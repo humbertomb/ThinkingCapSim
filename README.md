@@ -15,3 +15,6 @@ For this project use the following URL:
 ```
 https://github.com/humbertomb/ThinkingCapSim.git
 ```
+**WARNING**
+Leave the first checkbox _unchecked_
+<img width="880" alt="oojjjjjjioiiii" src="https://github.com/user-attachments/assets/8af97751-a9d7-420a-bcf9-350ca72c88b0">
