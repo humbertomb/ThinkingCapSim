@@ -19,7 +19,7 @@ import wucore.utils.geom.*;
 public class ExecArchSim extends ExecArch
 {
 	protected Simulator			sim;
-	protected Point3				start;
+	protected Point3			start;
 	
 	public ExecArchSim (String robotid, String name, Properties pdefs, Simulator sim)
 	{
