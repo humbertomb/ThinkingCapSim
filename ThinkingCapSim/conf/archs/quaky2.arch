@@ -1,0 +1,98 @@
+#---------------------------------------------------------------------
+# Apr 2002		Humberto Martinez Barbera
+#
+# Soccer player architecture definition (Quaky-II series)
+#
+
+#*********************************************************************
+#*****                                                           *****
+#*****            MULTIPLE ROBOTS INTERCONNECTION PART           *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Global Linda shared server (UDP mode)
+#---------------------------------------------------------------------
+#GLINADDR	= 155.54.12.154
+GLINADDR	= localhost
+GLINPORT	= 5500
+GLINCREATE	= false
+
+#*********************************************************************
+#*****                                                           *****
+#*****                    SINGLE ROBOT PART                      *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Linda intra-architecture server (UDP mode)
+#---------------------------------------------------------------------
+LLINADDR	= localhost
+LLINPORT	= 3000
+LLINCREATE	= true
+
+#---------------------------------------------------------------------
+# Active modules and TC-II execution parameters
+#---------------------------------------------------------------------
+MODULES		= CON, PLA, PER
+VROBOT		= ROB
+ROUTER		= COO
+
+#---------------------------------------------------------------------
+# Router section 
+#---------------------------------------------------------------------
+COOINFO		= Linda Router
+COOMODE		= shared
+COOCLASS		= tcrob.soccer.SoccerLindaRouter
+COOGMODE		= udp
+
+#---------------------------------------------------------------------
+# Planner section 
+#---------------------------------------------------------------------
+PLAINFO		= Planner
+PLAMODE		= shared
+PLACLASS		= tcrob.soccer.SoccerPlanner
+PLAPASSIVE	= false
+PLAQUEUED	= false
+PLAPOLLED	= true
+PLAEXTIME	= 1000
+PLACONNECT	= 	PLAN 		tc.shared.linda.ItemPlan 		notify_plan, \
+				BEHRESULT 	tc.shared.linda.ItemBehResult 	notify_beh_result
+
+#---------------------------------------------------------------------
+# Perception section 
+#---------------------------------------------------------------------
+PERINFO		= Perception
+PERMODE		= shared
+PERCLASS		= tcrob.soccer.SoccerPerception
+PERPASSIVE	= true
+PERCONNECT	= 	DATA 		tc.shared.linda.ItemData 		notify_data, \
+				OBJECT 		tc.shared.linda.ItemObject 		notify_object, \
+				NAVIGATION	tc.shared.linda.ItemNavigation	notify_navigation
+
+#---------------------------------------------------------------------
+# Controller section 
+#---------------------------------------------------------------------
+CONINFO		= Controller
+CONMODE		= shared
+CONCLASS		= tcrob.soccer.SoccerController
+CONPASSIVE	= true
+CONPRG		= conf/programs/quaky2.soccer.b
+CONCONNECT	= 	LPS			tc.shared.linda.ItemLPS 		notify_lps, \
+				GOAL 		tc.shared.linda.ItemGoal 		notify_goal, \
+				PATH 		tc.shared.linda.ItemPath 		notify_path
+
+#---------------------------------------------------------------------
+# Virtual robot section 
+#---------------------------------------------------------------------
+ROBINFO		= Virtual Robot
+ROBMODE		= shared
+ROBCLASS		= tcrob.quaky2.Quaky2
+ROBEXTIME	= 75
+ROBPASSIVE	= false
+ROBGFX		= false
+ROBDESC		= conf/robots/quaky2.soccer.robot
+ROBWORLD		= conf/maps/feria.world
+ROBAPW		= true
+ROBCONNECT	= 	MOTION		tc.shared.linda.ItemMotion 		notify_motion, \
+				DATACTRL 	tc.shared.linda.ItemDataCtrl 	notify_data_ctrl

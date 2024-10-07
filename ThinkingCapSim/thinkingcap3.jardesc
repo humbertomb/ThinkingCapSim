@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jardesc>
+    <jar path="ThinkingCap3/thinkingcap3.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/ThinkingCap3/thinkingcap3.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" mainClassHandleIdentifier="=ThinkingCap3/sources/&lt;tcapps.tcmonitor{LoginWindow.java[LoginWindow" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="false" exportJavaFiles="false" exportOutputFolder="true">
+        <folder path="/ThinkingCap3/sources"/>
+        <folder path="/ThinkingCap3/jarlibs"/>
+        <javaElement handleIdentifier="=ThinkingCap3/sources"/>
+    </selectedElements>
+</jardesc>

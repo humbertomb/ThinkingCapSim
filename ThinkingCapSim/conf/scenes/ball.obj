@@ -1,0 +1,51 @@
+RGBCOLOR	= 255, 255, 0
+M_TYPE		= accelerated
+RADIUS		= 0.13
+HEIGHT		= 0.20
+#ACC		= -0.8
+V3DFILE 	= conf/3dmodels/ball.3ds
+V3DCOLORR 	= 0.5
+V3DCOLORG 	= 0.5
+V3DCOLORB 	= 0.0
+
+LINES		= 8
+
+iconxi0 	= 0.13
+iconyi0 	= -0.065
+iconxf0 	= 0.13
+iconyf0 	= 0.065
+
+iconxi1 	= 0.13
+iconyi1 	= 0.065
+iconxf1 	= 0.065
+iconyf1 	= 0.13
+
+iconxi2 	= 0.065
+iconyi2 	= 0.13
+iconxf2 	= -0.065
+iconyf2 	= 0.13
+
+iconxi3 	= -0.065
+iconyi3 	= 0.13
+iconxf3 	= -0.13
+iconyf3 	= 0.065
+
+iconxi4 	= -0.13
+iconyi4 	= 0.065
+iconxf4 	= -0.13
+iconyf4 	= -0.065
+
+iconxi5 	= -0.13
+iconyi5 	= -0.065
+iconxf5 	= -0.065
+iconyf5 	= -0.13
+
+iconxi6 	= -0.065
+iconyi6 	= -0.13
+iconxf6 	= 0.065
+iconyf6 	= -0.13
+
+iconxi7 	= 0.065
+iconyi7 	= -0.13
+iconxf7 	= 0.13
+iconyf7 	= -0.065

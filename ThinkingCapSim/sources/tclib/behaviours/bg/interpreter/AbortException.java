@@ -1,0 +1,1 @@
+/* * (c) 1997-2001 Humberto Martinez */ package tclib.behaviours.bg.interpreter;public class AbortException extends HaltException{	public AbortException () 	{		super ();	}	public AbortException (String s) 	{		super (s);	}}

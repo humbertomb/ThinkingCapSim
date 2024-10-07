@@ -1,0 +1,1 @@
+/* * (c) 1997-2001 Humberto Martinez */ package tclib.behaviours.bg.interpreter;public class ReturnException extends InterpreterException{	public ReturnException () 	{		super ();	}	public ReturnException (String s) 	{		super (s);	}}

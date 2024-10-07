@@ -1,0 +1,19 @@
+#---------------------------------------------------------------------
+# Oct 2002		Humberto Martinez Barbera 
+# Mar 2003		Humberto Martinez Barbera
+#
+# Architecture definition for a generic global Linda server
+#
+
+#*********************************************************************
+#*****                                                           *****
+#*****            MULTIPLE ROBOTS INTERCONNECTION PART           *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Global Linda local server
+#---------------------------------------------------------------------
+GLINADDR		= localhost
+GLINPORT		= 5500
+GLINCREATE	= true

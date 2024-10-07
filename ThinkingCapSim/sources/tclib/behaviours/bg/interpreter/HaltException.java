@@ -1,0 +1,1 @@
+/* * (c) 1997-2001 Humberto Martinez */ package tclib.behaviours.bg.interpreter;public class HaltException extends InterpreterException{	public HaltException () 	{		super ();	}	public HaltException (String s) 	{		super (s);	}}

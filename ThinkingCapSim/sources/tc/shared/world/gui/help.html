@@ -1,0 +1,163 @@
+<codigo><HTML>
+  <HEAD>
+    <TITLE>Conversor de Formato DXF - World</TITLE>
+    <META AUTOR="Jose Antonio Marin Meseguer">
+  </HEAD>
+
+  <BODY>
+  
+    <CENTER><H2>Conversi&oacute;n World a DXF</H2></CENTER> 
+<HR>
+<HR>
+Para poder convertir el archivo de mapas del ThinkingCap a DXF sin perder informaci&oacute;n es necesario definir un formato donde los elementos del mapa (muros, objetos, waypoint, docking, etc) se transformen en entidades basicas del formato DXF (linea, circulo, polilinea, bloque). 
+<P>Como algunos de los elementos del Mapa tienen varias propiedades que no pueden transformarse directamente a una entidad DXF, es necesario en algunos casos a&ntilde;adir unas propiedades extendidas que no puede editarse directamente en AutoCad (es necesario cargar una aplicacion AutoLisp). 
+<P>En los siguientes apartados se muestra el formato utilizado para representar estos elementos en DXF.
+
+<BR>    
+<H3>L&iacute;neas de las paredes</H3>
+
+Las l&iacute;neas de las paredes se representa como una Entidad LINEA dentro de la capa por defecto ('0'). Si estas l&iacute;neas est&aacute;n definidas como polil&iacute;neas es necesario convertirlas en l&iacute;neas mediante el comando de AutoCad descomponer (descomp).
+<P>Para la representaci&oacute;n en 3D, en la capa por defecto ('0'), tambi&eacute;n se define la altura y anchura de las l&iacute;neas y la textura a utilizar, insertando una entidad de TEXTO con el mismo formato que el archivo World:
+<UL>
+<CODE>
+  <LI>LINE_DEF_HEIGHT = alto
+  <LI>LINE_DEF_WIDTH = ancho
+  <LI>LINE_DEF_TEXTURE = textura.jpg
+</CODE>
+</UL>
+<P>Para definir alguna propiedad 3D de forma individual a una l&iacute;nea se le a&ntilde;aden unas propiedades extendidas a la Entidad LINEA, 2 valores reales y una cadena de texto. Estas propiedades extendidas de las entidades no pueden ser editadas directamente por AutoCad por lo que es necesario cargar una aplicaci&oacute;n AUTOLISP (Ver mas adelante).
+
+<BR> 
+<H3>Objetos</H3>
+
+Los objetos se definen como un bloque de l&iacute;neas dentro de la capa denominada 'OBJECTS'.
+
+<P>Las propiedades 3D por defecto son las de las l&iacute;neas de las paredes (ver apartado anterior) y tambi&eacute;n utilizan propiedades extendidas para poder definir una propiedad 3D concreta en cada bloque insertado.
+
+<BR>
+<H3>Zonas</H3>
+
+Las Zonas se definen mediante una entidad POLILINEA (usando orden Rect&aacute;ngulo), en una capa llamada 'ZONES'. Se define una propiedad extendida en la polil&iacute;nea para definir la textura.
+<P>La textura por defecto se define con una entidad texto en la capa 'ZONES':
+
+<UL>
+<CODE>
+  <LI>ZONE_DEF_TEXTURE = textura
+</CODE>
+</UL>
+
+
+<BR>
+<H3>Docking</H3>
+
+Los docking se definen en una capa llamada 'DOCKINGS' con una entidad TEXTO, cuya posici&oacute;n x,y,z coincide con la posici&oacute;n del docking. Solo es necesario indicar el nombre. Para indicar la orientaci&oacute;n (grados) se a&ntilde;ade una propiedad extendida.
+
+<BR>      
+<H3>Waypoint</H3>
+
+Los Waypoint tambi&eacute;n se definen con un TEXTO situado en la posici&oacute;n x,y del Waypoint y definiendo la orientaci&oacute;n (grados) como una propiedad extendida. Se utiliza una capa denominada 'WAYPOINTS'.
+
+<BR> 
+<H3>Balizas cil&iacute;ndricas</H3>
+
+Est&aacute;n en la capa 'CBEACONS' y se definen como una entidad CIRCULO con la misma posici&oacute;n x,y de la baliza y di&aacute;metro. Para definir el nombre se utiliza una propiedad extendida.
+
+<BR>
+<H3>Balizas planas</H3>
+
+Est&aacute;n en la capa 'BEACONS' y se definen como una entidad LINEA. Para definir el nombre se utiliza una propiedad extendida
+
+<BR>
+<H3>Puertas</H3>
+
+Se definen como una entidad LINEA en la capa 'DOORS'. Se utilizan varias propiedades extendidas:
+
+<UL>
+<CODE>
+<LI>Altura (Double)
+<LI>Ancho (Double)
+<LI>Nombre (String)
+<LI>Representaci&oacute;n de la Puerta (String)
+<LI>Textura (String)
+</CODE>
+</UL
+
+La representaci&oacute;n de la puerta se realiza mediante una l&iacute;nea, por lo que se representa con 4 números (posici&oacute;n x,y del origen y destino) separados por comas.
+<P>Tambi&eacute;n se definen las propiedades 3D por defecto mediante texto dentro de la capa 'DOORS'.
+
+<UL>
+<CODE>
+  <LI>DOOR_DEF_HEIGHT = alto
+  <LI>DOOR_DEF_WIDTH = ancho
+  <LI>DOOR_DEF_TEXTURE = textura.jpg
+</CODE>
+</UL>
+
+<BR> 
+<H3>Puntos de Ruta (Path Points)</H3>
+
+Los puntos para definir una trayectoria, se representan con una entidad POLILINEA dentro de la capa 'PATH'
+
+<BR>
+<H3>Otros Elementos</H3>
+
+En la capa 'OTHERS' contiene otros elementos menos comunes. Actualmente solo se utilizan para el punto de Start mediante un texto:
+
+<UL>
+<CODE>
+  <LI>START = X, Y, &Aacute;ngulo
+</CODE>
+</UL
+
+<BR>
+<HR>
+<HR>
+<CENTER><H2>Conversi&oacute;n de DXF a World</H2></CENTER>
+<HR>
+Para convertir el archivo DXF es necesario que sea de la versi&oacute;n de Autocad12.
+
+<P>Para poder extraer las l&iacute;neas de un fichero DXF debe asegurarse de que sean entidades LINEA y no POLILINEAS como se ha comentado anteriormente utilizando el comando 'descomponer'.
+<P>Los pasos aconsejables para generar un archivo desde cero con AutoCad, serian los siguientes:
+<OL COMPACT>
+<CODE>
+<LI>Realizar los muros del mapa mediante l&iacute;neas en AutoCad en la capa por defecto ('0')
+<LI>Guardar el archivo en DXF version 12
+<LI>Abrirlo con el Conversor y guardarlo otra vez en DXF para que se generen las capas y otras propiedades por defecto.
+<LI>Volver a abrir el DXF con AutoCad y a&ntilde;adir los elementos necesarios en su correspondiente capa (sin propiedades extendidas).
+<LI>Realizar de nuevo el paso 3 para generar las propiedades extendidas por defecto de los elementos insertados.
+<LI>Editar las propiedades extendidas en AutoCad mediante la utilidad AutoLisp o directamente en modo texto con el Conversor mediante Preview.
+</CODE>
+</OL>
+
+Resumen de las entidades Autocad correspondientes a cada elemento del World (lo que falta es necesario definirlo mediante AutoLisp o se coger&aacute; por defecto): 
+<DL COMPACT>
+<DT> <B>Muro</B>: 		<DD>LINEA (faltar&iacute;a definir las propiedades 3D).
+<DT> <B>Objetos</B>: 	<DD>BLOQUE de LINEAS (faltar&iacute;a definir las propiedades 3D).
+<DT> <B>Waypoint</B>: 	<DD>TEXTO con el nombre y posici&oacute;n del WP (faltar&iacute;a el &aacute;ngulo)
+<DT> <B>Dock</B>: 		<DD>TEXTO con el nombre y posici&oacute;n del Dock (faltar&iacute;a el &aacute;ngulo)
+<DT> <B>Beacon</B>:		<DD>LINEA con la posici&oacute;n y orientaci&oacute;n (faltar&iacute;a el Nombre)
+<DT> <B>CBeacon</B>:	<DD>CIRCULO con el radio y posici&oacute;n (faltar&iacute;a el Nombre)
+<DT> <B>Path</B>:		<DD>POLILINEA que define el path.
+<DT> <B>Zonas</B>:		<DD>POLILINEA (o RECTANGULO) que define la zona (faltar&iacute;a el Nombre)
+<DT> <B>Door</B>:		<DD>LINEA que define el pasillo de la puerta (faltar&iacute;a el nombre y dimensi&oacute;n de la puerta)
+</DL>
+
+<H3>Editar Propiedades Extendidas</H3>
+
+Para poder editar las propiedades extendidas de los elementos, directamente en AutoCad es necesario copiar dos archivos de AutoLisp (ThinkingCap.lsp, ThinkingCap.dcl) y cargar el archivo *.lsp. Estos archivos est&aacute;n actualmente en /TCApps/sources/autolisp/.
+
+<P>Una vez cargado con el comando 'mapedit' se puede editar las propiedades extendidas del elemento seleccionado mediante un cuadro de dialogo. El elemento debe estar en la capa adecuada para ser editado correctamente.
+
+<BR>
+<HR>
+<HR> 
+<CENTER><H2>Utilizaci&oacute;n del Programa</H2></CENTER>
+<HR>
+Para convertir un archivo, es necesario cargarlo inicialmente en Dxf o World. El mapa cargado se visualiza en la ventana y es posible modificarlo mediante 'Preview File'.
+
+<P>Con 'Preview File' se visualiza el mapa cargado en modo texto (se genera un archivo temporal), pudiendo se editado o modificado. Para actualizar los cambios realizados en el mapa se utiliza 'Update World'. Al contrario, para volver a cargar los datos del mapa cargado al modo texto se utiliza 'Restart'.
+
+<P>El mapa cargado en memoria puede salvarse cualquier otro formato DXF o World.
+
+  </BODY>
+</HTML>

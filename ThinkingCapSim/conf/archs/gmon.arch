@@ -1,0 +1,38 @@
+#---------------------------------------------------------------------
+# Dec 2002		Humberto Martinez Barbera
+# Mar 2003	Humberto Martinez Barbera
+#
+# Sample monitoring-only architecture
+
+#*********************************************************************
+#*****                                                           *****
+#*****            MULTIPLE ROBOTS INTERCONNECTION PART           *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Global Linda local server
+#---------------------------------------------------------------------
+GLINADDR		= localhost
+GLINPORT		= 5500
+GLINCREATE	= false
+
+#---------------------------------------------------------------------
+# Active global modules
+#---------------------------------------------------------------------
+MONITORS		= MUL
+
+#---------------------------------------------------------------------
+# Global Monitor section 
+#---------------------------------------------------------------------
+MULINFO		= Global Monitor
+MULMODE		= tcp
+MULCLASS		= tc.modules.Monitor
+MULPASSIVE	= true
+MULGFX		= true
+MULWEBCLASS	= tcapps.tcmonitor.TCMonitor
+MULCONNECT	= 	MONITOR		tc.shared.linda.ItemMonitor 	notify_monitor, \
+				STATUS 		tc.shared.linda.ItemStatus 		notify_status, \
+				GOAL 		tc.shared.linda.ItemGoal 		notify_goal, \
+				BEHINFO		tc.shared.linda.ItemBehInfo		notify_beh_info
+

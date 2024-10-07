@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="sources"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="jarlibs/comm.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jamlab.jar"/>
+	<classpathentry kind="lib" path="jarlibs/startfire.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jmf.jar"/>
+	<classpathentry kind="lib" path="jarlibs/plot.jar"/>
+	<classpathentry kind="lib" path="jarlibs/tools.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jsdn_java3d.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/gluegen-rt.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/gluegen-rt-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/jogl-all.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/jogl-all-natives-macosx-universal.jar"/>
+	<classpathentry kind="output" path="output"/>
+</classpath>
