@@ -10,3 +10,8 @@ Robots simulator written entirely in Java. It is based on the ThinkingCap functi
 *	Open Eclipse and choose Import –> Projects from Git (with smart import)
 *	Choose the Clone URI option in the Git import wizard and click Next.
 *	Confirm the URI, Host, and Repository path parameters and click Next.
+
+For this project use the following URL:
+```
+https://github.com/humbertomb/ThinkingCapSim.git
+```
