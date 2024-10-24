@@ -120,11 +120,13 @@ MAX_OBJECTS = 0
 # ==============================
 # ZONES
 # ==============================
-ZONES = 1
+ZONES = 3
 
 ZONE_DEF_TEXTURE = ./conf/3dmodels/textures/floor.jpg
 
 ZONE_0 = 0.0, 0.0, 10.8, 14.25, Zone, ./conf/3dmodels/textures/floor2.jpg
+ZONE_1 = 6.2, 11.5, 4.4, 3.0, Room-1, ./conf/3dmodels/textures/floor2.jpg
+ZONE_2 = 0.2, 11.5, 4.4, 3.0, Room-2, ./conf/3dmodels/textures/floor2.jpg
 
 # ==============================
 # DOORS
