@@ -350,6 +350,7 @@ public class Simulator
 			} catch (Exception e)
 			{
 				System.out.println ("--[SIM] Error loading world <"+wname+">");
+				e.printStackTrace();
 				map			= new World ();
 			}
 		}

@@ -1,5 +1,5 @@
 NOBJECTS	= 3
 
-OBJECT0		= tcsim.simul.objects.SimCargo, ./conf/scenes/pallet.empty.obj,Palet1, 55.773, 81.141, -90.0,0.0
-OBJECT1		= tcsim.simul.objects.SimCargo, ./conf/scenes/pallet.full.obj,Palet2, 64.483, 83.184, 90.0,0.0
-OBJECT2		= tcsim.simul.objects.SimCargo, ./conf/scenes/pallet.full.empty.obj,Palet2, 60.483, 83.184, 90.0,0.0
+OBJECT0		= tcapps.tcsim.simul.objects.SimCargo, ./conf/scenes/pallet.empty.obj,Palet1, 55.773, 81.141, -90.0,0.0
+OBJECT1		= tcapps.tcsim.simul.objects.SimCargo, ./conf/scenes/pallet.full.obj,Palet2, 64.483, 83.184, 90.0,0.0
+OBJECT2		= tcapps.tcsim.simul.objects.SimCargo, ./conf/scenes/pallet.full.empty.obj,Palet2, 60.483, 83.184, 90.0,0.0

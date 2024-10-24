@@ -1,7 +1,9 @@
 package wucore.utils.color;
 
-public class WColor {
-	
+import java.io.*;
+
+public class WColor implements Serializable 
+{	
 	// The color white.  In the default sRGB space.
 	public final static WColor white = new WColor(255, 255, 255);
 	public final static WColor WHITE = white;

@@ -43,7 +43,7 @@ ROUTER		= COO
 #---------------------------------------------------------------------
 COOINFO		= Linda Router
 COOMODE		= shared
-COOCLASS		= tcrob.soccer.SoccerLindaRouter
+COOCLASS		= tcrob.umu.quaky2.SoccerLindaRouter
 COOGMODE		= udp
 
 #---------------------------------------------------------------------
@@ -51,11 +51,12 @@ COOGMODE		= udp
 #---------------------------------------------------------------------
 PLAINFO		= Planner
 PLAMODE		= shared
-PLACLASS		= tcrob.soccer.SoccerPlanner
+PLACLASS		= tcrob.umu.quaky2.SoccerPlanner
 PLAPASSIVE	= false
 PLAQUEUED	= false
 PLAPOLLED	= true
 PLAEXTIME	= 1000
+PLAGFX		= true;
 PLACONNECT	= 	PLAN 		tc.shared.linda.ItemPlan 		notify_plan, \
 				BEHRESULT 	tc.shared.linda.ItemBehResult 	notify_beh_result
 
@@ -64,7 +65,7 @@ PLACONNECT	= 	PLAN 		tc.shared.linda.ItemPlan 		notify_plan, \
 #---------------------------------------------------------------------
 PERINFO		= Perception
 PERMODE		= shared
-PERCLASS		= tcrob.soccer.SoccerPerception
+PERCLASS		= tcrob.umu.quaky2.SoccerPerception
 PERPASSIVE	= true
 PERCONNECT	= 	DATA 		tc.shared.linda.ItemData 		notify_data, \
 				OBJECT 		tc.shared.linda.ItemObject 		notify_object, \
@@ -75,9 +76,11 @@ PERCONNECT	= 	DATA 		tc.shared.linda.ItemData 		notify_data, \
 #---------------------------------------------------------------------
 CONINFO		= Controller
 CONMODE		= shared
-CONCLASS		= tcrob.soccer.SoccerController
+CONCLASS		= tcrob.umu.quaky2.SoccerController
 CONPASSIVE	= true
 CONPRG		= conf/programs/quaky2.soccer.b
+CONPRG_		= conf/programs/quaky2.indoor.b
+CONGFX		= true
 CONCONNECT	= 	LPS			tc.shared.linda.ItemLPS 		notify_lps, \
 				GOAL 		tc.shared.linda.ItemGoal 		notify_goal, \
 				PATH 		tc.shared.linda.ItemPath 		notify_path
@@ -87,12 +90,14 @@ CONCONNECT	= 	LPS			tc.shared.linda.ItemLPS 		notify_lps, \
 #---------------------------------------------------------------------
 ROBINFO		= Virtual Robot
 ROBMODE		= shared
-ROBCLASS		= tcrob.quaky2.Quaky2
+ROBCLASS		= tcrob.umu.quaky2.Quaky2
 ROBEXTIME	= 75
 ROBPASSIVE	= false
 ROBGFX		= false
-ROBDESC		= conf/robots/quaky2.soccer.robot
-ROBWORLD		= conf/maps/feria.world
+ROBDESC		= conf/robots/quaky2.robot
+ROBWORLD	= conf/maps/feria.world
+ROBSCN		= conf/scenes/soccer.scn
 ROBAPW		= true
+ROBGFX		= true
 ROBCONNECT	= 	MOTION		tc.shared.linda.ItemMotion 		notify_motion, \
 				DATACTRL 	tc.shared.linda.ItemDataCtrl 	notify_data_ctrl
