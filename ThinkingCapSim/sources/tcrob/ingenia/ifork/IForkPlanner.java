@@ -103,7 +103,7 @@ public class IForkPlanner extends SeqPlanner
 	protected int					givencause		= -1;
 	protected boolean				laserexception	=false;
 	// Private and debug variables
-	protected IForkPlanWindow			win;
+	protected IForkPlanWindow		win;
 	protected Hashtable				agv_runtime;
 	
 	// Debug
@@ -1285,7 +1285,13 @@ public class IForkPlanner extends SeqPlanner
 			return;
 		}
 		
-		if (localgfx) 	win	= new IForkPlanWindow (space);
+		if (localgfx) 	
+		{
+			swin.setVisible(false);
+			swin = null;
+			
+			win	= new IForkPlanWindow (space);
+		}
 	}	
 	
 	public void notify_coord (String space, ItemCoordination coord)
