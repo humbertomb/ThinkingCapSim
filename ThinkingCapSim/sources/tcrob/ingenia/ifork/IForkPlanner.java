@@ -30,81 +30,81 @@ import wucore.utils.math.*;
 public class IForkPlanner extends SeqPlanner
 {
 	// Plan types
-	static public final int			STAY				= 0;
-	static public final int			GOTO				= 1;
-	static public final int			LOAD				= 2;
-	static public final int			UNLOAD			= 3;
+	static public final int							STAY			= 0;
+	static public final int							GOTO			= 1;
+	static public final int							LOAD			= 2;
+	static public final int							UNLOAD			= 3;
 	
 	// Manouvering distances
-	static public final double		UNDOCK_DIST		= 2.25;		// Undocking distance (m)
+	static public final double						UNDOCK_DIST		= 2.25;		// Undocking distance (m)
 	
 	// Manouvering linear velocities
-	static public final double		UNDOCK_SPD		= 0.85;		// Undocking velocity (m/s)
-	static public final double		DOCK_SPD			= 0.35;		// Docking velocity (m/s)
-	static public final double		DOOR_SPD			= 0.75;		// Door crossing velocity (m/s)
-	static public final double		NAV_SPD			= 1.5;		// Navigating velocity (m/s)
-	static public final double		WRN_SPD			= 0.5;		// Max. warning speed (m/s)
+	static public final double						UNDOCK_SPD		= 0.85;		// Undocking velocity (m/s)
+	static public final double						DOCK_SPD		= 0.35;		// Docking velocity (m/s)
+	static public final double						DOOR_SPD		= 0.75;		// Door crossing velocity (m/s)
+	static public final double						NAV_SPD			= 1.5;		// Navigating velocity (m/s)
+	static public final double						WRN_SPD			= 0.5;		// Max. warning speed (m/s)
 
 	// Manouvering rotation velocities
-	static public final double		DOCK_TRN			= 80.0;		// Docking velocity (deg/s)
-	static public final double		DOOR_TRN			= 50.0;		// Door crossing velocity (deg/s)
-	static public final double		NAV_TRN			= 120.0;		// Navigating velocity (deg/s)
+	static public final double						DOCK_TRN		= 80.0;		// Docking velocity (deg/s)
+	static public final double						DOOR_TRN		= 50.0;		// Door crossing velocity (deg/s)
+	static public final double						NAV_TRN			= 120.0;		// Navigating velocity (deg/s)
 
 	// Manouvering tolerances
-	static public final  double		TOL_DOCK_DIST	= 0.04;		// Tolerance in docking operations (m)
-	static public final  double		TOL_DOCK_HEAD	= 15.0;		// Tolerance in docking operations (deg)
-	static public final  double		TOL_NAV_DIST		= 0.30;		// Tolerance in navigation operations (m)
-	static public final  double		TOL_NAV_HEAD		= 180.0;		// Tolerance in navigation operations (deg)
+	static public final  double						TOL_DOCK_DIST	= 0.04;		// Tolerance in docking operations (m)
+	static public final  double						TOL_DOCK_HEAD	= 15.0;		// Tolerance in docking operations (deg)
+	static public final  double						TOL_NAV_DIST	= 0.30;		// Tolerance in navigation operations (m)
+	static public final  double						TOL_NAV_HEAD	= 180.0;		// Tolerance in navigation operations (deg)
 
 	// Fork commands and heights
-	static public final double		FORK_NAVIG		= 0.240;		// Fork height navigation (m)
-	static public final double		FORK_OFFSET		= 0.22;		// Offset over current height setpoint (m)
+	static public final double						FORK_NAVIG		= 0.240;		// Fork height navigation (m)
+	static public final double						FORK_OFFSET		= 0.22;		// Offset over current height setpoint (m)
 
 	// Current sub-plan parameters
-	protected HTopolMap				topol;						// Topologic Map of world
-	protected IForkPlan[]				subplan;
-	protected int					subplan_n;
-	protected int					subplan_k;
+	protected HTopolMap								topol;						// Topologic Map of world
+	protected IForkPlan[]							subplan;
+	protected int									subplan_n;
+	protected int									subplan_k;
 	
-	protected boolean				completed;					// Current subtask finished
-	protected boolean				failed;						// Current subtask has failed	
+	protected boolean								completed;					// Current subtask finished
+	protected boolean								failed;						// Current subtask has failed	
 
 	// Current petri net for coordination
-	protected PetriNet				pnet;
-	private Vector					lnodes;						// Last inserted set of nodes
+	protected PetriNet								pnet;
+	private Vector<PNNode>							lnodes;						// Last inserted set of nodes
 
 	// Coordination with warehouse
-	protected boolean 				doSecCoord;					// Coordination active
-	protected boolean				firstwaiting;				// WAIT msg has to be sent
-	protected ItemSync 				syncitem;					// Warehouse item
-	protected Tuple 		  			synctuple;					// Warehouse tuple
+	protected boolean 								doSecCoord;					// Coordination active
+	protected boolean								firstwaiting;				// WAIT msg has to be sent
+	protected ItemSync 								syncitem;					// Warehouse item
+	protected Tuple 		  						synctuple;					// Warehouse tuple
 	
 	// Coordination with AGVs
-	static public final double 		AGV_DIST			= 4.0;		// Coordination Distance
-	static public final double		WARN_DIST			= 6.0;		// Warning distance
-	static public final double		POINT_DIST			= 3.0;		// Distance to ocuped wp
+	static public final double 						AGV_DIST		= 4.0;		// Coordination Distance
+	static public final double						WARN_DIST		= 6.0;		// Warning distance
+	static public final double						POINT_DIST		= 3.0;		// Distance to ocuped wp
 	
-	protected Hashtable				agvinfo;						// Coord info from other robots
-	protected long					myPriority;					// Own priority value
-	protected ItemCoordination		coorditem;	
-	protected Tuple					coordtuple;
-	protected boolean				givenway;
-	protected boolean				stopped;
-	protected String					task_backup;
+	protected Hashtable<String,ItemCoordination>	agvinfo;						// Coord info from other robots
+	protected long									myPriority;					// Own priority value
+	protected ItemCoordination						coorditem;	
+	protected Tuple									coordtuple;
+	protected boolean								givenway;
+	protected boolean								stopped;
+	protected String								task_backup;
 	
-	protected String				booked;						// Current topo node locked
-	protected LinkedList			locks;
-	protected Hashtable				asoclocks;					// Topo nodes locked with the AGVs
-	protected boolean				lmodified		= false;		// A lock has been modified
-	protected boolean				begindock		= true;
-	protected String				lastwp 			= null;			// Ultimo Punto de espera visitado WP o DOOR
-	protected boolean				warning			= false;
-	protected Line2[]				limits;
-	protected int					givencause		= -1;
-	protected boolean				laserexception	=false;
+	protected String								booked;						// Current topo node locked
+	protected LinkedList<String>					locks;
+	protected Hashtable<String,String>				asoclocks;					// Topo nodes locked with the AGVs
+	protected boolean								lmodified		= false;		// A lock has been modified
+	protected boolean								begindock		= true;
+	protected String								lastwp 			= null;			// Ultimo Punto de espera visitado WP o DOOR
+	protected boolean								warning			= false;
+	protected Line2[]								limits;
+	protected int									givencause		= -1;
+	protected boolean								laserexception	= false;
 	// Private and debug variables
-	protected IForkPlanWindow		win;
-	protected Hashtable				agv_runtime;
+	protected IForkPlanWindow						win;
+	protected Hashtable<String,Long>				agv_runtime;
 	
 	// Debug
 	PrintWriter pout = null;
@@ -124,7 +124,7 @@ public class IForkPlanner extends SeqPlanner
 		pnet			= new PetriNet ();
 			
 		// Coordination stuff
-		agvinfo		= new Hashtable ();
+		agvinfo		= new Hashtable<String,ItemCoordination> ();
 		myPriority	= 0;
 		coorditem 	= new ItemCoordination();
 		coordtuple 	= new Tuple (IForkTuple.COORD, coorditem); 
@@ -132,9 +132,9 @@ public class IForkPlanner extends SeqPlanner
 		stopped		= true;
 		robotid 	= props.getProperty ("ROBNAME");
 		
-		asoclocks	= new Hashtable ();
-		locks 		= new LinkedList ();
-		agv_runtime  = new Hashtable ();
+		asoclocks	= new Hashtable<String,String> ();
+		locks 		= new LinkedList<String> ();
+		agv_runtime  = new Hashtable<String,Long> ();
 		
 		fdebug = false;
 		
@@ -170,7 +170,7 @@ public class IForkPlanner extends SeqPlanner
 		gitem.task	= new IForkPlan ();
 		
 		// Set-up security coordination stuff
-		try { doSecCoord = new Boolean (props.getProperty ("WHCOORD")).booleanValue (); } 	
+		try { doSecCoord = Boolean.valueOf (props.getProperty ("WHCOORD")).booleanValue (); } 	
 		catch (Exception e) 	{ doSecCoord = false; }	
 		
 		if (doSecCoord)
@@ -414,18 +414,18 @@ public class IForkPlanner extends SeqPlanner
 		node		= new PNNode (robotid);
 		node.setTokens (1);
 		pnet.addNode (node);
-		lnodes	= new Vector ();
+		lnodes	= new Vector<PNNode> ();
 		lnodes.add (node);
 	}
 	
 	private void net_places (String[] places)
 	{
 		int				i, j;
-		Vector			cnodes;
+		Vector<PNNode>	cnodes;
 		PNNode			snode, dnode;
-		PNTransition		t;
+		PNTransition	t;
 
-		cnodes	= new Vector ();
+		cnodes	= new Vector<PNNode> ();
 		for (j = 0; j < places.length; j++)
 		{
 			dnode	= new PNNode (places[j]);
@@ -468,7 +468,7 @@ public class IForkPlanner extends SeqPlanner
 			pnet.addEdge (t, dnode);
 		}
 
-		lnodes	= new Vector ();
+		lnodes	= new Vector<PNNode> ();
 		lnodes.add (dnode);
 	}
 	
@@ -1000,11 +1000,9 @@ public class IForkPlanner extends SeqPlanner
 		while (infos.hasMoreElements())
 		{
 			rname	= (String)infos.nextElement();	// Nombre de la carretilla
-			item		= (ItemCoordination)agvinfo.get (rname); // Toda la informacion de la carretilla	
+			item	= (ItemCoordination)agvinfo.get (rname); // Toda la informacion de la carretilla	
 			dist	= iforkdist(lps.cur, item.position);
-			if(item !=null) wpname = item.goal;
-			else			wpname = null;
-			
+			wpname	= (item != null ? item.goal : null);
 			
 			// Si dos carretillas van al mismo sitio
 			if((IForkController.parseTask (subplan[subplan_k].task) == IForkController.NAVIGATE || (givenway && givencause==2)) && (wpname!=null && wpgoal!=null) && (!wpname.equals(booked))){
@@ -1168,14 +1166,14 @@ public class IForkPlanner extends SeqPlanner
 					Method checkMethod = null;
 					try
 					{
-						checkMethod = myclass.getMethod(method,null);
+						checkMethod = myclass.getMethod(method); //, (Class)null);
 					} catch (Exception e)
 					{
 						System.out.println ("  [IForkPlanner]: WARNING!! "+e+" method="+method);
 						return ItemBehResult.T_NOTYET;
 					}
 					//System.out.print ("\t[IFORKPLANNER]--->Checking condition");
-					if (((Boolean)checkMethod.invoke(this,null)).booleanValue())
+					if (((Boolean)checkMethod.invoke(this, (Object)null)).booleanValue())
 					{
 						firstwaiting = true; //Next time will be the first waiting
 						//System.out.println ("TRUE");
@@ -1218,7 +1216,7 @@ public class IForkPlanner extends SeqPlanner
 			linda.write (synctuple);
 			firstwaiting = false;
 			//System.out.println("He enviado WAIT sycntuple="+synctuple+" tiempo="+System.currentTimeMillis());
-			return new Boolean(false);
+			return Boolean.valueOf (false);
 		}
 		//return (new Boolean(true));
 		
@@ -1229,10 +1227,10 @@ public class IForkPlanner extends SeqPlanner
 			ItemSync item = (ItemSync)t2.value;
 			if(item!=null){
 				//System.out.println("IForkPlanner: recibido continue Sync"+item);
-				return (new Boolean (item.message == ItemSync.CONTINUE));
+				return Boolean.valueOf (item.message == ItemSync.CONTINUE);
 			}
 		}			
-		return new Boolean(false);
+		return Boolean.valueOf (false);
 	}
 
 	public Boolean sendByeMessage ()
@@ -1244,7 +1242,7 @@ public class IForkPlanner extends SeqPlanner
 		syncitem.dockid = label;
 		syncitem.message = ItemSync.BYE;
 		linda.write (synctuple);
-		return new Boolean(true);	
+		return Boolean.valueOf(true);	
 	}
 	
 	public Boolean sendAGVINMessage ()
@@ -1256,7 +1254,7 @@ public class IForkPlanner extends SeqPlanner
 		syncitem.dockid = label;
 		syncitem.message = ItemSync.AGVIN;
 		linda.write (synctuple);
-		return new Boolean(true);	
+		return Boolean.valueOf(true);	
 	}
 
 	public void setGoal (IForkPlan plan)
@@ -1356,7 +1354,7 @@ public class IForkPlanner extends SeqPlanner
 		else if(item.cmd==ItemDelRobot.DELETE){
 			//System.out.println("  [IForkPlanner] Recibido tuple delrobot "+item+" space="+space+" robotid="+robotid);
 			
-			agv_runtime.put(item.robotid,new Long(System.currentTimeMillis()));
+			agv_runtime.put(item.robotid, Long.valueOf(System.currentTimeMillis()));
 			
 			if(robotid!=null && robotid.equalsIgnoreCase(item.robotid)){
 				System.out.println("  [IForkPlanner] Stop robot "+robotid);
@@ -1480,13 +1478,13 @@ public class IForkPlanner extends SeqPlanner
 	static public Integer toInteger (String id)
 	{
 		if (id.equalsIgnoreCase("stay"))
-			return new Integer(STAY);
+			return Integer.valueOf(STAY);
 		else if (id.equalsIgnoreCase("goto"))
-			return new Integer(GOTO);
+			return Integer.valueOf(GOTO);
 		else if (id.equalsIgnoreCase("load"))
-			return new Integer(LOAD);
+			return Integer.valueOf(LOAD);
 		else if (id.equalsIgnoreCase("unload"))
-			return new Integer(UNLOAD);
+			return Integer.valueOf(UNLOAD);
 		else {
 			System.out.println("iForkPlanner::Warning:unknown id: " + id);
 			return null;

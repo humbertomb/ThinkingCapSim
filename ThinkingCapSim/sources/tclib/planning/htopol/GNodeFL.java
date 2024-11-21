@@ -1,5 +1,5 @@
 /*
- * (c) 2003 Juan Pedro Canovas Qui–onero
+ * (c) 2003 Juan Pedro Canovas Quiï¿½onero
  * (c) 2004 Humberto Martinez Barbera
  */
 
@@ -19,21 +19,21 @@ import tc.vrobot.*;
 
 public class GNodeFL extends GNode
 {
-	static public final double		IF_CELL		= 0.55;				// Default cell size (m)			
-	static public final double		IF_DIL		= 1.75;				// Default dilation constant				
+	static public final double						IF_CELL		= 0.55;				// Default cell size (m)			
+	static public final double						IF_DIL		= 1.75;				// Default dilation constant				
 
 	// Node parameters
-	protected double 				size			= IF_CELL;
-	protected double 				dilation		= IF_DIL;
+	protected double 								size			= IF_CELL;
+	protected double 								dilation		= IF_DIL;
 	
 	// Node data structures
-	protected Grid					grid;
-	protected GridPath				gpath;
-	protected Graph 					sgraph;
-	protected boolean				realized		= false;
+	protected Grid									grid;
+	protected GridPath								gpath;
+	protected Graph 								sgraph;
+	protected boolean								realized		= false;
 	
 	// Connectivity
-	protected Hashtable				doors;
+	protected Hashtable<String,Vector<String>>		doors;
 	
 	// Constructors
 	public GNodeFL (String label, int index, Properties props)
@@ -42,7 +42,7 @@ public class GNodeFL extends GNode
 		
 		fromProps (props, index);
 
-		doors = new Hashtable ();
+		doors = new Hashtable<String,Vector<String>> ();
 	}
 	
 	// Accessors
@@ -150,20 +150,20 @@ public class GNodeFL extends GNode
 	public void addNode (GNode a, String door)
 	{
 		String			zone;
-		Vector			vector;
+		Vector<String>			vector;
 		
 		addNode (a);
 		
 		zone		= a.getLabel ();
 		if (!doors.containsKey (zone))
 		{		
-			vector	= new Vector ();
+			vector	= new Vector<String> ();
 			vector.add (door);
 			doors.put (zone, vector);
 		}
 		else
 		{
-			vector	= (Vector) doors.get (zone);
+			vector	= doors.get (zone);
 			if (vector.indexOf (door) == -1)
 				vector.addElement (door);
 		}
@@ -173,13 +173,13 @@ public class GNodeFL extends GNode
 	{
 		Vector		vector;
 
-		vector	= (Vector) doors.get (zone);
+		vector	= doors.get (zone);
 		return (String) vector.firstElement ();
 	}
 	
-	public Vector getDoors (String zone)
+	public Vector<String> getDoors (String zone)
 	{
-		return (Vector) doors.get (zone);
+		return doors.get (zone);
 	}
 	
 	public void printDoors ()
@@ -187,14 +187,14 @@ public class GNodeFL extends GNode
 		int				i;
 		Enumeration		keys;
 		String			zone;
-		Vector			vector;
+		Vector<String>	vector;
 		
 		System.out.println ("Door list for zone <"+getLabel ()+">");
 		keys		= doors.keys ();
 		while (keys.hasMoreElements ())
 		{
 			zone		= (String) keys.nextElement ();
-			vector	= (Vector) doors.get (zone);
+			vector	= doors.get (zone);
 			
 			System.out.print ("\tTo zone <"+zone+"> through [");
 			for (i = 0; i < vector.size (); i++)

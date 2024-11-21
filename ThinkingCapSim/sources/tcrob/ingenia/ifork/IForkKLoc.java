@@ -20,38 +20,38 @@ import wucore.utils.math.*;
 public class IForkKLoc extends Object
 {	
 	// Initial variances
+	static public final boolean			REINIT		= false;
+	public static double				CHI_TEST	= 10;		// Matching value for the Chi-square test
 
-	public static double				CHI_TEST		= 10;		// Matching value for the Chi-square test
+	public static final double			SD_VM		= 1;	// Standard Desviation % (displacement of front wheel)
+	public static final double			SD_DELTA	= 0.5;	// Standard Desviation of delta in degree (angle of front wheel)
 
-	public static final double		SD_VM		= 1;	// Standard Desviation % (displacement of front wheel)
-	public static final double		SD_DELTA	= 0.5;	// Standard Desviation of delta in degree (angle of front wheel)
-
-	public double					SD_POSY		= 0.1;		// Standard Desviation of position initial
-	public double					SD_POSX		= 0.1;		// Standard Desviation of position initial
-	public double					SD_ANG		= 0.1;		// Standard Desviation of orientation initial
+	public double						SD_POSY		= 0.1;		// Standard Desviation of position initial
+	public double						SD_POSX		= 0.1;		// Standard Desviation of position initial
+	public double						SD_ANG		= 0.1;		// Standard Desviation of orientation initial
 	
 	protected double					POSX_INIT	= 0.0;		// Position X initial
 	protected double					POSY_INIT	= 0.0;		// Posicion Y initial
-	protected double					ANG_INIT		= 0.0;		// Orientation initial
+	protected double					ANG_INIT	= 0.0;		// Orientation initial
 	
-	public static double				DTOR			= Math.PI/180.0;
-	public static double				RTOD			= 180.0/Math.PI;
+	public static double				DTOR		= Math.PI/180.0;
+	public static double				RTOD		= 180.0/Math.PI;
 	
 		
 	// Global matrices
-	protected Matrix				P;							// State prediction covariance
-	protected Matrix				X;							// Estimated state
+	protected Matrix					P;							// State prediction covariance
+	protected Matrix					X;							// Estimated state
 	
 	// Position prediction variables
-	protected Position				posk;						// Current position, time k
-	protected Position				pest;						// Position at time k-1
-	protected long					tk;							// Time at k
-	protected long					tk1;						// Time at k-1	
+	protected Position					posk;						// Current position, time k
+	protected Position					pest;						// Position at time k-1
+	protected long						tk;							// Time at k
+	protected long						tk1;						// Time at k-1	
 
-	protected double				velAng;
-	protected double				velLin;
-	protected double				maxvelAng;
-	protected double				maxvelLin;
+	protected double					velAng;
+	protected double					velLin;
+	protected double					maxvelAng;
+	protected double					maxvelLin;
 	
 	// Position prediction matrices
 	protected Matrix					Fx;							// Jacobian with respect to the state of the previous state 
@@ -649,8 +649,9 @@ public class IForkKLoc extends Object
 			}
 			else{
 				//System.out.println("Upd FAIL: ["+Pos.x()+","+Pos.y()+"] Q="+quality);
-				if(true) return;
-				//System.out.println("  [iFrkKLoc] Reinitialising Kalman Filter");
+				if(!REINIT) return;
+				
+				System.out.println("  [iFrkKLoc] Reinitialising Kalman Filter");
 				// Initialise state prediction covariance
 				P.identity();
 
@@ -820,8 +821,9 @@ public class IForkKLoc extends Object
 			}
 			else{
 				//System.out.println("Upd FAIL: ["+Pos.x()+","+Pos.y()+"]");
-				if(true) return;
-				//System.out.println("  [iFrkKLoc] Reinitialising Kalman Filter");
+				if(!REINIT) return;
+				
+				System.out.println("  [iFrkKLoc] Reinitialising Kalman Filter");
 				// Initialise state prediction covariance
 				P.identity();
 
@@ -845,10 +847,6 @@ public class IForkKLoc extends Object
 			file.print((System.currentTimeMillis()-st)+"\t"+posk.x()+"\t"+posk.y()+"\t"+posk.alpha()*Angles.RTOD);
 		}		
 	}
-
-
-
-
 
 // Valida las medidas de posicion y orientacion, dando la incertidumbre en la Posicion y Orientacion.
 // Forma las matrices para la actualizacion (updated)

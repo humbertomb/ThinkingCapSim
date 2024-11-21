@@ -16,39 +16,39 @@ import tclib.planning.htopol.visualization.*;
 import tc.vrobot.*;
 
 import devices.pos.*;
-import wucore.utils.geom.Point2;
+import wucore.utils.geom.*;
 import wucore.widgets.*;
 import wucore.gui.*;
 
 public class HTopolWindow extends JFrame implements Runnable
 {
 	protected ChildWindowListener		parent;
-	protected HTopolMap				map;
+	protected HTopolMap					map;
 	
 	protected JSplitPane				rootSP		= new JSplitPane ();
 
 	protected JPanel					firstPA		= new JPanel ();
-	protected JPanel					secondPA		= new JPanel ();
+	protected JPanel					secondPA	= new JPanel ();
 	protected JPanel					gridPA		= new JPanel ();
 	
 	protected JPanel					toolsPA		= new JPanel ();
 	protected JPanel					topolPA		= new JPanel ();
-	protected JSplitPane				graphsSP		= new JSplitPane ();
-	protected JComboBox				zoneCB		= new JComboBox ();
-	protected JCheckBox				wgtsCB		= new JCheckBox ("Draw arc weights");
-	protected JCheckBox				relaxCB		= new JCheckBox ("Relax graphs");
-	protected JCheckBox				gridaCB		= new JCheckBox ("Draw grid artifacts");
+	protected JSplitPane				graphsSP	= new JSplitPane ();
+	protected JComboBox<String>			zoneCB		= new JComboBox<String> ();
+	protected JCheckBox					wgtsCB		= new JCheckBox ("Draw arc weights");
+	protected JCheckBox					relaxCB		= new JCheckBox ("Relax graphs");
+	protected JCheckBox					gridaCB		= new JCheckBox ("Draw grid artifacts");
 	
-	protected Component2D 			firstCO 		= new Component2D ();
-	protected Component2D 			secondCO 	= new Component2D ();
-	protected Component2D 			gridCO 		= new Component2D ();
+	protected Component2D 				firstCO 	= new Component2D ();
+	protected Component2D 				secondCO 	= new Component2D ();
+	protected Component2D 				gridCO 		= new Component2D ();
 
 	// Interface widgets
-	protected Graph2D				mfst;
-	protected HTopol2D				msnd;
+	protected Graph2D					mfst;
+	protected HTopol2D					msnd;
 	protected Grid2D					mgrid;
 	
-	private boolean					relaxing;
+	private boolean						relaxing;
 	private int 						selnode 		= -1;
 
 	public HTopolWindow (String name, HTopolMap map, RobotDesc rdesc)
@@ -70,7 +70,7 @@ public class HTopolWindow extends JFrame implements Runnable
 		gridCO.setBackground (mgrid.getMiddleColor ());
 
 		for (i = 0; i < map.numNodes (); i++)
-			zoneCB.addItem (((GNodeFL) map.getNode (i)).getLabel ());
+			zoneCB.addItem (map.getNode (i).getLabel ());
 
 		updateRoot ();
 		updateZone (0);

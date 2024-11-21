@@ -19,28 +19,28 @@ import devices.pos.*;
 
 public class IForkPerception extends IndoorPerception
 {
-	static public final double		RBUF_DIST	= 14.0;		// Max distance for range buffer (m)
-	static public final int			RBUF_HIST	= 10;		// History depth for range buffer
-	static public final int			MAX_MATES	= 10;		// Max number of known robots
+	static public final double				RBUF_DIST	= 14.0;		// Max distance for range buffer (m)
+	static public final int					RBUF_HIST	= 10;		// History depth for range buffer
+	static public final int					MAX_MATES	= 10;		// Max number of known robots
 	
 	// LPS and application LPOs
-	protected LPOIForkData			l_robot;					// Robot internal status
-	protected LPOMate[]				l_mates;					// Other robots data
-	protected LPORangePBug			l_pbug;					// Polar bug algorithm
-	protected LPOLine				l_avoid;					// Obstacle avoidance point
+	protected LPOIForkData					l_robot;					// Robot internal status
+	protected LPOMate[]						l_mates;					// Other robots data
+	protected LPORangePBug					l_pbug;					// Polar bug algorithm
+	protected LPOLine						l_avoid;					// Obstacle avoidance point
 	
 	// Odometry correction EKF
-	protected IForkKLoc				kloc;
-	protected Position				kpos;
-	protected boolean				kfilter;
-	protected Hashtable				agv_runtime;
+	protected IForkKLoc						kloc;
+	protected Position						kpos;
+	protected boolean						kfilter;
+	protected Hashtable<String,Long>		agv_runtime;
 
 	// Constructors
 	public IForkPerception (Properties props, Linda linda)
 	{
 		super (props, linda);
 
-		agv_runtime  = new Hashtable ();
+		agv_runtime  = new Hashtable<String,Long> ();
 	}
 	
 	// Instance methods
@@ -141,7 +141,7 @@ public class IForkPerception extends IndoorPerception
 	public synchronized void notify_coord (String space, ItemCoordination coord)
 	{
 		if(agv_runtime.contains(space)){
-			if((System.currentTimeMillis() - ((Long)agv_runtime.get(space)).longValue())<20000){
+			if((System.currentTimeMillis() - (agv_runtime.get(space)).longValue())<20000){
 				//System.out.println("  [IForkPerception]: notify_coord Recibido coord de "+space+" estando borrado.");
 				return;
 			}else{
@@ -224,7 +224,7 @@ public class IForkPerception extends IndoorPerception
 		else if(item.cmd==ItemDelRobot.DELETE){
 //			System.out.println("  [IForkPerception] Recibido tuple delrobot yo="+robotid+" el otro="+item+" space="+space);
 			
-			agv_runtime.put(item.robotid,new Long(System.currentTimeMillis()));
+			agv_runtime.put(item.robotid, Long.valueOf (System.currentTimeMillis()));
 			
 			if(robotid.equalsIgnoreCase(item.robotid)){
 				

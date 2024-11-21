@@ -12,8 +12,8 @@ import tc.shared.linda.*;
 
 import tclib.behaviours.bg.*;
 import tclib.navigation.mapbuilding.*;
+import tclib.navigation.mapbuilding.gui.*;
 import tclib.navigation.pathplanning.*;
-
 import tcrob.umu.indoor.linda.*;
 
 import devices.pos.*;
@@ -37,6 +37,8 @@ public class IasfController extends BGController
 	// Relevant objects (LPOs)
 	protected Position					robot;
 	protected Position					goal;
+	
+	protected GridWindow				win;
 	
 	// Constructors
 	public IasfController (Properties props, Linda linda) 
@@ -179,6 +181,9 @@ public class IasfController extends BGController
 			else
 				c_dump.write (c_buffer);
 		}
+		
+		if (win != null) 	win.updateGrid (gpath, pos);
+
 	}
 
 	public void notify_config (String space, ItemConfig item)
@@ -193,14 +198,17 @@ public class IasfController extends BGController
 		h 	= (int) Math.round (WORLD_SIZE / CELL_SIZE) + 4;
 		dil = (int) (Math.round (rdesc.RADIUS * DEF_DIL / CELL_SIZE));
 
-		grid 	= new FGrid (fdesc, rdesc, w, h, CELL_SIZE);		
+		grid = new FGrid (fdesc, rdesc, w, h, CELL_SIZE);		
 		grid.setMode (FGrid.SAFE_MOTION);
 		grid.setRangeSON (1.5);
 		grid.setOffsets (-WORLD_SIZE * 0.5, -WORLD_SIZE * 0.5);	
 		
-		gpath	= new FGridPathA (grid);
+		gpath = new FGridPathA (grid);
 		gpath.setDilation (dil);
 		gpath.setTimeStep (300);
+		
+		if (localgfx) 
+			win = new GridWindow (space, grid, rdesc);
 	}
 
 	public void notify_goal (String space, ItemGoal goal)

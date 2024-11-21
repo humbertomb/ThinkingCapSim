@@ -20,23 +20,23 @@ import wucore.utils.geom.Point2;
 
 public class IForkNavigation extends IndoorNavigation
 {	
-	protected String				my_id;
-	protected Hashtable				agvinfo;
+	protected String						my_id;
+	protected Hashtable<String,Position>	agvinfo;
 
-	protected ItemIForkZone			zitem;	
-	protected Tuple					ztuple;
+	protected ItemIForkZone					zitem;	
+	protected Tuple							ztuple;
 
-	protected HTopolMap				topol;							// Hierarchical Topological Map
-	protected HTopolWindow			win;
-	protected String				czone;							// Current working zone
-	protected String				lzone;							// Previous working zone
+	protected HTopolMap						topol;							// Hierarchical Topological Map
+	protected HTopolWindow					win;
+	protected String						czone;							// Current working zone
+	protected String						lzone;							// Previous working zone
 	
-	protected Position				g_pos;							// Current goal position
-	protected int					g_mode;
-	protected int					g_src;
-	protected Point2				iconMax;
-	protected Point2				iconMin;
-	protected Hashtable				agv_runtime;
+	protected Position						g_pos;							// Current goal position
+	protected int							g_mode;
+	protected int							g_src;
+	protected Point2						iconMax;
+	protected Point2						iconMin;
+	protected Hashtable<String,Long>		agv_runtime;
 
 	// Constructors
 	public IForkNavigation (Properties props, Linda linda)
@@ -44,13 +44,13 @@ public class IForkNavigation extends IndoorNavigation
 		super (props, linda);
 		
 		my_id 		= props.getProperty ("ROBNAME");
-		agvinfo		= new Hashtable ();
+		agvinfo		= new Hashtable<String,Position> ();
 		g_pos		= new Position ();
 		
 		// Linda data
 		zitem 	= new ItemIForkZone ();
 		ztuple 	= new Tuple (IForkTuple.ZONE, zitem); 
-		agv_runtime  = new Hashtable ();
+		agv_runtime  = new Hashtable<String,Long> ();
 	}
 		
 	// Instance methods
@@ -171,7 +171,7 @@ public class IForkNavigation extends IndoorNavigation
 		else if(item.cmd==ItemDelRobot.DELETE){
 			//System.out.println("  [IForkNavigation] Recibido tuple delrobot "+item+" space="+space+" my_id="+my_id);
 			
-			agv_runtime.put(item.robotid,new Long(System.currentTimeMillis()));
+			agv_runtime.put(item.robotid, Long.valueOf (System.currentTimeMillis()));
 			
 			if(my_id.equalsIgnoreCase(item.robotid)){
 				System.out.println("  [IForkNavigation] Stop robot "+my_id);
