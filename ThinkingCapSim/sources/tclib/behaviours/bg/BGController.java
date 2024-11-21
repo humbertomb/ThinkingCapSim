@@ -98,7 +98,7 @@ public class BGController extends Controller
 		String			name = null;
 		
 		// Load and parse a BG program
-		name		= props.getProperty ("CONPRG");
+		name = props.getProperty ("CONPRG");
 		if (name != null)
 		{
 			BGParser.parse (name, false);

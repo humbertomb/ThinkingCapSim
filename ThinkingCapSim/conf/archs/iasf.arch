@@ -1,0 +1,117 @@
+#---------------------------------------------------------------------
+# Nov 2024		Humberto Martinez Barbera
+#
+# Arquitectura base para las prácticas de IA para Sistemas Físicos
+# Máster de IA
+# Facultad de Informática
+#
+# Robot: Pioneer3 AT
+# Entorno: Navegacion
+#
+
+#*********************************************************************
+#*****                                                           *****
+#*****            MULTIPLE ROBOTS INTERCONNECTION PART           *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Global Linda shared server (UDP mode)
+#---------------------------------------------------------------------
+GLINADDR	= localhost
+GLINPORT	= 5500
+GLINCREATE	= false
+
+#*********************************************************************
+#*****                                                           *****
+#*****                    SINGLE ROBOT PART                      *****
+#*****                                                           *****
+#*********************************************************************
+
+LLINADDR	= localhost
+LLINPORT	= 3000
+LLINCREATE	= true
+
+#---------------------------------------------------------------------
+# Active modules and TC-II execution parameters
+#---------------------------------------------------------------------
+MODULES		= NAV, CON, PLA, PER
+VROBOT		= ROB
+ROUTER		= COO
+
+#---------------------------------------------------------------------
+# Router section 
+#---------------------------------------------------------------------
+COOINFO		= Linda Router
+COOMODE		= shared
+COOCLASS	= tc.coord.LindaRouter
+COOGMODE	= udp
+COOGPORT	= 20029
+COOGFX		= true
+
+#---------------------------------------------------------------------
+# Navigation section 
+#---------------------------------------------------------------------
+NAVINFO		= Navigation
+NAVMODE		= shared
+NAVCLASS	= tcrob.umu.indoor.IndoorNavigation
+NAVPASSIVE	= true
+NAVQUEUED	= false
+NAVPOLLED	= false
+NAVGFX		= true
+NAVCONNECT	= 	LPS			tc.shared.linda.ItemLPS 		notify_lps, \
+				GOAL 		tc.shared.linda.ItemGoal 		notify_goal
+
+#---------------------------------------------------------------------
+# Planner section 
+#---------------------------------------------------------------------
+PLAINFO		= Planner
+PLAMODE		= shared
+PLACLASS	= tclib.planning.sequence.SeqPlanner
+PLAPASSIVE	= false
+PLAQUEUED	= false
+PLAPOLLED	= true
+PLAEXTIME	= 1000
+PLAGFX		= true
+PLACONNECT	= 	PLAN 		tc.shared.linda.ItemPlan 		notify_plan, \
+				BEHRESULT 	tc.shared.linda.ItemBehResult 	notify_beh_result
+
+#---------------------------------------------------------------------
+# Perception section 
+#---------------------------------------------------------------------
+PERINFO		= Perception
+PERMODE		= shared
+PERCLASS	= tcrob.umu.indoor.IndoorPerception
+PERPASSIVE	= true
+PERGFX		= true
+PERCONNECT	= 	DATA 		tc.shared.linda.ItemData 		notify_data, \
+				OBJECT 		tc.shared.linda.ItemObject 		notify_object, \
+				NAVIGATION	tc.shared.linda.ItemNavigation	notify_navigation
+
+#---------------------------------------------------------------------
+# Controller section 
+#---------------------------------------------------------------------
+CONINFO		= Controller
+CONMODE		= shared
+CONCLASS	= tcrob.iasf.IasfController
+CONPASSIVE	= true
+CONGFX		= true
+CONPRG		= conf/programs/iasf.b
+CONCONNECT	= 	LPS			tc.shared.linda.ItemLPS 		notify_lps, \
+				GOAL 		tc.shared.linda.ItemGoal 		notify_goal, \
+				PATH 		tc.shared.linda.ItemPath 		notify_path
+
+#---------------------------------------------------------------------
+# Virtual robot section 
+#---------------------------------------------------------------------
+ROBINFO		= Virtual Robot
+ROBMODE		= shared
+ROBCLASS	= tcrob.umu.pioneer3.Pioneer3
+ROBEXTIME	= 100
+ROBPASSIVE	= false
+ROBDESC		= conf/robots/pioneer3.robot
+ROBWORLD	= conf/maps/um_diic_small.world
+ROBGFX		= true
+ROBAPW		= true
+ROBCONNECT	= 	MOTION		tc.shared.linda.ItemMotion 		notify_motion, \
+				DATACTRL 	tc.shared.linda.ItemDataCtrl 	notify_data_ctrl
