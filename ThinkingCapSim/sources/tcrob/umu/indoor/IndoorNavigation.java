@@ -11,6 +11,7 @@ import tc.modules.*;
 
 import tclib.navigation.localisation.*;
 import tclib.navigation.mapbuilding.*;
+import tclib.navigation.mapbuilding.gui.GridWindow;
 import tclib.navigation.mapbuilding.lpo.*;
 import tclib.navigation.pathplanning.*;
 
@@ -21,8 +22,8 @@ import devices.pos.*;
 public class IndoorNavigation extends Navigation
 {
 	static public final int			MAX_PATH		= 15000;				
-	static public final double		DEF_CELL		= 0.075;		// Default cell size (m)			
-	static public final double		DEF_DIL		= 0.75;		// Default dilation constant				
+	static public final double		DEF_CELL		= 0.075;	// Default cell size (m)			
+	static public final double		DEF_DIL			= 0.75;		// Default dilation constant				
 
 	// Navigation structures
 	protected Grid					grid;
@@ -36,27 +37,29 @@ public class IndoorNavigation extends Navigation
 	
 	// Linda data structures
 	protected Tuple					ntuple;
-	protected ItemNavigation			nitem;
+	protected ItemNavigation		nitem;
 
 	protected Tuple					ptuple;
 	protected ItemPath				pitem;
 
 	protected Tuple					gmtuple;
-	protected ItemGridMap				gmitem;
+	protected ItemGridMap			gmitem;
 
 	protected Tuple					fmtuple;
-	protected ItemFSegMap				fmitem;
+	protected ItemFSegMap			fmitem;
 
 	// Additional local variables
 	protected boolean				initialised		= false;
-	protected double					cell_size;
-	protected double					dilation;
+	protected double				cell_size;
+	protected double				dilation;
 	
 	// Algorithm execution control
 	protected boolean				allow_fmap		= true;
 	protected boolean				allow_gmap		= true;
 	protected boolean				allow_path		= true;
-	
+
+	protected GridWindow			win;
+
 	// Constructors
 	public IndoorNavigation (Properties props, Linda linda)
 	{
@@ -189,6 +192,13 @@ public class IndoorNavigation extends Navigation
 
 		    gpath.replan (pos);
 
+//			gpath.goal (goal);
+//			gpath.curve (GridPath.POLYLINE, GridPath.GRID);
+//			gpath.replan (robot);
+//			while (!gpath.newPath ())
+//				gpath.replan (robot);
+//			path = gpath.path ();
+
 			if (debug)			System.out.println ("  [Nav] End Replanning. newpath=" + gpath.newPath ());
 		}
 
@@ -198,6 +208,9 @@ public class IndoorNavigation extends Navigation
 
 		fmitem.set (fmap, paths, pos, System.currentTimeMillis ());
 		linda.write (fmtuple);
+		
+		
+		if (win != null) 	win.updateGrid (gpath, pos);
 	}
 
 	public void notify_goal (String space, ItemGoal item)
@@ -240,6 +253,9 @@ public class IndoorNavigation extends Navigation
 
 		time_upd	= 0;
 		initialised = true;
+		
+		if (localgfx) 
+			win = new GridWindow (space, grid, rdesc);
 	}
 }
 

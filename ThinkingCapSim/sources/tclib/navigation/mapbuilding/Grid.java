@@ -49,8 +49,8 @@ public abstract class Grid extends Object implements MapBuilding
 	protected int					data_n;							// Number of raw points
 	protected Line2[]				lines;							// Lines obtained by the algorithm
 	protected int					lines_n;						// Number of extracted lines
-	protected Hashtable				tempChanges;
-	
+
+	protected Hashtable<String,LinkedList<double[]>>	tempChanges;	
 	
 	// Constructors
 	public Grid (FusionDesc fdesc, RobotDesc rdesc, int nx, int ny, double h)
@@ -70,7 +70,7 @@ public abstract class Grid extends Object implements MapBuilding
 		occupied 	= new double[size_x][size_y];
 		obstacles	= new boolean[size_x][size_y];
 		
-		tempChanges = new Hashtable();
+		tempChanges = new Hashtable<String,LinkedList<double[]>>();
 		// Subclasses may redefine this for its own purposes
 		data		= null;
 		data_n		= 0;
@@ -278,13 +278,12 @@ public abstract class Grid extends Object implements MapBuilding
 	
 	public void fromWorld (World world, String zone)
 	{
-		int i;
-		Line2[] edges;
-		LinkedList zoneedges;
+		Line2[]				edges;
+		LinkedList<Line2>	zoneedges;
 		
 		edges = world.getLines();
-		zoneedges = new LinkedList ();
-		for (i=0; i < edges.length; i++)
+		zoneedges = new LinkedList<Line2> ();
+		for (int i=0; i < edges.length; i++)
 		{
 			if (zone.equals (world.zones ().inZone(edges[i].orig().x(), edges[i].orig().y())) 
 				|| zone.equals (world.zones ().inZone(edges[i].dest().x(), edges[i].dest().y())))
@@ -370,7 +369,7 @@ public abstract class Grid extends Object implements MapBuilding
 				new Line2(pt[2].x(), pt[2].y(), pt[3].x(), pt[3].y()),
 				new Line2(pt[3].x(), pt[3].y(), pt[0].x(), pt[0].y()) };
 		
-		LinkedList changes = new LinkedList();
+		LinkedList<double[]> changes = new LinkedList<double[]>();
 				
 		minx = ctog_x( Math.min(
 		        Math.min(pt[0].x(), pt[1].x()), 
@@ -385,8 +384,6 @@ public abstract class Grid extends Object implements MapBuilding
 		maxy = ctog_y( Math.max(
                 Math.max(pt[0].y(), pt[1].y()), 
                 Math.max(pt[2].y(), pt[3].y())  ));
-		
-		int cont = 0;
 		
 		restartChanges(robot);
 		for (i = minx; i <= maxx; i++) {
@@ -404,17 +401,13 @@ public abstract class Grid extends Object implements MapBuilding
 		                changes.add(change);
 		                
 		                set_occupied(i, j);
-		                cont++;
 		                break;
 		            }     
-		        }
-		        
+		        }	        
 		    }
 		}
 		
-		tempChanges.put(robot,changes);
-		
-		    
+		tempChanges.put(robot,changes);	    
 	}
 		
 	/*

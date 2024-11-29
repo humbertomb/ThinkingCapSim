@@ -5,7 +5,6 @@
 package tclib.navigation.pathplanning;
 
 import tclib.navigation.mapbuilding.*;
-import tclib.navigation.pathplanning.PathFinder;
 
 import devices.pos.*;
 import wucore.utils.math.*;
@@ -559,8 +558,8 @@ public abstract class GridPath extends Object
 			
 			pfinder_path = pfinder.getPath();
 			
-			double pathlenth = pfinder.getLength();
-			double pathlenth_aux = ((double)((int)(1000.0*pathlenth)))/1000.0;
+//			double pathlenth = pfinder.getLength();
+//			double pathlenth_aux = ((double)((int)(1000.0*pathlenth)))/1000.0;
 			
 			//System.out.println ("Path Length: " +  pathlenth_aux + " metres");
 			

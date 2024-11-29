@@ -36,6 +36,7 @@ public class BGController extends Controller
 	private double[]				b_buffer;
 	
 	// Goal and task related variables
+	protected boolean				has_goal;					// Is any goal available?
 	protected boolean				new_goal;					// New goal received
 	protected long					new_id;						// New task ID received
 	protected Task					new_plan;					// New task received
@@ -66,12 +67,13 @@ public class BGController extends Controller
 		pos			= new Position ();
 		plan		= new Task ();
 		
+		has_goal	= false;
 		new_plan	= new Task ();
 		new_goal	= false;
 		new_id		= 0;
 		
 		idtask		= 0;
-		looka_pts	= 4;
+		looka_pts	= 15;
 
 		// Create the BG interpreter
 		interp	= new Interpreter ();	
@@ -91,6 +93,8 @@ public class BGController extends Controller
 		
 		// Parse BG file
 		parse (props);
+		
+//		debug = true;
 	}
 	
 	protected void parse (Properties props)
@@ -104,12 +108,12 @@ public class BGController extends Controller
 			BGParser.parse (name, false);
 			if (BGParser.isparsed ())
 			{
-				// Initialise BG interpreter
+				// Initialize BG interpreter
 				program	= BGParser.program ();
 				interp.initialize (program);
 				
-				// Create additional percept strutures
-				b_buffer	= new double[program.behcount ()];
+				// Create additional perceptual structures
+				b_buffer = new double[program.behcount ()];
 			}
 		}
 	}
@@ -123,7 +127,7 @@ public class BGController extends Controller
 		dx		= plan.tpos.x () - pos.x ();
 		dy		= plan.tpos.y () - pos.y ();
 		dist	= Math.sqrt (dx * dx + dy * dy);										// [m]
-		delta	= Math.abs (Angles.radnorm_180 (plan.tpos.alpha () - pos.alpha ()));		// [rad]	
+		delta	= Math.abs (Angles.radnorm_180 (plan.tpos.alpha () - pos.alpha ()));	// [rad]	
 
 		if ((dist < plan.tol_pos) && (delta < plan.tol_head))		
 			return ItemBehResult.T_FINISHED;
@@ -133,13 +137,22 @@ public class BGController extends Controller
 	
 	protected void controller () 
 	{
-		int					i;
 		int					result;
 		LPOSensorRange		virtual;
 		LPOSensorGroup		group;
 		LPO					l_looka;
 		double				speed, turn;
 
+		if (!has_goal)
+		{
+			setMotion (0.0, 0.0);
+			return;
+		}
+		
+		/* ---------- */
+		/* LOOK-AHEAD */
+		/* ---------- */
+		
 		// Compute look-ahead point
 		pos.set (lps.cur);
 		looka.set (pos);
@@ -149,27 +162,31 @@ public class BGController extends Controller
 			path.check_lookahead (pos, looka_pts);
 			if (path.lookahead () != null)
 			{
-				path_dst	= path.distance ();
+				path_dst = path.distance ();
 				looka.set (path.lookahead ());
 				looka.valid (true);
 			}
 		}
 
 		// Update LPS
-		l_looka		= lps.find ("Looka");
+		l_looka = lps.find ("Looka");
 		if (l_looka != null)
 		{
 			l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (), pos.alpha ());
 			l_looka.active (looka.valid ());
 		}
 
+		/* ----------- */
+		/* INTERPRETER */
+		/* ----------- */
+				
 		// Put perception percept into BG interpreter
 		virtual	= (LPOSensorRange) lps.find ("Virtual");
-		for (i = 0; i < fdesc.MAXVIRTU; i++)
+		for (int i = 0; i < fdesc.MAXVIRTU; i++)
 			interp.access ("virtu"+i, virtual.range[i]);
 
-		group	= (LPOSensorGroup) lps.find ("Group");
-		for (i = 0; i < fdesc.MAXGROUP; i++)
+		group = (LPOSensorGroup) lps.find ("Group");
+		for (int i = 0; i < fdesc.MAXGROUP; i++)
 			interp.access ("group"+i, group.range[i]);
 		
 		interp.access ("x", pos.x ());
@@ -231,7 +248,7 @@ public class BGController extends Controller
 	{
 		if (idtask != new_id)
 		{
-			idtask		= new_id;
+			idtask = new_id;
 			plan.set (new_plan);
 				
 			if (debug)		System.out.println ("  [BG] Working with task [" + plan + "] and ID: " + idtask);
@@ -241,7 +258,7 @@ public class BGController extends Controller
 	protected void newplan (ItemGoal goal)
 	{
 		new_plan.set (goal.task);		
-		new_id		= goal.timestamp.longValue ();
+		new_id = goal.timestamp.longValue ();
 	}
 	
 	public void step (long ctime) 
@@ -267,7 +284,7 @@ public class BGController extends Controller
 				
 				if (localgfx)
 					b_plot.draw (b_buffer);	
-				else if (!localgfx)
+				else
 					b_dump.write (b_buffer);
 			}
 		}
@@ -312,7 +329,7 @@ public class BGController extends Controller
 		LPOPoint			l_goal;
 	
 		// Update LPS
-		l_goal		= (LPOPoint) lps.find ("Goal");
+		l_goal = (LPOPoint) lps.find ("Goal");
 		if (l_goal != null)
 		{
 			l_goal.update (pos, goal.task.tpos);
@@ -322,6 +339,7 @@ public class BGController extends Controller
 		newplan (goal);
 		
 		new_goal	= true;
+		has_goal	= true;
 	}
 
 	public void notify_path (String space, ItemPath item)
