@@ -21,7 +21,7 @@ public class LindaNetClient implements Linda, LindaNetProcessor
 	protected Integer				lock;
 	protected boolean				answered;
 	
-	protected String					sourceid;				// Source identification for outgoing messages
+	protected String				sourceid;				// Source identification for outgoing messages
 	
 	// Constructors
 	public LindaNetClient (int mode, String sourceid, String addr, int port)
@@ -32,7 +32,7 @@ public class LindaNetClient implements Linda, LindaNetProcessor
 		
 		// Set up local variables
 		listeners 	= new Hashtable (MAX_KEYS);
-		lock			= new Integer (0);
+		lock			= Integer.valueOf (0);
 		answered		= false;
 
 		// Resolve server address 

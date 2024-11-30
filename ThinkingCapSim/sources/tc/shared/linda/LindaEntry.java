@@ -17,13 +17,13 @@ import java.util.*;
 public class LindaEntry
 {
 	// Linda space data
-	protected Tuple						tuple;
-	protected Vector					listeners;
+	protected Tuple							tuple;
+	protected Vector<LindaEntryRegistry>	listeners;
 	
 	// Administrative and accounting data
-	protected int						rio;			// Read operations
-	protected int						wio;			// Write operations
-	protected int						eio;			// Event notifications
+	protected int							rio;			// Read operations
+	protected int							wio;			// Write operations
+	protected int							eio;			// Event notifications
 	
 	// Constructors
 	public LindaEntry (String space, String key)
@@ -33,7 +33,7 @@ public class LindaEntry
 		eio			= 0;
 		
 		tuple		= new Tuple (space, key, null);
-		listeners	= new Vector ();
+		listeners	= new Vector<LindaEntryRegistry> ();
 	}
 	
 	// Accessors

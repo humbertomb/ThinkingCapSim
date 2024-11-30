@@ -36,7 +36,7 @@ public class LindaSpace {
 	/**
 	 *  Description of the Field
 	 */
-	protected Hashtable content_config;
+	protected Hashtable<String, LindaEntry> content_config;
 
 	protected Hashtable	ifork_connection;
 
@@ -49,7 +49,7 @@ public class LindaSpace {
 	 */
 	public LindaSpace() {
 		content = new Hashtable(MAX_KEYS);
-		content_config = new Hashtable(MAX_CONFIG);
+		content_config = new Hashtable<String, LindaEntry>(MAX_CONFIG);
 		ifork_connection = new Hashtable();
 	}
 
@@ -67,10 +67,10 @@ public class LindaSpace {
 		LindaEntry  record_any;
 		Hashtable   hs;
 		Vector v_ler;
-		Vector v_misler;
+		Vector<LindaEntryRegistry> v_misler;
 		LindaEntryRegistry ler;
 		
-		v_misler=new Vector();
+		v_misler=new Vector<LindaEntryRegistry>();
 //		if(tuple.key.equals("SYNC") && !tuple.space.equals(LindaEntryFilter.ANY)){
 //			System.out.println("  [LindaSpace] tupla SYNC space="+tuple.space+" value="+tuple.value+" connection="+connection);
 //		}

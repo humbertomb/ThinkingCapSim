@@ -62,7 +62,7 @@ public class BGController extends Controller
 	{		
 		super.initialise (props);
 		
-		// Initialise local structures
+		// Initialize local structures
 		looka		= new Position ();
 		pos			= new Position ();
 		plan		= new Task ();
@@ -78,7 +78,7 @@ public class BGController extends Controller
 		// Create the BG interpreter
 		interp	= new Interpreter ();	
 		
-		// Initialise debug modules
+		// Initialize debug modules
 		c_buffer	= new double[2];
 		c_labels	= new String[4];
 		c_labels[0]	= "speed";
@@ -94,7 +94,8 @@ public class BGController extends Controller
 		// Parse BG file
 		parse (props);
 		
-//		debug = true;
+		debug = true;
+		localgfx = true;
 	}
 	
 	protected void parse (Properties props)
@@ -180,7 +181,7 @@ public class BGController extends Controller
 		/* INTERPRETER */
 		/* ----------- */
 				
-		// Put perception percept into BG interpreter
+		// Put perception percepts into BG interpreter
 		virtual	= (LPOSensorRange) lps.find ("Virtual");
 		for (int i = 0; i < fdesc.MAXVIRTU; i++)
 			interp.access ("virtu"+i, virtual.range[i]);
@@ -273,7 +274,7 @@ public class BGController extends Controller
 		// Run BG program
 		controller ();
 
-		// Update behaviour fusion information 
+		// Update behavior fusion information 
 		if (debug)
 		{
 			System.out.println ("  [BG] Control cycle: " + (System.currentTimeMillis () - ctime) + " ms");

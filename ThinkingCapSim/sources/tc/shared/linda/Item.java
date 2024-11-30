@@ -1,6 +1,6 @@
 /* 
 	Title:			Thinking Cap 
-	Author:			Humberto Martinez Barbera, Juan Pedro Canovas Qui–onero
+	Author:			Humberto Martinez Barbera, Juan Pedro Canovas Quiï¿½onero
 	Description:	BGA Architecture Support.
 */
 
@@ -21,6 +21,6 @@ public class Item extends Object implements Serializable
 	// Initialisers
 	public void set (long timestamp)
 	{
-		this.timestamp = new Long (timestamp);
+		this.timestamp = Long.valueOf (timestamp);
 	}
 }
