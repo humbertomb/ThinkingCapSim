@@ -20,16 +20,16 @@ import wucore.utils.geom.*;
 public class SimRobot extends VirtualRobot
 {
 	// Robot status internal data
-	protected double					speed;					// Current motion control commands
-	protected double					turn;
+	protected double				speed;					// Current motion control commands
+	protected double				turn;
 	
 	// Simulation parameters
 	protected Simulator				simul;
-	protected RobotModel				model;
+	protected RobotModel			model;
 	protected long					tgfx;					// Time of graphics update
 	
 	// Other local stuff
-	protected String					r_id;
+	protected String				r_id;
 	protected int					r_index;
 	protected World					map;
 	protected SimulatorDesc			sdesc;
@@ -45,7 +45,7 @@ public class SimRobot extends VirtualRobot
 	
 	/* Accessor methods */
 	public final int 			sonar_mode ()	 		{ return sdesc.MODESON; }
-	public final void 			sonar_mode (int mod)		{ sdesc.MODESON = mod; }
+	public final void 			sonar_mode (int mod)	{ sdesc.MODESON = mod; }
 	public final int 			ir_mode ()	 			{ return sdesc.MODEIR; }
 	public final void 			ir_mode (int mod)		{ sdesc.MODEIR = mod; }
 	public final int 			lsb_mode ()	 			{ return sdesc.MODELSB; }
@@ -75,8 +75,8 @@ public class SimRobot extends VirtualRobot
 	public void reset ()
 	{
 		// Initialise default motion commands		
-		turn			= 0.0;
-		speed		= 0.0;
+		turn	= 0.0;
+		speed	= 0.0;
 		
 		simul.reset (r_index, data, map);
 	}
@@ -93,7 +93,7 @@ public class SimRobot extends VirtualRobot
 		double		dt;
 		
 		// Update simulated delta time
-		dt		= ((double) dtime) / 1000.0;
+		dt = ((double) dtime) / 1000.0;
 		if (dt > (rdesc.DTIME / 1000.0))		
 			dt = rdesc.DTIME / 1000.0;							// Non real-time simulation
 
@@ -117,10 +117,6 @@ public class SimRobot extends VirtualRobot
 	public void notify_debug (String space, ItemDebug item)
 	{
 		super.notify_debug (space, item);
-		
-		// Create robot motion-command window (if debug mode selected)
-		if (debug)
-			open_plot ();
 	}	  
 	
 	public void notify_motion (String space, ItemMotion item)

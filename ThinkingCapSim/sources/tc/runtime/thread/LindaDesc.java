@@ -37,10 +37,10 @@ public class LindaDesc extends Object
 		this.mode		= mode;
 		
 		// Parse properties to set instance variables
-		classn		= props.getProperty (preffix + "CLASS");										if (classn == null)		{ classn	= "tc.shared.linda.LindaServer"; }
+		classn			= props.getProperty (preffix + "CLASS");										if (classn == null)		{ classn	= "tc.shared.linda.LindaServer"; }
 		addr			= props.getProperty (preffix + "ADDR");											if (addr == null)		{ addr		= "localhost"; }
-		try { port	 = new Integer (props.getProperty (preffix + "PORT")).intValue (); } 			catch (Exception e) 	{ port		= 7000; }
-		try { create	= new Boolean (props.getProperty (preffix + "CREATE")).booleanValue (); } 		catch (Exception e) 	{ create	= false; }
+		try { port	 	= Integer.valueOf (props.getProperty (preffix + "PORT")).intValue (); } 			catch (Exception e) 	{ port		= 7000; }
+		try { create	=  Boolean.valueOf (props.getProperty (preffix + "CREATE")).booleanValue (); } 		catch (Exception e) 	{ create	= false; }
 
 		// If creating the Linda space, override the IP address
 		if (create)

@@ -32,17 +32,17 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	static protected final String[]	labels		= {"speed", "turn"};
 	
 	protected RobotDesc				rdesc;				// Robot description
-	protected PlotWindow				plot;				// Window to plot current motion command
+	protected PlotWindow			plot;				// Window to plot current motion command
 
 	// Parameters for robot connection and environment settings
-	protected String					raddress;			// Remote robot address (VR to robot driver)
+	protected String				raddress;			// Remote robot address (VR to robot driver)
 	protected int					rport;				// Remote robot port (VR to robot driver)
 	protected int					lport;				// Local robot port (VR to robot driver)
-	protected Properties				rprops;				// Contents of robot description file
-	protected String					wname;				// Description of robot environment
-	protected Properties				wprops;				// Contents of world description file
-	protected String					tname;				// Description of topologic map
-	protected Properties				tprops;				// Contents of topologic description file
+	protected Properties			rprops;				// Contents of robot description file
+	protected String				wname;				// Description of robot environment
+	protected Properties			wprops;				// Contents of world description file
+	protected String				tname;				// Description of topologic map
+	protected Properties			tprops;				// Contents of topologic description file
 	
 	// Time calculation and correction
 	protected long					ltime;				// Previous time mark (ms)
@@ -59,11 +59,11 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected ItemData				sdata;
 	protected RobotData				data;
 	protected Tuple					tobj;
-	protected ItemObject				sobj;
+	protected ItemObject			sobj;
 	protected VisionData[]			odata;
 	protected RobotDataCtrl			data_ctrl;
 
-	private double[]					buffer;				// Buffer to store curve points
+	private double[]				buffer;				// Buffer to store curve points
 
 	// Constructors
 	public VirtualRobot (Properties props, Linda linda)
@@ -83,12 +83,12 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		// Load robot environment description and parameters
 		rname			= props.getProperty ("ROBDESC");
 		rcname			= props.getProperty ("ROBCUST");
-		raddress			= props.getProperty ("ROBRADDR");
-		try { rport 		= new Integer (props.getProperty ("ROBRPORT")).intValue (); } 	catch (Exception e) 		{ rport		= 0; }
-		try { lport 		= new Integer (props.getProperty ("ROBLPORT")).intValue (); } 	catch (Exception e) 		{ lport		= 0; }
+		raddress		= props.getProperty ("ROBRADDR");
+		try { rport 	= Integer.valueOf (props.getProperty ("ROBRPORT")).intValue (); } 	catch (Exception e) 		{ rport		= 0; }
+		try { lport 	= Integer.valueOf (props.getProperty ("ROBLPORT")).intValue (); } 	catch (Exception e) 		{ lport		= 0; }
 		wname			= props.getProperty ("ROBWORLD");
 		tname			= props.getProperty ("ROBTOPOL");
-		try { wapriori	= new Boolean (props.getProperty ("ROBAPW")).booleanValue (); } catch (Exception e) 		{ wapriori	= false; }
+		try { wapriori	= Boolean.valueOf (props.getProperty ("ROBAPW")).booleanValue (); } catch (Exception e) 		{ wapriori	= false; }
 		
 		// Load robot description and parameters
 		rprops			= new Properties ();
@@ -219,7 +219,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	public void childClosed (Object window)
 	{
 		if (window instanceof PlotWindow)
-			plot		= null;
+			plot = null;
 	}
 	
 	public final void step (long ctime) 
@@ -269,7 +269,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		turn		= item.turn;
 		
 		// Plot current motion command
-		if (debug && (plot != null))
+		if (plot != null)
 		{
 			buffer[0] 	= Math.max (Math.min (speed, 1.0), -1.0);
 			buffer[1] 	= Math.max (Math.min (turn / rdesc.model.Rmax, 1.0), -1.0);

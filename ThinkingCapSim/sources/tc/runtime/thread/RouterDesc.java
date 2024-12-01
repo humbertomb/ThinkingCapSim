@@ -68,7 +68,7 @@ public class RouterDesc extends ThreadDesc
 		String			sport = "", lport = "";
 		
 		if (port != 0)
-			lport = ":" + new Integer (port).toString ();
+			lport = ":" + Integer.valueOf (port).toString ();
 		
 		str		= "<LOCAL=";
 		
@@ -81,7 +81,7 @@ public class RouterDesc extends ThreadDesc
 		}
 
 		if (gport != 0)
-			sport = ":" + new Integer (gport).toString ();
+			sport = ":" + Integer.valueOf (gport).toString ();
 		
 		str		+= ",GLOBAL=";
 

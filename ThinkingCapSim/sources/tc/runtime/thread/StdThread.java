@@ -12,31 +12,31 @@ import tc.shared.linda.*;
 public abstract class StdThread implements Runnable, LindaListener
 {
 	// General constants
-	static public final int		MAX_EVTS		= 100;		// Maximum number of events (for registration)
+	static public final int		MAX_EVTS	= 100;		// Maximum number of events (for registration)
 	
 	// Execution status
-	static public final int		INIT			= 0;			// Initialisation phase
-	static public final int		CONFIG		= 1;			// Configuration phase
-	static public final int		RUN			= 2;			// Execution phase
+	static public final int		INIT		= 0;		// Initialisation phase
+	static public final int		CONFIG		= 1;		// Configuration phase
+	static public final int		RUN			= 2;		// Execution phase
 	
 	// Linda related variables
-	protected Thread				thread;					// Asynchronous execution thread
-	private volatile boolean		thlock		= false;		// Asynchronous thread execution lock
+	protected Thread			thread;					// Asynchronous execution thread
+	private volatile boolean	thlock		= false;	// Asynchronous thread execution lock
 	public ThreadDesc			tdesc;					// Parameters for the current thread
 	protected Linda				linda; 					// Reference to distributed blackboard
-	protected LindaQueue			queue;					// Queue for receiving Linda events
+	protected LindaQueue		queue;					// Queue for receiving Linda events
 	
 	// Linda registration variables
-	protected Hashtable			recvs;					// Description of Linda receivers
+	protected Hashtable<String,EventDesc>	recvs;					// Description of Linda receivers
 	
 	// Debug and control parameters
 	protected int				state;
 	protected int				mode;
 	protected boolean			running		= false;
-	protected boolean			step			= false;
+	protected boolean			step		= false;
 	protected boolean			debug		= false;
-	protected boolean			auto			= true;
-	protected boolean			localgfx		= false;
+	protected boolean			auto		= true;
+	protected boolean			localgfx	= false;
 	
 	private Properties props;
 	
@@ -47,7 +47,7 @@ public abstract class StdThread implements Runnable, LindaListener
 		this.queue	= new LindaQueue ();
 		this.state	= INIT;
 		
-		this.recvs	= new Hashtable (MAX_EVTS);
+		this.recvs	= new Hashtable<String,EventDesc> (MAX_EVTS);
 		
 		this.props	= props;
 //		initialise (props);
@@ -64,16 +64,14 @@ public abstract class StdThread implements Runnable, LindaListener
 		
 		this.tdesc	= tdesc; 
 		
-		initialise (props);
-		
 		// Initialise user-defined event receivers
 		if (tdesc.connects != null)
 		{
-			st			= new StringTokenizer (tdesc.connects, ",");
+			st = new StringTokenizer (tdesc.connects, ",");
 			while (st.hasMoreTokens ())
 			{
-				event		= st.nextToken ();
-				edesc		= new EventDesc (this, linda, event);
+				event	= st.nextToken ();
+				edesc	= new EventDesc (this, linda, event);
 				
 				System.out.println ("\t>> Registering event " + edesc);
 				recvs.put (edesc.key, edesc);
@@ -87,8 +85,10 @@ public abstract class StdThread implements Runnable, LindaListener
 		recvs.put (cdesc.key, cdesc);
 		
 		// Initialise other processing options
-		localgfx		= tdesc.cangfx;
+		localgfx	= tdesc.cangfx;
 		state 		= CONFIG; 
+
+		initialise (props);
 	}
 	
 	public void start ()

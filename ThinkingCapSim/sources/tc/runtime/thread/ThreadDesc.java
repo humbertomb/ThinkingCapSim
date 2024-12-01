@@ -20,7 +20,7 @@ public class ThreadDesc extends Object
 	
 	// Variables to control the processing mode
 	public int					priority;			// Execution priority of the thread
-	public boolean				passive;				// Run in pasive mode (event-activated execution) 
+	public boolean				passive;			// Run in pasive mode (event-activated execution) 
 	public boolean				queued;				// Queue Linda tuples before processing them 
 	public boolean				polled;				// Run in polled mode (polling the Linda space)
 	public long					exectime;			// Activation time for active and polled mode (ms)
@@ -28,15 +28,15 @@ public class ThreadDesc extends Object
 	
 	// Variables to help executing the modules
 	public String				classn;				// Subclass of tc.runtime.thread.StdThread
-	public String				preffix;				// Preffix for denoting the class (and parsing files)
+	public String				preffix;			// Preffix for denoting the class (and parsing files)
 	public String				info;				// Description of module's purpose
 	public String				connects;			// Connection registration parameters
 	public int					mode;				// Linda client execution mode
 	
 	// Runtime data
-	protected int				port		= 0;			// Current local port (for UDP/TCP mode only)
-	public String				robotid;				// Current robot name
-	public StdThread				thread;				// Current execution thread
+	protected int				port		= 0;	// Current local port (for UDP/TCP mode only)
+	public String				robotid;			// Current robot name
+	public StdThread			thread;				// Current execution thread
 	
 	// Constructors
 	public ThreadDesc (String preffix, Properties props)
@@ -67,16 +67,16 @@ public class ThreadDesc extends Object
 		this.preffix	= preffix;
 		
 		// Parse properties to set instance variables
-		classn			= props.getProperty (preffix + "CLASS");									if (classn == null)	{ classn		= "tc.runtime.thread.StdThread"; }
-		info				= props.getProperty (preffix + "INFO");									if (info == null)	{ info		= "No info"; }
-		connects			= props.getProperty (preffix + "CONNECT");		
-		mode				= parse_mode (props.getProperty (preffix + "MODE"));
-		try { passive	= new Boolean (props.getProperty (preffix + "PASSIVE")).booleanValue (); } 	catch (Exception e) 	{ passive	= false; }
-		try { queued		= new Boolean (props.getProperty (preffix + "QUEUED")).booleanValue (); } 	catch (Exception e) 	{ queued		= false; }
-		try { polled		= new Boolean (props.getProperty (preffix + "POLLED")).booleanValue (); } 	catch (Exception e) 	{ polled		= false; }
-		try { exectime 	= new Integer (props.getProperty (preffix + "EXTIME")).longValue (); } 		catch (Exception e) 	{ exectime	= 100; }
-		try { priority 	= new Integer (props.getProperty (preffix + "PRI")).intValue (); } 			catch (Exception e) 	{ priority	= -1; } // Thread.NORM_PRIORITY; }
-		try { cangfx		= new Boolean (props.getProperty (preffix + "GFX")).booleanValue (); } 		catch (Exception e) 	{ cangfx		= false; }
+		classn			= props.getProperty (preffix + "CLASS");									if (classn == null)	{ classn	= "tc.runtime.thread.StdThread"; }
+		info			= props.getProperty (preffix + "INFO");										if (info == null)	{ info		= "No info"; }
+		connects		= props.getProperty (preffix + "CONNECT");		
+		mode			= parse_mode (props.getProperty (preffix + "MODE"));
+		try { passive	= Boolean.valueOf (props.getProperty (preffix + "PASSIVE")).booleanValue (); } 	catch (Exception e) 	{ passive	= false; }
+		try { queued	= Boolean.valueOf (props.getProperty (preffix + "QUEUED")).booleanValue (); } 	catch (Exception e) 	{ queued	= false; }
+		try { polled	= Boolean.valueOf (props.getProperty (preffix + "POLLED")).booleanValue (); } 	catch (Exception e) 	{ polled	= false; }
+		try { exectime 	= Integer.valueOf (props.getProperty (preffix + "EXTIME")).longValue (); } 		catch (Exception e) 	{ exectime	= 100; }
+		try { priority 	= Integer.valueOf (props.getProperty (preffix + "PRI")).intValue (); } 			catch (Exception e) 	{ priority	= -1; } // Thread.NORM_PRIORITY; }
+		try { cangfx	= Boolean.valueOf (props.getProperty (preffix + "GFX")).booleanValue (); } 		catch (Exception e) 	{ cangfx	= false; }
 
 		if (polled)		passive = false;
 	}
@@ -120,7 +120,7 @@ public class ThreadDesc extends Object
 		Class				tclass;
 		Constructor			cons;
 		Class[]				types;
-		Object[]				params;
+		Object[]			params;
 
 		this.robotid	= robotid;
 		
@@ -157,7 +157,7 @@ public class ThreadDesc extends Object
 		String			sport = "";
 		
 		if (port != 0)
-			sport = ":" + new Integer (port).toString ();
+			sport = ":" + Integer.valueOf (port).toString ();
 		
 		str		= "<";
 		
@@ -165,8 +165,8 @@ public class ThreadDesc extends Object
 		{
 		case ThreadDesc.M_UDP:		str += "UDP" + sport;		break;
 		case ThreadDesc.M_TCP:		str += "TCP" + sport;		break;
-		case ThreadDesc.M_SHARED:		str += "SHARED";			break;
-		default:						str += "N/A";
+		case ThreadDesc.M_SHARED:	str += "SHARED";			break;
+		default:					str += "N/A";
 		}
 		
 		str		+= ">";
@@ -178,8 +178,7 @@ public class ThreadDesc extends Object
 	{
 		String 			str;
 		
-		str		= "[" + preffix + "/" + info + "] CLASS=" + classn + " LINDA=" + lindaToString ();
-		
+		str		= "[" + preffix + "/" + info + "] CLASS=" + classn + " LINDA=" + lindaToString ();		
 		str		+= " FLAGS=<";
 		
 		if (passive)		
