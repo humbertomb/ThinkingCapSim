@@ -82,6 +82,7 @@ public class Grid2D extends World2D
 		double		ii, jj, li, lj;
 		int			cndx;
 		double		rx, ry, gx, gy, cx, cy;
+		double		bx0, by0, bx1, by1;
 		double		side;
 		double[][]	cells;
 		Path		path = null;
@@ -126,30 +127,18 @@ public class Grid2D extends World2D
 			gx		= -Double.MAX_VALUE;
 			gy		= -Double.MAX_VALUE;
 		}
-
+		
 		if (mode != COST)						// Draw the occupancy grid
 		{
 			int			ggx, ggy, grx, gry;
-			double		bx0, by0, bx1, by1;
 			Color		color;
 			
-			// Draw grid boundary
-			bx0 = grid.gtoc_x (0) - side*0.5;
-			by0 = grid.gtoc_y (0) - side*0.5;
-			bx1 = grid.gtoc_x (grid.size_x ()-1) + side*0.5;
-			by1 = grid.gtoc_y (grid.size_y ()-1) + side*0.5;
-
-			model.addRawLine (bx0, by0, bx0, by1, Model2D.THICK, Color.BLACK);
-			model.addRawLine (bx0, by1, bx1, by1, Model2D.THICK, Color.BLACK);
-			model.addRawLine (bx1, by1, bx1, by0, Model2D.THICK, Color.BLACK);
-			model.addRawLine (bx1, by0, bx0, by0, Model2D.THICK, Color.BLACK);
-
 			// Convert real world to grid coordinates
 			ggx = grid.ctog_x (gx);
 			ggy = grid.ctog_y (gy);
 			grx = grid.ctog_x (rx);
 			gry = grid.ctog_y (ry);
-System.out.println ("ggx="+ggx+" ggy="+ggy+" grx="+grx+" gry="+gry);	
+
 			// Select the map to be drawn
 			switch (mode)
 			{
@@ -175,13 +164,13 @@ System.out.println ("ggx="+ggx+" ggy="+ggy+" grx="+grx+" gry="+gry);
 					cy = grid.gtoc_y (j) - side*0.5;
 					
 					if ((grx == i) && (gry == j))
-						color = Color.RED;
+						color = Color.WHITE;
 					else if ((ggx == i) && (ggy == j))
 						color = Color.BLUE;
 					else
 						color = colors[(int) Math.round (cells[i][j] * MAX_COLOR)];
 					
-//					model.addRawBox (cx, cy, side, Model2D.FILLED, color);
+					model.addRawBox (cx, cy, cx+side, cy+side, Model2D.FILLED, color);					
 				}
 		}
 		else									// Draw the costs grid
@@ -189,6 +178,14 @@ System.out.println ("ggx="+ggx+" ggy="+ggy+" grx="+grx+" gry="+gry);
 			double		cmin, cmax;
 			double		cavg;
 			int			cavgn;
+			Color		color;
+			int			ggx, ggy, grx, gry;
+			
+			// Convert real world to grid coordinates
+			ggx = grid.ctog_x (gx);
+			ggy = grid.ctog_y (gy);
+			grx = grid.ctog_x (rx);
+			gry = grid.ctog_y (ry);
 			
 			cmin	= Double.MAX_VALUE;
 			cmax	= Double.MIN_VALUE;
@@ -222,16 +219,22 @@ System.out.println ("ggx="+ggx+" ggy="+ggy+" grx="+grx+" gry="+gry);
 						if (cndx >= COLORS)		cndx = COLORS - 1;
 					}
 					else
-						cndx = COLORS;
+						cndx = COLORS-1;
 					
-					if ((i == 0) || (j == 0) || (i == grid.size_x () - 1) || (j == grid.size_y () - 1))
-						continue;
-					else if ((rx == i) && (ry == j))
-						model.addRawBox (i, j, side, Model2D.FILLED, Color.BLUE);
-					else if ((gx == i) && (gy == j))
-						model.addRawBox (i, j, side, Model2D.FILLED, Color.RED);
-					else if (cndx < COLORS)
-						model.addRawBox (i, j, side, Model2D.FILLED, colors[COLORS - cndx - 1]);
+//					if ((i == 0) || (j == 0) || (i == grid.size_x () - 1) || (j == grid.size_y () - 1))
+//						continue;
+					
+					cx = grid.gtoc_x (i) - side*0.5;
+					cy = grid.gtoc_y (j) - side*0.5;
+					
+					if ((grx == i) && (gry == j))
+						color = Color.WHITE;
+					else if ((ggx == i) && (ggy == j))
+						color = Color.BLUE;
+					else
+						color = colors[COLORS - cndx - 1];
+						
+					model.addRawBox (cx, cy, cx+side, cy+side, Model2D.FILLED, color);
 				}
 		}
 		
@@ -257,7 +260,17 @@ System.out.println ("ggx="+ggx+" ggy="+ggy+" grx="+grx+" gry="+gry);
 					model.addRawLine (lines[i].orig ().x (), lines[i].orig ().y (), lines[i].dest ().x (), lines[i].dest ().y (), Color.BLUE);
 				}			
 		}
-		
+		// Draw grid boundary
+		bx0 = grid.gtoc_x (0) - side*0.5;
+		by0 = grid.gtoc_y (0) - side*0.5;
+		bx1 = grid.gtoc_x (grid.size_x ()-1) + side*0.5;
+		by1 = grid.gtoc_y (grid.size_y ()-1) + side*0.5;
+
+		model.addRawLine (bx0, by0, bx0, by1, Model2D.THICK, Color.BLACK);
+		model.addRawLine (bx0, by1, bx1, by1, Model2D.THICK, Color.BLACK);
+		model.addRawLine (bx1, by1, bx1, by0, Model2D.THICK, Color.BLACK);
+		model.addRawLine (bx1, by0, bx0, by0, Model2D.THICK, Color.BLACK);
+
 		if (path != null)
 		{
 			Position			ppos;

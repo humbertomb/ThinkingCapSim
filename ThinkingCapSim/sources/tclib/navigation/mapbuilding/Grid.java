@@ -26,8 +26,8 @@ public abstract class Grid extends Object implements MapBuilding
 	protected int					tcount;							// Number of time updates
 	
 	// Instance variables
-	protected int					off_x;							/* Minimum value for X axis					*/
-	protected int					off_y;							/* Minimum value for Y axis					*/
+	protected double				off_x;							/* Minimum value for X axis	(world coords)	*/
+	protected double				off_y;							/* Minimum value for Y axis	(world coords)	*/
 	protected int					size_x;							/* The grid X axis size						*/
 	protected int					size_y;							/* The grid Y axis size						*/
 
@@ -44,7 +44,7 @@ public abstract class Grid extends Object implements MapBuilding
 	protected FusionDesc			fdesc;
 	protected int					mode;							/* Cell-update mode							*/
 
-	// Algorithm dependent debuging support
+	// Algorithm dependent debugging support
 	protected Point2[]				data;							// Raw buffer for algorithm operations
 	protected int					data_n;							// Number of raw points
 	protected Line2[]				lines;							// Lines obtained by the algorithm
@@ -60,8 +60,8 @@ public abstract class Grid extends Object implements MapBuilding
 		
 		size_x 		= nx + 2; 
 		size_y 		= ny + 2;	
-		off_x		= size_x / 2;
-		off_y		= size_y / 2;
+		off_x		= 0.0;
+		off_y		= 0.0;
 		
 		this.h		= h;
 
@@ -71,6 +71,7 @@ public abstract class Grid extends Object implements MapBuilding
 		obstacles	= new boolean[size_x][size_y];
 		
 		tempChanges = new Hashtable<String,LinkedList<double[]>>();
+		
 		// Subclasses may redefine this for its own purposes
 		data		= null;
 		data_n		= 0;
@@ -138,28 +139,28 @@ public abstract class Grid extends Object implements MapBuilding
 	
 	public void	setOffsets (double x, double y)	
 	{ 
-		off_x	= (int) Math.round (-x / h);	
-		off_y	= (int) Math.round (-y / h);	
+		off_x	= x;	
+		off_y	= y;	
 	}
 	
 	public int ctog_x (double x)
 	{
-		return (int) Math.round (x / h) + off_x;
+		return (int) Math.round ((x - off_x) / h);
 	}
 	
 	public int ctog_y (double y)
 	{
-		return (int) Math.round (y / h) + off_y;
+		return (int) Math.round ((y - off_y) / h);
 	}
 	
 	public double gtoc_x (int x)
 	{
-		return (double) (x - off_x) * h;
+		return x * h + off_x;
 	}
 	
 	public double gtoc_y (int y)
 	{
-		return (double) (y - off_y) * h;
+		return y * h + off_y;
 	}
 	
 	protected void fromFAreas (Polygon2[] polygons)

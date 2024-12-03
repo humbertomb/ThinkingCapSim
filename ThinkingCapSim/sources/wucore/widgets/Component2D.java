@@ -655,7 +655,6 @@ public class Component2D extends JComponent
 					switch (attr[i].mode)
 					{
 					case Model2D.FILLED:
-//System.out.println ("filled="+attr[i].color+" mx="+ mx+" my="+my+" w="+ Math.abs (x2 - x1)+" h="+Math.abs (y2 - y1));
 						g.fillRect (mx, my, Math.abs (x2 - x1), Math.abs (y2 - y1));
 						break;
 					default:

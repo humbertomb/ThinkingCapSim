@@ -22,8 +22,7 @@ import devices.pos.*;
 public class IndoorNavigation extends Navigation
 {
 	static public final int			MAX_PATH		= 15000;				
-	static public final double		DEF_CELL		= 0.500;	// Default cell size (m)			
-	static public final double		DEF_CELL_		= 0.075;	// Default cell size (m)			
+	static public final double		DEF_CELL		= 0.075;	// Default cell size (m)			
 	static public final double		DEF_DIL			= 0.75;		// Default dilation constant				
 
 	// Navigation structures
@@ -227,22 +226,22 @@ public class IndoorNavigation extends Navigation
 		
 		super.notify_config (space, item);
 
-		// Initialise size dependent variables
+		// Initialize size-dependent variables
 		if (world != null)
 		{
-			w = (int) Math.round ((world.walls ().maxx () - world.walls ().minx ()) / cell_size) + 4;
-			h = (int) Math.round ((world.walls ().maxy () - world.walls ().miny ()) / cell_size) + 4;
+			w = (int) Math.ceil ((world.walls ().maxx () - world.walls ().minx ()) / cell_size);
+			h = (int) Math.ceil ((world.walls ().maxy () - world.walls ().miny ()) / cell_size);
 		}
 		dil = (int) (Math.round (rdesc.RADIUS * dilation));
 				
 		// Create data structures
-		grid = new BGrid (fdesc, rdesc, w, h, cell_size);		
+		grid = new FGrid (fdesc, rdesc, w, h, cell_size);		
 		grid.setRangeSON (1.5);
 		grid.setRangeLRF (15.0);
 		if (world != null)
 		{
 			System.out.println ("  [Nav] Loading world into grid map");
-			grid.setOffsets (world.walls ().minx () - cell_size, world.walls ().miny () - cell_size);	
+			grid.setOffsets (world.walls ().minx (), world.walls ().miny ());	
 			grid.fromWorld (world);
 		}
 		
