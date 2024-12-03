@@ -48,7 +48,7 @@ public class GridWindow extends JFrame
 		mgrid = new Grid2D (gridCO.getModel (), rdesc);
 		mgrid.drawartifacts (true);
 
-		gridCO.setBackground (mgrid.getMiddleColor ());
+//		gridCO.setBackground (mgrid.getMiddleColor ());
 		gridCO.setMinimumSize (new Dimension(100, 100));
 		
 		panel = new JPanel ();

@@ -119,9 +119,6 @@ public class BGController extends Controller
 				
 				// Create additional perceptual structures
 				b_buffer = new double[program.behcount ()];
-
-				System.out.println (localgfx);
-				localgfx = true;
 				
 				if (localgfx)
 				{

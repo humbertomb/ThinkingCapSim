@@ -92,7 +92,7 @@ public class Component2D extends JComponent
 	protected Stroke					stk_plain;
 	protected Stroke					stk_dashed;
 	protected Stroke					stk_thick;
-	protected Hashtable					img_hash;					// Hashtable for images and icons
+	protected Hashtable<String,Image>	img_hash;					// Hashtable for images and icons
 	protected ImageCache				img_cache;					// Cache for images and icons
 	protected Component2DListener		img_listener;				// Listener for ToolTip labels
 
@@ -127,7 +127,7 @@ public class Component2D extends JComponent
 		stk_plain		= new BasicStroke ();
 		stk_thick		= new BasicStroke (2);
 		stk_dashed		= new BasicStroke (1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] {9}, 0);
-		img_hash		= new Hashtable (500);
+		img_hash		= new Hashtable<String,Image> (500);
 		img_cache		= new ImageCache ();
 		tfont			= new Font ("Times", Font.PLAIN, 14);
 		cfont			= new Font ("Courier", Font.PLAIN, 14);
@@ -590,14 +590,13 @@ public class Component2D extends JComponent
 		int				x1 = 0, y1 = 0;
 		int				x2 = 0, y2 = 0;
 		int				mx, my;
-		int				amax, adel;
+		int				amax;
 		int				lmode;
 		Color			lcolor;
 		Model2DCoord	coord1, coord2;
 
 		// Draw basic objects
 		amax		= Math.min (nattr, attr.length);
-		adel		= 0;
 		lmode 		= -1;
 		lcolor		= null;
 		for (i = 0; i < amax; i++) 
@@ -612,10 +611,7 @@ public class Component2D extends JComponent
 
 				// Perform clipping
 				if (doclipping && !((x1 >= 0) && (x1 <= wxmax) && (y1 >= 0) && (y1 <= wymax))) 
-				{
-					adel ++;
 					continue;
-				}
 			}
 			
 			if (attr[i].color != lcolor)
@@ -649,10 +645,7 @@ public class Component2D extends JComponent
 
 				// Perform clipping
 				if (doclipping && !((x2 >= 0) && (x2 <= wxmax) && (y2 >= 0) && (y2 <= wymax)))
-				{
-					adel ++;
 					continue;
-				}
 
 				switch (attr[i].type)
 				{
@@ -662,6 +655,7 @@ public class Component2D extends JComponent
 					switch (attr[i].mode)
 					{
 					case Model2D.FILLED:
+//System.out.println ("filled="+attr[i].color+" mx="+ mx+" my="+my+" w="+ Math.abs (x2 - x1)+" h="+Math.abs (y2 - y1));
 						g.fillRect (mx, my, Math.abs (x2 - x1), Math.abs (y2 - y1));
 						break;
 					default:
@@ -760,7 +754,7 @@ public class Component2D extends JComponent
 						if (image == null)
 						{
 							image		= getToolkit ().createImage ((String) attr[i].src);
-							img_hash.put (attr[i].src, image);
+							img_hash.put ((String) attr[i].src, image);
 							newimage	= true;
 						}					
 					}

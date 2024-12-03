@@ -36,9 +36,9 @@ public abstract class Grid extends Object implements MapBuilding
 	protected double[][]			occupied;						/* Belief that the cell is occupied			*/
 	private boolean[][]             obstacles;
 	
-	protected double				h				= 1.0;			/* Cell side lenght in application units.	*/
-	protected double				MAX_RANGE_SON	= 1.5;			/* Do not use soanr readings futher (m)		*/
-	protected double				MAX_RANGE_LRF	= 15.0;			/* Do not use laser readings futher (m)		*/
+	protected double				h				= 1.0;			/* Cell side length in application units.	*/
+	protected double				MAX_RANGE_SON	= 1.5;			/* Do not use sonar readings further (m)		*/
+	protected double				MAX_RANGE_LRF	= 15.0;			/* Do not use laser readings further (m)		*/
 
 	protected RobotDesc				rdesc;
 	protected FusionDesc			fdesc;
@@ -96,8 +96,6 @@ public abstract class Grid extends Object implements MapBuilding
         else                    free[i][j] = val; 
     }
     
-	public final int 			min_x ()							{ return -off_x; }
-	public final int 			min_y ()							{ return -off_y; }
 	public final int 			size_x ()							{ return size_x; }
 	public final int 			size_y ()							{ return size_y; }
 	
@@ -184,7 +182,7 @@ public abstract class Grid extends Object implements MapBuilding
 		double	xi, yi;
 		double	x1, y1, x2, y2;
 		double	As, Bs, alpha;
-		
+
 		for (int i = 0; i< edges.length; i++)
 		{
 			x1	=	edges[i].orig().x();
@@ -220,10 +218,10 @@ public abstract class Grid extends Object implements MapBuilding
 					yi = As * xi + Bs;
 					ci 	= ctog_x (xi);
 					cj 	= ctog_y (yi);
-					
+
 					if ((ci < 1) || (cj< 1) || (ci > size_x - 2) || (cj > size_y - 2))
 						continue;	
-					
+
                     set_occupied(ci,cj);
 					setObstacle(ci, cj, true);
 				}	

@@ -110,8 +110,9 @@ ROBCLASS	= tcrob.umu.pioneer3.Pioneer3
 ROBEXTIME	= 100
 ROBPASSIVE	= false
 ROBDESC		= conf/robots/pioneer3.robot
+ROBWORLD_	= conf/maps/iasf.world
 ROBWORLD	= conf/maps/um_diic_small.world
-ROBGFX		= true
+ROBGFX		= false
 ROBAPW		= true
 ROBCONNECT	= 	MOTION		tc.shared.linda.ItemMotion 				notify_motion, \
 				DATACTRL 	tc.shared.linda.ItemDataCtrl 			notify_data_ctrl

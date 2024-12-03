@@ -21,18 +21,18 @@ public class Grid2D extends World2D
 {
 	public static final int				NAVIGATION	= 1;
 	public static final int				EMPTY		= 2;
-	public static final int				OCCUPIED		= 3;
-	public static final int				COST			= 4;
+	public static final int				OCCUPIED	= 3;
+	public static final int				COST		= 4;
 	
 	public static final int				COLORS		= 21;
-	protected static final double			MAX_COLOR	= (double) (COLORS - 1);
+	protected static final double		MAX_COLOR	= (double) (COLORS - 1);
 	
 	// LPS HUD's labels
 	public static final int				H_MTIME		= 0;
 	public static final int				H_PTIME		= 1;
 	public static final int				H_PEXP		= 2;
 	
-	protected Color[]				colors;
+	protected Color[]					colors;
 	
 	/* Constructors */
 	public Grid2D (Model2D model, RobotDesc rdesc) 
@@ -55,23 +55,23 @@ public class Grid2D extends World2D
 	
 	protected void initialise () 
 	{
-		int			i, gray;
+		int			gray;
 		double		step;
 		
 		colors	= new Color[COLORS];
-		step		= 255.0 / MAX_COLOR;
-		for (i = 0; i < COLORS; i++) 
+		step	= 255.0 / MAX_COLOR;
+		for (int i = 0; i < COLORS; i++) 
 		{
-			gray	 = 255 - (int) Math.round ((double) i * step);
+			gray = 255 - (int) Math.round ((double) i * step);
 			colors[i] = new Color (gray, gray, gray);
 		}
 		
 //		// Add support for HUD objects
 //		model.hud_n				= 3;
-//		model.hud_x[H_MTIME]		= 45;
-//		model.hud_y[H_MTIME]		= 45;
-//		model.hud_x[H_PTIME]		= 45;
-//		model.hud_y[H_PTIME]		= 60;
+//		model.hud_x[H_MTIME]	= 45;
+//		model.hud_y[H_MTIME]	= 45;
+//		model.hud_x[H_PTIME]	= 45;
+//		model.hud_y[H_PTIME]	= 60;
 //		model.hud_x[H_PEXP]		= 250;
 //		model.hud_y[H_PEXP]		= 60;
 	}
@@ -81,32 +81,30 @@ public class Grid2D extends World2D
 		int			i, j;
 		double		ii, jj, li, lj;
 		int			cndx;
-		int			rx, ry, gx, gy;
-		int			xi, yi;
+		double		rx, ry, gx, gy, cx, cy;
 		double		side;
 		double[][]	cells;
-		Path			path = null;
+		Path		path = null;
 		Line2[]		icon;
 		
 		model.clearView ();
 		
 		if (grid == null) return;
 		
-		// Initialise component's model
+		// Initialize component's model
 		side		= grid.side ();
-		model.clearView ();
 		
-		// Initialise auxiliary constants
-		icon		= rdesc.icon;
+		// Initialize auxiliary constants
+		icon = rdesc.icon;
 		if (pos != null)
 		{
-			rx 		= grid.ctog_x (pos.x ());
-			ry	 	= grid.ctog_y (pos.y ());
+			rx 		= pos.x ();
+			ry	 	= pos.y ();
 		}
 		else
 		{
-			rx 		= -1;
-			ry	 	= -1;
+			rx 		= -Double.MAX_VALUE;
+			ry	 	= -Double.MAX_VALUE;
 		}
 		
 		// Set HUD data values
@@ -117,20 +115,41 @@ public class Grid2D extends World2D
 //			model.hud_label[H_PTIME] = "Path: " + (int) gpath.time () + " (" + (Math.round (gpath.avg () * 10.0) / 10.0) + ") ms";
 //			model.hud_label[H_PEXP] = "Nodes: " + (int) gpath.expanded () + " expanded";
 
-			gx 		= gpath.goal_x ();
-			gy	 	= gpath.goal_y ();
+			gx 		= grid.gtoc_x (gpath.goal_x ());
+			gy	 	= grid.gtoc_y (gpath.goal_y ());
 		}
 		else
 		{
 //			model.hud_label[H_PTIME] = null;
 //			model.hud_label[H_PEXP] = null;
 			
-			gx		= -1;
-			gy		= -1;
+			gx		= -Double.MAX_VALUE;
+			gy		= -Double.MAX_VALUE;
 		}
-		
+
 		if (mode != COST)						// Draw the occupancy grid
 		{
+			int			ggx, ggy, grx, gry;
+			double		bx0, by0, bx1, by1;
+			Color		color;
+			
+			// Draw grid boundary
+			bx0 = grid.gtoc_x (0) - side*0.5;
+			by0 = grid.gtoc_y (0) - side*0.5;
+			bx1 = grid.gtoc_x (grid.size_x ()-1) + side*0.5;
+			by1 = grid.gtoc_y (grid.size_y ()-1) + side*0.5;
+
+			model.addRawLine (bx0, by0, bx0, by1, Model2D.THICK, Color.BLACK);
+			model.addRawLine (bx0, by1, bx1, by1, Model2D.THICK, Color.BLACK);
+			model.addRawLine (bx1, by1, bx1, by0, Model2D.THICK, Color.BLACK);
+			model.addRawLine (bx1, by0, bx0, by0, Model2D.THICK, Color.BLACK);
+
+			// Convert real world to grid coordinates
+			ggx = grid.ctog_x (gx);
+			ggy = grid.ctog_y (gy);
+			grx = grid.ctog_x (rx);
+			gry = grid.ctog_y (ry);
+System.out.println ("ggx="+ggx+" ggy="+ggy+" grx="+grx+" gry="+gry);	
 			// Select the map to be drawn
 			switch (mode)
 			{
@@ -149,16 +168,20 @@ public class Grid2D extends World2D
 			for (i = 0; i < grid.size_x (); i++)
 				for (j = 0; j < grid.size_y (); j++)
 				{
-					cndx = (int) Math.round (cells[i][j] * MAX_COLOR); 
+//					if ((i == 0) || (j == 0) || (i == grid.size_x () - 1) || (j == grid.size_y () - 1))
+//						continue;
+//					
+					cx = grid.gtoc_x (i) - side*0.5;
+					cy = grid.gtoc_y (j) - side*0.5;
 					
-					if ((i == 0) || (j == 0) || (i == grid.size_x () - 1) || (j == grid.size_y () - 1))
-						continue;
-					else if ((rx == i) && (ry == j))
-						model.addRawBox (i, j, side, Model2D.FILLED, Color.BLUE);
-					else if ((gx == i) && (gy == j))
-						model.addRawBox (i, j, side, Model2D.FILLED, Color.RED);
-					else /* if (!colors[cndx].equals (model..getBackground ())) */
-						model.addRawBox (i, j, side, Model2D.FILLED, colors[cndx]);
+					if ((grx == i) && (gry == j))
+						color = Color.RED;
+					else if ((ggx == i) && (ggy == j))
+						color = Color.BLUE;
+					else
+						color = colors[(int) Math.round (cells[i][j] * MAX_COLOR)];
+					
+//					model.addRawBox (cx, cy, side, Model2D.FILLED, color);
 				}
 		}
 		else									// Draw the costs grid
@@ -184,7 +207,7 @@ public class Grid2D extends World2D
 					}
 					
 					if (cells[i][j] < cmin)											cmin	= cells[i][j];
-					if ((cells[i][j] > cmax) && (cells[i][j] < Double.MAX_VALUE))		cmax	= cells[i][j];
+					if ((cells[i][j] > cmax) && (cells[i][j] < Double.MAX_VALUE))	cmax	= cells[i][j];
 				}
 			cavg	= (cavg / (double) cavgn) - cmin;			// The median could give much better results
 			
@@ -215,21 +238,16 @@ public class Grid2D extends World2D
 		// Draw algorithm dependent artifacts
 		if (drawartifacts)
 		{
-			Point2[]		data;
+			Point2[]	data;
 			Line2[]		lines;
 			
-			data		= grid.data ();
+			data	= grid.data ();
 			lines	= grid.lines ();
 			
 			// Draw raw data points
 			if (data != null)
 				for (i = 0; i < grid.data_n (); i++)
-				{				
-					xi = grid.ctog_x (data[i].x ());
-					yi = grid.ctog_y (data[i].y ());
-					
-					model.addRawCircle (xi, yi, 0.15, Color.ORANGE);
-				}
+					model.addRawCircle (data[i].x (), data[i].y (), 0.15, Color.ORANGE);
 			
 			// Draw generated line segments
 			if (lines != null)
@@ -244,14 +262,15 @@ public class Grid2D extends World2D
 		{
 			Position			ppos;
 			
-			// Draw the planned robot gpath
-			ppos	= path.first();
+			// Draw the planned robot global path
+			ppos = path.first();
 			li = ppos.x ();
 			lj = ppos.y ();
 			for (ppos = path.next (); ppos != null; ppos = path.next ())
 			{
 				ii = ppos.x ();
 				jj = ppos.y ();
+				
 				model.addRawLine (li, lj, ii, jj, Color.GREEN);
 				
 				li = ii;
@@ -264,29 +283,27 @@ public class Grid2D extends World2D
 			// Draw the real robot
 			if (icon == null)
 			{
-				model.addRawCircle (rx*side, ry*side, rdesc.RADIUS, Color.RED);
-				model.addRawArrow (rx*side, ry*side, rdesc.RADIUS, pos.alpha (), Color.RED);	
+				model.addRawCircle (rx, ry, rdesc.RADIUS, Color.RED);
+				model.addRawArrow (rx, ry, rdesc.RADIUS, pos.alpha (), Color.RED);	
 			}
 			else
 			{
-				model.addRawCircle (rx*side, ry*side, rdesc.RADIUS, Color.ORANGE);
-				model.addRawArrow (rx*side, ry*side, rdesc.RADIUS, pos.alpha (), Color.ORANGE);	
+				model.addRawArrow (rx, ry, rdesc.RADIUS, pos.alpha (), Color.ORANGE);	
 				for (i = 0; i < icon.length; i++)
-					model.addRawTransRotLine (icon[i], rx * side, ry * side, pos.alpha (), Color.RED);
+					model.addRawTransRotLine (icon[i], rx, ry, pos.alpha (), Color.RED);
 			}
 		}
 		
 		// Set clipping region to the boundaries of the grid map
-		/*		double		minx, miny, maxx, maxy;
-		 
-		 minx	= grid.gtoc_x (0);
-		 miny	= grid.gtoc_y (0);
-		 maxx	= grid.gtoc_x (grid.size_x ());
-		 maxy	= grid.gtoc_y (grid.size_y ());
-		 
-		 model.setBB (minx, miny, maxx, maxy);
-		 
-		 System.out.println ("minx="+minx+", miny="+miny+", maxx="+maxx+", maxy="+maxy); */
+//		double		minx, miny, maxx, maxy;
+//		
+//		minx	= grid.gtoc_x (0);
+//		miny	= grid.gtoc_y (0);
+//		maxx	= grid.gtoc_x (grid.size_x ());
+//		maxy	= grid.gtoc_y (grid.size_y ());
+//
+////		model.setBB (minx, miny, maxx, maxy);
+//		System.out.println ("minx="+minx+", miny="+miny+", maxx="+maxx+", maxy="+maxy); 
 	}
 }
 
