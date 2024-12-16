@@ -11,7 +11,7 @@ import tc.modules.*;
 
 import tclib.navigation.localisation.*;
 import tclib.navigation.mapbuilding.*;
-import tclib.navigation.mapbuilding.gui.GridWindow;
+import tclib.navigation.mapbuilding.gui.*;
 import tclib.navigation.mapbuilding.lpo.*;
 import tclib.navigation.pathplanning.*;
 
@@ -58,7 +58,8 @@ public class IndoorNavigation extends Navigation
 	protected boolean				allow_gmap		= true;
 	protected boolean				allow_path		= true;
 
-	protected GridWindow			win;
+	protected GridWindow			gwin;
+	protected FSegWindow			fwin;
 
 	// Constructors
 	public IndoorNavigation (Properties props, Linda linda)
@@ -122,13 +123,13 @@ public class IndoorNavigation extends Navigation
 		scan	= (LPOSensorScanner) lps.find ("Scanner");
 		lsegs	= (LPOSensorFSeg) lps.find ("FSegs");
 
-		// WARNING: this localisation schema lacks the ability of effectively using
+		// WARNING: this localization schema lacks the ability of effectively using
 		// the current segments to update the local or the global map (TODO list)
-		//		NOTE: The kalman localisation and the fuzzy map update are
+		//		NOTE: The kalman lozalisation and the fuzzy map update are
 		//				decouple here, something which should not be. The idea is
 		//				to combine steps A and B in a single process.
 		
-		// Perform Kalman based localisation (step A)
+		// Perform Kalman based localization (step A)
 		pos.set (lps.cur);
 		if (allow_fmap)
 		{
@@ -210,7 +211,8 @@ public class IndoorNavigation extends Navigation
 		linda.write (fmtuple);
 		
 		
-		if (win != null) 	win.updateGrid (gpath, pos);
+		if (gwin != null) 	gwin.updateGrid (gpath, pos);
+		if (fwin != null) 	fwin.updateMap (paths, pos);
 	}
 
 	public void notify_goal (String space, ItemGoal item)
@@ -242,7 +244,7 @@ public class IndoorNavigation extends Navigation
 		{
 			System.out.println ("  [Nav] Loading world into grid map");
 			grid.setOffsets (world.walls ().minx (), world.walls ().miny ());	
-			grid.fromWorld (world);
+//			grid.fromWorld (world);
 		}
 		
 		gpath = new FGridPathA (grid);
@@ -256,7 +258,10 @@ public class IndoorNavigation extends Navigation
 		initialised = true;
 		
 		if (localgfx) 
-			win = new GridWindow (space, grid, rdesc);
+		{
+			gwin = new GridWindow (space, grid, rdesc);
+			fwin = new FSegWindow (space, fmap, rdesc);
+		}
 	}
 }
 

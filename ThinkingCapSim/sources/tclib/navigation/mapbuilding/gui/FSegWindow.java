@@ -10,7 +10,6 @@ import javax.swing.*;
 
 import tclib.navigation.mapbuilding.*;
 import tclib.navigation.mapbuilding.visualization.*;
-import tclib.navigation.pathplanning.*;
 
 import tc.vrobot.*;
 
@@ -19,48 +18,43 @@ import devices.pos.*;
 import wucore.widgets.*;
 import wucore.gui.*;
 
-public class GridWindow extends JFrame
+public class FSegWindow extends JFrame
 {
-	protected ChildWindowListener		parent;
+	protected ChildWindowListener		parent;	
 	
+	protected FSegMap 					fmap;
 	
-	protected Grid 						grid;
+	protected Component2D 				fmapCO 		= new Component2D ();
+	protected FMap2D					mfmap;
 	
-	protected Component2D 				gridCO 		= new Component2D ();
-
-	// Interface widgets
-	protected Grid2D					mgrid;
-	
-	private int 						selnode 		= -1;
-
-	public GridWindow (String name, Grid grid, RobotDesc rdesc)
+	public FSegWindow (String name, FSegMap grid, RobotDesc rdesc)
 	{
 		this (name, grid, rdesc, null);
 	}
 	
-	public GridWindow (String name, Grid grid, RobotDesc rdesc, ChildWindowListener parent)
+	public FSegWindow (String name, FSegMap grid, RobotDesc rdesc, ChildWindowListener parent)
 	{
-		this.grid	= grid;
+		this.fmap	= grid;
 		this.parent	= parent;
 
 		JPanel			panel;
 
-		mgrid = new Grid2D (gridCO.getModel (), gridCO, rdesc);
-		mgrid.drawartifacts (true);
+		mfmap = new FMap2D (fmapCO.getModel (), fmapCO, rdesc, null);
+		mfmap.drawartifacts (true);
 
 //		gridCO.setBackground (mgrid.getMiddleColor ());
-		gridCO.setMinimumSize (new Dimension(100, 100));
+		fmapCO.setMinimumSize (new Dimension(100, 100));
 		
 		panel = new JPanel ();
 		panel.setLayout (new GridLayout (1, 1));
-		panel.setBorder(new javax.swing.plaf.BorderUIResource.TitledBorderUIResource(new javax.swing.border.LineBorder(new java.awt.Color(153, 153, 153), 1, false), "Grid Map", 4, 2, new java.awt.Font("Application", 1, 12), new java.awt.Color(102, 102, 153)));
-		panel.add (gridCO);
+		panel.setBorder(new javax.swing.plaf.BorderUIResource.TitledBorderUIResource(new javax.swing.border.LineBorder(new java.awt.Color(153, 153, 153), 1, false), "Fuzzy Segments Map", 4, 2, new java.awt.Font("Application", 1, 12), new java.awt.Color(102, 102, 153)));
+		panel.add (fmapCO);
 
-		updateGrid (null, null);
+		updateMap (null, null);
 					
-		setTitle ("[" + name +"] Grid Map");
-		setLocation (new Point(20, 300));
-		setSize (new Dimension(500, 700));
+		setTitle ("[" + name +"] Fuzzy Segments Map");
+		setLocation (new Point(50, 500));
+		setSize (new Dimension(600, 800));
 		getContentPane().setLayout (new GridLayout (1, 1));
 		getContentPane().add (panel);
 		setVisible (true);
@@ -102,9 +96,9 @@ public class GridWindow extends JFrame
 		dispose ();
 	}
 
-	public void updateGrid (GridPath path, Position pos)
+	public void updateMap (Paths paths, Position pos)
 	{
-		mgrid.update (grid, path, pos, Grid2D.NAVIGATION);
-		gridCO.repaint ();
+		mfmap.update (fmap, paths, pos);
+		fmapCO.repaint ();
 	}
  }

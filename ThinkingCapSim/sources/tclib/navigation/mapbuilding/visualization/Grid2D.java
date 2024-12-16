@@ -32,17 +32,25 @@ public class Grid2D extends World2D
 	public static final int				H_PTIME		= 1;
 	public static final int				H_PEXP		= 2;
 	
+	protected Component2D 				compo;
+
+	public boolean						draw_hud	= false;
+
 	protected Color[]					colors;
 	
 	/* Constructors */
-	public Grid2D (Model2D model, RobotDesc rdesc) 
+	public Grid2D (Model2D model, Component2D compo, RobotDesc rdesc) 
 	{
+    	this.compo = compo;
+
 		this.initialise (model, rdesc, null, null);
 		this.initialise ();
 	}
 	
-	public Grid2D (Model2D model, RobotDesc rdesc, String mapname) 
+	public Grid2D (Model2D model, Component2D compo, RobotDesc rdesc, String mapname) 
 	{
+    	this.compo = compo;
+
 		this.initialise (model, rdesc, null, mapname);
 		this.initialise ();
 	}
@@ -66,14 +74,17 @@ public class Grid2D extends World2D
 			colors[i] = new Color (gray, gray, gray);
 		}
 		
-//		// Add support for HUD objects
-//		model.hud_n				= 3;
-//		model.hud_x[H_MTIME]	= 45;
-//		model.hud_y[H_MTIME]	= 45;
-//		model.hud_x[H_PTIME]	= 45;
-//		model.hud_y[H_PTIME]	= 60;
-//		model.hud_x[H_PEXP]		= 250;
-//		model.hud_y[H_PEXP]		= 60;
+		// Add support for HUD objects
+		if (draw_hud)
+		{
+			compo.hud_n				= 3;
+			compo.hud_x[H_MTIME]	= 45;
+			compo.hud_y[H_MTIME]	= 45;
+			compo.hud_x[H_PTIME]	= 45;
+			compo.hud_y[H_PTIME]	= 60;
+			compo.hud_x[H_PEXP]		= 250;
+			compo.hud_y[H_PEXP]		= 60;
+		}
 	}
 	
 	public void update (Grid grid, GridPath gpath, Position pos, int mode)
@@ -109,20 +120,29 @@ public class Grid2D extends World2D
 		}
 		
 		// Set HUD data values
-//		model.hud_label[H_MTIME] = "Map: " + (int) grid.time () + " (" + (Math.round (grid.avg () * 10.0) / 10.0) + ") ms";
+		if (draw_hud)
+			compo.hud_label[H_MTIME] = "Map: " + (int) grid.time () + " (" + (Math.round (grid.avg () * 10.0) / 10.0) + ") ms";
+
 		if (gpath != null)
 		{
 			path		= gpath.path ();
-//			model.hud_label[H_PTIME] = "Path: " + (int) gpath.time () + " (" + (Math.round (gpath.avg () * 10.0) / 10.0) + ") ms";
-//			model.hud_label[H_PEXP] = "Nodes: " + (int) gpath.expanded () + " expanded";
-
+			
+			if (draw_hud)
+			{
+				compo.hud_label[H_PTIME] = "Path: " + (int) gpath.time () + " (" + (Math.round (gpath.avg () * 10.0) / 10.0) + ") ms";
+				compo.hud_label[H_PEXP] = "Nodes: " + (int) gpath.expanded () + " expanded";
+			}
+			
 			gx 		= grid.gtoc_x (gpath.goal_x ());
 			gy	 	= grid.gtoc_y (gpath.goal_y ());
 		}
 		else
 		{
-//			model.hud_label[H_PTIME] = null;
-//			model.hud_label[H_PEXP] = null;
+			if (draw_hud)
+			{
+				compo.hud_label[H_PTIME] = null;
+				compo.hud_label[H_PEXP] = null;
+			}
 			
 			gx		= -Double.MAX_VALUE;
 			gy		= -Double.MAX_VALUE;
@@ -250,7 +270,7 @@ public class Grid2D extends World2D
 			// Draw raw data points
 			if (data != null)
 				for (i = 0; i < grid.data_n (); i++)
-					model.addRawCircle (data[i].x (), data[i].y (), 0.15, Color.ORANGE);
+					model.addRawCircle (data[i].x (), data[i].y (), 0.05, Color.ORANGE);
 			
 			// Draw generated line segments
 			if (lines != null)
@@ -308,15 +328,14 @@ public class Grid2D extends World2D
 		}
 		
 		// Set clipping region to the boundaries of the grid map
-//		double		minx, miny, maxx, maxy;
-//		
-//		minx	= grid.gtoc_x (0);
-//		miny	= grid.gtoc_y (0);
-//		maxx	= grid.gtoc_x (grid.size_x ());
-//		maxy	= grid.gtoc_y (grid.size_y ());
-//
-////		model.setBB (minx, miny, maxx, maxy);
-//		System.out.println ("minx="+minx+", miny="+miny+", maxx="+maxx+", maxy="+maxy); 
+		double		minx, miny, maxx, maxy;
+		
+		minx	= grid.gtoc_x (0) - 0.5;
+		miny	= grid.gtoc_y (0) - 0.5;
+		maxx	= grid.gtoc_x (grid.size_x ()) + 0.5;
+		maxy	= grid.gtoc_y (grid.size_y ()) + 0.5;
+
+		model.setBB (minx, miny, maxx, maxy);
 	}
 }
 

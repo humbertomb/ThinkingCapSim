@@ -66,7 +66,7 @@ public class HTopolWindow extends JFrame implements Runnable
 		// Initialise widgets		
 		mfst 		= new Graph2D (firstCO.getModel ());
 		msnd 		= new HTopol2D (secondCO.getModel ());
-		mgrid 		= new Grid2D (gridCO.getModel (), rdesc);
+		mgrid 		= new Grid2D (gridCO.getModel (), gridCO, rdesc);
 		gridCO.setBackground (mgrid.getMiddleColor ());
 
 		for (i = 0; i < map.numNodes (); i++)
