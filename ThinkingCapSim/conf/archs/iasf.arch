@@ -97,6 +97,7 @@ CONCLASS	= tclib.behaviours.bg.BGController
 CONPASSIVE	= true
 CONGFX		= true
 CONPRG		= conf/programs/iasf.b
+#CONPRG		= conf/programs/iasf-ejercicio1.b
 CONCONNECT	= 	LPS			tc.shared.linda.ItemLPS 				notify_lps, \
 				GOAL 		tc.shared.linda.ItemGoal 				notify_goal, \
 				PATH 		tc.shared.linda.ItemPath 				notify_path
@@ -110,8 +111,9 @@ ROBCLASS	= tcrob.umu.pioneer3.Pioneer3
 ROBEXTIME	= 100
 ROBPASSIVE	= false
 ROBDESC		= conf/robots/pioneer3.robot
-ROBWORLD_	= conf/maps/iasf.world
 ROBWORLD	= conf/maps/um_diic_small.world
+#ROBWORLD	= conf/maps/iasf_ejemplo_1.world
+#ROBWORLD	= conf/maps/iasf_ejemplo_2.world
 ROBGFX		= false
 ROBAPW		= true
 ROBCONNECT	= 	MOTION		tc.shared.linda.ItemMotion 				notify_motion, \
