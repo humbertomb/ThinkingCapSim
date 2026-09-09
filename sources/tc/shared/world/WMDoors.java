@@ -179,5 +179,41 @@ public class WMDoors
 			edges[i].toDxf(dxf);
 		}
 	}
-}
 
+	/* Edition methods (world editor) */
+	public void add (WMDoor e)
+	{
+		WMDoor[]	tmp = new WMDoor[edges.length + 1];
+		System.arraycopy (edges, 0, tmp, 0, edges.length);
+		tmp[edges.length] = e;
+		edges = tmp;
+	}
+
+	public WMDoor remove (int i)
+	{
+		if ((i < 0) || (i >= edges.length))		return null;
+		WMDoor		old = edges[i];
+		WMDoor[]	tmp = new WMDoor[edges.length - 1];
+		System.arraycopy (edges, 0, tmp, 0, i);
+		System.arraycopy (edges, i + 1, tmp, i, edges.length - i - 1);
+		edges = tmp;
+		return old;
+	}
+
+	public int indexOf (WMDoor e)
+	{
+		for (int i = 0; i < edges.length; i++)
+			if (edges[i] == e)				return i;
+		return -1;
+	}
+
+	public final double	 	defaultHeight () 	{ return defHeight; }
+	public final double	 	defaultWidth () 	{ return defWidth; }
+
+	public void setDefaults (double width, double height, String texture)
+	{
+		defWidth	= width;
+		defHeight	= height;
+		defTexture	= texture;
+	}
+}

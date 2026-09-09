@@ -189,5 +189,33 @@ public class WMZones
 	
 
 	}
-	
+
+	/* Edition methods (world editor) */
+	public void add (WMZone e)
+	{
+		WMZone[]	tmp = new WMZone[areas.length + 1];
+		System.arraycopy (areas, 0, tmp, 0, areas.length);
+		tmp[areas.length] = e;
+		areas = tmp;
+	}
+
+	public WMZone remove (int i)
+	{
+		if ((i < 0) || (i >= areas.length))		return null;
+		WMZone		old = areas[i];
+		WMZone[]	tmp = new WMZone[areas.length - 1];
+		System.arraycopy (areas, 0, tmp, 0, i);
+		System.arraycopy (areas, i + 1, tmp, i, areas.length - i - 1);
+		areas = tmp;
+		return old;
+	}
+
+	public int indexOf (WMZone e)
+	{
+		for (int i = 0; i < areas.length; i++)
+			if (areas[i] == e)				return i;
+		return -1;
+	}
+
+	public void setDefaultTexture (String texture)		{ defTexture = texture; }
 }

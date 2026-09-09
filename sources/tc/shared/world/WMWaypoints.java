@@ -122,5 +122,31 @@ public class WMWaypoints
 	        waypoints[i].toDxf(dxf);
 	    }
 	}
-	
+
+	/* Edition methods (world editor) */
+	public void add (WMWaypoint e)
+	{
+		WMWaypoint[]	tmp = new WMWaypoint[waypoints.length + 1];
+		System.arraycopy (waypoints, 0, tmp, 0, waypoints.length);
+		tmp[waypoints.length] = e;
+		waypoints = tmp;
+	}
+
+	public WMWaypoint remove (int i)
+	{
+		if ((i < 0) || (i >= waypoints.length))		return null;
+		WMWaypoint		old = waypoints[i];
+		WMWaypoint[]	tmp = new WMWaypoint[waypoints.length - 1];
+		System.arraycopy (waypoints, 0, tmp, 0, i);
+		System.arraycopy (waypoints, i + 1, tmp, i, waypoints.length - i - 1);
+		waypoints = tmp;
+		return old;
+	}
+
+	public int indexOf (WMWaypoint e)
+	{
+		for (int i = 0; i < waypoints.length; i++)
+			if (waypoints[i] == e)				return i;
+		return -1;
+	}
 }

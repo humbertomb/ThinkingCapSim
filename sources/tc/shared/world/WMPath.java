@@ -115,5 +115,34 @@ public class WMPath
 		}
 		dxf.addEntity(pol);
 	}
-	
+
+	/* Edition methods (world editor) */
+	public final Point2[]		points ()			{ return points; }
+
+	public void add (Point2 p)
+	{
+		insert (points.length, p);
+	}
+
+	public void insert (int i, Point2 p)
+	{
+		if (i < 0)						i = 0;
+		if (i > points.length)			i = points.length;
+		Point2[]	tmp = new Point2[points.length + 1];
+		System.arraycopy (points, 0, tmp, 0, i);
+		tmp[i] = p;
+		System.arraycopy (points, i, tmp, i + 1, points.length - i);
+		points = tmp;
+	}
+
+	public Point2 remove (int i)
+	{
+		if ((i < 0) || (i >= points.length))		return null;
+		Point2		old = points[i];
+		Point2[]	tmp = new Point2[points.length - 1];
+		System.arraycopy (points, 0, tmp, 0, i);
+		System.arraycopy (points, i + 1, tmp, i, points.length - i - 1);
+		points = tmp;
+		return old;
+	}
 }

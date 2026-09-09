@@ -184,7 +184,31 @@ public class WMObjects extends Object
 					lines.add(objects[i].icon[j]);
 		return ((Line2[]) lines.toArray(new Line2[0]));
 	}
-	
 
-	
+	/* Edition methods (world editor) */
+	public void add (WMObject e)
+	{
+		WMObject[]	tmp = new WMObject[objects.length + 1];
+		System.arraycopy (objects, 0, tmp, 0, objects.length);
+		tmp[objects.length] = e;
+		objects = tmp;
+	}
+
+	public WMObject remove (int i)
+	{
+		if ((i < 0) || (i >= objects.length))		return null;
+		WMObject		old = objects[i];
+		WMObject[]	tmp = new WMObject[objects.length - 1];
+		System.arraycopy (objects, 0, tmp, 0, i);
+		System.arraycopy (objects, i + 1, tmp, i, objects.length - i - 1);
+		objects = tmp;
+		return old;
+	}
+
+	public int indexOf (WMObject e)
+	{
+		for (int i = 0; i < objects.length; i++)
+			if (objects[i] == e)				return i;
+		return -1;
+	}
 }

@@ -394,5 +394,50 @@ public class WMWalls extends Object
 			lines[i] = edges[i].edge;
 		return lines;
 	}
-	
+
+	/* Edition methods (world editor) */
+	public void add (WMWall e)
+	{
+		WMWall[]	tmp = new WMWall[edges.length + 1];
+		System.arraycopy (edges, 0, tmp, 0, edges.length);
+		tmp[edges.length] = e;
+		edges = tmp;
+		recomputeBounds ();
+	}
+
+	public WMWall remove (int i)
+	{
+		if ((i < 0) || (i >= edges.length))		return null;
+		WMWall		old = edges[i];
+		WMWall[]	tmp = new WMWall[edges.length - 1];
+		System.arraycopy (edges, 0, tmp, 0, i);
+		System.arraycopy (edges, i + 1, tmp, i, edges.length - i - 1);
+		edges = tmp;
+		recomputeBounds ();
+		return old;
+	}
+
+	public int indexOf (WMWall e)
+	{
+		for (int i = 0; i < edges.length; i++)
+			if (edges[i] == e)				return i;
+		return -1;
+	}
+
+	public void setDefaults (double width, double height, String texture)
+	{
+		defWidth	= width;
+		defHeight	= height;
+		defTexture	= texture;
+	}
+
+	public void recomputeBounds ()
+	{
+		minx	= Double.MAX_VALUE;
+		miny	= Double.MAX_VALUE;
+		maxx	= -Double.MAX_VALUE;
+		maxy	= -Double.MAX_VALUE;
+		for (int i = 0; i < edges.length; i++)
+			update (edges[i].edge);
+	}
 }

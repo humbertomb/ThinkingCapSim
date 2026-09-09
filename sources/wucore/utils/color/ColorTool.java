@@ -42,12 +42,44 @@ public class ColorTool
 			if (COL_NAMES[i].equalsIgnoreCase (name))
 				return COL_VALUES[i];
 
-		st		= new StringTokenizer (name, ":");
-		r		= Integer.parseInt (st.nextToken ());
-		g		= Integer.parseInt (st.nextToken ());
-		b		= Integer.parseInt (st.nextToken ());
+		try
+		{
+			// "r:g:b"
+			st		= new StringTokenizer (name, ":");
+			if (st.countTokens () == 3)
+			{
+				r		= Integer.parseInt (st.nextToken ().trim ());
+				g		= Integer.parseInt (st.nextToken ().trim ());
+				b		= Integer.parseInt (st.nextToken ().trim ());
+				return new WColor (r, g, b);
+			}
 
-		return new WColor (r, g, b);
+			// Legacy files written with WColor.toString(): "wucore.utils.color.WColor[r=100,g=100,b=100]"
+			int		i = name.indexOf ('[');
+			int		j = name.indexOf (']');
+			if ((i >= 0) && (j > i))
+			{
+				r = g = b = 0;
+				st = new StringTokenizer (name.substring (i + 1, j), ",");
+				while (st.hasMoreTokens ())
+				{
+					String	tok = st.nextToken ().trim ();
+					int		eq = tok.indexOf ('=');
+					if (eq < 0)					continue;
+					int		v = Integer.parseInt (tok.substring (eq + 1).trim ());
+					switch (tok.charAt (0))
+					{
+					case 'r':	r = v;	break;
+					case 'g':	g = v;	break;
+					case 'b':	b = v;	break;
+					}
+				}
+				return new WColor (r, g, b);
+			}
+		} catch (Exception e) { }
+
+		System.out.println ("  [ColorTool] Warning: unknown color <" + name + ">, using black");
+		return WColor.BLACK;
 	}
 	
 	static public String getNameFromColor (WColor color)

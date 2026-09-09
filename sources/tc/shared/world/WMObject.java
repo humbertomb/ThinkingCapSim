@@ -84,7 +84,12 @@ public class WMObject extends WMElement
 			usecolor	= new Boolean (st.nextToken()).booleanValue ();
 		}
 		else
+		{
+			// No 3D shape: icon coordinates are already absolute
 			shape	= null;
+			pos		= new Point3 (0.0, 0.0, 0.0);
+			a		= 0.0;
+		}
 		
 		AbsIcon();
 	}
@@ -140,7 +145,7 @@ public class WMObject extends WMElement
 					new LineDxf(new Point3(icon[i].orig()),new Point3(icon[i].dest()))
 				);
 			}
-			insert.addExtText(0,color.toString());
+			insert.addExtText(0,ColorTool.getNameFromColor (color));
 			insert.addExtText(1,shape);
 			insert.addExtText(2,Boolean.toString(usecolor));
 			dxf.addBlock(block);
@@ -148,7 +153,7 @@ public class WMObject extends WMElement
 	}
 	
 	// Cambia el icono a coordenadas absolutas (rotacion+translacion)
-	protected void AbsIcon(){
+	public void AbsIcon(){
 		double x1,y1,x2,y2;
 		for(int i = 0; i<icon.length; i++){
 			x1 = icon[i].orig().x() * Math.cos(a) - icon[i].orig().y() * Math.sin(a)+ pos.x();
@@ -159,7 +164,7 @@ public class WMObject extends WMElement
 		}
 	}
 	
-	protected Line2[] getLocalIcon(){
+	public Line2[] getLocalIcon(){
 		double x1,y1,x2,y2;
 		Line2[] lines = new Line2[icon.length];
 		for(int i = 0; i<icon.length; i++){
@@ -181,7 +186,7 @@ public class WMObject extends WMElement
 		out		= new Integer (icon.length).toString () + ", ";
 		for (i = 0; i < icon.length; i ++)
 			out		+= DoubleFormat.format(icon[i].orig ().x ()) + ", " + DoubleFormat.format(icon[i].orig ().y ()) + ", " + DoubleFormat.format(icon[i].dest ().x ()) + ", " + DoubleFormat.format(icon[i].dest ().y ()) + ", ";		
-		out		+= color.toString ();
+		out		+= ColorTool.getNameFromColor (color);
 		
 		if (shape != null)
 			out		+= ", " + shape + ", " + DoubleFormat.format(pos.x()) + ", " + DoubleFormat.format(pos.y()) + ", " + DoubleFormat.format(pos.z ()) + ", " + DoubleFormat.format(a * Angles.RTOD) + ", " + usecolor;

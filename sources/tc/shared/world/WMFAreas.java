@@ -103,5 +103,33 @@ public class WMFAreas
 		
 		return polygons;
 	}
-	
+
+	/* Edition methods (world editor) */
+	public void add (WMFArea e)
+	{
+		WMFArea[]	tmp = new WMFArea[fareas.length + 1];
+		System.arraycopy (fareas, 0, tmp, 0, fareas.length);
+		tmp[fareas.length] = e;
+		fareas = tmp;
+	}
+
+	public WMFArea remove (int i)
+	{
+		if ((i < 0) || (i >= fareas.length))		return null;
+		WMFArea		old = fareas[i];
+		WMFArea[]	tmp = new WMFArea[fareas.length - 1];
+		System.arraycopy (fareas, 0, tmp, 0, i);
+		System.arraycopy (fareas, i + 1, tmp, i, fareas.length - i - 1);
+		fareas = tmp;
+		return old;
+	}
+
+	public int indexOf (WMFArea e)
+	{
+		for (int i = 0; i < fareas.length; i++)
+			if (fareas[i] == e)				return i;
+		return -1;
+	}
+
+	public void setDefaultTexture (String texture)		{ defTexture = texture; }
 }

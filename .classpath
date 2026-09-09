@@ -10,5 +10,9 @@
 	<classpathentry kind="lib" path="jarlibs/startfire.jar"/>
 	<classpathentry kind="lib" path="jarlibs/plot.jar"/>
 	<classpathentry kind="lib" path="jarlibs/jsdn_java3d.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/gluegen-rt.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/gluegen-rt-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/jogl-all.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/jogl-all-natives-macosx-universal.jar"/>
 	<classpathentry kind="output" path="output"/>
 </classpath>

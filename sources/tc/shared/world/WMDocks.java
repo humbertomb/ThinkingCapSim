@@ -121,5 +121,31 @@ public class WMDocks
 	        docks[i].toDxf(dxf);
 	    }
 	}
-	
+
+	/* Edition methods (world editor) */
+	public void add (WMDock e)
+	{
+		WMDock[]	tmp = new WMDock[docks.length + 1];
+		System.arraycopy (docks, 0, tmp, 0, docks.length);
+		tmp[docks.length] = e;
+		docks = tmp;
+	}
+
+	public WMDock remove (int i)
+	{
+		if ((i < 0) || (i >= docks.length))		return null;
+		WMDock		old = docks[i];
+		WMDock[]	tmp = new WMDock[docks.length - 1];
+		System.arraycopy (docks, 0, tmp, 0, i);
+		System.arraycopy (docks, i + 1, tmp, i, docks.length - i - 1);
+		docks = tmp;
+		return old;
+	}
+
+	public int indexOf (WMDock e)
+	{
+		for (int i = 0; i < docks.length; i++)
+			if (docks[i] == e)				return i;
+		return -1;
+	}
 }

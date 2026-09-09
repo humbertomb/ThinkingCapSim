@@ -145,5 +145,31 @@ public class WMBeacons
 		    beacons[i].toDxf(dxf);
 		}
 	}
-	
+
+	/* Edition methods (world editor) */
+	public void add (WMBeacon e)
+	{
+		WMBeacon[]	tmp = new WMBeacon[beacons.length + 1];
+		System.arraycopy (beacons, 0, tmp, 0, beacons.length);
+		tmp[beacons.length] = e;
+		beacons = tmp;
+	}
+
+	public WMBeacon remove (int i)
+	{
+		if ((i < 0) || (i >= beacons.length))		return null;
+		WMBeacon		old = beacons[i];
+		WMBeacon[]	tmp = new WMBeacon[beacons.length - 1];
+		System.arraycopy (beacons, 0, tmp, 0, i);
+		System.arraycopy (beacons, i + 1, tmp, i, beacons.length - i - 1);
+		beacons = tmp;
+		return old;
+	}
+
+	public int indexOf (WMBeacon e)
+	{
+		for (int i = 0; i < beacons.length; i++)
+			if (beacons[i] == e)				return i;
+		return -1;
+	}
 }
