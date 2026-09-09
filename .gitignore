@@ -1,0 +1,10 @@
+# Compilados
+output/
+bin/
+*.class
+# Distribución
+thinkingcap3.jar
+# Sistema / IDE
+.DS_Store
+Thumbs.db
+*.swp

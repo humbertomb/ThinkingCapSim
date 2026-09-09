@@ -1,0 +1,77 @@
+# ==============================
+# START POINT
+# ==============================
+START = 0.0, 0.0, 0.0
+
+# ==============================
+# PATH POINTS
+# ==============================
+PATH_POINTS = 0
+
+
+# ==============================
+# MAP WALL LINES
+# ==============================
+MAX_LINES = 0
+
+LINE_DEF_HEIGHT = 0.75
+LINE_DEF_WIDTH = 0.01
+LINE_DEF_TEXTURE = ./conf/3dmodels/textures/wall.jpg
+
+
+# ==============================
+# EXTERNAL OBJECTS
+# ==============================
+MAX_OBJECTS = 0
+
+
+# ==============================
+# ZONES
+# ==============================
+ZONES = 0
+
+ZONE_DEF_TEXTURE = ./conf/3dmodels/textures/floor.jpg
+
+
+# ==============================
+# NON NAVIGABLE AREAS
+# ==============================
+FAREAS = 0
+
+FAREA_DEF_TEXTURE = ./conf/3dmodels/textures/farea.jpg
+
+
+# ==============================
+# DOORS
+# ==============================
+DOORS = 0
+
+DOOR_DEF_HEIGHT = 1.9
+DOOR_DEF_WIDTH = 0.005
+DOOR_DEF_TEXTURE = ./conf/3dmodels/textures/wall.jpg
+
+
+# ==============================
+# WAYPOINTS
+# ==============================
+WPOINTS = 0
+
+
+# ==============================
+# DOCKS
+# ==============================
+DOCKINGS = 0
+
+
+# ==============================
+# STRIP BEACONS
+# ==============================
+BEACONS = 0
+
+
+# ==============================
+# CILINDRICAL BEACONS
+# ==============================
+CBEACONS = 0
+
+

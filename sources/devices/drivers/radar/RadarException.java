@@ -1,0 +1,23 @@
+/**
+ * Title: CompassException
+ * Description: Radar exception
+ * Copyright: Copyright (c) 2001
+ * Company: Grupo ANTS - Proyecto MIMICS
+ * @author Humberto Martinez Barbera
+ * @version 1.0
+ */
+
+package devices.drivers.radar;
+
+public class RadarException extends Exception
+{
+	public RadarException ()
+	{
+		super ();
+	}
+
+	public RadarException (String message)
+	{
+		super (message);
+	}
+}

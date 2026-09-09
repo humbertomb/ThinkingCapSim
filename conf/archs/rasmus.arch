@@ -1,0 +1,115 @@
+#---------------------------------------------------------------------
+# Jan 2003		 
+#
+# Architecture definition for RASMUS
+#
+
+#*********************************************************************
+#*****                                                           *****
+#*****            MULTIPLE ROBOTS INTERCONNECTION PART           *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Global Linda shared server (UDP mode)
+#---------------------------------------------------------------------
+GLINADDR	= localhost
+GLINPORT	= 5500
+GLINCREATE	= false
+
+#*********************************************************************
+#*****                                                           *****
+#*****                    SINGLE ROBOT PART                      *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Linda intra-architecture server (UDP mode)
+#---------------------------------------------------------------------
+LLINADDR	= localhost
+LLINPORT	= 3000
+LLINCREATE	= true
+
+#---------------------------------------------------------------------
+# Active modules and TC-II execution parameters
+#---------------------------------------------------------------------
+MODULES		= NAV, PER, CON 
+VROBOT		= ROB
+ROUTER		= COO
+
+#---------------------------------------------------------------------
+# Router section 
+#---------------------------------------------------------------------
+COOINFO		= Rasmus Linda Router
+COOMODE		= shared
+COOCLASS	= tc.coord.LindaRouter
+COOGMODE	= udp
+COOGPORT	= 20029
+COOGFX		= true
+
+#---------------------------------------------------------------------
+# Navigation section 
+#---------------------------------------------------------------------
+NAVINFO		= Navigation
+NAVMODE		= shared
+NAVCLASS	= tcrob.oru.rasmus.RasmusModel
+NAVPASSIVE	= true
+NAVQUEUED	= false
+NAVPOLLED	= false
+NAVGFX		= true
+NAVCONNECT	= 	LPS			tc.shared.linda.ItemLPS 		notify_lps, \
+				GOAL 		tc.shared.linda.ItemGoal 		notify_goal
+				
+#---------------------------------------------------------------------
+# Perception section 
+#---------------------------------------------------------------------
+PERINFO		= Perception
+PERMODE		= shared
+PERCLASS	= tcrob.oru.rasmus.RasmusPerception
+PERPASSIVE	= true
+PERGFX		= true
+PERCONNECT	= 	DATA 		tc.shared.linda.ItemData 		notify_data, \
+				OBJECT 		tc.shared.linda.ItemObject 		notify_object, \
+				NAVIGATION	tc.shared.linda.ItemNavigation	notify_navigation
+
+#---------------------------------------------------------------------
+# Controller section 
+#---------------------------------------------------------------------
+CONINFO		= Controller
+CONMODE		= shared
+# If you want to use the controller with BPlan data uncomment the next row and comment the one next that one
+#CONCLASS	= tcrob.oru.rasmus.RasmusControl_with_Planner
+CONCLASS	= tcrob.oru.rasmus.RasmusControl
+CONPASSIVE	= true
+CONGFX		= true
+CONFACT		= tcrob.oru.rasmus.behs, ./sources/tcrob/oru/rasmus/behs, ../sources/tc/runtime
+CONCONNECT	= 	LPS			tc.shared.linda.ItemLPS 		notify_lps, \
+				GOAL 		tc.shared.linda.ItemGoal 		notify_goal, \
+				PATH 		tc.shared.linda.ItemPath 		notify_path, \
+				BEHNAME		tc.shared.linda.ItemBehName		notify_beh_name, \
+				BEHRULES	tc.shared.linda.ItemBehRules	notify_beh_rules, \
+				BEHDEBUG	tc.shared.linda.ItemBehDebug	notify_beh_debug
+
+#---------------------------------------------------------------------
+# GUI Server section 
+#---------------------------------------------------------------------
+MONINFO		= Local GUI Server
+MONMODE		= shared
+MONCLASS	= oru.rasmus.gui.RasmusGUI
+MONPASSIVE	= true
+MONCONNECT	= 	LPS			tc.shared.linda.ItemLPS 		notify_lps, \
+				GUICTRL		tc.shared.linda.ItemGUICtrl	notify_gui_ctrl, \
+				GRIDMAP 	tcrob.indoor.linda.ItemGridMap 	notify_grid, \
+				FSEGMAP 	tcrob.indoor.linda.ItemFSegMap 	notify_fmap 
+#---------------------------------------------------------------------
+# Virtual robot section 
+#---------------------------------------------------------------------
+ROBINFO		= Virtual Robot
+ROBMODE		= shared
+ROBCLASS	= oru.rasmus.Rasmus
+ROBPASSIVE	= false
+ROBDESC		= conf/robots/rasmus.robot
+ROBWORLD	= conf/maps/aass_corr.world
+ROBGFX		= true
+ROBAPW		= true
+ROBCONNECT	= 	MOTION		tc.shared.linda.ItemMotion 		notify_motion

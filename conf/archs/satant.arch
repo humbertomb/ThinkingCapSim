@@ -1,0 +1,88 @@
+#---------------------------------------------------------------------
+# Feb 2002		Humberto Martinez Barbera
+# Dec 2002		Humberto Martinez Barbera
+#
+# Architecture definition for SatAnt
+#
+
+#*********************************************************************
+#*****                                                           *****
+#*****            MULTIPLE ROBOTS INTERCONNECTION PART           *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Global Linda shared server (UDP mode)
+#---------------------------------------------------------------------
+GLINADDR	= localhost
+#GLINADDR	= 155.54.12.154
+#GLINADDR	= 155.54.9.167
+GLINPORT	= 5500
+GLINCREATE	= false
+
+#*********************************************************************
+#*****                                                           *****
+#*****                        CAR PART                           *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Linda intra-architecture server (UDP mode)
+#---------------------------------------------------------------------
+LLINADDR	= localhost
+LLINPORT	= 3000
+LLINCREATE	= true
+
+#---------------------------------------------------------------------
+# Active modules and TC-II execution parameters
+#---------------------------------------------------------------------
+MODULES		= PER, CON, MON
+VROBOT		= ROB
+ROUTER		= COO
+
+#---------------------------------------------------------------------
+# Router section 
+#---------------------------------------------------------------------
+COOINFO		= Linda Router
+COOMODE		= shared
+COOCLASS	= um.satant.SatantRouter
+COOGMODE	= udp
+COOGPORT	= 20029
+
+#---------------------------------------------------------------------
+# Perception section 
+#---------------------------------------------------------------------
+PERINFO		= Perception
+PERMODE		= shared
+PERCLASS	= um.satant.SatantPerception
+PERPASSIVE	= true
+
+#---------------------------------------------------------------------
+# Controller section 
+#---------------------------------------------------------------------
+CONINFO		= Controller
+CONMODE		= shared
+CONCLASS	= um.satant.SatantController
+CONPASSIVE	= true
+CONGFX		= true
+CONPRG		= conf/programs/satant.b
+
+#---------------------------------------------------------------------
+# GUI Server section 
+#---------------------------------------------------------------------
+MONINFO		= Local GUI Server
+MONMODE		= shared
+MONCLASS	= um.satant.gui.SatantGUIServer
+MONPASSIVE	= true
+
+#---------------------------------------------------------------------
+# Virtual robot section 
+#---------------------------------------------------------------------
+ROBINFO		= Virtual Robot
+ROBMODE		= shared
+ROBCLASS	= um.satant.Satant
+ROBDESC		= conf/robots/satant.robot
+ROBWORLD	= conf/maps/campus.gis
+ROBAPW		= true
+ROBGFX		= false
+

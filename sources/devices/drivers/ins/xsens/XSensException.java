@@ -1,0 +1,19 @@
+/**
+ * @version March 16, 2006
+ * @author Humberto Martinez Barbera
+ */
+
+package devices.drivers.ins.xsens;
+
+public class XSensException extends devices.drivers.ins.InsException {
+	
+	public XSensException()
+	{
+		super ("XSens INS exception.");
+	}
+	
+	public XSensException (String message)
+	{
+		super ("XSens INS exception: "+message);
+	}
+}

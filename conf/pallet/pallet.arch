@@ -1,0 +1,29 @@
+#---------------------------------------------------------------------
+# Jun 2005		Sergio Aleman Sabater
+#
+
+
+#*********************************************************************
+#*****                                                           *****
+#*****            			PALLET MANAGER			             *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Global Linda local server (UDP mode)
+#---------------------------------------------------------------------
+
+GLINADDR	= localhost
+GLINPORT	= 5500
+GLINCREATE	= false
+
+LLINADDR	= localhost
+LLINPORT	= 3001
+LLINCREATE	= false
+
+VCARGO		= CAR
+
+#----------------------------------------------------
+CARMODE	= tcp
+CARPASSIVE	= true
+CARCONNECT	= 	PALLETCTRL	tcapps.tcsim.simul.ItemPallet			notify_pallet

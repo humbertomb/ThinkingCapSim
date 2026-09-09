@@ -1,0 +1,298 @@
+<?xml version="1.0"?>
+
+<project default="init" basedir=".">
+
+
+	<target name="init">
+		<tstamp/>
+
+		<property name="debug"          value="on"/>
+		<property name="optimize"       value="off"/>
+		<property name="deprecation"    value="off"/>
+		<property name="build.compiler" value="classic"/>
+		<property name="target.vm"      value="1.3"/>
+
+		<path id="classpath">
+			<fileset dir="./jars">
+				<include name="*.jar"/>
+			</fileset>
+		</path>
+
+	</target>
+
+
+	<target name="make.jar" description="Genera archivos JAR">
+		<echo message="-------------- Generando archivos JAR --------------"/>
+		<jar jarfile="../TCApps/tcapps.jar" basedir="../TCApps/output" includes="**"/>
+		<jar jarfile="../TCCore/tccore.jar" basedir="../TCCore/output" includes="**"/>
+		<jar jarfile="../WUCore/wucore.jar" basedir="../WUCore/output" includes="**"/>
+		<jar jarfile="../Devices/devices.jar" basedir="../Devices/output" includes="**"/>
+
+	</target>
+
+
+	<target name="leerInput">
+
+		<input message="Carretillas para enviar datos?"
+    addproperty="carretillas"/>
+
+		<condition property="ifork1">
+			<contains string="${carretillas}" substring="ifork1" casesensitive="false"/>
+		</condition>
+
+		<condition property="ifork2">
+			<contains string="${carretillas}" substring="ifork2" casesensitive="false"/>
+		</condition>
+
+		<condition property="ifork3">
+			<contains string="${carretillas}" substring="ifork3" casesensitive="false"/>
+		</condition>
+
+		<condition property="ifork4">
+			<contains string="${carretillas}" substring="ifork4" casesensitive="false"/>
+		</condition>
+
+		<condition property="ifork5">
+			<contains string="${carretillas}" substring="ifork5" casesensitive="false"/>
+		</condition>
+
+	</target>
+
+	<target name="mandarJars" depends="init,leerInput,make.jar" description="Manda archivos JAR a carretillas">
+		<echo message="-------------- Enviando archivos a los Vehiculos --------------"/>
+		<antcall target="send.jar.ifork1">
+		</antcall>
+		<antcall target="send.jar.ifork2">
+		</antcall>
+		<antcall target="send.jar.ifork3">
+		</antcall>
+		<antcall target="send.jar.ifork4">
+		</antcall>
+		<antcall target="send.jar.ifork5">
+		</antcall>
+	</target>
+	
+	<target name="mandarConf" depends="init,leerInput" description="Manda configuracion a carretillas">
+		<echo message="-------------- Enviando archivos a los Vehiculos --------------"/>
+		<antcall target="send.conf.ifork1">
+		</antcall>
+		<antcall target="send.conf.ifork2">
+		</antcall>
+		<antcall target="send.conf.ifork3">
+		</antcall>
+		<antcall target="send.conf.ifork4">
+		</antcall>
+		<antcall target="send.conf.ifork5">
+		</antcall>
+	</target>
+
+	<target name="mandarTodo" depends="init,leerInput,make.jar" description="Manda JAR y configuracion a carretillas">
+		<echo message="-------------- Enviando archivos a los Vehiculos --------------"/>
+		<antcall target="send.all.ifork1">
+		</antcall>
+		<antcall target="send.all.ifork2">
+		</antcall>
+		<antcall target="send.all.ifork3">
+		</antcall>
+		<antcall target="send.all.ifork4">
+		</antcall>
+		<antcall target="send.all.ifork5">
+		</antcall>
+	</target>
+
+	<target name="send.jar.ifork1" if="ifork1">
+		<echo message="-------------- Enviando archivos jar a Ifork1 --------------"/>
+		<ftp server="10.10.96.130"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap"
+	   verbose="true">
+			<fileset file="../TCApps/tcapps.jar"/>
+			<fileset file="../TCCore/tccore.jar"/>
+			<fileset file="../WUCore/wucore.jar"/>
+			<fileset file="../Devices/devices.jar"/>
+		</ftp>
+	</target>
+
+	<target name="send.jar.ifork2" if="ifork2">
+		<echo message="-------------- Enviando archivos jar a Ifork2 --------------"/>
+		<ftp server="10.10.96.131"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap"
+	   verbose="true">
+			<fileset file="../TCApps/tcapps.jar"/>
+			<fileset file="../TCCore/tccore.jar"/>
+			<fileset file="../WUCore/wucore.jar"/>
+			<fileset file="../Devices/devices.jar"/>
+		</ftp>
+	</target>
+
+	<target name="send.jar.ifork3" if="ifork3">
+		<echo message="-------------- Enviando archivos jar a Ifork3 --------------"/>
+		<ftp server="10.10.96.132"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap"
+		verbose="true">
+			<fileset file="../TCApps/tcapps.jar"/>
+			<fileset file="../TCCore/tccore.jar"/>
+			<fileset file="../WUCore/wucore.jar"/>
+			<fileset file="../Devices/devices.jar"/>
+		</ftp>
+	</target>
+
+	<target name="send.jar.ifork4" if="ifork4">
+		<echo message="-------------- Enviando archivos jar a Ifork4 --------------"/>
+		<ftp server="10.10.96.133"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap"
+	   verbose="true">
+			<fileset file="../TCApps/tcapps.jar"/>
+			<fileset file="../TCCore/tccore.jar"/>
+			<fileset file="../WUCore/wucore.jar"/>
+			<fileset file="../Devices/devices.jar"/>
+		</ftp>
+	</target>
+
+	<target name="send.jar.ifork5" if="ifork5">
+		<echo message="-------------- Enviando archivos jar a Ifork5 --------------"/>
+		<ftp server="10.10.96.134"
+	   userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap"
+	   verbose="true"
+	   >
+			<fileset file="../TCApps/tcapps.jar"/>
+			<fileset file="../TCCore/tccore.jar"/>
+			<fileset file="../WUCore/wucore.jar"/>
+			<fileset file="../Devices/devices.jar"/>
+		</ftp>
+	</target>
+
+
+	
+	<target name="send.conf.ifork1" if="ifork1">
+		<echo message="-------------- Enviando configuracion a Ifork1 --------------"/>
+		<ftp server="10.10.96.130"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap/conf/archs"
+	   verbose="true">
+			<fileset file="../TCApps/conf/archs/ifork.arch"/>
+		</ftp>
+		<ftp server="10.10.96.130"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap/conf/maps"
+	   verbose="true">
+			<fileset file="../TCApps/conf/maps/dulzem3d.world"/>
+			<fileset file="../TCApps/conf/maps/dulzem.topol"/>
+		</ftp>
+	</target>
+	
+	<target name="send.conf.ifork2" if="ifork2">
+		<echo message="-------------- Enviando configuracion a Ifork2 --------------"/>
+		<ftp server="10.10.96.131"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap/conf/archs"
+	   verbose="true">
+			<fileset file="../TCApps/conf/archs/ifork.arch"/>
+		</ftp>
+		<ftp server="10.10.96.131"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap/conf/maps"
+	   verbose="true">
+			<fileset file="../TCApps/conf/maps/dulzem3d.world"/>
+			<fileset file="../TCApps/conf/maps/dulzem.topol"/>
+		</ftp>
+	</target>
+	
+	<target name="send.conf.ifork3" if="ifork3">
+		<echo message="-------------- Enviando configuracion a Ifork3 --------------"/>
+		<ftp server="10.10.96.132"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap/conf/archs"
+	   verbose="true">
+			<fileset file="../TCApps/conf/archs/ifork.arch"/>
+		</ftp>
+		<ftp server="10.10.96.132"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap/conf/maps"
+	   verbose="true">
+			<fileset file="../TCApps/conf/maps/dulzem3d.world"/>
+			<fileset file="../TCApps/conf/maps/dulzem.topol"/>
+		</ftp>
+	</target>
+	
+	<target name="send.conf.ifork4" if="ifork4">
+		<echo message="-------------- Enviando configuracion a Ifork4 --------------"/>
+		<ftp server="10.10.96.133"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap/conf/archs"
+	   verbose="true">
+			<fileset file="../TCApps/conf/archs/ifork.arch"/>
+		</ftp>
+		<ftp server="10.10.96.133"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap/conf/maps"
+	   verbose="true">
+			<fileset file="../TCApps/conf/maps/dulzem3d.world"/>
+			<fileset file="../TCApps/conf/maps/dulzem.topol"/>
+		</ftp>
+	</target>
+	
+	<target name="send.conf.ifork5" if="ifork5">
+		<echo message="-------------- Enviando configuracion a Ifork5 --------------"/>
+		<ftp server="10.10.96.134"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap/conf/archs"
+	   verbose="true">
+			<fileset file="../TCApps/conf/archs/ifork.arch"/>
+		</ftp>
+		<ftp server="10.10.96.134"
+       userid="root"
+       password="rootme"
+       remotedir="/root/thinkingcap/conf/maps"
+	   verbose="true">
+			<fileset file="../TCApps/conf/maps/dulzem3d.world"/>
+			<fileset file="../TCApps/conf/maps/dulzem.topol"/>
+		</ftp>
+	</target>
+
+	
+	
+	<target name="send.all.ifork1" if="ifork1">
+		<antcall target="send.jar.ifork1">	</antcall>
+		<antcall target="send.conf.ifork1">	</antcall>
+	</target>
+	
+	<target name="send.all.ifork2" if="ifork2">
+		<antcall target="send.jar.ifork2">	</antcall>
+		<antcall target="send.conf.ifork2">	</antcall>
+	</target>
+	
+	<target name="send.all.ifork3" if="ifork3">
+		<antcall target="send.jar.ifork3">	</antcall>
+		<antcall target="send.conf.ifork3">	</antcall>
+	</target>
+	
+	<target name="send.all.ifork4" if="ifork4">
+		<antcall target="send.jar.ifork4">	</antcall>
+		<antcall target="send.conf.ifork4">	</antcall>
+	</target>
+	
+	<target name="send.all.ifork5" if="ifork5">
+		<antcall target="send.jar.ifork5">	</antcall>
+		<antcall target="send.conf.ifork5">	</antcall>
+	</target>
+
+</project>

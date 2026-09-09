@@ -1,0 +1,131 @@
+#---------------------------------------------------------------------
+# May 2002		Humberto Martinez Barbera
+#				Juan Pedro Canovas Quinonero 
+#
+# Mar 2003		Humberto Martinez Barbera
+# Jul 2004		Humberto Martinez Barbera
+#
+# Architecture definition for the iFork lift-fork AGV
+#
+
+#*********************************************************************
+#*****                                                           *****
+#*****            MULTIPLE ROBOTS INTERCONNECTION PART           *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Global Linda shared server
+#---------------------------------------------------------------------
+GLINADDR		= localhost
+GLINPORT		= 5500
+GLINCREATE	= false
+
+#*********************************************************************
+#*****                                                           *****
+#*****                    SINGLE ROBOT PART                      *****
+#*****                                                           *****
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Linda intra-architecture server
+#---------------------------------------------------------------------
+LLINADDR		= localhost
+LLINPORT		= 3000
+LLINCREATE	= true
+
+#---------------------------------------------------------------------
+# Active modules and TC-II execution parameters
+#---------------------------------------------------------------------
+MODULES		= NAV, CON, PLA, PER
+VROBOT		= ROB
+ROUTER		= COO
+
+#---------------------------------------------------------------------
+# Router section 
+#---------------------------------------------------------------------
+COOINFO		= Linda Router
+COOMODE		= shared
+COOCLASS		= tcrob.ingenia.ifork.IForkLindaRouter
+COOGMODE		= tcp
+COOGFX		= true
+
+#---------------------------------------------------------------------
+# Navigation section 
+#---------------------------------------------------------------------
+NAVINFO		= Navigation
+NAVMODE		= shared
+NAVCLASS		= tcrob.ingenia.ifork.IForkNavigation
+NAVPASSIVE	= true
+NAVQUEUED	= false
+NAVPOLLED	= false
+NAVGFX		= true
+NAVCONNECT	= 	LPS			tc.shared.linda.ItemLPS 			notify_lps, \
+				GOAL 		tc.shared.linda.ItemGoal 			notify_goal, \
+				COORD		tcrob.ingenia.ifork.linda.ItemCoordination		notify_coord, \
+				DELROBOT	tc.shared.linda.ItemDelRobot		notify_delrobot
+
+#---------------------------------------------------------------------
+# Planner section 
+#---------------------------------------------------------------------
+PLAINFO		= Planner
+PLAMODE		= shared
+PLACLASS		= tcrob.ingenia.ifork.IForkPlanner
+PLAPASSIVE	= false
+PLAQUEUED	= false
+PLAPOLLED	= true
+PLAEXTIME	= 1000
+PLAGFX		= true
+PLACONNECT	= 	PLAN 		tc.shared.linda.ItemPlan 		notify_plan, \
+				BEHRESULT 	tc.shared.linda.ItemBehResult 	notify_beh_result, \
+				STATUS 		tc.shared.linda.ItemStatus 		notify_status, \
+				COORD		tcrob.ingenia.ifork.linda.ItemCoordination	notify_coord, \
+				DELROBOT	tc.shared.linda.ItemDelRobot	notify_delrobot
+WHCOORD		= false
+
+#---------------------------------------------------------------------
+# Perception section 
+#---------------------------------------------------------------------
+PERINFO		= Perception
+PERMODE		= shared
+PERCLASS		= tcrob.ingenia.ifork.IForkPerception
+PERPASSIVE	= true
+PERGFX		= true
+PERCONNECT	= 	DATA 		tc.shared.linda.ItemData 		notify_data, \
+				OBJECT 		tc.shared.linda.ItemObject 		notify_object, \
+				NAVIGATION	tc.shared.linda.ItemNavigation	notify_navigation, \
+				COORD		tcrob.ingenia.ifork.linda.ItemCoordination	notify_coord, \
+				DELROBOT	tc.shared.linda.ItemDelRobot	notify_delrobot
+
+#---------------------------------------------------------------------
+# Controller section 
+#---------------------------------------------------------------------
+CONINFO		= Controller
+CONMODE		= shared
+CONCLASS		= tcrob.ingenia.ifork.IForkController
+CONPASSIVE	= true
+CONGFX		= false
+CONCONNECT	= 	LPS			tc.shared.linda.ItemLPS 			notify_lps, \
+				GOAL 		tc.shared.linda.ItemGoal 			notify_goal, \
+				PATH 		tc.shared.linda.ItemPath 			notify_path
+
+#---------------------------------------------------------------------
+# Virtual robot section 
+#---------------------------------------------------------------------
+ROBINFO		= Virtual Robot
+ROBMODE		= shared
+ROBCLASS	= tcrob.ingenia.ifork.IFork
+ROBPASSIVE	= false
+ROBEXTIME	= 115
+ROBDESC		= conf/robots/ifork.robot
+ROBCUST		= conf/robots/ifork.cust
+ROBWORLD	= conf/maps/dulzem3d.world
+ROBTOPOL	= conf/maps/dulzem.topol
+ROBGFX		= true
+ROBAPW		= true
+ROBCONNECT	= 	MOTION		tc.shared.linda.ItemMotion 			notify_motion, \
+				ZONE		tcrob.ingenia.ifork.linda.ItemIForkZone 		notify_zone, \
+				DATACTRL 	tc.shared.linda.ItemDataCtrl 		notify_data_ctrl, \
+				DELROBOT	tc.shared.linda.ItemDelRobot		notify_delrobot, \
+				STATUS 		tc.shared.linda.ItemStatus 			notify_status,
+				PALLETCTRL	tcapps.tcsim.simul.ItemPallet				notify_pallet

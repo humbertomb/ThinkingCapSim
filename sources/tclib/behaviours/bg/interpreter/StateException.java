@@ -1,0 +1,18 @@
+/*
+ * (c) 1997-2001 Humberto Martinez
+ */
+ 
+package tclib.behaviours.bg.interpreter;
+
+public class StateException extends InterpreterException
+{
+	public StateException () 
+	{
+		super ();
+	}
+
+	public StateException (String s) 
+	{
+		super (s);
+	}
+}
