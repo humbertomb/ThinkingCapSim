@@ -251,6 +251,11 @@ public class Line2 extends Object implements Serializable
 		Cx = orig.x;			Cy = orig.y;
 		Dx = dest.x;			Dy = dest.y;
 		
+		// a zero-length segment (either one) never intersects: without this check the
+		// coincident test below fires for any degenerate segment and returns a bogus point
+		if (((Cx == Dx) && (Cy == Dy)) || ((Ax == Bx) && (Ay == By)))
+			return null;
+		
 		rn = (Ay-Cy) * (Dx-Cx) - (Ax-Cx) * (Dy-Cy);
 		rd = (Bx-Ax) * (Dy-Cy) - (By-Ay) * (Dx-Cx);
 		if ((rd == 0.0) && (rn == 0.0))

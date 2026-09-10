@@ -414,7 +414,7 @@ public class Simulator
 			else
 			{				
 				p		= rout.intersection (wall);
-				tdist 	= p.distance (xx1, yy1);
+				if (p != null)	tdist 	= p.distance (xx1, yy1);
 			}
 			dist 		= Math.min (dist, tdist);
 		}
@@ -589,7 +589,7 @@ public class Simulator
 			else
 			{				
 				p		= rout.intersection (wall);
-				tdist 	= p.distance (xx1, yy1);
+				if (p != null)	tdist 	= p.distance (xx1, yy1);
 			}
 			dist 	= Math.min (dist, tdist);
 		}
@@ -686,7 +686,7 @@ public class Simulator
 			if (wall != null)									
 			{				
 				p		= rout.intersection (wall);
-				tdist 	= p.distance (xx1, yy1);
+				if (p != null)	tdist 	= p.distance (xx1, yy1);
 			}
 			lrf_measures[i] = tdist;					
 		}
@@ -797,14 +797,14 @@ public class Simulator
 			wall 	= map.crossline (rout, icons, iconcount, ROBOINDEX[roboindex]);									
 			if(wall != null){													
 				p			= rout.intersection (wall);	
-				distMuro	= p.distance (xx1, yy1);						// Calculo de la distancia entre sensor y el muro
+				if (p != null)	distMuro	= p.distance (xx1, yy1);						// Calculo de la distancia entre sensor y el muro
 			}
 			
 			index = map.beacons().crossline(rout);														
 			wall=map.beacons().at(index).getLine();
 			if(wall != null){
 				p			= rout.intersection (wall);
-				distBeac	= p.distance (xx1, yy1);						// Calcula la interseccion entre el sensor y baliza			
+				if (p != null)	distBeac	= p.distance (xx1, yy1);						// Calcula la interseccion entre el sensor y baliza			
 				
 				if((distBeac<distMuro)&&(distBeac>RDESC[roboindex].MINIMLSB)){			// Si la distancia a la baliza es menor o que la del Muro, y la distancia entre la baliza es mayor a la minima
 					
@@ -897,7 +897,7 @@ public class Simulator
 			wall 	= map.crossline (rout, icons, iconcount, ROBOINDEX[roboindex]);									
 			if(wall != null){
 				p		= rout.intersection (wall);
-				dist 	= p.distance (xx1, yy1);
+				if (p != null)	dist 	= p.distance (xx1, yy1);
 			}
 			
 			
@@ -989,7 +989,7 @@ public class Simulator
 			if (wall != null)									
 			{				
 				p		= rout.intersection (wall);
-				tdist 	= p.distance (xx1, yy1);
+				if (p != null)	tdist 	= p.distance (xx1, yy1);
 			}
 			rdr_measures[i] = tdist;					
 		}
