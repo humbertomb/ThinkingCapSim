@@ -782,14 +782,14 @@ public final class WorldEdit
 		case WorldItem.FAREA:		return new String[] { "label", "texture", "points" };
 		case WorldItem.PATH:		return new String[] { "x", "y", "z" };
 		case WorldItem.WALL:		return new String[] { "x1", "y1", "z1", "x2", "y2", "z2", "width", "height", "texture" };
-		case WorldItem.OBJECT:		return new String[] { "x", "y", "z", "angle", "icon", "shape", "color", "usecolor" };
+		case WorldItem.OBJECT:		return new String[] { "x", "y", "z", "orientation", "icon", "shape", "color", "usecolor" };
 		case WorldItem.ICON:		return new String[] { "label", "segments" };
 		case WorldItem.CONNECTOR:		return new String[] { "label", "x1", "y1", "z1", "x2", "y2", "z2", "path x1", "path y1", "path z1", "path x2", "path y2", "path z2", "width", "height", "texture" };
-		case WorldItem.BEACON:		return new String[] { "label", "x", "y", "z", "angle", "width", "height" };
+		case WorldItem.BEACON:		return new String[] { "label", "x", "y", "z", "orientation", "width", "height" };
 		case WorldItem.CBEACON:		return new String[] { "label", "x", "y", "z", "diameter", "height" };
-		case WorldItem.WAYPOINT:	return new String[] { "label", "x", "y", "z", "angle" };
-		case WorldItem.DOCK:		return new String[] { "label", "x", "y", "z", "angle" };
-		case WorldItem.START:		return new String[] { "x", "y", "z", "angle" };
+		case WorldItem.WAYPOINT:	return new String[] { "label", "x", "y", "z", "orientation" };
+		case WorldItem.DOCK:		return new String[] { "label", "x", "y", "z", "orientation" };
+		case WorldItem.START:		return new String[] { "x", "y", "z", "orientation" };
 		case WorldItem.DEFAULTS:	return new String[] { "wall width", "wall height", "wall texture", "connector width", "connector height", "connector texture", "zone texture", "farea texture" };
 		}
 		return new String[0];
@@ -855,7 +855,7 @@ public final class WorldEdit
 			if (name.equals ("x"))			return fmt (o.pos.x ());
 			if (name.equals ("y"))			return fmt (o.pos.y ());
 			if (name.equals ("z"))			return fmt (o.pos.z ());
-			if (name.equals ("angle"))		return fmt (Math.toDegrees (o.a));
+			if (name.equals ("orientation"))		return fmt (Math.toDegrees (o.a));
 			if (name.equals ("shape"))		return (o.shape == null) ? "" : o.shape;
 			if (name.equals ("color"))		return toHex (o.color);
 			if (name.equals ("usecolor"))	return Boolean.toString (o.usecolor);
@@ -897,7 +897,7 @@ public final class WorldEdit
 			if (name.equals ("x"))			return fmt (b.pos.x ());
 			if (name.equals ("y"))			return fmt (b.pos.y ());
 			if (name.equals ("z"))			return fmt (b.pos.z ());
-			if (name.equals ("angle"))		return fmt (Math.toDegrees (b.pos.alpha ()));
+			if (name.equals ("orientation"))		return fmt (Math.toDegrees (b.pos.alpha ()));
 			if (name.equals ("width"))		return fmt (b.width);
 			if (name.equals ("height"))		return fmt (b.height);
 			break;
@@ -920,7 +920,7 @@ public final class WorldEdit
 			if (name.equals ("x"))			return fmt (p.pos.x ());
 			if (name.equals ("y"))			return fmt (p.pos.y ());
 			if (name.equals ("z"))			return fmt (p.pos.z ());
-			if (name.equals ("angle"))		return fmt (Math.toDegrees (p.pos.alpha ()));
+			if (name.equals ("orientation"))		return fmt (Math.toDegrees (p.pos.alpha ()));
 			break;
 		}
 		case WorldItem.DOCK:
@@ -930,14 +930,14 @@ public final class WorldEdit
 			if (name.equals ("x"))			return fmt (d.pos.x ());
 			if (name.equals ("y"))			return fmt (d.pos.y ());
 			if (name.equals ("z"))			return fmt (d.pos.z ());
-			if (name.equals ("angle"))		return fmt (Math.toDegrees (d.pos.alpha ()));
+			if (name.equals ("orientation"))		return fmt (Math.toDegrees (d.pos.alpha ()));
 			break;
 		}
 		case WorldItem.START:
 			if (name.equals ("x"))			return fmt (w.start_x ());
 			if (name.equals ("y"))			return fmt (w.start_y ());
 			if (name.equals ("z"))			return fmt (w.start_z ());
-			if (name.equals ("angle"))		return fmt (Math.toDegrees (w.start_a ()));
+			if (name.equals ("orientation"))		return fmt (Math.toDegrees (w.start_a ()));
 			break;
 		case WorldItem.DEFAULTS:
 			if (name.equals ("wall width"))		return fmt (w.walls ().defaultWidth ());
@@ -1022,7 +1022,7 @@ public final class WorldEdit
 			if (name.equals ("x"))				setObjectPose (o, num (value), o.pos.y (), o.pos.z (), o.a);
 			else if (name.equals ("y"))			setObjectPose (o, o.pos.x (), num (value), o.pos.z (), o.a);
 			else if (name.equals ("z"))			setObjectPose (o, o.pos.x (), o.pos.y (), num (value), o.a);
-			else if (name.equals ("angle"))		setObjectPose (o, o.pos.x (), o.pos.y (), o.pos.z (), Math.toRadians (num (value)));
+			else if (name.equals ("orientation"))		setObjectPose (o, o.pos.x (), o.pos.y (), o.pos.z (), Math.toRadians (num (value)));
 			else if (name.equals ("shape"))		o.shape = (value.length () == 0) ? null : token (value);
 			else if (name.equals ("color"))		o.color = parseColor (value);
 			else if (name.equals ("usecolor"))	o.usecolor = bool (value);
@@ -1080,7 +1080,7 @@ public final class WorldEdit
 			else if (name.equals ("x"))			b.pos.x (num (value));
 			else if (name.equals ("y"))			b.pos.y (num (value));
 			else if (name.equals ("z"))			b.pos.z (num (value));
-			else if (name.equals ("angle"))		b.pos.alpha (Math.toRadians (num (value)));
+			else if (name.equals ("orientation"))		b.pos.alpha (Math.toRadians (num (value)));
 			else if (name.equals ("width"))		b.width = Math.abs (num (value));
 			else if (name.equals ("height"))	b.height = Math.abs (num (value));
 			return;
@@ -1103,7 +1103,7 @@ public final class WorldEdit
 			else if (name.equals ("x"))			p.pos.x (num (value));
 			else if (name.equals ("y"))			p.pos.y (num (value));
 			else if (name.equals ("z"))			p.pos.z (num (value));
-			else if (name.equals ("angle"))		p.pos.alpha (Math.toRadians (num (value)));
+			else if (name.equals ("orientation"))		p.pos.alpha (Math.toRadians (num (value)));
 			return;
 		}
 		case WorldItem.DOCK:
@@ -1113,14 +1113,14 @@ public final class WorldEdit
 			else if (name.equals ("x"))			d.pos.x (num (value));
 			else if (name.equals ("y"))			d.pos.y (num (value));
 			else if (name.equals ("z"))			d.pos.z (num (value));
-			else if (name.equals ("angle"))		d.pos.alpha (Math.toRadians (num (value)));
+			else if (name.equals ("orientation"))		d.pos.alpha (Math.toRadians (num (value)));
 			return;
 		}
 		case WorldItem.START:
 			if (name.equals ("x"))				w.setStart (num (value), w.start_y (), w.start_a ());
 			else if (name.equals ("y"))			w.setStart (w.start_x (), num (value), w.start_a ());
 			else if (name.equals ("z"))			w.setStart (w.start_x (), w.start_y (), num (value), w.start_a ());
-			else if (name.equals ("angle"))		w.setStart (w.start_x (), w.start_y (), Math.toRadians (num (value)));
+			else if (name.equals ("orientation"))		w.setStart (w.start_x (), w.start_y (), Math.toRadians (num (value)));
 			return;
 		case WorldItem.DEFAULTS:
 			if (name.equals ("wall width"))			w.walls ().setDefaults (num (value), w.walls ().defaultHeight (), w.walls ().defaultTexture ());

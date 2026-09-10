@@ -21,6 +21,7 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
@@ -260,12 +261,20 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 			public void actionPerformed (ActionEvent e)		{ canvas.newIcon (); }
 		};
 		newIcon.putValue (Action.SHORT_DESCRIPTION, "New icon  [Ctrl+I]");
-		tb.add (newIcon).setHideActionText (true);
+		JButton	newIconButton = new JButton (newIcon);
+		newIconButton.setHideActionText (true);
+		newIconButton.setFocusable (false);
+		newIconButton.setBorderPainted (false);				// same flat look as the tool toggles around it
+		newIconButton.setContentAreaFilled (false);
+		newIconButton.setOpaque (false);
+		newIconButton.putClientProperty ("JButton.buttonType", "toolbar");		// macOS Aqua: no push-button frame
+		tb.add (newIconButton);
 		getRootPane ().getInputMap (JComponent.WHEN_IN_FOCUSED_WINDOW).put (KeyStroke.getKeyStroke (KeyEvent.VK_I, Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ()), "newIcon");
 		getRootPane ().getActionMap ().put ("newIcon", newIcon);
 		addTool (tb, group, WorldCanvas.T_ICON,		ToolIcon.ICON,		"Edit icon",			"I");
 		toolButtons[WorldCanvas.T_ICON].setEnabled (false);
 		addTool (tb, group, WorldCanvas.T_OBJECT,	ToolIcon.OBJECT,	"Object",				"O");
+		tb.addSeparator ();
 		addTool (tb, group, WorldCanvas.T_CONNECTOR,	ToolIcon.CONNECTOR,	"Connector",			"D");
 		addTool (tb, group, WorldCanvas.T_WAYPOINT,	ToolIcon.WAYPOINT,	"Waypoint",				"P");
 		addTool (tb, group, WorldCanvas.T_DOCK,		ToolIcon.DOCK,		"Dock",					"K");
