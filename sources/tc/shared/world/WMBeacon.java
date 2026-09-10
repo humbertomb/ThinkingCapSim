@@ -25,8 +25,11 @@ import wucore.utils.geom.Point3;
 public class WMBeacon extends WMElement
 {
     
+    static public final double	DEF_HEIGHT	= 0.5;		// default plate height (m)
+
     public Position			pos;
     public double				width;
+    public double				height	= DEF_HEIGHT;
     
     
     public WMBeacon(String prop) {
@@ -37,14 +40,20 @@ public class WMBeacon extends WMElement
         double r		= Double.parseDouble (st.nextToken()); 	//orientation -  degrees
         pos 			= new Position(px,py,pz,Math.toRadians(r));
         width 		= Double.parseDouble (st.nextToken()); 	//width
+        height 		= Double.parseDouble (st.nextToken()); 	//height
         
         label = new String (st.nextToken());	
     }
     
     public WMBeacon(String label, Position pos, double width){
+        this (label, pos, width, DEF_HEIGHT);
+    }
+    
+    public WMBeacon(String label, Position pos, double width, double height){
         this.label = label;
         this.pos = pos;
         this.width = width;
+        this.height = height;
     }
     
     public WMBeacon(TextDxf text) {
@@ -53,7 +62,8 @@ public class WMBeacon extends WMElement
         double rot = 0.0;
         width = 0.0;
         if(text.ExtendedDouble.size()>0) rot = Math.toRadians(text.getExtDouble(0));	
-        if(text.ExtendedDouble.size()>1) width = Math.toRadians(text.getExtDouble(0));	
+        if(text.ExtendedDouble.size()>1) width = text.getExtDouble(1);	
+        if(text.ExtendedDouble.size()>2) height = text.getExtDouble(2);	
         pos = new Position(p3.x(),p3.y(),rot);
     }
     
@@ -70,6 +80,7 @@ public class WMBeacon extends WMElement
         TextDxf text = new TextDxf(label,new Point3(pos.x(),pos.y(),0.0),0.2,"BEACONS");		
         text.addExtDouble(Math.toDegrees(pos.alpha()));
         text.addExtDouble(width);
+        text.addExtDouble(height);
         
         dxf.addEntity(text);  
     }
@@ -96,7 +107,7 @@ public class WMBeacon extends WMElement
     
     public String toRawString ()
     {
-        return DoubleFormat.format(pos.x()) + ", " + DoubleFormat.format(pos.y()) + ", " + DoubleFormat.format(pos.z()) + ", " + DoubleFormat.format(Math.toDegrees(pos.alpha())) + ", " + DoubleFormat.format(width) + ", " + label;
+        return DoubleFormat.format(pos.x()) + ", " + DoubleFormat.format(pos.y()) + ", " + DoubleFormat.format(pos.z()) + ", " + DoubleFormat.format(Math.toDegrees(pos.alpha())) + ", " + DoubleFormat.format(width) + ", " + DoubleFormat.format(height) + ", " + label;
     }
     
 }

@@ -252,18 +252,8 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		addTool (tb, group, WorldCanvas.T_PAN,		ToolIcon.PAN,		"Pan",					"H");
 		tb.addSeparator ();
 		addTool (tb, group, WorldCanvas.T_WALL,		ToolIcon.WALL,		"Wall",					"W");
-		addTool (tb, group, WorldCanvas.T_CONNECTOR,		ToolIcon.CONNECTOR,		"Connector",					"D");
 		addTool (tb, group, WorldCanvas.T_ZONE,		ToolIcon.ZONE,		"Zone",					"Z");
 		addTool (tb, group, WorldCanvas.T_FAREA,	ToolIcon.FAREA,		"Forbidden area",		"F");
-		addTool (tb, group, WorldCanvas.T_OBJECT,	ToolIcon.OBJECT,	"Object",				"O");
-		tb.addSeparator ();
-		addTool (tb, group, WorldCanvas.T_WAYPOINT,	ToolIcon.WAYPOINT,	"Waypoint",				"P");
-		addTool (tb, group, WorldCanvas.T_DOCK,		ToolIcon.DOCK,		"Dock",					"K");
-		addTool (tb, group, WorldCanvas.T_BEACON,	ToolIcon.BEACON,	"Strip beacon",			"B");
-		addTool (tb, group, WorldCanvas.T_CBEACON,	ToolIcon.CBEACON,	"Cylindrical beacon",	"C");
-		addTool (tb, group, WorldCanvas.T_PATH,		ToolIcon.PATH,		"Path point",			"T");
-		addTool (tb, group, WorldCanvas.T_START,	ToolIcon.START,		"Start point",			"R");
-		tb.addSeparator ();
 		// icons: create a new one (action) and edit the selected object's / icon's (tool)
 		Action	newIcon = new AbstractAction ("New icon", new ToolIcon (ToolIcon.NEW_ICON))
 		{
@@ -275,6 +265,15 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		getRootPane ().getActionMap ().put ("newIcon", newIcon);
 		addTool (tb, group, WorldCanvas.T_ICON,		ToolIcon.ICON,		"Edit icon",			"I");
 		toolButtons[WorldCanvas.T_ICON].setEnabled (false);
+		addTool (tb, group, WorldCanvas.T_OBJECT,	ToolIcon.OBJECT,	"Object",				"O");
+		addTool (tb, group, WorldCanvas.T_CONNECTOR,	ToolIcon.CONNECTOR,	"Connector",			"D");
+		addTool (tb, group, WorldCanvas.T_WAYPOINT,	ToolIcon.WAYPOINT,	"Waypoint",				"P");
+		addTool (tb, group, WorldCanvas.T_DOCK,		ToolIcon.DOCK,		"Dock",					"K");
+		tb.addSeparator ();
+		addTool (tb, group, WorldCanvas.T_BEACON,	ToolIcon.BEACON,	"Strip beacon",			"B");
+		addTool (tb, group, WorldCanvas.T_CBEACON,	ToolIcon.CBEACON,	"Cylindrical beacon",	"C");
+		addTool (tb, group, WorldCanvas.T_PATH,		ToolIcon.PATH,		"Path point",			"T");
+		addTool (tb, group, WorldCanvas.T_START,	ToolIcon.START,		"Start point",			"R");
 		tb.addSeparator ();
 
 		deleteAction = new AbstractAction ("Delete", new ToolIcon (ToolIcon.DELETE))
@@ -903,10 +902,25 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		treeRoot.removeAllChildren ();
 		for (int kind = 0; kind < WorldItem.NKINDS; kind++)
 		{
+			if (kind == WorldItem.CBEACON)			continue;			// listed under the strip beacons category
 			int						n = WorldEdit.count (world, kind);
-			DefaultMutableTreeNode	cat = new KindNode (kind, n);
-			for (int i = 0; i < n; i++)
-				cat.add (new ItemNode (new WorldItem (kind, i)));
+			DefaultMutableTreeNode	cat;
+			if (kind == WorldItem.BEACON)
+			{
+				// both beacon types share the "Beacons" category
+				int		nc = WorldEdit.count (world, WorldItem.CBEACON);
+				cat = new KindNode (kind, n + nc);
+				for (int i = 0; i < n; i++)
+					cat.add (new ItemNode (new WorldItem (WorldItem.BEACON, i)));
+				for (int i = 0; i < nc; i++)
+					cat.add (new ItemNode (new WorldItem (WorldItem.CBEACON, i)));
+			}
+			else
+			{
+				cat = new KindNode (kind, n);
+				for (int i = 0; i < n; i++)
+					cat.add (new ItemNode (new WorldItem (kind, i)));
+			}
 			treeRoot.add (cat);
 		}
 		treeModel.reload ();
@@ -928,14 +942,19 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 			tree.clearSelection ();
 			return;
 		}
-		if (item.kind < treeRoot.getChildCount ())
+		for (int i = 0; i < treeRoot.getChildCount (); i++)
 		{
-			DefaultMutableTreeNode	cat = (DefaultMutableTreeNode) treeRoot.getChildAt (item.kind);
-			if (item.index < cat.getChildCount ())
+			DefaultMutableTreeNode	cat = (DefaultMutableTreeNode) treeRoot.getChildAt (i);
+			for (int j = 0; j < cat.getChildCount (); j++)
 			{
-				TreePath	path = new TreePath (((DefaultMutableTreeNode) cat.getChildAt (item.index)).getPath ());
-				tree.setSelectionPath (path);
-				tree.scrollPathToVisible (path);
+				DefaultMutableTreeNode	n = (DefaultMutableTreeNode) cat.getChildAt (j);
+				if (item.equals (n.getUserObject ()))
+				{
+					TreePath	path = new TreePath (n.getPath ());
+					tree.setSelectionPath (path);
+					tree.scrollPathToVisible (path);
+					return;
+				}
 			}
 		}
 	}
@@ -949,7 +968,9 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		public String toString ()
 		{
 			int	kind = ((Integer) getUserObject ()).intValue ();
-			return ((kind == WorldItem.START) || (kind == WorldItem.DEFAULTS)) ? WorldItem.PLURALS[kind] : WorldItem.PLURALS[kind] + "  (" + n + ")";
+			if ((kind == WorldItem.START) || (kind == WorldItem.DEFAULTS))		return WorldItem.PLURALS[kind];
+			if (kind == WorldItem.BEACON)											return "Beacons  (" + n + ")";
+			return WorldItem.PLURALS[kind] + "  (" + n + ")";
 		}
 	}
 

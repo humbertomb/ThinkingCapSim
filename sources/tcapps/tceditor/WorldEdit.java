@@ -790,7 +790,7 @@ public final class WorldEdit
 		case WorldItem.OBJECT:		return new String[] { "x", "y", "z", "angle", "icon", "shape", "color", "usecolor" };
 		case WorldItem.ICON:		return new String[] { "label", "segments" };
 		case WorldItem.CONNECTOR:		return new String[] { "label", "x1", "y1", "z1", "x2", "y2", "z2", "path x1", "path y1", "path z1", "path x2", "path y2", "path z2", "width", "height", "texture" };
-		case WorldItem.BEACON:		return new String[] { "label", "x", "y", "z", "angle", "width" };
+		case WorldItem.BEACON:		return new String[] { "label", "x", "y", "z", "angle", "width", "height" };
 		case WorldItem.CBEACON:		return new String[] { "label", "x", "y", "z", "horiz", "vert" };
 		case WorldItem.WAYPOINT:	return new String[] { "label", "x", "y", "z", "angle" };
 		case WorldItem.DOCK:		return new String[] { "label", "x", "y", "z", "angle" };
@@ -904,6 +904,7 @@ public final class WorldEdit
 			if (name.equals ("z"))			return fmt (b.pos.z ());
 			if (name.equals ("angle"))		return fmt (Math.toDegrees (b.pos.alpha ()));
 			if (name.equals ("width"))		return fmt (b.width);
+			if (name.equals ("height"))		return fmt (b.height);
 			break;
 		}
 		case WorldItem.CBEACON:
@@ -1086,6 +1087,7 @@ public final class WorldEdit
 			else if (name.equals ("z"))			b.pos.z (num (value));
 			else if (name.equals ("angle"))		b.pos.alpha (Math.toRadians (num (value)));
 			else if (name.equals ("width"))		b.width = Math.abs (num (value));
+			else if (name.equals ("height"))	b.height = Math.abs (num (value));
 			return;
 		}
 		case WorldItem.CBEACON:

@@ -394,9 +394,10 @@ public class WorldView3DWindow extends JFrame
 			WMBeacon		b = world.beacons ().at (i);
 			Transform3D		t = new Transform3D ();
 			t.rotZ (b.pos.alpha ());
-			t.setTranslation (new Vector3d (b.pos.x (), b.pos.y (), b.pos.z () + 0.4));
+			double			h = Math.max (0.02, b.height);
+			t.setTranslation (new Vector3d (b.pos.x (), b.pos.y (), b.pos.z () + h / 2.0));
 			TransformGroup	tg = new TransformGroup (t);
-			tg.addChild (new Box ((float) Math.max (0.01, b.width / 2.0), 0.01f, 0.3f, matAppearance (C_BEACON, 0f)));
+			tg.addChild (new Box ((float) Math.max (0.01, b.width / 2.0), 0.01f, (float) (h / 2.0), matAppearance (C_BEACON, 0f)));
 			bg.addChild (tg);
 		}
 

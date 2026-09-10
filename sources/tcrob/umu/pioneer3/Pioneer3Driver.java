@@ -89,7 +89,7 @@ public class Pioneer3Driver extends Object
 	private SerialPort				serial;
 	private InputStream				input;
 	private OutputStream			output;
-	private Integer					synchro;					// AROS initial synchronization lock
+	private Object					synchro;					// AROS initial synchronization lock
 	private int[]					packet;						// Serial data buffer
 	protected int[]					data;						// AROS commands data buffer
 	protected boolean				debug		= false;
