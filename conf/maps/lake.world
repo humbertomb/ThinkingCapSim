@@ -1,7 +1,7 @@
 # ==============================
 # START POINT
 # ==============================
-START = 0.0, 0.0, 0.0
+START = 0.0, 0.0, 0.0, 0.0
 
 # ==============================
 # PATH POINTS
@@ -17,18 +17,25 @@ LINE_DEF_HEIGHT = 3.0
 LINE_DEF_WIDTH = 0.01
 LINE_DEF_TEXTURE = ./conf/3dmodels/textures/pared_dulze.jpg
 
-LINE_0 = -100.0, -100.0, -100.0, 100.0, 3.25, 0.75, ./conf/3dmodels/textures/stone02.jpg
-LINE_1 = -100.0, 100.0, 100.0, 100.0, 3.25, 0.75, ./conf/3dmodels/textures/stone02.jpg
-LINE_2 = 100.0, 100.0, 100.0, -100.0, 3.25, 0.75, ./conf/3dmodels/textures/stone02.jpg
-LINE_3 = 100.0, -100.0, -100.0, -100.0, 3.25, 0.75, ./conf/3dmodels/textures/stone02.jpg
+LINE_0 = -100.0, -100.0, 0.0, -100.0, 100.0, 0.0, 3.25, 0.75, ./conf/3dmodels/textures/stone02.jpg
+LINE_1 = -100.0, 100.0, 0.0, 100.0, 100.0, 0.0, 3.25, 0.75, ./conf/3dmodels/textures/stone02.jpg
+LINE_2 = 100.0, 100.0, 0.0, 100.0, -100.0, 0.0, 3.25, 0.75, ./conf/3dmodels/textures/stone02.jpg
+LINE_3 = 100.0, -100.0, 0.0, -100.0, -100.0, 0.0, 3.25, 0.75, ./conf/3dmodels/textures/stone02.jpg
+
+# ==============================
+# ICONS (2D shapes, local coordinates)
+# ==============================
+ICONS = 1
+
+ICON_0 = barrera, 4, -0.2, -0.2, 0.0, 0.2, -0.2, 0.0, -0.2, 0.2, 0.0, -0.2, -0.2, 0.0, 0.2, 0.2, 0.0, -0.2, 0.2, 0.0, 0.2, -0.2, 0.0, 0.2, 0.2, 0.0
 
 # ==============================
 # EXTERNAL OBJECTS
 # ==============================
 MAX_OBJECTS = 2
 
-OBJECT_0 = 4, -0.2, -0.2, 0.2, -0.2, -0.2, 0.2, -0.2, -0.2, 0.2, 0.2, -0.2, 0.2, 0.2, -0.2, 0.2, 0.2, 100:100:100, ./conf/3dmodels/barrera.3ds, -50.0, -50.0, 0.0, 0.0, false
-OBJECT_1 = 4, -0.2, -0.2, 0.2, -0.2, -0.2, 0.2, -0.2, -0.2, 0.2, 0.2, -0.2, 0.2, 0.2, -0.2, 0.2, 0.2, 100:100:100, ./conf/3dmodels/barrera.3ds, 50.0, 50.0, 0.0, 0.0, false
+OBJECT_0 = barrera, -50.0, -50.0, 0.0, 0.0, 100:100:100, ./conf/3dmodels/barrera.3ds, false
+OBJECT_1 = barrera, 50.0, 50.0, 0.0, 0.0, 100:100:100, ./conf/3dmodels/barrera.3ds, false
 
 # ==============================
 # ZONES
@@ -36,5 +43,5 @@ OBJECT_1 = 4, -0.2, -0.2, 0.2, -0.2, -0.2, 0.2, -0.2, -0.2, 0.2, 0.2, -0.2, 0.2,
 ZONES = 1
 ZONE_DEF_TEXTURE = ./conf/3dmodels/textures/036metal.jpg
 
-ZONE_0 = -100.0, -100.0, 200.0, 200.0, Lake, ./conf/3dmodels/textures/sea.jpg
+ZONE_0 = -100.0, -100.0, 0.0, 200.0, 200.0, Lake, ./conf/3dmodels/textures/sea.jpg
 

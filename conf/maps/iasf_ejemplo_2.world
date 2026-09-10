@@ -1,7 +1,7 @@
 # ==============================
 # START POINT
 # ==============================
-START = 1, 249, 0
+START = 1, 249, 0.0, 0
 
 # ==============================
 # PATH POINTS
@@ -18,13 +18,13 @@ LINE_DEF_HEIGHT = 0.75
 LINE_DEF_WIDTH = 0.01
 LINE_DEF_TEXTURE = ./conf/3dmodels/textures/wall.jpg
 
-LINE_0 = 0, 0, 250, 0
-LINE_1 = 250, 0, 250, 250
-LINE_2 = 250, 250, 0,250
-LINE_3 = 0, 250, 0, 0
-LINE_4 = 120, 250, 120, 100
-LINE_5 = 120, 100, 160, 100
-LINE_6 = 160, 100, 160, 250
+LINE_0 = 0, 0, 0.0, 250, 0, 0.0
+LINE_1 = 250, 0, 0.0, 250, 250, 0.0
+LINE_2 = 250, 250, 0.0, 0, 250, 0.0
+LINE_3 = 0, 250, 0.0, 0, 0, 0.0
+LINE_4 = 120, 250, 0.0, 120, 100, 0.0
+LINE_5 = 120, 100, 0.0, 160, 100, 0.0
+LINE_6 = 160, 100, 0.0, 160, 250, 0.0
 
 # ==============================
 # EXTERNAL OBJECTS
@@ -39,7 +39,7 @@ ZONES = 1
 
 ZONE_DEF_TEXTURE = ./conf/3dmodels/textures/floor.jpg
 
-ZONE_0 = 160.0, 160.0, 80, 80, Zone, ./conf/3dmodels/textures/floor2.jpg
+ZONE_0 = 160.0, 160.0, 0.0, 80, 80, Zone, ./conf/3dmodels/textures/floor2.jpg
 
 
 # ==============================
@@ -57,7 +57,7 @@ DOOR_DEF_TEXTURE = ./conf/3dmodels/textures/wall.jpg
 # ==============================
 WPOINTS = 1
 
-WPOINT_0 = 6, 9, 0.0, wp0
+WPOINT_0 = 6, 9, 0.0, 0.0, wp0
 
 # ==============================
 # DOCKS
