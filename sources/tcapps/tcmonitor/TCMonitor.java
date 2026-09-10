@@ -217,7 +217,7 @@ public class TCMonitor extends JFrame implements GUIApplication
 		mItem=(JMenuItem) e.getSource();
 		className=(String)mItem.getClientProperty("ClassToLoad");
 		try {
-			Class mrpclass=  Class.forName(className);
+			Class<?> mrpclass=  Class.forName(className);
  robotsTP.removeTabAt(robotsTP.indexOfTab(multiPanel.getTitle())); // ESTO A VECES DA FALLOS!!!
 			multiPanel = (MultiRobotPanel) mrpclass.newInstance();
 			multiPanel.setMonitorMenu (monitorMI);
@@ -364,7 +364,7 @@ public class TCMonitor extends JFrame implements GUIApplication
 					JOptionPane.showMessageDialog(this, "Error parsing configuration file: value of MULTIROBOTPANEL_DEFAULT is not a declared multi robot panel NAME","Error",JOptionPane.ERROR_MESSAGE);
 				else
 				{
-					Class mrpclass=  Class.forName(multiPanels.get(confProps.getProperty("MULTIROBOTPANEL_DEFAULT")));
+					Class<?> mrpclass=  Class.forName(multiPanels.get(confProps.getProperty("MULTIROBOTPANEL_DEFAULT")));
 					multiPanel=(MultiRobotPanelInterf)mrpclass.newInstance();
 					multiPanel.setMonitorMenu (monitorMI);
 					if (monitor != null)

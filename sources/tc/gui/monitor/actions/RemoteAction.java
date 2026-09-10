@@ -25,7 +25,7 @@
 	/** Method that realizes the action in the server */
 	protected String method;
 	/** Parameter types of the method */
-	protected Class[] params;
+	protected Class<?>[] params;
 	/** Type of the action */
 	protected int type;
 	
@@ -62,7 +62,7 @@
 		return description;
 	}
 
-	public Class[] getParams()
+	public Class<?>[] getParams()
 	{
 		return params;
 	}

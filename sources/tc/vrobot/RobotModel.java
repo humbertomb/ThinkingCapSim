@@ -57,10 +57,10 @@ public abstract class RobotModel extends Object
 	static public RobotModel getModel (RobotDesc rdesc, Properties props)
 	{
 		String			name;
-		Class[]			types;
+		Class<?>[]			types;
 		Object[]			params;
-		Constructor		cons;
-		Class			mclass;
+		Constructor<?>		cons;
+		Class<?>			mclass;
 		RobotModel		model = null;
 		
 		name = props.getProperty ("DRIVEMODEL");
@@ -73,7 +73,7 @@ public abstract class RobotModel extends Object
 		try
 		{
 			mclass		= Class.forName (name);
-			types		= new Class[2];
+			types		= new Class<?>[2];
 			types[0]		= Class.forName ("tc.vrobot.RobotDesc");
 			types[1]		= Class.forName ("java.util.Properties");
 			cons			= mclass.getConstructor (types);

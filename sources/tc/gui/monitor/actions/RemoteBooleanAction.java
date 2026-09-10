@@ -13,7 +13,7 @@ public class RemoteBooleanAction extends RemoteAction implements java.io.Seriali
 	public RemoteBooleanAction (String name, String method,boolean checked)
 	{
 		super(name,method);
-		this.params=new Class[1];
+		this.params=new Class<?>[1];
 		try {
 			this.params[0]=Class.forName("java.lang.Boolean");
 		} catch (Exception e) {e.printStackTrace();};

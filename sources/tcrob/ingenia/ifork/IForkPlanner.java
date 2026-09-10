@@ -1144,7 +1144,7 @@ public class IForkPlanner extends SeqPlanner
 			
 	public int taskStatus ()
 	{	
-		Class myclass = this.getClass();
+		Class<?> myclass = this.getClass();
 		//System.out.println ("\t[IFORKPLANNER]--->taskStatus");
 		if (doSecCoord)
 		{
@@ -1167,7 +1167,7 @@ public class IForkPlanner extends SeqPlanner
 					Method checkMethod = null;
 					try
 					{
-						checkMethod = myclass.getMethod(method); //, (Class)null);
+						checkMethod = myclass.getMethod(method); //, (Class<?>) null);
 					} catch (Exception e)
 					{
 						System.out.println ("  [IForkPlanner]: WARNING!! "+e+" method="+method);

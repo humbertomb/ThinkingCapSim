@@ -36,7 +36,7 @@ public abstract class GPS extends Object
 			// Parse parameters and create a device instance
 			cl		= prop.substring (0, prop.indexOf("|"));
 			prt		= prop.substring (prop.indexOf("|")+1, prop.length());
-			Class gpsclass = Class.forName(cl);
+			Class<?> gpsclass = Class.forName(cl);
 			tg		= (GPS) gpsclass.newInstance();
 			
  			System.out.println ("GPS: connecting "+cl+" to port <"+prt+">");

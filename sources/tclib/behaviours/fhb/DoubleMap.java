@@ -90,7 +90,7 @@ public class DoubleMap implements Serializable {
 	 */
 	private static Object resizeArray (Object oldArray, int newSize) {
 		int oldSize = java.lang.reflect.Array.getLength(oldArray);
-		Class elementType = oldArray.getClass().getComponentType();
+		Class<?> elementType = oldArray.getClass().getComponentType();
 		
 		/* Creates a new array with the same element type but with the new size */
 		Object newArray = java.lang.reflect.Array.newInstance(

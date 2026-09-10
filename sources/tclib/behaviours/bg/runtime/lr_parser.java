@@ -125,7 +125,7 @@ public abstract class lr_parser {
     }
 
   /*-----------------------------------------------------------*/
-  /*--- (Access to) Static (Class) Variables ------------------*/
+  /*--- (Access to) Static (Class<?>) Variables ------------------*/
   /*-----------------------------------------------------------*/
 
   /** The default number of Symbols after an error we much match to consider 

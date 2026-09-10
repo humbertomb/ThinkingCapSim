@@ -26,7 +26,7 @@ public abstract class Vision extends Thread
 		Vision			vis;
 		String			cname;
 		String			param;
-		Class			clase;
+		Class<?>			clase;
 
 		try
 		{   	

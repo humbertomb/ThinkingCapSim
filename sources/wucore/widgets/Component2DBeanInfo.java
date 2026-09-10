@@ -15,7 +15,7 @@ package wucore.widgets;
  */
 public class Component2DBeanInfo extends java.beans.SimpleBeanInfo 
 {
-	private final Class				beanClass		= Component2D.class;
+	private final Class<?>				beanClass		= Component2D.class;
 
 	public Component2DBeanInfo ()
 	{

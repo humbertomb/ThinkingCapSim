@@ -42,14 +42,14 @@ public class EventDesc extends Object
 	// Instance methods
 	protected void configure (StdThread object, Linda linda)
 	{
-		Class[]				types;
-		Class				pclass;
+		Class<?>[]				types;
+		Class<?>				pclass;
 		
 		this.object		= object;
 		
 		try
 		{
-			types 		= new Class[2];
+			types 		= new Class<?>[2];
 			types[0] 	= Class.forName ("java.lang.String");
 			types[1] 	= Class.forName (classn);
 			pclass		= object.getClass ();

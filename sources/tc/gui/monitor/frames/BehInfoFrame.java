@@ -814,7 +814,7 @@ class MyTableModel extends AbstractTableModel{
 	 * Return the class of the objects stored in a particular table column.
 	 * @param column the column number
 	 */
-	public Class getColumnClass(int column) {
+	public Class<?> getColumnClass(int column) {
 		return getValueAt(0,column).getClass();
 	}
 }

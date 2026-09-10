@@ -21,7 +21,7 @@ public class Camera
 		Camera			cam;
 		String			cname;
 		String			param;
-		Class			clase;
+		Class<?>			clase;
 
 		try
 		{   	

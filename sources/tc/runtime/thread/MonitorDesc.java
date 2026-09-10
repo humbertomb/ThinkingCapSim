@@ -36,9 +36,9 @@ public class MonitorDesc extends ThreadDesc
 	{
 		Linda	 				client;
 		Monitor					monitor;	
-		Class					tclass, pclass;
-		Constructor				cons;
-		Class[]					types;
+		Class<?>					tclass, pclass;
+		Constructor<?>				cons;
+		Class<?>[]					types;
 		Object[]					params;
 		GUIApplication			web = null;
 		GUIMonitor				gui = null;
@@ -67,7 +67,7 @@ public class MonitorDesc extends ThreadDesc
 			System.out.println (" Linda=" + lindaToString ());
 			
 			tclass			= Class.forName (classn);
-			types			= new Class[3];
+			types			= new Class<?>[3];
 			types[0]			= Class.forName ("java.util.Properties");      
 			types[1]			= Class.forName ("tc.gui.GUIMonitor");   
 			types[2]			= Class.forName ("tc.shared.linda.Linda");        

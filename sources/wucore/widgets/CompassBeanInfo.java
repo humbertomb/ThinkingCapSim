@@ -15,7 +15,7 @@ package wucore.widgets;
  */
 public class CompassBeanInfo extends GaugeBeanInfo 
 {
-	private final Class beanClass = Compass.class;	 
+	private final Class<?> beanClass = Compass.class;	 
 
     public java.awt.Image getIcon(int iconKind) {
 		java.awt.Image icon = null;

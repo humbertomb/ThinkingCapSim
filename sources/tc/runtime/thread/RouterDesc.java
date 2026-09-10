@@ -34,9 +34,9 @@ public class RouterDesc extends ThreadDesc
 	{
 		Linda	 			client_loc;
 		Linda				client_glob;
-		Class				pclass;
-		Constructor			cons;
-		Class[]				types;
+		Class<?>				pclass;
+		Constructor<?>			cons;
+		Class<?>[]				types;
 		Object[]				params;
 
 		try
@@ -48,7 +48,7 @@ public class RouterDesc extends ThreadDesc
 			System.out.println (" Linda=" + lindaToString ());
 			
 			pclass		= Class.forName (classn);
-			types		= new Class[3];
+			types		= new Class<?>[3];
 			types[0]		= Class.forName ("java.lang.String");        
 			types[1]		= Class.forName ("tc.shared.linda.Linda");        
 			types[2]		= Class.forName ("tc.shared.linda.Linda");        

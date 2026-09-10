@@ -39,7 +39,7 @@ public class LaserBeacon
 		LaserBeacon		laser;
 		String			cname;
 		String			param;
-		Class			clase;
+		Class<?>			clase;
 
 		try
 		{   	

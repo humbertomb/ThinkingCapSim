@@ -29,7 +29,7 @@ public abstract class Ins extends Object
 			// Parse parameters and create a device instance
 			cl		= prop.substring (0, prop.indexOf("|"));
 			prt		= prop.substring (prop.indexOf("|")+1, prop.length());
-			Class insclass = Class.forName(cl);
+			Class<?> insclass = Class.forName(cl);
 			tg		= (Ins) insclass.newInstance();
 			
  			System.out.println ("INS: connecting "+cl+" to port "+prt+".");

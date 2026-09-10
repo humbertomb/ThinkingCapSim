@@ -27,7 +27,7 @@ public abstract class Radar extends Object implements Runnable
 	// Class methods
     public static Radar createRadar (String desc) throws RadarException
     {
-		Class			aclass;
+		Class<?>			aclass;
 		Radar			radar;
 		String			_class;
 		String			_port;

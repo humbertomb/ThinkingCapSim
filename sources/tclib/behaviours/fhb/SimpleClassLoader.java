@@ -55,7 +55,7 @@ public class SimpleClassLoader extends ClassLoader {
 	 * @param className the class name
 	 * @throws ClassNotFoundException if the class is not found
 	 */
-	public Class loadClass(String className) throws ClassNotFoundException {
+	public Class<?> loadClass(String className) throws ClassNotFoundException {
 		return (loadClass(className, true));
 	}
 
@@ -69,7 +69,7 @@ public class SimpleClassLoader extends ClassLoader {
 	 * 					in this class
 	 * @throws ClassNotFoundException if the class is not found
 	 */
-	public synchronized Class loadClass(String className, boolean resolveIt)
+	public synchronized Class<?> loadClass(String className, boolean resolveIt)
 		throws ClassNotFoundException {
 		Class<?> result;
 		byte  classData[];

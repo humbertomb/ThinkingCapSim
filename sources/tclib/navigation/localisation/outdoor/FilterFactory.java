@@ -39,7 +39,7 @@ public class FilterFactory extends Object
 		StringTokenizer		st;
 		String				token;
 		String 				fltname;
-		Class				fltclass;
+		Class<?>				fltclass;
 
 		// Default values
 		block		= false;

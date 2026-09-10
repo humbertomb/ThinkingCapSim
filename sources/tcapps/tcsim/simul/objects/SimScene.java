@@ -71,9 +71,9 @@ public class SimScene
 				
 		for (i=0; i < numobjects; i++)
 		{
-			Class			tclass;
-			Constructor		cons;
-			Class[]			types;
+			Class<?>			tclass;
+			Constructor<?>		cons;
+			Class<?>[]			types;
 			Object[]			params;
 			SimObject 		obj = null;		
 
@@ -83,7 +83,7 @@ public class SimScene
 			try
 			{
 				tclass		= Class.forName (st.nextToken ());
-				types		= new Class[1];
+				types		= new Class<?>[1];
 				types[0]		= Class.forName ("java.lang.String");        
 				cons			= tclass.getConstructor (types);
 				params		= new Object[1];

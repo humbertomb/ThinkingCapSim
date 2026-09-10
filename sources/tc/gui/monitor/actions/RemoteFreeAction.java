@@ -12,7 +12,7 @@ public class RemoteFreeAction extends RemoteAction implements java.io.Serializab
 	/** Descripions of the params */
 	private String[] paramsDesc;
 
-	public RemoteFreeAction (String name, String method,Class[] params)
+	public RemoteFreeAction (String name, String method,Class<?>[] params)
 	{
 		super (name,method);
 		int i;

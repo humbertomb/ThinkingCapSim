@@ -15,7 +15,7 @@ package wucore.widgets;
  */
 public class GaugeBeanInfo extends java.beans.SimpleBeanInfo 
 {
-	private final Class				beanClass		= Gauge.class;
+	private final Class<?>				beanClass		= Gauge.class;
 
 	public GaugeBeanInfo ()
 	{

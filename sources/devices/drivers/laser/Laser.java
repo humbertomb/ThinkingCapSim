@@ -18,7 +18,7 @@ public class Laser
 		Laser			laser;
 		String			cname;
 		String			param;
-		Class			clase;
+		Class<?>			clase;
 
 		try
 		{   	

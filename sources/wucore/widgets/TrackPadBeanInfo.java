@@ -15,7 +15,7 @@ package wucore.widgets;
  */
 public class TrackPadBeanInfo extends java.beans.SimpleBeanInfo 
 {
-	private final Class				beanClass		= TrackPad.class;
+	private final Class<?>				beanClass		= TrackPad.class;
 
 	public TrackPadBeanInfo ()
 	{

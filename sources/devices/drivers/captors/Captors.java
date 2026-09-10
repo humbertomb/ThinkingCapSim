@@ -23,7 +23,7 @@ public class Captors
       	
         cl = Capprop.substring (0,Capprop.indexOf("|"));
         param = Capprop.substring (Capprop.indexOf("|")+1,Capprop.length());
-        Class captorsclass = Class.forName(cl);
+        Class<?> captorsclass = Class.forName(cl);
         tcp=(Captors)captorsclass.newInstance();
         System.out.println ("Captors: inicializando "+cl+" en "+param+".");
         tcp.init(param);

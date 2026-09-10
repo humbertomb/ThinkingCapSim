@@ -15,7 +15,7 @@ package wucore.widgets;
  */
 public class PlotterBeanInfo extends java.beans.SimpleBeanInfo 
 {
-	private final Class				beanClass		= Plotter.class;
+	private final Class<?>				beanClass		= Plotter.class;
 
 	public PlotterBeanInfo ()
 	{

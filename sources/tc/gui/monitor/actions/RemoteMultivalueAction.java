@@ -14,10 +14,10 @@ public class RemoteMultivalueAction extends RemoteAction implements java.io.Seri
 	/** Possible values of the argument and their identificatives names */
 	private Hashtable<String, Object> values;
 
-	public RemoteMultivalueAction (String name, String method,Class param)
+	public RemoteMultivalueAction (String name, String method,Class<?> param)
 	{
 		super (name,method);
-		this.params=new Class[1];
+		this.params=new Class<?>[1];
 		this.params[0]=param;
 		this.values=new Hashtable<String, Object>();
 		this.type=MULTIVALUE_ACTION;

@@ -15,7 +15,7 @@ package wucore.widgets;
  */
 public class HorizontBeanInfo extends GaugeBeanInfo 
 {
-	private final Class beanClass = Horizont.class;
+	private final Class<?> beanClass = Horizont.class;
 	 
     public java.awt.Image getIcon(int iconKind) {
 		java.awt.Image icon = null;

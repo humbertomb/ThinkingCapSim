@@ -117,9 +117,9 @@ public class ThreadDesc extends Object
 	public void start_thread (String robotid, Properties props, LindaDesc ldesc_loc, LindaServer server_loc)
 	{
 		Linda	 			client;
-		Class				tclass;
-		Constructor			cons;
-		Class[]				types;
+		Class<?>				tclass;
+		Constructor<?>			cons;
+		Class<?>[]				types;
 		Object[]			params;
 
 		this.robotid	= robotid;
@@ -136,7 +136,7 @@ public class ThreadDesc extends Object
 			System.out.println (" Linda=" + lindaToString ());
 
 			tclass		= Class.forName (classn);
-			types		= new Class[2];
+			types		= new Class<?>[2];
 			types[0]		= Class.forName ("java.util.Properties");        
 			types[1]		= Class.forName ("tc.shared.linda.Linda");        
 			cons			= tclass.getConstructor (types);
