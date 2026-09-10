@@ -1286,6 +1286,50 @@ public final class WorldEdit
 		ic.lines = rest.toArray (new Line2[rest.size ()]);
 	}
 
+	/**
+	 * Welds vertex <code>vi</code> to another vertex of the icon lying within
+	 * <code>tol</code> (world units) of it, if any. Returns the world point the
+	 * vertex was welded to, or null when no other vertex is close enough.
+	 */
+	static public Point2 weldIconVertex (WMIcon ic, double rx, double ry, double ra, int vi, double tol)
+	{
+		Point2[]	v = iconWorldVertices (ic, rx, ry, ra);
+		if ((vi < 0) || (vi >= v.length))		return null;
+		int			best = -1;
+		double		bd = tol;
+		for (int i = 0; i < v.length; i++)
+		{
+			if (i == vi)		continue;
+			double	d = v[i].distance (v[vi]);
+			if (d < bd) { bd = d; best = i; }
+		}
+		if (best < 0)		return null;
+		moveIconVertex (ic, rx, ry, ra, vi, v[best].x (), v[best].y ());
+		return v[best];
+	}
+
+	/**
+	 * Removes the segments left empty after merging vertices (both endpoints on
+	 * the same point) and duplicated segments. Returns the number of segments removed.
+	 */
+	static public int removeEmptyIconSegments (WMIcon ic)
+	{
+		List<Line2>	kept = new ArrayList<Line2> ();
+		for (Line2 l : ic.lines)
+		{
+			if (l.orig ().distance (l.dest ()) < ICON_EPS)		continue;			// zero length
+			boolean	dup = false;
+			for (Line2 k : kept)
+				if (((k.orig ().distance (l.orig ()) < ICON_EPS) && (k.dest ().distance (l.dest ()) < ICON_EPS))
+						|| ((k.orig ().distance (l.dest ()) < ICON_EPS) && (k.dest ().distance (l.orig ()) < ICON_EPS)))
+				{ dup = true; break; }
+			if (!dup)		kept.add (l);
+		}
+		int	removed = ic.lines.length - kept.size ();
+		if (removed > 0)		ic.lines = kept.toArray (new Line2[kept.size ()]);
+		return removed;
+	}
+
 	/** Appends a segment given in world coordinates. */
 	static public void addIconSegment (WMIcon ic, double rx, double ry, double ra, double x1, double y1, double x2, double y2)
 	{

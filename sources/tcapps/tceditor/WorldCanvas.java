@@ -513,7 +513,24 @@ public class WorldCanvas extends JPanel
 			if (dragged)		changed ("Edit " + WorldItem.NAMES[selection.kind].toLowerCase ());
 			break;
 		case 5:
-			if (dragged)		changed ("Edit icon");
+			if (dragged)
+			{
+				// a vertex dropped onto another one is welded to it, and the segments left
+				// empty (or duplicated) by the merge are removed
+				WMIcon		ic = editIcon ();
+				double[]	rp = refPose ();
+				if ((ic != null) && (rp != null))
+				{
+					Point2	wp = WorldEdit.weldIconVertex (ic, rp[0], rp[1], rp[2], iconVertex, PICK_PX / scale);
+					if (wp != null)
+					{
+						WorldEdit.removeEmptyIconSegments (ic);
+						iconVertex = WorldEdit.pickIconVertex (ic, rp[0], rp[1], rp[2], wp.x (), wp.y (), WorldEdit.ICON_EPS * 10);
+						WorldEdit.iconChanged (world, ic);
+					}
+				}
+				changed ("Edit icon");
+			}
 			break;
 		case 6:
 			onIconSegmentRelease (nx, ny);
@@ -645,7 +662,7 @@ public class WorldCanvas extends JPanel
 		case T_ICON:
 			if (editIcon () == null)	return "Click an object to edit its icon";
 			if (awaitingAnchor)			return "Click to set the reference point (local origin) of the new icon";
-			return "Drag vertices; click a segment to insert a vertex; drag on empty space (or Shift+drag from a vertex) to add a segment; right click / Del: remove; Esc: finish";
+			return "Drag vertices (drop one on another to merge them); click a segment to insert a vertex; drag on empty space (or Shift+drag from a vertex) to add a segment; right click / Del: remove; Esc: finish";
 		}
 		return "";
 	}
