@@ -80,6 +80,10 @@ public class WorldView3DWindow extends JFrame
 
 	static public final String		TITLE		= "World 3D View";
 	static private final int		REBUILD_MS	= 120;		// coalescing delay for scene rebuilds
+	/** Height of the top face of the plain floor (m). Slightly below 0 so that zones,
+	 *  areas and markers lying on z = 0 never z-fight with it. */
+	static private final double		FLOOR_TOP	= -0.02;
+	static private final double		FLOOR_THICK	= 0.02;
 
 	/* Colours */
 	static private final Color3f	C_SEL		= new Color3f (1.0f, 0.55f, 0.0f);
@@ -372,9 +376,9 @@ public class WorldView3DWindow extends JFrame
 		for (i = 0; i < world.fareas ().n (); i++)
 		{
 			WMFArea		f = world.fareas ().at (i);
-			Shape3D		s = polygon (f.polygon, 0.015, C_FAREA, 0.45f);
+			Shape3D		s = polygon (f.polygon, 0.03, C_FAREA, 0.45f);
 			if (s != null)		bg.addChild (s);
-			bg.addChild (polyline (f.polygon, true, 0.02, C_FAREA, 2f));
+			bg.addChild (polyline (f.polygon, true, 0.035, C_FAREA, 2f));
 		}
 
 		// path
@@ -428,9 +432,9 @@ public class WorldView3DWindow extends JFrame
 		double		m = 1.0;		// margin
 		double		w = (b[2] - b[0]) / 2.0 + m, h = (b[3] - b[1]) / 2.0 + m;
 		Transform3D	t = new Transform3D ();
-		t.setTranslation (new Vector3d ((b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0, -0.03));
+		t.setTranslation (new Vector3d ((b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0, FLOOR_TOP - FLOOR_THICK / 2.0));
 		TransformGroup	tg = new TransformGroup (t);
-		tg.addChild (new Box ((float) w, (float) h, 0.01f, matAppearance (C_FLOOR, 0f)));
+		tg.addChild (new Box ((float) w, (float) h, (float) (FLOOR_THICK / 2.0), matAppearance (C_FLOOR, 0f)));
 		BranchGroup	bg = new BranchGroup ();
 		bg.addChild (tg);
 		return bg;
@@ -598,8 +602,9 @@ public class WorldView3DWindow extends JFrame
 		{
 			super (canvas);
 			// large maps: the default clipping planes (0.1 .. 10 m) would hide most of the world
-			universe.getViewer ().getView ().setFrontClipDistance (0.05);
-			universe.getViewer ().getView ().setBackClipDistance (2000.0);
+			// (the near/far ratio also sets the depth-buffer precision: keep it moderate to avoid z-fighting)
+			universe.getViewer ().getView ().setFrontClipDistance (0.3);
+			universe.getViewer ().getView ().setBackClipDistance (1500.0);
 			rho		= 0.7;
 			theta	= -Math.PI / 2.0;
 			len		= 20.0;

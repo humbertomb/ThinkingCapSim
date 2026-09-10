@@ -24,6 +24,7 @@ import tc.shared.world.WMWaypoint;
 import tc.shared.world.WMZone;
 import tc.shared.world.World;
 import wucore.utils.color.ColorTool;
+import wucore.utils.color.WColor;
 import wucore.utils.geom.Ellipse2;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
@@ -790,7 +791,7 @@ public final class WorldEdit
 			if (name.equals ("z"))			return fmt (o.pos.z ());
 			if (name.equals ("angle"))		return fmt (Math.toDegrees (o.a));
 			if (name.equals ("shape"))		return (o.shape == null) ? "" : o.shape;
-			if (name.equals ("color"))		return ColorTool.getNameFromColor (o.color);
+			if (name.equals ("color"))		return toHex (o.color);
 			if (name.equals ("usecolor"))	return Boolean.toString (o.usecolor);
 			if (name.equals ("icon"))
 			{
@@ -945,11 +946,7 @@ public final class WorldEdit
 			else if (name.equals ("z"))			setObjectPose (o, o.pos.x (), o.pos.y (), num (value), o.a);
 			else if (name.equals ("angle"))		setObjectPose (o, o.pos.x (), o.pos.y (), o.pos.z (), Math.toRadians (num (value)));
 			else if (name.equals ("shape"))		o.shape = (value.length () == 0) ? null : token (value);
-			else if (name.equals ("color"))
-			{
-				try { o.color = ColorTool.getColorFromName (token (value)); }
-				catch (Exception e) { throw new IllegalArgumentException ("Use a colour name (red, blue, gray_dark...) or r:g:b"); }
-			}
+			else if (name.equals ("color"))		o.color = parseColor (value);
 			else if (name.equals ("usecolor"))	o.usecolor = bool (value);
 			else if (name.equals ("icon"))
 			{
@@ -1038,6 +1035,162 @@ public final class WorldEdit
 			else if (name.equals ("farea texture"))	w.fareas ().setDefaultTexture (token (value));
 			return;
 		}
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Object icons (list of segments in absolute coordinates)             */
+	/* ------------------------------------------------------------------ */
+
+	/** Endpoints closer than this are considered the same vertex (m). */
+	static public final double		ICON_EPS	= 1e-4;
+
+	static public boolean isBooleanProperty (String name)
+	{
+		return name.equals ("usecolor");
+	}
+
+	/**
+	 * Distinct vertices of an icon: coincident segment endpoints are merged, so
+	 * that a chain of segments behaves like a polyline when edited.
+	 */
+	static public Point2[] iconVertices (WMObject o)
+	{
+		List<Point2>	v = new ArrayList<Point2> ();
+		for (Line2 l : o.icon)
+		{
+			addVertex (v, l.orig ());
+			addVertex (v, l.dest ());
+		}
+		return v.toArray (new Point2[v.size ()]);
+	}
+
+	static private void addVertex (List<Point2> v, Point2 p)
+	{
+		for (Point2 q : v)
+			if (q.distance (p) < ICON_EPS)		return;
+		v.add (new Point2 (p));
+	}
+
+	/** Index of the icon vertex near (x, y) within tol, or -1. */
+	static public int pickIconVertex (WMObject o, double x, double y, double tol)
+	{
+		Point2[]	v = iconVertices (o);
+		int			best = -1;
+		double		bd = tol;
+		for (int i = 0; i < v.length; i++)
+		{
+			double	d = v[i].distance (x, y);
+			if (d < bd) { bd = d; best = i; }
+		}
+		return best;
+	}
+
+	/** Index of the icon segment near (x, y) within tol, or -1. */
+	static public int pickIconSegment (WMObject o, double x, double y, double tol)
+	{
+		int			best = -1;
+		double		bd = tol;
+		for (int i = 0; i < o.icon.length; i++)
+		{
+			double	d = segDist (o.icon[i], x, y);
+			if (d < bd) { bd = d; best = i; }
+		}
+		return best;
+	}
+
+	/** Moves vertex <code>vi</code> (and every segment endpoint lying on it) to (x, y). */
+	static public void moveIconVertex (WMObject o, int vi, double x, double y)
+	{
+		Point2[]	v = iconVertices (o);
+		if ((vi < 0) || (vi >= v.length))		return;
+		Point2		p = v[vi];
+		for (Line2 l : o.icon)
+		{
+			double	ox = l.orig ().x (), oy = l.orig ().y (), dx = l.dest ().x (), dy = l.dest ().y ();
+			boolean	mo = l.orig ().distance (p) < ICON_EPS, md = l.dest ().distance (p) < ICON_EPS;
+			if (mo || md)
+				l.set (mo ? x : ox, mo ? y : oy, md ? x : dx, md ? y : dy);
+		}
+	}
+
+	/** Splits segment <code>si</code> at (x, y); returns the index of the new vertex. */
+	static public int splitIconSegment (WMObject o, int si, double x, double y)
+	{
+		if ((si < 0) || (si >= o.icon.length))		return -1;
+		Line2		l = o.icon[si];
+		Line2[]		icon = new Line2[o.icon.length + 1];
+		System.arraycopy (o.icon, 0, icon, 0, si + 1);
+		icon[si]		= new Line2 (l.orig ().x (), l.orig ().y (), x, y);
+		icon[si + 1]	= new Line2 (x, y, l.dest ().x (), l.dest ().y ());
+		System.arraycopy (o.icon, si + 1, icon, si + 2, o.icon.length - si - 1);
+		o.icon = icon;
+		return pickIconVertex (o, x, y, ICON_EPS * 10);
+	}
+
+	/**
+	 * Removes vertex <code>vi</code>. If exactly two segments meet there they
+	 * are merged into one; otherwise every segment touching it is deleted.
+	 */
+	static public void removeIconVertex (WMObject o, int vi)
+	{
+		Point2[]	v = iconVertices (o);
+		if ((vi < 0) || (vi >= v.length))		return;
+		Point2		p = v[vi];
+		List<Line2>	touching = new ArrayList<Line2> ();
+		List<Line2>	rest = new ArrayList<Line2> ();
+		for (Line2 l : o.icon)
+			if ((l.orig ().distance (p) < ICON_EPS) || (l.dest ().distance (p) < ICON_EPS))	touching.add (l);
+			else																			rest.add (l);
+		if (touching.size () == 2)
+		{
+			Line2	a = touching.get (0), b = touching.get (1);
+			Point2	pa = (a.orig ().distance (p) < ICON_EPS) ? a.dest () : a.orig ();
+			Point2	pb = (b.orig ().distance (p) < ICON_EPS) ? b.dest () : b.orig ();
+			if (pa.distance (pb) > ICON_EPS)
+				rest.add (new Line2 (pa.x (), pa.y (), pb.x (), pb.y ()));
+		}
+		o.icon = rest.toArray (new Line2[rest.size ()]);
+	}
+
+	static public void addIconSegment (WMObject o, double x1, double y1, double x2, double y2)
+	{
+		Line2[]		icon = new Line2[o.icon.length + 1];
+		System.arraycopy (o.icon, 0, icon, 0, o.icon.length);
+		icon[o.icon.length] = new Line2 (x1, y1, x2, y2);
+		o.icon = icon;
+	}
+
+	static public void removeIconSegment (WMObject o, int si)
+	{
+		if ((si < 0) || (si >= o.icon.length))		return;
+		Line2[]		icon = new Line2[o.icon.length - 1];
+		System.arraycopy (o.icon, 0, icon, 0, si);
+		System.arraycopy (o.icon, si + 1, icon, si, o.icon.length - si - 1);
+		o.icon = icon;
+	}
+
+	/* Colour helpers: the editor shows colours as #rrggbb; files keep names or r:g:b (ColorTool). */
+
+	static public String toHex (WColor c)
+	{
+		if (c == null)			return "#000000";
+		return String.format ("#%02x%02x%02x", c.getRed (), c.getGreen (), c.getBlue ());
+	}
+
+	static public WColor parseColor (String s)
+	{
+		s = s.trim ();
+		String	hex = s.startsWith ("#") ? s.substring (1) : s;
+		if (hex.matches ("[0-9a-fA-F]{6}"))
+			return new WColor (Integer.parseInt (hex.substring (0, 2), 16), Integer.parseInt (hex.substring (2, 4), 16), Integer.parseInt (hex.substring (4, 6), 16));
+		if (hex.matches ("[0-9a-fA-F]{3}"))
+			return new WColor (17 * Integer.parseInt (hex.substring (0, 1), 16), 17 * Integer.parseInt (hex.substring (1, 2), 16), 17 * Integer.parseInt (hex.substring (2, 3), 16));
+		// colour names and r:g:b, as in the .world files
+		for (int i = 0; i < ColorTool.COL_NAMES.length; i++)
+			if (ColorTool.COL_NAMES[i].equalsIgnoreCase (s))		return ColorTool.COL_VALUES[i];
+		if (s.matches ("\\d{1,3}:\\d{1,3}:\\d{1,3}"))
+			return ColorTool.getColorFromName (s);
+		throw new IllegalArgumentException ("Use a hexadecimal colour (#f045a7), a colour name (red, gray_dark...) or r:g:b");
 	}
 
 	/* Parsing helpers. The .world format separates fields with ", \t", so labels and textures cannot contain them. */

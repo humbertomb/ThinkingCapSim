@@ -40,6 +40,7 @@ public class ToolIcon implements Icon
 	static public final int		UNDO		= 25;
 	static public final int		REDO		= 26;
 	static public final int		VIEW3D		= 27;
+	static public final int		ICON		= 28;
 
 	protected int				type;
 	protected int				size;
@@ -162,6 +163,15 @@ public class ToolIcon implements Icon
 		case REDO:
 			g.drawArc (5, 6, 12, 12, 270, 270);
 			g.drawLine (17, 12, 17, 6);	g.drawLine (17, 6, 11, 6);
+			break;
+		case ICON:			// polyline with vertex handles
+			g.setColor (new Color (255, 140, 0));
+			g.drawLine (4, 16, 9, 6);	g.drawLine (9, 6, 14, 14);	g.drawLine (14, 14, 19, 4);
+			g.setColor (Color.WHITE);
+			g.fillRect (2, 14, 5, 5);	g.fillRect (7, 4, 5, 5);	g.fillRect (12, 12, 5, 5);	g.fillRect (17, 2, 5, 5);
+			g.setColor (new Color (255, 140, 0));
+			g.setStroke (new BasicStroke (1f));
+			g.drawRect (2, 14, 5, 5);	g.drawRect (7, 4, 5, 5);	g.drawRect (12, 12, 5, 5);	g.drawRect (17, 2, 5, 5);
 			break;
 		case VIEW3D:		// isometric cube
 			g.setColor (new Color (120, 160, 220, 110));

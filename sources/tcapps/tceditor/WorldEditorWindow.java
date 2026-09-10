@@ -91,7 +91,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 	protected PropertyModel			propModel;
 	protected JLabel				statusLabel;
 	protected JLabel				selLabel;
-	protected JToggleButton[]		toolButtons	= new JToggleButton[13];
+	protected JToggleButton[]		toolButtons	= new JToggleButton[14];
 	protected Action				undoAction, redoAction, deleteAction;
 	protected JCheckBoxMenuItem[]	layerItems	= new JCheckBoxMenuItem[WorldItem.NKINDS];
 	protected JCheckBoxMenuItem		gridItem, snapItem, labelsItem;
@@ -165,7 +165,38 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 
 		// --- property table
 		propModel	= new PropertyModel ();
-		propTable	= new JTable (propModel);
+		propTable	= new JTable (propModel)
+		{
+			private static final long	serialVersionUID = 1L;
+			private final FileCellEditor.Renderer	fileRenderer = new FileCellEditor.Renderer ();
+			private final ColorCellEditor.Renderer	colorRenderer = new ColorCellEditor.Renderer ();
+			private final javax.swing.DefaultCellEditor	boolEditor = new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (new String[] { "true", "false" }));
+
+			// file-path properties get a text field with a "..." browse button
+			public javax.swing.table.TableCellEditor getCellEditor (int row, int column)
+			{
+				if (column == 1)
+				{
+					String	name = propModel.nameAt (row);
+					if (name.equals ("shape"))			return FileCellEditor.SHAPE;
+					if (name.endsWith ("texture"))		return FileCellEditor.TEXTURE;
+					if (name.equals ("color"))			return ColorCellEditor.INSTANCE;
+					if (WorldEdit.isBooleanProperty (name))	return boolEditor;
+				}
+				return super.getCellEditor (row, column);
+			}
+
+			public javax.swing.table.TableCellRenderer getCellRenderer (int row, int column)
+			{
+				if (column == 1)
+				{
+					String	name = propModel.nameAt (row);
+					if (name.equals ("shape") || name.endsWith ("texture"))		return fileRenderer;
+					if (name.equals ("color"))									return colorRenderer;
+				}
+				return super.getCellRenderer (row, column);
+			}
+		};
 		propTable.setRowHeight (22);
 		propTable.getColumnModel ().getColumn (0).setPreferredWidth (90);
 		propTable.getColumnModel ().getColumn (1).setPreferredWidth (200);
@@ -210,6 +241,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		addTool (tb, group, WorldCanvas.T_ZONE,		ToolIcon.ZONE,		"Zone: drag a rectangle",					"Z");
 		addTool (tb, group, WorldCanvas.T_FAREA,	ToolIcon.FAREA,		"Forbidden area: click the vertices, double-click to close", "F");
 		addTool (tb, group, WorldCanvas.T_OBJECT,	ToolIcon.OBJECT,	"Object: click to place (edit icon, shape and colour in Properties)", "O");
+		addTool (tb, group, WorldCanvas.T_ICON,		ToolIcon.ICON,		"Edit object icon: drag vertices, click a segment to insert one, drag on empty space to add a segment, right click to remove (also: double-click an object)", "I");
 		tb.addSeparator ();
 		addTool (tb, group, WorldCanvas.T_WAYPOINT,	ToolIcon.WAYPOINT,	"Waypoint: click to place",					"P");
 		addTool (tb, group, WorldCanvas.T_DOCK,		ToolIcon.DOCK,		"Dock: click to place",						"K");
@@ -398,7 +430,8 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		medit.add (item (redoAction, KeyStroke.getKeyStroke (KeyEvent.VK_Z, mask | InputEvent.SHIFT_DOWN_MASK)));
 		medit.addSeparator ();
 		medit.add (item (deleteAction, KeyStroke.getKeyStroke (KeyEvent.VK_DELETE, 0)));
-		medit.add (item ("Deselect", KeyStroke.getKeyStroke (KeyEvent.VK_ESCAPE, 0), new AbstractAction ()
+		// (Esc itself is handled by the canvas: it first cancels drawings / leaves the current tool, then deselects)
+		medit.add (item ("Deselect", null, new AbstractAction ()
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.setSelection (null); selectTool (WorldCanvas.T_SELECT); }
 		}));
@@ -526,6 +559,8 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 			"  F  Forbidden area: click the vertices, double-click / Enter to close.\n" +
 			"  O  Object, P  Waypoint, K  Dock, B  Strip beacon, C  Cylindrical beacon,\n" +
 			"  T  Path point, R  Start point: click to place.\n" +
+			"  I  Edit object icon (or double-click an object): drag vertices, click a segment to insert\n" +
+			"       a vertex, drag on empty space (Shift+drag from a vertex) to add a segment, right click / Del removes.\n" +
 			"  Right click with a creation tool returns to Select.\n\n" +
 			"Keyboard:  Del deletes, arrows nudge the selection, Esc deselects / cancels,\n" +
 			"  Ctrl+Z / Ctrl+Shift+Z undo / redo, mouse wheel zooms, Ctrl+0 zoom to fit.\n\n" +
@@ -577,6 +612,11 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 	public void toolFinished ()
 	{
 		selectTool (WorldCanvas.T_SELECT);
+	}
+
+	public void toolRequested (int tool)
+	{
+		selectTool (tool);
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -907,6 +947,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 			else									fireTableRowsUpdated (0, Math.max (0, names.length - 1));
 		}
 
+		String nameAt (int r)							{ return ((r >= 0) && (r < names.length)) ? names[r] : ""; }
 		public int getRowCount ()						{ return names.length; }
 		public int getColumnCount ()					{ return 2; }
 		public String getColumnName (int c)				{ return (c == 0) ? "Property" : "Value"; }
