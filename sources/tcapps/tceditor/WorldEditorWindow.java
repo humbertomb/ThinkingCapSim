@@ -261,14 +261,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 			public void actionPerformed (ActionEvent e)		{ canvas.newIcon (); }
 		};
 		newIcon.putValue (Action.SHORT_DESCRIPTION, "New icon  [Ctrl+I]");
-		JButton	newIconButton = new JButton (newIcon);
-		newIconButton.setHideActionText (true);
-		newIconButton.setFocusable (false);
-		newIconButton.setBorderPainted (false);				// same flat look as the tool toggles around it
-		newIconButton.setContentAreaFilled (false);
-		newIconButton.setOpaque (false);
-		newIconButton.putClientProperty ("JButton.buttonType", "toolbar");		// macOS Aqua: no push-button frame
-		tb.add (newIconButton);
+		tb.add (flatButton (newIcon));
 		getRootPane ().getInputMap (JComponent.WHEN_IN_FOCUSED_WINDOW).put (KeyStroke.getKeyStroke (KeyEvent.VK_I, Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ()), "newIcon");
 		getRootPane ().getActionMap ().put ("newIcon", newIcon);
 		addTool (tb, group, WorldCanvas.T_ICON,		ToolIcon.ICON,		"Edit icon",			"I");
@@ -290,28 +283,28 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 			public void actionPerformed (ActionEvent e)		{ canvas.deleteSelection (); }
 		};
 		deleteAction.putValue (Action.SHORT_DESCRIPTION, "Delete  [Del]");
-		tb.add (deleteAction).setHideActionText (true);
+		tb.add (flatButton (deleteAction));
 
 		Action	fit = new AbstractAction ("Zoom to fit", new ToolIcon (ToolIcon.ZOOM_FIT))
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.zoomToFit (); }
 		};
 		fit.putValue (Action.SHORT_DESCRIPTION, "Zoom to fit  [Ctrl+0]");
-		tb.add (fit).setHideActionText (true);
+		tb.add (flatButton (fit));
 
 		Action	zin = new AbstractAction ("Zoom in", new ToolIcon (ToolIcon.ZOOM_IN))
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.zoom (1.25); }
 		};
 		zin.putValue (Action.SHORT_DESCRIPTION, "Zoom in");
-		tb.add (zin).setHideActionText (true);
+		tb.add (flatButton (zin));
 
 		Action	zout = new AbstractAction ("Zoom out", new ToolIcon (ToolIcon.ZOOM_OUT))
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.zoom (0.8); }
 		};
 		zout.putValue (Action.SHORT_DESCRIPTION, "Zoom out");
-		tb.add (zout).setHideActionText (true);
+		tb.add (flatButton (zout));
 
 		// --- 3D view toggle, at the bottom of the toolbar
 		tb.add (Box.createVerticalGlue ());
@@ -379,6 +372,19 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 	private void sync3D ()
 	{
 		if ((view3d != null) && view3d.isVisible ())		view3d.setWorld (world);
+	}
+
+	/** Action button with the same flat look as the tool toggles (no push-button frame, macOS included). */
+	private static JButton flatButton (Action action)
+	{
+		JButton	b = new JButton (action);
+		b.setHideActionText (true);
+		b.setFocusable (false);
+		b.setBorderPainted (false);
+		b.setContentAreaFilled (false);
+		b.setOpaque (false);
+		b.putClientProperty ("JButton.buttonType", "toolbar");
+		return b;
 	}
 
 	private void addTool (JToolBar tb, ButtonGroup group, final int tool, int icon, String tip, String key)
