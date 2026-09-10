@@ -106,7 +106,7 @@ public class ComandosCCD400E {
 	static public ComandoCCD400E STB = new ComandoCCD400E ("INQUIRY","","STB","PLL-Shift Information","STB");	
 	static public ComandoCCD400E STI = new ComandoCCD400E ("INQUIRY","","STI","Bright Information","STI");	
 
-	public static java.util.Hashtable comandos = new java.util.Hashtable ();
+	public static java.util.Hashtable<String, ComandoCCD400E> comandos = new java.util.Hashtable<String, ComandoCCD400E> ();
 	
 	
 	public static void feedHash ()

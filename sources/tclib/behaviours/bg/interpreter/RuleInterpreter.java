@@ -15,7 +15,7 @@ public class RuleInterpreter extends Interpreter
 	static public final String			SUFFIX		= ".fuzzy";
 	static public final String			HEADER		= "Fuzzy Rule Base Parameters";
 
-	private Hashtable					locals;
+	private Hashtable<String, Store>	locals;
 	protected Command					fuzzy;
 	protected double					output[];
 	protected int						n;
@@ -27,7 +27,7 @@ public class RuleInterpreter extends Interpreter
 	{
 		super ();
 		
-		locals	= new Hashtable (MAXLOCS);
+		locals	= new Hashtable<String, Store> (MAXLOCS);
 		load (name);
 	}
 	

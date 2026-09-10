@@ -32,13 +32,13 @@ public class LindaSpace {
 	/**
 	 *  Description of the Field
 	 */
-	protected Hashtable content;
+	protected Hashtable<String, Object> content;			// LindaEntry per key, or content_config for the CONFIG key
 	/**
 	 *  Description of the Field
 	 */
 	protected Hashtable<String, LindaEntry> content_config;
 
-	protected Hashtable	ifork_connection;
+	protected Hashtable<String, LindaEntryListener>	ifork_connection;
 
 
 	//operaciones register
@@ -48,9 +48,9 @@ public class LindaSpace {
 	 *Constructor for the LindaSpace object
 	 */
 	public LindaSpace() {
-		content = new Hashtable(MAX_KEYS);
+		content = new Hashtable<String, Object>(MAX_KEYS);
 		content_config = new Hashtable<String, LindaEntry>(MAX_CONFIG);
-		ifork_connection = new Hashtable();
+		ifork_connection = new Hashtable<String, LindaEntryListener>();
 	}
 
 
@@ -65,7 +65,7 @@ public class LindaSpace {
 	public synchronized boolean write(Tuple tuple, LindaConnection connection) {
 		LindaEntry  record;
 		LindaEntry  record_any;
-		Hashtable   hs;
+		Object   hs;
 		ArrayList<LindaEntryRegistry> v_misler;
 		
 		v_misler=new ArrayList<LindaEntryRegistry>();
@@ -74,17 +74,17 @@ public class LindaSpace {
 //		}
 		if (tuple.key.equals(Tuple.CONFIG)) {
 			//crear la tabla hash de las tuplas CONFIG
-			hs = (Hashtable) content.get(tuple.key);
+			hs = content.get(tuple.key);
 			if (hs == null) {
 				content.put(tuple.key, content_config);
 			}
 						
 			//Si es la primera escritura, crear el registro LindaEntry
-			record = (LindaEntry) content_config.get(tuple.space);
+			record = content_config.get(tuple.space);
 			if (record == null) {
 				record = new LindaEntry(tuple.space, tuple.key);
 				//Obtener los LindaEntryRegistry de tuplas CONFIG(están en la entrada "any")
-				record_any = (LindaEntry) content_config.get(LindaEntryFilter.ANY);
+				record_any = content_config.get(LindaEntryFilter.ANY);
 				if(record_any!=null){
 					for (LindaEntryRegistry ler : record_any.listeners)
 						v_misler.add(new LindaEntryRegistry(ler.filter.pattern,ler.listener));
@@ -121,7 +121,7 @@ public class LindaSpace {
 		LindaEntry  record  = null;
 
 		if (template.key.equals(Tuple.CONFIG)) {
-			record = (LindaEntry) content_config.get(template.space);
+			record = content_config.get(template.space);
 		}else{
 			record = (LindaEntry) content.get(template.key);
 		}
@@ -147,7 +147,7 @@ public class LindaSpace {
 
 		if (template.key.equals(Tuple.CONFIG)) {
 			//System.out.println("LindaSpace:take OPERACION DE TAKE SOBRE CONFIG");
-			record = (LindaEntry) content_config.get(template.space);
+			record = content_config.get(template.space);
 		}else{
 			record = (LindaEntry) content.get(template.key);
 		}
@@ -175,8 +175,8 @@ public class LindaSpace {
 	 */
 	public synchronized void register(Tuple template, LindaEntryListener listener) {
 		LindaEntry   record  = null;
-		Hashtable    hs;
-		Enumeration  enu    = null;
+		Object    hs;
+		Enumeration<String>  enu    = null;
 
 		if(!template.space.equals(LindaEntryFilter.ANY)){
 			ifork_connection.put(template.space,listener);
@@ -184,14 +184,14 @@ public class LindaSpace {
 		// Check for the corresponding record (if non existing, create it)
 		//Si la tupla es de tipo CONFIG
 		if (template.key.equals(Tuple.CONFIG)) {
-			hs = (Hashtable) content.get(template.key);
+			hs = content.get(template.key);
 			if (hs == null) {
 				content.put(template.key, content_config);
 			}
 
 			//Si la tupla es de tipo "any", se registra en todos los robot
 			if (template.space.equals(LindaEntryFilter.ANY)) {
-				record = (LindaEntry) content_config.get(template.space);
+				record = content_config.get(template.space);
 				if (record == null) {
 					record = new LindaEntry(template.space, template.key);
 					content_config.put(template.space, record);
@@ -199,7 +199,7 @@ public class LindaSpace {
 				enu = content_config.keys();
 				while (enu.hasMoreElements()) {
 
-					record = (LindaEntry) content_config.get((String) enu.nextElement());
+					record = content_config.get(enu.nextElement());
 					//Update listeners information
 					record.register(template.space, listener);
 					// Send current data to the listener
@@ -209,7 +209,7 @@ public class LindaSpace {
 				}
 			}
 			else {
-				record = (LindaEntry) content_config.get(template.space);
+				record = content_config.get(template.space);
 				if (record == null) {
 					record = new LindaEntry(template.space, template.key);
 					content_config.put(template.space, record);
@@ -247,17 +247,17 @@ public class LindaSpace {
 	 */
 	public synchronized void unregister(Tuple template, LindaEntryListener listener) {
 		LindaEntry  record;
-		Enumeration enu;
+		Enumeration<String> enu;
 		
 		if (template.key.equals(Tuple.CONFIG)) {
 			if (template.space.equals(LindaEntryFilter.ANY)) {
 				enu = content_config.keys();
 				while (enu.hasMoreElements()) {
-					record = (LindaEntry) content_config.get((String) enu.nextElement());
+					record = content_config.get(enu.nextElement());
 					record.unregister(template.space, listener);
 				}
 			}else{
-				record = (LindaEntry) content_config.get(template.space);	
+				record = content_config.get(template.space);	
 				if (record != null) {
 					record.unregister(template.space, listener);
 				}
@@ -273,18 +273,18 @@ public class LindaSpace {
 
 	public synchronized void unregister(LindaEntryListener listener) {
 		LindaEntry  record;
-		Enumeration enu,enu1;
+		Enumeration<String> enu,enu1;
 		
 		String key,key1;
 		
 		enu = content.keys();
 		while (enu.hasMoreElements()) {
-			key = (String) enu.nextElement();
+			key = enu.nextElement();
 			if (key.equals(Tuple.CONFIG)) {
 				enu1 = content_config.keys();
 				while (enu1.hasMoreElements()) {
-					key1 = (String) enu1.nextElement();
-					record = (LindaEntry) content_config.get(key1);
+					key1 = enu1.nextElement();
+					record = content_config.get(key1);
 //					System.out.println("LindaSpace unregister key="+key+" key1="+key1+" "+record.key());
 					record.unregister(listener);
 				}
@@ -310,25 +310,25 @@ public class LindaSpace {
 
 		switch (lctrl.cmd) {
 				case ItemLindaCtrl.DELETE:
-					Enumeration    enu;
-					Enumeration    enu1;
+					Enumeration<String>    enu;
+					Enumeration<String>    enu1;
 					String         key;
 					LindaEntry     entry;
 
 					if (!tuple.space.equals(LindaEntryFilter.ANY)) {
 						enu = content.keys();
 						while (enu.hasMoreElements()) {
-							key = (String) enu.nextElement();
+							key = enu.nextElement();
 							if(key.equals(Tuple.CONFIG)){
 								enu1 = content_config.keys();
 								while (enu1.hasMoreElements()) {
-									key = (String) enu1.nextElement();
+									key = enu1.nextElement();
 									if(key.equals(tuple.space)){
 										content_config.remove(key);	
 									}else{
-										entry = (LindaEntry) content_config.get(key);
+										entry = content_config.get(key);
 										entry.unregister(tuple.space);
-										lel=(LindaEntryListener)ifork_connection.get(tuple.space);
+										lel=ifork_connection.get(tuple.space);
 										if(lel!=null)
 											entry.unregister(LindaEntryFilter.ANY,lel);
 									}
@@ -336,7 +336,7 @@ public class LindaSpace {
 							}else{
 								entry = (LindaEntry) content.get(key);
 								entry.unregister(tuple.space);
-								lel=(LindaEntryListener)ifork_connection.get(tuple.space);
+								lel=ifork_connection.get(tuple.space);
 								if(lel!=null)
 									entry.unregister(LindaEntryFilter.ANY,lel);
 								
@@ -364,8 +364,8 @@ public class LindaSpace {
 	 * @return         Description of the Return Value
 	 */
 	public String toHTML(boolean expand) {
-		Enumeration  enu;
-		Enumeration  enu1;
+		Enumeration<String>  enu;
+		Enumeration<String>  enu1;
 		LindaEntry   record;
 		String       key;
 		String       key1;
@@ -374,12 +374,12 @@ public class LindaSpace {
 		output = "<HTML>";
 		enu = content.keys();
 		while (enu.hasMoreElements()) {
-			key = (String) enu.nextElement();
+			key = enu.nextElement();
 			if (key.equals(Tuple.CONFIG)) {
 				enu1 = content_config.keys();
 				while (enu1.hasMoreElements()) {
-					key1 = (String) enu1.nextElement();
-					record = (LindaEntry) content_config.get(key1);
+					key1 = enu1.nextElement();
+					record = content_config.get(key1);
 					output += record.toHTML(expand);
 				}
 			}
@@ -390,7 +390,7 @@ public class LindaSpace {
 		}
 		
 		for(enu=ifork_connection.keys();enu.hasMoreElements();){
-			String ifork=(String)enu.nextElement();
+			String ifork=enu.nextElement();
 			output+="<br>"+ifork+" -> "+ifork_connection.get(ifork);
 		}
 		return output + "</HTML>";
@@ -404,8 +404,8 @@ public class LindaSpace {
 	 * @return         Description of the Return Value
 	 */
 	public String toString(boolean expand) {
-		Enumeration  enu;
-		Enumeration  enu1;
+		Enumeration<String>  enu;
+		Enumeration<String>  enu1;
 		LindaEntry   record;
 		String       key;
 		String       key1;
@@ -414,12 +414,12 @@ public class LindaSpace {
 		output = "--------------------------------------------\n";
 		enu = content.keys();
 		while (enu.hasMoreElements()) {
-			key = (String) enu.nextElement();
+			key = enu.nextElement();
 			if (key.equals(Tuple.CONFIG)) {
 				enu1 = content_config.keys();
 				while (enu1.hasMoreElements()) {
-					key1 = (String) enu1.nextElement();
-					record = (LindaEntry) content_config.get(key1);
+					key1 = enu1.nextElement();
+					record = content_config.get(key1);
 					output += record.toString(expand);
 
 				}
@@ -431,7 +431,7 @@ public class LindaSpace {
 			}
 		}
 		for(enu=ifork_connection.keys();enu.hasMoreElements();){
-			String ifork=(String)enu.nextElement();
+			String ifork=enu.nextElement();
 			output+="\n"+ifork+" -> "+ifork_connection.get(ifork);
 		}
 		output += "--------------------------------------------\n\n";

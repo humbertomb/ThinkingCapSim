@@ -118,8 +118,8 @@ public class Simulator
 					
 				SimObject so;
 				if(smc != null){
-					for (Enumeration enu=smc.pallets.elements();enu.hasMoreElements();){
-						so=(SimObject)enu.nextElement();
+					for (Enumeration<SimObject> enu=smc.pallets.elements();enu.hasMoreElements();){
+						so=enu.nextElement();
 						win.updateObjectData(so.idsimul,so.odesc.pos,so.odesc.a);
 					}
 				}

@@ -36,8 +36,8 @@ public class SimMultiCargo extends StdThread {
 	
 	Simulator	simul;
 	
-	public		Hashtable 	pallets = null;					//Pallets que hay en simulador 3D actualmente
-	protected 	Hashtable	typepallets = null;				//Tipos de pallets que pueden aparecer en el simulador 3D
+	public		Hashtable<String, SimObject>	pallets = null;					//Pallets que hay en simulador 3D actualmente
+	protected 	Hashtable<Integer, PalletType>	typepallets = null;				//Tipos de pallets que pueden aparecer en el simulador 3D
 	
 	
 	
@@ -48,7 +48,7 @@ public class SimMultiCargo extends StdThread {
 		
 //		this.r_id		= robotid;
 		this.simul		= simul;
-		pallets			= new Hashtable();
+		pallets			= new Hashtable<String, SimObject>();
 	}
 	
 	// Instance methods
@@ -63,7 +63,7 @@ public class SimMultiCargo extends StdThread {
 //		Obtener los tipos de pallets que se utilizaran en la escena
 		numtipospallets=Integer.parseInt (props.getProperty ("NOBJECTS","0"));
 		
-		typepallets = new Hashtable();
+		typepallets = new Hashtable<Integer, PalletType>();
 		for(int i=0;i<numtipospallets;i++){
 			prop		= props.getProperty ("OBJECT"+i);
 			st		= new StringTokenizer (prop,", \t");
@@ -91,7 +91,7 @@ public class SimMultiCargo extends StdThread {
 		PalletType		pt;
 		int 			idobject;
 
-		pt=(PalletType)typepallets.get(Integer.valueOf (typepallet));
+		pt=typepallets.get(Integer.valueOf (typepallet));
 		if(pt==null){
 			System.out.println("--[SimMultiCargo] Tipo de pallet desconocido "+ItemPallet.strTypePallet(typepallet));
 			return null;
@@ -140,7 +140,7 @@ public class SimMultiCargo extends StdThread {
 			id=getUnkownPalletInPos(new Point3(pos.x(),pos.y(),pos.z()));
 			idpallet=PalletType.PALLET_UNKNOWN+id;
 		}
-		so=(SimObject)pallets.remove(idpallet);
+		so=pallets.remove(idpallet);
 		if(so!=null){
 			idso=so.idsimul;
 		}else{
@@ -149,13 +149,13 @@ public class SimMultiCargo extends StdThread {
 		return idso;
 	}
 	private int getUnkownPalletInPos(Point3 pos){
-		Enumeration enu;
+		Enumeration<SimObject> enu;
 		int 		id=-1;
 		SimObject	so;
 		
 //		System.out.println("SimMultiCargo getUnknownPalletInPos("+pos+") ");
 		for(enu=pallets.elements();enu.hasMoreElements();){
-			so=(SimObject)enu.nextElement();
+			so=enu.nextElement();
 //			System.out.println("\t so.pos="+so.odesc.pos+" dist="+pos.distance(so.odesc.pos));
 			if(pos.distance(so.odesc.pos)<DISTAGVPALLET){
 				return so.idsimul;
@@ -185,14 +185,14 @@ public class SimMultiCargo extends StdThread {
 		}
 	}
 	public SimObject getNearestPalletToPos(Position pos){
-		Enumeration enu;
+		Enumeration<SimObject> enu;
 		SimObject	so=null,ret=null;
 		double 		dist_min,dist_aux;
 		
 		dist_min=Double.MAX_VALUE;
 //		System.out.println("SimMultiCargo getNearestPalletToPos("+pos+") ");
 		for(enu=pallets.elements();enu.hasMoreElements();){
-			so=(SimObject)enu.nextElement();
+			so=enu.nextElement();
 //			System.out.println("\t so.pos="+so.odesc.pos+" dist="+pos.distance(so.odesc.pos));
 			dist_aux=pos.distance(so.odesc.pos);
 			if(dist_aux<DISTAGVPALLET){
@@ -297,7 +297,7 @@ public class SimMultiCargo extends StdThread {
 				}
 			break;
 		case ItemPallet.MOVE:
-				so=(SimObject)pallets.get(item.idpallet);
+				so=pallets.get(item.idpallet);
 				so.odesc.pos=new Point3(item.position.x(),item.position.y(),item.position.z());
 //				Si el pallet se asigna a un agv, hacer que el robot lo coja
 				if(item.destiny==ItemPallet.AGV){

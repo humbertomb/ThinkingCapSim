@@ -12,14 +12,14 @@ public class RemoteMultivalueAction extends RemoteAction implements java.io.Seri
 	/** Name of the selected value */
 	private String itemSelected;
 	/** Possible values of the argument and their identificatives names */
-	private Hashtable values;
+	private Hashtable<String, Object> values;
 
 	public RemoteMultivalueAction (String name, String method,Class param)
 	{
 		super (name,method);
 		this.params=new Class[1];
 		this.params[0]=param;
-		this.values=new Hashtable();
+		this.values=new Hashtable<String, Object>();
 		this.type=MULTIVALUE_ACTION;
 	}
 	
@@ -41,7 +41,7 @@ public class RemoteMultivalueAction extends RemoteAction implements java.io.Seri
 		return itemSelected;
 	}
 	
-	public Hashtable getValues()
+	public Hashtable<String, Object> getValues()
 	{
 		return values;
 	}

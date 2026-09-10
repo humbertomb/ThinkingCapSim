@@ -388,7 +388,7 @@ public class VSymbol extends List
 		return toString (false);
 	}
 	
-	protected VSymbol deepclone (Hashtable table) 
+	protected VSymbol deepclone (Hashtable<VSymbol, VSymbol> table) 
 	{
 		VSymbol		clon;
 		VSymbol		tset;
@@ -399,7 +399,7 @@ public class VSymbol extends List
 		if (table.containsKey (this))
 		{
 //System.out.println ("Linking to  VSymbol node " + name);		
-			return (VSymbol) table.get (this);
+			return table.get (this);
 		}
 			
 		tnext	= null;
@@ -437,9 +437,9 @@ public class VSymbol extends List
 		
 	public Object clone () 
 	{
-		Hashtable 		table;
+		Hashtable<VSymbol, VSymbol>	table;
 		
-		table = new Hashtable (MAXSYMBOLS);
+		table = new Hashtable<VSymbol, VSymbol> (MAXSYMBOLS);
 		return deepclone (table);
 	}
 		

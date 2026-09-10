@@ -21,12 +21,12 @@ public class RobotList extends VehicleList
 	
 	protected int					rindex;
 
-    protected Hashtable				fdesc;
-    protected Hashtable				goal;
-    protected Hashtable				rrdata;
-	protected Hashtable				rdatainfo;
-	protected Hashtable				rlpos;
-    protected Hashtable				status;
+    protected Hashtable<String, FusionDesc>	fdesc;
+    protected Hashtable<String, Position>	goal;
+    protected Hashtable<String, RobotData>	rrdata;
+	protected Hashtable<String, String>		rdatainfo;
+	protected Hashtable<String, LPO[]>		rlpos;
+    protected Hashtable<String, String>		status;
    	
 	
 	// Constructors
@@ -40,12 +40,12 @@ public class RobotList extends VehicleList
 	{
 		super (n);
 		
-		fdesc		= new Hashtable(n);
-		goal			= new Hashtable(n);
-		rrdata 		= new Hashtable(n);
-		rdatainfo 	= new Hashtable(n);
-		rlpos		= new Hashtable(n);
-		status 		= new Hashtable(n);
+		fdesc		= new Hashtable<String, FusionDesc>(n);
+		goal			= new Hashtable<String, Position>(n);
+		rrdata 		= new Hashtable<String, RobotData>(n);
+		rdatainfo 	= new Hashtable<String, String>(n);
+		rlpos		= new Hashtable<String, LPO[]>(n);
+		status 		= new Hashtable<String, String>(n);
 	
 		columnNames	= new String []{ "Robot", "Position", "Status" };
 		rindex		= 0;
@@ -133,12 +133,12 @@ public class RobotList extends VehicleList
        
 	public String getName (int i)
 	{
-	   return (String) robotsid.get (i);
+	   return robotsid.get (i);
 	}
     
 	public RobotDesc getDesc (int i)
 	{
-	   return ((RobotDesc)rdesc.get((String)robotsid.get(i)));
+	   return ((RobotDesc)rdesc.get(robotsid.get(i)));
 	}
     
 	public RobotDesc getDesc (String id)
@@ -148,37 +148,37 @@ public class RobotList extends VehicleList
     
     public FusionDesc getFusion (int i)
     {
-    	return ((FusionDesc)fdesc.get((String)robotsid.get(i)));
+    	return (fdesc.get(robotsid.get(i)));
     }
     
     public FusionDesc getFusion (String id)
     {
-    	return ((FusionDesc)fdesc.get(id));
+    	return (fdesc.get(id));
     }
     
     public Position getGoal (int i)
     {
-    	return ((Position) goal.get((String)robotsid.get(i)));
+    	return (goal.get(robotsid.get(i)));
     }
     
     public Position getGoal (String id)
     {
-    	return ((Position) goal.get(id));
+    	return (goal.get(id));
     }
     
     public RobotData getRData (int i)
     {
-    	return ((RobotData)rrdata.get((String)robotsid.get(i)));
+    	return (rrdata.get(robotsid.get(i)));
     }
     
     public RobotData getRData (String id)
     {
-    	return ((RobotData)rrdata.get(id));
+    	return (rrdata.get(id));
     }
     
     public MonitorData getMData (int i)
     {
-    	return ((MonitorData)rpdata.get((String)robotsid.get(i)));
+    	return ((MonitorData)rpdata.get(robotsid.get(i)));
      }
     
     public MonitorData getMData (String id)
@@ -188,12 +188,12 @@ public class RobotList extends VehicleList
     
     public LPO[] getLPOs (int i)
     {
-    	return ((LPO[]) rlpos.get ((String) robotsid.get (i)));
+    	return (rlpos.get (robotsid.get (i)));
      }
     
     public LPO[] getLPOs (String id)
     {
-    	return ((LPO[]) rlpos.get (id));
+    	return (rlpos.get (id));
     }
     
     public String toString ()
@@ -215,11 +215,11 @@ public class RobotList extends VehicleList
   					break;
   							
   			case 1:  
-  					obj = rdatainfo.get((String)robotsid.get (row)); 
+  					obj = rdatainfo.get(robotsid.get (row)); 
 					break;
 					  					
   			case 2: 
-  					obj = status.get((String)robotsid.get (row));
+  					obj = status.get(robotsid.get (row));
   					break; 
   					 			
   			default: break;

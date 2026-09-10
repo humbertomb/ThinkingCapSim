@@ -15,11 +15,11 @@ public class VehicleList extends AbstractTableModel
 	
 	protected String[]				columnNames	= { "Vehicle", "Position" };
 	
-	protected Hashtable				rdesc;						// Vehicle descriptions
-	protected Hashtable				rpdata;						// Vehicle positioning data
-	protected Hashtable				rcol;						// Vehicle colors
+	protected Hashtable<String, VehicleDesc>	rdesc;						// Vehicle descriptions
+	protected Hashtable<String, VehicleData>	rpdata;						// Vehicle positioning data
+	protected Hashtable<String, Color>		rcol;						// Vehicle colors
 	
-	protected LinkedList				robotsid;
+	protected LinkedList<String>			robotsid;
 	protected Color[]			colors 		= { Color.RED.brighter() };
 	protected int					indcolor;
 	
@@ -31,11 +31,11 @@ public class VehicleList extends AbstractTableModel
 	
 	public VehicleList (int n)
 	{
-		rdesc		= new Hashtable(n);
-		rpdata 		= new Hashtable(n);
-		rcol		= new Hashtable(n);
+		rdesc		= new Hashtable<String, VehicleDesc>(n);
+		rpdata 		= new Hashtable<String, VehicleData>(n);
+		rcol		= new Hashtable<String, Color>(n);
 		
-		robotsid	= new LinkedList ();
+		robotsid	= new LinkedList<String> ();
 	}
 	
 	// Instance methods
@@ -82,11 +82,11 @@ public class VehicleList extends AbstractTableModel
 	 public VehicleDesc[] getVehicles ()
 	 {
 	 VehicleDesc rdescs[] = new VehicleDesc [rdesc.size()];
-	 Enumeration values = rdesc.elements();
+	 Enumeration<VehicleDesc> values = rdesc.elements();
 	 int i;
 	 
 	 for (i=0; values.hasMoreElements(); i++)
-	 rdescs[i] = (VehicleDesc)values.nextElement();
+	 rdescs[i] = values.nextElement();
 	 
 	 return (rdescs);    	
 	 }
@@ -95,43 +95,43 @@ public class VehicleList extends AbstractTableModel
 	{
 		String arr[] = new String[0];
 		
-		arr = (String[])robotsid.toArray (arr);
+		arr = robotsid.toArray (arr);
 		return (arr);
 	}
 	
 	public String getID (int i)
 	{
-		return ((String)robotsid.get(i));
+		return (robotsid.get(i));
 	}
 	
 	public VehicleDesc getVDesc (int i)
 	{
-		return ((VehicleDesc)rdesc.get((String)robotsid.get(i)));
+		return (rdesc.get(robotsid.get(i)));
 	}
 	
 	public VehicleDesc getVDesc (String id)
 	{
-		return ((VehicleDesc)rdesc.get(id));	
+		return (rdesc.get(id));	
 	}
 	
 	public VehicleData getData (int i)
 	{
-		return ((VehicleData)rpdata.get((String)robotsid.get(i)));
+		return (rpdata.get(robotsid.get(i)));
 	}
 	
 	public VehicleData getData (String id)
 	{
-		return ((VehicleData)rpdata.get(id));
+		return (rpdata.get(id));
 	}
 	
 	public Color getColor (int i)
 	{
-		return ((Color)rcol.get((String)robotsid.get(i)));
+		return (rcol.get(robotsid.get(i)));
 	}
 	
 	public Color getColor (String id)
 	{
-		return ((Color)rcol.get(id));
+		return (rcol.get(id));
 	}
 	
 	public String toString ()
@@ -162,7 +162,7 @@ public class VehicleList extends AbstractTableModel
 				break;
 				
 			case 1: 
-				obj = rpdata.get((String)robotsid.get(row)); // Extract current UTM position
+				obj = rpdata.get(robotsid.get(row)); // Extract current UTM position
 				break;
 				
 			default: break;

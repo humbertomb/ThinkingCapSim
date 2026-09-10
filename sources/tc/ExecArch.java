@@ -92,7 +92,7 @@ public class ExecArch extends Thread
 		String			modules, vrmodule, lrmodule;
 		String			preffix;
 		StringTokenizer	st;
-		Enumeration		enu;
+		Enumeration<?>	enu;
 		String			pname;
 		
 		// Setup private local variables

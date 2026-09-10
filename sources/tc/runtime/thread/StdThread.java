@@ -106,7 +106,7 @@ public abstract class StdThread implements Runnable, LindaListener
 	
 	public void stop ()
 	{
-		Enumeration		enu;
+		Enumeration<String>	enu;
 		EventDesc		edesc;
 		
 		System.out.println (">> Stopping module [" + tdesc.preffix + "@" + tdesc.robotid + "]");
@@ -115,7 +115,7 @@ public abstract class StdThread implements Runnable, LindaListener
 		enu		= recvs.keys ();
 		while (enu.hasMoreElements ())
 		{
-			edesc	= (EventDesc) recvs.get ((String) enu.nextElement ());
+			edesc	= recvs.get (enu.nextElement ());
 			
 			System.out.println ("\t>> Unregistering event " + edesc);
 			edesc.unregister (linda);

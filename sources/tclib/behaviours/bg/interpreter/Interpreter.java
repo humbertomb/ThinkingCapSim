@@ -20,11 +20,11 @@ public class Interpreter extends Object
 	public static final int			MAXSTATES		= 75;
 	private static final int		VARSPERLINE		= 5;
 	
-	protected Hashtable				globals;
-	protected Hashtable				sets;
-	protected Hashtable				funcs;
-	protected Hashtable				states;
-	protected Stack					env;
+	protected Hashtable<String, Store>	globals;
+	protected Hashtable<String, FSet>	sets;
+	protected Hashtable<String, Function>	funcs;
+	protected Hashtable<String, String>	states;
+	protected Stack<Hashtable<String, Store>>	env;
 	protected boolean				finished		= false;			// Only for DEBUG mode
 	protected boolean				debug			= false;			// Only for DEBUG mode
 	protected boolean				verbose			= false;
@@ -33,11 +33,11 @@ public class Interpreter extends Object
 	/* Constructors */
 	public Interpreter ()
 	{
-		globals		= new Hashtable (MAXVARS);
-		sets 		= new Hashtable (MAXSETS);
-		funcs 		= new Hashtable (MAXFUNCS);
-		states 		= new Hashtable (MAXSTATES);
-		env			= new Stack ();
+		globals		= new Hashtable<String, Store> (MAXVARS);
+		sets 		= new Hashtable<String, FSet> (MAXSETS);
+		funcs 		= new Hashtable<String, Function> (MAXFUNCS);
+		states 		= new Hashtable<String, String> (MAXSTATES);
+		env			= new Stack<Hashtable<String, Store>> ();
 		position	= new Position ();
 	}
 	
@@ -265,7 +265,7 @@ public class Interpreter extends Object
 	public void reset ()
 	{
 		// Initialize states
-		states 		= new Hashtable (MAXSTATES);
+		states 		= new Hashtable<String, String> (MAXSTATES);
 	}
 	
 	public void fusion (Program prg, double[] buffer)
@@ -394,7 +394,7 @@ public class Interpreter extends Object
 		return out;
 	}
 
-	protected double expresion (Expresion exp, int env, VSymbol out, Hashtable locals) throws InterpreterException
+	protected double expresion (Expresion exp, int env, VSymbol out, Hashtable<String, Store> locals) throws InterpreterException
 	{
 		VSymbol			id;
 		FSet				set;
@@ -541,11 +541,11 @@ public class Interpreter extends Object
 		return 0.0;
 	}
 	
-	protected double function (Function func, VSymbol params, VSymbol out, Hashtable locals) throws InterpreterException
+	protected double function (Function func, VSymbol params, VSymbol out, Hashtable<String, Store> locals) throws InterpreterException
 	{
 		VSymbol			s, t;
 		Command			c;
-		Hashtable		ltemp;
+		Hashtable<String, Store>	ltemp;
 		double			ret;		
 		int			f, a;
 		
@@ -563,7 +563,7 @@ public class Interpreter extends Object
 		{
 			BGParser.error ("Too many recursion levels in function <" + func.name () + ">");
 		}
-		ltemp = new Hashtable (MAXLOCS);
+		ltemp = new Hashtable<String, Store> (MAXLOCS);
 		s = func.params ();
 		t = params;
 		while ((s != null) && (t != null))
@@ -598,13 +598,13 @@ public class Interpreter extends Object
 		catch (ReturnException e) { }
 		
 		ret = access ("return", locals);
-		locals = (Hashtable) env.pop ();				// Restore execution environment
+		locals = env.pop ();				// Restore execution environment
 		
 		if (verbose) BGParser.debug ("       End Function <" + func.name () + ">");
 		return ret;
 	}
 
-	protected void commands (Command coms, VSymbol out, Hashtable locals) throws InterpreterException
+	protected void commands (Command coms, VSymbol out, Hashtable<String, Store> locals) throws InterpreterException
 	{
 		Command		p, t;
 			
@@ -680,7 +680,7 @@ public class Interpreter extends Object
 		}
 	}
 
-	protected void fcommands (Command coms, VSymbol out, Rules rs, Hashtable locals) throws InterpreterException
+	protected void fcommands (Command coms, VSymbol out, Rules rs, Hashtable<String, Store> locals) throws InterpreterException
 	{
 		Command		p;
 		FSet			output, cut;
@@ -716,7 +716,7 @@ public class Interpreter extends Object
 		}
 	}
 
-	protected void behaviours (Behaviour behs, Hashtable locals) throws InterpreterException
+	protected void behaviours (Behaviour behs, Hashtable<String, Store> locals) throws InterpreterException
 	{
 		Fusion			fus;
 		Pairs			prs;
@@ -785,7 +785,7 @@ public class Interpreter extends Object
 		fus.fusion ();
 	}
 	
-	protected void common (Common com, Hashtable locals) throws InterpreterException
+	protected void common (Common com, Hashtable<String, Store> locals) throws InterpreterException
 	{
 		Common			p;
 		Command		c;
@@ -823,7 +823,7 @@ public class Interpreter extends Object
 		}
 	}
 
-	protected void blender (Blender blend, Hashtable locals) throws InterpreterException
+	protected void blender (Blender blend, Hashtable<String, Store> locals) throws InterpreterException
 	{
 		Blender			p;
 		Command			c;
@@ -864,13 +864,13 @@ public class Interpreter extends Object
 	protected void initialize (Command com)
 	{
 		Command			c;
-		Hashtable		locals;
+		Hashtable<String, Store>	locals;
 	
 		if (com == null) return;
 		
 		if (verbose) BGParser.debug ("   Initialization Block");
 		
-		locals	= new Hashtable (MAXLOCS);
+		locals	= new Hashtable<String, Store> (MAXLOCS);
 		c = com;	
 		while ((c = nextfsm (c)) != null)
 		{
@@ -888,9 +888,9 @@ public class Interpreter extends Object
 	public void agents (Program prg)
 	{
 		Agent			p;
-		Hashtable		locals;
+		Hashtable<String, Store>	locals;
 	
-		locals	= new Hashtable (MAXLOCS);
+		locals	= new Hashtable<String, Store> (MAXLOCS);
 
 		p = prg.agts ();
 		while ((p != null) && !finished)
@@ -927,9 +927,9 @@ public class Interpreter extends Object
 	/* A U X I L I A R Y   F U N C T I O N S */
 	/* ------------------------------------- */
 
-	protected void dumplocals (Hashtable locals)
+	protected void dumplocals (Hashtable<String, Store> locals)
 	{
-		Enumeration		keys;
+		Enumeration<String>	keys;
 		String			name;
 		double			value;
 		
@@ -938,22 +938,22 @@ public class Interpreter extends Object
 		for (keys = locals.keys (); keys.hasMoreElements (); ) 
 		{
 			System.out.print ("       ");
-			name = (String) keys.nextElement ();
+			name = keys.nextElement ();
 			value = access (name, locals);
 			System.out.println (name + " = " + value);
 		}
 		System.out.println ("             ---------------------");
 	}
 	
-	protected double access (String name, Hashtable locals)
+	protected double access (String name, Hashtable<String, Store> locals)
 	{
 		double			value;
 		Store			sto 		= null;
 		
-		if (locals != null) sto = (Store) locals.get (name);
+		if (locals != null) sto = locals.get (name);
 		if (sto == null)
 		{
-			sto = (Store) globals.get (name);
+			sto = globals.get (name);
 			if (sto == null)
 			{
 				BGParser.error ("Variable <" + name + "> not found");
@@ -970,7 +970,7 @@ public class Interpreter extends Object
 		double			value;
 		Store			sto 		= null;
 		
-		sto = (Store) globals.get (name);
+		sto = globals.get (name);
 		if (sto == null)
 		{
 			BGParser.error ("Global variable <" + name + "> not found");
@@ -981,14 +981,14 @@ public class Interpreter extends Object
 		return value;
 	}
 	
-	protected void access (String name, double value, Hashtable locals)
+	protected void access (String name, double value, Hashtable<String, Store> locals)
 	{
 		Store			sto		= null;
 		
-		if (locals != null) sto = (Store) locals.get (name);
+		if (locals != null) sto = locals.get (name);
 		if (sto == null)
 		{
-			sto = (Store) globals.get (name);
+			sto = globals.get (name);
 			if (sto == null)
 			{
 				BGParser.error ("Variable <" + name + "> not found");
@@ -1003,7 +1003,7 @@ public class Interpreter extends Object
 	{
 		Store			sto		= null;
 		
-		sto = (Store) globals.get (name);
+		sto = globals.get (name);
 		if (sto == null)
 		{
 			if (verbose) BGParser.warning ("Global variable <" + name + "> not found");
@@ -1013,14 +1013,14 @@ public class Interpreter extends Object
 		if (verbose) BGParser.debug ("          Variable <" + name + "> <== [" + value + "]");
 	}
 	
-	private Store pointer (String name, Hashtable locals)
+	private Store pointer (String name, Hashtable<String, Store> locals)
 	{
 		Store			sto		= null;
 		
-		if (locals != null) sto = (Store) locals.get (name);
+		if (locals != null) sto = locals.get (name);
 		if (sto == null)
 		{
-			sto = (Store) globals.get (name);
+			sto = globals.get (name);
 			if (sto == null)
 			{
 				BGParser.error ("Pointer to variable <" + name + "> not found");
@@ -1035,7 +1035,7 @@ public class Interpreter extends Object
 	{
 		FSet			set;
 		
-		set = (FSet) sets.get (name);
+		set = sets.get (name);
 		if (set == null)
 		{
 			BGParser.error ("FSet <" + name + "> not found");
@@ -1048,7 +1048,7 @@ public class Interpreter extends Object
 	{
 		Function		fun;
 		
-		fun = (Function) funcs.get (name);
+		fun = funcs.get (name);
 		if (fun == null)
 		{
 			BGParser.error ("Function <" + name + "> not found");
@@ -1061,7 +1061,7 @@ public class Interpreter extends Object
 	{
 		String			ret;
 		
-		ret = (String) states.get (name);
+		ret = states.get (name);
 		if (ret == null)
 		{
 			BGParser.error ("FSM State <" + name + "> not found");

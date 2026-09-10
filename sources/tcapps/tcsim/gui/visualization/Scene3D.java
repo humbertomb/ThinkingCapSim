@@ -58,8 +58,8 @@ public class Scene3D extends Object
 	protected AmbientLight			lightAmbient;
 	
 	// Textures and coloring
-	private Hashtable				texCache;		// Textures cache
-	private Hashtable				objCache;		// 3D objects cache
+	private Hashtable<String, Appearance>	texCache;		// Textures cache
+	private Hashtable<String, BranchGroup>	objCache;		// 3D objects cache
 
 	/* Constructors */
 	public Scene3D (Canvas3D canvas) 
@@ -71,8 +71,8 @@ public class Scene3D extends Object
 		this.canvas	= canvas;
 		
 		// Caches
-		texCache	= new Hashtable ();	
-		objCache	= new Hashtable ();	
+		texCache	= new Hashtable<String, Appearance> ();	
+		objCache	= new Hashtable<String, BranchGroup> ();	
 		
 		view		= new Transform3D ();
 		focus	= new Point3d (0.0, 0.0, 0.0);
@@ -140,7 +140,7 @@ public class Scene3D extends Object
 		Material				mat;
 		
 		if (texCache.containsKey(name))
-			app = (Appearance) texCache.get(name);
+			app = texCache.get(name);
 		else
 		{
 			System.out.println ("  [Scene3D] Loading texture <"+name+">");
@@ -181,7 +181,7 @@ public class Scene3D extends Object
 		
 		if (objCache.containsKey(name))
 		{
-			branch	= (BranchGroup) objCache.get (name);
+			branch	= objCache.get (name);
 			branch	= (BranchGroup) branch.cloneTree (true);
 		}
 		else
@@ -201,7 +201,7 @@ public class Scene3D extends Object
 				branch.setCapability(BranchGroup.ALLOW_CHILDREN_READ);					
 			} catch (Exception e) { e.printStackTrace(); }		
 
-			objCache.put (name, branch.cloneTree (true));
+			objCache.put (name, (BranchGroup) branch.cloneTree (true));
 		}
 		
 		// Transform object references to Java3D
@@ -228,7 +228,7 @@ public class Scene3D extends Object
 	 */
 	protected void traverse (Group bg, Color3f objcolor) 
 	{
-		Enumeration e = bg.getAllChildren();		
+		Enumeration<Node> e = bg.getAllChildren();		
 		
 		while (e.hasMoreElements())
 		{

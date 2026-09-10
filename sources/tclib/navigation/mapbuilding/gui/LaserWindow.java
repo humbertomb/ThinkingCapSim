@@ -188,7 +188,7 @@ public class LaserWindow extends Object implements Runnable
 		if(AUTOPORTDETECT){
 			try{
 				CommPortIdentifier portId;
-				Enumeration en = CommPortIdentifier.getPortIdentifiers();
+				Enumeration<?> en = CommPortIdentifier.getPortIdentifiers();
 				// iterate through the ports.
 				while (en.hasMoreElements()) {
 					portId = (CommPortIdentifier) en.nextElement();

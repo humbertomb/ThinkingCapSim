@@ -66,7 +66,7 @@ public class CCD400E extends Camera
     {       
   		ComandoCCD400E c;
   		
-  		c = (ComandoCCD400E)ComandosCCD400E.comandos.get (comando.orden);
+  		c = ComandosCCD400E.comandos.get (comando.orden);
 		if (c==null)
 		{
 			if (DEBUG) System.out.println("Camera CCD400E does not supports command"+comando.orden);
@@ -106,7 +106,7 @@ public class CCD400E extends Camera
     {
     	ComandoCCD400E c;
   		
-  		c = (ComandoCCD400E)ComandosCCD400E.comandos.get (comando.orden);
+  		c = ComandosCCD400E.comandos.get (comando.orden);
 		if (c==null)
 		{
 			if (DEBUG) System.out.println("Camera CCD400E does not supports command \""+comando.orden+"\"");
@@ -139,12 +139,12 @@ public class CCD400E extends Camera
     {
 		ArrayList<String> groups= new ArrayList<String>();
 	
-		Enumeration en;
+		Enumeration<ComandoCCD400E> en;
 		ComandoCCD400E comando;
 		en = ComandosCCD400E.comandos.elements();
 		while (en.hasMoreElements())
 		{
-			comando = (ComandoCCD400E)en.nextElement();
+			comando = en.nextElement();
 			if (!groups.contains(comando.grupo))
 			{
 				groups.add(comando.grupo);

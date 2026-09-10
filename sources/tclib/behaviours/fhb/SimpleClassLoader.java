@@ -23,7 +23,7 @@ import java.io.FileInputStream;
 public class SimpleClassLoader extends ClassLoader {
 	
 	/* map containing the classes already returned */
-	private Hashtable classes = new Hashtable();
+	private Hashtable<String, Class<?>> classes = new Hashtable<String, Class<?>>();
 	/* folder where the class loader can find the class files */
 	private String classImplementationPath;
 
@@ -71,7 +71,7 @@ public class SimpleClassLoader extends ClassLoader {
 	 */
 	public synchronized Class loadClass(String className, boolean resolveIt)
 		throws ClassNotFoundException {
-		Class result;
+		Class<?> result;
 		byte  classData[];
 
 //		System.out.println("DEBUG: Load class : "+className);
@@ -87,7 +87,7 @@ public class SimpleClassLoader extends ClassLoader {
 		 * called recursively when a class is being resolved, and you will need to 
 		 * return the cached result rather than chase it down for another copy.
 		 */ 
-		result = (Class)classes.get(className);
+		result = classes.get(className);
 		if (result != null) {
 //			System.out.println("DEBUG: Returning cached result.");
 			return result;

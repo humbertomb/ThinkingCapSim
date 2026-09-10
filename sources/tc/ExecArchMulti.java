@@ -79,7 +79,7 @@ public class ExecArchMulti extends Thread
 		String			modules;
 		String			preffix;
 		StringTokenizer	st;
-		Enumeration		enu;
+		Enumeration<?>	enu;
 		String			pname;
 		
 		// Setup private local variables

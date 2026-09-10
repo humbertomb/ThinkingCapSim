@@ -29,7 +29,7 @@ public class LindaNetTCP extends LindaNet
 	// TCP server stuff
 	protected ServerSocket			ssocket;
 	protected LindaNetTCPServer		nserver;
-	protected Hashtable				pserver;
+	protected Hashtable<String, LindaNetTCPClient>	pserver;
 	
 	// Local states and synchronization
 	private int						mode;
@@ -49,7 +49,7 @@ public class LindaNetTCP extends LindaNet
 	{
 		super (port, processor);
 		
-		pserver		= new Hashtable (MAX_CLIENT);
+		pserver		= new Hashtable<String, LindaNetTCPClient> (MAX_CLIENT);
 		nserver		= new LindaNetTCPServer (this);
 	}
 
@@ -230,8 +230,8 @@ public class LindaNetTCP extends LindaNet
 				
 		public void stop ()
 		{
-			Enumeration			enu;
-			Integer				key;
+			Enumeration<String>	enu;
+			String				key;
 			LindaNetTCPClient	client;
 			
 			running	= false;
@@ -239,8 +239,8 @@ public class LindaNetTCP extends LindaNet
 			enu		= pserver.keys ();
 			while (enu.hasMoreElements ())
 			{
-				key		= (Integer) enu.nextElement ();
-				client	= (LindaNetTCPClient) pserver.get (key);
+				key		= enu.nextElement ();
+				client	= pserver.get (key);
 				pserver.remove (key);
 				client.stop ();
 			}
@@ -327,7 +327,7 @@ public class LindaNetTCP extends LindaNet
 		}
 		else
 		{
-			client	= (LindaNetTCPClient) pserver.get (dconn.peer+" "+dconn.port); 
+			client	= pserver.get (dconn.peer+" "+dconn.port); 
 			if (client == null)						return false;
 			
 			try { ostream	= client.socket.getOutputStream (); } catch (Exception e) { 

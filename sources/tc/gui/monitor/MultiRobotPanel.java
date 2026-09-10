@@ -92,7 +92,7 @@ public class MultiRobotPanel extends MultiRobotPanelInterf //implements GUIMonit
 	protected JRadioButton 				lactualRB	= new JRadioButton();
 	
 	// Robot dependent GUI variables
-	protected Hashtable					rtable		= new Hashtable (MAX_ROBOTS);
+	protected Hashtable<String, MonitorPanel>	rtable		= new Hashtable<String, MonitorPanel> (MAX_ROBOTS);
 	protected Properties				config;
 	
 	// Internal variables
@@ -383,13 +383,13 @@ public class MultiRobotPanel extends MultiRobotPanelInterf //implements GUIMonit
 	
 	public void close ()
 	{
-		Enumeration			enu;
+		Enumeration<String>	enu;
 		MonitorPanel			panel;
 
 		enu		= rtable.keys ();
 		while (enu.hasMoreElements ())
 		{
-			panel	= (MonitorPanel) rtable.get (enu.nextElement ());
+			panel	= rtable.get (enu.nextElement ());
 			panel.close ();
 		}
 	}
@@ -455,7 +455,7 @@ public class MultiRobotPanel extends MultiRobotPanelInterf //implements GUIMonit
 			map.update (robots);
 		mapPA.repaint ();
 
-		panel	= (MonitorPanel) rtable.get (id);
+		panel	= rtable.get (id);
 		if (panel != null)
 			panel.setRobotData (robots);
 	}
@@ -486,7 +486,7 @@ public class MultiRobotPanel extends MultiRobotPanelInterf //implements GUIMonit
 		MonitorPanel 	panel;
 		
 		robotsCB.removeItem (id);
-		panel=(MonitorPanel)rtable.remove (id);
+		panel=rtable.remove (id);
 		panel.delRobotJMenu(id);
 		
 		robotTB.setModel (robots);
@@ -539,7 +539,7 @@ public class MultiRobotPanel extends MultiRobotPanelInterf //implements GUIMonit
 	{
 		MonitorPanel			panel;
 
-		panel	= (MonitorPanel) rtable.get (id);
+		panel	= rtable.get (id);
 		if (panel != null)
 			panel.setBehaviours (behInfo);
 	}
@@ -567,7 +567,7 @@ public class MultiRobotPanel extends MultiRobotPanelInterf //implements GUIMonit
 		if (id != null)
 		{
 			monitorPA.removeAll ();
-			monitorPA.add ((MonitorPanel) rtable.get (id));			
+			monitorPA.add (rtable.get (id));			
 			monitorPA.repaint ();
 		}
 	}

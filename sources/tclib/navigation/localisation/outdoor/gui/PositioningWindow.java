@@ -599,7 +599,7 @@ public class PositioningWindow extends Object implements Runnable
 			try
 			{
 				CommPortIdentifier portId;
-				Enumeration en = CommPortIdentifier.getPortIdentifiers();
+				Enumeration<?> en = CommPortIdentifier.getPortIdentifiers();
 				while (en.hasMoreElements())
 				{
 					portId = (CommPortIdentifier) en.nextElement();

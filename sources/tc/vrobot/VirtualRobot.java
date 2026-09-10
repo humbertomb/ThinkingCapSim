@@ -104,7 +104,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		if (rcname != null)
 		{
 			Properties		rcprops;
-			Enumeration		keys;
+			Enumeration<Object>	keys;
 			String			key;
 			
 			rcprops			= new Properties ();

@@ -83,7 +83,7 @@ public class RemoteActionCreator
 		ButtonGroup bg;
 		JMenu auxSubmenu;
 		JRadioButtonMenuItem auxRBItem;
-		Enumeration valuesEnum;
+		Enumeration<String> valuesEnum;
 		String valueName;
 					
 		auxSubmenu=new JMenu();
@@ -92,7 +92,7 @@ public class RemoteActionCreator
 		bg=new ButtonGroup();
 		while (valuesEnum.hasMoreElements())
 		{
-			valueName=(String) valuesEnum.nextElement();
+			valueName=valuesEnum.nextElement();
 			auxRBItem=new JRadioButtonMenuItem();
 			auxRBItem.setVisible(true);
 			auxRBItem.setText(valueName);

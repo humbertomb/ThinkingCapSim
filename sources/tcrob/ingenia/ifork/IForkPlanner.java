@@ -917,7 +917,7 @@ public class IForkPlanner extends SeqPlanner
 	protected synchronized void checkCoordStatus ()
 	{
 		ItemCoordination		item;
-		Enumeration			infos = agvinfo.keys();
+		Enumeration<String>	infos = agvinfo.keys();
 		String				wpname, rname;
 		String				wpgoal = null;
 		boolean				warn =false;
@@ -930,9 +930,9 @@ public class IForkPlanner extends SeqPlanner
 		if (stopped)				return;
 		
 		// Check for waypoint booking status
-		for (ListIterator l = locks.listIterator(); l.hasNext();)
+		for (ListIterator<String> l = locks.listIterator(); l.hasNext();)
 		{
-			wpname = (String)l.next();  // wp ocupado
+			wpname = l.next();  // wp ocupado
 			
 			// Si el WP ocupado es el suyo lo ignora
 			if ((booked != null) && booked.equalsIgnoreCase (wpname)) 			continue;
@@ -945,7 +945,7 @@ public class IForkPlanner extends SeqPlanner
 				// Si se acerca a un wp ocupado una distancia minima cede el paso
 				if(distTo(wpname) < POINT_DIST || (distTo(wpname) < 4 && world.getType(wpname)==World.DOCK)){
 				    rname = (String)asoclocks.get(wpname); // robot que ha ocupado el WP
-				    item		= (ItemCoordination)agvinfo.get (rname);
+				    item		= agvinfo.get (rname);
 				    if(item!=null && debug) 
 				    	System.out.println("  [IforkPlanner] "+wpname+" esta ocupado por "+rname+" myprio="+myPriority+" supri="+item.priority);
 				    //if(item == null || item.priority <= myPriority){
@@ -1000,8 +1000,8 @@ public class IForkPlanner extends SeqPlanner
 		// Check for robot proximity conditions
 		while (infos.hasMoreElements())
 		{
-			rname	= (String)infos.nextElement();	// Nombre de la carretilla
-			item	= (ItemCoordination)agvinfo.get (rname); // Toda la informacion de la carretilla	
+			rname	= infos.nextElement();	// Nombre de la carretilla
+			item	= agvinfo.get (rname); // Toda la informacion de la carretilla	
 			dist	= iforkdist(lps.cur, item.position);
 			wpname	= (item != null ? item.goal : null);
 			
@@ -1347,7 +1347,7 @@ public class IForkPlanner extends SeqPlanner
 	}
 	
 	public synchronized void notify_delrobot(String space,ItemDelRobot item){
-		Enumeration enum1;
+		Enumeration<String> enum1;
 		String wp;
 		
 		if(item.cmd==ItemDelRobot.INFO){
@@ -1365,7 +1365,7 @@ public class IForkPlanner extends SeqPlanner
 			}
 			if(asoclocks.containsValue(item.robotid)){
 				for(enum1 = asoclocks.keys();enum1.hasMoreElements();){
-					wp = (String)enum1.nextElement();
+					wp = enum1.nextElement();
 					if(item.robotid.equalsIgnoreCase((String)asoclocks.get(wp))){
 						System.out.println("  [IForkPlanner] Robot "+robotid+": eliminando "+wp+" del robot "+item.robotid);
 						asoclocks.remove(wp);
@@ -1546,7 +1546,7 @@ public class IForkPlanner extends SeqPlanner
 	    if(subplan[subplan_k].t_labels == null) return true;
 	    
 	    String goal = subplan[subplan_k].t_labels[0];
-	    ItemCoordination item = (ItemCoordination) agvinfo.get(rname);
+	    ItemCoordination item = agvinfo.get(rname);
 	    if(item==null || item.goal == null) return true;
 	    double d1 = distTo(lps.cur, item.goal);	// Distancia de la carretilla al wp al que va otra carretilla
 	    double d2 = distTo(item.position, goal); // Distancia de la otra carretilla al wp al que va la carretilla
@@ -1643,12 +1643,12 @@ public class IForkPlanner extends SeqPlanner
 			System.out.println("}");
 		}
 	    if(asoclocks.size()>0){
-	    	Enumeration			infos = asoclocks.keys();
+	    	Enumeration<String>	infos = asoclocks.keys();
 	    	String rname;
 	    	String bockedname;
 	    	System.out.print("["+robotid+"] AsocLooks = { ");
 	    	while (infos.hasMoreElements()){
-	    		rname	= (String)infos.nextElement();
+	    		rname	= infos.nextElement();
 	    		bockedname = (String)asoclocks.get (rname);
 	    		System.out.print(rname+"->"+bockedname+" ");
 	    	}
@@ -1658,14 +1658,14 @@ public class IForkPlanner extends SeqPlanner
 	
 	public void printAgvInfos(){
 	    if(agvinfo.isEmpty()) return;
-	    Enumeration			infos = agvinfo.keys();
+	    Enumeration<String>	infos = agvinfo.keys();
 	    String rname;
 	    ItemCoordination item;
 	    
 	    System.out.println("["+robotid+"] Agvinfos:");
 	    while(infos.hasMoreElements()){
-	        rname	= (String)infos.nextElement();
-			item		= (ItemCoordination)agvinfo.get (rname);
+	        rname	= infos.nextElement();
+			item		= agvinfo.get (rname);
 			System.out.println("\tNAME= "+rname+" ITEM= "+item+" dist= "+lps.cur.distance(item.position)+ " dist2="+iforkdist(item.position,lps.cur));
 	    }
 		

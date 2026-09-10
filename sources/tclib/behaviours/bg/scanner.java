@@ -34,7 +34,7 @@ public class scanner
 	 *  they match one of the keywords.  The string of the name is the key here,
 	 *  which indexes Integer objects holding the symbol number. 
 	 */
-	protected static Hashtable 		keywords 			= new Hashtable(60);
+	protected static Hashtable<String, Integer>		keywords 		= new Hashtable<String, Integer>(60);
 
 	/** Table of single character symbols.  For ease of implementation, we 
 	 *  store all unambiguous single character Symbols in this table of Integer
@@ -42,7 +42,7 @@ public class scanner
 	 *  appropriate char (currently Character objects have a bug which precludes
 	 *  their use in tables).
 	 */
-	protected static Hashtable 		char_symbols 		= new Hashtable(20);
+	protected static Hashtable<Integer, Integer>	char_symbols 	= new Hashtable<Integer, Integer>(20);
 
 	protected static int			current_line		= 1;
 	protected static int 			current_position	= 1;
@@ -270,7 +270,7 @@ public class scanner
 	{
 		Integer result;
 
-		result = (Integer) char_symbols.get (Integer.valueOf ((char)ch));
+		result = char_symbols.get (Integer.valueOf ((char)ch));
 		if (result == null) 
 			return -1;
 		else
@@ -359,7 +359,7 @@ public class scanner
 
 		/* extract a string and try to look it up as a keyword */
 		result_str = result.toString ();
-		keyword_num = (Integer) keywords.get (result_str);
+		keyword_num = keywords.get (result_str);
 
 		/* if we found something, return that keyword */
 		if (keyword_num != null)
@@ -424,7 +424,7 @@ public class scanner
 
 		/* extract a string and try to look it up as a keyword */
 		result_str = result.toString ();
-		keyword_num = (Integer) keywords.get (result_str);
+		keyword_num = keywords.get (result_str);
 
 		/* if we found something, return that keyword */
 		if (keyword_num != null)

@@ -71,7 +71,7 @@ public class Minidome extends Camera
 			return true;
 		}
 
-		mcommand=(MinidomeCommand)commands.getCommand(comando);
+		mcommand=commands.getCommand(comando);
 		if (mcommand.getParamLength()!=0)
 			if (DEBUG) System.out.println("Minidome.java: Warning! Sending a command that needs "+mcommand.getParamLength()+" params with no params ");
 		
@@ -110,7 +110,7 @@ public class Minidome extends Camera
 		}
 		else
 		{
-			mcommand=(MinidomeCommand)commands.getCommand(comando);
+			mcommand=commands.getCommand(comando);
 			paramChain[0]=(byte)numero;
 			paramChain[1]=0;
 			commandChain= mcommand.com(paramChain);
@@ -149,7 +149,7 @@ public class Minidome extends Camera
 		}
 		else
 		{
-			mcommand=(MinidomeCommand)commands.getCommand(comando);
+			mcommand=commands.getCommand(comando);
 			paramChain[0]=(byte)param1;
 			paramChain[1]=(byte)param2;
 			commandChain= mcommand.com(paramChain);
@@ -194,7 +194,7 @@ public class Minidome extends Camera
 		}
 		else
 		{
-			mcommand=(MinidomeCommand)commands.getCommand(comando);
+			mcommand=commands.getCommand(comando);
 			paramChain[0]=(byte)(param1%256);
 			paramChain[1]=(byte)(param1/256);
 			paramChain[2]=(byte)(param2%256);
@@ -223,14 +223,14 @@ public class Minidome extends Camera
 	public Collection getCommandGroups()
 	{
 		ArrayList<String> groups = new ArrayList<String>();
-		Collection allComs;
+		Collection<MinidomeCommand> allComs;
 		Comando command;
-		Iterator it;
+		Iterator<MinidomeCommand> it;
 		allComs=commands.getAvaiableCommands();
 		it=allComs.iterator();
 		while (it.hasNext())
 		{
-			command=(Comando)it.next();
+			command=it.next();
 			if(!groups.contains(command.grupo))
 				groups.add(command.grupo);		
 		}

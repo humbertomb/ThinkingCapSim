@@ -10,7 +10,7 @@ import devices.drivers.camera.*;
 public class MinidomeAllCommands
 {
 
-	Hashtable commands= new Hashtable();
+	Hashtable<String, MinidomeCommand> commands= new Hashtable<String, MinidomeCommand>();
 
 	public MinidomeAllCommands()
 	{
@@ -54,12 +54,12 @@ public class MinidomeAllCommands
 		commands.put("MIXED_MOVEMENT",new MinidomeCommand("ORIENTATION","MIXED_MOVEMENT",new byte [] {2,1,1},"",2));
 	}
 
-	public Comando getCommand(Comando command)
+	public MinidomeCommand getCommand(Comando command)
 	{
-		return (Comando)commands.get(command.orden);
+		return commands.get(command.orden);
 	}
 	
-	public Collection getAvaiableCommands()
+	public Collection<MinidomeCommand> getAvaiableCommands()
 	{
 		return (commands.values());
 	}

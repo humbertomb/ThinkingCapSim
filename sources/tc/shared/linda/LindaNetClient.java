@@ -15,7 +15,7 @@ public class LindaNetClient implements Linda, LindaNetProcessor
 	static protected final long		TIMEOUT		= 200; 		// Reception timeout (ms)
 
 	// Linda connection data and control
-	protected Hashtable				listeners 	= null;	
+	protected Hashtable<String, LindaListener>	listeners 	= null;	
 	protected LindaNet				lclient;
 	protected Tuple					ltuple;
 	protected Integer				lock;
@@ -31,7 +31,7 @@ public class LindaNetClient implements Linda, LindaNetProcessor
 		this.sourceid	= sourceid;
 		
 		// Set up local variables
-		listeners 	= new Hashtable (MAX_KEYS);
+		listeners 	= new Hashtable<String, LindaListener> (MAX_KEYS);
 		lock			= Integer.valueOf (0);
 		answered		= false;
 
@@ -145,7 +145,7 @@ public class LindaNetClient implements Linda, LindaNetProcessor
 			Tuple			tuple;
 
 			tuple		= packet.getTuple ();
-			listener	= (LindaListener) listeners.get (tuple.key);
+			listener	= listeners.get (tuple.key);
 			
 			if (listener != null) 
 				listener.notify (tuple);

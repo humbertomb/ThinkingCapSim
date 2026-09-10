@@ -318,7 +318,7 @@ public class TCMonitor extends JFrame implements GUIApplication
 		}
 		
 		// Gets available multi-robot classes
-		Hashtable multiPanels = new Hashtable();
+		Hashtable<String, String> multiPanels = new Hashtable<String, String>();
 		if ((confProps.getProperty("MULTIROBOTPANEL0_NAME")==null) ||	(confProps.getProperty("MULTIROBOTPANEL0_CLASS")==null))
 			
 			JOptionPane.showMessageDialog(this, "Error parsing configuration file: properties MULTIROBOTPANEL0_NAME or MULTIROBOTPANEL0_CLASS not found","Error",JOptionPane.ERROR_MESSAGE);
@@ -364,7 +364,7 @@ public class TCMonitor extends JFrame implements GUIApplication
 					JOptionPane.showMessageDialog(this, "Error parsing configuration file: value of MULTIROBOTPANEL_DEFAULT is not a declared multi robot panel NAME","Error",JOptionPane.ERROR_MESSAGE);
 				else
 				{
-					Class mrpclass=  Class.forName((String)multiPanels.get(confProps.getProperty("MULTIROBOTPANEL_DEFAULT")));
+					Class mrpclass=  Class.forName(multiPanels.get(confProps.getProperty("MULTIROBOTPANEL_DEFAULT")));
 					multiPanel=(MultiRobotPanelInterf)mrpclass.newInstance();
 					multiPanel.setMonitorMenu (monitorMI);
 					if (monitor != null)
@@ -373,9 +373,9 @@ public class TCMonitor extends JFrame implements GUIApplication
 					multiPanel.open (confProps);
 				}
 			} catch (Exception e) {
-				System.out.println("Error loading panel class <"+(String)multiPanels.get(confProps.getProperty("MULTIROBOTPANEL_DEFAULT"))+">: "+e.getMessage());
+				System.out.println("Error loading panel class <"+multiPanels.get(confProps.getProperty("MULTIROBOTPANEL_DEFAULT"))+">: "+e.getMessage());
 				e.printStackTrace();
-				JOptionPane.showMessageDialog(this, "Error loading panel class <"+(String)multiPanels.get(confProps.getProperty("MULTIROBOTPANEL_DEFAULT"))+">: "+e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(this, "Error loading panel class <"+multiPanels.get(confProps.getProperty("MULTIROBOTPANEL_DEFAULT"))+">: "+e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
 			}
 		}
 
