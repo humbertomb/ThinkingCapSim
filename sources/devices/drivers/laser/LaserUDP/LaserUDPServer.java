@@ -79,7 +79,7 @@ public class LaserUDPServer extends Thread
 					System.exit (0);
 				}
 			}
-			yield();			
+			Thread.yield ();			
 		}		
 	}
 	

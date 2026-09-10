@@ -50,10 +50,10 @@ public class EventList extends AbstractTableModel
 		
 		switch (col)
 		{
-		case 0:		obj = new Integer (row);					break;			
+		case 0:		obj = Integer.valueOf (row);					break;			
 		case 1:		obj = events[row].stamp;					break;			
 		case 2:		obj = events[row].id;						break;			
-		case 3:		obj = new Integer (events[row].type);		break;
+		case 3:		obj = Integer.valueOf (events[row].type);		break;
 		case 4:		obj = events[row].desc;					break;
 		}
 		
@@ -67,7 +67,7 @@ public class EventList extends AbstractTableModel
 		EventEntry[]		tevents;
 		
 		entry		= new EventEntry ();
-		entry.stamp	= new Long (stamp);
+		entry.stamp	= Long.valueOf (stamp);
 		entry.id		= id;
 		entry.type	= type;
 		entry.desc	= desc;

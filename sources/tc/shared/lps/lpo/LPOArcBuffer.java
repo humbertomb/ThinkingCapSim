@@ -205,7 +205,7 @@ public class LPOArcBuffer extends LPO implements Serializable
 			
 			xx = pos.x () + kk * Math.cos (pos.alpha ());
 			yy = pos.y () + kk * Math.sin (pos.alpha ());									
-			model.addRawText (xx, yy, new Integer ((int) Math.round (kk)).toString (), ColorTool.fromWColorToColor(WColor.CYAN));
+			model.addRawText (xx, yy, Integer.valueOf ((int) Math.round (kk)).toString (), ColorTool.fromWColorToColor(WColor.CYAN));
 		}	
 
 		for (i = 0; i < size; i++)

@@ -33,8 +33,9 @@ public class WMBeacon extends WMElement
         StringTokenizer st = new StringTokenizer (prop,", \t");
         double px	= Double.parseDouble (st.nextToken()); 
         double py 	= Double.parseDouble (st.nextToken());
+        double pz 	= Double.parseDouble (st.nextToken());
         double r		= Double.parseDouble (st.nextToken()); 	//orientation -  degrees
-        pos 			= new Position(px,py,Math.toRadians(r));
+        pos 			= new Position(px,py,pz,Math.toRadians(r));
         width 		= Double.parseDouble (st.nextToken()); 	//width
         
         label = new String (st.nextToken());	
@@ -95,7 +96,7 @@ public class WMBeacon extends WMElement
     
     public String toRawString ()
     {
-        return DoubleFormat.format(pos.x()) + ", " + DoubleFormat.format(pos.y()) + ", " + DoubleFormat.format(Math.toDegrees(pos.alpha())) + ", " + DoubleFormat.format(width) + ", " + label;
+        return DoubleFormat.format(pos.x()) + ", " + DoubleFormat.format(pos.y()) + ", " + DoubleFormat.format(pos.z()) + ", " + DoubleFormat.format(Math.toDegrees(pos.alpha())) + ", " + DoubleFormat.format(width) + ", " + label;
     }
     
 }

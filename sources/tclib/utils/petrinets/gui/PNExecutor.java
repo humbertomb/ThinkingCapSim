@@ -110,10 +110,10 @@ public class PNExecutor implements Runnable
          }
     }
 
-    public void blink(Vector v) {           //new 18.5.97 jw
+    public void blink(ArrayList<PNTransition> v) {           //new 18.5.97 jw
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < v.size(); j++) {
-                ((PNTransition)v.elementAt(j)).highlight = true;
+                v.get (j).highlight = true;
             }
             Vis.repaint();
             try {
@@ -121,7 +121,7 @@ public class PNExecutor implements Runnable
             }
             catch (InterruptedException l) {}
             for (int j = 0; j < v.size(); j++) {
-                ((PNTransition)v.elementAt(j)).highlight = false;
+                v.get (j).highlight = false;
             }
             Vis.repaint();
             try {
@@ -172,18 +172,18 @@ public class PNExecutor implements Runnable
         case PNExecutor.SEQRAN :
             PNTransition t;
             boolean increaseCounter;
-            Vector seq = new Vector();
+            ArrayList<PNTransition> seq = new ArrayList<PNTransition>();
 
             while (! PNet.isDead(true) && running) {
                 for (int i = 0; i < PNet.numberOfTransitions(); i++){
                     t = PNet.getTransition(i);
                     t.randomize();
-                    if (t.canFire(PNet,true)) seq.addElement(t);
+                    if (t.canFire(PNet,true)) seq.add (t);
                 }
-                PNTransition seqtemp = (PNTransition)seq.elementAt(0);
+                PNTransition seqtemp = seq.get (0);
                 for (int i = 1; i < seq.size()-1; i++) {
-                    if (seqtemp.getRan() > ((PNTransition)seq.elementAt(i)).getRan())
-                        seqtemp = ((PNTransition)seq.elementAt(i));
+                    if (seqtemp.getRan() > seq.get (i).getRan())
+                        seqtemp = (seq.get (i));
                 }
                 t = seqtemp;
                 increaseCounter = t.canFire(PNet,true);
@@ -242,28 +242,28 @@ public class PNExecutor implements Runnable
             boolean changed;
             boolean increaseCounter1;
             PNTransition prio, nextprio, help;
-            Vector par = new Vector();
+            ArrayList<PNTransition> par = new ArrayList<PNTransition>();
 
 
             while (! PNet.isDead(false) && running){
                 for (int i = 0; i < PNet.numberOfTransitions(); i++){
                     t2 = PNet.getTransition(i);
                     t2.randomize();
-                    if (t2.canFire(PNet,false)) par.addElement(t2);
+                    if (t2.canFire(PNet,false)) par.add (t2);
                 }
 
                 do {
                     changed = false;
                     int size = (par.size()-1);
                     for (int i = 0; i < size ; i++){
-                        prio = (PNTransition) par.elementAt(i);
-                        nextprio = (PNTransition) par.elementAt(i+1);
+                        prio = par.get (i);
+                        nextprio = par.get (i+1);
                         if (prio.getRan() < nextprio.getRan() ) {
                             help = nextprio;
-                            par.removeElementAt(i+1);
-                            par.insertElementAt(prio, i+1);
-                            par.removeElementAt(i);
-                            par.insertElementAt(help, i);
+                            par.remove (i+1);
+                            par.add(i+1, prio);
+                            par.remove (i);
+                            par.add(i, help);
                             changed = true;
                         }
                     }
@@ -276,11 +276,11 @@ public class PNExecutor implements Runnable
                 }
                 increaseCounter1 = false;
                 for (int i = 0; i< par.size(); i++){
-                    t2 = (PNTransition) par.elementAt(i);
+                    t2 = par.get (i);
                     increaseCounter1 = (t2.fire(PNet, false));
                   }
                 Vis.repaint();
-                par.removeAllElements();
+                par.clear ();
                 if (increaseCounter1) {
                     StepCount++;
                     Vis.repaint();
@@ -310,8 +310,8 @@ public class PNExecutor implements Runnable
             int i;
 
 
-            Vector par2 = new Vector();
-            Vector fired = new Vector();
+            ArrayList<PNTransition> par2 = new ArrayList<PNTransition>();
+            ArrayList<PNTransition> fired = new ArrayList<PNTransition>();
 
 
             while (! PNet.isDead(false) && running){
@@ -319,39 +319,39 @@ public class PNExecutor implements Runnable
                     t3 = PNet.getTransition(i);
                     t3.randomize();
                     if (t3.canFire(PNet,false))
-                        par2.addElement(t3);
+                        par2.add (t3);
                 }
                 do {
                     changed2 = false;
                     int size = (par2.size()-1);
                     for (i = 0; i < size ; i++){
-                        prio2 = (PNTransition) par2.elementAt(i);
-                        nextprio2 = (PNTransition) par2.elementAt(i+1);
+                        prio2 = par2.get (i);
+                        nextprio2 = par2.get (i+1);
                         if (prio2.getRan() < nextprio2.getRan() ) {
                             help2 = nextprio2;
-                            par2.removeElementAt(i+1);
-                            par2.insertElementAt(prio2, i+1);
-                            par2.removeElementAt(i);
-                            par2.insertElementAt(help2, i);
+                            par2.remove (i+1);
+                            par2.add(i+1, prio2);
+                            par2.remove (i);
+                            par2.add(i, help2);
                             changed2 = true;
                         }
                     }
                 } while (changed2);
 
                 moreThanOne = false;
-                Vector fireable = new Vector();
+                ArrayList<PNTransition> fireable = new ArrayList<PNTransition>();
 
                 for (i = 0; i < par2.size(); i++){
-                  PNTransition test = (PNTransition) par2.elementAt(i);
+                  PNTransition test = par2.get (i);
                   if ((PNet.getAllConnectedFireableTrans(test, false)).size() > 1) {
                     moreThanOne = true;
-                    fireable.addElement(test);
+                    fireable.add (test);
                   }
                 }
                 if (moreThanOne){
                   PetriNet.subVectorOfVector(fireable, par2);
                   for (i=0; i < fireable.size(); i++){
-                    t4 = (PNTransition) fireable.elementAt(i);
+                    t4 = fireable.get (i);
                     t4.highlight = true;
                   }
                   holdVisMode();
@@ -365,7 +365,7 @@ public class PNExecutor implements Runnable
                     fired = PNet.getAllConnectedTrans(selectedTransition);
 
                     for (int k = 0; k < fired.size(); k++) {
-                      PNTransition unhigh = (PNTransition) fired.elementAt(k);
+                      PNTransition unhigh = fired.get (k);
                       unhigh.highlight = false;
                     }
                     if (demo) blink(selectedTransition);
@@ -376,7 +376,7 @@ public class PNExecutor implements Runnable
                   }
                   restoreVisMode();
                   if (fireable.size() == 1) {
-                    ((PNTransition)fireable.elementAt(0)).fire(PNet, false);
+                    fireable.get (0).fire(PNet, false);
                     Vis.repaint();
                   }
                 }
@@ -388,12 +388,12 @@ public class PNExecutor implements Runnable
                           }
 
                 for (i=0; i < par2.size(); i++){
-                     PNTransition fire = (PNTransition) par2.elementAt(i);
+                     PNTransition fire = par2.get (i);
                      fire.fire(PNet, false);
                 }
 
 
-                par2.removeAllElements();
+                par2.clear ();
 
                 StepCount++;              //zaehlt vielleicht nicht richtig
                 Vis.repaint();

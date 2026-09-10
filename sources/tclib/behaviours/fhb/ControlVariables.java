@@ -49,9 +49,9 @@ public class ControlVariables implements Serializable {
 	public final static int SPEED_F 	= 3;
 	
 	/* a list with one fuzzy set for each control variable */
-	private ArrayList outputFSets;
+	private ArrayList<Histogram> outputFSets;
 	/* a list with one default fuzzy set for each control variable */
-	private ArrayList defaultOutputFSets;
+	private ArrayList<Histogram> defaultOutputFSets;
 	/* an array with one crisp value for each control variable */
 	private double[] outputCrispValues;
 	
@@ -59,8 +59,8 @@ public class ControlVariables implements Serializable {
 	 * type of t-norm and t-conorm has to be used in the fuzzy operations
 	 */
 	public ControlVariables() {
-		outputFSets = new ArrayList(NVARIABLES);
-		defaultOutputFSets = new ArrayList(NVARIABLES);
+		outputFSets = new ArrayList<Histogram>(NVARIABLES);
+		defaultOutputFSets = new ArrayList<Histogram>(NVARIABLES);
 		outputCrispValues = new double[NVARIABLES];
 		
 		/* Choose the TNORM and TCONORM for the behaviours computation */
@@ -110,7 +110,7 @@ public class ControlVariables implements Serializable {
 	 */
 	public void clearOutputFSets() {
 		for (int i = 0; i < outputFSets.size(); i++) 
-			((Histogram)outputFSets.get(i)).clearYValues();
+			outputFSets.get(i).clearYValues();
 	}
 	
 	/**
@@ -120,7 +120,7 @@ public class ControlVariables implements Serializable {
 	 */
 	public Histogram getDefaultOutputFSet(int ctrlVariable) {
 		try {
-			return (Histogram) ((Histogram) defaultOutputFSets.get(ctrlVariable)).dupset();
+			return (Histogram) defaultOutputFSets.get(ctrlVariable).dupset();
 		}
 		catch (IndexOutOfBoundsException e)	{
 			System.out.println("DEBUG: IndexOutOfBounds error in getDefaultOutputFSet of ControlVariables class");				
@@ -152,7 +152,7 @@ public class ControlVariables implements Serializable {
 	 */
 	public Histogram getOutputFSet(int ctrlVariable) {
 		try {
-			return (Histogram) outputFSets.get(ctrlVariable);
+			return outputFSets.get(ctrlVariable);
 		}
 		catch (IndexOutOfBoundsException e)	{
 			System.out.println("DEBUG: IndexOutOfBounds error in getOutputFSet of ControlVariables class");
@@ -168,9 +168,9 @@ public class ControlVariables implements Serializable {
 		Histogram outFSet;
 		
 		for (int i = 0; i < outputFSets.size(); i++) {
-			outFSet = (Histogram) outputFSets.get(i);
+			outFSet = outputFSets.get(i);
 			if (outFSet != null) {
-				outputFSets.set(i,outFSet.alphacut(alpha));
+				outputFSets.set(i,(Histogram) outFSet.alphacut(alpha));
 			}
 		}
 	}
@@ -188,7 +188,7 @@ public class ControlVariables implements Serializable {
 		for (int i = 0; i < NVARIABLES; i++) {
 			outFSet = (Histogram) originalOutputFSets.getOutputFSet(i);
 			if (outFSet != null) {
-				outputFSets.set(i,outFSet.alphacut(alpha));
+				outputFSets.set(i,(Histogram) outFSet.alphacut(alpha));
 			}
 		}
 	}
@@ -201,7 +201,7 @@ public class ControlVariables implements Serializable {
 		Histogram out1, out2;
 		
 		for (int i = 0; i < outputFSets.size(); i ++) {
-			out1 = (Histogram) outputFSets.get(i);
+			out1 = outputFSets.get(i);
 			out2 = (Histogram) cv1.getOutputFSet(i);
 			Histogram.union(out1,out2);
 		}
@@ -213,7 +213,7 @@ public class ControlVariables implements Serializable {
 	 */
 	public void defuzzify() {
 		for (int i = 0; i < outputFSets.size(); i++)
-			outputCrispValues[i] = ((Histogram) outputFSets.get(i)).defuzzify();
+			outputCrispValues[i] = outputFSets.get(i).defuzzify();
 	}
 	
 	/**

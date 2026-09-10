@@ -25,11 +25,13 @@ public class WMCBeacon extends WMElement
 {
 	
 	public Ellipse2			beacon;	// Se considerara que son siempre circulares
+	public double			z;		// Elevation of the beacon base (m)
 
 	public WMCBeacon(String prop) {
 		StringTokenizer st = new StringTokenizer (prop,", \t");
 		double px			 	= Double.parseDouble (st.nextToken()); 
 		double py 				= Double.parseDouble (st.nextToken());
+		z						= Double.parseDouble (st.nextToken());
 		double horiz			= Double.parseDouble (st.nextToken()); 				// Horizontal size
 		double vert			 	= Double.parseDouble (st.nextToken());				// Vertical size		
 		beacon = new Ellipse2(px,py,horiz,vert);
@@ -72,6 +74,6 @@ public class WMCBeacon extends WMElement
 
 	public String toRawString ()
 	{
-		return DoubleFormat.format(beacon.center().x()) + ", " + DoubleFormat.format(beacon.center().y()) + ", " + DoubleFormat.format(beacon.horiz()) + ", " + DoubleFormat.format(beacon.vert()) + ", " + label;
+		return DoubleFormat.format(beacon.center().x()) + ", " + DoubleFormat.format(beacon.center().y()) + ", " + DoubleFormat.format(z) + ", " + DoubleFormat.format(beacon.horiz()) + ", " + DoubleFormat.format(beacon.vert()) + ", " + label;
 	}
 }

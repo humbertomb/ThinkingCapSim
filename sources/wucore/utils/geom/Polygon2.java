@@ -30,6 +30,9 @@ public class Polygon2 {
 	// re-creating this array. The value of npoints is equal to the number of
 	// valid points in this Polygon. 
 	public double ypoints[];
+
+	// The array of elevations (z). Always as long as xpoints; 0 by default.
+	public double zpoints[];
 	
 	// JDK 1.1 serialVersionUID 
 	private static final long serialVersionUID = -6460261437900069969L;
@@ -42,6 +45,7 @@ public class Polygon2 {
 	{
 		xpoints = new double[MIN_LENGTH];
 		ypoints = new double[MIN_LENGTH];
+		zpoints = new double[MIN_LENGTH];
 	}
 	
 	// Constructs and initializes a Polygon from the specified parameters.
@@ -60,6 +64,7 @@ public class Polygon2 {
 		this.npoints = npoints;
 		this.xpoints = new double[npoints];
 		this.ypoints = new double[npoints];
+		this.zpoints = new double[npoints];
 		System.arraycopy (xpoints, 0, this.xpoints, 0, npoints);
 		System.arraycopy (ypoints, 0, this.ypoints, 0, npoints);
 //		this.xpoints = Arrays.copyOf(xpoints, npoints);
@@ -92,9 +97,21 @@ public class Polygon2 {
 		}
 	}
 	
-	// Appends the specified coordinates to this Polygon.
+	// Appends the specified coordinates to this Polygon (elevation 0).
 	public void addPoint(double x, double y)
 	{
+		addPoint (x, y, 0.0);
+	}
+
+	// Appends the specified coordinates, with elevation, to this Polygon.
+	public void addPoint(double x, double y, double z)
+	{
+		if (zpoints == null || zpoints.length < xpoints.length)
+		{
+			double cz[] = new double[xpoints.length];
+			if (zpoints != null) System.arraycopy (zpoints, 0, cz, 0, zpoints.length);
+			zpoints = cz;
+		}
 		if (npoints >= xpoints.length || npoints >= ypoints.length)
 		{
 			int newLength = npoints * 2;
@@ -110,22 +127,19 @@ public class Polygon2 {
 			
 			double cxpoints[] = new double[newLength];
 			double cypoints[] = new double[newLength];
+			double czpoints[] = new double[newLength];
 			
 			int lastlength = xpoints.length;
 			for(int j = 0; j < lastlength; j++)
 			{
 				cxpoints[j] = xpoints[j];
 				cypoints[j] = ypoints[j];
+				czpoints[j] = zpoints[j];
 			}
 			
-			xpoints = new double[newLength];
-			ypoints = new double[newLength];
-			
-			for(int i = 0; i < lastlength; i++)
-			{
-				xpoints[i] = cxpoints[i];
-				ypoints[i] = cypoints[i];
-			}
+			xpoints = cxpoints;
+			ypoints = cypoints;
+			zpoints = czpoints;
 			
 			//xpoints = Arrays.copyOf(xpoints, newLength);
 			//ypoints = Arrays.copyOf(ypoints, newLength);
@@ -133,6 +147,7 @@ public class Polygon2 {
 		
 		xpoints[npoints] = x;
 		ypoints[npoints] = y;
+		zpoints[npoints] = z;
 		npoints++;
 	}
 	

@@ -1193,7 +1193,7 @@ public class Matrix implements Serializable
 		System.out.println();  // start on new line.
 		for (int i = 0; i < m; i++) {
 			for (int j = 0; j < n; j++) {
-				String s = new Double (A[i][j]).toString(); // format the number
+				String s = Double.valueOf (A[i][j]).toString(); // format the number
 				int padding = Math.max(1,width-s.length()); // At _least_ 1 space
 				for (int k = 0; k < padding; k++)
 					System.out.print(' ');
@@ -1225,25 +1225,25 @@ public class Matrix implements Serializable
 		tokenizer.wordChars(0,255);
 		tokenizer.whitespaceChars(0, ' ');
 		tokenizer.eolIsSignificant(true);
-		java.util.Vector v = new java.util.Vector();
+		java.util.ArrayList<Double>	first = new java.util.ArrayList<Double> ();		// values of the 1st row
+		java.util.ArrayList<double[]> v = new java.util.ArrayList<double[]> ();			// rows
 
 		// Ignore initial empty lines
 		while (tokenizer.nextToken() == StreamTokenizer.TT_EOL);
 		if (tokenizer.ttype == StreamTokenizer.TT_EOF)
 			throw new java.io.IOException("Unexpected EOF on matrix read.");
 		do {
-			v.addElement(Double.valueOf(tokenizer.sval)); // Read & store 1st row.
+			first.add(Double.valueOf(tokenizer.sval)); // Read & store 1st row.
 		} while (tokenizer.nextToken() == StreamTokenizer.TT_WORD);
 
-		int n = v.size();  // Now we've got the number of columns!
+		int n = first.size();  // Now we've got the number of columns!
 		double row[] = new double[n];
 		for (int j=0; j<n; j++)  // extract the elements of the 1st row.
-			row[j]=((Double)v.elementAt(j)).doubleValue();
-		v.removeAllElements();
-		v.addElement(row);  // Start storing rows instead of columns.
+			row[j]=first.get(j).doubleValue();
+		v.add(row);  // Start storing rows instead of columns.
 		while (tokenizer.nextToken() == StreamTokenizer.TT_WORD) {
 			// While non-empty lines
-			v.addElement(row = new double[n]);
+			v.add(row = new double[n]);
 			int j = 0;
 			do {
 				if (j >= n) throw new java.io.IOException
@@ -1255,7 +1255,7 @@ public class Matrix implements Serializable
 		}
 		int m = v.size();  // Now we've got the number of rows.
 		double[][] A = new double[m][];
-		v.copyInto(A);  // copy the rows out of the vector
+		v.toArray (A);  // copy the rows out of the list
 		return new Matrix(A);
 	}
 

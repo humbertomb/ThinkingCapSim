@@ -195,12 +195,12 @@ public abstract class CanDriver extends Object
 			canDev			= p.getProperty ("CAN_DEV");
 			canBrate		= Integer.parseInt (p.getProperty ("CAN_BRATE"));
 
-			messageDebug	= new Boolean(p.getProperty ("DEBUG")).booleanValue();
-			canDebug		= new Boolean(p.getProperty ("DEBUG_CAN")).booleanValue();
+			messageDebug	= Boolean.valueOf (p.getProperty ("DEBUG")).booleanValue();
+			canDebug		= Boolean.valueOf (p.getProperty ("DEBUG_CAN")).booleanValue();
 
 			ocr				= Integer.parseInt (p.getProperty ("CAN_OCR"));
 			cdr				= Integer.parseInt (p.getProperty ("CAN_CDR"));
-			singleFilter	= new Boolean(p.getProperty ("CAN_SINGLE_MODE")).booleanValue();
+			singleFilter	= Boolean.valueOf (p.getProperty ("CAN_SINGLE_MODE")).booleanValue();
 		} catch (Exception e) { e.printStackTrace (); }
 
 		System.out.println ("  [CanDrv] Using "+canDev+" at "+canBrate+" kbps");

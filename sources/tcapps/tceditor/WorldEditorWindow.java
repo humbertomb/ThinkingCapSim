@@ -54,7 +54,7 @@ import tc.shared.world.World;
 /**
  * Editor for {@link World} maps (.world files). Shows a map, lets the user
  * create and edit every kind of element (walls, objects, forbidden areas,
- * zones, doors, waypoints, docks, beacons, path points and the start point)
+ * zones, connectors, waypoints, docks, beacons, path points and the start point)
  * with the mouse or through a property table, and saves the result back to the
  * .world format understood by the simulator.
  *
@@ -89,7 +89,8 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 	protected DefaultMutableTreeNode	treeRoot;
 	protected JTable				propTable;
 	protected PropertyModel			propModel;
-	protected JLabel				statusLabel;
+	protected JLabel				statusLabel;			// cursor info (left)
+	protected JLabel				usageLabel;				// how to use the current tool (right)
 	protected JLabel				selLabel;
 	protected JToggleButton[]		toolButtons	= new JToggleButton[14];
 	protected Action				undoAction, redoAction, deleteAction;
@@ -182,6 +183,13 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 					if (name.endsWith ("texture"))		return FileCellEditor.TEXTURE;
 					if (name.equals ("color"))			return ColorCellEditor.INSTANCE;
 					if (WorldEdit.isBooleanProperty (name))	return boolEditor;
+					if (name.equals ("icon") && (propModel.item != null) && (propModel.item.kind == WorldItem.OBJECT))
+					{
+						// choose among the icons defined in the world
+						String[]	labels = new String[world.icons ().n ()];
+						for (int i = 0; i < labels.length; i++)		labels[i] = world.icons ().at (i).label;
+						return new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (labels));
+					}
 				}
 				return super.getCellEditor (row, column);
 			}
@@ -219,11 +227,17 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		// --- status bar
 		statusLabel	= new JLabel (" ");
 		statusLabel.setBorder (BorderFactory.createEmptyBorder (3, 8, 3, 8));
+		usageLabel	= new JLabel (" ", JLabel.RIGHT);
+		usageLabel.setBorder (BorderFactory.createEmptyBorder (3, 8, 3, 8));
+		usageLabel.setForeground (new java.awt.Color (70, 70, 70));
+		JPanel			statusBar = new JPanel (new BorderLayout ());
+		statusBar.add (statusLabel, BorderLayout.WEST);
+		statusBar.add (usageLabel, BorderLayout.CENTER);
 
 		getContentPane ().setLayout (new BorderLayout ());
 		getContentPane ().add (buildToolBar (), BorderLayout.WEST);
 		getContentPane ().add (center, BorderLayout.CENTER);
-		getContentPane ().add (statusLabel, BorderLayout.SOUTH);
+		getContentPane ().add (statusBar, BorderLayout.SOUTH);
 		setJMenuBar (buildMenuBar ());
 	}
 
@@ -233,57 +247,69 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		tb.setFloatable (false);
 		ButtonGroup		group = new ButtonGroup ();
 
-		addTool (tb, group, WorldCanvas.T_SELECT,	ToolIcon.SELECT,	"Select / move  (Esc)",						"S");
-		addTool (tb, group, WorldCanvas.T_PAN,		ToolIcon.PAN,		"Pan view  (also: middle button, Alt+drag, Space+drag)", "H");
+		// tooltips name the tool; how to use it is shown in the status bar (right side)
+		addTool (tb, group, WorldCanvas.T_SELECT,	ToolIcon.SELECT,	"Select",				"S");
+		addTool (tb, group, WorldCanvas.T_PAN,		ToolIcon.PAN,		"Pan",					"H");
 		tb.addSeparator ();
-		addTool (tb, group, WorldCanvas.T_WALL,		ToolIcon.WALL,		"Wall: drag from one end to the other",		"W");
-		addTool (tb, group, WorldCanvas.T_DOOR,		ToolIcon.DOOR,		"Door: drag along the door opening",		"D");
-		addTool (tb, group, WorldCanvas.T_ZONE,		ToolIcon.ZONE,		"Zone: drag a rectangle",					"Z");
-		addTool (tb, group, WorldCanvas.T_FAREA,	ToolIcon.FAREA,		"Forbidden area: click the vertices, double-click to close", "F");
-		addTool (tb, group, WorldCanvas.T_OBJECT,	ToolIcon.OBJECT,	"Object: click to place (edit icon, shape and colour in Properties)", "O");
-		addTool (tb, group, WorldCanvas.T_ICON,		ToolIcon.ICON,		"Edit object icon: drag vertices, click a segment to insert one, drag on empty space to add a segment, right click to remove (also: double-click an object)", "I");
+		addTool (tb, group, WorldCanvas.T_WALL,		ToolIcon.WALL,		"Wall",					"W");
+		addTool (tb, group, WorldCanvas.T_CONNECTOR,		ToolIcon.CONNECTOR,		"Connector",					"D");
+		addTool (tb, group, WorldCanvas.T_ZONE,		ToolIcon.ZONE,		"Zone",					"Z");
+		addTool (tb, group, WorldCanvas.T_FAREA,	ToolIcon.FAREA,		"Forbidden area",		"F");
+		addTool (tb, group, WorldCanvas.T_OBJECT,	ToolIcon.OBJECT,	"Object",				"O");
 		tb.addSeparator ();
-		addTool (tb, group, WorldCanvas.T_WAYPOINT,	ToolIcon.WAYPOINT,	"Waypoint: click to place",					"P");
-		addTool (tb, group, WorldCanvas.T_DOCK,		ToolIcon.DOCK,		"Dock: click to place",						"K");
-		addTool (tb, group, WorldCanvas.T_BEACON,	ToolIcon.BEACON,	"Strip beacon: click to place",				"B");
-		addTool (tb, group, WorldCanvas.T_CBEACON,	ToolIcon.CBEACON,	"Cylindrical beacon: click to place",		"C");
-		addTool (tb, group, WorldCanvas.T_PATH,		ToolIcon.PATH,		"Path point: click to append to the path",	"T");
-		addTool (tb, group, WorldCanvas.T_START,	ToolIcon.START,		"Robot start point: click to place",		"R");
+		addTool (tb, group, WorldCanvas.T_WAYPOINT,	ToolIcon.WAYPOINT,	"Waypoint",				"P");
+		addTool (tb, group, WorldCanvas.T_DOCK,		ToolIcon.DOCK,		"Dock",					"K");
+		addTool (tb, group, WorldCanvas.T_BEACON,	ToolIcon.BEACON,	"Strip beacon",			"B");
+		addTool (tb, group, WorldCanvas.T_CBEACON,	ToolIcon.CBEACON,	"Cylindrical beacon",	"C");
+		addTool (tb, group, WorldCanvas.T_PATH,		ToolIcon.PATH,		"Path point",			"T");
+		addTool (tb, group, WorldCanvas.T_START,	ToolIcon.START,		"Start point",			"R");
+		tb.addSeparator ();
+		// icons: create a new one (action) and edit the selected object's / icon's (tool)
+		Action	newIcon = new AbstractAction ("New icon", new ToolIcon (ToolIcon.NEW_ICON))
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.newIcon (); }
+		};
+		newIcon.putValue (Action.SHORT_DESCRIPTION, "New icon  [Ctrl+I]");
+		tb.add (newIcon).setHideActionText (true);
+		getRootPane ().getInputMap (JComponent.WHEN_IN_FOCUSED_WINDOW).put (KeyStroke.getKeyStroke (KeyEvent.VK_I, Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ()), "newIcon");
+		getRootPane ().getActionMap ().put ("newIcon", newIcon);
+		addTool (tb, group, WorldCanvas.T_ICON,		ToolIcon.ICON,		"Edit icon",			"I");
+		toolButtons[WorldCanvas.T_ICON].setEnabled (false);
 		tb.addSeparator ();
 
 		deleteAction = new AbstractAction ("Delete", new ToolIcon (ToolIcon.DELETE))
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.deleteSelection (); }
 		};
-		deleteAction.putValue (Action.SHORT_DESCRIPTION, "Delete selected element  (Del)");
+		deleteAction.putValue (Action.SHORT_DESCRIPTION, "Delete  [Del]");
 		tb.add (deleteAction).setHideActionText (true);
 
 		Action	fit = new AbstractAction ("Zoom to fit", new ToolIcon (ToolIcon.ZOOM_FIT))
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.zoomToFit (); }
 		};
-		fit.putValue (Action.SHORT_DESCRIPTION, "Zoom to fit the whole map  (Ctrl+0)");
+		fit.putValue (Action.SHORT_DESCRIPTION, "Zoom to fit  [Ctrl+0]");
 		tb.add (fit).setHideActionText (true);
 
 		Action	zin = new AbstractAction ("Zoom in", new ToolIcon (ToolIcon.ZOOM_IN))
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.zoom (1.25); }
 		};
-		zin.putValue (Action.SHORT_DESCRIPTION, "Zoom in  (mouse wheel)");
+		zin.putValue (Action.SHORT_DESCRIPTION, "Zoom in");
 		tb.add (zin).setHideActionText (true);
 
 		Action	zout = new AbstractAction ("Zoom out", new ToolIcon (ToolIcon.ZOOM_OUT))
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.zoom (0.8); }
 		};
-		zout.putValue (Action.SHORT_DESCRIPTION, "Zoom out  (mouse wheel)");
+		zout.putValue (Action.SHORT_DESCRIPTION, "Zoom out");
 		tb.add (zout).setHideActionText (true);
 
 		// --- 3D view toggle, at the bottom of the toolbar
 		tb.add (Box.createVerticalGlue ());
 		tb.addSeparator ();
 		view3dButton = new JToggleButton (new ToolIcon (ToolIcon.VIEW3D));
-		view3dButton.setToolTipText ("Show / hide the synchronised 3D view (Java 3D)  [Ctrl+3]");
+		view3dButton.setToolTipText ("3D view  [Ctrl+3]");
 		view3dButton.setFocusable (false);
 		view3dButton.addActionListener (new java.awt.event.ActionListener ()
 		{
@@ -377,7 +403,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 
 	private JMenuBar buildMenuBar ()
 	{
-		int			mask = Toolkit.getDefaultToolkit ().getMenuShortcutKeyMask ();
+		int			mask = Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ();
 		JMenuBar	mb = new JMenuBar ();
 
 		// --- File
@@ -444,6 +470,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.setSelection (new WorldItem (WorldItem.START, 0)); }
 		}));
+
 		mb.add (medit);
 
 		// --- View
@@ -485,7 +512,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		mview.add (labelsItem);
 		mview.addSeparator ();
 		JMenu		mlayers = new JMenu ("Layers");
-		for (int k = 0; k < WorldItem.DEFAULTS; k++)
+		for (int k = 0; k < WorldItem.ICON; k++)
 		{
 			final int	kind = k;
 			layerItems[k] = new JCheckBoxMenuItem (WorldItem.PLURALS[k], true);
@@ -500,7 +527,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		{
 			public void actionPerformed (ActionEvent e)
 			{
-				for (int k = 0; k < WorldItem.DEFAULTS; k++) { layerItems[k].setSelected (true); canvas.setKindVisible (k, true); }
+				for (int k = 0; k < WorldItem.ICON; k++) { layerItems[k].setSelected (true); canvas.setKindVisible (k, true); }
 			}
 		}));
 		mview.add (mlayers);
@@ -555,20 +582,22 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 			"  S  Select / move: click an element, drag it, or drag its handles.\n" +
 			"       Circular handle of waypoints, docks, objects and start = orientation.\n" +
 			"  H  Pan. Also middle button, Alt+drag or Space+drag with any tool.\n" +
-			"  W  Wall, D  Door, Z  Zone: drag on the map.\n" +
+			"  W  Wall, D  Connector, Z  Zone: drag on the map.\n" +
 			"  F  Forbidden area: click the vertices, double-click / Enter to close.\n" +
 			"  O  Object, P  Waypoint, K  Dock, B  Strip beacon, C  Cylindrical beacon,\n" +
 			"  T  Path point, R  Start point: click to place.\n" +
-			"  I  Edit object icon (or double-click an object): drag vertices, click a segment to insert\n" +
-			"       a vertex, drag on empty space (Shift+drag from a vertex) to add a segment, right click / Del removes.\n" +
+			"  I  Edit icon of the selected object / icon (or double-click an object): drag vertices, click a\n" +
+			"       segment to insert a vertex, drag on empty space (Shift+drag from a vertex) to add a segment,\n" +
+			"       right click / Del removes. Icons are shared: editing one changes every object using it.\n" +
+			"       The 'New icon' button (Ctrl+I) creates an icon; its first click sets the reference point.\n" +
 			"  Right click with a creation tool returns to Select.\n\n" +
 			"Keyboard:  Del deletes, arrows nudge the selection, Esc deselects / cancels,\n" +
 			"  Ctrl+Z / Ctrl+Shift+Z undo / redo, mouse wheel zooms, Ctrl+0 zoom to fit.\n\n" +
 			"3D view: the button at the bottom of the toolbar (or Ctrl+3) opens a Java 3D window that\n" +
 			"  follows every change and highlights the selection.\n\n" +
-			"Properties: edit any value in the table and press Enter. Labels of zones, doors,\n" +
+			"Properties: edit any value in the table and press Enter. Labels of zones, connectors,\n" +
 			"  waypoints and docks must be unique. 'Defaults' (Edit menu) holds the default\n" +
-			"  wall/door sizes and textures written to the file.";
+			"  wall/connector sizes and textures written to the file.";
 		JOptionPane.showMessageDialog (this, msg, "Mouse and Keyboard", JOptionPane.INFORMATION_MESSAGE);
 	}
 
@@ -581,6 +610,10 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		propModel.setItem (item);
 		selLabel.setText ((item == null) ? " " : WorldItem.NAMES[item.kind] + ":  " + WorldEdit.describe (world, item));
 		deleteAction.setEnabled ((item != null) && (item.kind != WorldItem.START) && (item.kind != WorldItem.DEFAULTS));
+		// the icon tool only applies to elements that have an icon (objects) or to icons themselves
+		boolean	hasIcon = (item != null) && ((item.kind == WorldItem.OBJECT) || (item.kind == WorldItem.ICON));
+		toolButtons[WorldCanvas.T_ICON].setEnabled (hasIcon);
+		if (!hasIcon && (canvas.getTool () == WorldCanvas.T_ICON))		selectTool (WorldCanvas.T_SELECT);
 		if (view3d != null)		view3d.setSelection (item);
 		if (!syncing)
 		{
@@ -612,6 +645,11 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 	public void toolFinished ()
 	{
 		selectTool (WorldCanvas.T_SELECT);
+	}
+
+	public void usageChanged (String text)
+	{
+		usageLabel.setText ((text.length () == 0) ? " " : text);
 	}
 
 	public void toolRequested (int tool)

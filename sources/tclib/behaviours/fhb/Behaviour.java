@@ -48,7 +48,7 @@ public abstract class Behaviour {
 	/* Contains the parameters used by the behaviour */
 	protected HashMap params;
 	/* Contains the names of the parameters used in the behaviour */
-	protected ArrayList parameters;
+	protected ArrayList<String> parameters;
 	
 	/**
 	 * Returns the name of the behaviour class.
@@ -75,7 +75,7 @@ public abstract class Behaviour {
 		rules = new RuleSet();
 		cv = new ControlVariables();
 		outputFSets = null;
-		parameters = new ArrayList();
+		parameters = new ArrayList<String>();
 		params = new HashMap();
 		/* Creates the fuzzy rules */
 		createRules();
@@ -111,7 +111,7 @@ public abstract class Behaviour {
 	 * Returns the parameters names used by the behaviour to calculate the fuzzy predicates
 	 * @return a list of the parameters names used by the behaviour.
 	 */
-	public ArrayList getParameters() {
+	public ArrayList<String> getParameters() {
 		return parameters;
 	}
 	

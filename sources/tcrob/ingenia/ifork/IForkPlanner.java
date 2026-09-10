@@ -19,6 +19,7 @@ import tc.shared.world.*;
 import tclib.navigation.pathplanning.GridPath;
 import tclib.planning.htopol.*;
 import tclib.planning.sequence.*;
+import tclib.utils.graphs.*;
 import tclib.utils.petrinets.*;
 import tcrob.ingenia.ifork.gui.*;
 import tcrob.ingenia.ifork.linda.*;
@@ -71,7 +72,7 @@ public class IForkPlanner extends SeqPlanner
 
 	// Current petri net for coordination
 	protected PetriNet								pnet;
-	private Vector<PNNode>							lnodes;						// Last inserted set of nodes
+	private ArrayList<PNNode>							lnodes;						// Last inserted set of nodes
 
 	// Coordination with warehouse
 	protected boolean 								doSecCoord;					// Coordination active
@@ -414,18 +415,18 @@ public class IForkPlanner extends SeqPlanner
 		node		= new PNNode (robotid);
 		node.setTokens (1);
 		pnet.addNode (node);
-		lnodes	= new Vector<PNNode> ();
+		lnodes	= new ArrayList<PNNode> ();
 		lnodes.add (node);
 	}
 	
 	private void net_places (String[] places)
 	{
 		int				i, j;
-		Vector<PNNode>	cnodes;
+		ArrayList<PNNode>	cnodes;
 		PNNode			snode, dnode;
 		PNTransition	t;
 
-		cnodes	= new Vector<PNNode> ();
+		cnodes	= new ArrayList<PNNode> ();
 		for (j = 0; j < places.length; j++)
 		{
 			dnode	= new PNNode (places[j]);
@@ -436,7 +437,7 @@ public class IForkPlanner extends SeqPlanner
 			
 			for (i = 0; i < lnodes.size (); i++)
 			{			
-				snode	= (PNNode) lnodes.elementAt (i);
+				snode	= (PNNode) lnodes.get (i);
 				t		= new PNTransition ();
 				
 				pnet.addTransition (t);
@@ -459,7 +460,7 @@ public class IForkPlanner extends SeqPlanner
 		
 		for (i = 0; i < lnodes.size (); i++)
 		{			
-			snode	= (PNNode) lnodes.elementAt (i);
+			snode	= (PNNode) lnodes.get (i);
 			t		= new PNTransition ();
 			t.setName (reason);
 			
@@ -468,7 +469,7 @@ public class IForkPlanner extends SeqPlanner
 			pnet.addEdge (t, dnode);
 		}
 
-		lnodes	= new Vector<PNNode> ();
+		lnodes	= new ArrayList<PNNode> ();
 		lnodes.add (dnode);
 	}
 	
@@ -486,12 +487,12 @@ public class IForkPlanner extends SeqPlanner
 		int				i, j, aux;
 		double			a;
 		Point2			paux, p1;
-		Vector 			nodes;
+		ArrayList<GNode>		nodes;
 		Position			tpos;
 		GNodeSL			node;
 		String			goal;
 		String[]			labels;
-		Vector			wps = null;
+		ArrayList<GNodeSL>	wps = null;
 
 		// Set the fork for navigation
 		tpos		= new Position (task[task_k].tpos);
@@ -506,7 +507,7 @@ public class IForkPlanner extends SeqPlanner
 		if (isdock)
 		{
 			wps		= topol.getInNodesSL (task[task_k].place);
-			goal		= ((GNodeSL) wps.firstElement ()).getLabel ();
+			goal		= wps.get (0).getLabel ();
 		}
 		else
 			goal		= task[task_k].place;
@@ -522,11 +523,11 @@ public class IForkPlanner extends SeqPlanner
 			zone		= node.getFather ();
 			
 			paux		= world.getPos (node.getLabel(), zone);		
-			aux		= world.doors ().index (node.getLabel ());
+			aux		= world.connectors ().index (node.getLabel ());
 			
 			if (aux != -1)
 			{				
-				Line2 l = world.doors ().at (aux).edge;
+				Line2 l = world.connectors ().at (aux).edge;
 				if (l.orig().x() == paux.x() && l.orig().y() == paux.y())
 					p1 = l.dest ();
 				else 
@@ -538,13 +539,13 @@ public class IForkPlanner extends SeqPlanner
 				a = world.getAngle (node.getLabel ());
 				
 			GNodeFL		parent;
-			Vector		doors;
+			ArrayList<String>	doors;
 			
 			parent	= (GNodeFL) topol.getNode (zone);
 			doors	= parent.getDoors (next.getFather ());
 			labels	= new String[doors.size ()];
 			for (j = 0; j < doors.size (); j++)
-				labels[j]	= (String) doors.elementAt (j);
+				labels[j]	= doors.get (j);
 			
 			subplan[subplan_n].place		= task[task_k].place;				
 			subplan[subplan_n].plan			= task[task_k].plan;				
@@ -593,7 +594,7 @@ public class IForkPlanner extends SeqPlanner
 		{
 			labels		= new String[wps.size ()];
 			for (j = 0; j < wps.size (); j++)
-				labels[j]	= ((GNodeSL) wps.elementAt (j)).getLabel ();
+				labels[j]	= wps.get (j).getLabel ();
 		}
 		else
 		{
@@ -1218,7 +1219,7 @@ public class IForkPlanner extends SeqPlanner
 			//System.out.println("He enviado WAIT sycntuple="+synctuple+" tiempo="+System.currentTimeMillis());
 			return Boolean.valueOf (false);
 		}
-		//return (new Boolean(true));
+		//return (Boolean.valueOf (true));
 		
 		Tuple t = new Tuple(IForkTuple.SYNC,syncitem);
 		Tuple t2 = linda.take(t);
@@ -1510,7 +1511,7 @@ public class IForkPlanner extends SeqPlanner
 //		if(type == World.WP)
 //			cond = lps.cur.distance (world.wps().at(wpname).getPos()) < dist;	
 //		else if(type == World.DOOR){
-//			Line2 path = world.doors().at(wpname).path;
+//			Line2 path = world.connectors ().at(wpname).path;
 //			cond = path.segDistance(lps.cur.x(),lps.cur.y()) < dist;
 //		}
 //		return cond;
@@ -1521,7 +1522,7 @@ public class IForkPlanner extends SeqPlanner
 		if(type == World.WP)
 			return lps.cur.distance (world.wps().at(wpname).getPos());	
 		else if(type == World.DOOR){
-			Line2 path = world.doors().at(wpname).path;
+			Line2 path = world.connectors ().at(wpname).path;
 			return path.segDistance(lps.cur.x(),lps.cur.y());
 		}
 		return Double.MAX_VALUE;
@@ -1532,7 +1533,7 @@ public class IForkPlanner extends SeqPlanner
 		if(type == World.WP)
 			return pos.distance (world.wps().at(wpname).getPos());	
 		else if(type == World.DOOR){
-			Line2 path = world.doors().at(wpname).path;
+			Line2 path = world.connectors ().at(wpname).path;
 			return path.segDistance(pos.x(),pos.y());
 		}
 		return Double.MAX_VALUE;
@@ -1621,12 +1622,12 @@ public class IForkPlanner extends SeqPlanner
 			return pos1.distance(pos2);
 		}
 		else if(type1 == World.DOOR && type2 == World.WP){
-			Line2 path = world.doors().at(wp1).path;
+			Line2 path = world.connectors ().at(wp1).path;
 			Point3 pos2 = world.wps().at(wp2).getPos();
 			return path.segDistance(pos2.x(),pos2.y());
 		}
 		else if(type1 == World.WP && type2 == World.DOOR){
-			Line2 path = world.doors().at(wp2).path;
+			Line2 path = world.connectors ().at(wp2).path;
 			Point3 pos1 = world.wps().at(wp1).getPos();
 			return path.segDistance(pos1.x(),pos1.y());
 		}

@@ -15,6 +15,7 @@ import tclib.behaviours.fhb.MetricPredInfo;
 import tclib.behaviours.fhb.MetricPredicates;
 import tclib.behaviours.fhb.exceptions.LexicalError;
 import tclib.behaviours.fhb.exceptions.SyntaxError;
+import tc.shared.lps.lpo.LPO;
 
 /**
  * This class implement the behaviour that execute the BPlan.
@@ -28,11 +29,11 @@ public class BPlanTaskBehaviour extends Behaviour {
 	/* list of sub-behaviour */
 	private Behaviour beh[];
 	/* list of parameter sets: the parameters are relative to the goal of the behaviours */
-	private Vector behGoalParams[];
+	private ArrayList<LPO> behGoalParams[];
 	/* list of parameter sets: the parameters are not relative to the goal of the behaviours */
 	private HashMap behOtherParams[];
 	/* list of the information about the metric predicates */
-	private Vector predicatesData;
+	private ArrayList<MetricPredInfo> predicatesData;
 	/* contains the information about a metric predicate */
 	private MetricPredInfo mPredInfo;
 	/* Used to calculate the truth value of metric predicates */
@@ -67,6 +68,7 @@ public class BPlanTaskBehaviour extends Behaviour {
 	 * 
 	 * @param data information about the BPlan
 	 */
+	@SuppressWarnings("unchecked")
 	public void createRules(BPlanData data) {
 		if (data == null) 
 			return;
@@ -75,7 +77,7 @@ public class BPlanTaskBehaviour extends Behaviour {
 		predicatesData = data.getPredicatesData();
 		beh = new Behaviour[rulesNum];
 		behOtherParams = new HashMap[rulesNum];
-		behGoalParams = new Vector[rulesNum];
+		behGoalParams = new ArrayList[rulesNum];
 		
 		try {
 			/* creates all the rules of the behaviour */
@@ -104,13 +106,13 @@ public class BPlanTaskBehaviour extends Behaviour {
 	 */
 	protected void update(HashMap params) {
 		double predValue;
-		Vector behParam;
+		ArrayList<LPO> behParam;
 		
 		/* Calculates the metric predicates and append them to the list of 
 		 * predicates
 		 */
 		for (int i = 0; i < predicatesData.size(); i++) {
-			mPredInfo = (MetricPredInfo) predicatesData.get(i);
+			mPredInfo = predicatesData.get(i);
 			predValue = metricPred.calculate(mPredInfo.getMetricPredicate(),mPredInfo.getParameters());
 			antecedentValues.setValue(mPredInfo.getPredName(),predValue);
 		}

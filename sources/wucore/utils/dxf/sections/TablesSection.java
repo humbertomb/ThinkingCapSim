@@ -12,7 +12,7 @@ package wucore.utils.dxf.sections;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Vector;
+import java.util.ArrayList;
 
 /**
  * @author Administrador
@@ -22,10 +22,10 @@ import java.util.Vector;
  */
 public class TablesSection {
 
-public Vector layers;
+public ArrayList<Layer> layers;
 
 public TablesSection(){
-    layers = new Vector();
+    layers = new ArrayList<Layer>();
 }
 
 public void addLayer(Layer layer){
@@ -53,7 +53,7 @@ public void write(PrintWriter out){
 	    out.println("  2\nLAYER");
 	    out.println(" 70\n     "+layers.size());		// Longitud tabla = 2
 	    for(int i = 0; i<layers.size();i++){
-	        layer = (Layer)layers.get(i);
+	        layer = layers.get(i);
 	        out.println("  0\nLAYER");
 	        out.println("  2\n"+layer.name);				// Nombre capa
 	        out.println(" 70\n     0");					// Valores de indicador estándar

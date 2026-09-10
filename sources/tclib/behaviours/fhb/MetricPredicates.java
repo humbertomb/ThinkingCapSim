@@ -128,15 +128,15 @@ public class MetricPredicates {
 	 * @param params parameters needed to calculate the truth value of the metric predicate
 	 * @return the truth value of the metric predicate
 	 */
-	public double calculate(String pred, Vector params) {
+	public double calculate(String pred, ArrayList<LPO> params) {
 		double res = 0;
 		
 		if (pred.equals("AT"))
-			res = at((LPO)params.get(0));
+			res = at(params.get(0));
 		else if (pred.equals("NEAR"))
-			res = near((LPO)params.get(0));
+			res = near(params.get(0));
 		else if (pred.equals("ORIENTED"))
-			res = oriented((LPO)params.get(0));
+			res = oriented(params.get(0));
 		
 		return res;
 	}

@@ -52,9 +52,9 @@ public class Setup {
 		if(new File(pathfile).exists()){
 			Properties props = new Properties();
 			props.load (new FileInputStream (new File (pathfile)));
-			try { alpha		= Math.toRadians(new Double (props.getProperty ("lsbfeat0")).doubleValue ()); } catch (Exception e) 	{ alpha		= 0.0; }
-			try { len		= new Double (props.getProperty ("lsblen0")).doubleValue (); } catch (Exception e) 		{ len		= 0.623; }
-			try { rho		= Math.toRadians(new Double (props.getProperty ("lsbrho0")).doubleValue ()); } catch (Exception e) 		{ rho		= 0.0; }
+			try { alpha		= Math.toRadians(Double.valueOf (props.getProperty ("lsbfeat0")).doubleValue ()); } catch (Exception e) 	{ alpha		= 0.0; }
+			try { len		= Double.valueOf (props.getProperty ("lsblen0")).doubleValue (); } catch (Exception e) 		{ len		= 0.623; }
+			try { rho		= Math.toRadians(Double.valueOf (props.getProperty ("lsbrho0")).doubleValue ()); } catch (Exception e) 		{ rho		= 0.0; }
 			System.out.println("Cargado el archivo de configuracion del Robot:");
 			System.out.println("lenght = "+len+"\nrho = "+Math.toDegrees(rho)+"\nalpha = "+Math.toDegrees(alpha));
 		}
@@ -122,13 +122,14 @@ public class Setup {
 	
 
 
+    @SuppressWarnings("unchecked")
     public void menuStandby(){
    	int comand;
 	int radius = 0;
 	int layer = 0;
 	int maxlayer = 0;
 	int cont = 0;
-	ArrayList[] position;
+	ArrayList<Point2D.Double>[] position;
 	double[][] posit;
 	do{
 		comand = 0;
@@ -280,7 +281,7 @@ public class Setup {
 				position = new ArrayList[maxlayer];
 				for(layer = 0; layer<position.length ; layer++){
 					System.out.println("\nLAYER "+layer);
-					position[layer] = new ArrayList();
+					position[layer] = new ArrayList<Point2D.Double>();
 					for(int i=0;i<50;i++){
 						data=l.getReflector(layer,i);
 						if(data!=null)
@@ -310,7 +311,7 @@ public class Setup {
 						bw.write("LAYER_"+j+"_RADIUS = "+radius+"\n");
 						Point2D.Double pos;
 						for(int i = 0; i<position[j].size(); i++){
-							pos = (Point2D.Double)position[j].get(i);
+							pos = position[j].get(i);
 							bw.write("LAYER_"+j+"_BEACON_"+i+" = "+pos.getX()+", "+pos.getY()+"\n");
 						}
 						bw.write("##\n");

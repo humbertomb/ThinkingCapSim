@@ -18,7 +18,7 @@ import java.util.ArrayList;
 public class ItemBehRules extends Item implements Serializable
 {
 	/* The list containing the rules names */
-	private ArrayList rulesNamesList;
+	private ArrayList<String> rulesNamesList;
 	
 	public ItemBehRules() {
 		rulesNamesList = null;
@@ -28,7 +28,7 @@ public class ItemBehRules extends Item implements Serializable
 	 * Sets the rules names
 	 * @param rulesNamesList the list containing the rules names
 	 */
-	public void set(ArrayList rulesNamesList) {
+	public void set(ArrayList<String> rulesNamesList) {
 		this.rulesNamesList = rulesNamesList;
 	}
 	
@@ -36,7 +36,7 @@ public class ItemBehRules extends Item implements Serializable
 	 * Returns the rules names
 	 * @return the rules names
 	 */
-	public ArrayList get() {
+	public ArrayList<String> get() {
 		return rulesNamesList;
 	}
 	

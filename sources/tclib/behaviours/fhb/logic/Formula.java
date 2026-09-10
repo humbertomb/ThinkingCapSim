@@ -32,8 +32,8 @@ public class Formula {
 	/*
 	 * Once the formula is parsed, each parsed element is stored in this list. 
 	 */
-	private ArrayList parsedFormula;  			
-	private ListIterator parsedFormulaIterator;  // iterator to pass through the parsedFormula list
+	private ArrayList<GenericToken> parsedFormula;  			
+	private ListIterator<GenericToken> parsedFormulaIterator;  // iterator to pass through the parsedFormula list
 	
 	/**
 	 * Creates a new formula from a string.
@@ -58,7 +58,7 @@ public class Formula {
 	 */
 	public void set(String formula) throws SyntaxError, LexicalError, IOException {
 		logicFormula = formula;
-		parsedFormula = new ArrayList();
+		parsedFormula = new ArrayList<GenericToken>();
 		la = new LexicalAnalizer(logicFormula);
 		
 		parseExpression();
@@ -164,7 +164,7 @@ public class Formula {
 		double value1, value2,value3;
 		
 		/* get the next token from parsed formula */
-		gt = (GenericToken)parsedFormulaIterator.next();		
+		gt = parsedFormulaIterator.next();		
 		
 		switch (gt.getType()) {
 			case GenericToken.VARIABLE:
@@ -203,7 +203,7 @@ public class Formula {
 			case GenericToken.SYMBOL:
 				if (((SymbolToken)gt).getSymbol()=='(') {
 					value1 = evalExpression();
-					gt = (GenericToken)parsedFormulaIterator.next();
+					gt = parsedFormulaIterator.next();
 					// The parenthesis open in the formula has to be closed 
 					if (gt.getType()==GenericToken.SYMBOL
 							&& ((SymbolToken)gt).getSymbol()==')') {

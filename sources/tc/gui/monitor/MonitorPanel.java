@@ -259,7 +259,7 @@ public class MonitorPanel extends JPanel implements ChildWindowListener
 		
 		dbgCB		= (JCheckBox) e.getSource();
 		actionName	= (String) dbgCB.getClientProperty("ActionName");
-		value[0]		= new Boolean (dbgCB.isSelected ());
+		value[0]		= Boolean.valueOf (dbgCB.isSelected ());
 
 		parent.getMonitor ().setGUIActionCtrl (ItemGUICtrl.ACT_DEBUG, null, actionName, value);
 	}
@@ -287,7 +287,7 @@ public class MonitorPanel extends JPanel implements ChildWindowListener
 		mitem=(JMenuItem)e.getSource();
 		actionName=(String)mitem.getClientProperty("ActionName");
 		servName=(String)mitem.getClientProperty("ServiceName");		
-		value[0]=new Boolean(mitem.isSelected());
+		value[0]=Boolean.valueOf (mitem.isSelected());
 
 		parent.getMonitor ().setGUIActionCtrl(ItemGUICtrl.ACT_SERVICE, servName, actionName, value);
 	}

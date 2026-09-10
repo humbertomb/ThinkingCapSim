@@ -209,7 +209,7 @@ public class Monitor extends Controller
 		linda.write(bNameTuple);
 	}
 	
-	public void setBehaviourRuleNames(ArrayList ruleNamesList) {
+	public void setBehaviourRuleNames(ArrayList<String> ruleNamesList) {
 		rNamesItem.set(ruleNamesList);
 		linda.write(rNamesTuple);
 	}

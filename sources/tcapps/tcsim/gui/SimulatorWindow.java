@@ -978,7 +978,7 @@ public class SimulatorWindow extends JFrame
 			focusOnObjectCB.setEnabled(true);
 			focusOnObjectCO.setEnabled(true);
 		}
-		focusOnObjectCO.addItem(new Integer(id));
+		focusOnObjectCO.addItem(Integer.valueOf (id));
 		return id;
 	}
 	/** Remove the object with index id from the world 3D representation */
@@ -986,7 +986,7 @@ public class SimulatorWindow extends JFrame
 		if(model3d!=null) model3d.removeObject(id);
 		model3d.setViewpoint();
 		
-		focusOnObjectCO.removeItem(new Integer(id));
+		focusOnObjectCO.removeItem(Integer.valueOf (id));
 		
 		if(focusOnObjectCO.getComponentCount()<1){
 			focusOnObjectCB.setEnabled(false);
@@ -1019,7 +1019,7 @@ public class SimulatorWindow extends JFrame
 			focusOnRobotCB.setEnabled(true);
 			focusOnRobotCO.setEnabled(true);
 		}
-		focusOnRobotCO.addItem(new Integer(id));
+		focusOnRobotCO.addItem(Integer.valueOf (id));
 
 		return id;
 	}

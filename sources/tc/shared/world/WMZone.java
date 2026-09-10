@@ -25,6 +25,7 @@ import wucore.utils.geom.Point3;
 public class WMZone extends WMElement
 {
     public Rectangle2D.Double			area;
+    public double					z;				// Elevation of the zone floor (m)
     public String					texture;
     
     // Accessors
@@ -43,6 +44,7 @@ public class WMZone extends WMElement
         st		= new StringTokenizer (prop,", \t");
         x1		= Double.parseDouble (st.nextToken());
         y1		= Double.parseDouble (st.nextToken());
+        z		= Double.parseDouble (st.nextToken());
         w		= Double.parseDouble (st.nextToken());
         h		= Double.parseDouble (st.nextToken());
         area 	= new Rectangle2D.Double (x1, y1, w, h);
@@ -60,6 +62,7 @@ public class WMZone extends WMElement
         texture = defTexture;
         double x = polyline.minlimit.x();
         double y = polyline.minlimit.y();
+        z = polyline.minlimit.z();
         double w = polyline.maxlimit.x()-polyline.minlimit.x();
         double h = polyline.maxlimit.y()-polyline.minlimit.y();
         
@@ -85,10 +88,10 @@ public class WMZone extends WMElement
         PolylineDxf pol = new PolylineDxf();
         
         // Se define los vertices del cuadrado
-        pol.addVertex(new VertexDxf(new Point3(minx(),miny(),0.0)));		
-        pol.addVertex(new VertexDxf(new Point3(minx()+width(),miny(),0.0)));		
-        pol.addVertex(new VertexDxf(new Point3(minx()+width(),miny()+height(),0.0)));		
-        pol.addVertex(new VertexDxf(new Point3(minx(),miny()+height(),0.0)));		
+        pol.addVertex(new VertexDxf(new Point3(minx(),miny(),z)));		
+        pol.addVertex(new VertexDxf(new Point3(minx()+width(),miny(),z)));		
+        pol.addVertex(new VertexDxf(new Point3(minx()+width(),miny()+height(),z)));		
+        pol.addVertex(new VertexDxf(new Point3(minx(),miny()+height(),z)));		
         pol.addExtText(0,label);
         pol.addExtText(1,texture);
         pol.setLayer("ZONES");
@@ -98,6 +101,12 @@ public class WMZone extends WMElement
     // Instance methods
     public String toRawString ()
     {
-        return DoubleFormat.format(area.getX())+", "+DoubleFormat.format(area.getY())+", "+DoubleFormat.format(area.getWidth())+", "+DoubleFormat.format(area.getHeight())+", "+label+", "+texture;
+        return pointsRawString ()+", "+texture;
+    }
+
+    /** "x, y, z, width, height, label" */
+    public String pointsRawString ()
+    {
+        return DoubleFormat.format(area.getX())+", "+DoubleFormat.format(area.getY())+", "+DoubleFormat.format(z)+", "+DoubleFormat.format(area.getWidth())+", "+DoubleFormat.format(area.getHeight())+", "+label;
     }
 }

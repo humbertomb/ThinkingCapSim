@@ -63,64 +63,64 @@ public class scanner
 	public static void init () throws java.io.IOException
 	{
 		/* set up the keyword table */
-		keywords.put("tuple",    		new Integer(bg_sym.TUPLE));
-		keywords.put("extern",			new Integer(bg_sym.EXTERN));
-		keywords.put("sensor",			new Integer(bg_sym.SENSOR));
-		keywords.put("effector",		new Integer(bg_sym.EFFECTOR));
-		keywords.put("status",			new Integer(bg_sym.STATUS));
-		keywords.put("initialization",	new Integer(bg_sym.INITIALIZATION));
-		keywords.put("agent",			new Integer(bg_sym.AGENT));
-		keywords.put("function",		new Integer(bg_sym.FUNCTION));
-		keywords.put("return",			new Integer(bg_sym.RETURN));
-		keywords.put("common",     		new Integer(bg_sym.COMMON));
-		keywords.put("behaviour",     	new Integer(bg_sym.BEHAVIOUR));
-		keywords.put("blender",     	new Integer(bg_sym.BLENDER));
-		keywords.put("blending",     	new Integer(bg_sym.BLENDING));
-		keywords.put("range",     		new Integer(bg_sym.RANGE));
-		keywords.put("priority",		new Integer(bg_sym.PRIORITY));
-		keywords.put("rules",			new Integer(bg_sym.RULES));
-		keywords.put("if",				new Integer(bg_sym.IF));
-		keywords.put("else",			new Integer(bg_sym.ELSE));
-		keywords.put("set",				new Integer(bg_sym.SET));
-		keywords.put("float",			new Integer(bg_sym.FLOAT));
-		keywords.put("fsm",				new Integer(bg_sym.FSM));
-		keywords.put("start",			new Integer(bg_sym.START));
-		keywords.put("state",			new Integer(bg_sym.STATE));
-		keywords.put("shift",			new Integer(bg_sym.SHIFT));
-		keywords.put("background",		new Integer(bg_sym.BACKGROUND));
-		keywords.put("fusion",			new Integer(bg_sym.FUSION));
-		keywords.put("trapezoid",		new Integer(bg_sym.TRAPEZOID));
-		keywords.put("sigmoid",			new Integer(bg_sym.SIGMOID));
-		keywords.put("bell",			new Integer(bg_sym.BELL));
-		keywords.put("triangle",		new Integer(bg_sym.TRIANGLE));
-		keywords.put("crisp",			new Integer(bg_sym.CRISP));
-		keywords.put("tsk",				new Integer(bg_sym.TSK));
-		keywords.put("printf",			new Integer(bg_sym.PRINTF));
-		keywords.put("halt",			new Integer(bg_sym.HALT));
-		keywords.put("is",				new Integer(bg_sym.IS));
-		keywords.put("==",				new Integer(bg_sym.EQUAL));
-		keywords.put("!=",				new Integer(bg_sym.NE));
-		keywords.put("<=",				new Integer(bg_sym.LE));
-		keywords.put(">=",				new Integer(bg_sym.GE));
-		keywords.put("<",				new Integer(bg_sym.LT));
-		keywords.put(">",				new Integer(bg_sym.GT));
-		keywords.put("=",				new Integer(bg_sym.ASSIGN));
-		keywords.put("!",				new Integer(bg_sym.NOT));
-		keywords.put("&&",				new Integer(bg_sym.AND));
-		keywords.put("||",				new Integer(bg_sym.OR));
+		keywords.put("tuple",    		Integer.valueOf (bg_sym.TUPLE));
+		keywords.put("extern",			Integer.valueOf (bg_sym.EXTERN));
+		keywords.put("sensor",			Integer.valueOf (bg_sym.SENSOR));
+		keywords.put("effector",		Integer.valueOf (bg_sym.EFFECTOR));
+		keywords.put("status",			Integer.valueOf (bg_sym.STATUS));
+		keywords.put("initialization",	Integer.valueOf (bg_sym.INITIALIZATION));
+		keywords.put("agent",			Integer.valueOf (bg_sym.AGENT));
+		keywords.put("function",		Integer.valueOf (bg_sym.FUNCTION));
+		keywords.put("return",			Integer.valueOf (bg_sym.RETURN));
+		keywords.put("common",     		Integer.valueOf (bg_sym.COMMON));
+		keywords.put("behaviour",     	Integer.valueOf (bg_sym.BEHAVIOUR));
+		keywords.put("blender",     	Integer.valueOf (bg_sym.BLENDER));
+		keywords.put("blending",     	Integer.valueOf (bg_sym.BLENDING));
+		keywords.put("range",     		Integer.valueOf (bg_sym.RANGE));
+		keywords.put("priority",		Integer.valueOf (bg_sym.PRIORITY));
+		keywords.put("rules",			Integer.valueOf (bg_sym.RULES));
+		keywords.put("if",				Integer.valueOf (bg_sym.IF));
+		keywords.put("else",			Integer.valueOf (bg_sym.ELSE));
+		keywords.put("set",				Integer.valueOf (bg_sym.SET));
+		keywords.put("float",			Integer.valueOf (bg_sym.FLOAT));
+		keywords.put("fsm",				Integer.valueOf (bg_sym.FSM));
+		keywords.put("start",			Integer.valueOf (bg_sym.START));
+		keywords.put("state",			Integer.valueOf (bg_sym.STATE));
+		keywords.put("shift",			Integer.valueOf (bg_sym.SHIFT));
+		keywords.put("background",		Integer.valueOf (bg_sym.BACKGROUND));
+		keywords.put("fusion",			Integer.valueOf (bg_sym.FUSION));
+		keywords.put("trapezoid",		Integer.valueOf (bg_sym.TRAPEZOID));
+		keywords.put("sigmoid",			Integer.valueOf (bg_sym.SIGMOID));
+		keywords.put("bell",			Integer.valueOf (bg_sym.BELL));
+		keywords.put("triangle",		Integer.valueOf (bg_sym.TRIANGLE));
+		keywords.put("crisp",			Integer.valueOf (bg_sym.CRISP));
+		keywords.put("tsk",				Integer.valueOf (bg_sym.TSK));
+		keywords.put("printf",			Integer.valueOf (bg_sym.PRINTF));
+		keywords.put("halt",			Integer.valueOf (bg_sym.HALT));
+		keywords.put("is",				Integer.valueOf (bg_sym.IS));
+		keywords.put("==",				Integer.valueOf (bg_sym.EQUAL));
+		keywords.put("!=",				Integer.valueOf (bg_sym.NE));
+		keywords.put("<=",				Integer.valueOf (bg_sym.LE));
+		keywords.put(">=",				Integer.valueOf (bg_sym.GE));
+		keywords.put("<",				Integer.valueOf (bg_sym.LT));
+		keywords.put(">",				Integer.valueOf (bg_sym.GT));
+		keywords.put("=",				Integer.valueOf (bg_sym.ASSIGN));
+		keywords.put("!",				Integer.valueOf (bg_sym.NOT));
+		keywords.put("&&",				Integer.valueOf (bg_sym.AND));
+		keywords.put("||",				Integer.valueOf (bg_sym.OR));
 
 		/* set up the table of single character symbols */
-		char_symbols.put(new Integer('{'), new Integer(bg_sym.BBEGIN));
-		char_symbols.put(new Integer('}'), new Integer(bg_sym.BEND));
-		char_symbols.put(new Integer(';'), new Integer(bg_sym.COLON));
-		char_symbols.put(new Integer(':'), new Integer(bg_sym.BSTATE));
-		char_symbols.put(new Integer('('), new Integer(bg_sym.SEXP));
-		char_symbols.put(new Integer(')'), new Integer(bg_sym.EEXP));
-		char_symbols.put(new Integer(','), new Integer(bg_sym.SCOLON));
-		char_symbols.put(new Integer('+'), new Integer(bg_sym.PLUS));
-		char_symbols.put(new Integer('-'), new Integer(bg_sym.MINUS));
-		char_symbols.put(new Integer('*'), new Integer(bg_sym.TIMES));
-		char_symbols.put(new Integer('/'), new Integer(bg_sym.DIV));
+		char_symbols.put(Integer.valueOf ('{'), Integer.valueOf (bg_sym.BBEGIN));
+		char_symbols.put(Integer.valueOf ('}'), Integer.valueOf (bg_sym.BEND));
+		char_symbols.put(Integer.valueOf (';'), Integer.valueOf (bg_sym.COLON));
+		char_symbols.put(Integer.valueOf (':'), Integer.valueOf (bg_sym.BSTATE));
+		char_symbols.put(Integer.valueOf ('('), Integer.valueOf (bg_sym.SEXP));
+		char_symbols.put(Integer.valueOf (')'), Integer.valueOf (bg_sym.EEXP));
+		char_symbols.put(Integer.valueOf (','), Integer.valueOf (bg_sym.SCOLON));
+		char_symbols.put(Integer.valueOf ('+'), Integer.valueOf (bg_sym.PLUS));
+		char_symbols.put(Integer.valueOf ('-'), Integer.valueOf (bg_sym.MINUS));
+		char_symbols.put(Integer.valueOf ('*'), Integer.valueOf (bg_sym.TIMES));
+		char_symbols.put(Integer.valueOf ('/'), Integer.valueOf (bg_sym.DIV));
 
 		next_char = BGParser.read ();
 		if (next_char == EOF_CHAR) 
@@ -270,7 +270,7 @@ public class scanner
 	{
 		Integer result;
 
-		result = (Integer) char_symbols.get (new Integer ((char)ch));
+		result = (Integer) char_symbols.get (Integer.valueOf ((char)ch));
 		if (result == null) 
 			return -1;
 		else
@@ -393,11 +393,11 @@ public class scanner
 		result_str = result.toString ();
 		try
 		{
-			number = new Double (result_str);
+			number = Double.valueOf (result_str);
 		} catch (Exception e)
 		{
 			emit_warn ("Incorrect floating point number [" + result_str + "]");
-			number = new Double (0.0);
+			number = Double.valueOf (0.0);
 		}
 		return new Symbol (bg_sym.DOUBLE, number);
 	}
@@ -494,7 +494,7 @@ public class scanner
 			if (next_char == EOF_CHAR) return new Symbol (bg_sym.EOF);
 
 			/* if we get here, we have an unrecognized character */
-			emit_warn ("Unrecognized character '" + new Character ((char) next_char) + "'(" + next_char + ") -- ignored");
+			emit_warn ("Unrecognized character '" + Character.valueOf ((char) next_char) + "'(" + next_char + ") -- ignored");
 			advance ();
 		}
 	}

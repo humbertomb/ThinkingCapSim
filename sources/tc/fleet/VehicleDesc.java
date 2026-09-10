@@ -57,10 +57,10 @@ public class VehicleDesc extends Object implements Serializable
 		boolean			modified = true;
 
 		// Load vehicle properties
-		try { DTIME	 		= new Long (props.getProperty ("DTIME")).longValue (); } 			catch (Exception e) 	{ }
+		try { DTIME	 		= Long.valueOf (props.getProperty ("DTIME")).longValue (); } 			catch (Exception e) 	{ }
 
-		try { RADIUS 		= new Double (props.getProperty ("RADIUS")).doubleValue (); } 		catch (Exception e) 	{ }
-		try { LINES		 	= new Integer (props.getProperty ("LINES")).intValue (); } 			catch (Exception e) 	{ modified = false; }
+		try { RADIUS 		= Double.valueOf (props.getProperty ("RADIUS")).doubleValue (); } 		catch (Exception e) 	{ }
+		try { LINES		 	= Integer.valueOf (props.getProperty ("LINES")).intValue (); } 			catch (Exception e) 	{ modified = false; }
 		
 		// TODO the new properties MUST include all the segments. Could be done better
 		if ((LINES > 0) && modified)
@@ -68,10 +68,10 @@ public class VehicleDesc extends Object implements Serializable
 			icon			= new Line2 [LINES];
 			for (i = 0; i < LINES; i++)
 			{
-				try { xi		= new Double (props.getProperty ("iconxi" + i)).doubleValue (); } 	catch (Exception e) 	{ }
-				try { yi		= new Double (props.getProperty ("iconyi" + i)).doubleValue (); } 	catch (Exception e) 	{ }
-				try { xf		= new Double (props.getProperty ("iconxf" + i)).doubleValue (); } 	catch (Exception e) 	{ }
-				try { yf		= new Double (props.getProperty ("iconyf" + i)).doubleValue (); }	catch (Exception e) 	{ }
+				try { xi		= Double.valueOf (props.getProperty ("iconxi" + i)).doubleValue (); } 	catch (Exception e) 	{ }
+				try { yi		= Double.valueOf (props.getProperty ("iconyi" + i)).doubleValue (); } 	catch (Exception e) 	{ }
+				try { xf		= Double.valueOf (props.getProperty ("iconxf" + i)).doubleValue (); } 	catch (Exception e) 	{ }
+				try { yf		= Double.valueOf (props.getProperty ("iconyf" + i)).doubleValue (); }	catch (Exception e) 	{ }
 				icon[i]		= new Line2 ();
 				icon[i].set (xi, yi, xf, yf);
 			}

@@ -1101,7 +1101,7 @@ class CUP$bg_par$actions {
             {
               Double RESULT = null;
 		Double n = (Double)((tclib.behaviours.bg.runtime.Symbol) CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).value;
-		 RESULT = new Double (-1.0 * n.doubleValue ()); 
+		 RESULT = Double.valueOf (-1.0 * n.doubleValue ()); 
               CUP$bg_par$result = new tclib.behaviours.bg.runtime.Symbol(5/*number*/, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-1)).left, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).right, RESULT);
             }
           return CUP$bg_par$result;
@@ -1662,7 +1662,7 @@ class CUP$bg_par$actions {
             {
               VSymbol RESULT = null;
 		String na = (String)((tclib.behaviours.bg.runtime.Symbol) CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).value;
-		 RESULT = (new VSymbol ()).ref (check (na), new Double (-100.0), new Double (100.0)); 
+		 RESULT = (new VSymbol ()).ref (check (na), Double.valueOf (-100.0), Double.valueOf (100.0)); 
               CUP$bg_par$result = new tclib.behaviours.bg.runtime.Symbol(16/*blenv*/, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).left, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).right, RESULT);
             }
           return CUP$bg_par$result;
@@ -2156,7 +2156,7 @@ class CUP$bg_par$actions {
           case 20: // set ::= TSK 
             {
               Integer RESULT = null;
-		 RESULT = new Integer (VSymbol.S_TSK); 
+		 RESULT = Integer.valueOf (VSymbol.S_TSK); 
               CUP$bg_par$result = new tclib.behaviours.bg.runtime.Symbol(6/*set*/, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).left, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).right, RESULT);
             }
           return CUP$bg_par$result;
@@ -2165,7 +2165,7 @@ class CUP$bg_par$actions {
           case 19: // set ::= CRISP 
             {
               Integer RESULT = null;
-		 RESULT = new Integer (VSymbol.S_CRISP); 
+		 RESULT = Integer.valueOf (VSymbol.S_CRISP); 
               CUP$bg_par$result = new tclib.behaviours.bg.runtime.Symbol(6/*set*/, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).left, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).right, RESULT);
             }
           return CUP$bg_par$result;
@@ -2174,7 +2174,7 @@ class CUP$bg_par$actions {
           case 18: // set ::= TRIANGLE 
             {
               Integer RESULT = null;
-		 RESULT = new Integer (VSymbol.S_TRIANGLE); 
+		 RESULT = Integer.valueOf (VSymbol.S_TRIANGLE); 
               CUP$bg_par$result = new tclib.behaviours.bg.runtime.Symbol(6/*set*/, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).left, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).right, RESULT);
             }
           return CUP$bg_par$result;
@@ -2183,7 +2183,7 @@ class CUP$bg_par$actions {
           case 17: // set ::= BELL 
             {
               Integer RESULT = null;
-		 RESULT = new Integer (VSymbol.S_BELL); 
+		 RESULT = Integer.valueOf (VSymbol.S_BELL); 
               CUP$bg_par$result = new tclib.behaviours.bg.runtime.Symbol(6/*set*/, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).left, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).right, RESULT);
             }
           return CUP$bg_par$result;
@@ -2192,7 +2192,7 @@ class CUP$bg_par$actions {
           case 16: // set ::= SIGMOID 
             {
               Integer RESULT = null;
-		 RESULT = new Integer (VSymbol.S_SIGMOID); 
+		 RESULT = Integer.valueOf (VSymbol.S_SIGMOID); 
               CUP$bg_par$result = new tclib.behaviours.bg.runtime.Symbol(6/*set*/, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).left, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).right, RESULT);
             }
           return CUP$bg_par$result;
@@ -2201,7 +2201,7 @@ class CUP$bg_par$actions {
           case 15: // set ::= TRAPEZOID 
             {
               Integer RESULT = null;
-		 RESULT = new Integer (VSymbol.S_TRAPEZOID); 
+		 RESULT = Integer.valueOf (VSymbol.S_TRAPEZOID); 
               CUP$bg_par$result = new tclib.behaviours.bg.runtime.Symbol(6/*set*/, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).left, ((tclib.behaviours.bg.runtime.Symbol)CUP$bg_par$stack.elementAt(CUP$bg_par$top-0)).right, RESULT);
             }
           return CUP$bg_par$result;

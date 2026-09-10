@@ -77,7 +77,7 @@ public class FHBController extends Controller
 	 * The path that has to be followed to reach the behaviour 
 	 * requested by the debug window 
 	 */
-	private ArrayList 				behReqPath;
+	private ArrayList<String> 		behReqPath;
 	
 	/* FHB state flags */
 	private boolean 				behReload;					// Is a behaviour reload need?
@@ -200,23 +200,23 @@ public class FHBController extends Controller
 		for (i = 0; i < lps.lpos_n (); i++)
 			beh.setParam (lpos[i].label (), lpos[i]);
 					
-//		beh.setParam ("crossSpeed",new Double(0.1));
-//		beh.setParam ("wanderSpeed",new Double(0.4));
-//		beh.setParam ("followSpeed",new Double(0.2));
+//		beh.setParam ("crossSpeed",Double.valueOf (0.1));
+//		beh.setParam ("wanderSpeed",Double.valueOf (0.4));
+//		beh.setParam ("followSpeed",Double.valueOf (0.2));
 
 		virtual	= (LPOSensorRange) lps.find ("Virtual");
 		for (i = 0; i < fdesc.MAXVIRTU; i++)
-			beh.setParam ("Virtu"+i, new Double (virtual.range[i]));
+			beh.setParam ("Virtu"+i, Double.valueOf (virtual.range[i]));
 
 		group	= (LPOSensorGroup) lps.find ("Group");
-		beh.setParam ("Groups", new Double (fdesc.MAXGROUP));
+		beh.setParam ("Groups", Double.valueOf (fdesc.MAXGROUP));
 		for (i = 0; i < fdesc.MAXGROUP; i++)
-			beh.setParam ("Group"+i, new Double (group.range[i]));
+			beh.setParam ("Group"+i, Double.valueOf (group.range[i]));
 
-		beh.setParam ("x", new Double (pos.x ()));
-		beh.setParam ("y", new Double (pos.y ()));
-		beh.setParam ("alpha", new Double (pos.alpha ()));
-		beh.setParam ("heading", new Double (Math.atan2 ((looka.y () - pos.y ()), (looka.x () - pos.x ()))));
+		beh.setParam ("x", Double.valueOf (pos.x ()));
+		beh.setParam ("y", Double.valueOf (pos.y ()));
+		beh.setParam ("alpha", Double.valueOf (pos.alpha ()));
+		beh.setParam ("heading", Double.valueOf (Math.atan2 ((looka.y () - pos.y ()), (looka.x () - pos.x ()))));
 
 		// Invoke the FHB executor		
 		try { output = beh.exec (); }
@@ -345,9 +345,9 @@ public class FHBController extends Controller
 	/*
 	 * Finds the behaviour requested. The list contains the path to reach the behaviour.
 	 */
-	private void findBehRequested(ArrayList list) {
+	private void findBehRequested(ArrayList<String> list) {
 		RuleSet rules;
-		ArrayList rulesNames;
+		ArrayList<String> rulesNames;
 		Behaviour currentBeh;
 		
 		if ((list == null) || (list.isEmpty()))
@@ -355,11 +355,11 @@ public class FHBController extends Controller
 		else {
 			currentBeh = beh;
 			for (int i = 0; i < list.size(); i++) {
-				String ruleName = (String)list.get(i);
+				String ruleName = list.get(i);
 				int j = 0;
 				rules = currentBeh.getRuleSet();
 				rulesNames = rules.getRulesNames();
-				while ((j < rulesNames.size()) && (!ruleName.equals((String) rulesNames.get(j))))
+				while ((j < rulesNames.size()) && (!ruleName.equals(rulesNames.get(j))))
 					j++;
 				if (j == rulesNames.size())
 					break;
@@ -390,15 +390,15 @@ public class FHBController extends Controller
 	private void setRulesInformation(BehaviourInfo behInfo, RuleSet rules) {
 		Rule currentRule;
 		Behaviour beh;
-		ArrayList rulesNames = rules.getRulesNames();
+		ArrayList<String> rulesNames = rules.getRulesNames();
 		for (int i = 0; i < rulesNames.size(); i++) {
-			currentRule = rules.getRule((String)rulesNames.get(i));
+			currentRule = rules.getRule(rulesNames.get(i));
 
 			beh = currentRule.getSubBehaviour();			
 			if (beh != null)
-				behInfo.addRule((String)rulesNames.get(i),currentRule.getAntecedentValue(),currentRule.getOutputFSets(),beh.getName(),beh.getParameters());
+				behInfo.addRule(rulesNames.get(i),currentRule.getAntecedentValue(),currentRule.getOutputFSets(),beh.getName(),beh.getParameters());
 			else 
-				behInfo.addRule((String)rulesNames.get(i),currentRule.getAntecedentValue(),currentRule.getOutputFSets(),null,null);
+				behInfo.addRule(rulesNames.get(i),currentRule.getAntecedentValue(),currentRule.getOutputFSets(),null,null);
 		}
 	}
 	
@@ -446,12 +446,12 @@ public class FHBController extends Controller
 			if (beh != null)
 			{
 				int					i;
-				ArrayList			names;
+				ArrayList<String>	names;
 
 				names	= beh.getRuleSet ().getRulesNames ();
 				labels	= new String [names.size ()];
 				for (i = 0; i < names.size (); i++)
-					labels[i]	= (String) names.get (i);
+					labels[i]	= names.get (i);
 			}
 		
 			if (localgfx)

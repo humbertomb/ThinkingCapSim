@@ -9,23 +9,23 @@
 
 package wucore.utils.dxf;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 public class DXFPolyline
 {
-  private Vector xs;
-  private Vector ys;
+  private ArrayList<Integer> xs;
+  private ArrayList<Integer> ys;
 
   public DXFPolyline()
   {
-    xs = new Vector ();
-    ys = new Vector ();
+    xs = new ArrayList<Integer> ();
+    ys = new ArrayList<Integer> ();
   }
 
   public void addPoint (int x, int y)
   {
-    xs.addElement (new Integer(x));
-    ys.addElement (new Integer(y));
+    xs.add (Integer.valueOf (x));
+    ys.add (Integer.valueOf (y));
   }
 
   public void addPoint (double x, double y)
@@ -46,7 +46,7 @@ public class DXFPolyline
     arr = new int[xs.size()];
     for (i=0; i < xs.size(); i++)
     {
-      arr[i] = ((Integer)xs.elementAt (i)).intValue();
+      arr[i] = xs.get (i).intValue();
     }
     return (arr);
 
@@ -60,7 +60,7 @@ public class DXFPolyline
     arr = new int[ys.size()];
     for (i=0; i < ys.size(); i++)
     {
-      arr[i] = ((Integer)ys.elementAt(i)).intValue();
+      arr[i] = ys.get (i).intValue();
     }
     return (arr);
   }

@@ -1,198 +1,212 @@
 /*
  * Created on 10-dic-2004
- *
- * To change the template for this generated file go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * (c) 2004-2026 Humberto Martinez Barbera
  */
 package tc.shared.world;
 
 import java.util.StringTokenizer;
-//import java.awt.*;
-import wucore.utils.color.*;
 
-import wucore.utils.dxf.*;
-import wucore.utils.dxf.entities.*;
-import wucore.utils.geom.*;
-import wucore.utils.math.*;
-import wucore.utils.color.*;
+import wucore.utils.color.ColorTool;
+import wucore.utils.color.WColor;
+import wucore.utils.dxf.DXFWorldFile;
+import wucore.utils.dxf.DoubleFormat;
+import wucore.utils.dxf.entities.BlockDxf;
+import wucore.utils.dxf.entities.InsertDxf;
+import wucore.utils.dxf.entities.LineDxf;
+import wucore.utils.geom.Line2;
+import wucore.utils.geom.Point3;
+import wucore.utils.math.Angles;
 
 /**
- * @author Humberto Martinez Barbera
+ * An object of the world: a 2D icon (shared {@link WMIcon}, referenced by
+ * name) placed at a position and heading, plus its colour and an optional 3D
+ * shape.
  *
- * To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * File format:
+ * <pre>
+ *   OBJECT_i = icon, x, y, z, angle(deg), color [, shape, usecolor]
+ * </pre>
+ *
+ * @author Humberto Martinez Barbera
  */
 public class WMObject extends WMElement
 {
-	// 2D components (mandatory variables)
-	public Line2[]				icon;		// Physical 2D bounds of the object
+	// 2D components
+	public String				iconId;		// Name of the icon in the world's icon library
+	public WMIcon				icon;		// Resolved icon (local coordinates)
 	public WColor				color;		// Color of the object
-		
-	// 3D components
-	public Point3				pos;			// Position of the 3D object (m, m, m)
-	public double				a;			// Heading of the 3D object, XY plane (rad)
-	public String				shape;		// 3D object representation	
+
+	// Placement and 3D components
+	public Point3				pos;			// Position of the object (m, m, m)
+	public double				a;			// Heading, XY plane (rad)
+	public String				shape;		// 3D object representation (may be null)
 	public boolean				usecolor;	// Replace 3D object color
 
 	public boolean				visible		= true;
-	
-	public WMObject (){
-	}
-	
-	// Constructors
-	public WMObject (String prop)
+
+	// Cache of the icon in world coordinates
+	private Line2[]				absCache;
+	private double				cx, cy, cz, ca;
+	private WMIcon				cicon;
+	private int					clines;
+
+	/* Constructors */
+
+	public WMObject ()
 	{
-		int					j, num;
-		StringTokenizer		st;
-		double				x1, x2, y1, y2, z1;
-		st		= new StringTokenizer (prop,", \t");
-		
-		// Read line based icon (for 2D displaying and simulation)
-		num		= Integer.parseInt (st.nextToken());
-		icon		= new Line2[num];
-		for (j = 0; j < num; j++)
-		{
-			x1		= Double.parseDouble (st.nextToken());
-			y1		= Double.parseDouble (st.nextToken());
-			x2		= Double.parseDouble (st.nextToken());
-			y2		= Double.parseDouble (st.nextToken());
-			
-			icon[j]	= new Line2 (x1, y1, x2, y2);
-		}
-			
-		// Read object color
-		if (st.hasMoreTokens())
-		{
-			//r		= Integer.parseInt (st.nextToken());
-			//g		= Integer.parseInt (st.nextToken());
-			//b		= Integer.parseInt (st.nextToken());
-			//color	= new Color (r, g, b);
-			color	= ColorTool.getColorFromName (st.nextToken ());
-		}
-		else
-			color	= WColor.BLACK;
-		
-		// Read object 3D shape and properties
+		pos		= new Point3 (0.0, 0.0, 0.0);
+		color	= WColor.BLACK;
+	}
+
+	/**
+	 * @param prop  the property value
+	 * @param icons icon library used to resolve the icon name (a missing icon
+	 *              yields a warning and an empty icon)
+	 */
+	public WMObject (String prop, WMIcons icons)
+	{
+		StringTokenizer		st = new StringTokenizer (prop, ", \t");
+		fromCurrent (st.nextToken (), st, icons);
+	}
+
+	private void fromCurrent (String first, StringTokenizer st, WMIcons icons)
+	{
+		iconId	= first;
+		double	x = Double.parseDouble (st.nextToken ());
+		double	y = Double.parseDouble (st.nextToken ());
+		double	z = Double.parseDouble (st.nextToken ());
+		pos		= new Point3 (x, y, z);
+		a		= Double.parseDouble (st.nextToken ()) * Angles.DTOR;
+		color	= st.hasMoreTokens () ? ColorTool.getColorFromName (st.nextToken ()) : WColor.BLACK;
 		if (st.hasMoreTokens ())
 		{
 			shape	= st.nextToken ();
-			x1		= Double.parseDouble (st.nextToken());
-			y1		= Double.parseDouble (st.nextToken());
-			z1		= Double.parseDouble (st.nextToken());
-			pos		= new Point3 (x1, y1, z1);
-			a		= Double.parseDouble (st.nextToken()) * Angles.DTOR;
-			usecolor	= new Boolean (st.nextToken()).booleanValue ();
+			if (shape.equalsIgnoreCase ("none"))		shape = null;
+			usecolor = st.hasMoreTokens () && Boolean.parseBoolean (st.nextToken ());
+		}
+		icon = (icons != null) ? icons.at (iconId) : null;
+		if (icon == null)
+		{
+			System.out.println ("  [WMObject] Warning: icon <" + iconId + "> not found, using an empty icon");
+			icon = new WMIcon (iconId, new Line2[0]);
+		}
+	}
+
+	/** Builds an object from a DXF insert: the block lines become its (local) icon. */
+	public WMObject (InsertDxf insert, BlockDxf block, WMIcons icons)
+	{
+		pos		= insert.getPos ();
+		a		= insert.getRot ();
+		color	= (insert.ExtTextSize () > 0) ? ColorTool.getColorFromName (insert.getExtText (0)) : WColor.BLACK;
+		shape	= (insert.ExtTextSize () > 1) ? insert.getExtText (1) : null;
+		if ((shape != null) && shape.equalsIgnoreCase ("none"))		shape = null;
+		usecolor = (insert.ExtTextSize () > 2) && Boolean.parseBoolean (insert.getExtText (2));
+
+		int		size = 0;
+		for (int i = 0; i < block.entities.size (); i++)
+			if (block.entities.get (i) instanceof LineDxf)		size++;
+		Line2[]	lines = new Line2[size];
+		int		k = 0;
+		for (int i = 0; i < block.entities.size (); i++)
+			if (block.entities.get (i) instanceof LineDxf)
+			{
+				LineDxf	line = (LineDxf) block.entities.get (i);
+				lines[k++] = new Line2 (line.getStart ().x (), line.getStart ().y (), line.getStart ().z (), line.getEnd ().x (), line.getEnd ().y (), line.getEnd ().z ());
+			}
+		String	name = insert.getBlockname ();
+		if (icons != null)
+		{
+			icon = icons.at (name);
+			if ((icon == null) || !icon.sameGeometry (new WMIcon (name, lines)))
+				icon = icons.register (lines, name);
 		}
 		else
+			icon = new WMIcon (name, lines);
+		iconId	= icon.label;
+		label	= "OBJECT";
+	}
+
+	/* Accessors */
+
+	/** Assigns a (shared) icon to the object. */
+	public void setIcon (WMIcon icon)
+	{
+		this.icon	= icon;
+		this.iconId	= (icon != null) ? icon.label : null;
+		absCache	= null;
+	}
+
+	/** Icon segments in local coordinates (the shared icon definition). */
+	public Line2[] getLocalIcon ()
+	{
+		return (icon != null) ? icon.lines : new Line2[0];
+	}
+
+	/**
+	 * Icon segments in world coordinates for the current position and heading.
+	 * The result is cached and recomputed when the pose or the icon change; the
+	 * returned array must not be modified.
+	 */
+	public Line2[] absIcon ()
+	{
+		if (icon == null)			return new Line2[0];
+		if ((absCache == null) || (cicon != icon) || (clines != icon.lines.length)
+				|| (cx != pos.x ()) || (cy != pos.y ()) || (cz != pos.z ()) || (ca != a) || !sameLocal ())
 		{
-			// No 3D shape: icon coordinates are already absolute
-			shape	= null;
-			pos		= new Point3 (0.0, 0.0, 0.0);
-			a		= 0.0;
+			absCache	= icon.toAbsolute (pos, a);
+			cx = pos.x ();	cy = pos.y ();	cz = pos.z ();	ca = a;
+			cicon		= icon;
+			clines		= icon.lines.length;
+			localCopy	= icon.copy (icon.label).lines;
 		}
-		
-		AbsIcon();
+		return absCache;
 	}
-	
-	
-	public WMObject (InsertDxf insert, BlockDxf block){
-			
-			LineDxf line;
-			int size = 0;
-			pos = insert.getPos();
-			a = insert.getRot();
-			
-			if(insert.ExtTextSize()>0)
-				color = ColorTool.getColorFromName (insert.getExtText(0));
-			else
-				color	= WColor.BLACK;
-			
-			if(insert.ExtTextSize()>1)
-				shape = insert.getExtText(1);
-			else
-				shape	= null;
-			
-			if(insert.ExtTextSize()>2)
-				usecolor = Boolean.getBoolean(insert.getExtText(2));
-			else
-				usecolor	= false;
-			
-			for(int i = 0; i<block.entities.size(); i++)
-				if(block.entities.get(i) instanceof LineDxf) size ++;
-			
-			icon = new Line2[size];
-			
-			for(int i = 0; i<block.entities.size(); i++){
-				if(block.entities.get(i) instanceof LineDxf){
-					line = (LineDxf)block.entities.get(i);
-					icon[i] = new Line2(line.getStart().x(),line.getStart().y(),line.getEnd().x(),line.getEnd().y());
-				}
-			}
-			label = "OBJECT";
-			AbsIcon();
+
+	private Line2[]				localCopy;
+
+	private boolean sameLocal ()
+	{
+		if ((localCopy == null) || (localCopy.length != icon.lines.length))		return false;
+		for (int i = 0; i < localCopy.length; i++)
+		{
+			Line2	a1 = localCopy[i], b = icon.lines[i];
+			if ((a1.orig ().x () != b.orig ().x ()) || (a1.orig ().y () != b.orig ().y ()) || (a1.z1 () != b.z1 ())
+			 || (a1.dest ().x () != b.dest ().x ()) || (a1.dest ().y () != b.dest ().y ()) || (a1.z2 () != b.z2 ()))
+				return false;
 		}
-	
-	public void toDxf(DXFWorldFile dxf){
-			InsertDxf insert = new InsertDxf(pos,shape,"OBJECTS");
-			insert.setRot(a);
-						
-			String name = shape.replace('/','_').replace('.','_');
-			insert.setBlockname(name);
-			BlockDxf block = new BlockDxf(name);
-			Line2[] 	icon = getLocalIcon();	// Se escribe en coordenadas locales
-			for(int i=0; i<icon.length;i++){
-				block.entities.add(
-					new LineDxf(new Point3(icon[i].orig()),new Point3(icon[i].dest()))
-				);
-			}
-			insert.addExtText(0,ColorTool.getNameFromColor (color));
-			insert.addExtText(1,shape);
-			insert.addExtText(2,Boolean.toString(usecolor));
-			dxf.addBlock(block);
-			dxf.insertBlock(insert);
+		return true;
 	}
-	
-	// Cambia el icono a coordenadas absolutas (rotacion+translacion)
-	public void AbsIcon(){
-		double x1,y1,x2,y2;
-		for(int i = 0; i<icon.length; i++){
-			x1 = icon[i].orig().x() * Math.cos(a) - icon[i].orig().y() * Math.sin(a)+ pos.x();
-			y1 = icon[i].orig().x() * Math.sin(a) + icon[i].orig().y() * Math.cos(a)+ pos.y();
-			x2 = icon[i].dest().x() * Math.cos(a) - icon[i].dest().y() * Math.sin(a)+ pos.x();
-			y2 = icon[i].dest().x() * Math.sin(a) + icon[i].dest().y() * Math.cos(a)+ pos.y();
-			icon[i].set(x1,y1,x2,y2);
-		}
+
+	/** Forces the recomputation of the absolute icon (after editing the icon or the pose). */
+	public void invalidate ()
+	{
+		absCache = null;
 	}
-	
-	public Line2[] getLocalIcon(){
-		double x1,y1,x2,y2;
-		Line2[] lines = new Line2[icon.length];
-		for(int i = 0; i<icon.length; i++){
-			x1 = (icon[i].orig().x()-pos.x()) * Math.cos(-a) - (icon[i].orig().y()-pos.y()) * Math.sin(-a);
-			y1 = (icon[i].orig().x()-pos.x()) * Math.sin(-a) + (icon[i].orig().y()-pos.y()) * Math.cos(-a);
-			x2 = (icon[i].dest().x()-pos.x()) * Math.cos(-a) - (icon[i].dest().y()-pos.y()) * Math.sin(-a);
-			y2 = (icon[i].dest().x()-pos.x()) * Math.sin(-a) + (icon[i].dest().y()-pos.y()) * Math.cos(-a);
-			lines[i] = new Line2(x1,y1,x2,y2);
-		}
-		return lines;
+
+	/* Persistence */
+
+	public void toDxf (DXFWorldFile dxf)
+	{
+		String		name = (iconId != null) ? iconId : "icon";
+		InsertDxf	insert = new InsertDxf (pos, (shape != null) ? shape : name, "OBJECTS");
+		insert.setRot (a);
+		insert.setBlockname (name);
+		BlockDxf	block = new BlockDxf (name);
+		for (Line2 l : getLocalIcon ())
+			block.entities.add (new LineDxf (new Point3 (l.orig ().x (), l.orig ().y (), l.z1 ()), new Point3 (l.dest ().x (), l.dest ().y (), l.z2 ())));
+		insert.addExtText (0, ColorTool.getNameFromColor (color));
+		insert.addExtText (1, (shape != null) ? shape : "none");
+		insert.addExtText (2, Boolean.toString (usecolor));
+		dxf.addBlock (block);
+		dxf.insertBlock (insert);
 	}
-	
-	// Instance methods
+
 	public String toRawString ()
 	{
-		int			i;
-		String		out;
-		Line2[] 	icon = getLocalIcon();	// Se escribe en coordenadas locales
-		out		= new Integer (icon.length).toString () + ", ";
-		for (i = 0; i < icon.length; i ++)
-			out		+= DoubleFormat.format(icon[i].orig ().x ()) + ", " + DoubleFormat.format(icon[i].orig ().y ()) + ", " + DoubleFormat.format(icon[i].dest ().x ()) + ", " + DoubleFormat.format(icon[i].dest ().y ()) + ", ";		
-		out		+= ColorTool.getNameFromColor (color);
-		
+		String	out = iconId + ", " + DoubleFormat.format (pos.x ()) + ", " + DoubleFormat.format (pos.y ()) + ", " + DoubleFormat.format (pos.z ())
+					+ ", " + DoubleFormat.format (a * Angles.RTOD) + ", " + ColorTool.getNameFromColor (color);
 		if (shape != null)
-			out		+= ", " + shape + ", " + DoubleFormat.format(pos.x()) + ", " + DoubleFormat.format(pos.y()) + ", " + DoubleFormat.format(pos.z ()) + ", " + DoubleFormat.format(a * Angles.RTOD) + ", " + usecolor;
-		
-		return  out;
+			out += ", " + shape + ", " + usecolor;
+		return out;
 	}
-	
-	
 }

@@ -103,7 +103,7 @@ public class PNTransition extends PNObject
 		int index = p.transitions.indexOf(this);
 		
 		for (i=0; i<p.edges.size(); i++){
-			PNEdge e = ((PNEdge) p.edges.elementAt(i));
+			PNEdge e = p.edges.get (i);
 			if (e.isNegated()) negatedEdge = true;
 			
 			
@@ -114,7 +114,7 @@ public class PNTransition extends PNObject
 				
 				if (e.getTTo() == PNEdge.NODE) {
 					int ind = e.getITo();
-					PNNode z = ((PNNode) p.nodes.elementAt(ind));
+					PNNode z = p.nodes.get (ind);
 					
 					if (z.isFull ()) 
 					{
@@ -127,13 +127,13 @@ public class PNTransition extends PNObject
 				if (e.getTFrom() == PNEdge.NODE) {
 					if (negatedEdge)  {
 						int ind = e.getIFrom();
-						PNNode z = ((PNNode) p.nodes.elementAt(ind));
+						PNNode z = p.nodes.get (ind);
 						
 						if (z.getTokens() > 0) { canfire = false;
 						break;
 						}          //leave **-for-loop
-						Vector testTransition = new Vector();                   //
-						testTransition.addElement(this);                        //
+						ArrayList<PNTransition> testTransition = new ArrayList<PNTransition>();                   //
+						testTransition.add (this);                        //
 						if (p.getConnectedItems(testTransition) < 1) {          // neu
 							canfire = false;                                   // 11.5.97
 							break;                                             // JW
@@ -142,7 +142,7 @@ public class PNTransition extends PNObject
 
 					if (priorEnabled) {
 						for (int k = 0; k < p.edges.size(); k++){
-							PNEdge f = (PNEdge) p.edges.elementAt(k);
+							PNEdge f = p.edges.get (k);
 							if ((f.getTTo() == PNEdge.TRANSITION) && (index != f.getITo())
 									&& (p.getTransition(f.getITo()).priority > this.priority)
 									&& (p.getNode(f.getIFrom()).checkNode(f.getWeight())))
@@ -154,7 +154,7 @@ public class PNTransition extends PNObject
 					if (negatedEdge == false){ // System.out.println("7");
 						nodeindex = e.getIFrom();
 						int w = e.getWeight();
-						canfire = (((PNNode) p.nodes.elementAt(nodeindex)).checkNode(w))
+						canfire = (p.nodes.get (nodeindex).checkNode(w))
 						/*&& (checkTrans(p))*/;
 						if (canfire == false) break; //leave **-for-loop
 					}
@@ -185,22 +185,22 @@ public class PNTransition extends PNObject
 		if (canFire(p, priorEnabled) == true)
 		{
 			for (i=0; i<p.edges.size(); i++){
-				PNEdge e = (PNEdge) p.edges.elementAt(i);
+				PNEdge e = p.edges.get (i);
 				if (((e.getTFrom() == PNEdge.TRANSITION) && (e.getIFrom() == index))
 						|| ((e.getTTo() == PNEdge.TRANSITION) && (e.getITo() == index)))
 				{
 					
 					if (e.getTFrom() == PNEdge.NODE)
 					{  w = e.getWeight();
-					nodeindexFrom = ((PNEdge) p.edges.elementAt(i)).getIFrom();
-					((PNNode) p.nodes.elementAt(nodeindexFrom)).decTokens(w);
+					nodeindexFrom = p.edges.get (i).getIFrom();
+					p.nodes.get (nodeindexFrom).decTokens(w);
 					}
 					if (e.getTTo() == PNEdge.NODE)
 					{
 						w = e.getWeight();
-						nodeindexTo = ((PNEdge) p.edges.elementAt(i)).getITo();
-						if (e.isNegated()) ((PNNode) p.nodes.elementAt(nodeindexTo)).decTokens(1);
-						else            ((PNNode) p.nodes.elementAt(nodeindexTo)).incTokens(w);
+						nodeindexTo = p.edges.get (i).getITo();
+						if (e.isNegated()) p.nodes.get (nodeindexTo).decTokens(1);
+						else            p.nodes.get (nodeindexTo).incTokens(w);
 					}
 				}
 			}
@@ -223,7 +223,7 @@ public class PNTransition extends PNObject
 		int index = p.transitions.indexOf(this);
 		
 		for (i=0; i< p.edges.size(); i++){
-			PNEdge e = (PNEdge) p.edges.elementAt(i);
+			PNEdge e = p.edges.get (i);
 			if ((e.getTTo() == PNEdge.NODE) && (e.getIFrom() == index) && (e.getTFrom() == PNEdge.TRANSITION))
 				ret = true;
 		}

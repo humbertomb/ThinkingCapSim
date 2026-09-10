@@ -8,7 +8,7 @@ package tc.shared.world;
 
 import java.io.PrintWriter;
 import java.util.Properties;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import devices.pos.Position;
 import wucore.utils.dxf.DXFWorldFile;
@@ -39,14 +39,14 @@ public class WMZones
 	}
 	
 	public WMZones (DXFWorldFile dxf){
-		Vector entities = dxf.getEntities();
-		Vector zones = new Vector();
+		ArrayList<Entity> entities = dxf.getEntities();
+		ArrayList<PolylineDxf> zones = new ArrayList<PolylineDxf>();
 		Entity entity;
 		for(int i = 0; i<entities.size(); i++){
-			entity = (Entity)entities.get(i);
+			entity = entities.get(i);
 			if(entity.getLayer().equalsIgnoreCase("ZONES")){
 				if(entity instanceof PolylineDxf) 
-					zones.add(entity);  
+					zones.add((PolylineDxf)entity);  
 			}
 			if(entity instanceof TextDxf){
 				try{
@@ -59,7 +59,7 @@ public class WMZones
 		}
 		areas	= new WMZone[zones.size()];
 		for(int i = 0; i<zones.size(); i++){
-			areas[i] = new WMZone((PolylineDxf)zones.get(i),defTexture);
+			areas[i] = new WMZone(zones.get(i),defTexture);
 		}
 	}
 	
@@ -162,7 +162,7 @@ public class WMZones
 		
 		for (i = 0; i < areas.length; i++) 
 			if(areas[i].texture.equals(defTexture))
-				out.println ("ZONE_" + i + " = " + areas[i].area.getX()+", "+areas[i].area.getY()+", "+areas[i].area.getWidth()+", "+areas[i].area.getHeight()+", "+areas[i].label);
+				out.println ("ZONE_" + i + " = " + areas[i].pointsRawString ());
 			else
 				out.println ("ZONE_" + i + " = " + areas[i].toRawString ());
 		out.println ();		

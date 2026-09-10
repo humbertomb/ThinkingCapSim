@@ -941,7 +941,7 @@ public class LPOFSegments extends LPO implements Serializable
 				test 			= segments_LRF_RIEPFA_TEST (datos_LRF, ini, fin);
 
 				fardistance  	= test[0];											// Distancia que se aleja
-				farpoint 		= new Double(test[1]).intValue();					// Punto mas alejado
+				farpoint 		= Double.valueOf (test[1]).intValue();					// Punto mas alejado
 
 				if(fardistance < max_dist_riepfa){
 				

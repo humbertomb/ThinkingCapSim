@@ -112,19 +112,19 @@ public class HTopolMap extends Graph
 			((GNodeFL) getNode (i)).createMaps (world, fdesc, rdesc);
 	}
 						
-	public Vector getInNodesSL (String label)
+	public ArrayList<GNodeSL> getInNodesSL (String label)
 	{
 		int			i, j;
 		String		zone;
 		GNodeFL		fnode;
 		GNodeSL		snode, pnode;
 		Graph		graph;
-		Vector		in;
+		ArrayList<GNodeSL>	in;
 		
 		zone		= world.zones ().inZone (world.getPos (label));
 		fnode	= (GNodeFL) getNode (zone);
 		graph	= fnode.getGraph ();
-		in		= new Vector ();
+		in		= new ArrayList<GNodeSL> ();
 		
 		for (i = 0; i < graph.numNodes (); i++)
 		{
@@ -140,19 +140,19 @@ public class HTopolMap extends Graph
 		return in;
 	}
 	
-	public Vector getOutNodesSL (String label)
+	public ArrayList<GNodeSL> getOutNodesSL (String label)
 	{
 		int			i, j;
 		String		zone;
 		GNodeFL		fnode;
 		GNodeSL		snode;
 		Graph		graph;
-		Vector		out;
+		ArrayList<GNodeSL>	out;
 		
 		zone		= world.zones ().inZone (world.getPos (label));
 		fnode	= (GNodeFL) getNode (zone);
 		graph	= fnode.getGraph ();
-		out		= new Vector ();
+		out		= new ArrayList<GNodeSL> ();
 		
 		for (i = 0; i < graph.numNodes (); i++)
 		{
@@ -165,15 +165,15 @@ public class HTopolMap extends Graph
 		return out;
 	}
 	
-	public Vector calcPath (Point2 orig, String destlabel)
+	public ArrayList<GNode> calcPath (Point2 orig, String destlabel)
 	{
 		String zo, zd;
 		int	i,ind1, ind2;
 		GNodeFL fst_node1;
 		Graph sndgraph;
-		Vector fst_path;
-		Vector doors;
-		Vector ret_path;
+		ArrayList<GNode> fst_path;
+		ArrayList<String> doors;
+		ArrayList<GNode> ret_path;
 	
 		zo = world.zones ().inZone (orig);		
 		zd = world.zones ().inZone (world.getPos (destlabel));
@@ -193,19 +193,19 @@ public class HTopolMap extends Graph
 		
 		fst_path = calcPath (indNode (zo),indNode (zd));				
 		
-		doors = new Vector ();
+		doors = new ArrayList<String> ();
 		for (i=0; (i+1) < fst_path.size(); i++)
 		{
 			fst_node1 = (GNodeFL)fst_path.get (i);
-			doors.add (fst_node1.getDoor (((GNode) fst_path.get (i+1)).getLabel ()));
+			doors.add (fst_node1.getDoor (fst_path.get (i+1).getLabel ()));
 		}
 		
 		if (debug)
 			for (i=0; i < doors.size (); i++)
 				System.out.println (((GNodeFL)fst_path.get (i)).getLabel()+" to "+
-									((GNodeFL)fst_path.get (i+1)).getLabel()+" through "+(String)doors.get(i));
+									((GNodeFL)fst_path.get (i+1)).getLabel()+" through "+doors.get(i));
 		
-		ret_path = new Vector ();
+		ret_path = new ArrayList<GNode> ();
 		
 		
 		i = 0;
@@ -213,7 +213,7 @@ public class HTopolMap extends Graph
 		while (!fst_node1.getLabel ().equals (zd))
 		{
 		
-			ret_path.add (fst_node1.getGraph ().getNode ((String)doors.get(i)));
+			ret_path.add (fst_node1.getGraph ().getNode (doors.get(i)));
 			i++;
 			fst_node1 = (GNodeFL)fst_path.get (i);			
 		}
@@ -225,7 +225,7 @@ public class HTopolMap extends Graph
 		if (destlabel != null && doors.size () > 0)
 		{
 			sndgraph = fst_node1.getGraph ();
-			ind1 = sndgraph.indNode ((String)doors.lastElement());
+			ind1 = sndgraph.indNode (doors.get (doors.size () - 1));
 			ind2 = sndgraph.indNode(destlabel);
 			ret_path.addAll (sndgraph.calcPath (ind1,ind2));
 		}

@@ -41,7 +41,7 @@ public class Command extends List
 	public static String newid ()
 	{
 		serial ++;
-		return "fsm" + (new Integer (serial)).toString ();
+		return "fsm" + (Integer.valueOf (serial)).toString ();
 	}
 	
 	/* Accessor methods */

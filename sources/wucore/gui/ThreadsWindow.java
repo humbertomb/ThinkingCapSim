@@ -227,9 +227,9 @@ public class ThreadsWindow extends JFrame implements Runnable
 		tm = rt.totalMemory () / 1000;
 		fm = rt.freeMemory () / 1000;
 		
-		totalTF.setText (new Integer ((int) tm).toString ());
-		freeTF.setText (new Integer ((int) fm).toString ());
-		thsTF.setText (new Integer ((int) numThreads ()).toString ());
+		totalTF.setText (Integer.valueOf ((int) tm).toString ());
+		freeTF.setText (Integer.valueOf ((int) fm).toString ());
+		thsTF.setText (Integer.valueOf ((int) numThreads ()).toString ());
 		threadsTA.setText (thsToHTML ());
 	}		
 	

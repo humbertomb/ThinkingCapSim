@@ -28,9 +28,9 @@ public class BehaviourInfo implements Serializable {
 	/* The map of the behaviour's rules */
 	private HashMap rulesList;
 	/* The list containing the names of the rules */
-	private ArrayList rulesNames;
+	private ArrayList<String> rulesNames;
 	/* The map containing the parameters used by the rule sub-behaviour */
-	private HashMap rulesParameters;
+	private HashMap<String, ArrayList<String>> rulesParameters;
 	/* The output fuzzy sets of the behaviour */
 	private ControlVariables finalOutputFSets;
 	/* The max value of the antecedents of the rules */
@@ -48,8 +48,8 @@ public class BehaviourInfo implements Serializable {
 		maxAntecedentValue = -1; 
 		this.behName = behName;
 		rulesList = new HashMap();
-		rulesNames = new ArrayList();
-		rulesParameters = new HashMap();
+		rulesNames = new ArrayList<String>();
+		rulesParameters = new HashMap<String, ArrayList<String>>();
 	}
 	
 	/**
@@ -93,7 +93,7 @@ public class BehaviourInfo implements Serializable {
 	 * @param parameters the parameters used by the sub-behaviour (it can be null)
 	 */
 	public void addRule(String ruleName, double antValue, ControlVariables outputFSets,
-						String subBehaviourName, ArrayList parameters)  {
+						String subBehaviourName, ArrayList<String> parameters)  {
 		
 		/* Creates the information about the rule */
 		RuleInformation rule = new RuleInformation(ruleName,antValue,outputFSets,
@@ -136,9 +136,9 @@ public class BehaviourInfo implements Serializable {
 	 * @return the parameters used by the sub-behaviour associated to the rule
 	 * @throws IndexOutOfBoundsException if the requested rule doesn't exist
 	 */
-	public ArrayList getRuleParameters(int ruleNumber) throws IndexOutOfBoundsException {
-		String ruleName = (String) rulesNames.get(ruleNumber);
-		return (ArrayList) rulesParameters.get(ruleName);
+	public ArrayList<String> getRuleParameters(int ruleNumber) throws IndexOutOfBoundsException {
+		String ruleName = rulesNames.get(ruleNumber);
+		return rulesParameters.get(ruleName);
 	}
 	
 	/**
@@ -148,7 +148,7 @@ public class BehaviourInfo implements Serializable {
 	 * @throws IndexOutOfBoundsException if the requested rule doesn't exists
 	 */
 	public String getRuleName(int ruleNumber) throws IndexOutOfBoundsException {
-		return (String) rulesNames.get(ruleNumber);
+		return rulesNames.get(ruleNumber);
 	}
 	
 	/**
@@ -158,7 +158,7 @@ public class BehaviourInfo implements Serializable {
 	 * @throws IndexOutOfBoundsException if the requested rule doesn't exist
 	 */
 	public double getRuleAntecedentValue(int ruleNumber) throws IndexOutOfBoundsException {
-		String ruleName = (String) rulesNames.get(ruleNumber);
+		String ruleName = rulesNames.get(ruleNumber);
 		return ((RuleInformation) rulesList.get(ruleName)).getAntecedentValue();
 	}
 	
@@ -190,7 +190,7 @@ public class BehaviourInfo implements Serializable {
 	 * @throws IndexOutOfBoundsException if the requested rule doesn't exist
 	 */
 	public ControlVariables getRuleOutputFSets(int ruleNumber) throws IndexOutOfBoundsException {
-		String ruleName = (String) rulesNames.get(ruleNumber);
+		String ruleName = rulesNames.get(ruleNumber);
 		return ((RuleInformation) rulesList.get(ruleName)).getOutputFSets();
 	}
 
@@ -202,7 +202,7 @@ public class BehaviourInfo implements Serializable {
 	 * @throws IndexOutOfBoundsException if the requested rule doesn't exist
 	 */
 	public String getRuleSubBehaviour(int ruleNumber) throws IndexOutOfBoundsException {
-		String ruleName = (String) rulesNames.get(ruleNumber);
+		String ruleName = rulesNames.get(ruleNumber);
 		return ((RuleInformation) rulesList.get(ruleName)).getSubBehaviourName();
 	}
 	
@@ -232,7 +232,7 @@ class RuleInformation implements Serializable {
 	/* The rule output fuzzy sets */
 	private ControlVariables outputFSets;
 	/* The parameters used by the rule sub-behaviour */
-	private ArrayList subBehParameters;
+	private ArrayList<String> subBehParameters;
 	/* The name of the rule sub-behaviour */
 	private String subBehaviourName;
 
@@ -246,7 +246,7 @@ class RuleInformation implements Serializable {
 	 * @param subBehParameters the parameters used by the rule sub-behaviour (it can be null)
 	 */
 	public RuleInformation(String ruleName, double antValue, ControlVariables outputFSets, 
-						   String subBehaviourName, ArrayList subBehParameters)  {
+						   String subBehaviourName, ArrayList<String> subBehParameters)  {
 		this.ruleName = ruleName;
 		this.antecedentValue = antValue;
 		this.outputFSets = outputFSets;
@@ -282,7 +282,7 @@ class RuleInformation implements Serializable {
 	 * Returns the parameters used by the rule sub-behaviour.
 	 * @return the parameters used by the rule sub-behavour or null if there is no sub-behaviour.
 	 */
-	public ArrayList getSubBehParameters() {
+	public ArrayList<String> getSubBehParameters() {
 		return subBehParameters;
 	}
 	

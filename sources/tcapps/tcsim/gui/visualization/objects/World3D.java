@@ -76,15 +76,15 @@ public class World3D extends BranchGroup
 			addChild (createWaypoint (map.wps().at(i)));
 		
 		// Add doors
-		WMDoors			doors;
+		WMConnectors			doors;
 		
-		doors	= map.doors ();
+		doors	= map.connectors ();
 		for (i = 0; i < doors.n (); i++)
 		{
-//			WMDoor			door;
+//			WMConnector			door;
 //			door		= (doors.edges ())[i];
-			addChild (createDoorOrig (map.doors().at(i)));
-			addChild (createDoorDest (map.doors().at(i)));
+			addChild (createDoorOrig (map.connectors ().at(i)));
+			addChild (createDoorDest (map.connectors ().at(i)));
 		}
 	}
 	
@@ -118,7 +118,8 @@ public class World3D extends BranchGroup
 		gwall 	= new TransformGroup ();
 		pos 	= new Transform3D ();
 		pos.rotZ (af);
-		pos.setTranslation (new Vector3d (xi + xo, yi + yo, wallHeight/2.0));
+		// walls stand on their (lower) endpoint elevation
+		pos.setTranslation (new Vector3d (xi + xo, yi + yo, Math.min (line.z1 (), line.z2 ()) + wallHeight/2.0));
 		pos.setScale (1.0f);
 		gwall.setTransform (pos);
 		
@@ -165,7 +166,7 @@ public class World3D extends BranchGroup
 		yo		= (zone.area.getMaxY()-zone.area.getMinY()) /2.0;
 		zonetg	= new TransformGroup();
 		zonet	= new Transform3D();
-		zonet.setTranslation(new Vector3d(zone.area.getMinX()+xo,zone.area.getMinY()+yo,0.0f));
+		zonet.setTranslation(new Vector3d(zone.area.getMinX()+xo,zone.area.getMinY()+yo,zone.z));
 		zonetg.setTransform(zonet);
 		
 		app		= scene.getCachedTexture (zone.texture, true);		
@@ -265,11 +266,11 @@ public class World3D extends BranchGroup
 		return node;
 	}	
 	
-	protected TransformGroup createDoorOrig (WMDoor door){
-	    return createDoor(door.label,new Point3(door.edge.orig()));
+	protected TransformGroup createDoorOrig (WMConnector door){
+	    return createDoor(door.label,new Point3(door.edge.orig().x(), door.edge.orig().y(), door.edge.z1()));
 	}
-	protected TransformGroup createDoorDest (WMDoor door){
-	    return createDoor(door.label,new Point3(door.edge.orig()));
+	protected TransformGroup createDoorDest (WMConnector door){
+	    return createDoor(door.label,new Point3(door.edge.dest().x(), door.edge.dest().y(), door.edge.z2()));
 	}
 	
 	/** Adds a new door object to the universe */

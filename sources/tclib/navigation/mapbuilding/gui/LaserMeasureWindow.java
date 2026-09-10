@@ -339,7 +339,7 @@ public class LaserMeasureWindow extends Object implements Runnable
 			out.write (posy.getText()+" ");
 			out.write (posz.getText()+" ");
 			out.write (angle.getText()+" ");
-			out.write (new Integer (RAYSCAN).toString ());
+			out.write (Integer.valueOf (RAYSCAN).toString ());
 			for(i = 0; i < RAYSCAN; i++)
 				out.write (" " + format (values[i], 2));
 			out.write("\n");			

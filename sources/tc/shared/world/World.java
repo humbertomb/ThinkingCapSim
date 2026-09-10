@@ -11,7 +11,7 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
 import wucore.utils.dxf.entities.Entity;
@@ -41,16 +41,18 @@ public class World extends Object
 	// Robot starting location
 	protected double					sx;
 	protected double					sy;
+	protected double					sz;
 	protected double					sa;
 	
 	protected WMPath				path;
 	
 	// Map components
+	protected WMIcons				icons;
 	protected WMObjects			objects;
 	protected WMFAreas			fareas;
 	protected WMWalls				walls;
 	protected WMZones				zones;
-	protected WMDoors				doors;
+	protected WMConnectors			connectors;
 	
 	protected WMCBeacons			cbeacons;
 	protected WMBeacons			beacons;
@@ -82,15 +84,17 @@ public class World extends Object
 	// Robot starting location
 	public final double	 	start_x () 			{ return sx; }
 	public final double	 	start_y () 			{ return sy; }
+	public final double	 	start_z () 			{ return sz; }
 	public final double	 	start_a () 			{ return sa; }
 	
 	// World components
 	public final WMPath 			path ()				{ return path; }
 	public final WMWalls 		walls ()				{ return walls; }
 	public final WMObjects 		objects ()			{ return objects; }
+	public final WMIcons			icons ()			{ return icons; }
 	public final WMZones			zones ()				{ return zones; }
 	public final WMFAreas			fareas ()				{ return fareas; }
-	public final WMDoors			doors ()				{ return doors; }
+	public final WMConnectors	connectors ()		{ return connectors; }
 	public final WMBeacons		beacons ()			{ return beacons; }
 	public final WMCBeacons		cbeacons ()			{ return cbeacons; }
 	public final WMWaypoints	wps ()				{ return waypoints; }
@@ -121,6 +125,14 @@ public class World extends Object
 	{
 		this.sx = sx;
 		this.sy = sy;
+		this.sa = sa;
+	}
+
+	public final void setStart (double sx, double sy, double sz, double sa) 		
+	{
+		this.sx = sx;
+		this.sy = sy;
+		this.sz = sz;
 		this.sa = sa;
 	}
 	
@@ -156,7 +168,7 @@ public class World extends Object
 		case ZONE:
 			return new Point3 (zones.at (label).area.getCenterX(), zones.at (label).area.getCenterY(), 0.0);
 		case DOOR:
-			Line2 path = doors.at(label).path;
+			Line2 path = connectors.at(label).path;
 			if (zone.equals (zones.inZone(path.orig()))) return new Point3(path.orig());
 			else if (zone.equals (zones.inZone(path.dest()))) return new Point3(path.dest());
 			else System.out.println("  [World.getPos()] Warning!!! Door "+label+" no esta en zona "+zone);
@@ -171,7 +183,7 @@ public class World extends Object
 		if (waypoints.index (name) != -1)
 			return WP;	
 		
-		if (doors.index (name) != -1)
+		if (connectors.index (name) != -1)
 			return DOOR;
 		
 		if (zones.index (name) != -1)
@@ -208,22 +220,26 @@ public class World extends Object
 		path = new WMPath(dxf);
 		walls	= new WMWalls (dxf);
 		zones	= new WMZones (dxf);
-		doors	= new WMDoors (dxf);
-		objects	= new WMObjects (dxf);
+		connectors	= new WMConnectors (dxf);
+		icons	= new WMIcons ();
+		objects	= new WMObjects (dxf, icons);
+		fareas	= new WMFAreas (new Properties ());
 		
-		Vector entities = dxf.getEntities();
+		ArrayList<Entity> entities = dxf.getEntities();
 		
 		Entity entity;
 		for(int i = 0; i<entities.size(); i++){
-			entity = (Entity)entities.get(i);
+			entity = entities.get(i);
 			if(entity.getLayer().equalsIgnoreCase("OTHERS")){
 				if(entity instanceof TextDxf){ 
 					String texto = ((TextDxf)entity).getText();
 					if(texto.startsWith("START")){
 						String prop = texto.substring(texto.lastIndexOf("=")+1).trim();
 						StringTokenizer st = new StringTokenizer (prop,", \t");
+						// DXF files written by older versions carry "x, y, angle" (no z)
 						sx = Double.parseDouble (st.nextToken());
 						sy = Double.parseDouble (st.nextToken());
+						sz = (st.countTokens () >= 2) ? Double.parseDouble (st.nextToken()) : 0.0;
 						sa = Math.toRadians (Double.parseDouble (st.nextToken()));
 					}
 				}
@@ -246,18 +262,20 @@ public class World extends Object
 		if (worldprop == null)				return;
 		
 		// Read in Robot starting location (x, y, alpha)
-		prop = worldprop.getProperty ("START","0.0, 0.0, 0.0");
+		prop = worldprop.getProperty ("START","0.0, 0.0, 0.0, 0.0");
 		st = new StringTokenizer (prop,", \t");
 		sx = Double.parseDouble (st.nextToken());
 		sy = Double.parseDouble (st.nextToken());
+		sz = Double.parseDouble (st.nextToken());
 		sa = Math.toRadians (Double.parseDouble (st.nextToken()));
 		
 		path 			= new WMPath(worldprop);
 		walls			= new WMWalls (worldprop);
-		objects			= new WMObjects (worldprop);
+		icons			= new WMIcons (worldprop);
+		objects			= new WMObjects (worldprop, icons);
 		fareas			= new WMFAreas(worldprop);
 		zones			= new WMZones (worldprop);
-		doors			= new WMDoors (worldprop);
+		connectors			= new WMConnectors (worldprop);
 		waypoints		= new WMWaypoints (worldprop);
 		docks			= new WMDocks (worldprop);
 		beacons			= new WMBeacons (worldprop);		
@@ -273,14 +291,15 @@ public class World extends Object
 		worldprop = new Properties ();
 		
 		// Store Start Point
-		worldprop.setProperty ("START", sx + ", " + sy + ", " + Math.toDegrees(sa));
+		worldprop.setProperty ("START", sx + ", " + sy + ", " + sz + ", " + Math.toDegrees(sa));
 		
 		path.toProperties (worldprop);
 		walls.toProperties (worldprop);
+		icons.toProperties (worldprop);
 		objects.toProperties (worldprop);
 		zones.toProperties (worldprop);
 		fareas.toProperties(worldprop);
-		doors.toProperties (worldprop);
+		connectors.toProperties (worldprop);
 		waypoints.toProperties (worldprop);
 		docks.toProperties (worldprop);
 		beacons.toProperties (worldprop);
@@ -302,15 +321,16 @@ public class World extends Object
 		out.println("# ==============================");
 		out.println("# START POINT");
 		out.println("# ==============================");
-		out.println("START = " + sx + ", " + sy + ", " + Math.toDegrees(sa));
+		out.println("START = " + sx + ", " + sy + ", " + sz + ", " + Math.toDegrees(sa));
 		out.println("");
 		
 		path.toFile (out);
 		walls.toFile (out);
+		icons.toFile (out);
 		objects.toFile (out);
 		zones.toFile (out);
 		fareas.toFile(out);
-		doors.toFile (out);	
+		connectors.toFile (out);	
 		waypoints.toFile (out);
 		docks.toFile (out);
 		beacons.toFile(out);
@@ -332,14 +352,14 @@ public class World extends Object
 		docks.toDxfFile(dxf);
 		cbeacons.toDxfFile(dxf);
 		beacons.toDxfFile(dxf);
-		doors.toDxfFile(dxf);
+		connectors.toDxfFile(dxf);
 		// Others
 		//	  Define una capa con un color determinado (opcional)
 		dxf.addLayer(new Layer("OTHERS",ACADColor.BLUE));
 		dxf.addEntity(
 				new TextDxf(
-						"START = "+sx+", "+sy+", "+Math.toDegrees(sa),
-						new Point3(sx,sy,0.0),
+						"START = "+sx+", "+sy+", "+sz+", "+Math.toDegrees(sa),
+						new Point3(sx,sy,sz),
 						0.2,
 						"OTHERS"
 				)

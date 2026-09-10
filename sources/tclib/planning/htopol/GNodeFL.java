@@ -33,7 +33,7 @@ public class GNodeFL extends GNode
 	protected boolean								realized		= false;
 	
 	// Connectivity
-	protected Hashtable<String,Vector<String>>		doors;
+	protected Hashtable<String,ArrayList<String>>		doors;
 	
 	// Constructors
 	public GNodeFL (String label, int index, Properties props)
@@ -42,7 +42,7 @@ public class GNodeFL extends GNode
 		
 		fromProps (props, index);
 
-		doors = new Hashtable<String,Vector<String>> ();
+		doors = new Hashtable<String,ArrayList<String>> ();
 	}
 	
 	// Accessors
@@ -150,14 +150,14 @@ public class GNodeFL extends GNode
 	public void addNode (GNode a, String door)
 	{
 		String			zone;
-		Vector<String>			vector;
+		ArrayList<String>			vector;
 		
 		addNode (a);
 		
 		zone		= a.getLabel ();
 		if (!doors.containsKey (zone))
 		{		
-			vector	= new Vector<String> ();
+			vector	= new ArrayList<String> ();
 			vector.add (door);
 			doors.put (zone, vector);
 		}
@@ -165,19 +165,19 @@ public class GNodeFL extends GNode
 		{
 			vector	= doors.get (zone);
 			if (vector.indexOf (door) == -1)
-				vector.addElement (door);
+				vector.add (door);
 		}
 	}
 	
 	public String getDoor (String zone)
 	{
-		Vector		vector;
+		ArrayList<String>	vector;
 
 		vector	= doors.get (zone);
-		return (String) vector.firstElement ();
+		return vector.get (0);
 	}
 	
-	public Vector<String> getDoors (String zone)
+	public ArrayList<String> getDoors (String zone)
 	{
 		return doors.get (zone);
 	}
@@ -185,20 +185,20 @@ public class GNodeFL extends GNode
 	public void printDoors ()
 	{
 		int				i;
-		Enumeration		keys;
+		Enumeration<String>	keys;
 		String			zone;
-		Vector<String>	vector;
+		ArrayList<String>	vector;
 		
 		System.out.println ("Door list for zone <"+getLabel ()+">");
 		keys		= doors.keys ();
 		while (keys.hasMoreElements ())
 		{
-			zone		= (String) keys.nextElement ();
+			zone		= keys.nextElement ();
 			vector	= doors.get (zone);
 			
 			System.out.print ("\tTo zone <"+zone+"> through [");
 			for (i = 0; i < vector.size (); i++)
-				System.out.print ("<"+vector.elementAt (i)+">");
+				System.out.print ("<"+vector.get (i)+">");
 			System.out.println ("]");
 		}
 	}

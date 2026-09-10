@@ -678,7 +678,7 @@ public class PNEdge extends PNObject
 		if (getWeight() > 1 && isNegated() == false)
 		{
 			Point weightPos = getWeightPosition(PN);
-			model.addRawText (weightPos.x, weightPos.y, new Integer (getWeight ()).toString (), ColorTool.fromWColorToColor(color));
+			model.addRawText (weightPos.x, weightPos.y, Integer.valueOf (getWeight ()).toString (), ColorTool.fromWColorToColor(color));
 		}
 	}
 	
@@ -690,7 +690,7 @@ public class PNEdge extends PNObject
 		tFrom	= Integer.parseInt (st.nextToken());
 		iTo		= Integer.parseInt (st.nextToken());
 		tTo		= Integer.parseInt (st.nextToken());
-		negated	= new Boolean (st.nextToken()).booleanValue ();		
+		negated	= Boolean.valueOf (st.nextToken()).booleanValue ();		
 		weight	= Integer.parseInt (st.nextToken());
 		//		weight	= Double.parseDouble (st.nextToken());
 	}

@@ -56,7 +56,7 @@ public class FilterAvg extends Filter
 		} catch (Exception e) { }
 
 		// Read Filter parameters
-		try { n 			= new Integer (props.getProperty ("MEMORY")).intValue (); } catch (Exception e) 		{ n		= 4; }
+		try { n 			= Integer.valueOf (props.getProperty ("MEMORY")).intValue (); } catch (Exception e) 		{ n		= 4; }
 
 		// Create data structures
 		create (n);
@@ -76,8 +76,8 @@ public class FilterAvg extends Filter
 		FileOutputStream	stream;
 		props			= new Properties ();
 		
-		props.put ("FILTER", 			new Integer (FILTERID).toString ());
-		props.put ("MEMORY", 		new Integer (n).toString ());
+		props.put ("FILTER", 			Integer.valueOf (FILTERID).toString ());
+		props.put ("MEMORY", 		Integer.valueOf (n).toString ());
 
 		try 
 		{

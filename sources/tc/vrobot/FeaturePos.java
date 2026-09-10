@@ -43,14 +43,14 @@ public class FeaturePos extends SensorPos
 		if (buff == null)			return;
 		
    		st	= new StringTokenizer (buff, ",");
- 		try { n 	= new Integer (st.nextToken ()).intValue (); } catch (Exception e) 		{ n = 0; }
+ 		try { n 	= Integer.valueOf (st.nextToken ()).intValue (); } catch (Exception e) 		{ n = 0; }
   			
   		ndx	= new int[n];
   		wgt	= new double[n];
 		for (i = 0; i < n; i++)
 		{
- 			try { ndx[i] 	= new Integer (st.nextToken ()).intValue (); } catch (Exception e) 		{ ndx[i] = 0; }
- 			try { wgt[i] 	= new Double (st.nextToken ()).doubleValue (); } catch (Exception e) 	{ wgt[i] = 0.0; }
+ 			try { ndx[i] 	= Integer.valueOf (st.nextToken ()).intValue (); } catch (Exception e) 		{ ndx[i] = 0; }
+ 			try { wgt[i] 	= Double.valueOf (st.nextToken ()).doubleValue (); } catch (Exception e) 	{ wgt[i] = 0.0; }
 		}
 	}	
 

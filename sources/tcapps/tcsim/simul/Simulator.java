@@ -1178,7 +1178,7 @@ public class Simulator
 		
 		// Simulates picked objects by the robot
 		if (objectPicked[robotind]!=-1)
-//			((SimCargo)scene.OBJS.get(new Integer(objectPicked[robotind]))).move (data.real_x,data.real_y, data.fork, data.real_a);
+//			((SimCargo)scene.OBJS.get(Integer.valueOf (objectPicked[robotind]))).move (data.real_x,data.real_y, data.fork, data.real_a);
 			((SimCargo) scene.OBJS[objectPicked[robotind]]).move (data.real_x,data.real_y, data.fork, data.real_a);
 //		 Simulates picked pallets by the robot
 		if (palletPicked[robotind]!=null){

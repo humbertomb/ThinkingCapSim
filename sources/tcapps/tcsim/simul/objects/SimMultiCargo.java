@@ -71,7 +71,7 @@ public class SimMultiCargo extends StdThread {
 			if(!ItemPallet.strTypePallet(typepallet).equalsIgnoreCase("UNKNOWN")){
 				pt=new PalletType(typepallet,st.nextToken(),st.nextToken());
 				
-				typepallets.put(new Integer(pt.getType()),pt);	
+				typepallets.put(Integer.valueOf (pt.getType()),pt);	
 			}else{
 				System.err.println("--[SimMultiCargo] tipo de pallet desconocido "+typepallet);
 			}
@@ -91,7 +91,7 @@ public class SimMultiCargo extends StdThread {
 		PalletType		pt;
 		int 			idobject;
 
-		pt=(PalletType)typepallets.get(new Integer(typepallet));
+		pt=(PalletType)typepallets.get(Integer.valueOf (typepallet));
 		if(pt==null){
 			System.out.println("--[SimMultiCargo] Tipo de pallet desconocido "+ItemPallet.strTypePallet(typepallet));
 			return null;
@@ -117,14 +117,14 @@ public class SimMultiCargo extends StdThread {
 		
 		
 		idobject=simul.allocIcon ();
-//		pallets.put(new Integer(idobject),obj);
+//		pallets.put(Integer.valueOf (idobject),obj);
 //		OBJS[numobjects]	= obj;
 //		OBJICONS[numobjects] = ;
 
-		simul.moveIcon (idobject, obj.odesc.icon,obj.odesc.pos.x(), obj.odesc.pos.y(), obj.odesc.a);
+		simul.moveIcon (idobject, obj.odesc.getLocalIcon (),obj.odesc.pos.x(), obj.odesc.pos.y(), obj.odesc.a);
 		
 //		simul.VISDATA[numobjects]	= new VisionData ();
-//		simul.VISDATA.put(new Integer(idobject),new VisionData());
+//		simul.VISDATA.put(Integer.valueOf (idobject),new VisionData());
 
 //		numobjects++;
 		return obj;

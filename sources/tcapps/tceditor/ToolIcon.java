@@ -26,7 +26,7 @@ public class ToolIcon implements Icon
 	static public final int		OBJECT		= 4;
 	static public final int		FAREA		= 5;
 	static public final int		ZONE		= 6;
-	static public final int		DOOR		= 7;
+	static public final int		CONNECTOR		= 7;
 	static public final int		WAYPOINT	= 8;
 	static public final int		DOCK		= 9;
 	static public final int		BEACON		= 10;
@@ -41,6 +41,7 @@ public class ToolIcon implements Icon
 	static public final int		REDO		= 26;
 	static public final int		VIEW3D		= 27;
 	static public final int		ICON		= 28;
+	static public final int		NEW_ICON	= 29;
 
 	protected int				type;
 	protected int				size;
@@ -59,7 +60,10 @@ public class ToolIcon implements Icon
 		double		s = size / 22.0;
 		g.scale (s, s);
 		g.setStroke (new BasicStroke (1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-		Color		fg = ((c == null) || c.isEnabled ()) ? new Color (50, 50, 50) : new Color (160, 160, 160);	// c is null with the macOS screen menu bar
+		Color		fg = new Color (50, 50, 50);
+		// disabled buttons: paint the whole glyph faded (colours included) so the state is obvious
+		if ((c != null) && !c.isEnabled ())										// c is null with the macOS screen menu bar
+			g.setComposite (java.awt.AlphaComposite.getInstance (java.awt.AlphaComposite.SRC_OVER, 0.28f));
 		g.setColor (fg);
 
 		switch (type)
@@ -102,7 +106,7 @@ public class ToolIcon implements Icon
 			g.setStroke (new BasicStroke (1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f, new float[] { 3f, 2f }, 0f));
 			g.drawRect (3, 5, 16, 12);
 			break;
-		case DOOR:
+		case CONNECTOR:
 			g.setColor (new Color (150, 90, 30));
 			g.setStroke (new BasicStroke (3f));
 			g.drawLine (5, 16, 17, 16);
@@ -172,6 +176,14 @@ public class ToolIcon implements Icon
 			g.setColor (new Color (255, 140, 0));
 			g.setStroke (new BasicStroke (1f));
 			g.drawRect (2, 14, 5, 5);	g.drawRect (7, 4, 5, 5);	g.drawRect (12, 12, 5, 5);	g.drawRect (17, 2, 5, 5);
+			break;
+		case NEW_ICON:		// small polyline with a plus sign
+			g.setColor (new Color (255, 140, 0));
+			g.drawLine (3, 18, 7, 10);	g.drawLine (7, 10, 11, 15);
+			g.fillRect (1, 16, 4, 4);	g.fillRect (5, 8, 4, 4);	g.fillRect (9, 13, 4, 4);
+			g.setColor (new Color (30, 140, 40));
+			g.setStroke (new BasicStroke (2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawLine (16, 3, 16, 11);	g.drawLine (12, 7, 20, 7);
 			break;
 		case VIEW3D:		// isometric cube
 			g.setColor (new Color (120, 160, 220, 110));

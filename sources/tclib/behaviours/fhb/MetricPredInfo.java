@@ -6,7 +6,9 @@
  */
 package tclib.behaviours.fhb;
 
-import java.util.Vector;
+import java.util.ArrayList;
+
+import tc.shared.lps.lpo.LPO;
 
 /**
  * This class contains the information about a metric predicate, like the name
@@ -26,7 +28,7 @@ public class MetricPredInfo {
 	
 	private String predName;
 	private String metricPredicate;
-	private Vector parameters;
+	private ArrayList<LPO> parameters;
 	
 	/**
 	 * Initializes the information structure about a metric predicate.
@@ -35,7 +37,7 @@ public class MetricPredInfo {
 	public MetricPredInfo(String metricPredicate) {
 		this.metricPredicate = metricPredicate;
 		predName = null;
-		parameters = new Vector();
+		parameters = new ArrayList<LPO>();
 	}
 
 	/**
@@ -50,8 +52,8 @@ public class MetricPredInfo {
 	 * Adds a parameter needed to calculate the metric predicate
 	 * @param param the parameter
 	 */
-	public void addParameter(Object param) {
-		parameters.addElement(param);
+	public void addParameter(LPO param) {
+		parameters.add (param);
 	}
 	
 	/**
@@ -74,7 +76,7 @@ public class MetricPredInfo {
 	 * Returns the list of parameters needed to calculate the metric predicate
 	 * @return the list of parameters
 	 */
-	public Vector getParameters() {
+	public ArrayList<LPO> getParameters() {
 		return parameters;
 	}
 	

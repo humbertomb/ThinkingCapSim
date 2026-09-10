@@ -12,7 +12,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.dxf.entities.BlockDxf;
 import wucore.utils.dxf.entities.CircleDxf;
@@ -87,10 +87,10 @@ public class DXFFile{
 		ENTITIES.add(insert);
 	}
 	
-	public Vector getEntities(){
+	public ArrayList<Entity> getEntities(){
 		return ENTITIES.entities;
 	}
-	public Vector getBlocks(){
+	public ArrayList<BlockDxf> getBlocks(){
 		return BLOCKS.blocks;
 	}
 	public BlockDxf getBlocks(String name){

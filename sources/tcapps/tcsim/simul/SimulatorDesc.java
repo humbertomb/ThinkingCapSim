@@ -49,34 +49,34 @@ public class SimulatorDesc
 		double			ra = Angles.DTOR;
 
 		// Set default properties for simulated robot and environment
-		try { SENSIBSON	 	= new Double (props.getProperty ("SENSIBSON")).doubleValue (); } catch (Exception e) 				{ SENSIBSON			= 0.85; }
-		try { ERRORSON	 	= new Double (props.getProperty ("ERRORSON")).doubleValue (); } catch (Exception e) 				{ ERRORSON			= 0.05; }
-		try { RAYSON 		= new Integer (props.getProperty ("RAYSON")).intValue (); } catch (Exception e) 					{ RAYSON			= 11; }
-		try { MODESON 		= new Integer (props.getProperty ("MODESON")).intValue (); } catch (Exception e) 					{ MODESON			= Simulator.S_GEOM; }
+		try { SENSIBSON	 	= Double.valueOf (props.getProperty ("SENSIBSON")).doubleValue (); } catch (Exception e) 				{ SENSIBSON			= 0.85; }
+		try { ERRORSON	 	= Double.valueOf (props.getProperty ("ERRORSON")).doubleValue (); } catch (Exception e) 				{ ERRORSON			= 0.05; }
+		try { RAYSON 		= Integer.valueOf (props.getProperty ("RAYSON")).intValue (); } catch (Exception e) 					{ RAYSON			= 11; }
+		try { MODESON 		= Integer.valueOf (props.getProperty ("MODESON")).intValue (); } catch (Exception e) 					{ MODESON			= Simulator.S_GEOM; }
 	
-		try { ERRORIR	 	= new Double (props.getProperty ("ERRORIR")).doubleValue (); } catch (Exception e) 					{ ERRORIR			= 0.05; }
-		try { RAYIR 			= new Integer (props.getProperty ("RAYIR")).intValue (); } catch (Exception e) 						{ RAYIR				= 11; }
-		try { MODEIR 		= new Integer (props.getProperty ("MODEIR")).intValue (); } catch (Exception e) 					{ MODEIR			= Simulator.I_GEOM; }
+		try { ERRORIR	 	= Double.valueOf (props.getProperty ("ERRORIR")).doubleValue (); } catch (Exception e) 					{ ERRORIR			= 0.05; }
+		try { RAYIR 			= Integer.valueOf (props.getProperty ("RAYIR")).intValue (); } catch (Exception e) 						{ RAYIR				= 11; }
+		try { MODEIR 		= Integer.valueOf (props.getProperty ("MODEIR")).intValue (); } catch (Exception e) 					{ MODEIR			= Simulator.I_GEOM; }
 		
-		try { MODELRF 		= new Integer (props.getProperty ("MODELRF")).intValue (); } catch (Exception e) 					{ MODELRF			= Simulator.LRF_GEOM; }
-		try { ERRORLRFGAUSS	= new Double (props.getProperty ("ERRORLRFGAUSS")).doubleValue (); } catch (Exception e) 			{ ERRORLRFGAUSS		= 0.005; }
+		try { MODELRF 		= Integer.valueOf (props.getProperty ("MODELRF")).intValue (); } catch (Exception e) 					{ MODELRF			= Simulator.LRF_GEOM; }
+		try { ERRORLRFGAUSS	= Double.valueOf (props.getProperty ("ERRORLRFGAUSS")).doubleValue (); } catch (Exception e) 			{ ERRORLRFGAUSS		= 0.005; }
 
-		try { RAYRAD	 		= new Integer (props.getProperty ("RAYRAD")).intValue (); } 		catch (Exception e) 			{ RAYRAD		= 16; }
+		try { RAYRAD	 		= Integer.valueOf (props.getProperty ("RAYRAD")).intValue (); } 		catch (Exception e) 			{ RAYRAD		= 16; }
 
-		try { RAYLSB 		= new Integer (props.getProperty ("RAYLSB")).intValue (); } catch (Exception e) 					{ RAYLSB				= 360; }
-		try { MODELSB 		= new Integer (props.getProperty ("MODELSB")).intValue (); } catch (Exception e) 					{ MODELSB				= Simulator.LSB_GEOM; }
-		try { ERRORANGLELSBGAUSS = new Double (props.getProperty ("ERRORANGLELSBGAUSS")).doubleValue (); } catch (Exception e) 	{ ERRORANGLELSBGAUSS	= 0.05; }
-		try { ERRORANGLELSB		 = new Double (props.getProperty ("ERRORANGLELSB")).doubleValue (); } catch (Exception e) 		{ ERRORANGLELSB			= 0.05; }
-		try { ERRORRANGELSBGAUSS = new Double (props.getProperty ("ERRORRANGELSBGAUSS")).doubleValue (); } catch (Exception e) 	{ ERRORRANGELSBGAUSS	= 0.05; }
-		try { ERRORRANGELSB	 = new Double (props.getProperty ("ERRORRANGELSB")).doubleValue (); } catch (Exception e) 			{ ERRORRANGELSB			= 0.05; }
+		try { RAYLSB 		= Integer.valueOf (props.getProperty ("RAYLSB")).intValue (); } catch (Exception e) 					{ RAYLSB				= 360; }
+		try { MODELSB 		= Integer.valueOf (props.getProperty ("MODELSB")).intValue (); } catch (Exception e) 					{ MODELSB				= Simulator.LSB_GEOM; }
+		try { ERRORANGLELSBGAUSS = Double.valueOf (props.getProperty ("ERRORANGLELSBGAUSS")).doubleValue (); } catch (Exception e) 	{ ERRORANGLELSBGAUSS	= 0.05; }
+		try { ERRORANGLELSB		 = Double.valueOf (props.getProperty ("ERRORANGLELSB")).doubleValue (); } catch (Exception e) 		{ ERRORANGLELSB			= 0.05; }
+		try { ERRORRANGELSBGAUSS = Double.valueOf (props.getProperty ("ERRORRANGELSBGAUSS")).doubleValue (); } catch (Exception e) 	{ ERRORRANGELSBGAUSS	= 0.05; }
+		try { ERRORRANGELSB	 = Double.valueOf (props.getProperty ("ERRORRANGELSB")).doubleValue (); } catch (Exception e) 			{ ERRORRANGELSB			= 0.05; }
 
-		try { ERRORVIS	 	= new Double (props.getProperty ("ERRORVIS")).doubleValue () * ra; } catch (Exception e) 			{ ERRORVIS			= 0.0; }
+		try { ERRORVIS	 	= Double.valueOf (props.getProperty ("ERRORVIS")).doubleValue () * ra; } catch (Exception e) 			{ ERRORVIS			= 0.0; }
 		
 		try { V3DFILE		= props.getProperty("V3DFILE"); } catch (Exception e) 											{ V3DFILE = null; };
 		try { V3DLIFT		= props.getProperty("V3DLIFT"); } catch (Exception e) 											{ V3DLIFT = null; };
-		try { V3DCOLORR		= new Float (props.getProperty("V3DCOLORR")).floatValue(); } catch (Exception e)					{ V3DCOLORR = 255.0f; };
-		try { V3DCOLORG		= new Float (props.getProperty("V3DCOLORG")).floatValue(); } catch (Exception e)					{ V3DCOLORG = 0.0f;	};
-		try { V3DCOLORB		= new Float (props.getProperty("V3DCOLORB")).floatValue(); } catch (Exception e)					{ V3DCOLORB = 0.0f; };
+		try { V3DCOLORR		= Float.valueOf (props.getProperty("V3DCOLORR")).floatValue(); } catch (Exception e)					{ V3DCOLORR = 255.0f; };
+		try { V3DCOLORG		= Float.valueOf (props.getProperty("V3DCOLORG")).floatValue(); } catch (Exception e)					{ V3DCOLORG = 0.0f;	};
+		try { V3DCOLORB		= Float.valueOf (props.getProperty("V3DCOLORB")).floatValue(); } catch (Exception e)					{ V3DCOLORB = 0.0f; };
 	}
 
 	public final int 			sonar_mode ()	 		{ return MODESON; }

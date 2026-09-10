@@ -101,20 +101,20 @@ public class FusionDesc extends Object
 				
 		// Set default properties	
 		FILTERVIRTU 		= props.getProperty ("FILTERVIRTU");
-		try { MAXVIRTU	 	= new Integer (props.getProperty ("MAXVIRTU")).intValue (); } 			catch (Exception e) 	{ MAXVIRTU		= 0; }
-		try { RANGEVIRTU	= new Double (props.getProperty ("RANGEVIRTU")).doubleValue (); } 		catch (Exception e) 	{ RANGEVIRTU	= 8.0; }
-		try { CONEVIRTU	 	= new Double (props.getProperty ("CONEVIRTU")).doubleValue () * ra; }	catch (Exception e) 	{ CONEVIRTU		= 20.0 * ra; }
-		try { MODEVIRTU	 	= new Integer (props.getProperty ("MODEVIRTU")).intValue (); } 			catch (Exception e) 	{ MODEVIRTU		= V_SONAR; }
+		try { MAXVIRTU	 	= Integer.valueOf (props.getProperty ("MAXVIRTU")).intValue (); } 			catch (Exception e) 	{ MAXVIRTU		= 0; }
+		try { RANGEVIRTU	= Double.valueOf (props.getProperty ("RANGEVIRTU")).doubleValue (); } 		catch (Exception e) 	{ RANGEVIRTU	= 8.0; }
+		try { CONEVIRTU	 	= Double.valueOf (props.getProperty ("CONEVIRTU")).doubleValue () * ra; }	catch (Exception e) 	{ CONEVIRTU		= 20.0 * ra; }
+		try { MODEVIRTU	 	= Integer.valueOf (props.getProperty ("MODEVIRTU")).intValue (); } 			catch (Exception e) 	{ MODEVIRTU		= V_SONAR; }
 
-		try { MAXGROUP	 	= new Integer (props.getProperty ("MAXGROUP")).intValue (); } 			catch (Exception e) 	{ MAXGROUP		= 0; }
-		try { RANGEGROUP	= new Double (props.getProperty ("RANGEGROUP")).doubleValue (); }		catch (Exception e) 	{ RANGEGROUP	= 1.0; }
-		try { CONEGROUP	 	= new Double (props.getProperty ("CONEGROUP")).doubleValue () * ra; }	catch (Exception e) 	{ CONEGROUP		= 30.0 * ra; }
+		try { MAXGROUP	 	= Integer.valueOf (props.getProperty ("MAXGROUP")).intValue (); } 			catch (Exception e) 	{ MAXGROUP		= 0; }
+		try { RANGEGROUP	= Double.valueOf (props.getProperty ("RANGEGROUP")).doubleValue (); }		catch (Exception e) 	{ RANGEGROUP	= 1.0; }
+		try { CONEGROUP	 	= Double.valueOf (props.getProperty ("CONEGROUP")).doubleValue () * ra; }	catch (Exception e) 	{ CONEGROUP		= 30.0 * ra; }
 
-		try { RAYSCAN	 	= new Integer (props.getProperty ("RAYSCAN")).intValue (); } 			catch (Exception e) 	{ RAYSCAN		= 0; }
-		try { RANGESCAN	 	= new Double (props.getProperty ("RANGESCAN")).doubleValue (); } 		catch (Exception e) 	{ RANGESCAN		= 10.0; }
-		try { CONESCAN	 	= new Double (props.getProperty ("CONESCAN")).doubleValue () * ra; }	catch (Exception e) 	{ CONESCAN		= 180.0 * ra; }
+		try { RAYSCAN	 	= Integer.valueOf (props.getProperty ("RAYSCAN")).intValue (); } 			catch (Exception e) 	{ RAYSCAN		= 0; }
+		try { RANGESCAN	 	= Double.valueOf (props.getProperty ("RANGESCAN")).doubleValue (); } 		catch (Exception e) 	{ RANGESCAN		= 10.0; }
+		try { CONESCAN	 	= Double.valueOf (props.getProperty ("CONESCAN")).doubleValue () * ra; }	catch (Exception e) 	{ CONESCAN		= 180.0 * ra; }
 
-		try { MAXDSIG		= new Integer (props.getProperty ("MAXDSIG")).intValue (); } 			catch (Exception e) 	{ MAXDSIG		= 0; }
+		try { MAXDSIG		= Integer.valueOf (props.getProperty ("MAXDSIG")).intValue (); } 			catch (Exception e) 	{ MAXDSIG		= 0; }
 
 		virtufeat		= new SensorPos [MAXVIRTU];
 		groupfeat		= new FeaturePos [MAXGROUP];
@@ -123,52 +123,52 @@ public class FusionDesc extends Object
 		vfilter	= Filter.fromFile (FILTERVIRTU);
 		for (i = 0; i < MAXVIRTU; i++)
 		{
-			try { alpha		= new Double (props.getProperty ("virtufeat" + i)).doubleValue (); }	catch (Exception e) 	{ alpha		= 0.0; }
-			try { len		= new Double (props.getProperty ("virtulen" + i)).doubleValue (); }		catch (Exception e) 	{ len		= 0.0; }
-			try { rho		= new Double (props.getProperty ("virturho" + i)).doubleValue (); }		catch (Exception e) 	{ rho		= alpha; }
+			try { alpha		= Double.valueOf (props.getProperty ("virtufeat" + i)).doubleValue (); }	catch (Exception e) 	{ alpha		= 0.0; }
+			try { len		= Double.valueOf (props.getProperty ("virtulen" + i)).doubleValue (); }		catch (Exception e) 	{ len		= 0.0; }
+			try { rho		= Double.valueOf (props.getProperty ("virturho" + i)).doubleValue (); }		catch (Exception e) 	{ rho		= alpha; }
 			virtufeat[i]	= new SensorPos ();
 			
-			try { mode 	= new Integer (props.getProperty ("virtumode" + i)).intValue (); }			catch (Exception e) 	{ mode  	= V_UNDEF; }
+			try { mode 	= Integer.valueOf (props.getProperty ("virtumode" + i)).intValue (); }			catch (Exception e) 	{ mode  	= V_UNDEF; }
 			virtufeat[i].mode (mode);
 			virtufeat[i].set_polar (len, rho * ra, alpha * ra);			
 		}
 
 		for (i = 0; i < MAXGROUP; i++)
 		{
-			try { alpha		= new Double (props.getProperty ("groupfeat" + i)).doubleValue (); }	catch (Exception e) 	{ alpha		= 0.0; }
-			try { len		= new Double (props.getProperty ("grouplen" + i)).doubleValue (); }		catch (Exception e) 	{ len		= 0.0; }
-			try { rho		= new Double (props.getProperty ("grouprho" + i)).doubleValue (); }		catch (Exception e) 	{ rho		= alpha; }
+			try { alpha		= Double.valueOf (props.getProperty ("groupfeat" + i)).doubleValue (); }	catch (Exception e) 	{ alpha		= 0.0; }
+			try { len		= Double.valueOf (props.getProperty ("grouplen" + i)).doubleValue (); }		catch (Exception e) 	{ len		= 0.0; }
+			try { rho		= Double.valueOf (props.getProperty ("grouprho" + i)).doubleValue (); }		catch (Exception e) 	{ rho		= alpha; }
 			groupfeat[i]	= new FeaturePos ();
 			groupfeat[i].set_polar (len, rho * ra, alpha * ra);
 			
-			try { mode 	= new Integer (props.getProperty ("groupmode" + i)).intValue (); } 			catch (Exception e) 	{ mode  	= G_UNDEF; }
+			try { mode 	= Integer.valueOf (props.getProperty ("groupmode" + i)).intValue (); } 			catch (Exception e) 	{ mode  	= G_UNDEF; }
 			groupfeat[i].mode (mode);
 			groupfeat[i].set_equ (props.getProperty ("groupequ" + i));
 
-			try { base		= new Double (props.getProperty ("groupbase" + i)).doubleValue (); }	catch (Exception e) 	{ base		= 0.3; }
-			try { cone		= new Double (props.getProperty ("groupcone" + i)).doubleValue () * ra; }	catch (Exception e) { cone		= CONEGROUP; }
-			try { range		= new Double (props.getProperty ("grouprng" + i)).doubleValue (); }		catch (Exception e) 	{ range		= RANGEGROUP; }
+			try { base		= Double.valueOf (props.getProperty ("groupbase" + i)).doubleValue (); }	catch (Exception e) 	{ base		= 0.3; }
+			try { cone		= Double.valueOf (props.getProperty ("groupcone" + i)).doubleValue () * ra; }	catch (Exception e) { cone		= CONEGROUP; }
+			try { range		= Double.valueOf (props.getProperty ("grouprng" + i)).doubleValue (); }		catch (Exception e) 	{ range		= RANGEGROUP; }
 			groupfeat[i].set_shape (base, cone, range);
 		}
 
 		for (i = 0; i < MAXDSIG; i++)
 		{
-			try { alpha		= new Double (props.getProperty ("dsigfeat" + i)).doubleValue (); }		catch (Exception e) 	{ alpha		= 0.0; }
-			try { len		= new Double (props.getProperty ("dsiglen" + i)).doubleValue (); }		catch (Exception e) 	{ len		= 0.0; }
-			try { rho		= new Double (props.getProperty ("dsigrho" + i)).doubleValue (); }		catch (Exception e) 	{ rho		= alpha; }
+			try { alpha		= Double.valueOf (props.getProperty ("dsigfeat" + i)).doubleValue (); }		catch (Exception e) 	{ alpha		= 0.0; }
+			try { len		= Double.valueOf (props.getProperty ("dsiglen" + i)).doubleValue (); }		catch (Exception e) 	{ len		= 0.0; }
+			try { rho		= Double.valueOf (props.getProperty ("dsigrho" + i)).doubleValue (); }		catch (Exception e) 	{ rho		= alpha; }
 			dsigfeat[i]	= new SensorPos ();
 			
-			try { mode 	= new Integer (props.getProperty ("dsigmode" + i)).intValue (); }			catch (Exception e) 	{ mode  	= S_UNDEF; }
+			try { mode 	= Integer.valueOf (props.getProperty ("dsigmode" + i)).intValue (); }			catch (Exception e) 	{ mode  	= S_UNDEF; }
 			dsigfeat[i].mode (mode);
 			dsigfeat[i].set_polar (len, rho * ra, alpha * ra);			
 		}
 
-		try { alpha		= new Double (props.getProperty ("scanfeat")).doubleValue (); }				catch (Exception e) 	{ alpha		= 0.0; }
-		try { len		= new Double (props.getProperty ("scanlen")).doubleValue (); }				catch (Exception e) 	{ len		= 0.0; }
-		try { rho		= new Double (props.getProperty ("scanrho")).doubleValue (); }				catch (Exception e) 	{ rho		= alpha; }
+		try { alpha		= Double.valueOf (props.getProperty ("scanfeat")).doubleValue (); }				catch (Exception e) 	{ alpha		= 0.0; }
+		try { len		= Double.valueOf (props.getProperty ("scanlen")).doubleValue (); }				catch (Exception e) 	{ len		= 0.0; }
+		try { rho		= Double.valueOf (props.getProperty ("scanrho")).doubleValue (); }				catch (Exception e) 	{ rho		= alpha; }
 		scanfeat		= new SensorPos ();
 
-		try { mode 	= new Integer (props.getProperty ("scanmode")).intValue (); }					catch (Exception e) 	{ mode  	= S_UNDEF; }
+		try { mode 	= Integer.valueOf (props.getProperty ("scanmode")).intValue (); }					catch (Exception e) 	{ mode  	= S_UNDEF; }
 		scanfeat.mode (mode);
 		scanfeat.set_polar (len, rho * ra, alpha * ra);			
 	}

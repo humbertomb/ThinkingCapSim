@@ -8,10 +8,9 @@ package tc.shared.world;
 
 import java.io.PrintWriter;
 import java.util.Properties;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.DoubleFormat;
 import wucore.utils.dxf.entities.Entity;
 import wucore.utils.dxf.entities.LineDxf;
 import wucore.utils.dxf.entities.TextDxf;
@@ -26,30 +25,30 @@ import wucore.utils.geom.Point2;
  * To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-public class WMDoors
+public class WMConnectors
 {
-	protected WMDoor[]				edges;
+	protected WMConnector[]				edges;
 	
 	private double					defWidth		= 0.005;
 	private double					defHeight	= 1.90;
 	private String					defTexture	= "./conf/3dmodels/textures/wall.jpg";
 		
 	// Constructors
-	public WMDoors (Properties props)
+	public WMConnectors (Properties props)
 	{
 		fromProperties (props);
 	}
 	
-	public WMDoors (DXFWorldFile dxf)
+	public WMConnectors (DXFWorldFile dxf)
 	{
-		Vector entities = dxf.getEntities();
-		Vector doors = new Vector();
+		ArrayList<Entity> entities = dxf.getEntities();
+		ArrayList<LineDxf> doors = new ArrayList<LineDxf>();
 		Entity entity;
 		for(int i = 0; i<entities.size(); i++){
-			entity = (Entity)entities.get(i);
+			entity = entities.get(i);
 			if(entity.getLayer().equalsIgnoreCase("DOORS")){
 				if(entity instanceof LineDxf) 
-					doors.add(entity);  
+					doors.add((LineDxf)entity);  
 			}
 			if(entity instanceof TextDxf){
 				try{
@@ -66,26 +65,26 @@ public class WMDoors
 				}catch(Exception e){}
 			}
 		}
-		edges	= new WMDoor[doors.size()];
+		edges	= new WMConnector[doors.size()];
 		for(int i = 0; i<doors.size(); i++){
-			edges[i] = new WMDoor((LineDxf)doors.get(i),defWidth, defHeight, defTexture); 
+			edges[i] = new WMConnector(doors.get(i),defWidth, defHeight, defTexture); 
 		}
 	}
 	
 	// Accessors
 	public final int	 		n () 				{ return edges.length; }
-	public final WMDoor[]		edges ()				{ return edges; }
+	public final WMConnector[]		edges ()				{ return edges; }
 
 	public final String	 	defaultTexture () 	{ return defTexture; }
 
 	// Instance methods
-	public WMDoor at (int i)
+	public WMConnector at (int i)
 	{
 		if ((i < 0) || (i >= edges.length)) return null;
 		return edges[i];
 	}
 	
-	public WMDoor at (String label)
+	public WMConnector at (String label)
 	{
 		return at(index(label));
 	} 
@@ -120,7 +119,7 @@ public class WMDoors
 		int					i;
 		String				prop;
 	
-		edges	= new WMDoor[Integer.parseInt (props.getProperty ("DOORS", "0"))];
+		edges	= new WMConnector[Integer.parseInt (props.getProperty ("DOORS", "0"))];
 
 		if ((prop = props.getProperty ("DOOR_DEF_WIDTH")) != null)
 			defWidth	= Double.parseDouble (prop);
@@ -133,7 +132,7 @@ public class WMDoors
 		for (i=0; i < edges.length; i++)
 		{
 			prop		= props.getProperty ("DOOR_"+i);		
-			edges[i]	= new WMDoor (prop, defWidth, defHeight, defTexture);
+			edges[i]	= new WMConnector (prop, defWidth, defHeight, defTexture);
 		}		
 	}	
 	
@@ -164,7 +163,7 @@ public class WMDoors
 		
 		for (i = 0; i < edges.length; i++) 
 			if(edges[i].texture.equals(defTexture) && edges[i].width == defWidth && edges[i].height == defHeight)
-				out.println ("DOOR_" + i + " = " + DoubleFormat.format(edges[i].edge.orig().x())+", "+DoubleFormat.format(edges[i].edge.orig().y())+", "+DoubleFormat.format(edges[i].edge.dest().x())+", "+DoubleFormat.format(edges[i].edge.dest().y())+", "+edges[i].label+", "+DoubleFormat.format(edges[i].path.orig().x())+", "+DoubleFormat.format(edges[i].path.orig().y())+", "+DoubleFormat.format(edges[i].path.dest().x())+", "+DoubleFormat.format(edges[i].path.dest().y()));
+				out.println ("DOOR_" + i + " = " + edges[i].pointsRawString ());
 			else
 				out.println ("DOOR_" + i + " = " + edges[i].toRawString ());		
 		out.println ();		
@@ -181,26 +180,26 @@ public class WMDoors
 	}
 
 	/* Edition methods (world editor) */
-	public void add (WMDoor e)
+	public void add (WMConnector e)
 	{
-		WMDoor[]	tmp = new WMDoor[edges.length + 1];
+		WMConnector[]	tmp = new WMConnector[edges.length + 1];
 		System.arraycopy (edges, 0, tmp, 0, edges.length);
 		tmp[edges.length] = e;
 		edges = tmp;
 	}
 
-	public WMDoor remove (int i)
+	public WMConnector remove (int i)
 	{
 		if ((i < 0) || (i >= edges.length))		return null;
-		WMDoor		old = edges[i];
-		WMDoor[]	tmp = new WMDoor[edges.length - 1];
+		WMConnector		old = edges[i];
+		WMConnector[]	tmp = new WMConnector[edges.length - 1];
 		System.arraycopy (edges, 0, tmp, 0, i);
 		System.arraycopy (edges, i + 1, tmp, i, edges.length - i - 1);
 		edges = tmp;
 		return old;
 	}
 
-	public int indexOf (WMDoor e)
+	public int indexOf (WMConnector e)
 	{
 		for (int i = 0; i < edges.length; i++)
 			if (edges[i] == e)				return i;

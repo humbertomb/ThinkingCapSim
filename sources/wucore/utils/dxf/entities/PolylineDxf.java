@@ -10,7 +10,7 @@ package wucore.utils.dxf.entities;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.geom.Point3;
 
@@ -19,11 +19,11 @@ public class PolylineDxf extends Entity{
 	public Point3 maxlimit;
 	public Point3 minlimit;
 
-	public Vector vertexs;
+	public ArrayList<VertexDxf> vertexs;
 	
 	public PolylineDxf(){
 		super();
-		vertexs = new Vector();
+		vertexs = new ArrayList<VertexDxf>();
 		maxlimit = new Point3(Double.MIN_VALUE,Double.MIN_VALUE,Double.MIN_VALUE);
 		minlimit = new Point3(Double.MAX_VALUE,Double.MAX_VALUE,Double.MAX_VALUE);
 	}
@@ -44,7 +44,7 @@ public class PolylineDxf extends Entity{
 	}
 	
 	public VertexDxf getVertex(int i){
-		return (VertexDxf)vertexs.get(i);
+		return vertexs.get(i);
 	}
 	
 	public Point3 getPoint(int i){
@@ -106,7 +106,7 @@ public class PolylineDxf extends Entity{
 															//	128 = El patrón de tipo de línea se genera continuamente alrededor de los vértices de esta polilínea 
 		writeExt(out);										// Escribe propiedades Extendidas
 		for(int i = 0; i<vertexs.size(); i++)
-			((VertexDxf)vertexs.get(i)).write(out);			// Vertices de la polilinea
+			vertexs.get(i).write(out);			// Vertices de la polilinea
 		new SeqendDxf().write(out);							// Fin de Secuencia
 		
 	}
@@ -117,9 +117,9 @@ public class PolylineDxf extends Entity{
 	    LineDxf[] lines = new LineDxf[nlines];
 	    VertexDxf orig, dest;
 	    for(int i=0; i<nlines; i++){
-	        orig = (VertexDxf) vertexs.get(i);
-	        if(i+1 < nlines) 	dest =(VertexDxf) vertexs.get(i+1);
-	        else				dest = (VertexDxf) vertexs.get(0);
+	        orig = vertexs.get(i);
+	        if(i+1 < nlines) 	dest = vertexs.get(i+1);
+	        else				dest = vertexs.get(0);
 	        lines[i] = new LineDxf(orig.vertex, dest.vertex);
 	        lines[i].setEntProp(orig);
 	    }
@@ -130,7 +130,7 @@ public class PolylineDxf extends Entity{
 	public String toString()	{		
 		String ret = "POLYLINE(LAYER: '"+getLayer()+"' ID: '"+getID()+"')   "+ toExtString();
 		for(int i = 0; i<vertexs.size(); i++)
-			ret += "\n" + ((VertexDxf)vertexs.get(i)).toString();
+			ret += "\n" + vertexs.get(i).toString();
 		return ret;
 	}
 }

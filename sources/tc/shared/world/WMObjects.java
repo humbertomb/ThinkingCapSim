@@ -9,7 +9,7 @@ package tc.shared.world;
 import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.Properties;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
 import wucore.utils.dxf.entities.Entity;
@@ -29,32 +29,43 @@ public class WMObjects extends Object
 {
 	protected WMObject[]				objects;
 			
+	protected WMIcons					icons;			// Icon library the objects refer to
+			
 	// Constructors
-	public WMObjects (Properties props)
+	public WMObjects (Properties props, WMIcons icons)
 	{
+		this.icons = (icons != null) ? icons : new WMIcons ();
 		fromProperties (props);
 	}
+
+	/** Legacy: objects with inline icons and a private icon library. */
+	public WMObjects (Properties props)
+	{
+		this (props, new WMIcons ());
+	}
 	
-	public WMObjects (DXFWorldFile dxf){
-			Vector entities = dxf.getEntities();
-			Vector object = new Vector();
+	public WMObjects (DXFWorldFile dxf, WMIcons icons){
+			this.icons = (icons != null) ? icons : new WMIcons ();
+			ArrayList<Entity> entities = dxf.getEntities();
+			ArrayList<WMObject> object = new ArrayList<WMObject>();
 			Entity entity;
 			for(int i = 0; i<entities.size(); i++){
-				entity = (Entity)entities.get(i);
+				entity = entities.get(i);
 				if(entity.getLayer().equalsIgnoreCase("OBJECTS")){
 					if(entity instanceof InsertDxf) 
-						object.add(new WMObject((InsertDxf)entity, dxf.getBlocks(((InsertDxf)entity).getBlockname())));
+						object.add(new WMObject((InsertDxf)entity, dxf.getBlocks(((InsertDxf)entity).getBlockname()), this.icons));
 				}
 			}
 			objects	= new WMObject[object.size()];
 			for(int i = 0; i<object.size(); i++){
-				objects[i] = (WMObject) object.get(i);
+				objects[i] = object.get(i);
 			}
 	}
 	
 	// Accessors
 	public final int	 		n () 				{ return objects.length; }
 	public final WMObject[]	object ()			{ return objects; }
+	public final WMIcons		icons ()			{ return icons; }
 	
 	// Instance methods
 	public WMObject at (int i)
@@ -74,7 +85,7 @@ public class WMObjects extends Object
 		for (int i = 0; i < objects.length; i++)
 		{
 			prop = props.getProperty ("OBJECT_"+i);		
-			objects[i] = new WMObject (prop);
+			objects[i] = new WMObject (prop, icons);
 		}
 	}
 	
@@ -130,16 +141,16 @@ public class WMObjects extends Object
 		
 		for (i = 0; i < objects.length; i++)
 			if(objects[i].visible)
-				for( j=0; j<objects[i].icon.length; j++)
+				for( j=0; j<objects[i].absIcon ().length; j++)
 				{
-					pt = objects[i].icon[j].intersection (x1, y1, x2, y2);
+					pt = objects[i].absIcon ()[j].intersection (x1, y1, x2, y2);
 					if (pt != null)
 					{
 						d1 = pt.distance (x1, y1);
 						if (d1 < d)
 						{
 							d 	= d1;
-							cln	= objects[i].icon[j];
+							cln	= objects[i].absIcon ()[j];
 						}
 					}
 				}
@@ -162,12 +173,12 @@ public class WMObjects extends Object
 		d = Double.MAX_VALUE;
 		for (i = 0; i < objects.length; i++)
 			if(objects[i].visible)
-				for( j=0; j<objects[i].icon.length; j++)
+				for( j=0; j<objects[i].absIcon ().length; j++)
 				{
-					len = objects[i].icon[j].distance (x1, y1);
+					len = objects[i].absIcon ()[j].distance (x1, y1);
 					if (len < d)
 					{
-						tmp = objects[i].icon[j];
+						tmp = objects[i].absIcon ()[j];
 						d = len;
 					}
 				}
@@ -176,13 +187,13 @@ public class WMObjects extends Object
 	}
 	
 	public Line2[] getLines(){
-		LinkedList lines;
-		lines = new LinkedList();
+		LinkedList<Line2> lines;
+		lines = new LinkedList<Line2>();
 		for(int i=0; i<objects.length; i++)
 			if(objects[i].visible)
-				for(int j=0; j<objects[i].icon.length; j++)
-					lines.add(objects[i].icon[j]);
-		return ((Line2[]) lines.toArray(new Line2[0]));
+				for(int j=0; j<objects[i].absIcon ().length; j++)
+					lines.add(objects[i].absIcon ()[j]);
+		return (lines.toArray(new Line2[0]));
 	}
 
 	/* Edition methods (world editor) */

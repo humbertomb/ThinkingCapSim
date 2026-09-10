@@ -23,11 +23,13 @@ public class WMFArea extends WMElement
 		
 		st		= new StringTokenizer (prop,", \t");
 		npoints	= Integer.parseInt(st.nextToken());
+		double				z1;
 		for (int i = 0; i < npoints; i++)
 		{
 			x1	= Double.parseDouble (st.nextToken());
 			y1	= Double.parseDouble (st.nextToken());
-			polygon.addPoint(x1, y1);
+			z1	= Double.parseDouble (st.nextToken());
+			polygon.addPoint(x1, y1, z1);
 		}
 		
 		label	= st.nextToken();
@@ -40,14 +42,7 @@ public class WMFArea extends WMElement
 	// Instance methods
 	public String toRawString ()
 	{
-		String rname = new String(Integer.toString(polygon.npoints));
-		for(int i = 0; i < polygon.npoints; i++)
-		{
-			rname = rname.concat(", " + polygon.xpoints[i] + ", " + polygon.ypoints[i]);
-		}
-		rname = rname.concat(", ").concat(label).concat(", ").concat(texture);
-		
-		return rname;
+		return toRawString2 ().concat(", ").concat(texture);
 	}
 	
 	public String toRawString2 ()
@@ -55,7 +50,7 @@ public class WMFArea extends WMElement
 		String rname = new String(Integer.toString(polygon.npoints));
 		for(int i = 0; i < polygon.npoints; i++)
 		{
-			rname = rname.concat(", " + polygon.xpoints[i] + ", " + polygon.ypoints[i]);
+			rname = rname.concat(", " + polygon.xpoints[i] + ", " + polygon.ypoints[i] + ", " + polygon.zpoints[i]);
 		}
 		rname = rname.concat(", ").concat(label);
 		

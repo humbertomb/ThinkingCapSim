@@ -5,7 +5,7 @@
 
 package tclib.utils.graphs;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 public class GNode extends Object
 {
@@ -13,8 +13,8 @@ public class GNode extends Object
 	protected	String 		name;   		// Nombre del Node
 	protected	int			index;		// Numero identificativo del Node
 	
-	protected	Vector  		list;  		// Lista de Adyacencia
-	protected	Vector		pesos;		// Lista de Pesos
+	protected	ArrayList<Integer>	list;  		// Lista de Adyacencia
+	protected	ArrayList<Integer>	pesos;		// Lista de Pesos
 	protected	int			nList;		// Numero de elementos en la Lista
 	
 	
@@ -23,8 +23,8 @@ public class GNode extends Object
 	{
 		index 		= -1;        
 		name 		= new String("Node"+index);
-		list 		= new Vector();
-		pesos		= new Vector();
+		list 		= new ArrayList<Integer>();
+		pesos		= new ArrayList<Integer>();
 		nList 		= 0;            
 	}
 	
@@ -136,10 +136,10 @@ public class GNode extends Object
 	public boolean addNode(int nodo, int peso)
 	{
 		for(int i=0;i<nList;i++) 
-			if(((Integer)list.get(i)).intValue() == nodo)	return(false);	// Comprueba si no esta ya metido
+			if(list.get(i).intValue() == nodo)	return(false);	// Comprueba si no esta ya metido
 			
-		list.addElement(new Integer(nodo));
-		pesos.addElement(new Integer(peso));	
+		list.add (Integer.valueOf (nodo));
+		pesos.add (Integer.valueOf (peso));	
 		nList++;
 		return (true);
 	}
@@ -153,7 +153,7 @@ public class GNode extends Object
 	{
 		try
 		{
-			return( ((Integer)list.get(index)).intValue() );
+			return( list.get(index).intValue() );
 		}catch(Exception e){return -1;}
 	}
 	
@@ -165,7 +165,7 @@ public class GNode extends Object
 	{
 		try
 		{
-			return( ((Integer)pesos.get(index)).intValue() );
+			return( pesos.get(index).intValue() );
 		}catch(Exception e){return -1;}
 	}
 	

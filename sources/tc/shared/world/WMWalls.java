@@ -8,10 +8,9 @@ package tc.shared.world;
 
 import java.io.PrintWriter;
 import java.util.Properties;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.DoubleFormat;
 import wucore.utils.dxf.entities.Entity;
 import wucore.utils.dxf.entities.LineDxf;
 import wucore.utils.dxf.entities.PolylineDxf;
@@ -52,20 +51,20 @@ public class WMWalls extends Object
 	
 	public WMWalls (DXFWorldFile dxf)
 	{
-		Vector entities = dxf.getEntities();
-		Vector walls = new Vector();
+		ArrayList<Entity> entities = dxf.getEntities();
+		ArrayList<LineDxf> walls = new ArrayList<LineDxf>();
 		Entity entity;
 		
 		// Se guardan las lineas de la Capa 0 (lineas de Wall) en un vector y se leen las propiedades por defecto
 		for(int i = 0; i<entities.size(); i++){
-			entity = (Entity)entities.get(i);
+			entity = entities.get(i);
 			if(entity.getLayer().equalsIgnoreCase("0")){
 				if(entity instanceof LineDxf){
-				  walls.add(entity);
+				  walls.add((LineDxf)entity);
 				}
 				else if(entity instanceof PolylineDxf){
 				    LineDxf[] poly = ((PolylineDxf)entity).toDxfLines();
-				    walls.add(poly);
+				    for(int j = 0; j<poly.length; j++) walls.add(poly[j]);
 				}
 			}
 			if(entity instanceof TextDxf){
@@ -87,7 +86,7 @@ public class WMWalls extends Object
 		// Se generan las lineas Wall (WMWall)
 		edges	= new WMWall[walls.size()];
 		for(int i = 0; i<walls.size(); i++){
-			edges[i] = new WMWall((LineDxf)walls.get(i),defWidth, defHeight, defTexture);
+			edges[i] = new WMWall(walls.get(i),defWidth, defHeight, defTexture);
 			update(edges[i].edge);
 		}
 	}
@@ -181,7 +180,7 @@ public class WMWalls extends Object
 		
 		for (i = 0; i < edges.length; i++){ 
 			if(edges[i].texture.equals(defTexture) && edges[i].width == defWidth && edges[i].height == defHeight)
-				out.println ("LINE_" + i + " = " + DoubleFormat.format(edges[i].edge.orig().x())+", "+DoubleFormat.format(edges[i].edge.orig().y())+", "+DoubleFormat.format(edges[i].edge.dest().x())+", "+DoubleFormat.format(edges[i].edge.dest().y()));
+				out.println ("LINE_" + i + " = " + edges[i].pointsRawString ());
 			else
 				out.println ("LINE_" + i + " = " + edges[i].toRawString ());
 		}

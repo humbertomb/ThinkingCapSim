@@ -95,12 +95,12 @@ public abstract class RobotModel extends Object
 	// Instance methods
 	public void update (Properties props)
 	{
-		try { Vmax	 	= new Double (props.getProperty ("VMAX")).doubleValue (); } 				catch (Exception e) 		{ }
-		try { Rmax	 	= new Double (props.getProperty ("RMAX")).doubleValue () * Angles.DTOR; } 	catch (Exception e) 		{ }
+		try { Vmax	 	= Double.valueOf (props.getProperty ("VMAX")).doubleValue (); } 				catch (Exception e) 		{ }
+		try { Rmax	 	= Double.valueOf (props.getProperty ("RMAX")).doubleValue () * Angles.DTOR; } 	catch (Exception e) 		{ }
 
-		try { odom_et 	= new Double (props.getProperty ("ODOM_ET")).doubleValue (); }				catch (Exception e)		{ }
-		try { odom_er 	= new Double (props.getProperty ("ODOM_ER")).doubleValue (); }				catch (Exception e)		{ }
-		try { odom_bias 	= new Double (props.getProperty ("ODOM_BIAS")).doubleValue (); } 			catch (Exception e)		{ }
+		try { odom_et 	= Double.valueOf (props.getProperty ("ODOM_ET")).doubleValue (); }				catch (Exception e)		{ }
+		try { odom_er 	= Double.valueOf (props.getProperty ("ODOM_ER")).doubleValue (); }				catch (Exception e)		{ }
+		try { odom_bias 	= Double.valueOf (props.getProperty ("ODOM_BIAS")).doubleValue (); } 			catch (Exception e)		{ }
 	}
 	
 	public void position (RobotData data, double x, double y, double alpha)

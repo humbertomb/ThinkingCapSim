@@ -311,33 +311,33 @@ public class RobotDataFrame extends MonitorFrame
 		renderer.setRobotData(data);
 
 		// Read odometry data
-		tmp = sx = new Double (data.odom_x).toString ();
+		tmp = sx = Double.valueOf (data.odom_x).toString ();
 		if (((ndx = tmp.indexOf (".")) != 0) && (tmp.length () >= ndx + 4))		
 			sx = tmp.substring (0, ndx + 4);
 		
-		tmp = sy = new Double (data.odom_y).toString ();
+		tmp = sy = Double.valueOf (data.odom_y).toString ();
 		if (((ndx = tmp.indexOf (".")) != 0) && (tmp.length () >= ndx + 4))		
 			sy = tmp.substring (0, ndx + 4);
 		
 		odomposLabel.setText(sx+", "+sy);
 		
-		tmp = sa = new Double (data.odom_a ).toString ();
+		tmp = sa = Double.valueOf (data.odom_a ).toString ();
 		if (((ndx = tmp.indexOf (".")) != 0) && (tmp.length () >= ndx + 2))		
 			sa = tmp.substring (0, ndx + 2);
 			
 		odomaLabel.setText(sa);
 			
-		tmp = sx = new Double (data.real_x).toString ();
+		tmp = sx = Double.valueOf (data.real_x).toString ();
 		if (((ndx = tmp.indexOf (".")) != 0) && (tmp.length () >= ndx + 4))		
 			sx = tmp.substring (0, ndx + 4);
 		
-		tmp = sy = new Double (data.real_y).toString ();
+		tmp = sy = Double.valueOf (data.real_y).toString ();
 		if (((ndx = tmp.indexOf (".")) != 0) && (tmp.length () >= ndx + 4))		
 			sy = tmp.substring (0, ndx + 4);
 		
 		realposLabel.setText(sx+", "+sy);
 
-		tmp = sa = new Double (data.real_a ).toString ();
+		tmp = sa = Double.valueOf (data.real_a ).toString ();
 		if (((ndx = tmp.indexOf (".")) != 0) && (tmp.length () >= ndx + 2))		
 			sa = tmp.substring (0, ndx + 2);
 			
@@ -345,13 +345,13 @@ public class RobotDataFrame extends MonitorFrame
 		
 		// Read other data
 		
-/*		tmp = new Double (data.turn ).toString ();
+/*		tmp = Double.valueOf (data.turn ).toString ();
 		if (((ndx = tmp.indexOf (".")) != 0) && (tmp.length () >= ndx + 2))		
 			sa = tmp.substring (0, ndx + 2);
 		
 		turnLabel.setText(sa);
 
-		tmp = new Double (data.speed ).toString ();
+		tmp = Double.valueOf (data.speed ).toString ();
 		if (((ndx = tmp.indexOf (".")) != 0) && (tmp.length () >= ndx + 2))		
 			sa = tmp.substring (0, ndx + 2);
 		

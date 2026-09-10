@@ -20,7 +20,12 @@ import wucore.utils.geom.Point3;
  * To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-public class WMDoor extends WMElement
+/** A connector between two zones (a door, a gate, an opening...): the physical opening and the path to cross it. */
+/**
+ * A connector between two zones (a door, a gate, an opening...): the physical
+ * opening (edge) and the segment to cross it (path). Kept as DOOR_i in the files.
+ */
+public class WMConnector extends WMElement
 {
     // 2D components
     public Line2					edge;		// Physical location of the door
@@ -34,33 +39,35 @@ public class WMDoor extends WMElement
     public String				texture;					
     
     // Constructors
-    public WMDoor (String prop, double dwidth, double dheight, String dtexture)
+    public WMConnector (String prop, double dwidth, double dheight, String dtexture)
     {
         StringTokenizer		st;
-        double				x1, x2, y1, y2;
-        double				px1, px2, py1, py2;
+        double				x1, x2, y1, y2, z1, z2;
+        double				px1, px2, py1, py2, pz1, pz2;
         
         st		= new StringTokenizer (prop,", \t");
         x1		= Double.parseDouble (st.nextToken());
         y1		= Double.parseDouble (st.nextToken());
+        z1		= Double.parseDouble (st.nextToken());
         x2		= Double.parseDouble (st.nextToken());
         y2		= Double.parseDouble (st.nextToken());
+        z2		= Double.parseDouble (st.nextToken());
         label	= st.nextToken(); 
-        edge		= new Line2 (x1, y1, x2, y2);
+        edge		= new Line2 (x1, y1, z1, x2, y2, z2);
         
-        px1		= x1;
-        py1		= y1;
-        px2		= x2;
-        py2		= y2;
+        px1		= x1;	py1		= y1;	pz1		= z1;
+        px2		= x2;	py2		= y2;	pz2		= z2;
         
         if (st.hasMoreTokens())
         {
             px1		= Double.parseDouble (st.nextToken());
             py1		= Double.parseDouble (st.nextToken());
+            pz1		= Double.parseDouble (st.nextToken());
             px2		= Double.parseDouble (st.nextToken());
             py2		= Double.parseDouble (st.nextToken());
+            pz2		= Double.parseDouble (st.nextToken());
         }
-        path		= new Line2 (px1, py1, px2, py2);
+        path		= new Line2 (px1, py1, pz1, px2, py2, pz2);
         
         height	= dheight;
         width	= dwidth;
@@ -76,15 +83,15 @@ public class WMDoor extends WMElement
             texture	= st.nextToken();
     }
     
-    public WMDoor(){
+    public WMConnector(){
     }
     
-    public WMDoor(LineDxf line,double dwidth, double dheight, String dtexture) {
+    public WMConnector(LineDxf line,double dwidth, double dheight, String dtexture) {
         texture = dtexture;
         width = dwidth;
         height = dheight;
         
-        path = new Line2(line.getStart().x(),line.getStart().y(),line.getEnd().x(),line.getEnd().y());
+        path = new Line2(line.getStart().x(),line.getStart().y(),line.getStart().z(),line.getEnd().x(),line.getEnd().y(),line.getEnd().z());
         if(line.ExtendedText.size()>0) label = line.getExtText(0);
         else									label = "DOOR_?";
         if(line.ExtendedText.size()>1){
@@ -112,7 +119,19 @@ public class WMDoor extends WMElement
     // Instance methods
     public String toRawString ()
     {
-        return DoubleFormat.format(edge.orig().x())+", "+DoubleFormat.format(edge.orig().y())+", "+DoubleFormat.format(edge.dest().x())+", "+DoubleFormat.format(edge.dest().y())+", "+label+", "+DoubleFormat.format(path.orig().x())+", "+DoubleFormat.format(path.orig().y())+", "+DoubleFormat.format(path.dest().x())+", "+DoubleFormat.format(path.dest().y())+", "+DoubleFormat.format(width)+", "+DoubleFormat.format(height)+", "+texture;
+        return pointsRawString ()+", "+DoubleFormat.format(width)+", "+DoubleFormat.format(height)+", "+texture;
+    }
+
+    /** "x1, y1, z1, x2, y2, z2, label, px1, py1, pz1, px2, py2, pz2" */
+    public String pointsRawString ()
+    {
+        return line3 (edge)+", "+label+", "+line3 (path);
+    }
+
+    static String line3 (Line2 l)
+    {
+        return DoubleFormat.format(l.orig().x())+", "+DoubleFormat.format(l.orig().y())+", "+DoubleFormat.format(l.z1())
+             +", "+DoubleFormat.format(l.dest().x())+", "+DoubleFormat.format(l.dest().y())+", "+DoubleFormat.format(l.z2());
     }
     
 }

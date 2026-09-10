@@ -99,7 +99,7 @@ public class SimScene
 			
 			OBJS[i]	= obj;
 			OBJICONS[i] = simul.allocIcon ();
-			simul.moveIcon (OBJICONS[i], obj.odesc.icon,obj.odesc.pos.x(), obj.odesc.pos.y(), obj.odesc.a);
+			simul.moveIcon (OBJICONS[i], obj.odesc.getLocalIcon (),obj.odesc.pos.x(), obj.odesc.pos.y(), obj.odesc.a);
 			
 			simul.VISDATA[i]	= new VisionData ();		// ESTO SERIA INTERESANTE INICIALIZARLO	
 		}	
@@ -149,7 +149,7 @@ public class SimScene
 						dist		= wall.distance (OBJS[i].odesc.pos.x(),OBJS[i].odesc.pos.y());
 						
 						if (dist > mobj.radius)
-							simul.moveIcon (OBJICONS[i], OBJS[i].odesc.icon,OBJS[i].odesc.pos.x(),OBJS[i].odesc.pos.y(),OBJS[i].odesc.a);	
+							simul.moveIcon (OBJICONS[i], OBJS[i].odesc.getLocalIcon (),OBJS[i].odesc.pos.x(),OBJS[i].odesc.pos.y(),OBJS[i].odesc.a);	
 						else 		// Collision with another object
 						{
 							robot	= simul.collisionIcon (wall);

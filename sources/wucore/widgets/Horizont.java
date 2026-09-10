@@ -152,7 +152,7 @@ public class Horizont extends Gauge
 		if (box)
 		{
 			g.setColor (this.getForeground ());
-			g.drawString (new Integer ((int) Math.round (pitch * Angles.RTOD)).toString (), ow+tw, oh + mh + 2*qh);
+			g.drawString (Integer.valueOf ((int) Math.round (pitch * Angles.RTOD)).toString (), ow+tw, oh + mh + 2*qh);
 		}		
 	}
 }

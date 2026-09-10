@@ -127,7 +127,7 @@ public class Gauge extends JComponent
 			g.fillRect (ow+tw, oh+mh + qh, tw, 2*qh);
 			g.setColor (this.getForeground ());
 			g.drawRect (ow+tw, oh+mh + qh, tw, 2*qh);
-			g.drawString (new Integer ((int) Math.round (value)).toString (), ow + tw + 5, oh + mh + 2*qh + 5);
+			g.drawString (Integer.valueOf ((int) Math.round (value)).toString (), ow + tw + 5, oh + mh + 2*qh + 5);
 		}
 		
 		// Draw gauge arrow/pointer

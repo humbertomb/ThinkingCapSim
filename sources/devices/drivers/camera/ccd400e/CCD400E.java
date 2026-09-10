@@ -137,7 +137,7 @@ public class CCD400E extends Camera
     
     public Collection getCommandGroups()
     {
-		Vector groups= new Vector();
+		ArrayList<String> groups= new ArrayList<String>();
 	
 		Enumeration en;
 		ComandoCCD400E comando;

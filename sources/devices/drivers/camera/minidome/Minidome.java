@@ -222,7 +222,7 @@ public class Minidome extends Camera
 
 	public Collection getCommandGroups()
 	{
-		Vector groups = new Vector();
+		ArrayList<String> groups = new ArrayList<String>();
 		Collection allComs;
 		Comando command;
 		Iterator it;

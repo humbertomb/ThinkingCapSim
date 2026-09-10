@@ -24,7 +24,7 @@ public class RuleSet {
 	/* A map with the rules */
 	private HashMap rules;
 	/* A list including the rules names*/
-	private ArrayList rulesNames;
+	private ArrayList<String> rulesNames;
 	/* It's needed only to merge the results of the rules evaluations */
 	private ControlVariables cv;
 	
@@ -33,7 +33,7 @@ public class RuleSet {
 	 */
 	public RuleSet() {
 		rules = new HashMap();
-		rulesNames = new ArrayList();
+		rulesNames = new ArrayList<String>();
 	    cv = new ControlVariables();
 	}
 	
@@ -41,7 +41,7 @@ public class RuleSet {
 	 * Returns a list including the names of the rules included in the rule set
 	 * @return a list including the names of the rules included in the rule set
 	 */
-	public ArrayList getRulesNames() {
+	public ArrayList<String> getRulesNames() {
 		return rulesNames;
 	}
 	
@@ -70,7 +70,7 @@ public class RuleSet {
 		/* initialize the output sets */
 		cv.clearOutputFSets();
 		for (int i=0; i < rules.size(); i++) {
-			ruleName = (String) rulesNames.get(i);
+			ruleName = rulesNames.get(i);
 			cv.unionOutputFSets((ControlVariables)((Rule)rules.get(ruleName)).evaluate(antecedentsValue));
 		}
 			

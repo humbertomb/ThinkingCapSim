@@ -59,7 +59,7 @@ public class FilterFuzzy extends Filter
 			istream.close ();
 		} catch (Exception e) { }
 		
-		props.put ("FILTER", 			new Integer (FILTERID).toString ());
+		props.put ("FILTER", 			Integer.valueOf (FILTERID).toString ());
 
 		// Save Filter Preferences
 		try 

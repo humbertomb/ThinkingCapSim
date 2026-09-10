@@ -33,8 +33,9 @@ import javax.swing.SwingUtilities;
 import tc.shared.world.WMBeacon;
 import tc.shared.world.WMCBeacon;
 import tc.shared.world.WMDock;
-import tc.shared.world.WMDoor;
+import tc.shared.world.WMConnector;
 import tc.shared.world.WMFArea;
+import tc.shared.world.WMIcon;
 import tc.shared.world.WMObject;
 import tc.shared.world.WMWall;
 import tc.shared.world.WMWaypoint;
@@ -64,7 +65,7 @@ public class WorldCanvas extends JPanel
 	static public final int		T_OBJECT	= 4;
 	static public final int		T_FAREA		= 5;
 	static public final int		T_ZONE		= 6;
-	static public final int		T_DOOR		= 7;
+	static public final int		T_CONNECTOR		= 7;
 	static public final int		T_WAYPOINT	= 8;
 	static public final int		T_DOCK		= 9;
 	static public final int		T_BEACON	= 10;
@@ -84,6 +85,8 @@ public class WorldCanvas extends JPanel
 		public void worldPreview ();
 		/** The canvas wants to switch to another tool (e.g. double click on an object → icon tool). */
 		public void toolRequested (int tool);
+		/** How to use the current tool (shown right-aligned in the status bar). */
+		public void usageChanged (String text);
 	}
 
 	/* Colours */
@@ -97,8 +100,8 @@ public class WorldCanvas extends JPanel
 	static private final Color		C_FAREA_B	= new Color (200, 40, 40);
 	static private final Color		C_PATH		= new Color (0, 170, 200);
 	static private final Color		C_WALL		= Color.BLACK;
-	static private final Color		C_DOOR		= new Color (150, 90, 30);
-	static private final Color		C_DOORP		= new Color (40, 170, 40);
+	static private final Color		C_CONN		= new Color (150, 90, 30);
+	static private final Color		C_CONNP		= new Color (40, 170, 40);
 	static private final Color		C_BEACON	= new Color (200, 0, 200);
 	static private final Color		C_WP		= new Color (30, 80, 220);
 	static private final Color		C_DOCK		= new Color (0, 140, 60);
@@ -197,6 +200,7 @@ public class WorldCanvas extends JPanel
 		selection = item;
 		repaint ();
 		if (listener != null)		listener.selectionChanged (item);
+		showUsage ();
 	}
 
 	public void setTool (int tool)
@@ -205,9 +209,11 @@ public class WorldCanvas extends JPanel
 		polyPoints.clear ();
 		iconVertex	= -1;
 		iconSegment	= -1;
+		awaitingAnchor	= false;
 		setCursor ((tool == T_PAN) ? Cursor.getPredefinedCursor (Cursor.MOVE_CURSOR)
 				: (tool == T_SELECT) ? Cursor.getDefaultCursor () : Cursor.getPredefinedCursor (Cursor.CROSSHAIR_CURSOR));
 		repaint ();
+		showUsage ();
 	}
 
 	public void setGridVisible (boolean b)			{ showGrid = b; repaint (); }
@@ -270,6 +276,13 @@ public class WorldCanvas extends JPanel
 	public void deleteSelection ()
 	{
 		if (selection == null)			return;
+		if ((selection.kind == WorldItem.ICON) && (WorldEdit.iconUsers (world, world.icons ().at (selection.index).label) > 0))
+		{
+			javax.swing.JOptionPane.showMessageDialog (this, "Icon '" + world.icons ().at (selection.index).label + "' is used by "
+					+ WorldEdit.iconUsers (world, world.icons ().at (selection.index).label) + " object(s) and cannot be deleted.",
+					"Delete icon", javax.swing.JOptionPane.WARNING_MESSAGE);
+			return;
+		}
 		if (WorldEdit.remove (world, selection))
 		{
 			String	what = "Delete " + WorldItem.NAMES[selection.kind].toLowerCase ();
@@ -388,7 +401,7 @@ public class WorldCanvas extends JPanel
 			onIconPress (e, tol);
 			break;
 		case T_WALL:
-		case T_DOOR:
+		case T_CONNECTOR:
 		case T_ZONE:
 			dragMode = 4;
 			break;
@@ -478,17 +491,8 @@ public class WorldCanvas extends JPanel
 			repaint ();
 			break;
 		case 5:		// drag icon vertex
-		{
-			WMObject	o = selectedObject ();
-			if (o != null)
-			{
-				WorldEdit.moveIconVertex (o, iconVertex, snap (nx), snap (ny));
-				dragged = true;
-				repaint ();
-				if (listener != null)		listener.worldPreview ();
-			}
+			onIconDrag (nx, ny);
 			break;
-		}
 		}
 		lastPx	= e.getPoint ();
 		curX	= nx;
@@ -513,16 +517,8 @@ public class WorldCanvas extends JPanel
 			if (dragged)		changed ("Edit icon");
 			break;
 		case 6:
-		{
-			WMObject	o = selectedObject ();
-			if ((o != null) && (Math.hypot (nx - anchorX, ny - anchorY) > 1e-6))
-			{
-				WorldEdit.addIconSegment (o, anchorX, anchorY, nx, ny);
-				iconVertex = WorldEdit.pickIconVertex (o, nx, ny, WorldEdit.ICON_EPS * 10);
-				changed ("Add icon segment");
-			}
+			onIconSegmentRelease (nx, ny);
 			break;
-		}
 		case 4:
 		{
 			double	len = Math.hypot (nx - anchorX, ny - anchorY);
@@ -531,7 +527,7 @@ public class WorldCanvas extends JPanel
 				WorldItem	it = null;
 				String		what = null;
 				if (tool == T_WALL)			{ it = WorldEdit.addWall (world, anchorX, anchorY, nx, ny);		what = "Add wall"; }
-				else if (tool == T_DOOR)	{ it = WorldEdit.addDoor (world, anchorX, anchorY, nx, ny);		what = "Add door"; }
+				else if (tool == T_CONNECTOR)	{ it = WorldEdit.addConnector (world, anchorX, anchorY, nx, ny);		what = "Add connector"; }
 				else if ((tool == T_ZONE) && (Math.abs (nx - anchorX) > 1e-6) && (Math.abs (ny - anchorY) > 1e-6))
 											{ it = WorldEdit.addZone (world, anchorX, anchorY, nx, ny);		what = "Add zone"; }
 				if (it != null)
@@ -623,19 +619,41 @@ public class WorldCanvas extends JPanel
 		String	s = "x = " + WorldEdit.fmt (curX) + " m,  y = " + WorldEdit.fmt (curY) + " m";
 		if (world.zones ().n () > 0)		s += "   |   zone: " + world.zones ().inZone (curX, curY);
 		s += "   |   grid " + WorldEdit.fmt (gridStep) + " m";
-		if (tool == T_ICON)
-		{
-			if (selectedObject () == null)
-				s += "   |   ICON: click an object to edit its icon";
-			else
-				s += "   |   ICON: drag vertices, click a segment to insert a vertex, drag on empty space (or Shift+drag from a vertex) to add a segment, "
-				   + "right click / Del removes a vertex, Esc finishes";
-		}
-		else if (tool == T_FAREA)
-			s += "   |   click to add vertices, double-click / Enter to close the area, Esc to cancel";
-		else if ((tool == T_WALL) || (tool == T_DOOR) || (tool == T_ZONE))
-			s += "   |   drag to draw, right click to go back to selection";
 		status (s);
+		showUsage ();
+	}
+
+	/** Usage hint of the current tool (and its state), for the status bar. */
+	public String usageText ()
+	{
+		switch (tool)
+		{
+		case T_SELECT:
+			if (selection == null)		return "Click an element to select it; drag to move it. Double-click an object to edit its icon. Wheel: zoom, middle button / Space+drag: pan";
+			return "Drag the element or its handles (round handle: orientation). Del: delete, arrows: nudge, Esc: deselect";
+		case T_PAN:			return "Drag to pan the view. Wheel: zoom";
+		case T_WALL:		return "Drag from one end of the wall to the other. Right click / Esc: back to Select";
+		case T_CONNECTOR:		return "Drag along the connector opening (the crossing path can be adjusted afterwards). Right click / Esc: back to Select";
+		case T_ZONE:		return "Drag a rectangle. Right click / Esc: back to Select";
+		case T_FAREA:		return "Click the vertices, double-click / Enter to close the area, Esc to cancel";
+		case T_OBJECT:		return "Click to place an object (icon, shape and colour in Properties). Right click / Esc: back to Select";
+		case T_WAYPOINT:	return "Click to place a waypoint. Right click / Esc: back to Select";
+		case T_DOCK:		return "Click to place a dock. Right click / Esc: back to Select";
+		case T_BEACON:		return "Click to place a strip beacon. Right click / Esc: back to Select";
+		case T_CBEACON:		return "Click to place a cylindrical beacon. Right click / Esc: back to Select";
+		case T_PATH:		return "Click to append a point to the path. Right click / Esc: back to Select";
+		case T_START:		return "Click to place the robot start point. Right click / Esc: back to Select";
+		case T_ICON:
+			if (editIcon () == null)	return "Click an object to edit its icon";
+			if (awaitingAnchor)			return "Click to set the reference point (local origin) of the new icon";
+			return "Drag vertices; click a segment to insert a vertex; drag on empty space (or Shift+drag from a vertex) to add a segment; right click / Del: remove; Esc: finish";
+		}
+		return "";
+	}
+
+	private void showUsage ()
+	{
+		if (listener != null)		listener.usageChanged (usageText ());
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -657,7 +675,7 @@ public class WorldCanvas extends JPanel
 		if (visible[WorldItem.PATH])		drawPath (g);
 		if (visible[WorldItem.WALL])		for (int i = 0; i < world.walls ().n (); i++)		drawWall (g, world.walls ().at (i), isSel (WorldItem.WALL, i));
 		if (visible[WorldItem.OBJECT])		for (int i = 0; i < world.objects ().n (); i++)		drawObject (g, world.objects ().at (i), isSel (WorldItem.OBJECT, i));
-		if (visible[WorldItem.DOOR])		for (int i = 0; i < world.doors ().n (); i++)		drawDoor (g, world.doors ().at (i), isSel (WorldItem.DOOR, i));
+		if (visible[WorldItem.CONNECTOR])		for (int i = 0; i < world.connectors ().n (); i++)		drawConnector (g, world.connectors ().at (i), isSel (WorldItem.CONNECTOR, i));
 		if (visible[WorldItem.BEACON])		for (int i = 0; i < world.beacons ().n (); i++)		drawBeacon (g, world.beacons ().at (i), isSel (WorldItem.BEACON, i));
 		if (visible[WorldItem.CBEACON])		for (int i = 0; i < world.cbeacons ().n (); i++)	drawCBeacon (g, world.cbeacons ().at (i), isSel (WorldItem.CBEACON, i));
 		if (visible[WorldItem.WAYPOINT])	for (int i = 0; i < world.wps ().n (); i++)			drawWaypoint (g, world.wps ().at (i), isSel (WorldItem.WAYPOINT, i));
@@ -665,7 +683,8 @@ public class WorldCanvas extends JPanel
 		if (visible[WorldItem.START])		drawStart (g, isSel (WorldItem.START, 0));
 
 		drawRubber (g);
-		if (tool == T_ICON)					drawIconHandles (g);
+		if (tool == T_ICON)					drawIconHandles (g, true);
+		else if ((selection != null) && (selection.kind == WorldItem.ICON))		drawIconHandles (g, false);
 		else if (selection != null)			drawHandles (g);
 		drawScaleBar (g);
 	}
@@ -807,7 +826,7 @@ public class WorldCanvas extends JPanel
 		if (!o.visible && !sel)		c = new Color (c.getRed (), c.getGreen (), c.getBlue (), 90);
 		g.setColor (c);
 		g.setStroke (stroke (sel ? 2.5f : 1.5f));
-		for (Line2 l : o.icon)
+		for (Line2 l : o.absIcon ())
 			g.draw (new Line2D.Double (px (l.orig ().x ()), py (l.orig ().y ()), px (l.dest ().x ()), py (l.dest ().y ())));
 		// position and heading
 		double	x = px (o.pos.x ()), y = py (o.pos.y ());
@@ -822,19 +841,19 @@ public class WorldCanvas extends JPanel
 		}
 	}
 
-	private void drawDoor (Graphics2D g, WMDoor d, boolean sel)
+	private void drawConnector (Graphics2D g, WMConnector d, boolean sel)
 	{
-		g.setColor (sel ? C_SEL : C_DOOR);
+		g.setColor (sel ? C_SEL : C_CONN);
 		g.setStroke (stroke (sel ? 4f : 3f));
 		g.draw (new Line2D.Double (px (d.edge.orig ().x ()), py (d.edge.orig ().y ()), px (d.edge.dest ().x ()), py (d.edge.dest ().y ())));
-		g.setColor (sel ? C_SEL : C_DOORP);
+		g.setColor (sel ? C_SEL : C_CONNP);
 		g.setStroke (dashed (1.5f));
 		g.draw (new Line2D.Double (px (d.path.orig ().x ()), py (d.path.orig ().y ()), px (d.path.dest ().x ()), py (d.path.dest ().y ())));
 		g.setStroke (stroke (1f));
 		g.fill (new Ellipse2D.Double (px (d.path.orig ().x ()) - 3, py (d.path.orig ().y ()) - 3, 6, 6));
 		g.fill (new Ellipse2D.Double (px (d.path.dest ().x ()) - 3, py (d.path.dest ().y ()) - 3, 6, 6));
 		Point2	c = d.edge.center ();
-		label (g, d.label, c.x (), c.y (), sel ? C_SEL : C_DOOR);
+		label (g, d.label, c.x (), c.y (), sel ? C_SEL : C_CONN);
 	}
 
 	private void drawBeacon (Graphics2D g, WMBeacon b, boolean sel)
@@ -944,8 +963,16 @@ public class WorldCanvas extends JPanel
 	}
 
 	/* ------------------------------------------------------------------ */
-	/* Icon tool (segments of the selected object)                         */
+	/* Icon tool                                                           */
+	/*                                                                     */
+	/* Edits a WMIcon (local coordinates) through a reference pose: the pose */
+	/* of the selected object, or the anchor chosen for an icon selected in  */
+	/* the tree / just created (its first click sets the anchor).            */
 	/* ------------------------------------------------------------------ */
+
+	/** Anchors (x, y, angle) where icons selected on their own are displayed, by icon label. */
+	protected java.util.Map<String, double[]>	iconAnchors = new java.util.HashMap<String, double[]> ();
+	protected boolean				awaitingAnchor	= false;
 
 	private WMObject selectedObject ()
 	{
@@ -953,21 +980,85 @@ public class WorldCanvas extends JPanel
 		return world.objects ().at (selection.index);
 	}
 
-	private void onIconPress (MouseEvent e, double tol)
+	/** The icon the icon tool works on, or null. */
+	public WMIcon editIcon ()
 	{
 		WMObject	o = selectedObject ();
-		if (o == null)
+		if (o != null)				return o.icon;
+		if ((selection != null) && (selection.kind == WorldItem.ICON) && WorldEdit.valid (world, selection))
+			return world.icons ().at (selection.index);
+		return null;
+	}
+
+	/** Reference pose {x, y, angle} for the icon being edited, or null when the anchor is still to be clicked. */
+	public double[] refPose ()
+	{
+		WMObject	o = selectedObject ();
+		if (o != null)				return new double[] { o.pos.x (), o.pos.y (), o.a };
+		WMIcon		ic = editIcon ();
+		if (ic == null)				return null;
+		double[]	anchor = iconAnchors.get (ic.label);
+		if (anchor != null)			return anchor;
+		if (awaitingAnchor)			return null;
+		// default anchor: the pose of the first object using the icon, else the view centre
+		java.util.List<WorldItem>	users = WorldEdit.iconUserItems (world, ic.label);
+		if (users.size () > 0)
 		{
-			// nothing selected yet: pick an object
+			WMObject	u = world.objects ().at (users.get (0).index);
+			anchor = new double[] { u.pos.x (), u.pos.y (), u.a };
+		}
+		else
+			anchor = new double[] { snap (cx), snap (cy), 0.0 };
+		iconAnchors.put (ic.label, anchor);
+		return anchor;
+	}
+
+	/** Creates a new empty icon, selects it and starts the icon tool waiting for its reference point. */
+	public void newIcon ()
+	{
+		WorldItem	it = WorldEdit.addIcon (world, "icon");
+		awaitingAnchor = true;
+		changed ("New icon");
+		setSelection (it);
+		if (listener != null)		listener.toolRequested (T_ICON);
+		awaitingAnchor = true;		// setTool clears it
+		repaint ();
+	}
+
+	private void iconEdited (String what)
+	{
+		WMIcon	ic = editIcon ();
+		if (ic != null)		WorldEdit.iconChanged (world, ic);
+		changed (what);
+	}
+
+	private void onIconPress (MouseEvent e, double tol)
+	{
+		WMIcon		ic = editIcon ();
+		if (ic == null)
+		{
+			// nothing suitable selected: pick an object
 			WorldItem	hit = WorldEdit.pick (world, curX, curY, tol, visible);
 			if ((hit != null) && (hit.kind == WorldItem.OBJECT))		setSelection (hit);
 			return;
 		}
-		int		vi = WorldEdit.pickIconVertex (o, curX, curY, tol * 1.3);
+		if (awaitingAnchor)
+		{
+			// first click of a new icon: sets the reference point (local origin)
+			iconAnchors.put (ic.label, new double[] { anchorX, anchorY, 0.0 });
+			awaitingAnchor = false;
+			repaint ();
+			showUsage ();
+			return;
+		}
+		double[]	rp = refPose ();
+		if (rp == null)				return;
+
+		int		vi = WorldEdit.pickIconVertex (ic, rp[0], rp[1], rp[2], curX, curY, tol * 1.3);
 		if ((vi >= 0) && e.isShiftDown ())
 		{
 			// new segment starting at this vertex
-			Point2	p = WorldEdit.iconVertices (o)[vi];
+			Point2	p = WorldEdit.iconWorldVertices (ic, rp[0], rp[1], rp[2])[vi];
 			anchorX = p.x ();	anchorY = p.y ();
 			dragMode = 6;
 			return;
@@ -978,11 +1069,11 @@ public class WorldCanvas extends JPanel
 			dragMode	= 5;
 			return;
 		}
-		int		si = WorldEdit.pickIconSegment (o, curX, curY, tol);
+		int		si = WorldEdit.pickIconSegment (ic, rp[0], rp[1], rp[2], curX, curY, tol);
 		if (si >= 0)
 		{
 			// insert a vertex on the segment and start dragging it
-			iconVertex	= WorldEdit.splitIconSegment (o, si, anchorX, anchorY);
+			iconVertex	= WorldEdit.splitIconSegment (ic, rp[0], rp[1], rp[2], si, anchorX, anchorY);
 			dragMode	= 5;
 			dragged		= true;
 			repaint ();
@@ -992,55 +1083,92 @@ public class WorldCanvas extends JPanel
 		dragMode = 6;
 	}
 
+	private void onIconDrag (double nx, double ny)
+	{
+		WMIcon		ic = editIcon ();
+		double[]	rp = refPose ();
+		if ((ic == null) || (rp == null))		return;
+		WorldEdit.moveIconVertex (ic, rp[0], rp[1], rp[2], iconVertex, snap (nx), snap (ny));
+		WorldEdit.iconChanged (world, ic);
+		dragged = true;
+		repaint ();
+		if (listener != null)		listener.worldPreview ();
+	}
+
+	private void onIconSegmentRelease (double nx, double ny)
+	{
+		WMIcon		ic = editIcon ();
+		double[]	rp = refPose ();
+		if ((ic == null) || (rp == null) || (Math.hypot (nx - anchorX, ny - anchorY) <= 1e-6))		return;
+		WorldEdit.addIconSegment (ic, rp[0], rp[1], rp[2], anchorX, anchorY, nx, ny);
+		iconVertex = WorldEdit.pickIconVertex (ic, rp[0], rp[1], rp[2], nx, ny, WorldEdit.ICON_EPS * 10);
+		iconEdited ("Add icon segment");
+	}
+
 	private void onIconRightClick (MouseEvent e)
 	{
-		WMObject	o = selectedObject ();
-		if (o == null)				return;
+		WMIcon		ic = editIcon ();
+		double[]	rp = refPose ();
+		if ((ic == null) || (rp == null))		return;
 		double	tol = PICK_PX / scale;
 		double	x = toWorldX (e.getX ()), y = toWorldY (e.getY ());
-		int		vi = WorldEdit.pickIconVertex (o, x, y, tol * 1.3);
+		int		vi = WorldEdit.pickIconVertex (ic, rp[0], rp[1], rp[2], x, y, tol * 1.3);
 		if (vi >= 0)
 		{
-			WorldEdit.removeIconVertex (o, vi);
+			WorldEdit.removeIconVertex (ic, vi);
 			iconVertex = -1;
-			changed ("Remove icon vertex");
+			iconEdited ("Remove icon vertex");
 			return;
 		}
-		int		si = WorldEdit.pickIconSegment (o, x, y, tol);
+		int		si = WorldEdit.pickIconSegment (ic, rp[0], rp[1], rp[2], x, y, tol);
 		if (si >= 0)
 		{
-			WorldEdit.removeIconSegment (o, si);
+			WorldEdit.removeIconSegment (ic, si);
 			iconVertex = -1;
-			changed ("Remove icon segment");
+			iconEdited ("Remove icon segment");
 		}
 	}
 
 	private void deleteIconVertex ()
 	{
-		WMObject	o = selectedObject ();
-		if ((o == null) || (iconVertex < 0))		return;
-		WorldEdit.removeIconVertex (o, iconVertex);
+		WMIcon		ic = editIcon ();
+		if ((ic == null) || (iconVertex < 0))		return;
+		WorldEdit.removeIconVertex (ic, iconVertex);
 		iconVertex = -1;
-		changed ("Remove icon vertex");
+		iconEdited ("Remove icon vertex");
 	}
 
-	private void drawIconHandles (Graphics2D g)
+	/** Draws the icon being edited (or the selected icon) at its reference pose. */
+	private void drawIconHandles (Graphics2D g, boolean editing)
 	{
-		WMObject	o = selectedObject ();
-		if (o == null)				return;
-
-		// object segments in orange, over the normal drawing
+		WMIcon		ic = editIcon ();
+		if (ic == null)				return;
+		double[]	rp = refPose ();
+		if (rp == null)
+		{
+			// waiting for the anchor: hint at the cursor
+			g.setColor (C_SEL);
+			g.setFont (g.getFont ().deriveFont (Font.PLAIN, 11f));
+			g.drawString ("click to set the reference point of icon '" + ic.label + "'", toPixelX (curX) + 12, toPixelY (curY) - 8);
+			return;
+		}
+		// reference point: dashed cross with heading
+		int		cxp = toPixelX (rp[0]), cyp = toPixelY (rp[1]);
 		g.setColor (C_SEL);
-		g.setStroke (stroke (2f));
-		for (Line2 l : o.icon)
-			g.draw (new Line2D.Double (px (l.orig ().x ()), py (l.orig ().y ()), px (l.dest ().x ()), py (l.dest ().y ())));
-		// position marker
-		int		cxp = toPixelX (o.pos.x ()), cyp = toPixelY (o.pos.y ());
+		g.setStroke (dashed (1f));
+		g.drawLine (cxp - 10, cyp, cxp + 10, cyp);
+		g.drawLine (cxp, cyp - 10, cxp, cyp + 10);
 		g.setStroke (stroke (1f));
-		g.drawLine (cxp - 5, cyp, cxp + 5, cyp);
-		g.drawLine (cxp, cyp - 5, cxp, cyp + 5);
+		g.drawLine (cxp, cyp, cxp + (int) Math.round (12 * Math.cos (rp[2])), cyp - (int) Math.round (12 * Math.sin (rp[2])));
+		// segments
+		g.setStroke (stroke (editing ? 2f : 1.5f));
+		for (Line2 l : WorldEdit.iconWorldLines (ic, rp[0], rp[1], rp[2]))
+			g.draw (new Line2D.Double (px (l.orig ().x ()), py (l.orig ().y ()), px (l.dest ().x ()), py (l.dest ().y ())));
+		if (selectedObject () == null)
+			label (g, ic.label, rp[0], rp[1], C_SEL);
+		if (!editing)				return;
 		// vertices
-		Point2[]	vs = WorldEdit.iconVertices (o);
+		Point2[]	vs = WorldEdit.iconWorldVertices (ic, rp[0], rp[1], rp[2]);
 		g.setStroke (stroke (1.2f));
 		for (int i = 0; i < vs.length; i++)
 		{

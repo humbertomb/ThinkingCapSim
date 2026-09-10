@@ -42,7 +42,7 @@ public class DXFParser
 	public double getmaxX () { return maxX; }
 	public double getmaxY () { return maxY; }
 	
-	public void leeDXF (Vector lista) throws IOException
+	public void leeDXF (ArrayList<Object> lista) throws IOException
 	{
 		int status;	
 		StringTokenizer st;
@@ -134,7 +134,7 @@ public class DXFParser
 		}
 	}
 	
-	private void leePoly(Vector l) throws IOException
+	private void leePoly(ArrayList<Object> l) throws IOException
 	{
 		boolean salir;
 		String linea;
@@ -159,12 +159,12 @@ public class DXFParser
 					linea = fichin.readLine();
 					if (linea.trim().equals("10"))
 					{
-						try { dx = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { dx = 0.0; }
+						try { dx = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { dx = 0.0; }
 						conta--;
 					}
 					else if (linea.trim().equals("20"))
 					{
-						try { dy = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { dy = 0.0; }
+						try { dy = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { dy = 0.0; }
 						conta--;
 					}
 				}
@@ -178,11 +178,11 @@ public class DXFParser
 			else if (linea.indexOf("SEQEND") != -1) salir = true;
 			linea = fichin.readLine();
 		}
-		l.addElement(poly);
+		l.add (poly);
 	}
 	
 	
-	private void leeLine(Vector l) throws IOException
+	private void leeLine(ArrayList<Object> l) throws IOException
 	{
 		String doubles;
 		double x1,x2,y1,y2;
@@ -198,22 +198,22 @@ public class DXFParser
 			doubles = fichin.readLine();
 			if (doubles.trim().equals("10"))
 			{
-				try { x1 = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { x1 = 0.0; }
+				try { x1 = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { x1 = 0.0; }
 				conta--;
 			}
 			if (doubles.trim().equals("20"))
 			{
-				try { y1 = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { y1 = 0.0; }
+				try { y1 = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { y1 = 0.0; }
 				conta--;
 			}
 			if (doubles.trim().equals("11"))
 			{
-				try { x2 = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { x2 = 0.0; }
+				try { x2 = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { x2 = 0.0; }
 				conta--;
 			}
 			if (doubles.trim().equals("21"))
 			{
-				try { y2 = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { y2 = 0.0; }
+				try { y2 = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { y2 = 0.0; }
 				conta--;
 			}
 		}
@@ -223,10 +223,10 @@ public class DXFParser
 		
 		linea = new Line2 (x1,y1,x2,y2);
 		//System.out.println ("\tleida linea: "+linea.toString());
-		l.addElement(linea);
+		l.add (linea);
 	}
 	
-	private void leeArc(Vector l) throws IOException
+	private void leeArc(ArrayList<Object> l) throws IOException
 	{
 		String doubles;
 		double x,y,radio,sangle,eangle;
@@ -240,27 +240,27 @@ public class DXFParser
 			doubles = fichin.readLine();
 			if (doubles.trim().equals("10"))
 			{
-				try { x = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { x = 0.0; }
+				try { x = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { x = 0.0; }
 				conta--;
 			}
 			else if (doubles.trim().equals("20"))
 			{
-				try { y = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { y = 0.0; }
+				try { y = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { y = 0.0; }
 				conta--;
 			}
 			else if (doubles.trim().equals("40"))
 			{
-				try { radio = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { radio = 0.0; }
+				try { radio = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { radio = 0.0; }
 				conta--;
 			}
 			else if (doubles.trim().equals("50"))
 			{
-				try { sangle = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { sangle = 0.0; }
+				try { sangle = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { sangle = 0.0; }
 				conta--;
 			}
 			else if (doubles.trim().equals("51"))
 			{
-				try { eangle = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { eangle = 0.0; }
+				try { eangle = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { eangle = 0.0; }
 				conta--;
 			}
 			
@@ -270,10 +270,10 @@ public class DXFParser
 		
 		arco = new Arc2 (x,y,radio,sangle,Math.abs(sangle-eangle));
 		//System.out.println ("\tleido arco: "+arco.toString());
-		l.addElement (arco);
+		l.add (arco);
 	}
 	
-	private void leeCircle(Vector l) throws IOException
+	private void leeCircle(ArrayList<Object> l) throws IOException
 	{
 		String doubles;
 		double x,y,radio;
@@ -288,17 +288,17 @@ public class DXFParser
 			doubles = fichin.readLine();
 			if (doubles.trim().equals("10"))
 			{
-				try { x = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { x = 0.0; }
+				try { x = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { x = 0.0; }
 				conta--;
 			}
 			else if (doubles.trim().equals("20"))
 			{
-				try { y = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { y = 0.0; }
+				try { y = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { y = 0.0; }
 				conta--;
 			}
 			else if (doubles.trim().equals("40"))
 			{
-				try { radio = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { radio = 0.0; }
+				try { radio = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { radio = 0.0; }
 				conta--;
 			}
 		}
@@ -307,11 +307,11 @@ public class DXFParser
 		
 		circ = new Ellipse2 (x,y,radio*2,radio*2);
 		//System.out.println ("\tleido circulo: "+circ.toString());
-		l.addElement (circ);
+		l.add (circ);
 		
 	}
 	
-	private void leePoint(Vector l) throws IOException
+	private void leePoint(ArrayList<Object> l) throws IOException
 	{
 		String doubles;
 		double x,y;
@@ -327,12 +327,12 @@ public class DXFParser
 			doubles = fichin.readLine();
 			if (doubles.trim().equals("10"))
 			{
-				try { x = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { x = 0.0; }
+				try { x = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { x = 0.0; }
 				conta--;
 			}
 			else if (doubles.trim().equals("20"))
 			{
-				try { y = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { y = 0.0; }
+				try { y = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { y = 0.0; }
 				conta--;
 			}
 		}
@@ -341,7 +341,7 @@ public class DXFParser
 		
 		point = new Ellipse2 (x,y,1,1);
 		//System.out.println ("\tleido circulo: "+point.toString());
-		l.addElement (point);
+		l.add (point);
 	}
 		
 	/**
@@ -360,13 +360,13 @@ public class DXFParser
 			doubles = fichin.readLine();
 			if (doubles.trim().equals("10"))
 			{
-				try { x1 = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { x1 = 0.0; }
+				try { x1 = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { x1 = 0.0; }
 				conta--;
 				
 			}
 			if (doubles.trim().equals("20"))
 			{
-				try { y1 = new Double (fichin.readLine()).doubleValue (); } catch (Exception e) { y1 = 0.0; }
+				try { y1 = Double.valueOf (fichin.readLine()).doubleValue (); } catch (Exception e) { y1 = 0.0; }
 				conta--;				
 			}			
 			if (doubles.trim().equals("30"))

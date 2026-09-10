@@ -8,7 +8,7 @@ package tc.shared.world;
 
 import java.io.PrintWriter;
 import java.util.Properties;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
 import wucore.utils.dxf.entities.Entity;
@@ -34,11 +34,11 @@ public class WMDocks
 	}
 	
 	public WMDocks (DXFWorldFile dxf){
-		Vector entities = dxf.getEntities();
-		Vector dk = new Vector();
+		ArrayList<Entity> entities = dxf.getEntities();
+		ArrayList<WMDock> dk = new ArrayList<WMDock>();
 		Entity entity;
 		for(int i = 0; i<entities.size(); i++){
-			entity = (Entity)entities.get(i);
+			entity = entities.get(i);
 			if(entity.getLayer().equalsIgnoreCase("DOCKINGS")){
 				if(entity instanceof TextDxf){ 
 				    dk.add(new WMDock((TextDxf)entity)); 

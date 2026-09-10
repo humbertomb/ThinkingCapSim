@@ -16,15 +16,12 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.media.j3d.Appearance;
 import javax.media.j3d.BranchGroup;
 import javax.media.j3d.Canvas3D;
 import javax.media.j3d.ColoringAttributes;
 import javax.media.j3d.GeometryArray;
-import javax.media.j3d.LineArray;
 import javax.media.j3d.LineAttributes;
 import javax.media.j3d.LineStripArray;
 import javax.media.j3d.Material;
@@ -56,13 +53,14 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
 
 import tc.shared.world.WMBeacon;
 import tc.shared.world.WMCBeacon;
-import tc.shared.world.WMDoor;
+import tc.shared.world.WMConnector;
 import tc.shared.world.WMFArea;
 import tc.shared.world.WMWall;
 import tc.shared.world.World;
 import tcapps.tcsim.gui.visualization.Scene3D;
 import tcapps.tcsim.gui.visualization.objects.World3D;
 import wucore.utils.geom.Point2;
+import wucore.utils.geom.Point3;
 import wucore.utils.geom.Polygon2;
 
 /**
@@ -71,7 +69,7 @@ import wucore.utils.geom.Polygon2;
  * modification, and the current selection is highlighted in orange. It reuses
  * the simulator's {@link Scene3D} (lights, textures, 3DS objects, viewpoint
  * control) and {@link World3D} (walls, zones, objects, docks, waypoints,
- * doors), and adds the elements the simulator does not draw: forbidden areas,
+ * connectors), and adds the elements the simulator does not draw: forbidden areas,
  * path, beacons and start point.
  */
 public class WorldView3DWindow extends JFrame
@@ -90,7 +88,7 @@ public class WorldView3DWindow extends JFrame
 	static private final Color3f	C_FAREA		= new Color3f (0.85f, 0.15f, 0.15f);
 	static private final Color3f	C_PATH		= new Color3f (0.0f, 0.7f, 0.85f);
 	static private final Color3f	C_BEACON	= new Color3f (0.8f, 0.0f, 0.8f);
-	static private final Color3f	C_DOORP		= new Color3f (0.15f, 0.7f, 0.15f);
+	static private final Color3f	C_CONNP		= new Color3f (0.15f, 0.7f, 0.15f);
 	static private final Color3f	C_START		= new Color3f (0.9f, 0.1f, 0.1f);
 	static private final Color3f	C_FLOOR		= new Color3f (0.55f, 0.55f, 0.5f);
 
@@ -366,7 +364,7 @@ public class WorldView3DWindow extends JFrame
 		return (vmode == Scene3D.M_MOVE) ? "move" : (vmode == Scene3D.M_ROTATE) ? "rotate" : "zoom";
 	}
 
-	/** Elements not drawn by World3D: forbidden areas, path, beacons, door paths, start point. */
+	/** Elements not drawn by World3D: forbidden areas, path, beacons, connector paths, start point. */
 	private BranchGroup createExtras ()
 	{
 		BranchGroup		bg = new BranchGroup ();
@@ -388,7 +386,7 @@ public class WorldView3DWindow extends JFrame
 			bg.addChild (polyline (pts, false, 0.03, C_PATH, 3f));
 		}
 		for (i = 0; i < world.path ().n (); i++)
-			bg.addChild (sphere (world.path ().at (i).x (), world.path ().at (i).y (), 0.03, 0.06, C_PATH));
+			bg.addChild (sphere (world.path ().at (i).x (), world.path ().at (i).y (), pz (world.path ().at (i)) + 0.03, 0.06, C_PATH));
 
 		// strip beacons: thin vertical plates
 		for (i = 0; i < world.beacons ().n (); i++)
@@ -396,7 +394,7 @@ public class WorldView3DWindow extends JFrame
 			WMBeacon		b = world.beacons ().at (i);
 			Transform3D		t = new Transform3D ();
 			t.rotZ (b.pos.alpha ());
-			t.setTranslation (new Vector3d (b.pos.x (), b.pos.y (), 0.4));
+			t.setTranslation (new Vector3d (b.pos.x (), b.pos.y (), b.pos.z () + 0.4));
 			TransformGroup	tg = new TransformGroup (t);
 			tg.addChild (new Box ((float) Math.max (0.01, b.width / 2.0), 0.01f, 0.3f, matAppearance (C_BEACON, 0f)));
 			bg.addChild (tg);
@@ -407,20 +405,20 @@ public class WorldView3DWindow extends JFrame
 		{
 			WMCBeacon		b = world.cbeacons ().at (i);
 			double			r = Math.max (0.02, Math.max (b.beacon.horiz (), b.beacon.vert ()));
-			bg.addChild (cylinder (b.beacon.center ().x (), b.beacon.center ().y (), 0.0, r, 0.8, C_BEACON, 0f));
+			bg.addChild (cylinder (b.beacon.center ().x (), b.beacon.center ().y (), b.z, r, 0.8, C_BEACON, 0f));
 		}
 
-		// door crossing paths
-		for (i = 0; i < world.doors ().n (); i++)
+		// connector crossing paths
+		for (i = 0; i < world.connectors ().n (); i++)
 		{
-			WMDoor		d = world.doors ().at (i);
-			bg.addChild (polyline (new Point2[] { d.path.orig (), d.path.dest () }, false, 0.02, C_DOORP, 2f));
+			WMConnector		d = world.connectors ().at (i);
+			bg.addChild (polyline (new Point2[] { d.path.orig (), d.path.dest () }, false, 0.02, C_CONNP, 2f));
 		}
 
 		// start point: red disc with heading bar
-		double		sx = world.start_x (), sy = world.start_y (), sa = world.start_a ();
-		bg.addChild (cylinder (sx, sy, 0.0, 0.25, 0.04, C_START, 0.3f));
-		bg.addChild (polyline (new Point2[] { new Point2 (sx, sy), new Point2 (sx + 0.5 * Math.cos (sa), sy + 0.5 * Math.sin (sa)) }, false, 0.05, C_START, 3f));
+		double		sx = world.start_x (), sy = world.start_y (), sz = world.start_z (), sa = world.start_a ();
+		bg.addChild (cylinder (sx, sy, sz, 0.25, 0.04, C_START, 0.3f));
+		bg.addChild (segment (sx, sy, sz + 0.05, sx + 0.5 * Math.cos (sa), sy + 0.5 * Math.sin (sa), sz + 0.05, C_START, 3f));
 
 		return bg;
 	}
@@ -448,46 +446,49 @@ public class WorldView3DWindow extends JFrame
 			selBranch.detach ();
 			selBranch = null;
 		}
-		if (!WorldEdit.valid (world, selection) || (selection.kind == WorldItem.DEFAULTS))		return;
+		if (!WorldEdit.valid (world, selection) || (selection.kind == WorldItem.DEFAULTS) || (selection.kind == WorldItem.ICON))		return;
 
 		BranchGroup		bg = new BranchGroup ();
 		bg.setCapability (BranchGroup.ALLOW_DETACH);
 		Point2[]		hs = WorldEdit.handles (world, selection);
-		double			z = 0.08;
+		double			base = WorldEdit.elevation (world, selection);		// handles are planar: lift them to the element
+		double			z = base + 0.08;
 
 		switch (selection.kind)
 		{
 		case WorldItem.WALL:
 		{
 			WMWall	w = world.walls ().at (selection.index);
-			bg.addChild (polyline (hs, false, 0.02, C_SEL, 4f));
-			bg.addChild (polyline (hs, false, w.height + 0.02, C_SEL, 4f));
+			bg.addChild (segment (hs[0].x (), hs[0].y (), w.edge.z1 () + 0.02, hs[1].x (), hs[1].y (), w.edge.z2 () + 0.02, C_SEL, 4f));
+			bg.addChild (segment (hs[0].x (), hs[0].y (), w.edge.z1 () + w.height + 0.02, hs[1].x (), hs[1].y (), w.edge.z2 () + w.height + 0.02, C_SEL, 4f));
 			break;
 		}
-		case WorldItem.DOOR:
+		case WorldItem.CONNECTOR:
 		{
-			WMDoor	d = world.doors ().at (selection.index);
-			bg.addChild (polyline (new Point2[] { hs[0], hs[1] }, false, 0.02, C_SEL, 4f));
-			bg.addChild (polyline (new Point2[] { hs[0], hs[1] }, false, d.height + 0.02, C_SEL, 4f));
-			bg.addChild (polyline (new Point2[] { hs[2], hs[3] }, false, 0.03, C_SEL, 3f));
+			WMConnector	d = world.connectors ().at (selection.index);
+			bg.addChild (segment (hs[0].x (), hs[0].y (), d.edge.z1 () + 0.02, hs[1].x (), hs[1].y (), d.edge.z2 () + 0.02, C_SEL, 4f));
+			bg.addChild (segment (hs[0].x (), hs[0].y (), d.edge.z1 () + d.height + 0.02, hs[1].x (), hs[1].y (), d.edge.z2 () + d.height + 0.02, C_SEL, 4f));
+			bg.addChild (segment (hs[2].x (), hs[2].y (), d.path.z1 () + 0.03, hs[3].x (), hs[3].y (), d.path.z2 () + 0.03, C_SEL, 3f));
 			break;
 		}
 		case WorldItem.ZONE:
+			bg.addChild (polyline (hs, true, base + 0.04, C_SEL, 4f));
+			break;
 		case WorldItem.FAREA:
-			bg.addChild (polyline (hs, true, 0.04, C_SEL, 4f));
+			bg.addChild (polyline (world.fareas ().at (selection.index).polygon, true, 0.04, C_SEL, 4f));
 			break;
 		case WorldItem.OBJECT:
-			for (wucore.utils.geom.Line2 l : world.objects ().at (selection.index).icon)
+			for (wucore.utils.geom.Line2 l : world.objects ().at (selection.index).absIcon ())
 				bg.addChild (polyline (new Point2[] { l.orig (), l.dest () }, false, 0.04, C_SEL, 3f));
-			bg.addChild (polyline (hs, false, 0.05, C_SEL, 3f));
+			bg.addChild (polyline (hs, false, base + 0.05, C_SEL, 3f));
 			break;
 		case WorldItem.WAYPOINT:
 		case WorldItem.DOCK:
 		case WorldItem.START:
 		case WorldItem.BEACON:
 		case WorldItem.CBEACON:
-			bg.addChild (polyline (hs, false, 0.1, C_SEL, 3f));
-			z = 0.12;
+			bg.addChild (polyline (hs, false, base + 0.1, C_SEL, 3f));
+			z = base + 0.12;
 			break;
 		}
 		for (int i = 0; i < hs.length; i++)
@@ -522,7 +523,14 @@ public class WorldView3DWindow extends JFrame
 		return app;
 	}
 
-	static private Shape3D polyline (Point2[] pts, boolean closed, double z, Color3f color, float width)
+	/** Elevation carried by a point (Point3), or 0. */
+	static private double pz (Point2 p)
+	{
+		return (p instanceof Point3) ? ((Point3) p).z () : 0.0;
+	}
+
+	/** Polyline through the points; <code>dz</code> is added to each point's own elevation. */
+	static private Shape3D polyline (Point2[] pts, boolean closed, double dz, Color3f color, float width)
 	{
 		int				n = pts.length + (closed ? 1 : 0);
 		if (pts.length < 2)
@@ -531,16 +539,22 @@ public class WorldView3DWindow extends JFrame
 		for (int i = 0; i < n; i++)
 		{
 			Point2	p = pts[i % pts.length];
-			geo.setCoordinate (i, new Point3d (p.x (), p.y (), z));
+			geo.setCoordinate (i, new Point3d (p.x (), p.y (), pz (p) + dz));
 		}
 		return new Shape3D (geo, lineAppearance (color, width));
 	}
 
-	static private Shape3D polyline (Polygon2 poly, boolean closed, double z, Color3f color, float width)
+	/** A segment between two points with explicit elevations. */
+	static private Shape3D segment (double x1, double y1, double z1, double x2, double y2, double z2, Color3f color, float width)
+	{
+		return polyline (new Point2[] { new Point3 (x1, y1, z1), new Point3 (x2, y2, z2) }, false, 0.0, color, width);
+	}
+
+	static private Shape3D polyline (Polygon2 poly, boolean closed, double dz, Color3f color, float width)
 	{
 		Point2[]	pts = new Point2[poly.npoints];
-		for (int i = 0; i < poly.npoints; i++)		pts[i] = new Point2 (poly.xpoints[i], poly.ypoints[i]);
-		return polyline (pts, closed, z, color, width);
+		for (int i = 0; i < poly.npoints; i++)		pts[i] = new Point3 (poly.xpoints[i], poly.ypoints[i], poly.zpoints[i]);
+		return polyline (pts, closed, dz, color, width);
 	}
 
 	/** Filled (possibly concave) polygon, both faces visible. */
@@ -551,7 +565,7 @@ public class WorldView3DWindow extends JFrame
 		{
 			Point3d[]		coords = new Point3d[poly.npoints];
 			for (int i = 0; i < poly.npoints; i++)
-				coords[i] = new Point3d (poly.xpoints[i], poly.ypoints[i], z);
+				coords[i] = new Point3d (poly.xpoints[i], poly.ypoints[i], poly.zpoints[i] + z);
 			GeometryInfo	gi = new GeometryInfo (GeometryInfo.POLYGON_ARRAY);
 			gi.setCoordinates (coords);
 			gi.setStripCounts (new int[] { poly.npoints });

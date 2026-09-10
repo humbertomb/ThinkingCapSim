@@ -41,12 +41,15 @@ public class WMWall extends WMElement
 		StringTokenizer		st;
 		double				x1, x2, y1, y2;
 		
+		double				z1, z2;
 		st		= new StringTokenizer (prop,", \t");
 		x1		= Double.parseDouble (st.nextToken());
 		y1		= Double.parseDouble (st.nextToken());
+		z1		= Double.parseDouble (st.nextToken());
 		x2		= Double.parseDouble (st.nextToken());
 		y2		= Double.parseDouble (st.nextToken());
-		edge		= new Line2 (x1, y1, x2, y2);
+		z2		= Double.parseDouble (st.nextToken());
+		edge		= new Line2 (x1, y1, z1, x2, y2, z2);
 		
 		height	= dheight;
 		width	= dwidth;
@@ -63,7 +66,7 @@ public class WMWall extends WMElement
 	}
 	
 	public WMWall (LineDxf line, double dwidth, double dheight, String dtexture){
-	      edge = new Line2(line.getStart().x(),line.getStart().y(),line.getEnd().x(),line.getEnd().y());
+	      edge = new Line2(line.getStart().x(),line.getStart().y(),line.getStart().z(),line.getEnd().x(),line.getEnd().y(),line.getEnd().z());
 			if(line.ExtendedDouble.size()>0) 
 			    height = line.getExtDouble(0);
 			else
@@ -81,8 +84,8 @@ public class WMWall extends WMElement
 	
 	public void toDxf(DXFWorldFile dxf){
 	    LineDxf line = new LineDxf(
-               new Point3(edge.orig()),
-               new Point3(edge.dest()),
+               new Point3(edge.orig().x(), edge.orig().y(), edge.z1()),
+               new Point3(edge.dest().x(), edge.dest().y(), edge.z2()),
                "0"
        );
        line.addExtDouble(0,height);
@@ -94,6 +97,13 @@ public class WMWall extends WMElement
 	// Instance methods
 	public String toRawString ()
 	{
-		return DoubleFormat.format(edge.orig().x())+", "+DoubleFormat.format(edge.orig().y())+", "+DoubleFormat.format(edge.dest().x())+", "+DoubleFormat.format(edge.dest().y())+", "+DoubleFormat.format(width)+", "+DoubleFormat.format(height)+", "+texture;
+		return pointsRawString ()+", "+DoubleFormat.format(width)+", "+DoubleFormat.format(height)+", "+texture;
+	}
+
+	/** "x1, y1, z1, x2, y2, z2" */
+	public String pointsRawString ()
+	{
+		return DoubleFormat.format(edge.orig().x())+", "+DoubleFormat.format(edge.orig().y())+", "+DoubleFormat.format(edge.z1())
+			+", "+DoubleFormat.format(edge.dest().x())+", "+DoubleFormat.format(edge.dest().y())+", "+DoubleFormat.format(edge.z2());
 	}
 }

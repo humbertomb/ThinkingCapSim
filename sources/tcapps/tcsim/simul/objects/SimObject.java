@@ -51,12 +51,13 @@ public class SimObject
 		Line2[]			icon;
 		
 		prop		= props.getProperty ("OBJECT");
-		odesc	= new WMObject (prop);
+		// The descriptor may carry its own icon library (ICONS / ICON_i); legacy inline icons are also accepted
+		odesc	= new WMObject (prop, new WMIcons (props));
 		
-		// Compute bounding circle radius
+		// Compute bounding circle radius (icon in local coordinates)
 		min		= Double.MAX_VALUE;
 		max		= -Double.MAX_VALUE;
-		icon		= odesc.icon;
+		icon		= odesc.getLocalIcon ();
 		for (i = 0; i < icon.length; i++)
 		{
 			if (icon[i].orig().x() < min)		min = icon[i].orig().x();

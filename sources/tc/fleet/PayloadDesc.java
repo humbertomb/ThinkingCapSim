@@ -48,7 +48,7 @@ public class PayloadDesc extends Object implements Serializable
 		boolean				modified = true;
 
 		// Load payload properties
-		try { MAXPAYLOAD 	= new Integer (props.getProperty ("MAXPAYLOAD")).intValue (); } 	catch (Exception e) 	{ modified = false; }
+		try { MAXPAYLOAD 	= Integer.valueOf (props.getProperty ("MAXPAYLOAD")).intValue (); } 	catch (Exception e) 	{ modified = false; }
 
 		// TODO the new properties MUST include all the attributes. Could be done better
 		if ((MAXPAYLOAD != 0) && modified)

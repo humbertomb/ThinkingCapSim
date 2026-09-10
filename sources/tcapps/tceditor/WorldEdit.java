@@ -16,9 +16,11 @@ import devices.pos.Position;
 import tc.shared.world.WMBeacon;
 import tc.shared.world.WMCBeacon;
 import tc.shared.world.WMDock;
-import tc.shared.world.WMDoor;
+import tc.shared.world.WMConnector;
 import tc.shared.world.WMFArea;
+import tc.shared.world.WMIcon;
 import tc.shared.world.WMObject;
+import tc.shared.world.WMPath;
 import tc.shared.world.WMWall;
 import tc.shared.world.WMWaypoint;
 import tc.shared.world.WMZone;
@@ -58,13 +60,14 @@ public final class WorldEdit
 	{
 		Properties		props = new Properties ();
 
-		props.setProperty ("START", w.start_x () + ", " + w.start_y () + ", " + Math.toDegrees (w.start_a ()));
+		props.setProperty ("START", w.start_x () + ", " + w.start_y () + ", " + w.start_z () + ", " + Math.toDegrees (w.start_a ()));
 		w.path ().toProperties (props);
 		w.walls ().toProperties (props);
+		w.icons ().toProperties (props);
 		w.objects ().toProperties (props);
 		w.zones ().toProperties (props);
 		w.fareas ().toProperties (props);
-		w.doors ().toProperties (props);
+		w.connectors ().toProperties (props);
 		w.wps ().toProperties (props);
 		w.docks ().toProperties (props);
 		w.beacons ().toProperties (props);
@@ -74,9 +77,9 @@ public final class WorldEdit
 		props.setProperty ("LINE_DEF_WIDTH", Double.toString (w.walls ().defaultWidth ()));
 		props.setProperty ("LINE_DEF_HEIGHT", Double.toString (w.walls ().defaultHeight ()));
 		props.setProperty ("LINE_DEF_TEXTURE", w.walls ().defaultTexture ());
-		props.setProperty ("DOOR_DEF_WIDTH", Double.toString (w.doors ().defaultWidth ()));
-		props.setProperty ("DOOR_DEF_HEIGHT", Double.toString (w.doors ().defaultHeight ()));
-		props.setProperty ("DOOR_DEF_TEXTURE", w.doors ().defaultTexture ());
+		props.setProperty ("DOOR_DEF_WIDTH", Double.toString (w.connectors ().defaultWidth ()));
+		props.setProperty ("DOOR_DEF_HEIGHT", Double.toString (w.connectors ().defaultHeight ()));
+		props.setProperty ("DOOR_DEF_TEXTURE", w.connectors ().defaultTexture ());
 		props.setProperty ("ZONE_DEF_TEXTURE", w.zones ().defaultTexture ());
 		props.setProperty ("FAREA_DEF_TEXTURE", w.fareas ().defaultTexture ());
 
@@ -110,11 +113,12 @@ public final class WorldEdit
 		case WorldItem.PATH:		return w.path ().n ();
 		case WorldItem.WALL:		return w.walls ().n ();
 		case WorldItem.OBJECT:		return w.objects ().n ();
-		case WorldItem.DOOR:		return w.doors ().n ();
+		case WorldItem.CONNECTOR:		return w.connectors ().n ();
 		case WorldItem.BEACON:		return w.beacons ().n ();
 		case WorldItem.CBEACON:		return w.cbeacons ().n ();
 		case WorldItem.WAYPOINT:	return w.wps ().n ();
 		case WorldItem.DOCK:		return w.docks ().n ();
+		case WorldItem.ICON:		return w.icons ().n ();
 		case WorldItem.START:
 		case WorldItem.DEFAULTS:	return 1;
 		}
@@ -136,22 +140,24 @@ public final class WorldEdit
 		case WorldItem.ZONE:		return w.zones ().at (it.index).label;
 		case WorldItem.FAREA:		return w.fareas ().at (it.index).label;
 		case WorldItem.PATH:		return "P" + it.index + " (" + fmt (w.path ().at (it.index).x ()) + ", " + fmt (w.path ().at (it.index).y ()) + ")";
-		case WorldItem.WALL:
-		{
-			Line2	l = w.walls ().at (it.index).edge;
-			return "LINE_" + it.index + " (" + fmt (l.orig ().x ()) + ", " + fmt (l.orig ().y ()) + ") - (" + fmt (l.dest ().x ()) + ", " + fmt (l.dest ().y ()) + ")";
-		}
+		case WorldItem.WALL:		return "LINE_" + it.index;
 		case WorldItem.OBJECT:
 		{
 			WMObject	o = w.objects ().at (it.index);
-			return "OBJECT_" + it.index + ((o.shape != null) ? " " + shortName (o.shape) : "");
+			return "OBJECT_" + it.index + "  [" + o.iconId + "]" + ((o.shape != null) ? " " + shortName (o.shape) : "");
 		}
-		case WorldItem.DOOR:		return w.doors ().at (it.index).label;
+		case WorldItem.CONNECTOR:		return w.connectors ().at (it.index).label;
 		case WorldItem.BEACON:		return w.beacons ().at (it.index).label;
 		case WorldItem.CBEACON:		return w.cbeacons ().at (it.index).label;
 		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).label;
 		case WorldItem.DOCK:		return w.docks ().at (it.index).label;
 		case WorldItem.START:		return "START (" + fmt (w.start_x ()) + ", " + fmt (w.start_y ()) + ", " + fmt (Math.toDegrees (w.start_a ())) + "º)";
+		case WorldItem.ICON:
+		{
+			WMIcon	ic = w.icons ().at (it.index);
+			int		users = iconUsers (w, ic.label);
+			return ic.label + "  (" + ic.n () + " seg, " + users + " obj)";
+		}
 		case WorldItem.DEFAULTS:	return "Default values";
 		}
 		return "?";
@@ -176,7 +182,7 @@ public final class WorldEdit
 	/* Creation and deletion                                               */
 	/* ------------------------------------------------------------------ */
 
-	/** A label not used by any zone, door, waypoint or dock (they share a namespace in World.getType). */
+	/** A label not used by any zone, connector, waypoint or dock (they share a namespace in World.getType). */
 	static public String uniqueLabel (World w, String prefix)
 	{
 		int		i = 0;
@@ -207,13 +213,48 @@ public final class WorldEdit
 		{
 		case WorldItem.ZONE:		return w.zones ().at (it.index).label;
 		case WorldItem.FAREA:		return w.fareas ().at (it.index).label;
-		case WorldItem.DOOR:		return w.doors ().at (it.index).label;
+		case WorldItem.CONNECTOR:		return w.connectors ().at (it.index).label;
 		case WorldItem.BEACON:		return w.beacons ().at (it.index).label;
 		case WorldItem.CBEACON:		return w.cbeacons ().at (it.index).label;
 		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).label;
 		case WorldItem.DOCK:		return w.docks ().at (it.index).label;
+		case WorldItem.ICON:		return w.icons ().at (it.index).label;
 		}
 		return null;
+	}
+
+	/** Number of objects referencing the icon. */
+	static public int iconUsers (World w, String iconLabel)
+	{
+		int		n = 0;
+		for (int i = 0; i < w.objects ().n (); i++)
+			if (iconLabel.equals (w.objects ().at (i).iconId))		n++;
+		return n;
+	}
+
+	/** Objects referencing the icon. */
+	static public List<WorldItem> iconUserItems (World w, String iconLabel)
+	{
+		List<WorldItem>	v = new ArrayList<WorldItem> ();
+		for (int i = 0; i < w.objects ().n (); i++)
+			if (iconLabel.equals (w.objects ().at (i).iconId))		v.add (new WorldItem (WorldItem.OBJECT, i));
+		return v;
+	}
+
+	/** Creates an empty icon with a unique label and returns its item. */
+	static public WorldItem addIcon (World w, String prefix)
+	{
+		WMIcon	ic = new WMIcon (w.icons ().uniqueLabel (prefix), new Line2[0]);
+		w.icons ().add (ic);
+		return new WorldItem (WorldItem.ICON, w.icons ().n () - 1);
+	}
+
+	/** The default icon for new objects: a 0.4 m square, created on demand. */
+	static public WMIcon defaultIcon (World w)
+	{
+		double		h = 0.2;
+		Line2[]		sq = { new Line2 (-h, -h, h, -h), new Line2 (h, -h, h, h), new Line2 (h, h, -h, h), new Line2 (-h, h, -h, -h) };
+		return w.icons ().register (sq, "box");
 	}
 
 	static public WorldItem addWall (World w, double x1, double y1, double x2, double y2)
@@ -228,17 +269,17 @@ public final class WorldEdit
 		return new WorldItem (WorldItem.WALL, w.walls ().n () - 1);
 	}
 
-	static public WorldItem addDoor (World w, double x1, double y1, double x2, double y2)
+	static public WorldItem addConnector (World w, double x1, double y1, double x2, double y2)
 	{
-		WMDoor		door = new WMDoor ();
-		door.edge		= new Line2 (x1, y1, x2, y2);
-		door.path		= new Line2 (x1, y1, x2, y2);
-		door.width		= w.doors ().defaultWidth ();
-		door.height		= w.doors ().defaultHeight ();
-		door.texture	= w.doors ().defaultTexture ();
-		door.label		= uniqueLabel (w, "Door");
-		w.doors ().add (door);
-		return new WorldItem (WorldItem.DOOR, w.doors ().n () - 1);
+		WMConnector		connector = new WMConnector ();
+		connector.edge		= new Line2 (x1, y1, x2, y2);
+		connector.path		= new Line2 (x1, y1, x2, y2);
+		connector.width		= w.connectors ().defaultWidth ();
+		connector.height		= w.connectors ().defaultHeight ();
+		connector.texture	= w.connectors ().defaultTexture ();
+		connector.label		= uniqueLabel (w, "Connector");
+		w.connectors ().add (connector);
+		return new WorldItem (WorldItem.CONNECTOR, w.connectors ().n () - 1);
 	}
 
 	static public WorldItem addZone (World w, double x1, double y1, double x2, double y2)
@@ -267,7 +308,6 @@ public final class WorldEdit
 	static public WorldItem addObject (World w, double x, double y, double size)
 	{
 		WMObject	obj = new WMObject ();
-		double		h = size / 2.0;
 		obj.pos			= new Point3 (x, y, 0.0);
 		obj.a			= 0.0;
 		obj.shape		= null;
@@ -275,9 +315,7 @@ public final class WorldEdit
 		obj.usecolor	= false;
 		obj.visible		= true;
 		obj.label		= "OBJECT_" + w.objects ().n ();
-		obj.icon		= new Line2[] {
-			new Line2 (x - h, y - h, x + h, y - h), new Line2 (x + h, y - h, x + h, y + h),
-			new Line2 (x + h, y + h, x - h, y + h), new Line2 (x - h, y + h, x - h, y - h) };
+		obj.setIcon ((w.icons ().n () > 0) ? w.icons ().at (0) : defaultIcon (w));
 		w.objects ().add (obj);
 		return new WorldItem (WorldItem.OBJECT, w.objects ().n () - 1);
 	}
@@ -308,7 +346,7 @@ public final class WorldEdit
 
 	static public WorldItem addPathPoint (World w, double x, double y)
 	{
-		w.path ().add (new Point2 (x, y));
+		w.path ().add (new Point3 (x, y, 0.0));
 		return new WorldItem (WorldItem.PATH, w.path ().n () - 1);
 	}
 
@@ -323,11 +361,15 @@ public final class WorldEdit
 		case WorldItem.PATH:		w.path ().remove (it.index);		return true;
 		case WorldItem.WALL:		w.walls ().remove (it.index);		return true;
 		case WorldItem.OBJECT:		w.objects ().remove (it.index);		return true;
-		case WorldItem.DOOR:		w.doors ().remove (it.index);		return true;
+		case WorldItem.CONNECTOR:		w.connectors ().remove (it.index);		return true;
 		case WorldItem.BEACON:		w.beacons ().remove (it.index);		return true;
 		case WorldItem.CBEACON:		w.cbeacons ().remove (it.index);	return true;
 		case WorldItem.WAYPOINT:	w.wps ().remove (it.index);			return true;
 		case WorldItem.DOCK:		w.docks ().remove (it.index);		return true;
+		case WorldItem.ICON:
+			if (iconUsers (w, w.icons ().at (it.index).label) > 0)		return false;		// still referenced
+			w.icons ().remove (it.index);
+			return true;
 		}
 		return false;		// START and DEFAULTS cannot be removed
 	}
@@ -388,12 +430,12 @@ public final class WorldEdit
 		{
 			WMObject	o = w.objects ().at (it.index);
 			double	d = o.pos.distance (x, y);
-			for (Line2 l : o.icon)			d = Math.min (d, segDist (l, x, y));
+			for (Line2 l : o.absIcon ())	d = Math.min (d, segDist (l, x, y));
 			return d;
 		}
-		case WorldItem.DOOR:
+		case WorldItem.CONNECTOR:
 		{
-			WMDoor	dr = w.doors ().at (it.index);
+			WMConnector	dr = w.connectors ().at (it.index);
 			return Math.min (segDist (dr.edge, x, y), segDist (dr.path, x, y));
 		}
 		case WorldItem.BEACON:
@@ -416,7 +458,7 @@ public final class WorldEdit
 	/** Kinds in picking priority (small things first, areas last). */
 	static public final int[]	PICK_ORDER	= {
 		WorldItem.START, WorldItem.WAYPOINT, WorldItem.DOCK, WorldItem.PATH, WorldItem.CBEACON, WorldItem.BEACON,
-		WorldItem.DOOR, WorldItem.WALL, WorldItem.OBJECT, WorldItem.FAREA, WorldItem.ZONE
+		WorldItem.CONNECTOR, WorldItem.WALL, WorldItem.OBJECT, WorldItem.FAREA, WorldItem.ZONE
 	};
 
 	/**
@@ -463,12 +505,11 @@ public final class WorldEdit
 		{
 			WMObject	o = w.objects ().at (it.index);
 			o.pos = new Point3 (o.pos.x () + dx, o.pos.y () + dy, o.pos.z ());
-			for (Line2 l : o.icon)		moveLine (l, dx, dy);
 			break;
 		}
-		case WorldItem.DOOR:
+		case WorldItem.CONNECTOR:
 		{
-			WMDoor	d = w.doors ().at (it.index);
+			WMConnector	d = w.connectors ().at (it.index);
 			moveLine (d.edge, dx, dy);
 			moveLine (d.path, dx, dy);
 			break;
@@ -541,9 +582,9 @@ public final class WorldEdit
 			WMObject	o = w.objects ().at (it.index);
 			return new Point2[] { new Point2 (o.pos.x (), o.pos.y ()), arrow (o.pos.x (), o.pos.y (), o.a) };
 		}
-		case WorldItem.DOOR:
+		case WorldItem.CONNECTOR:
 		{
-			WMDoor	d = w.doors ().at (it.index);
+			WMConnector	d = w.connectors ().at (it.index);
 			return new Point2[] { new Point2 (d.edge.orig ()), new Point2 (d.edge.dest ()), new Point2 (d.path.orig ()), new Point2 (d.path.dest ()) };
 		}
 		case WorldItem.BEACON:
@@ -614,9 +655,9 @@ public final class WorldEdit
 			else			setObjectPose (o, o.pos.x (), o.pos.y (), o.pos.z (), Math.atan2 (y - o.pos.y (), x - o.pos.x ()));
 			break;
 		}
-		case WorldItem.DOOR:
+		case WorldItem.CONNECTOR:
 		{
-			WMDoor	d = w.doors ().at (it.index);
+			WMConnector	d = w.connectors ().at (it.index);
 			Line2	l = (h < 2) ? d.edge : d.path;
 			if ((h % 2) == 0)	l.set (x, y, l.dest ().x (), l.dest ().y ());
 			else				l.set (l.orig ().x (), l.orig ().y (), x, y);
@@ -662,11 +703,9 @@ public final class WorldEdit
 	/** Re-places an object keeping its local icon shape. */
 	static public void setObjectPose (WMObject o, double x, double y, double z, double a)
 	{
-		Line2[]		local = o.getLocalIcon ();
-		o.icon	= local;
 		o.pos	= new Point3 (x, y, z);
 		o.a		= a;
-		o.AbsIcon ();
+		o.invalidate ();
 	}
 
 	/** Bounding box of everything in the world: {minx, miny, maxx, maxy}, or null if empty. */
@@ -685,7 +724,7 @@ public final class WorldEdit
 				if (kind == WorldItem.OBJECT)
 				{
 					hs = new Point2[0];
-					for (Line2 l : w.objects ().at (i).icon)
+					for (Line2 l : w.objects ().at (i).absIcon ())
 						hs = concat (hs, new Point2[] { l.orig (), l.dest () });
 				}
 				for (Point2 p : hs)
@@ -707,6 +746,33 @@ public final class WorldEdit
 		return r;
 	}
 
+	/** Base elevation of an element (m), for 3D markers. */
+	static public double elevation (World w, WorldItem it)
+	{
+		if (!valid (w, it))				return 0.0;
+		switch (it.kind)
+		{
+		case WorldItem.ZONE:		return w.zones ().at (it.index).z;
+		case WorldItem.FAREA:
+		{
+			Polygon2	p = w.fareas ().at (it.index).polygon;
+			double	z = 0.0;
+			for (int i = 0; i < p.npoints; i++)		z += p.zpoints[i];
+			return (p.npoints > 0) ? z / p.npoints : 0.0;
+		}
+		case WorldItem.PATH:		return WMPath.z (w.path ().at (it.index));
+		case WorldItem.WALL:		return Math.min (w.walls ().at (it.index).edge.z1 (), w.walls ().at (it.index).edge.z2 ());
+		case WorldItem.OBJECT:		return w.objects ().at (it.index).pos.z ();
+		case WorldItem.CONNECTOR:		return Math.min (w.connectors ().at (it.index).edge.z1 (), w.connectors ().at (it.index).edge.z2 ());
+		case WorldItem.BEACON:		return w.beacons ().at (it.index).pos.z ();
+		case WorldItem.CBEACON:		return w.cbeacons ().at (it.index).z;
+		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).pos.z ();
+		case WorldItem.DOCK:		return w.docks ().at (it.index).pos.z ();
+		case WorldItem.START:		return w.start_z ();
+		}
+		return 0.0;
+	}
+
 	/* ------------------------------------------------------------------ */
 	/* Property view (name / value strings)                                */
 	/* ------------------------------------------------------------------ */
@@ -717,18 +783,19 @@ public final class WorldEdit
 
 		switch (it.kind)
 		{
-		case WorldItem.ZONE:		return new String[] { "label", "x", "y", "width", "height", "texture" };
+		case WorldItem.ZONE:		return new String[] { "label", "x", "y", "z", "width", "height", "texture" };
 		case WorldItem.FAREA:		return new String[] { "label", "texture", "points" };
-		case WorldItem.PATH:		return new String[] { "x", "y" };
-		case WorldItem.WALL:		return new String[] { "x1", "y1", "x2", "y2", "width", "height", "texture" };
-		case WorldItem.OBJECT:		return new String[] { "x", "y", "z", "angle", "shape", "color", "usecolor", "icon" };
-		case WorldItem.DOOR:		return new String[] { "label", "x1", "y1", "x2", "y2", "path x1", "path y1", "path x2", "path y2", "width", "height", "texture" };
-		case WorldItem.BEACON:		return new String[] { "label", "x", "y", "angle", "width" };
-		case WorldItem.CBEACON:		return new String[] { "label", "x", "y", "horiz", "vert" };
-		case WorldItem.WAYPOINT:	return new String[] { "label", "x", "y", "angle" };
+		case WorldItem.PATH:		return new String[] { "x", "y", "z" };
+		case WorldItem.WALL:		return new String[] { "x1", "y1", "z1", "x2", "y2", "z2", "width", "height", "texture" };
+		case WorldItem.OBJECT:		return new String[] { "x", "y", "z", "angle", "icon", "shape", "color", "usecolor" };
+		case WorldItem.ICON:		return new String[] { "label", "segments" };
+		case WorldItem.CONNECTOR:		return new String[] { "label", "x1", "y1", "z1", "x2", "y2", "z2", "path x1", "path y1", "path z1", "path x2", "path y2", "path z2", "width", "height", "texture" };
+		case WorldItem.BEACON:		return new String[] { "label", "x", "y", "z", "angle", "width" };
+		case WorldItem.CBEACON:		return new String[] { "label", "x", "y", "z", "horiz", "vert" };
+		case WorldItem.WAYPOINT:	return new String[] { "label", "x", "y", "z", "angle" };
 		case WorldItem.DOCK:		return new String[] { "label", "x", "y", "z", "angle" };
-		case WorldItem.START:		return new String[] { "x", "y", "angle" };
-		case WorldItem.DEFAULTS:	return new String[] { "wall width", "wall height", "wall texture", "door width", "door height", "door texture", "zone texture", "farea texture" };
+		case WorldItem.START:		return new String[] { "x", "y", "z", "angle" };
+		case WorldItem.DEFAULTS:	return new String[] { "wall width", "wall height", "wall texture", "connector width", "connector height", "connector texture", "zone texture", "farea texture" };
 		}
 		return new String[0];
 	}
@@ -745,6 +812,7 @@ public final class WorldEdit
 			if (name.equals ("label"))		return z.label;
 			if (name.equals ("x"))			return fmt (z.area.getX ());
 			if (name.equals ("y"))			return fmt (z.area.getY ());
+			if (name.equals ("z"))			return fmt (z.z);
 			if (name.equals ("width"))		return fmt (z.area.getWidth ());
 			if (name.equals ("height"))		return fmt (z.area.getHeight ());
 			if (name.equals ("texture"))	return z.texture;
@@ -759,7 +827,7 @@ public final class WorldEdit
 			{
 				StringBuffer	sb = new StringBuffer ();
 				for (int i = 0; i < f.polygon.npoints; i++)
-					sb.append ((i > 0) ? "; " : "").append (fmt (f.polygon.xpoints[i])).append (", ").append (fmt (f.polygon.ypoints[i]));
+					sb.append ((i > 0) ? "; " : "").append (fmt (f.polygon.xpoints[i])).append (", ").append (fmt (f.polygon.ypoints[i])).append (", ").append (fmt (f.polygon.zpoints[i]));
 				return sb.toString ();
 			}
 			break;
@@ -769,6 +837,7 @@ public final class WorldEdit
 			Point2	p = w.path ().at (it.index);
 			if (name.equals ("x"))			return fmt (p.x ());
 			if (name.equals ("y"))			return fmt (p.y ());
+			if (name.equals ("z"))			return fmt (WMPath.z (p));
 			break;
 		}
 		case WorldItem.WALL:
@@ -776,8 +845,10 @@ public final class WorldEdit
 			WMWall	wl = w.walls ().at (it.index);
 			if (name.equals ("x1"))			return fmt (wl.edge.orig ().x ());
 			if (name.equals ("y1"))			return fmt (wl.edge.orig ().y ());
+			if (name.equals ("z1"))			return fmt (wl.edge.z1 ());
 			if (name.equals ("x2"))			return fmt (wl.edge.dest ().x ());
 			if (name.equals ("y2"))			return fmt (wl.edge.dest ().y ());
+			if (name.equals ("z2"))			return fmt (wl.edge.z2 ());
 			if (name.equals ("width"))		return fmt (wl.width);
 			if (name.equals ("height"))		return fmt (wl.height);
 			if (name.equals ("texture"))	return wl.texture;
@@ -793,29 +864,32 @@ public final class WorldEdit
 			if (name.equals ("shape"))		return (o.shape == null) ? "" : o.shape;
 			if (name.equals ("color"))		return toHex (o.color);
 			if (name.equals ("usecolor"))	return Boolean.toString (o.usecolor);
-			if (name.equals ("icon"))
-			{
-				StringBuffer	sb = new StringBuffer ();
-				Line2[]			local = o.getLocalIcon ();
-				for (int i = 0; i < local.length; i++)
-					sb.append ((i > 0) ? "; " : "").append (fmt (local[i].orig ().x ())).append (", ").append (fmt (local[i].orig ().y ()))
-					  .append (", ").append (fmt (local[i].dest ().x ())).append (", ").append (fmt (local[i].dest ().y ()));
-				return sb.toString ();
-			}
+			if (name.equals ("icon"))		return (o.iconId == null) ? "" : o.iconId;
 			break;
 		}
-		case WorldItem.DOOR:
+		case WorldItem.ICON:
 		{
-			WMDoor	d = w.doors ().at (it.index);
+			WMIcon	ic = w.icons ().at (it.index);
+			if (name.equals ("label"))		return ic.label;
+			if (name.equals ("segments"))	return segmentsText (ic.lines);
+			break;
+		}
+		case WorldItem.CONNECTOR:
+		{
+			WMConnector	d = w.connectors ().at (it.index);
 			if (name.equals ("label"))		return d.label;
 			if (name.equals ("x1"))			return fmt (d.edge.orig ().x ());
 			if (name.equals ("y1"))			return fmt (d.edge.orig ().y ());
+			if (name.equals ("z1"))			return fmt (d.edge.z1 ());
 			if (name.equals ("x2"))			return fmt (d.edge.dest ().x ());
 			if (name.equals ("y2"))			return fmt (d.edge.dest ().y ());
+			if (name.equals ("z2"))			return fmt (d.edge.z2 ());
 			if (name.equals ("path x1"))	return fmt (d.path.orig ().x ());
 			if (name.equals ("path y1"))	return fmt (d.path.orig ().y ());
+			if (name.equals ("path z1"))	return fmt (d.path.z1 ());
 			if (name.equals ("path x2"))	return fmt (d.path.dest ().x ());
 			if (name.equals ("path y2"))	return fmt (d.path.dest ().y ());
+			if (name.equals ("path z2"))	return fmt (d.path.z2 ());
 			if (name.equals ("width"))		return fmt (d.width);
 			if (name.equals ("height"))		return fmt (d.height);
 			if (name.equals ("texture"))	return d.texture;
@@ -827,6 +901,7 @@ public final class WorldEdit
 			if (name.equals ("label"))		return b.label;
 			if (name.equals ("x"))			return fmt (b.pos.x ());
 			if (name.equals ("y"))			return fmt (b.pos.y ());
+			if (name.equals ("z"))			return fmt (b.pos.z ());
 			if (name.equals ("angle"))		return fmt (Math.toDegrees (b.pos.alpha ()));
 			if (name.equals ("width"))		return fmt (b.width);
 			break;
@@ -837,6 +912,7 @@ public final class WorldEdit
 			if (name.equals ("label"))		return b.label;
 			if (name.equals ("x"))			return fmt (b.beacon.center ().x ());
 			if (name.equals ("y"))			return fmt (b.beacon.center ().y ());
+			if (name.equals ("z"))			return fmt (b.z);
 			if (name.equals ("horiz"))		return fmt (b.beacon.horiz ());
 			if (name.equals ("vert"))		return fmt (b.beacon.vert ());
 			break;
@@ -847,6 +923,7 @@ public final class WorldEdit
 			if (name.equals ("label"))		return p.label;
 			if (name.equals ("x"))			return fmt (p.pos.x ());
 			if (name.equals ("y"))			return fmt (p.pos.y ());
+			if (name.equals ("z"))			return fmt (p.pos.z ());
 			if (name.equals ("angle"))		return fmt (Math.toDegrees (p.pos.alpha ()));
 			break;
 		}
@@ -863,15 +940,16 @@ public final class WorldEdit
 		case WorldItem.START:
 			if (name.equals ("x"))			return fmt (w.start_x ());
 			if (name.equals ("y"))			return fmt (w.start_y ());
+			if (name.equals ("z"))			return fmt (w.start_z ());
 			if (name.equals ("angle"))		return fmt (Math.toDegrees (w.start_a ()));
 			break;
 		case WorldItem.DEFAULTS:
 			if (name.equals ("wall width"))		return fmt (w.walls ().defaultWidth ());
 			if (name.equals ("wall height"))	return fmt (w.walls ().defaultHeight ());
 			if (name.equals ("wall texture"))	return w.walls ().defaultTexture ();
-			if (name.equals ("door width"))		return fmt (w.doors ().defaultWidth ());
-			if (name.equals ("door height"))	return fmt (w.doors ().defaultHeight ());
-			if (name.equals ("door texture"))	return w.doors ().defaultTexture ();
+			if (name.equals ("connector width"))		return fmt (w.connectors ().defaultWidth ());
+			if (name.equals ("connector height"))	return fmt (w.connectors ().defaultHeight ());
+			if (name.equals ("connector texture"))	return w.connectors ().defaultTexture ();
 			if (name.equals ("zone texture"))	return w.zones ().defaultTexture ();
 			if (name.equals ("farea texture"))	return w.fareas ().defaultTexture ();
 			break;
@@ -896,6 +974,7 @@ public final class WorldEdit
 			if (name.equals ("label"))			z.label = checkLabel (w, it, value);
 			else if (name.equals ("x"))			z.area.setRect (num (value), z.area.getY (), z.area.getWidth (), z.area.getHeight ());
 			else if (name.equals ("y"))			z.area.setRect (z.area.getX (), num (value), z.area.getWidth (), z.area.getHeight ());
+			else if (name.equals ("z"))			z.z = num (value);
 			else if (name.equals ("width"))		z.area.setRect (z.area.getX (), z.area.getY (), Math.abs (num (value)), z.area.getHeight ());
 			else if (name.equals ("height"))	z.area.setRect (z.area.getX (), z.area.getY (), z.area.getWidth (), Math.abs (num (value)));
 			else if (name.equals ("texture"))	z.texture = token (value);
@@ -909,10 +988,10 @@ public final class WorldEdit
 			else if (name.equals ("points"))
 			{
 				double[]	v = nums (value);
-				if ((v.length < 6) || (v.length % 2 != 0))
-					throw new IllegalArgumentException ("At least 3 points, as: x1, y1; x2, y2; x3, y3");
+				if ((v.length < 9) || (v.length % 3 != 0))
+					throw new IllegalArgumentException ("At least 3 points, as: x1, y1, z1; x2, y2, z2; x3, y3, z3");
 				Polygon2	p = new Polygon2 ();
-				for (int i = 0; i < v.length; i += 2)		p.addPoint (v[i], v[i + 1]);
+				for (int i = 0; i < v.length; i += 3)		p.addPoint (v[i], v[i + 1], v[i + 2]);
 				f.polygon = p;
 			}
 			return;
@@ -922,6 +1001,7 @@ public final class WorldEdit
 			Point2	p = w.path ().at (it.index);
 			if (name.equals ("x"))				p.x (num (value));
 			else if (name.equals ("y"))			p.y (num (value));
+			else if (name.equals ("z"))			{ if (p instanceof Point3) ((Point3) p).z (num (value)); }
 			return;
 		}
 		case WorldItem.WALL:
@@ -932,6 +1012,8 @@ public final class WorldEdit
 			else if (name.equals ("y1"))		l.set (l.orig ().x (), num (value), l.dest ().x (), l.dest ().y ());
 			else if (name.equals ("x2"))		l.set (l.orig ().x (), l.orig ().y (), num (value), l.dest ().y ());
 			else if (name.equals ("y2"))		l.set (l.orig ().x (), l.orig ().y (), l.dest ().x (), num (value));
+			else if (name.equals ("z1"))		l.setZ (num (value), l.z2 ());
+			else if (name.equals ("z2"))		l.setZ (l.z1 (), num (value));
 			else if (name.equals ("width"))		wl.width = num (value);
 			else if (name.equals ("height"))	wl.height = num (value);
 			else if (name.equals ("texture"))	wl.texture = token (value);
@@ -950,20 +1032,32 @@ public final class WorldEdit
 			else if (name.equals ("usecolor"))	o.usecolor = bool (value);
 			else if (name.equals ("icon"))
 			{
-				double[]	v = nums (value);
-				if ((v.length < 4) || (v.length % 4 != 0))
-					throw new IllegalArgumentException ("Segments in local coordinates, as: x1, y1, x2, y2; x1, y1, x2, y2; ...");
-				Line2[]		local = new Line2[v.length / 4];
-				for (int i = 0; i < local.length; i++)
-					local[i] = new Line2 (v[4 * i], v[4 * i + 1], v[4 * i + 2], v[4 * i + 3]);
-				o.icon = local;
-				o.AbsIcon ();
+				WMIcon	ic = w.icons ().at (token (value));
+				if (ic == null)		throw new IllegalArgumentException ("Unknown icon '" + value + "'");
+				o.setIcon (ic);
 			}
 			return;
 		}
-		case WorldItem.DOOR:
+		case WorldItem.ICON:
 		{
-			WMDoor	d = w.doors ().at (it.index);
+			WMIcon	ic = w.icons ().at (it.index);
+			if (name.equals ("label"))
+			{
+				String	old = ic.label;
+				token (value);
+				if (!value.equals (old) && (w.icons ().index (value) >= 0))
+					throw new IllegalArgumentException ("Icon '" + value + "' already exists");
+				ic.label = value;
+				for (int i = 0; i < w.objects ().n (); i++)			// keep the references
+					if (old.equals (w.objects ().at (i).iconId))		w.objects ().at (i).setIcon (ic);
+			}
+			else if (name.equals ("segments"))
+				ic.lines = parseSegments (value);
+			return;
+		}
+		case WorldItem.CONNECTOR:
+		{
+			WMConnector	d = w.connectors ().at (it.index);
 			Line2	e = d.edge, p = d.path;
 			if (name.equals ("label"))			d.label = checkLabel (w, it, value);
 			else if (name.equals ("x1"))		e.set (num (value), e.orig ().y (), e.dest ().x (), e.dest ().y ());
@@ -974,6 +1068,10 @@ public final class WorldEdit
 			else if (name.equals ("path y1"))	p.set (p.orig ().x (), num (value), p.dest ().x (), p.dest ().y ());
 			else if (name.equals ("path x2"))	p.set (p.orig ().x (), p.orig ().y (), num (value), p.dest ().y ());
 			else if (name.equals ("path y2"))	p.set (p.orig ().x (), p.orig ().y (), p.dest ().x (), num (value));
+			else if (name.equals ("z1"))		e.setZ (num (value), e.z2 ());
+			else if (name.equals ("z2"))		e.setZ (e.z1 (), num (value));
+			else if (name.equals ("path z1"))	p.setZ (num (value), p.z2 ());
+			else if (name.equals ("path z2"))	p.setZ (p.z1 (), num (value));
 			else if (name.equals ("width"))		d.width = num (value);
 			else if (name.equals ("height"))	d.height = num (value);
 			else if (name.equals ("texture"))	d.texture = token (value);
@@ -985,6 +1083,7 @@ public final class WorldEdit
 			if (name.equals ("label"))			b.label = checkLabel (w, it, value);
 			else if (name.equals ("x"))			b.pos.x (num (value));
 			else if (name.equals ("y"))			b.pos.y (num (value));
+			else if (name.equals ("z"))			b.pos.z (num (value));
 			else if (name.equals ("angle"))		b.pos.alpha (Math.toRadians (num (value)));
 			else if (name.equals ("width"))		b.width = Math.abs (num (value));
 			return;
@@ -996,6 +1095,7 @@ public final class WorldEdit
 			if (name.equals ("label"))			b.label = checkLabel (w, it, value);
 			else if (name.equals ("x"))			e.set (num (value), e.center ().y (), e.horiz (), e.vert ());
 			else if (name.equals ("y"))			e.set (e.center ().x (), num (value), e.horiz (), e.vert ());
+			else if (name.equals ("z"))			b.z = num (value);
 			else if (name.equals ("horiz"))		e.set (e.center ().x (), e.center ().y (), Math.abs (num (value)), e.vert ());
 			else if (name.equals ("vert"))		e.set (e.center ().x (), e.center ().y (), e.horiz (), Math.abs (num (value)));
 			return;
@@ -1006,6 +1106,7 @@ public final class WorldEdit
 			if (name.equals ("label"))			p.label = checkLabel (w, it, value);
 			else if (name.equals ("x"))			p.pos.x (num (value));
 			else if (name.equals ("y"))			p.pos.y (num (value));
+			else if (name.equals ("z"))			p.pos.z (num (value));
 			else if (name.equals ("angle"))		p.pos.alpha (Math.toRadians (num (value)));
 			return;
 		}
@@ -1022,15 +1123,16 @@ public final class WorldEdit
 		case WorldItem.START:
 			if (name.equals ("x"))				w.setStart (num (value), w.start_y (), w.start_a ());
 			else if (name.equals ("y"))			w.setStart (w.start_x (), num (value), w.start_a ());
+			else if (name.equals ("z"))			w.setStart (w.start_x (), w.start_y (), num (value), w.start_a ());
 			else if (name.equals ("angle"))		w.setStart (w.start_x (), w.start_y (), Math.toRadians (num (value)));
 			return;
 		case WorldItem.DEFAULTS:
 			if (name.equals ("wall width"))			w.walls ().setDefaults (num (value), w.walls ().defaultHeight (), w.walls ().defaultTexture ());
 			else if (name.equals ("wall height"))	w.walls ().setDefaults (w.walls ().defaultWidth (), num (value), w.walls ().defaultTexture ());
 			else if (name.equals ("wall texture"))	w.walls ().setDefaults (w.walls ().defaultWidth (), w.walls ().defaultHeight (), token (value));
-			else if (name.equals ("door width"))	w.doors ().setDefaults (num (value), w.doors ().defaultHeight (), w.doors ().defaultTexture ());
-			else if (name.equals ("door height"))	w.doors ().setDefaults (w.doors ().defaultWidth (), num (value), w.doors ().defaultTexture ());
-			else if (name.equals ("door texture"))	w.doors ().setDefaults (w.doors ().defaultWidth (), w.doors ().defaultHeight (), token (value));
+			else if (name.equals ("connector width"))	w.connectors ().setDefaults (num (value), w.connectors ().defaultHeight (), w.connectors ().defaultTexture ());
+			else if (name.equals ("connector height"))	w.connectors ().setDefaults (w.connectors ().defaultWidth (), num (value), w.connectors ().defaultTexture ());
+			else if (name.equals ("connector texture"))	w.connectors ().setDefaults (w.connectors ().defaultWidth (), w.connectors ().defaultHeight (), token (value));
 			else if (name.equals ("zone texture"))	w.zones ().setDefaultTexture (token (value));
 			else if (name.equals ("farea texture"))	w.fareas ().setDefaultTexture (token (value));
 			return;
@@ -1038,7 +1140,11 @@ public final class WorldEdit
 	}
 
 	/* ------------------------------------------------------------------ */
-	/* Object icons (list of segments in absolute coordinates)             */
+	/* Icon editing                                                        */
+	/*                                                                     */
+	/* Icons are stored in local coordinates. The GUI edits them through a  */
+	/* reference pose (rx, ry, ra): the world position where the icon origin */
+	/* is displayed (an object's pose, or the anchor chosen for a new icon). */
 	/* ------------------------------------------------------------------ */
 
 	/** Endpoints closer than this are considered the same vertex (m). */
@@ -1049,19 +1155,44 @@ public final class WorldEdit
 		return name.equals ("usecolor");
 	}
 
+	static private Point2 toWorld (double lx, double ly, double rx, double ry, double ra)
+	{
+		return new Point2 (lx * Math.cos (ra) - ly * Math.sin (ra) + rx, lx * Math.sin (ra) + ly * Math.cos (ra) + ry);
+	}
+
+	static private Point2 toLocal (double x, double y, double rx, double ry, double ra)
+	{
+		double	dx = x - rx, dy = y - ry;
+		return new Point2 (dx * Math.cos (-ra) - dy * Math.sin (-ra), dx * Math.sin (-ra) + dy * Math.cos (-ra));
+	}
+
+	/** Segments of the icon in world coordinates for the reference pose. */
+	static public Line2[] iconWorldLines (WMIcon ic, double rx, double ry, double ra)
+	{
+		return ic.toAbsolute (new Point3 (rx, ry, 0.0), ra);
+	}
+
 	/**
-	 * Distinct vertices of an icon: coincident segment endpoints are merged, so
-	 * that a chain of segments behaves like a polyline when edited.
+	 * Distinct vertices of the icon (local coordinates): coincident segment
+	 * endpoints are merged, so that a chain of segments behaves like a polyline.
 	 */
-	static public Point2[] iconVertices (WMObject o)
+	static public Point2[] iconVertices (WMIcon ic)
 	{
 		List<Point2>	v = new ArrayList<Point2> ();
-		for (Line2 l : o.icon)
+		for (Line2 l : ic.lines)
 		{
 			addVertex (v, l.orig ());
 			addVertex (v, l.dest ());
 		}
 		return v.toArray (new Point2[v.size ()]);
+	}
+
+	/** Same vertices, in world coordinates. */
+	static public Point2[] iconWorldVertices (WMIcon ic, double rx, double ry, double ra)
+	{
+		Point2[]	v = iconVertices (ic);
+		for (int i = 0; i < v.length; i++)		v[i] = toWorld (v[i].x (), v[i].y (), rx, ry, ra);
+		return v;
 	}
 
 	static private void addVertex (List<Point2> v, Point2 p)
@@ -1071,10 +1202,10 @@ public final class WorldEdit
 		v.add (new Point2 (p));
 	}
 
-	/** Index of the icon vertex near (x, y) within tol, or -1. */
-	static public int pickIconVertex (WMObject o, double x, double y, double tol)
+	/** Index of the icon vertex near world point (x, y) within tol, or -1. */
+	static public int pickIconVertex (WMIcon ic, double rx, double ry, double ra, double x, double y, double tol)
 	{
-		Point2[]	v = iconVertices (o);
+		Point2[]	v = iconWorldVertices (ic, rx, ry, ra);
 		int			best = -1;
 		double		bd = tol;
 		for (int i = 0; i < v.length; i++)
@@ -1085,60 +1216,67 @@ public final class WorldEdit
 		return best;
 	}
 
-	/** Index of the icon segment near (x, y) within tol, or -1. */
-	static public int pickIconSegment (WMObject o, double x, double y, double tol)
+	/** Index of the icon segment near world point (x, y) within tol, or -1. */
+	static public int pickIconSegment (WMIcon ic, double rx, double ry, double ra, double x, double y, double tol)
 	{
+		Line2[]		ls = iconWorldLines (ic, rx, ry, ra);
 		int			best = -1;
 		double		bd = tol;
-		for (int i = 0; i < o.icon.length; i++)
+		for (int i = 0; i < ls.length; i++)
 		{
-			double	d = segDist (o.icon[i], x, y);
+			double	d = segDist (ls[i], x, y);
 			if (d < bd) { bd = d; best = i; }
 		}
 		return best;
 	}
 
-	/** Moves vertex <code>vi</code> (and every segment endpoint lying on it) to (x, y). */
-	static public void moveIconVertex (WMObject o, int vi, double x, double y)
+	/** Moves vertex <code>vi</code> (and every segment endpoint lying on it) to world point (x, y). */
+	static public void moveIconVertex (WMIcon ic, double rx, double ry, double ra, int vi, double x, double y)
 	{
-		Point2[]	v = iconVertices (o);
+		Point2[]	v = iconVertices (ic);
 		if ((vi < 0) || (vi >= v.length))		return;
 		Point2		p = v[vi];
-		for (Line2 l : o.icon)
+		Point2		q = toLocal (x, y, rx, ry, ra);
+		for (Line2 l : ic.lines)
 		{
 			double	ox = l.orig ().x (), oy = l.orig ().y (), dx = l.dest ().x (), dy = l.dest ().y ();
 			boolean	mo = l.orig ().distance (p) < ICON_EPS, md = l.dest ().distance (p) < ICON_EPS;
 			if (mo || md)
-				l.set (mo ? x : ox, mo ? y : oy, md ? x : dx, md ? y : dy);
+				l.set (mo ? q.x () : ox, mo ? q.y () : oy, md ? q.x () : dx, md ? q.y () : dy);
 		}
 	}
 
-	/** Splits segment <code>si</code> at (x, y); returns the index of the new vertex. */
-	static public int splitIconSegment (WMObject o, int si, double x, double y)
+	/** Splits segment <code>si</code> at world point (x, y); returns the index of the new vertex. */
+	static public int splitIconSegment (WMIcon ic, double rx, double ry, double ra, int si, double x, double y)
 	{
-		if ((si < 0) || (si >= o.icon.length))		return -1;
-		Line2		l = o.icon[si];
-		Line2[]		icon = new Line2[o.icon.length + 1];
-		System.arraycopy (o.icon, 0, icon, 0, si + 1);
-		icon[si]		= new Line2 (l.orig ().x (), l.orig ().y (), x, y);
-		icon[si + 1]	= new Line2 (x, y, l.dest ().x (), l.dest ().y ());
-		System.arraycopy (o.icon, si + 1, icon, si + 2, o.icon.length - si - 1);
-		o.icon = icon;
-		return pickIconVertex (o, x, y, ICON_EPS * 10);
+		if ((si < 0) || (si >= ic.lines.length))		return -1;
+		Point2		q = toLocal (x, y, rx, ry, ra);
+		Line2		l = ic.lines[si];
+		double		zq = (l.z1 () + l.z2 ()) / 2.0;			// new vertex: mean elevation of the segment
+		Line2[]		lines = new Line2[ic.lines.length + 1];
+		System.arraycopy (ic.lines, 0, lines, 0, si + 1);
+		lines[si]		= new Line2 (l.orig ().x (), l.orig ().y (), l.z1 (), q.x (), q.y (), zq);
+		lines[si + 1]	= new Line2 (q.x (), q.y (), zq, l.dest ().x (), l.dest ().y (), l.z2 ());
+		System.arraycopy (ic.lines, si + 1, lines, si + 2, ic.lines.length - si - 1);
+		ic.lines = lines;
+		Point2[]	v = iconVertices (ic);
+		for (int i = 0; i < v.length; i++)
+			if (v[i].distance (q) < ICON_EPS)		return i;
+		return -1;
 	}
 
 	/**
 	 * Removes vertex <code>vi</code>. If exactly two segments meet there they
 	 * are merged into one; otherwise every segment touching it is deleted.
 	 */
-	static public void removeIconVertex (WMObject o, int vi)
+	static public void removeIconVertex (WMIcon ic, int vi)
 	{
-		Point2[]	v = iconVertices (o);
+		Point2[]	v = iconVertices (ic);
 		if ((vi < 0) || (vi >= v.length))		return;
 		Point2		p = v[vi];
 		List<Line2>	touching = new ArrayList<Line2> ();
 		List<Line2>	rest = new ArrayList<Line2> ();
-		for (Line2 l : o.icon)
+		for (Line2 l : ic.lines)
 			if ((l.orig ().distance (p) < ICON_EPS) || (l.dest ().distance (p) < ICON_EPS))	touching.add (l);
 			else																			rest.add (l);
 		if (touching.size () == 2)
@@ -1147,26 +1285,56 @@ public final class WorldEdit
 			Point2	pa = (a.orig ().distance (p) < ICON_EPS) ? a.dest () : a.orig ();
 			Point2	pb = (b.orig ().distance (p) < ICON_EPS) ? b.dest () : b.orig ();
 			if (pa.distance (pb) > ICON_EPS)
-				rest.add (new Line2 (pa.x (), pa.y (), pb.x (), pb.y ()));
+				rest.add (new Line2 (pa.x (), pa.y (), (pa instanceof Point3) ? ((Point3) pa).z () : 0.0, pb.x (), pb.y (), (pb instanceof Point3) ? ((Point3) pb).z () : 0.0));
 		}
-		o.icon = rest.toArray (new Line2[rest.size ()]);
+		ic.lines = rest.toArray (new Line2[rest.size ()]);
 	}
 
-	static public void addIconSegment (WMObject o, double x1, double y1, double x2, double y2)
+	/** Appends a segment given in world coordinates. */
+	static public void addIconSegment (WMIcon ic, double rx, double ry, double ra, double x1, double y1, double x2, double y2)
 	{
-		Line2[]		icon = new Line2[o.icon.length + 1];
-		System.arraycopy (o.icon, 0, icon, 0, o.icon.length);
-		icon[o.icon.length] = new Line2 (x1, y1, x2, y2);
-		o.icon = icon;
+		Point2		a = toLocal (x1, y1, rx, ry, ra), b = toLocal (x2, y2, rx, ry, ra);
+		Line2[]		lines = new Line2[ic.lines.length + 1];
+		System.arraycopy (ic.lines, 0, lines, 0, ic.lines.length);
+		lines[ic.lines.length] = new Line2 (a.x (), a.y (), 0.0, b.x (), b.y (), 0.0);
+		ic.lines = lines;
 	}
 
-	static public void removeIconSegment (WMObject o, int si)
+	static public void removeIconSegment (WMIcon ic, int si)
 	{
-		if ((si < 0) || (si >= o.icon.length))		return;
-		Line2[]		icon = new Line2[o.icon.length - 1];
-		System.arraycopy (o.icon, 0, icon, 0, si);
-		System.arraycopy (o.icon, si + 1, icon, si, o.icon.length - si - 1);
-		o.icon = icon;
+		if ((si < 0) || (si >= ic.lines.length))		return;
+		Line2[]		lines = new Line2[ic.lines.length - 1];
+		System.arraycopy (ic.lines, 0, lines, 0, si);
+		System.arraycopy (ic.lines, si + 1, lines, si, ic.lines.length - si - 1);
+		ic.lines = lines;
+	}
+
+	/** Invalidates the cached absolute icons of the objects using an icon (after editing it). */
+	static public void iconChanged (World w, WMIcon ic)
+	{
+		for (int i = 0; i < w.objects ().n (); i++)
+			if (w.objects ().at (i).icon == ic)		w.objects ().at (i).invalidate ();
+	}
+
+	static public String segmentsText (Line2[] lines)
+	{
+		StringBuffer	sb = new StringBuffer ();
+		for (int i = 0; i < lines.length; i++)
+			sb.append ((i > 0) ? "; " : "").append (fmt (lines[i].orig ().x ())).append (", ").append (fmt (lines[i].orig ().y ())).append (", ").append (fmt (lines[i].z1 ()))
+			  .append (", ").append (fmt (lines[i].dest ().x ())).append (", ").append (fmt (lines[i].dest ().y ())).append (", ").append (fmt (lines[i].z2 ()));
+		return sb.toString ();
+	}
+
+	static public Line2[] parseSegments (String value)
+	{
+		if (value.trim ().length () == 0)		return new Line2[0];
+		double[]	v = nums (value);
+		if ((v.length < 6) || (v.length % 6 != 0))
+			throw new IllegalArgumentException ("Segments in local coordinates, as: x1, y1, z1, x2, y2, z2; x1, y1, z1, x2, y2, z2; ...");
+		Line2[]		lines = new Line2[v.length / 6];
+		for (int i = 0; i < lines.length; i++)
+			lines[i] = new Line2 (v[6 * i], v[6 * i + 1], v[6 * i + 2], v[6 * i + 3], v[6 * i + 4], v[6 * i + 5]);
+		return lines;
 	}
 
 	/* Colour helpers: the editor shows colours as #rrggbb; files keep names or r:g:b (ColorTool). */
@@ -1228,7 +1396,7 @@ public final class WorldEdit
 	static private String checkLabel (World w, WorldItem it, String s)
 	{
 		token (s);
-		for (int kind = 0; kind < WorldItem.DEFAULTS; kind++)
+		for (int kind = 0; kind < WorldItem.ICON; kind++)
 		{
 			int		n = count (w, kind);
 			for (int i = 0; i < n; i++)

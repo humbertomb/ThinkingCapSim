@@ -49,7 +49,7 @@ public class Task2 extends Behaviour {
 	protected void update(HashMap params) {
 					
 		subBeh.setParam("RBuffer",params.get("RBuffer"));
-		subBeh.setParam("speed",new Double("0.2"));
+		subBeh.setParam("speed",Double.valueOf ("0.2"));
 		//subBeh.setParam("speed",params.get("followSpeed"));
 		
 	}

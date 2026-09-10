@@ -79,7 +79,7 @@ public class RasmusControl_with_Planner extends Controller
 	 * The path that has to be followed to reach the behaviour 
 	 * requested by the debug window 
 	 */
-	private ArrayList behRequestedPath;
+	private ArrayList<String> behRequestedPath;
 	/* Linda Item about the behaviour information */
 	private ItemBehInfo bItem;
 	/* Linda Tuple about the behaviour information */
@@ -308,9 +308,9 @@ public class RasmusControl_with_Planner extends Controller
 	/*
 	 * Finds the behaviour requested. The list contains the path to reach the behaviour.
 	 */
-	private void findBehRequested(ArrayList list) {
+	private void findBehRequested(ArrayList<String> list) {
 		RuleSet rules;
-		ArrayList rulesNames;
+		ArrayList<String> rulesNames;
 		Behaviour currentBeh;
 		
 		if ((list == null) || (list.isEmpty()))
@@ -318,11 +318,11 @@ public class RasmusControl_with_Planner extends Controller
 		else {
 			currentBeh = beh;
 			for (int i = 0; i < list.size(); i++) {
-				String ruleName = (String)list.get(i);
+				String ruleName = list.get(i);
 				int j = 0;
 				rules = currentBeh.getRuleSet();
 				rulesNames = rules.getRulesNames();
-				while ((j < rulesNames.size()) && (!ruleName.equals((String) rulesNames.get(j))))
+				while ((j < rulesNames.size()) && (!ruleName.equals(rulesNames.get(j))))
 					j++;
 				if (j == rulesNames.size())
 					break;
@@ -352,15 +352,15 @@ public class RasmusControl_with_Planner extends Controller
 	private void setRulesInformation(BehaviourInfo behInfo, RuleSet rules) {
 		Rule currentRule;
 		Behaviour beh;
-		ArrayList rulesNames = rules.getRulesNames();
+		ArrayList<String> rulesNames = rules.getRulesNames();
 		for (int i = 0; i < rulesNames.size(); i++) {
-			currentRule = rules.getRule((String)rulesNames.get(i));
+			currentRule = rules.getRule(rulesNames.get(i));
 
 			beh = currentRule.getSubBehaviour();			
 			if (beh != null)
-				behInfo.addRule((String)rulesNames.get(i),currentRule.getAntecedentValue(),currentRule.getOutputFSets(),beh.getName(),beh.getParameters());
+				behInfo.addRule(rulesNames.get(i),currentRule.getAntecedentValue(),currentRule.getOutputFSets(),beh.getName(),beh.getParameters());
 			else 
-				behInfo.addRule((String)rulesNames.get(i),currentRule.getAntecedentValue(),currentRule.getOutputFSets(),null,null);
+				behInfo.addRule(rulesNames.get(i),currentRule.getAntecedentValue(),currentRule.getOutputFSets(),null,null);
 //			rulen++;
 		}
 		

@@ -135,7 +135,7 @@ public class MonitorDataFrame extends MonitorFrame
 		String			tmp;
 		int				ndx;
 		
-		tmp = new Double (value).toString ();
+		tmp = Double.valueOf (value).toString ();
 		if (((ndx = tmp.indexOf (".")) != 0) && (tmp.length () >= ndx + len + 1))		
 			tmp = tmp.substring (0, ndx + len + 1);	
 		

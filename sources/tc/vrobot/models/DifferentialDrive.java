@@ -49,12 +49,12 @@ public class DifferentialDrive extends RobotModel
 	{
 		super.update (props);
 		
-		try { Dn		= new Double (props.getProperty ("WHEEL")).doubleValue (); } 		catch (Exception e) 		{ }
-		try { Ce		= new Double (props.getProperty ("PULSES")).doubleValue (); } 		catch (Exception e) 		{ }
-		try { b		= new Double (props.getProperty ("BASE")).doubleValue (); } 		catch (Exception e) 		{ }
-		try { Gn	 	= new Double (props.getProperty ("GEAR")).doubleValue (); } 		catch (Exception e) 		{ }
+		try { Dn		= Double.valueOf (props.getProperty ("WHEEL")).doubleValue (); } 		catch (Exception e) 		{ }
+		try { Ce		= Double.valueOf (props.getProperty ("PULSES")).doubleValue (); } 		catch (Exception e) 		{ }
+		try { b		= Double.valueOf (props.getProperty ("BASE")).doubleValue (); } 		catch (Exception e) 		{ }
+		try { Gn	 	= Double.valueOf (props.getProperty ("GEAR")).doubleValue (); } 		catch (Exception e) 		{ }
 
-		try { MOTmax = new Double (props.getProperty ("MAXMOTOR")).doubleValue (); } 	catch (Exception e) 		{ }
+		try { MOTmax = Double.valueOf (props.getProperty ("MAXMOTOR")).doubleValue (); } 	catch (Exception e) 		{ }
 
 		// Robot kinematics parameters
 		Cm		= (Math.PI * Dn) / (Ce * Gn);

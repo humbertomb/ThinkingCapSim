@@ -63,7 +63,7 @@ public class VSymbol extends List
 	public static String newid ()
 	{
 		serial ++;
-		return ROOT + (new Integer (serial)).toString ();
+		return ROOT + (Integer.valueOf (serial)).toString ();
 	}
 
 	public static void dump (VSymbol s)
@@ -163,17 +163,17 @@ public class VSymbol extends List
 
 	public VSymbol number (String name, Integer subtype, double number)
 	{
-		return number (name, subtype.intValue (), new Double (number));
+		return number (name, subtype.intValue (), Double.valueOf (number));
 	}
 
 	public VSymbol number (String name, int subtype, double number)
 	{
-		return number (name, subtype, new Double (number));
+		return number (name, subtype, Double.valueOf (number));
 	}
 
 	public VSymbol number (String name, double number)
 	{
-		return number (name, N_VAR, new Double (number));
+		return number (name, N_VAR, Double.valueOf (number));
 	}
 
 	public VSymbol number (String name, Double number)
@@ -183,7 +183,7 @@ public class VSymbol extends List
 	
 	public VSymbol number (double number)
 	{
-		return number (newid (), N_CONSTANT, new Double (number));
+		return number (newid (), N_CONSTANT, Double.valueOf (number));
 	}
 	
 	public VSymbol number (Double number)

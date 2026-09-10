@@ -566,8 +566,8 @@ public class LaserWindow extends Object implements Runnable
 		laserCO.repaint ();
 
 		riepfa_pminSL.setValue(inviewLRF.getNPointRiepfa());
-		riepfa_bpmaxSL.setValue(new Double(inviewLRF.getMaxBreakPointRiepfa() * 100.0).intValue());
-		riepfa_distSL.setValue(new Double(inviewLRF.getMaxDistRiepfa() * 100.0).intValue());
+		riepfa_bpmaxSL.setValue(Double.valueOf (inviewLRF.getMaxBreakPointRiepfa() * 100.0).intValue());
+		riepfa_distSL.setValue(Double.valueOf (inviewLRF.getMaxDistRiepfa() * 100.0).intValue());
 
 		ltg_rangeSL.setValue ((int) (ltgLRF.getRangeLRF () * 10));
 		ltg_windowSL.setValue (ltgLRF.getFWindow ());
@@ -612,7 +612,7 @@ public class LaserWindow extends Object implements Runnable
 			// Appending to file
 			out = new BufferedWriter(new FileWriter (fname, true));
 			
-			out.write (new Integer (RAYSCAN).toString ());
+			out.write (Integer.valueOf (RAYSCAN).toString ());
 			for(i = 0; i < RAYSCAN; i++)
 				out.write (" " + format (values[i], 2));
 			out.write("\n");			

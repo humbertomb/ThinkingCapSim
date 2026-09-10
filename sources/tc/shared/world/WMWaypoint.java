@@ -28,8 +28,9 @@ public class WMWaypoint extends WMElement
         StringTokenizer st = new StringTokenizer (prop,", \t");
         double x1 = Double.parseDouble (st.nextToken());
         double y1 = Double.parseDouble (st.nextToken());
+        double z1 = Double.parseDouble (st.nextToken());
         double	r  = Double.parseDouble (st.nextToken()); 				//orientation - degrees
-        pos = new Position(x1,y1,Math.toRadians(r));
+        pos = new Position(x1,y1,z1,Math.toRadians(r));
         label = new String (st.nextToken());
     }
     
@@ -61,6 +62,6 @@ public class WMWaypoint extends WMElement
     
     public String toRawString ()
     {
-        return DoubleFormat.format(pos.x ()) + ", " + DoubleFormat.format(pos.y ()) + ", " + DoubleFormat.format(Math.toDegrees (pos.alpha())) + ", " + label;
+        return DoubleFormat.format(pos.x ()) + ", " + DoubleFormat.format(pos.y ()) + ", " + DoubleFormat.format(pos.z ()) + ", " + DoubleFormat.format(Math.toDegrees (pos.alpha())) + ", " + label;
     }
 }

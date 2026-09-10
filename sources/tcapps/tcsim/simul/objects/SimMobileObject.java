@@ -44,10 +44,10 @@ public class SimMobileObject extends SimObject
 		if (oneproperty.equalsIgnoreCase("constant")) m_type = CONSTANT_MOVE;
 		else if (oneproperty.equalsIgnoreCase("accelerated")) m_type = ACCELERATED_MOVE;		
 		
-		SPEED = new Double (props.getProperty ("SPEED","0.0")).doubleValue ();
-		ACC = new Double (props.getProperty ("ACC","0.0")).doubleValue ();
-		RES_COEF = new Double (props.getProperty("RES_COEF",String.valueOf(RES_COEF))).doubleValue();
-		FRIC_COEF = new Double (props.getProperty("FRIC_COEF",String.valueOf(FRIC_COEF))).doubleValue();
+		SPEED = Double.valueOf (props.getProperty ("SPEED","0.0")).doubleValue ();
+		ACC = Double.valueOf (props.getProperty ("ACC","0.0")).doubleValue ();
+		RES_COEF = Double.valueOf (props.getProperty("RES_COEF",String.valueOf(RES_COEF))).doubleValue();
+		FRIC_COEF = Double.valueOf (props.getProperty("FRIC_COEF",String.valueOf(FRIC_COEF))).doubleValue();
 	}
 	
 	/** Moves the object. Returns false if the object hasn't been moved */

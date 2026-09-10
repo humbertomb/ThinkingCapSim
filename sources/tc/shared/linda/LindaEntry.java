@@ -18,7 +18,7 @@ public class LindaEntry
 {
 	// Linda space data
 	protected Tuple							tuple;
-	protected Vector<LindaEntryRegistry>	listeners;
+	protected ArrayList<LindaEntryRegistry>	listeners;
 	
 	// Administrative and accounting data
 	protected int							rio;			// Read operations
@@ -33,7 +33,7 @@ public class LindaEntry
 		eio			= 0;
 		
 		tuple		= new Tuple (space, key, null);
-		listeners	= new Vector<LindaEntryRegistry> ();
+		listeners	= new ArrayList<LindaEntryRegistry> ();
 	}
 	
 	// Accessors
@@ -94,14 +94,10 @@ public class LindaEntry
 	
 	public void register (String space, LindaEntryListener listener)
 	{
-		Enumeration			enu;
-		LindaEntryRegistry	registry;
 		boolean				update = true;
 
-		enu = listeners.elements ();
-		while (enu.hasMoreElements ()) 
+		for (LindaEntryRegistry registry : new ArrayList<LindaEntryRegistry> (listeners))
 		{
-			registry = (LindaEntryRegistry) enu.nextElement ();
 			if (registry.matches (space, listener.getConnection ()))
 				update = false;
 		}
@@ -112,13 +108,9 @@ public class LindaEntry
 	
 	public void unregister (String space, LindaEntryListener listener) 
 	{
-		Enumeration			enu;
-		LindaEntryRegistry	registry;
 		
-		enu = listeners.elements ();
-		while (enu.hasMoreElements ()) 
+		for (LindaEntryRegistry registry : new ArrayList<LindaEntryRegistry> (listeners))
 		{
-			registry = (LindaEntryRegistry) enu.nextElement ();
 			if (registry.matches (space, listener.getConnection ()))
 			{
 				listeners.remove (registry);
@@ -129,13 +121,9 @@ public class LindaEntry
 	
 	public void unregister (String space) 
 	{
-		Enumeration			enu;
-		LindaEntryRegistry	registry;
 		
-		enu = listeners.elements ();
-		while (enu.hasMoreElements ()) 
+		for (LindaEntryRegistry registry : new ArrayList<LindaEntryRegistry> (listeners))
 		{
-			registry = (LindaEntryRegistry) enu.nextElement ();
 			if (registry.filter.matches_exact (space))
 				listeners.remove (registry);
 		}
@@ -143,13 +131,9 @@ public class LindaEntry
 	
 	public void unregister (LindaEntryListener con) 
 	{
-		Enumeration			enu;
-		LindaEntryRegistry	registry;
 		
-		enu = listeners.elements ();
-		while (enu.hasMoreElements ()) 
+		for (LindaEntryRegistry registry : new ArrayList<LindaEntryRegistry> (listeners))
 		{
-			registry = (LindaEntryRegistry) enu.nextElement ();
 			if (registry.matchesConnection(con.getConnection())){
 				//System.out.println("LindaEntry unregistry("+con+") eliminando entrada "+registry.filter.toString());
 				listeners.remove (registry);
@@ -159,21 +143,15 @@ public class LindaEntry
 	
 	public String toHTML (boolean expand)
 	{
-		Enumeration			enu;
-		LindaEntryRegistry	registry;
 		String				output;
 		
 		output	= "[<B>" + tuple.key + "</B>]  W=<B>" + wio + "</B>, R=<B>" + rio + "</B>, E=<B>" + eio + "</B> (L=<B>" + listeners.size () + "</B>)";
 		
-		enu 	= listeners.elements ();
-		if (expand && enu.hasMoreElements ())
+		if (expand && !listeners.isEmpty ())
 		{
 			output	+= "<BR>";
-			while (enu.hasMoreElements ()) 
-			{
-				registry= (LindaEntryRegistry) enu.nextElement ();
+			for (LindaEntryRegistry registry : new ArrayList<LindaEntryRegistry> (listeners))
 				output	+= "&nbsp;&nbsp;&nbsp;&nbsp;* " + registry.filter + " => " + registry.listener + " E=<B>" + registry.eio + "</B><BR>";		
-			}
 		}
 		else
 			output	+= "<BR>";
@@ -183,21 +161,15 @@ public class LindaEntry
 	
 	public String toString (boolean expand)
 	{
-		Enumeration			enu;
-		LindaEntryRegistry	registry;
 		String				output;
 		
 		output	= "[" + tuple.key + "]  W=" + wio + ", R=" + rio + ", E=" + eio + " (L=" + listeners.size () + ")";
 		
-		enu 	= listeners.elements ();
-		if (expand && enu.hasMoreElements ())
+		if (expand && !listeners.isEmpty ())
 		{
 			output	+= "\n";
-			while (enu.hasMoreElements ()) 
-			{
-				registry= (LindaEntryRegistry) enu.nextElement ();
+			for (LindaEntryRegistry registry : new ArrayList<LindaEntryRegistry> (listeners))
 				output	+= "    >> " + registry.filter + " => " + registry.listener + " E=" + registry.eio + "\n";		
-			}
 		}
 		else
 			output	+= "\n";

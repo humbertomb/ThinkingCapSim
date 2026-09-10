@@ -187,7 +187,7 @@ public class World2D extends Object2D
 		for (i = 0; i < map.objects ().n (); i++)
 		{
 			object	= map.objects ().at (i);
-			icon		= object.icon;
+			icon		= object.absIcon ();
 			for (j = 0; j < icon.length; j++)
 			{
 				x1	= icon[j].orig ().x ();
@@ -251,9 +251,9 @@ public class World2D extends Object2D
 		double x1,y1,x2,y2;
 		Line2 l; 
 		
-		for (i = 0; i < map.doors ().n (); i++)
+		for (i = 0; i < map.connectors ().n (); i++)
 		{
-			l = map.doors ().at (i).edge;
+			l = map.connectors ().at (i).edge;
 			x1 = l.orig().x();
 			y1 = l.orig().y();
 			x2 = l.dest().x();
@@ -263,7 +263,7 @@ public class World2D extends Object2D
 			model.addRawCircle(x2, y2, 0.1, Color.BLUE);
 			model.addRawLine (l, Color.BLUE);
 			
-			l = map.doors ().at (i).path;
+			l = map.connectors ().at (i).path;
 			x1 = l.orig().x();
 			y1 = l.orig().y();
 			x2 = l.dest().x();
@@ -272,7 +272,7 @@ public class World2D extends Object2D
 			model.addRawCircle(x1, y1, 0.1, Color.BLACK);
 			model.addRawCircle(x2, y2, 0.1, Color.BLACK);
 			//			model.addRawLine (l, Color.BLACK);
-			model.addRawText (x1,y1,map.doors ().at (i).label, Color.BLACK);			
+			model.addRawText (x1,y1,map.connectors ().at (i).label, Color.BLACK);			
 		}
 	}
 	
@@ -436,7 +436,7 @@ public class World2D extends Object2D
 		
 		// Draw the location quality label
 		if ((rdesc.MAXLSB > 0) && data.beacon[0].isValid ())
-			model.addRawText (rx + rdesc.RADIUS, ry + rdesc.RADIUS, new Integer (data.beacon[0].getNumber ()).toString (), color);				
+			model.addRawText (rx + rdesc.RADIUS, ry + rdesc.RADIUS, Integer.valueOf (data.beacon[0].getNumber ()).toString (), color);				
 		
 		
 		// Draw the warning area
@@ -554,7 +554,7 @@ public class World2D extends Object2D
 		
 		// Draw the location quality label
 		if (data.qlty >= 0.0)
-			model.addRawText (rx + rdesc.RADIUS, ry + rdesc.RADIUS, new Integer ((int) Math.round (data.qlty)).toString (), color);				
+			model.addRawText (rx + rdesc.RADIUS, ry + rdesc.RADIUS, Integer.valueOf ((int) Math.round (data.qlty)).toString (), color);				
 			
 		// Draw a pallet when agv carry it
 		if(data.pal_switch==1){

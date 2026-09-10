@@ -8,7 +8,7 @@ package tc.shared.world;
 
 import java.io.PrintWriter;
 import java.util.Properties;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
 import wucore.utils.dxf.entities.CircleDxf;
@@ -35,12 +35,12 @@ public class WMCBeacons
 	}
 	
 	public WMCBeacons (DXFWorldFile dxf){
-		Vector entities = dxf.getEntities();
-		Vector cbeac = new Vector();
+		ArrayList<Entity> entities = dxf.getEntities();
+		ArrayList<WMCBeacon> cbeac = new ArrayList<WMCBeacon>();
 		Entity entity;
 		int index = 0;
 		for(int i = 0; i<entities.size(); i++){
-			entity = (Entity)entities.get(i);
+			entity = entities.get(i);
 			if(entity.getLayer().equalsIgnoreCase("CBEACONS")){
 				if(entity instanceof TextDxf) 
 					cbeac.add(new WMCBeacon((TextDxf) entity));

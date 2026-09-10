@@ -6,17 +6,17 @@ import java.awt.*;
 
 public class PetriNet
 {
-	Vector nodes;
-	Vector transitions;
-	Vector edges;
+	ArrayList<PNNode> nodes;
+	ArrayList<PNTransition> transitions;
+	ArrayList<PNEdge> edges;
 	String name;
 	int stepCount;
 	
 	
 	public PetriNet() {
-		this.nodes = new Vector();
-		this.transitions = new Vector();
-		this.edges = new Vector();
+		this.nodes = new ArrayList<PNNode>();
+		this.transitions = new ArrayList<PNTransition>();
+		this.edges = new ArrayList<PNEdge>();
 		this.name = "PN";
 		this.stepCount = 0;
 	}
@@ -80,19 +80,19 @@ public class PetriNet
 	
 	public PNNode getNode(int i) {
 		PNNode n;
-		n = (PNNode) nodes.elementAt(i);
+		n = nodes.get (i);
 		return n;
 	}
 	
 	public PNTransition getTransition(int i) {
 		PNTransition t;
-		t = (PNTransition) transitions.elementAt(i);
+		t = transitions.get (i);
 		return t;
 	}
 	
 	public PNEdge getEdge(int i) {
 		PNEdge e;
-		e = (PNEdge) edges.elementAt(i);
+		e = edges.get (i);
 		return e;
 	}
 	
@@ -101,7 +101,7 @@ public class PetriNet
 		int ret = -1;
 		
 		for (i=0; i< numberOfTransitions(); i++){
-			if ( (PNTransition) transitions.elementAt(i) == t) {ret = i;
+			if ( transitions.get (i) == t) {ret = i;
 			break;}
 		}
 		return ret;
@@ -112,7 +112,7 @@ public class PetriNet
 		int ret = -1;
 		
 		for (i=0; i< numberOfNodes(); i++){
-			if ( (PNNode) nodes.elementAt(i) == n) {ret = i;
+			if ( nodes.get (i) == n) {ret = i;
 			break;}
 		}
 		return ret;
@@ -207,7 +207,7 @@ public class PetriNet
 	
 	public void addNode(){
 		PNNode n = new PNNode();
-		nodes.addElement(n);
+		nodes.add (n);
 		/*System.out.print("NODE ");
 		 System.out.print(n.name);
 		 System.out.println(" created !");*/
@@ -220,7 +220,7 @@ public class PetriNet
 		PNNode n = new PNNode();
 		n.x(x);
 		n.y(y);
-		nodes.addElement(n);
+		nodes.add (n);
 		/*System.out.print("NODE ");
 		 System.out.print(n.name);
 		 System.out.println(" created !");*/
@@ -230,7 +230,7 @@ public class PetriNet
 	public boolean addNode(PNNode n) {
 		//   if (getDistanceToClosestItem(n.getX(), n.getY()) < 45.0)
 		//    return false;
-		nodes.addElement(n);
+		nodes.add (n);
 		//System.out.println("Node "+n.name+" created!");
 		return true;
 	}
@@ -238,7 +238,7 @@ public class PetriNet
 	
 	public void addTransition() {
 		PNTransition t = new PNTransition();
-		transitions.addElement(t);
+		transitions.add (t);
 	}
 	
 	public boolean addTransition(int x, int y) {
@@ -248,7 +248,7 @@ public class PetriNet
 		PNTransition t = new PNTransition();
 		t.x(x);
 		t.y(y);
-		transitions.addElement(t);
+		transitions.add (t);
 		/*System.out.print("Created TRANSITION ");
 		 System.out.print(name);
 		 System.out.println(" !");*/
@@ -258,20 +258,20 @@ public class PetriNet
 	public boolean addTransition(PNTransition t) {
 		//   if (getDistanceToClosestItem(t.getX(), t.getY()) < 45.0)
 		//    return false;
-		transitions.addElement(t);
+		transitions.add (t);
 		//System.out.println("transition "+t.name+" created!");
 		return true;
 	}
 	
 	public PNEdge addEdge(PNEdge e) {
-		edges.addElement(e);
+		edges.add (e);
 		addEdgeProtocol(e);
 		return e;
 	}
 	
 	public PNEdge addEdge(int tFrom, int iFrom, int tTo, int iTo, Polygon points) {
 		PNEdge e = new PNEdge(tFrom, iFrom, tTo, iTo, points);
-		edges.addElement(e);
+		edges.add (e);
 		addEdgeProtocol(e);
 		return e;
 	}
@@ -325,21 +325,21 @@ public class PetriNet
 		int todelete[] = new int[nodes.size()];
 		
 		
-		this.nodes.removeElement(n);
+		this.nodes.remove(n);
 		
 		/*System.out.print("NODE ");
 		 System.out.print(n.name);
 		 System.out.println(" removed !");*/
 		
 		for (i = 0; i < edges.size(); i++) {
-			PNEdge e = (PNEdge) edges.elementAt(i);
+			PNEdge e = edges.get (i);
 			if (e.adjust(this, index, PNEdge.NODE))
 			{todelete[k] = i; k++;}
 		}
 		
 		for (i = k; i > 0; i--) {
-			PNEdge d = (PNEdge) edges.elementAt(todelete[i-1]);
-			edges.removeElement(d);
+			PNEdge d = edges.get (todelete[i-1]);
+			edges.remove(d);
 		}
 	}
 	
@@ -355,21 +355,21 @@ public class PetriNet
 		 System.out.println(" removed ! (==> deleting of connected edges)");*/
 		
 		for (i = 0; i < edges.size(); i++) {
-			PNEdge e = (PNEdge) edges.elementAt(i);
+			PNEdge e = edges.get (i);
 			if (e.adjust(this, index, PNEdge.TRANSITION))
 			{todelete[k] = i; k++;}
 		}
 		
 		for (i = k; i > 0; i--) {
-			PNEdge d = (PNEdge) edges.elementAt(todelete[i-1]);
-			edges.removeElement(d);
+			PNEdge d = edges.get (todelete[i-1]);
+			edges.remove(d);
 		}
-		this.transitions.removeElement(t);
+		this.transitions.remove(t);
 	}
 	
 	public boolean removeEdge(PNEdge e){
 		removeEdgeProtocol(e);
-		edges.removeElement(e);
+		edges.remove(e);
 		return true;
 	}
 	
@@ -392,7 +392,7 @@ public class PetriNet
 		boolean isdead = true;
 		int i;
 		for (i=0; i<transitions.size(); i++){
-			isdead = ! (((PNTransition) transitions.elementAt(i)).canFire(this, priorEnabled));
+			isdead = ! (transitions.get (i).canFire(this, priorEnabled));
 			if (isdead == false) break;
 		}
 		return isdead;
@@ -404,19 +404,19 @@ public class PetriNet
 		p.setStepCount(stepCount);
 		for (int i = 0; i < nodes.size(); i++) {
 			PNNode n	= new PNNode ();
-			n.set ((PNNode) nodes.elementAt(i));
+			n.set (nodes.get (i));
 			p.addNode(n);
 		}
 		for (int i = 0; i < transitions.size(); i++)
 		{
 			PNTransition t = new PNTransition ();
-			t.set ((PNTransition) transitions.elementAt(i));
+			t.set (transitions.get (i));
 			p.addTransition(t);
 		}
 		for (int i = 0; i < edges.size(); i++)
 		{
 			PNEdge e = new PNEdge ();
-			e.set ((PNEdge)edges.elementAt(i));
+			e.set (edges.get (i));
 			p.addEdge(e);
 		}
 		return p;
@@ -430,23 +430,23 @@ public class PetriNet
 		return stepCount;          // Fuer die Bildschirmausgabe abzuaendern !!!
 	}
 	
-	public Vector getAllConnectedTrans(PNTransition t){
+	public ArrayList<PNTransition> getAllConnectedTrans(PNTransition t){
 		int i,j;
 		int ind = 0;
 		
 		PNEdge e,f;
 		
-		Vector connected = new Vector();
+		ArrayList<PNTransition> connected = new ArrayList<PNTransition>();
 		
 		for (i=0; i < numberOfEdges(); i++){
-			e = (PNEdge) edges.elementAt(i);
+			e = edges.get (i);
 			if ((e.getTTo() == PNEdge.TRANSITION) && (e.getITo() == getTransIndex(t)))
 			{ind = e.getIFrom();
 			for (j=0; j< numberOfEdges(); j++){
 				f = getEdge(j);
 				if (( f.getTFrom() == PNEdge.NODE) && (f.getIFrom() == ind)){
 					if (! connected.contains(getTransition(f.getITo())))
-						connected.addElement(getTransition(f.getITo()));
+						connected.add (getTransition(f.getITo()));
 				}
 			}
 			}
@@ -454,11 +454,11 @@ public class PetriNet
 		return connected;
 	}
 	
-	public Vector getAllConnectedFireableTrans(PNTransition t, boolean prior) {
-		Vector vec = getAllConnectedTrans(t);
+	public ArrayList<PNTransition> getAllConnectedFireableTrans(PNTransition t, boolean prior) {
+		ArrayList<PNTransition> vec = getAllConnectedTrans(t);
 		for (int i = 0; i < vec.size(); i++) {
-			if (! ((PNTransition)vec.elementAt(i)).canFire(this, prior)) {
-				vec.removeElementAt(i);
+			if (! vec.get (i).canFire(this, prior)) {
+				vec.remove (i);
 			}
 		}
 		return vec;
@@ -471,7 +471,7 @@ public class PetriNet
 		boolean ret = false;
 		
 		for (i=0; i<numberOfEdges(); i++){
-			e = (PNEdge) edges.elementAt(i);
+			e = edges.get (i);
 			if (e.pointingTo(this,t)){
 				if (getNodeIndex(n) == e.getIFrom()) ret = true;
 			}
@@ -479,31 +479,31 @@ public class PetriNet
 		return ret;
 	}
 	
-	public int getAllWeights(Vector v){
+	public int getAllWeights(ArrayList<PNTransition> v){
 		int i,j;
 		PNEdge e;
 		PNTransition t = new PNTransition();
 		int weights = 0;
 		
 		for (i=0; i< v.size(); i++){
-			t = (PNTransition) v.elementAt(i);
+			t = v.get (i);
 			for (j=0; j< numberOfEdges(); j++){
-				e = (PNEdge) getEdge(j);
+				e = getEdge(j);
 				if (e.pointingTo(this,t)) weights = weights + e.getWeight();
 			}
 		}
 		return weights;
 	}
 	
-	public int getConnectedItems(Vector v){
+	public int getConnectedItems(ArrayList<PNTransition> v){
 		int i,j;
 		int items = 0;
 		PNTransition t = new PNTransition();
 		PNNode n = new PNNode();
 		for (i=0; i< v.size(); i++){
-			t = (PNTransition) v.elementAt(i);
+			t = v.get (i);
 			for (j=0; j<numberOfNodes(); j++){
-				n = (PNNode) nodes.elementAt(j);
+				n = nodes.get (j);
 				if (connectedWith(n,t)) items = items + n.getTokens();
 			}
 		}
@@ -511,42 +511,42 @@ public class PetriNet
 	}
 	
 	
-	public Vector multipleCanFire(Vector v, boolean priorEnabled){     //NEW 22.5.97 AH
+	public ArrayList<PNTransition> multipleCanFire(ArrayList<PNTransition> v, boolean priorEnabled){     //NEW 22.5.97 AH
 		int i,j,size;
 		PNTransition s,t;
 		boolean b;
-		Vector w = new Vector();
-		Vector z = new Vector();
+		ArrayList<PNTransition> w = new ArrayList<PNTransition>();
+		ArrayList<PNTransition> z = new ArrayList<PNTransition>();
 		
 		PetriNet q = (PetriNet) this.clone();
 		
 		size = v.size();
 		
 		for (i=0; i < size; i++){
-			t = (PNTransition) v.elementAt(i);
+			t = v.get (i);
 			for (j=0; j < q.numberOfTransitions(); j++){
 				s = q.getTransition(j);
-				if (s.equals(t)) z.addElement(s);
+				if (s.equals(t)) z.add (s);
 			}
 		}
 		
 		size = z.size();
 		
 		for (i=0; i < size; i++){
-			t = (PNTransition) z.elementAt(i);
+			t = z.get (i);
 			// System.out.println("3");               //***
 			b = t.fire(q, false); // System.out.println(b);
 			if (b) {  // System.out.println(t.getName());
-				w.addElement(t);
+				w.add (t);
 			}
 		}
-		v.removeAllElements();
+		v.clear ();
 		
 		for (i=0; i < w.size(); i++){
-			t = (PNTransition) w.elementAt(i);
+			t = w.get (i);
 			for (j=0; j < numberOfTransitions(); j++){
 				s = getTransition(j);
-				if (s.equals(t)) v.addElement(s);
+				if (s.equals(t)) v.add (s);
 			}
 		}
 		
@@ -556,9 +556,9 @@ public class PetriNet
 	// static methods
 	
 	// new 18.5.97 jw
-	public static void subVectorOfVector(Vector sub,Vector vec) {
+	public static void subVectorOfVector(ArrayList<PNTransition> sub,ArrayList<PNTransition> vec) {
 		for (int i = 0; i < sub.size(); i++) {
-			vec.removeElement(sub.elementAt(i));
+			vec.remove(sub.get (i));
 		}
 	}
 
@@ -639,7 +639,7 @@ public class PetriNet
 			out.println ("NODES = " + nodes.size ());		
 			out.println();	
 			for (i = 0; i < nodes.size (); i++) 
-				out.println("NODE_" + i + " = " + ((PNNode) nodes.elementAt (i)).toPropString ());
+				out.println("NODE_" + i + " = " + nodes.get (i).toPropString ());
 			out.println();
 
 			out.println("# ==============================");
@@ -648,7 +648,7 @@ public class PetriNet
 			out.println ("TRANS = " + transitions.size ());		
 			out.println();	
 			for (i = 0; i < transitions.size (); i++) 
-				out.println("TRAN_" + i + " = " + ((PNTransition) transitions.elementAt (i)).toPropString ());
+				out.println("TRAN_" + i + " = " + transitions.get (i).toPropString ());
 			out.println();
 
 			out.println("# ==============================");
@@ -657,7 +657,7 @@ public class PetriNet
 			out.println ("EDGES = " + edges.size ());		
 			out.println();	
 			for (i = 0; i < edges.size (); i++) 
-				out.println("EDGE_" + i + " = " + ((PNEdge) edges.elementAt (i)).toPropString ());
+				out.println("EDGE_" + i + " = " + edges.get (i).toPropString ());
 			out.println();
 
 			out.println();
@@ -673,17 +673,17 @@ public class PetriNet
 
 		props	= new Properties ();
 		
-		props.setProperty ("NODES", new Integer (nodes.size ()).toString ());		
+		props.setProperty ("NODES", Integer.valueOf (nodes.size ()).toString ());		
 		for (i = 0; i < nodes.size (); i++) 
-			props.setProperty ("NODE_" + i, ((PNNode) nodes.elementAt (i)).toPropString ());
+			props.setProperty ("NODE_" + i, nodes.get (i).toPropString ());
 		
-		props.setProperty  ("TRANS", new Integer (transitions.size ()).toString ());		
+		props.setProperty  ("TRANS", Integer.valueOf (transitions.size ()).toString ());		
 		for (i = 0; i < transitions.size (); i++) 
-			props.setProperty ("TRAN_" + i, ((PNTransition) transitions.elementAt (i)).toPropString ());
+			props.setProperty ("TRAN_" + i, transitions.get (i).toPropString ());
 
-		props.setProperty  ("EDGES", new Integer (edges.size ()).toString ());		
+		props.setProperty  ("EDGES", Integer.valueOf (edges.size ()).toString ());		
 		for (i = 0; i < edges.size (); i++) 
-			props.setProperty ("EDGE_" + i, ((PNEdge) edges.elementAt (i)).toPropString ());
+			props.setProperty ("EDGE_" + i, edges.get (i).toPropString ());
 
 		return props;
 	}

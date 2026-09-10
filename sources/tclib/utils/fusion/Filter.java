@@ -46,7 +46,7 @@ public class Filter extends Object
 		} catch (Exception e) { }
 
 		// Read Filter Type
-		try { type 			= new Integer (props.getProperty ("FILTER")).intValue (); } catch (Exception e) 		{ type		= FILTERID; }
+		try { type 			= Integer.valueOf (props.getProperty ("FILTER")).intValue (); } catch (Exception e) 		{ type		= FILTERID; }
 
 		switch (type)
 		{
@@ -110,7 +110,7 @@ public class Filter extends Object
 				break;
 			case Filter.FILTERID:
 			default:
-				props.put ("FILTER", 			new Integer (FILTERID).toString ());
+				props.put ("FILTER", 			Integer.valueOf (FILTERID).toString ());
 
 				try 
 				{

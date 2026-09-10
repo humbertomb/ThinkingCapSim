@@ -9,7 +9,7 @@ package tc.shared.world;
 import java.io.PrintWriter;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
 import wucore.utils.dxf.entities.Entity;
@@ -39,10 +39,10 @@ public class WMPath
 	}
 	
 	public WMPath (DXFWorldFile dxf){
-	    Vector entities = dxf.getEntities();
+	    ArrayList<Entity> entities = dxf.getEntities();
 	    Entity entity;
 	    for(int i = 0; i<entities.size(); i++){
-	        entity = (Entity)entities.get(i);
+	        entity = entities.get(i);
 	        if(entity.getLayer().equalsIgnoreCase("PATH")){
 	            if(entity instanceof PolylineDxf){ 
 	                points = new Point2[((PolylineDxf)entity).vertexs.size()];
@@ -58,6 +58,15 @@ public class WMPath
 	
     // Accessors
 	public final int	 		n () 				{ return points.length; }
+
+	/** Elevation of a path point (0 if it carries none). */
+	static public double z (Point2 p)			{ return (p instanceof Point3) ? ((Point3) p).z () : 0.0; }
+
+	/** "x, y, z" */
+	static public String pointRawString (Point2 p)
+	{
+		return p.x () + ", " + p.y () + ", " + z (p);
+	}
 	
 	// Instance methods
 	public Point2 at (int i)
@@ -69,7 +78,7 @@ public class WMPath
 	public void fromProperties (Properties props)
 	{
 		String				prop;
-		double				x1,y1;
+		double				x1,y1,z1;
 		StringTokenizer 	st;
 		points = new Point2[Integer.parseInt (props.getProperty ("PATH_POINTS","0"))];
 		for (int i=0; i < points.length; i++){
@@ -79,7 +88,8 @@ public class WMPath
 				st = new StringTokenizer (prop,", \t");
 				x1 = Double.parseDouble (st.nextToken());
 				y1 = Double.parseDouble (st.nextToken());
-				points[i] = new Point2(x1, y1);	 
+				z1 = Double.parseDouble (st.nextToken());
+				points[i] = new Point3(x1, y1, z1);		// Point3 extends Point2: the elevation travels with the point	 
 			}
 		}
 	}
@@ -89,7 +99,7 @@ public class WMPath
 		props.setProperty ("PATH_POINTS",Integer.toString (points.length));
 		
 		for (int i = 0; i < points.length; i++)
-			props.setProperty ("PATHPOINT_"+i, points[i].toRawString ());
+			props.setProperty ("PATHPOINT_"+i, pointRawString (points[i]));
 	}
 	
 	public void toFile (PrintWriter out)
@@ -100,7 +110,7 @@ public class WMPath
 			out.println ("PATH_POINTS = " + n());		
 			out.println();	
 			for (int i = 0; i < n(); i++) 
-				out.println("PATHPOINT_" + i + " = " + points[i].x () + ", " +  points[i].y ());
+				out.println("PATHPOINT_" + i + " = " + pointRawString (points[i]));
 			out.println();
 	}
 	

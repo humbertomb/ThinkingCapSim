@@ -148,7 +148,7 @@ public class UDPCamServer extends Thread
 	}
 
 /*
-					byte[] bytes = ((new Boolean (b)).toString()).getBytes();
+					byte[] bytes = ((Boolean.valueOf (b)).toString()).getBytes();
 					
 		
 					dp2 = new DatagramPacket (bytes, bytes.length,dp.getAddress(),dp.getPort());

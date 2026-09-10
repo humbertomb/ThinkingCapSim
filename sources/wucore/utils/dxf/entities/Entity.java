@@ -13,7 +13,7 @@ package wucore.utils.dxf.entities;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.geom.Point2;
 import wucore.utils.geom.Point3;
@@ -37,9 +37,9 @@ public abstract class Entity{
 	protected int color = 256;
 	
 	// Para poder añadir propiedades Extendidas
-	public Vector ExtendedInt;
-	public Vector ExtendedDouble;
-	public Vector ExtendedText;
+	public ArrayList<Integer> ExtendedInt;
+	public ArrayList<Double> ExtendedDouble;
+	public ArrayList<String> ExtendedText;
 
 	
 	public Entity(){
@@ -47,9 +47,9 @@ public abstract class Entity{
 		id = "0";
 		LIMMIN = new Point2();
 		LIMMAX = new Point2();
-		ExtendedInt = new Vector();
-		ExtendedDouble = new Vector();
-		ExtendedText = new Vector();
+		ExtendedInt = new ArrayList<Integer>();
+		ExtendedDouble = new ArrayList<Double>();
+		ExtendedText = new ArrayList<String>();
 	}
 	
 	
@@ -69,17 +69,17 @@ public abstract class Entity{
 	public void setID(String id)	{		this.id = id; 	}
 	public String getID()	   		{		return id;		}
 	
-	public void addExtInt(int data)			{ExtendedInt.add(new Integer(data));}
+	public void addExtInt(int data)			{ExtendedInt.add(Integer.valueOf (data));}
 	public void addExtText(String data)		{ExtendedText.add(data);}
-	public void addExtDouble(double data)	{ExtendedDouble.add(new Double(data));}
+	public void addExtDouble(double data)	{ExtendedDouble.add(Double.valueOf (data));}
 	
-	public void addExtInt(int index, int data)			{ExtendedInt.add(index, new Integer(data));}
+	public void addExtInt(int index, int data)			{ExtendedInt.add(index, Integer.valueOf (data));}
 	public void addExtText(int index, String data)		{ExtendedText.add(index, data);}
-	public void addExtDouble(int index, double data)	{ExtendedDouble.add(index, new Double(data));}
+	public void addExtDouble(int index, double data)	{ExtendedDouble.add(index, Double.valueOf (data));}
 	
-	public int getExtInt(int index)			{return ((Integer)ExtendedInt.get(index)).intValue();}
-	public String getExtText(int index)		{return (String)ExtendedText.get(index);}
-	public double getExtDouble(int index)	{return ((Double)ExtendedDouble.get(index)).doubleValue();}
+	public int getExtInt(int index)			{return ExtendedInt.get(index).intValue();}
+	public String getExtText(int index)		{return ExtendedText.get(index);}
+	public double getExtDouble(int index)	{return ExtendedDouble.get(index).doubleValue();}
 
 	public int ExtIntSize()		{return ExtendedInt.size();}
 	public int ExtTextSize()	{return ExtendedText.size();}
@@ -89,8 +89,8 @@ public abstract class Entity{
 	    this.layer = ent.layer;
 	    this.color = ent.color;
 	    this.ExtendedDouble = ent.ExtendedDouble;
-	    this.ExtendedInt = ent.ExtendedDouble;
-	    this.ExtendedText = ent.ExtendedDouble;
+	    this.ExtendedInt = ent.ExtendedInt;
+	    this.ExtendedText = ent.ExtendedText;
 	    this.id = ent.id;  
 	}
 	

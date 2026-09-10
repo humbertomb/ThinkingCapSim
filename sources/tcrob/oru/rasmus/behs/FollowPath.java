@@ -110,7 +110,7 @@ public class FollowPath extends Behaviour {
 //		System.out.println("speed % = "+speed);
 		speed = speed*((Double)params.get("wanderSpeed")).doubleValue();
 //		System.out.println("keepVel speed = "+speed);
-		keepVel.setParam("speed",new Double(speed));
+		keepVel.setParam("speed",Double.valueOf (speed));
 		keepVel.setParam("RBuffer",params.get("RBuffer"));
 //		System.out.println("phi = "+phi);
 				

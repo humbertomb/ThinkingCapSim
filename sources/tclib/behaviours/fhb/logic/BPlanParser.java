@@ -7,7 +7,7 @@
 package tclib.behaviours.fhb.logic;
 
 import java.io.*;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import tclib.behaviours.fhb.MetricPredInfo;
@@ -16,6 +16,7 @@ import tclib.behaviours.fhb.bplan.BPlanData;
 import tclib.behaviours.fhb.exceptions.LexicalError;
 import tclib.behaviours.fhb.exceptions.SyntaxError;
 import tc.shared.lps.LPS;
+import tc.shared.lps.lpo.LPO;
 
 
 
@@ -105,7 +106,7 @@ public class BPlanParser {
 				gt = la.nextToken();
 				if (gt.getType() == GenericToken.NUMBER) {
 					paramValue = ((NumberToken)gt).getValue();
-					params.put(paramName, new Double(paramValue));
+					params.put(paramName, Double.valueOf (paramValue));
 				}
 				else
 					throw new SyntaxError("I expected the parameter value");
@@ -133,7 +134,7 @@ public class BPlanParser {
 	private void parseConsequent(String bPlanRuleConsequent) throws SyntaxError, LexicalError, IOException {
 		la = new LexicalAnalizer(bPlanRuleConsequent);
 		String behaviourName = "";
-		Vector behaviourParams = new Vector();
+		ArrayList<LPO> behaviourParams = new ArrayList<LPO>();
 		
 		GenericToken gt = la.nextToken();
 		if (gt.getType() == GenericToken.VARIABLE) {
@@ -145,7 +146,7 @@ public class BPlanParser {
 				gt = la.nextToken();
 				while (gt.getType() != GenericToken.SYMBOL) {
 					if (gt.getType() == GenericToken.VARIABLE) 
-						behaviourParams.addElement(lps.find(((VariableToken)gt).getName()));
+						behaviourParams.add (lps.find(((VariableToken)gt).getName()));
 					else
 						throw new SyntaxError("I expected a variable as parameter of the behaviour");
 					gt = la.nextToken();

@@ -10,7 +10,7 @@
 		<property name="optimize"       value="off"/>
 		<property name="deprecation"    value="off"/>
 		<property name="build.compiler" value="classic"/>
-		<property name="target.vm"      value="1.3"/>
+		<property name="target.vm"      value="25"/>
 
 		<path id="classpath">
 			<fileset dir="./jars">

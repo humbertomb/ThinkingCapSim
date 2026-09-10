@@ -815,7 +815,7 @@ public class PositioningWindow extends Object implements Runnable
 		
 		try
 		{
-			logfile.write (new Long(time).toString () + " " + preffix);
+			logfile.write (Long.valueOf (time).toString () + " " + preffix);
 			for (i = 0; i < data.length; i++)
 				logfile.write (" " + data[i]);
 			logfile.write("\n");
@@ -943,7 +943,7 @@ public class PositioningWindow extends Object implements Runnable
 	
 			try 
 			{
-				fileth2 = new PollNet (InetAddress.getByName(laddrTF.getText()), new Integer(lportTF.getText()).intValue());
+				fileth2 = new PollNet (InetAddress.getByName(laddrTF.getText()), Integer.valueOf (lportTF.getText()).intValue());
 				fileth2.start ();
 			} catch (Exception ex) { ex.printStackTrace (); }
 			

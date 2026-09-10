@@ -11,7 +11,7 @@ package wucore.utils.dxf.entities;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.geom.Point3;
 
@@ -20,7 +20,7 @@ public class BlockDxf extends Entity{
 	public String name;
 	Point3 pos;
 	
-	public Vector entities;
+	public ArrayList<Entity> entities;
 	
 	public BlockDxf(String name){
 		this(name,new Point3(),"0");
@@ -37,7 +37,7 @@ public class BlockDxf extends Entity{
 	
 	public BlockDxf(String name, Point3 pos, String layer){
 		super();
-		entities = new Vector();
+		entities = new ArrayList<Entity>();
 		this.pos = pos;
 		this.layer = layer;
 		this.name = name;
@@ -66,7 +66,7 @@ public class BlockDxf extends Entity{
 		out.println("  3\n" + name);
 		out.println("  1\n" + "   ");
 		for(int i = 0; i < entities.size(); i++){
-			((Entity)entities.get(i)).write(out);
+			entities.get(i).write(out);
 		}
 		out.println("  0\nENDBLK");
 		out.println("  5\n" + getID());								

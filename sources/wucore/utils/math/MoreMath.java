@@ -99,7 +99,7 @@ public abstract class MoreMath {
 			return null;	
 
 		value 	= ((double) Math.rint(dou * Math.pow(10, dec))) * Math.pow(10, -dec); 	
-		str 	= new Double (value).toString();
+		str 	= Double.valueOf (value).toString();
 
 		if (str.indexOf(".") == -1)
 			return null;		

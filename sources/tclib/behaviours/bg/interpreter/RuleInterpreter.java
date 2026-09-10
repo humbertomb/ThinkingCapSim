@@ -64,9 +64,9 @@ public class RuleInterpreter extends Interpreter
 		} catch (Exception e) { }
 
 		// Read rule base parameters
-		try { n 			= new Integer (props.getProperty ("RULES")).intValue (); } catch (Exception e) 		{ n			= 0; }
-		try { ni 			= new Integer (props.getProperty ("INPUT")).intValue (); } catch (Exception e) 		{ ni			= 1; }
-		try { no 			= new Integer (props.getProperty ("OUTPUT")).intValue (); } catch (Exception e) 		{ no			= 1; }
+		try { n 			= Integer.valueOf (props.getProperty ("RULES")).intValue (); } catch (Exception e) 		{ n			= 0; }
+		try { ni 			= Integer.valueOf (props.getProperty ("INPUT")).intValue (); } catch (Exception e) 		{ ni			= 1; }
+		try { no 			= Integer.valueOf (props.getProperty ("OUTPUT")).intValue (); } catch (Exception e) 		{ no			= 1; }
 
 		// Declare genereal structures
 		output 	= new double[no];
@@ -101,7 +101,7 @@ public class RuleInterpreter extends Interpreter
     				st.nextToken ();		// It MUST be a bell function set "b"
    				set		= new double[VSymbol.elem[VSymbol.S_BELL]];
     				for (k = 0; k < VSymbol.elem[VSymbol.S_BELL]; k++)
-					try { set[k] 			= new Double (st.nextToken ()).doubleValue (); } catch (Exception e) 		{ set[k]		= 0.0; }
+					try { set[k] 			= Double.valueOf (st.nextToken ()).doubleValue (); } catch (Exception e) 		{ set[k]		= 0.0; }
 				iset[j]	= new VSymbol ().bell (set);
 				symbols (iset[j], null);				
 		
@@ -122,7 +122,7 @@ public class RuleInterpreter extends Interpreter
     				{
     					set		= new double[ni + 1];
     					for (k = 0; k < ni + 1; k++)
-						try { set[k] 			= new Double (st.nextToken ()).doubleValue (); } catch (Exception e) 		{ set[k]		= 0.0; }
+						try { set[k] 			= Double.valueOf (st.nextToken ()).doubleValue (); } catch (Exception e) 		{ set[k]		= 0.0; }
 						oset[j]	= new VSymbol ().tsk (vars, set);
 						symbols (oset[j], null);			
 					}	
@@ -130,7 +130,7 @@ public class RuleInterpreter extends Interpreter
     				{
    						set		= new double[VSymbol.elem[VSymbol.S_CRISP]];
     					for (k = 0; k < VSymbol.elem[VSymbol.S_CRISP]; k++)
-						try { set[k] 			= new Double (st.nextToken ()).doubleValue (); } catch (Exception e) 		{ set[k]		= 0.0; }
+						try { set[k] 			= Double.valueOf (st.nextToken ()).doubleValue (); } catch (Exception e) 		{ set[k]		= 0.0; }
 						oset[j]	= new VSymbol ().crisp (set);
 						symbols (oset[j], null);				
 				}
@@ -171,9 +171,9 @@ public class RuleInterpreter extends Interpreter
 		
 		props			= new Properties ();
 		
-		props.put ("RULES", 		new Integer (n).toString ());
-		props.put ("INPUT", 		new Integer (ni).toString ());
-		props.put ("OUTPUT", 		new Integer (no).toString ());
+		props.put ("RULES", 		Integer.valueOf (n).toString ());
+		props.put ("INPUT", 		Integer.valueOf (ni).toString ());
+		props.put ("OUTPUT", 		Integer.valueOf (no).toString ());
 		
 		try 
 		{

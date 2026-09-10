@@ -417,7 +417,7 @@ public class BehInfoFrame extends MonitorFrame
 	 */
 	private void setBehTree(BehaviourInfo behInfo, DefaultMutableTreeNode behNode) {
 		String nodeLabel;
-		ArrayList ruleParameters;
+		ArrayList<String> ruleParameters;
 		DefaultMutableTreeNode node = null;				// the new child node
 		int ruleNumber = behInfo.getRulesNumber();
 		String params="";
@@ -430,9 +430,9 @@ public class BehInfoFrame extends MonitorFrame
 				/* Builds a string containing the list of the parameters used by the sub-behaviour */
 				ruleParameters = behInfo.getRuleParameters(i);
 				if ((ruleParameters != null) && ruleParameters.size() > 0) {
-					params =  (String) ruleParameters.get(0);
+					params =  ruleParameters.get(0);
 					for (int j = 1; j < ruleParameters.size(); j++)
-						params += ", " + (String) ruleParameters.get(j);
+						params += ", " + ruleParameters.get(j);
 				}
 				nodeLabel = behInfo.getRuleName(i) + "("+params+")";
 				/* Creates and adds the new child node */
@@ -517,7 +517,7 @@ public class BehInfoFrame extends MonitorFrame
 			HistogramPanel histogramPanel;
 			Histogram hi;
 			String params = "";
-			ArrayList ruleParameters;
+			ArrayList<String> ruleParameters;
 			
 			this.behInformation = behItem.get();
 			tableData.setRowsNumber(behInformation.getRulesNumber());
@@ -572,9 +572,9 @@ public class BehInfoFrame extends MonitorFrame
 				params = "";
 				/* if there are parameters it creates a string with the list of them */
 				if ((ruleParameters != null) && (ruleParameters.size() > 0)) {
-					params =  (String) ruleParameters.get(0);
+					params =  ruleParameters.get(0);
 					for (int j = 1; j < ruleParameters.size(); j++)
-						params += ", " + (String) ruleParameters.get(j);
+						params += ", " + ruleParameters.get(j);
 				}
 				/* updates the first column of the current rule showed in the main table */
 				table.getModel().setValueAt(behInformation.getRuleName(row) + "("+params+")",row,0);
@@ -651,7 +651,7 @@ public class BehInfoFrame extends MonitorFrame
 
 	/* Sends to the controller the list of the rules that bring you to the desidered behaviour */
 	private void sendCurrentBehPath() {
-		ArrayList rulesNames = new ArrayList();
+		ArrayList<String> rulesNames = new ArrayList<String>();
 		String ruleName;
 		int pos;
 		
@@ -705,18 +705,24 @@ public class BehInfoFrame extends MonitorFrame
  */
 class MyTableModel extends AbstractTableModel{
 	
-	/* Contains the table data: each element will be a vector */
-	private Vector data;
+	/* Contains the table data: each element is the list of cells of a row (null until the row is written) */
+	private ArrayList<ArrayList<Object>>	data;
 	/* Contains the names of the table columns */
-	private Vector columnNames;
+	private ArrayList<String>				columnNames;
 	
 	/**
 	 * Creates an empty model.
 	 */
 	public MyTableModel()
 	{
-		data = new Vector();
-		columnNames = new Vector();
+		data = new ArrayList<ArrayList<Object>>();
+		columnNames = new ArrayList<String>();
+	}
+
+	/** Grows or shrinks a list to the given size, padding with nulls (Vector.setSize equivalent). */
+	static private <T> void setSize(ArrayList<T> list, int num) {
+		while (list.size() < num) list.add(null);
+		while (list.size() > num) list.remove(list.size() - 1);
 	}
 	
 	/**
@@ -738,7 +744,7 @@ class MyTableModel extends AbstractTableModel{
 	 * @param num the number of table rows.
 	 */
 	public void setRowsNumber(int num) {
-		data.setSize(num);
+		setSize(data, num);
 	}
 	
 	/**
@@ -746,7 +752,7 @@ class MyTableModel extends AbstractTableModel{
 	 * @param num the number of table columns
 	 */
 	public void setColsNumber(int num) {
-		columnNames.setSize(num);
+		setSize(columnNames, num);
 	}
 	
 	/**
@@ -772,7 +778,7 @@ class MyTableModel extends AbstractTableModel{
 	 * @return the name of a table column.
 	 */
 	public String getColumnName(int col) {
-		return (String)columnNames.get(col);
+		return columnNames.get(col);
 	}
 	
 	/**
@@ -784,9 +790,8 @@ class MyTableModel extends AbstractTableModel{
 	public Object getValueAt(int row, int column)
 	{
 		if (data == null) return null;
-		Vector c = (Vector)data.elementAt(row);
-		Object q = (Object)c.elementAt(column);
-		return q;
+		ArrayList<Object> c = data.get (row);
+		return (c == null) ? null : c.get (column);
 	}
 	
 	/**
@@ -798,11 +803,11 @@ class MyTableModel extends AbstractTableModel{
 	public void setValueAt(Object obj, int row, int column) {
 		/* if the row doesn't exist it will be created */
 		if (data.get(row) == null) {
-			Vector r = new Vector();
-			r.setSize(columnNames.size());
-			data.setElementAt(r,row);
+			ArrayList<Object> r = new ArrayList<Object>();
+			setSize(r, columnNames.size());
+			data.set(row, r);
 		}
-		((Vector) data.get(row)).setElementAt(obj,column);
+		data.get(row).set(column, obj);
 	}
 	
 	/**

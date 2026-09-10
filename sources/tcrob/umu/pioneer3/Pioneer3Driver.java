@@ -353,7 +353,7 @@ public class Pioneer3Driver extends Object
 		
 		// Parse properties
 		port			= props.getProperty (SER_PORT);
-		try { brate	 	= new Integer (props.getProperty (SER_BRATE)).intValue (); } 		catch (Exception e) 		{ brate		= 9600; }
+		try { brate	 	= Integer.valueOf (props.getProperty (SER_BRATE)).intValue (); } 		catch (Exception e) 		{ brate		= 9600; }
 
 		// Create communication data buffers
 		packet			= new int[AROS_BUFFER];
@@ -389,7 +389,7 @@ public class Pioneer3Driver extends Object
 		debug		= true;
 		
 		// Create AROS data structures
-		synchro		= new Integer (0);
+		synchro		= Integer.valueOf (0);
 		parser		= new Pioneer3DriverParser ();
 		
 		System.out.println ("  [Pioneer3Drv] Synchronizing AROS server");

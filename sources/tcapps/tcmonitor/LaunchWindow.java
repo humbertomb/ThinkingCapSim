@@ -264,7 +264,7 @@ public class LaunchWindow extends JFrame
 		{
 			servers.setValueAt (client.groups[i], i, 0);
 			servers.setValueAt (client.addrs[i].getHostAddress (), i, 1);
-			servers.setValueAt (new Integer (client.ports[i]).toString (), i, 2);
+			servers.setValueAt (Integer.valueOf (client.ports[i]).toString (), i, 2);
 			servers.setValueAt (client.ids[i].toString (), i, 3);
 		}
 	

@@ -8,7 +8,7 @@ package tc.shared.world;
 
 import java.io.PrintWriter;
 import java.util.Properties;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
 import wucore.utils.dxf.entities.Entity;
@@ -34,11 +34,11 @@ public class WMWaypoints
 	}
 	
 	public WMWaypoints (DXFWorldFile dxf){
-		Vector entities = dxf.getEntities();
-		Vector wp = new Vector();
+		ArrayList<Entity> entities = dxf.getEntities();
+		ArrayList<WMWaypoint> wp = new ArrayList<WMWaypoint>();
 		Entity entity;
 		for(int i = 0; i<entities.size(); i++){
-			entity = (Entity)entities.get(i);
+			entity = entities.get(i);
 			if(entity.getLayer().equalsIgnoreCase("WAYPOINTS")){
 				if(entity instanceof TextDxf){ 
 					wp.add(new WMWaypoint((TextDxf)entity)); 

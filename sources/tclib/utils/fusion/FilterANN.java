@@ -57,7 +57,7 @@ public class FilterANN extends Filter		// TODO: re-include ANN into ThinkingCap-
 			istream.close ();
 		} catch (Exception e) { }
 		
-		props.put ("FILTER", 			new Integer (FILTERID).toString ());
+		props.put ("FILTER", 			Integer.valueOf (FILTERID).toString ());
 
 		// Save Filter Preferences
 		try 

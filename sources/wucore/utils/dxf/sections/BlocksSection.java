@@ -8,7 +8,7 @@ package wucore.utils.dxf.sections;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.dxf.entities.BlockDxf;
 
@@ -20,17 +20,17 @@ import wucore.utils.dxf.entities.BlockDxf;
  */
 public class BlocksSection {
 
-public Vector blocks;
+public ArrayList<BlockDxf> blocks;
  
 
 
 public BlocksSection(){
-	blocks = new Vector();
+	blocks = new ArrayList<BlockDxf>();
 }
 
 public void add(BlockDxf block){
 	for(int i = 0; i<blocks.size(); i++){
-		if(((BlockDxf)blocks.get(i)).getName().equals(block.getName())) {
+		if(blocks.get(i).getName().equals(block.getName())) {
 			//System.out.println("Bloque con el nombre "+block.name+" ya insertado");
 			return;
 		}
@@ -41,8 +41,8 @@ public void add(BlockDxf block){
 public BlockDxf getBlock(String name){
 	if(blocks == null) return null;
 	for (int i = 0; i<blocks.size(); i++)
-		if(((BlockDxf)blocks.get(i)).getName().equalsIgnoreCase(name)) 
-			return (BlockDxf)blocks.get(i);
+		if(blocks.get(i).getName().equalsIgnoreCase(name)) 
+			return blocks.get(i);
 	return null;
 }
 
@@ -50,7 +50,7 @@ public void write(PrintWriter out){
 	out.println("  0\nSECTION");					// Inicio Seccion
 	out.println("  2\nBLOCKS"); 					// Seccion Blocks
 	for(int i = 0; i<blocks.size(); i++){
-		((BlockDxf)blocks.get(i)).write(out);
+		blocks.get(i).write(out);
 	}
 	out.println("  0\nENDSEC"); 					// Fin Seccion Blocks
 }

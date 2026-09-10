@@ -9,6 +9,7 @@ package tclib.behaviours.fhb.bplan;
 import java.util.*;
 
 import tclib.behaviours.fhb.MetricPredInfo;
+import tc.shared.lps.lpo.LPO;
 
 /**
  * This class contains all the information about the context rules included in a BPlan.
@@ -19,25 +20,25 @@ import tclib.behaviours.fhb.MetricPredInfo;
 public class BPlanData {
 
 	/* List of behaviours, one for each context rule */
-	private Vector behaviours;
+	private ArrayList<String> behaviours;
 	/* List of antecedents, one for each context rule */
-	private Vector antecedents;
+	private ArrayList<String> antecedents;
 	/* List of parameters relative to the goal of a behaviour */
-	private Vector goalParameters;
+	private ArrayList<ArrayList<LPO>> goalParameters;
 	/* List of parameters that are not relative to the goal of a behaviour  */
-	private Vector otherParameters;
+	private ArrayList<HashMap> otherParameters;
 	/* List of information about metric predicates */
-	private Vector predicatesData;
+	private ArrayList<MetricPredInfo> predicatesData;
 	
 	/**
 	 * Initializes the class
 	 */
 	public BPlanData() {
-		behaviours = new Vector();
-		antecedents = new Vector();
-		goalParameters = new Vector();
-		otherParameters = new Vector();
-		predicatesData = new Vector();
+		behaviours = new ArrayList<String>();
+		antecedents = new ArrayList<String>();
+		goalParameters = new ArrayList<ArrayList<LPO>>();
+		otherParameters = new ArrayList<HashMap>();
+		predicatesData = new ArrayList<MetricPredInfo>();
 	}
 	
 	/**
@@ -45,7 +46,7 @@ public class BPlanData {
 	 * @param nameBehaviour the name of the behaviour
 	 */
 	public void addBehaviour(String nameBehaviour) {
-		behaviours.addElement(nameBehaviour);
+		behaviours.add (nameBehaviour);
 	}
 	
 	/**
@@ -53,15 +54,15 @@ public class BPlanData {
 	 * @param antecedent the formula of the context rule antecedent
 	 */
 	public void addAntecedent(String antecedent) {
-		antecedents.addElement(antecedent);
+		antecedents.add (antecedent);
 	}
 	
 	/**
 	 * Adds the parameters relative to the goal of a behaviour
 	 * @param params list of parameters
 	 */
-	public void addGoalParameters(Vector params) {
-		goalParameters.addElement(params);
+	public void addGoalParameters(ArrayList<LPO> params) {
+		goalParameters.add (params);
 	}
 	
 	/**
@@ -69,7 +70,7 @@ public class BPlanData {
 	 * @param params list of parameters
 	 */
 	public void addOtherParameters(HashMap params) {
-		otherParameters.addElement(params);
+		otherParameters.add (params);
 	}
 	
 	/**
@@ -77,7 +78,7 @@ public class BPlanData {
 	 * @param data the information about the metric predicate
 	 */
 	public void addPredicatesData(MetricPredInfo data) {
-		predicatesData.addElement(data);
+		predicatesData.add (data);
 	}
 	
 	/**
@@ -87,7 +88,7 @@ public class BPlanData {
 	 */
 	public String getBehaviourName(int n) {
 		if ((n >= 0) && (n < behaviours.size()))
-			return (String) behaviours.get(n);
+			return behaviours.get(n);
 		else
 			return null;				
 	}
@@ -99,7 +100,7 @@ public class BPlanData {
 	 */
 	public String getAntecedent(int n) {
 		if ((n >= 0) && (n < antecedents.size()))
-			return (String) antecedents.get(n);
+			return antecedents.get(n);
 		else
 			return null;	
 	}
@@ -108,7 +109,7 @@ public class BPlanData {
 	 * Returns the list of the metric predicates used by context rules
 	 * @return the list of metric predicates
 	 */
-	public Vector getPredicatesData() {
+	public ArrayList<MetricPredInfo> getPredicatesData() {
 		return predicatesData;
 	}
 	
@@ -118,9 +119,9 @@ public class BPlanData {
 	 * @param n the number of the context rule
 	 * @return the list of parameters, or null if n is not correct.
 	 */
-	public Vector getBehGoalParameters(int n) {
+	public ArrayList<LPO> getBehGoalParameters(int n) {
 		if ((n >= 0) && (n < goalParameters.size()))
-			return (Vector) goalParameters.get(n);
+			return goalParameters.get(n);
 		
 		return null;
 	}
@@ -133,7 +134,7 @@ public class BPlanData {
 	 */
 	public HashMap getBehOtherParameters(int n) {
 		if ((n >= 0) && (n < otherParameters.size()))
-			return (HashMap) otherParameters.get(n);
+			return otherParameters.get(n);
 		
 		return null;
 	}

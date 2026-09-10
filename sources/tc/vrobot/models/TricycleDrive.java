@@ -57,15 +57,15 @@ public class TricycleDrive extends RobotModel
 	{
 		super.update (props);
 		
-		try { SAmax	 = new Double (props.getProperty ("SAMAX")).doubleValue () * Angles.DTOR; } 	catch (Exception e) 		{ }
-		try { LAmax	 = new Double (props.getProperty ("LAMAX")).doubleValue (); } 				catch (Exception e) 		{ }
-		try { LDmax	 = new Double (props.getProperty ("LDMAX")).doubleValue (); } 				catch (Exception e) 		{ }
-		try { MOTmax	= new Double (props.getProperty ("MAXMOTOR")).doubleValue (); } 			catch (Exception e) 		{ }
-		try { STRmax	= new Double (props.getProperty ("MAXSTEER")).doubleValue () * Angles.DTOR; } catch (Exception e) 	{ }
+		try { SAmax	 = Double.valueOf (props.getProperty ("SAMAX")).doubleValue () * Angles.DTOR; } 	catch (Exception e) 		{ }
+		try { LAmax	 = Double.valueOf (props.getProperty ("LAMAX")).doubleValue (); } 				catch (Exception e) 		{ }
+		try { LDmax	 = Double.valueOf (props.getProperty ("LDMAX")).doubleValue (); } 				catch (Exception e) 		{ }
+		try { MOTmax	= Double.valueOf (props.getProperty ("MAXMOTOR")).doubleValue (); } 			catch (Exception e) 		{ }
+		try { STRmax	= Double.valueOf (props.getProperty ("MAXSTEER")).doubleValue () * Angles.DTOR; } catch (Exception e) 	{ }
 
-		try { r		= new Double (props.getProperty ("RWHEEL")).doubleValue (); }				catch (Exception e)		{ }
-		try { b		= new Double (props.getProperty ("BASE")).doubleValue (); } 				catch (Exception e) 		{ }
-		try { l		= new Double (props.getProperty ("LENGHT")).doubleValue (); } 				catch (Exception e) 		{ }
+		try { r		= Double.valueOf (props.getProperty ("RWHEEL")).doubleValue (); }				catch (Exception e)		{ }
+		try { b		= Double.valueOf (props.getProperty ("BASE")).doubleValue (); } 				catch (Exception e) 		{ }
+		try { l		= Double.valueOf (props.getProperty ("LENGHT")).doubleValue (); } 				catch (Exception e) 		{ }
 	}
 	
 	public void kynematics_direct (double vm, double del)

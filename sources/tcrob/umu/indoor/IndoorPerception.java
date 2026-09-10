@@ -251,7 +251,7 @@ public class IndoorPerception extends Perception
 		if (world != null)
 		{
 			int				i;
-			WMDoor			door;
+			WMConnector			door;
 			LPOPoint		l_door;	
 			Point2			pdoor;		
 			WMZone			zone;
@@ -264,9 +264,9 @@ public class IndoorPerception extends Perception
 			rotm.toFrame (world.start_x (), world.start_y (), world.start_a ());
 			
 			// Add doors to the LPS
-			for (i = 0; i < world.doors ().n (); i++)
+			for (i = 0; i < world.connectors ().n (); i++)
 			{
-				door	= world.doors ().at (i);
+				door	= world.connectors ().at (i);
 				pdoor	= door.edge.center ();
 				
 				xx		= pdoor.x ();

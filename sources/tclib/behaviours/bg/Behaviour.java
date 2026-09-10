@@ -19,7 +19,7 @@ public class Behaviour extends List
 
 	public Behaviour (String name, double pri, VSymbol out, VSymbol loc, Command com)
 	{
-		this.create (name, new Double (pri), out, loc, com);
+		this.create (name, Double.valueOf (pri), out, loc, com);
 	}
 	
 	public Behaviour (String name, Double pri, VSymbol out, VSymbol loc, Command com)

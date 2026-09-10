@@ -43,7 +43,7 @@ public class LPORangePBug extends LPORangeBuffer
 	protected int[]					cindex;			// Index of colision points
 	protected int					cnum;			// Number of object boundaries
 	
-	protected LinkedList			lastCol1;
+	protected LinkedList<LPORangePoint>	lastCol1;
 	
 	// Debugging tools
 	LPORangePoint 					coldraw;	// guarda el punto que colisiona para dibujarlo
@@ -64,7 +64,7 @@ public class LPORangePBug extends LPORangeBuffer
 		cnum		= 0;
 		goal		= new LPOLine (0.0, 0.0, 0.0, "PBug_Goal", LPO.ARTIFACT);
 		goal.color (WColor.MAGENTA.darker());
-		lastCol1	= new LinkedList();
+		lastCol1	= new LinkedList<LPORangePoint> ();
 		color (WColor.ORANGE);
 		world  = null;
 	}
@@ -79,7 +79,7 @@ public class LPORangePBug extends LPORangeBuffer
 		cnum		= 0;
 		goal		= new LPOLine (0.0, 0.0, 0.0, "PBug_Goal", LPO.ARTIFACT);
 		goal.color (WColor.MAGENTA.darker());
-		lastCol1	= new LinkedList();
+		lastCol1	= new LinkedList<LPORangePoint> ();
 		color (WColor.ORANGE);
 		this.world = world;
 	}
@@ -154,7 +154,7 @@ public class LPORangePBug extends LPORangeBuffer
 		// Se actualiza el buffer, añadiendo nuevos puntos y eliminando antiguos
 		updateBuffer();
 		
-		LPORangePoint[] oldbuffer = (LPORangePoint[]) lastCol1.toArray(new LPORangePoint[0]);
+		LPORangePoint[] oldbuffer = lastCol1.toArray(new LPORangePoint[0]);
 
 		r = calc_rad(gx,gy,dist);
 		radius = r;
@@ -474,7 +474,7 @@ public class LPORangePBug extends LPORangeBuffer
 		// Se actualiza el buffer, añadiendo nuevos puntos y eliminando antiguos
 		updateBuffer();
 		
-		LPORangePoint[] oldbuffer = (LPORangePoint[]) lastCol1.toArray(new LPORangePoint[0]);
+		LPORangePoint[] oldbuffer = lastCol1.toArray(new LPORangePoint[0]);
 
 		r = calc_rad(gx,gy,dist);
 		// Detecta una colision con los valores obtenidos del laser
@@ -669,7 +669,7 @@ public class LPORangePBug extends LPORangeBuffer
 	private boolean addBuffer(LPORangePoint data){
 	    if(data == null || data.rho > DIST_ADD || !data.active) return false;
 	    for(int i = 0; i<lastCol1.size();i++){
-	        if( ((LPORangePoint)lastCol1.get(i)).distance(data) < PTDIST) return false;
+	        if( lastCol1.get(i).distance(data) < PTDIST) return false;
 	    }
 	    LPORangePoint clone = new LPORangePoint(0,0);
 	    clone.set(data.x,data.y,data.len,data.sensor,data.source);
@@ -688,7 +688,7 @@ public class LPORangePBug extends LPORangeBuffer
 		LPORangePoint pt;
 		
 		for(int i = 0; i<lastCol1.size();i++){
-			pt = ((LPORangePoint)lastCol1.get(i));
+			pt = lastCol1.get(i);
 			
 			//	Borrando puntos lejanos
 			if( pt.rho > DIST_DEL){
@@ -834,7 +834,7 @@ public class LPORangePBug extends LPORangeBuffer
 		
 		//if(lastCol!=null)
 		for(i = 0; i<lastCol1.size(); i++){
-		    LPORangePoint p = (LPORangePoint) lastCol1.get(i);
+		    LPORangePoint p = lastCol1.get(i);
 		    a1	= view.rotation + p.phi();
 			x1 	= p.rho() * Math.cos (a1);
 			y1 	= p.rho() * Math.sin (a1);
@@ -880,7 +880,7 @@ public class LPORangePBug extends LPORangeBuffer
 		super.clamp(rm);
 		LPORangePoint data;
 		for (int i = 0; i < lastCol1.size(); i++){
-		    data = ((LPORangePoint)lastCol1.get(i));
+		    data = lastCol1.get(i);
 		    data.clamp(rm);
 		}
 	}

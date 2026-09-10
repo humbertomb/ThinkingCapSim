@@ -10,7 +10,7 @@ import java.io.*;
 
 public class Graph
 {
-	Vector 	tabla;
+	ArrayList<GNode> 	tabla;
 	int 	nNodes;
 	
 	protected boolean debug	= false;
@@ -18,7 +18,7 @@ public class Graph
 	/** Constructor por defecto */
 	public Graph ()
 	{
-		tabla 	= new Vector();
+		tabla 	= new ArrayList<GNode>();
 		nNodes 	= 0;
 	}
 
@@ -55,7 +55,7 @@ public class Graph
 	/** Añade un vector de arrays al grafo, siendo el primer Node del vector el nodo origen y los demas los Nodes adyacentes.
 		@param	arrayNodes	Array de nodos
 	*/
-	public void join(Vector arrayNodes)
+	public void join(ArrayList<Object> arrayNodes)
 	{
 		if(arrayNodes.isEmpty()) return;
 		
@@ -88,7 +88,7 @@ public class Graph
 		
 		for(int i=0; i<nNodes; i++)
 		{
-			aux = (GNode)tabla.get(i);
+			aux = tabla.get(i);
 			if (aux.getLabel().equals(name))	
 			{
 				newNode = false;
@@ -99,7 +99,7 @@ public class Graph
 		if(newNode == true)
 		{
 			A.setIndex(nNodes);
-			tabla.addElement(A);						// Añade el Node a la tabla
+			tabla.add (A);						// Añade el Node a la tabla
 			index = nNodes;
 			nNodes++;
 		}
@@ -118,7 +118,7 @@ public class Graph
 	
 		for(int i=0; i<nNodes; i++)
 		{
-			aux = (GNode)tabla.get(i);
+			aux = tabla.get(i);
 			if (aux.getLabel().equals(name))
 			{
 				mod = true;
@@ -138,7 +138,7 @@ public class Graph
 	*/
 	public GNode getNode(int index)
 	{
-		if(index<nNodes)	return((GNode)tabla.get(index));
+		if(index<nNodes)	return(tabla.get(index));
 		else				return null;
 	}
  
@@ -150,7 +150,7 @@ public class Graph
 	{
 		for (int i=0; i<nNodes; i++)
 			if( (getNode(i).getLabel()).equals(name))
-				return((GNode)tabla.get(i));
+				return(tabla.get(i));
 		return null;
 	}
 	
@@ -208,8 +208,8 @@ public class Graph
 	*/
 	public int[][] pathMin(int nodoOrigen)
 	{
-		int[] path = new int[nNodes];		// Vector del camino minimo
-		int[] dist = new int[nNodes];		// Vector con la distancia del nodo origen
+		int[] path = new int[nNodes];		// Camino minimo
+		int[] dist = new int[nNodes];		// Distancia desde el nodo origen
 		int[][] result =  new int[2][];
 		boolean[] colaPrio = new boolean[nNodes];
 		int icola, minIndex=0;
@@ -341,12 +341,12 @@ public class Graph
 		return path;
 	}
 
-	public Vector calcPath (int orig, int dest)
+	public ArrayList<GNode> calcPath (int orig, int dest)
 	{
 		int i;
 		int[][] dijsktra;
-		LinkedList pathnodes;
-		Vector	ret_nodes;
+		LinkedList<Integer> pathnodes;
+		ArrayList<GNode>	ret_nodes;
 		
 		if (debug)
 			System.out.println ("Graph.calc_path: from "+getNode (orig).getLabel()+" to "+getNode (dest).getLabel());
@@ -377,33 +377,33 @@ public class Graph
 		}
 			
 		i = dest;
-		pathnodes = new LinkedList ();
+		pathnodes = new LinkedList<Integer> ();
 		while (dijsktra[1][i] != 0)
 		{
-			pathnodes.addFirst (new Integer(i));
+			pathnodes.addFirst (Integer.valueOf (i));
 			i = dijsktra[0][i];
 		}
-		pathnodes.addFirst (new Integer(i));
+		pathnodes.addFirst (Integer.valueOf (i));
 					
 		if (debug)
 		{
 			System.out.print ("Camino: {");
 			for (i = 0; i < pathnodes.size (); i++)
-				System.out.print (((Integer)pathnodes.get(i)).intValue()+", ");
+				System.out.print (pathnodes.get(i).intValue()+", ");
 			System.out.println ("\b\b}");	
 		}
 		
-		ret_nodes = new Vector(pathnodes.size ());
+		ret_nodes = new ArrayList<GNode>(pathnodes.size ());
 		
 		for (i = 0; i < pathnodes.size (); i++)
-			ret_nodes.add(getNode (((Integer)pathnodes.get(i)).intValue()));
+			ret_nodes.add(getNode (pathnodes.get(i).intValue()));
 		
 		if (debug)
 		{
 			System.out.print ("Camino: {");
 			for (i = 0; i < ret_nodes.size(); i++)	
 			{
-				System.out.print (((GNode)ret_nodes.get(i)).getLabel()+", ");
+				System.out.print (ret_nodes.get(i).getLabel()+", ");
 			}
 			System.out.println ("\b\b}");
 		}
@@ -416,7 +416,7 @@ public class Graph
 	*/
 	protected void fromFile(String name)
 	{
-		Vector arrayNodes = new Vector();
+		ArrayList<Object> arrayNodes = new ArrayList<Object>();
 		StreamTokenizer st;
 		
 		try
@@ -429,19 +429,19 @@ public class Graph
 				if(st.ttype == StreamTokenizer.TT_WORD )
 				{
 						GNode A = new GNode(st.sval); 					// Se crea un nodo
-						arrayNodes.addElement(A);
+						arrayNodes.add (A);
 						System.out.println("Añadido nodo "+A.getLabel());
 				}
 				if(st.ttype == StreamTokenizer.TT_NUMBER )
 				{
-					arrayNodes.addElement(new Integer(new Double(st.nval).intValue()));
+					arrayNodes.add (Integer.valueOf (Double.valueOf (st.nval).intValue()));
 					System.out.println("Añadido peso "+st.nval);
 				}
 				
 				if(st.ttype == StreamTokenizer.TT_EOL)
 				{
 					join(arrayNodes);
-					arrayNodes.removeAllElements();
+					arrayNodes.clear ();
 					System.out.println("--------------");
 				}
 			}

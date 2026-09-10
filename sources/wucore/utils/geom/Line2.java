@@ -27,15 +27,28 @@ public class Line2 extends Object implements Serializable
 		this.set (x1, y1, x2, y2);
 	}
 	
+	/** Segment with elevations: the endpoints keep a z coordinate (see {@link #z1()}, {@link #z2()}). */
+	public Line2 (double x1, double y1, double z1, double x2, double y2, double z2)
+	{
+		this.create ();
+		this.set (x1, y1, z1, x2, y2, z2);
+	}
+	
 	/* Accessor methods */
 	public final Point2 	orig () 					{ return orig; }
 	public final Point2 	dest () 					{ return dest; }
 
+	/** Elevation of the origin (0 when the endpoints carry no z). */
+	public final double		z1 ()						{ return (orig instanceof Point3) ? ((Point3) orig).z () : 0.0; }
+	/** Elevation of the destination (0 when the endpoints carry no z). */
+	public final double		z2 ()						{ return (dest instanceof Point3) ? ((Point3) dest).z () : 0.0; }
+
 	/* Instance methods */
 	protected void create ()
 	{
-		orig	= new Point2 ();
-		dest	= new Point2 ();
+		// Point3 extends Point2: all the planar computations work unchanged and the z is preserved
+		orig	= new Point3 ();
+		dest	= new Point3 ();
 	}
 			
 	public void set (double x1, double y1, double x2, double y2)
@@ -44,16 +57,31 @@ public class Line2 extends Object implements Serializable
 		dest.set (x2, y2);
 	}
 	
+	public void set (double x1, double y1, double z1, double x2, double y2, double z2)
+	{
+		set (x1, y1, x2, y2);
+		setZ (z1, z2);
+	}
+	
+	/** Sets the elevations of the endpoints. */
+	public void setZ (double z1, double z2)
+	{
+		if (!(orig instanceof Point3))		orig = new Point3 (orig);
+		if (!(dest instanceof Point3))		dest = new Point3 (dest);
+		((Point3) orig).z (z1);
+		((Point3) dest).z (z2);
+	}
+	
 	public void set (Point2 orig, Point2 dest)
 	{
 		this.orig.set (orig);
 		this.dest.set (dest);
+		setZ ((orig instanceof Point3) ? ((Point3) orig).z () : 0.0, (dest instanceof Point3) ? ((Point3) dest).z () : 0.0);
 	}
 	
 	public void set (Line2 line)
 	{
-		orig.set (line.orig);
-		dest.set (line.dest);
+		set (line.orig, line.dest);
 	}
 	
 	public final double theta()

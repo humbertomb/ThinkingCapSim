@@ -9,7 +9,7 @@ package tc.shared.linda;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Vector;
+import java.util.ArrayList;
 
 
 /**
@@ -66,11 +66,9 @@ public class LindaSpace {
 		LindaEntry  record;
 		LindaEntry  record_any;
 		Hashtable   hs;
-		Vector v_ler;
-		Vector<LindaEntryRegistry> v_misler;
-		LindaEntryRegistry ler;
+		ArrayList<LindaEntryRegistry> v_misler;
 		
-		v_misler=new Vector<LindaEntryRegistry>();
+		v_misler=new ArrayList<LindaEntryRegistry>();
 //		if(tuple.key.equals("SYNC") && !tuple.space.equals(LindaEntryFilter.ANY)){
 //			System.out.println("  [LindaSpace] tupla SYNC space="+tuple.space+" value="+tuple.value+" connection="+connection);
 //		}
@@ -88,12 +86,8 @@ public class LindaSpace {
 				//Obtener los LindaEntryRegistry de tuplas CONFIG(están en la entrada "any")
 				record_any = (LindaEntry) content_config.get(LindaEntryFilter.ANY);
 				if(record_any!=null){
-					v_ler=record_any.listeners;
-					Enumeration en=v_ler.elements();
-					while(en.hasMoreElements()){
-						ler=(LindaEntryRegistry)en.nextElement();
+					for (LindaEntryRegistry ler : record_any.listeners)
 						v_misler.add(new LindaEntryRegistry(ler.filter.pattern,ler.listener));
-					}
 				}
 				record.listeners=v_misler;
 				content_config.put(tuple.space, record);

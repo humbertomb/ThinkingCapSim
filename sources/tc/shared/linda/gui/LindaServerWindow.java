@@ -139,7 +139,7 @@ public class LindaServerWindow extends Frame implements Runnable
 		rt = Runtime.getRuntime ();
 		fm = rt.freeMemory () / 1000;
 		
-		freeTF.setText (new Integer ((int) fm).toString ());
+		freeTF.setText (Integer.valueOf ((int) fm).toString ());
 		thsTF.setText ("----");
 		spacesTA.setText (linda.toHTML (expandBU.isSelected ()));
 	}		

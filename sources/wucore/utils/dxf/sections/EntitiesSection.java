@@ -10,7 +10,7 @@ package wucore.utils.dxf.sections;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import wucore.utils.dxf.entities.CircleDxf;
 import wucore.utils.dxf.entities.Entity;
@@ -30,13 +30,13 @@ import wucore.utils.geom.Point2;
  */
 public class EntitiesSection {
 
-public Vector entities;
+public ArrayList<Entity> entities;
 
 public Point2 min = new Point2(0,0);
 public Point2 max = new Point2(100,100);
 
 public EntitiesSection(){
-	entities = new Vector();
+	entities = new ArrayList<Entity>();
 }
 
 
@@ -77,7 +77,7 @@ public void write(PrintWriter out){
 	out.println("  0\nSECTION");					// Inicio Seccion
 	out.println("  2\nENTITIES"); 					// Seccion Entities
 	for(int i = 0; i<entities.size();i++){
-		((Entity)entities.get(i)).write(out);
+		entities.get(i).write(out);
 	}
 	out.println("  0\nENDSEC"); 					// Fin Seccion Entities
 }
@@ -107,12 +107,12 @@ public String toString(){
 }
 
 public LineDxf[] getLines(){
-    Vector lines = new Vector();
+    ArrayList<LineDxf> lines = new ArrayList<LineDxf>();
     Entity ent;
     for(int i=0; i<entities.size();i++){
-        ent = (Entity)entities.get(i);
+        ent = entities.get(i);
         if(ent instanceof LineDxf)
-            lines.add(ent);
+            lines.add((LineDxf)ent);
         if(ent instanceof PolylineDxf){	// Convierte polilineas en lineas
             LineDxf[] poly = ((PolylineDxf)ent).toDxfLines();
             if(poly != null)
@@ -121,7 +121,7 @@ public LineDxf[] getLines(){
         }
     }
     if(lines.size()==0) return null;
-    return (LineDxf[]) lines.toArray(new LineDxf[0]);
+    return lines.toArray(new LineDxf[0]);
 }
 
 }

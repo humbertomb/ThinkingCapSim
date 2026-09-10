@@ -53,11 +53,11 @@ public class AckermanDrive extends RobotModel
 	{
 		super.update (props);
 		
-		try { SAmax	 = new Double (props.getProperty ("SAMAX")).doubleValue () * Angles.DTOR; } 	catch (Exception e) 		{ SAmax			= 360.0 * Angles.DTOR; }
-		try { MOTmax = new Double (props.getProperty ("MAXMOTOR")).doubleValue (); } 			catch (Exception e) 		{ MOTmax		= 100.0; }
-		try { STRmax = new Double (props.getProperty ("MAXSTEER")).doubleValue () * Angles.DTOR; } catch (Exception e) 		{ STRmax		= 90.0 * Angles.DTOR; }
+		try { SAmax	 = Double.valueOf (props.getProperty ("SAMAX")).doubleValue () * Angles.DTOR; } 	catch (Exception e) 		{ SAmax			= 360.0 * Angles.DTOR; }
+		try { MOTmax = Double.valueOf (props.getProperty ("MAXMOTOR")).doubleValue (); } 			catch (Exception e) 		{ MOTmax		= 100.0; }
+		try { STRmax = Double.valueOf (props.getProperty ("MAXSTEER")).doubleValue () * Angles.DTOR; } catch (Exception e) 		{ STRmax		= 90.0 * Angles.DTOR; }
 
-		try { l		= new Double (props.getProperty ("LENGHT")).doubleValue (); } 				catch (Exception e) 		{ l				= 0.0; }
+		try { l		= Double.valueOf (props.getProperty ("LENGHT")).doubleValue (); } 				catch (Exception e) 		{ l				= 0.0; }
 	}
 	
 	public void kynematics_direct (double vm, double del)
