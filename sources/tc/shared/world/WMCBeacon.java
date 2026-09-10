@@ -12,68 +12,79 @@ import wucore.utils.dxf.DXFWorldFile;
 import wucore.utils.dxf.DoubleFormat;
 import wucore.utils.dxf.entities.CircleDxf;
 import wucore.utils.dxf.entities.TextDxf;
-import wucore.utils.geom.Ellipse2;
 import wucore.utils.geom.Point3;
 
 /**
- * @author Humberto Martinez Barbera
+ * Cylindrical (reflector) beacon: a vertical cylinder of a given diameter and
+ * height whose base is at pos (x, y, z).
  *
- * To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * @author Humberto Martinez Barbera
  */
 public class WMCBeacon extends WMElement
 {
-	
-	public Ellipse2			beacon;	// Se considerara que son siempre circulares
-	public double			z;		// Elevation of the beacon base (m)
+	static public final double	DEF_DIAMETER	= 0.036;	// default diameter (m)
+	static public final double	DEF_HEIGHT		= 0.5;		// default height (m)
+
+	public Point3			pos;						// Centre of the base
+	public double			diameter	= DEF_DIAMETER;
+	public double			height		= DEF_HEIGHT;
 
 	public WMCBeacon(String prop) {
 		StringTokenizer st = new StringTokenizer (prop,", \t");
-		double px			 	= Double.parseDouble (st.nextToken()); 
+		double px			 	= Double.parseDouble (st.nextToken());
 		double py 				= Double.parseDouble (st.nextToken());
-		z						= Double.parseDouble (st.nextToken());
-		double horiz			= Double.parseDouble (st.nextToken()); 				// Horizontal size
-		double vert			 	= Double.parseDouble (st.nextToken());				// Vertical size		
-		beacon = new Ellipse2(px,py,horiz,vert);
+		double pz				= Double.parseDouble (st.nextToken());
+		pos						= new Point3 (px, py, pz);
+		diameter				= Double.parseDouble (st.nextToken());
+		height				 	= Double.parseDouble (st.nextToken());
 		label = new String (st.nextToken());
 	}
 
-	public WMCBeacon(Ellipse2 beacon, String label){
-		this.beacon = beacon;
-		this.label = label;
+	public WMCBeacon(double x, double y, double z, double diameter, double height, String label){
+		this.pos		= new Point3 (x, y, z);
+		this.diameter	= diameter;
+		this.height		= height;
+		this.label		= label;
 	}
-	
+
 	public WMCBeacon(TextDxf text) {
-	    Point3 pos = text.getPos();
+	    Point3 p = text.getPos();
 	    label = text.getText();
-	    double radius = 0.0;
-	    if(text.ExtendedDouble.size()>0) radius = text.getExtDouble(0);	
-	    beacon = new Ellipse2(pos.x(),pos.y(),radius,radius);
+	    if(text.ExtendedDouble.size()>0) diameter = text.getExtDouble(0);
+	    if(text.ExtendedDouble.size()>1) height = text.getExtDouble(1);
+	    pos = new Point3 (p.x(), p.y(), 0.0);
 	}
-	
+
 	public WMCBeacon(CircleDxf circle) {
-	    Point3 pos = circle.getCenter();
-	    if(circle.ExtendedText.size()>0) label = circle.getExtText(0);	
+	    Point3 p = circle.getCenter();
+	    if(circle.ExtendedText.size()>0) label = circle.getExtText(0);
 	    else label = "CBEAC";
-	    beacon = new Ellipse2(pos.x(),pos.y(),circle.getRadius(),circle.getRadius());
+	    diameter = 2.0 * circle.getRadius();
+	    pos = new Point3 (p.x(), p.y(), 0.0);
 	}
+
+	public double x ()			{ return pos.x (); }
+	public double y ()			{ return pos.y (); }
+	public double z ()			{ return pos.z (); }
+	public double radius ()		{ return diameter / 2.0; }
 
 	// Lo convierte en un circulo
    public void toDxf(DXFWorldFile dxf) {
-	    CircleDxf circle = new CircleDxf(new Point3(beacon.center()),beacon.horiz(),"CBEACONS");		
+	    CircleDxf circle = new CircleDxf(new Point3(pos.x(),pos.y(),0.0),radius(),"CBEACONS");
 	    circle.addExtText(label);
-	    dxf.addEntity(circle); 
+	    dxf.addEntity(circle);
 	}
-	
+
    // Lo convierte en un texto
    public void toDxf1(DXFWorldFile dxf) {
-	    TextDxf text = new TextDxf(label,new Point3(beacon.center()),0.2,"CBEACONS");		
-	    text.addExtDouble(beacon.horiz());
-	    dxf.addEntity(text); 
+	    TextDxf text = new TextDxf(label,new Point3(pos.x(),pos.y(),0.0),0.2,"CBEACONS");
+	    text.addExtDouble(diameter);
+	    text.addExtDouble(height);
+	    dxf.addEntity(text);
 	}
 
 	public String toRawString ()
 	{
-		return DoubleFormat.format(beacon.center().x()) + ", " + DoubleFormat.format(beacon.center().y()) + ", " + DoubleFormat.format(z) + ", " + DoubleFormat.format(beacon.horiz()) + ", " + DoubleFormat.format(beacon.vert()) + ", " + label;
+		return DoubleFormat.format(pos.x()) + ", " + DoubleFormat.format(pos.y()) + ", " + DoubleFormat.format(pos.z()) + ", " + DoubleFormat.format(diameter) + ", " + DoubleFormat.format(height) + ", " + label;
 	}
 }

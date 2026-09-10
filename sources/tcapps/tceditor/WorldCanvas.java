@@ -42,7 +42,6 @@ import tc.shared.world.WMWaypoint;
 import tc.shared.world.WMZone;
 import tc.shared.world.World;
 import wucore.utils.color.ColorTool;
-import wucore.utils.geom.Ellipse2;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
 import wucore.utils.geom.Polygon2;
@@ -871,15 +870,14 @@ public class WorldCanvas extends JPanel
 
 	private void drawCBeacon (Graphics2D g, WMCBeacon b, boolean sel)
 	{
-		Ellipse2	e = b.beacon;
-		double		rx = Math.max (3.0, e.horiz () * scale), ry = Math.max (3.0, e.vert () * scale);
-		Ellipse2D	s = new Ellipse2D.Double (px (e.center ().x ()) - rx, py (e.center ().y ()) - ry, 2 * rx, 2 * ry);
+		double		r = Math.max (3.0, b.radius () * scale);
+		Ellipse2D	s = new Ellipse2D.Double (px (b.pos.x ()) - r, py (b.pos.y ()) - r, 2 * r, 2 * r);
 		g.setColor (new Color (200, 0, 200, 80));
 		g.fill (s);
 		g.setColor (sel ? C_SEL : C_BEACON);
 		g.setStroke (stroke (sel ? 2.5f : 1.5f));
 		g.draw (s);
-		label (g, b.label, e.center ().x (), e.center ().y (), sel ? C_SEL : C_BEACON);
+		label (g, b.label, b.pos.x (), b.pos.y (), sel ? C_SEL : C_BEACON);
 	}
 
 	private void drawPose (Graphics2D g, double x, double y, double a, double r, Color c, boolean sel, boolean square)

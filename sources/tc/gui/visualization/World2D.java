@@ -369,13 +369,12 @@ public class World2D extends Object2D
 	public void drawCilindricalBeacons () 
 	{
 		int i;
-		Ellipse2 e;
 		
 		for (i = 0; i < map.cbeacons().n(); i++)
 		{
-			e = map.cbeacons().at(i).beacon;
-			model.addRawCircle (e.center().x(), e.center().y(), e.vert() / 2, Color.RED);
-			model.addRawText (e.center().x(), e.center().y(), map.cbeacons().at(i).label, Color.RED);
+			WMCBeacon b = map.cbeacons().at(i);
+			model.addRawCircle (b.x(), b.y(), b.radius(), Color.RED);
+			model.addRawText (b.x(), b.y(), b.label, Color.RED);
 		}
 	}
 	

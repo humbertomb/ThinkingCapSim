@@ -27,7 +27,6 @@ import tc.shared.world.WMZone;
 import tc.shared.world.World;
 import wucore.utils.color.ColorTool;
 import wucore.utils.color.WColor;
-import wucore.utils.geom.Ellipse2;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
 import wucore.utils.geom.Point3;
@@ -340,7 +339,7 @@ public final class WorldEdit
 
 	static public WorldItem addCBeacon (World w, double x, double y)
 	{
-		w.cbeacons ().add (new WMCBeacon (new Ellipse2 (x, y, 0.05, 0.05), uniqueLabel (w, "cb")));
+		w.cbeacons ().add (new WMCBeacon (x, y, 0.0, WMCBeacon.DEF_DIAMETER, WMCBeacon.DEF_HEIGHT, uniqueLabel (w, "cb")));
 		return new WorldItem (WorldItem.CBEACON, w.cbeacons ().n () - 1);
 	}
 
@@ -445,8 +444,8 @@ public final class WorldEdit
 		}
 		case WorldItem.CBEACON:
 		{
-			Ellipse2	e = w.cbeacons ().at (it.index).beacon;
-			return Math.max (0.0, e.center ().distance (x, y) - Math.max (e.horiz (), e.vert ()));
+			WMCBeacon	b = w.cbeacons ().at (it.index);
+			return Math.max (0.0, b.pos.distance (x, y) - b.radius ());
 		}
 		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).pos.distance (x, y);
 		case WorldItem.DOCK:		return w.docks ().at (it.index).pos.distance (x, y);
@@ -522,8 +521,8 @@ public final class WorldEdit
 		}
 		case WorldItem.CBEACON:
 		{
-			Ellipse2	e = w.cbeacons ().at (it.index).beacon;
-			e.set (e.center ().x () + dx, e.center ().y () + dy, e.horiz (), e.vert ());
+			Point3		p = w.cbeacons ().at (it.index).pos;
+			p.x (p.x () + dx);	p.y (p.y () + dy);
 			break;
 		}
 		case WorldItem.WAYPOINT:
@@ -594,8 +593,8 @@ public final class WorldEdit
 		}
 		case WorldItem.CBEACON:
 		{
-			Ellipse2	e = w.cbeacons ().at (it.index).beacon;
-			return new Point2[] { new Point2 (e.center ()), new Point2 (e.center ().x () + e.horiz (), e.center ().y ()) };
+			WMCBeacon	b = w.cbeacons ().at (it.index);
+			return new Point2[] { new Point2 (b.pos), new Point2 (b.pos.x () + b.radius (), b.pos.y ()) };
 		}
 		case WorldItem.WAYPOINT:
 		{
@@ -676,13 +675,9 @@ public final class WorldEdit
 		}
 		case WorldItem.CBEACON:
 		{
-			Ellipse2	e = w.cbeacons ().at (it.index).beacon;
-			if (h == 0)		e.set (x, y, e.horiz (), e.vert ());
-			else
-			{
-				double	r = Math.max (0.005, e.center ().distance (x, y));
-				e.set (e.center ().x (), e.center ().y (), r, r);
-			}
+			WMCBeacon	b = w.cbeacons ().at (it.index);
+			if (h == 0)		{ b.pos.x (x); b.pos.y (y); }
+			else			b.diameter = 2.0 * Math.max (0.005, b.pos.distance (x, y));
 			break;
 		}
 		case WorldItem.WAYPOINT:
@@ -765,7 +760,7 @@ public final class WorldEdit
 		case WorldItem.OBJECT:		return w.objects ().at (it.index).pos.z ();
 		case WorldItem.CONNECTOR:		return Math.min (w.connectors ().at (it.index).edge.z1 (), w.connectors ().at (it.index).edge.z2 ());
 		case WorldItem.BEACON:		return w.beacons ().at (it.index).pos.z ();
-		case WorldItem.CBEACON:		return w.cbeacons ().at (it.index).z;
+		case WorldItem.CBEACON:		return w.cbeacons ().at (it.index).pos.z ();
 		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).pos.z ();
 		case WorldItem.DOCK:		return w.docks ().at (it.index).pos.z ();
 		case WorldItem.START:		return w.start_z ();
@@ -791,7 +786,7 @@ public final class WorldEdit
 		case WorldItem.ICON:		return new String[] { "label", "segments" };
 		case WorldItem.CONNECTOR:		return new String[] { "label", "x1", "y1", "z1", "x2", "y2", "z2", "path x1", "path y1", "path z1", "path x2", "path y2", "path z2", "width", "height", "texture" };
 		case WorldItem.BEACON:		return new String[] { "label", "x", "y", "z", "angle", "width", "height" };
-		case WorldItem.CBEACON:		return new String[] { "label", "x", "y", "z", "horiz", "vert" };
+		case WorldItem.CBEACON:		return new String[] { "label", "x", "y", "z", "diameter", "height" };
 		case WorldItem.WAYPOINT:	return new String[] { "label", "x", "y", "z", "angle" };
 		case WorldItem.DOCK:		return new String[] { "label", "x", "y", "z", "angle" };
 		case WorldItem.START:		return new String[] { "x", "y", "z", "angle" };
@@ -911,11 +906,11 @@ public final class WorldEdit
 		{
 			WMCBeacon	b = w.cbeacons ().at (it.index);
 			if (name.equals ("label"))		return b.label;
-			if (name.equals ("x"))			return fmt (b.beacon.center ().x ());
-			if (name.equals ("y"))			return fmt (b.beacon.center ().y ());
-			if (name.equals ("z"))			return fmt (b.z);
-			if (name.equals ("horiz"))		return fmt (b.beacon.horiz ());
-			if (name.equals ("vert"))		return fmt (b.beacon.vert ());
+			if (name.equals ("x"))			return fmt (b.pos.x ());
+			if (name.equals ("y"))			return fmt (b.pos.y ());
+			if (name.equals ("z"))			return fmt (b.pos.z ());
+			if (name.equals ("diameter"))	return fmt (b.diameter);
+			if (name.equals ("height"))		return fmt (b.height);
 			break;
 		}
 		case WorldItem.WAYPOINT:
@@ -1093,13 +1088,12 @@ public final class WorldEdit
 		case WorldItem.CBEACON:
 		{
 			WMCBeacon	b = w.cbeacons ().at (it.index);
-			Ellipse2	e = b.beacon;
 			if (name.equals ("label"))			b.label = checkLabel (w, it, value);
-			else if (name.equals ("x"))			e.set (num (value), e.center ().y (), e.horiz (), e.vert ());
-			else if (name.equals ("y"))			e.set (e.center ().x (), num (value), e.horiz (), e.vert ());
-			else if (name.equals ("z"))			b.z = num (value);
-			else if (name.equals ("horiz"))		e.set (e.center ().x (), e.center ().y (), Math.abs (num (value)), e.vert ());
-			else if (name.equals ("vert"))		e.set (e.center ().x (), e.center ().y (), e.horiz (), Math.abs (num (value)));
+			else if (name.equals ("x"))			b.pos.x (num (value));
+			else if (name.equals ("y"))			b.pos.y (num (value));
+			else if (name.equals ("z"))			b.pos.z (num (value));
+			else if (name.equals ("diameter"))	b.diameter = Math.abs (num (value));
+			else if (name.equals ("height"))	b.height = Math.abs (num (value));
 			return;
 		}
 		case WorldItem.WAYPOINT:

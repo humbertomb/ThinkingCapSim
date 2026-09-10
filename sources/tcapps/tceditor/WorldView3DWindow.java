@@ -405,8 +405,7 @@ public class WorldView3DWindow extends JFrame
 		for (i = 0; i < world.cbeacons ().n (); i++)
 		{
 			WMCBeacon		b = world.cbeacons ().at (i);
-			double			r = Math.max (0.02, Math.max (b.beacon.horiz (), b.beacon.vert ()));
-			bg.addChild (cylinder (b.beacon.center ().x (), b.beacon.center ().y (), b.z, r, 0.8, C_BEACON, 0f));
+			bg.addChild (cylinder (b.pos.x (), b.pos.y (), b.pos.z (), Math.max (0.01, b.radius ()), Math.max (0.02, b.height), C_BEACON, 0f));
 		}
 
 		// connector crossing paths
