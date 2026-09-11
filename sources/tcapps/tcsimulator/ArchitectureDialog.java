@@ -270,10 +270,10 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		// --- left: toolbar
 		JToolBar	tb = new JToolBar (JToolBar.VERTICAL);
 		tb.setFloatable (false);
-		lindaAC		= ToolButtons.action ("Linda", ToolIcon.LINDA, "Add a Linda space (global first, then the local one of the robot)", new Runnable () { public void run () { addLinda (); } });
+		lindaAC		= ToolButtons.action ("Linda", ToolIcon.LINDA, "Add a global Linda space", new Runnable () { public void run () { select (model.addGlobalLinda ()); } });
 		routerAC	= ToolButtons.action ("Router", ToolIcon.ROUTER, "Add the Linda router of the selected robot", new Runnable () { public void run () { select (model.addRouter (currentRobot ())); } });
 		moduleAC	= ToolButtons.action ("Module", ToolIcon.MODULE, "Add a module to the selected robot", new Runnable () { public void run () { select (model.addModule (currentRobot ())); } });
-		robotAC		= ToolButtons.action ("Robot", ToolIcon.ROBOT, "Add a robot (local Linda space and virtual robot)", new Runnable () { public void run () { select (model.addRobot ()); } });
+		robotAC		= ToolButtons.action ("Robot", ToolIcon.ROBOT, "Add a robot", new Runnable () { public void run () { select (model.addRobot ()); } });
 		deleteAC	= ToolButtons.action ("Delete", ToolIcon.DELETE, "Delete the selected block  [Delete]", new Runnable () { public void run () { deleteSelection (); } });
 		tb.add (ToolButtons.flatButton (lindaAC));
 		tb.add (ToolButtons.flatButton (robotAC));
@@ -435,21 +435,10 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		return model.addRobot ().robot;
 	}
 
-	/** Linda button: the global space when missing, otherwise the local one of the current robot. */
-	private void addLinda ()
-	{
-		if (!model.hasGlobalLinda ())		select (model.addGlobalLinda ());
-		else
-		{
-			int	r = currentRobot ();
-			if (!model.hasLocalLinda (r))	select (model.addLocalLinda (r));
-		}
-	}
-
 	private void deleteSelection ()
 	{
 		Block	b = canvas.getSelection ();
-		if (b == null)					return;
+		if ((b == null) || !model.isRemovable (b))		return;
 		if (b.kind == ArchModel.ROBOT)
 		{
 			if (JOptionPane.showConfirmDialog (this, "Delete the robot " + model.getRobotId (b.robot) + " with all its modules?", getTitle (),
@@ -520,10 +509,10 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	{
 		Block	sel = canvas.getSelection ();
 		int		r = ((sel != null) && (sel.robot >= 0)) ? sel.robot : (model.robots ().size () > 0 ? model.robots ().get (0) : -1);
-		lindaAC.setEnabled (!model.hasGlobalLinda () || (r < 0) || !model.hasLocalLinda (r));
+		lindaAC.setEnabled (!model.hasGlobalLinda ());				// local spaces come with the robot
 		routerAC.setEnabled ((r < 0) || !model.hasRouter (r));
 		robotAC.setEnabled (true);
-		deleteAC.setEnabled (sel != null);
+		deleteAC.setEnabled ((sel != null) && model.isRemovable (sel));
 	}
 
 	/** A name was edited in place on the diagram (robot name or module INFO): tree and properties follow. */

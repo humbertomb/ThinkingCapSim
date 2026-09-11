@@ -320,6 +320,12 @@ public class ArchModel
 		return ((info != null) && (info.trim ().length () > 0)) ? info.trim () : b.prefix;
 	}
 
+	/** True when the block can be deleted: everything but the local Linda space and the virtual robot, which every robot must have. */
+	public boolean isRemovable (Block b)
+	{
+		return (b.kind != LOCAL_LINDA) && (b.kind != VROBOT);
+	}
+
 	/** True when the name of the block can be edited (robot name or INFO of a module). */
 	public boolean isRenameable (Block b)
 	{
@@ -515,6 +521,15 @@ public class ArchModel
 		return new Block (ROBOT, null, r);
 	}
 
+	/** "Module 1", "Module 2", ...: the first name not used by another block of the robot. */
+	protected String uniqueModuleName (int r, String base)
+	{
+		List<String>	names = new ArrayList<String> ();
+		for (Block b : robotBlocks (r))		names.add (labelOf (b));
+		for (int i = 1; ; i++)
+			if (!names.contains (base + " " + i))		return base + " " + i;
+	}
+
 	protected List<String> robotNames ()
 	{
 		List<String>	l = new ArrayList<String> ();
@@ -555,7 +570,7 @@ public class ArchModel
 		List<String>	mods = modulePrefixes (r);
 		mods.add (p);
 		setp (r, "MODULES", join (mods));
-		setp (r, p + "INFO", "Module");
+		setp (r, p + "INFO", uniqueModuleName (r, "Module"));
 		setp (r, p + "MODE", "shared");
 		setp (r, p + "CLASS", "tc.runtime.thread.StdThread");
 		setp (r, p + "PASSIVE", "true");
