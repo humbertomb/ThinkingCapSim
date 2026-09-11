@@ -86,23 +86,27 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 		setMinimumSize (new Dimension (300, minimumHeight ()));
 	}
 
-	/** Height of the two tab labels (laid out vertically on the left). */
+	/** Height of the two tab labels (laid out vertically on the left), measured on the real layout. */
 	public int tabsHeight ()
 	{
+		if (getWidth () > 0)		validate ();								// make sure the tab bounds are current
+		// sum of the tab heights: the tabs must fit stacked in one column (when the panel is too
+		// short the look and feel wraps them into several columns, so max(y + height) is not enough)
 		int	h = 0;
 		for (int i = 0; i < getTabCount (); i++)
 		{
 			java.awt.Rectangle	r = getBoundsAt (i);
-			if (r != null)		h = Math.max (h, r.y + r.height);
+			if (r != null)		h += r.height;
 		}
-		if (h == 0)		h = 2 * (getFontMetrics (getFont ()).getHeight () + 8);		// not laid out yet: estimate
+		if (h == 0)		h = 2 * (getFontMetrics (getFont ()).getHeight () + 12);		// not laid out yet: estimate
 		return h;
 	}
 
-	/** Initial height of the panel: three times the tabs, enough for the header and a few rows. */
+	/** Initial height of the panel: just what the two tabs need (plus the border of the tab area). */
 	public int minimumHeight ()
 	{
-		return 3 * tabsHeight () + 6;
+		java.awt.Insets	in = getInsets ();
+		return tabsHeight () + in.top + in.bottom + 12;
 	}
 
 	public RobotList	getRobotList ()		{ return robots; }
