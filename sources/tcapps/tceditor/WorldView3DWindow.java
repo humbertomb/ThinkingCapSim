@@ -57,8 +57,12 @@ import tc.shared.world.WMConnector;
 import tc.shared.world.WMFArea;
 import tc.shared.world.WMWall;
 import tc.shared.world.World;
+import tc.vrobot.RobotData;
+import tc.vrobot.RobotDesc;
 import tcapps.tcsim.gui.visualization.Scene3D;
+import tcapps.tcsim.gui.visualization.objects.Robot3D;
 import tcapps.tcsim.gui.visualization.objects.World3D;
+import tcapps.tcsimulator.simulator.SimulatorDesc;
 import wucore.utils.geom.Point2;
 import wucore.utils.geom.Point3;
 import wucore.utils.geom.Polygon2;
@@ -103,6 +107,8 @@ public class WorldView3DWindow extends JFrame
 	protected EditorScene			scene;
 	protected BranchGroup			worldBranch;		// detachable: World3D + extras
 	protected BranchGroup			selBranch;			// detachable: selection highlight
+	protected BranchGroup			robotsBranch;		// live: simulated robots (Robot3D children)
+	protected java.util.List<Robot3D>	robots = new java.util.ArrayList<Robot3D> ();
 	protected int					vmode			= Scene3D.M_MOVE;
 
 	/* GUI */
@@ -602,6 +608,57 @@ public class WorldView3DWindow extends JFrame
 
 	/* ------------------------------------------------------------------ */
 	/* Scene with editor-friendly extensions                               */
+	/* ------------------------------------------------------------------ */
+	/* Simulated robots (live objects, independent of the world rebuilds)   */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * Adds a robot (3DS body and optional lift from its simulator description)
+	 * and returns its index for {@link #updateRobot}. Robots survive world
+	 * rebuilds: they hang from their own branch.
+	 */
+	public int addRobot (RobotDesc rdesc, SimulatorDesc sdesc, double x, double y, double a)
+	{
+		if (robotsBranch == null)
+		{
+			robotsBranch = new BranchGroup ();
+			robotsBranch.setCapability (BranchGroup.ALLOW_DETACH);
+			robotsBranch.setCapability (BranchGroup.ALLOW_CHILDREN_EXTEND);
+			robotsBranch.setCapability (BranchGroup.ALLOW_CHILDREN_WRITE);
+			scene.addBranch (robotsBranch);
+		}
+		TransformGroup	body = (sdesc.V3DFILE != null) ? scene.getCachedObject (sdesc.V3DFILE, null) : null;
+		TransformGroup	lift = (sdesc.V3DLIFT != null) ? scene.getCachedObject (sdesc.V3DLIFT, null) : null;
+		if (body == null)
+		{
+			// no 3D model: a box the size of the robot
+			body = new TransformGroup ();
+			double	r = Math.max (0.1, rdesc.RADIUS);
+			body.addChild (new Box ((float) r, (float) r, (float) (r / 2.0), matAppearance (new Color3f (0.2f, 0.4f, 0.9f), 0f)));
+			body.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
+		}
+		body.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
+		if (lift != null)		lift.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
+		Robot3D		r3d = new Robot3D (rdesc, body, lift, new Point3 (x, y, 0.0), 0.0, a);
+		robots.add (r3d);
+		robotsBranch.addChild (r3d);
+		return robots.size () - 1;
+	}
+
+	/** Moves a robot (and its sensor displays) to the pose of <code>data</code>. */
+	public void updateRobot (int index, RobotData data)
+	{
+		if ((index < 0) || (index >= robots.size ()))		return;
+		robots.get (index).move (data, new Point3 (data.real_x, data.real_y, 0.0), data.fork, data.real_a);
+	}
+
+	public void clearRobots ()
+	{
+		if (robotsBranch != null)		robotsBranch.detach ();
+		robotsBranch = null;
+		robots.clear ();
+	}
+
 	/* ------------------------------------------------------------------ */
 
 	/**

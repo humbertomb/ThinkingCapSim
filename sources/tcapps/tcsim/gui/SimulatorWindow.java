@@ -54,12 +54,13 @@ import tcapps.tcsim.gui.visualization.Model3D;
 import tcapps.tcsim.gui.visualization.Scene3D;
 import tcapps.tcsimulator.simulator.Simulator;
 import tcapps.tcsimulator.simulator.SimulatorDesc;
+import tcapps.tcsimulator.simulator.SimulatorListener;
 import tcapps.tcsimulator.simulator.objects.SimObject;
 import wucore.utils.geom.Point3;
 
 import com.sun.j3d.utils.universe.SimpleUniverse;
 
-public class SimulatorWindow extends JFrame
+public class SimulatorWindow extends JFrame implements SimulatorListener
 {
 	public static final int 		ADMIN = 0;
 	public static final int 		CLIENT = 1;

@@ -18,7 +18,6 @@ import tc.vrobot.RobotModel;
 import tc.vrobot.SensorPos;
 import tc.vrobot.TrackerData;
 import tc.vrobot.models.TricycleDrive;
-import tcapps.tcsim.gui.SimulatorWindow;
 import tcapps.tcsimulator.simulator.objects.SimCargo;
 import tcapps.tcsimulator.simulator.objects.SimMultiCargo;
 import tcapps.tcsimulator.simulator.objects.SimObject;
@@ -92,7 +91,7 @@ public class Simulator
 	public RobotData[] 			lastRobotData; // Stores the last 'RobotData' object received from "SimulatedRobot" to allow 3D representation in the "RefreshThread"
 	
 	// Simulated world visualization
-	protected SimulatorWindow 		win;
+	protected SimulatorListener 		win;
 	
 	public int[] 					objectPicked; // Indexed by robot id, this array contains the id of the object that the robot has picked. -1 if no object has been picked 
 	public String[]					palletPicked; // Indexed by robot id, this array contains the id of the pallet that the robot has picked. -1 if no object has been picked
@@ -293,7 +292,7 @@ public class Simulator
 		}
 	}
 	
-	public void setVisualization (SimulatorWindow win) 
+	public void setVisualization (SimulatorListener win) 
 	{ 
 		int			i;
 		

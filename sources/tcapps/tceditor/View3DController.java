@@ -128,6 +128,23 @@ public class View3DController
 		if (view3d != null)		view3d.setSelection (item);
 	}
 
+	/* --- simulated robots (delegated to the 3D window; no-ops while it does not exist) --- */
+
+	public int addRobot (tc.vrobot.RobotDesc rdesc, tcapps.tcsimulator.simulator.SimulatorDesc sdesc, double x, double y, double a)
+	{
+		return (view3d != null) ? view3d.addRobot (rdesc, sdesc, x, y, a) : -1;
+	}
+
+	public void updateRobot (int index, tc.vrobot.RobotData data)
+	{
+		if (view3d != null)		view3d.updateRobot (index, data);
+	}
+
+	public void clearRobots ()
+	{
+		if (view3d != null)		view3d.clearRobots ();
+	}
+
 	public void dispose ()
 	{
 		if (view3d != null)		view3d.dispose ();

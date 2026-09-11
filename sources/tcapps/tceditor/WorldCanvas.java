@@ -73,6 +73,12 @@ public class WorldCanvas extends JPanel
 	static public final int		T_ICON		= 13;		// edit the icon (segments) of the selected object
 
 	/** Receives notifications from the canvas. */
+	/** Extra layer painted over the world (e.g. the simulated robots); coordinates via toPixelX/Y and getScale. */
+	public interface Overlay
+	{
+		public void paint (Graphics2D g, WorldCanvas canvas);
+	}
+
 	public interface Listener
 	{
 		public void selectionChanged (WorldItem item);
@@ -138,6 +144,7 @@ public class WorldCanvas extends JPanel
 	protected List<Point2>			polyPoints	= new ArrayList<Point2> ();	// points of the area being drawn
 	protected boolean				spaceDown	= false;
 	protected boolean				editable	= true;		// false: viewer mode (select, pan and zoom only)
+	protected Overlay				overlay;				// extra drawing on top of the world (robots, ...)
 	protected int					iconVertex	= -1;		// icon tool: vertex being dragged / last clicked
 	protected int					iconSegment	= -1;		// icon tool: segment under the last click
 
@@ -215,6 +222,8 @@ public class WorldCanvas extends JPanel
 	}
 
 	public boolean isEditable ()		{ return editable; }
+
+	public void setOverlay (Overlay overlay)		{ this.overlay = overlay; repaint (); }
 
 	public void setTool (int tool)
 	{
@@ -713,6 +722,8 @@ public class WorldCanvas extends JPanel
 		if (visible[WorldItem.WAYPOINT])	for (int i = 0; i < world.wps ().n (); i++)			drawWaypoint (g, world.wps ().at (i), isSel (WorldItem.WAYPOINT, i));
 		if (visible[WorldItem.DOCK])		for (int i = 0; i < world.docks ().n (); i++)		drawDock (g, world.docks ().at (i), isSel (WorldItem.DOCK, i));
 		if (visible[WorldItem.START])		drawStart (g, isSel (WorldItem.START, 0));
+
+		if (overlay != null)				overlay.paint (g, this);
 
 		drawRubber (g);
 		if (tool == T_ICON)					drawIconHandles (g, true);

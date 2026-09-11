@@ -4,7 +4,14 @@
 
 package tcapps.tcsimulator;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
+import java.util.ArrayList;
+import java.util.List;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -29,6 +36,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import tc.ExecArch;
 import tc.shared.linda.ItemDebug;
 import tc.shared.world.World;
+import tc.vrobot.RobotData;
+import tc.vrobot.RobotDesc;
 import tcapps.tceditor.StatusBar;
 import tcapps.tceditor.ToolButtons;
 import tcapps.tceditor.ToolIcon;
@@ -37,6 +46,11 @@ import tcapps.tceditor.WorldCanvas;
 import tcapps.tceditor.WorldEdit;
 import tcapps.tceditor.WorldItem;
 import tcapps.tcsimulator.simulator.Simulator;
+import tcapps.tcsimulator.simulator.SimulatorDesc;
+import tcapps.tcsimulator.simulator.SimulatorListener;
+import tcapps.tcsimulator.simulator.objects.SimObject;
+import wucore.utils.geom.Line2;
+import wucore.utils.geom.Point3;
 
 /**
  * Main window of the new ThinkingCap simulator. Everything the simulator
@@ -47,7 +61,7 @@ import tcapps.tcsimulator.simulator.Simulator;
  * {@link WorldCanvas} and the 3D view a {@link View3DController}.
  * Functionality will be added incrementally.
  */
-public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
+public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, SimulatorListener, WorldCanvas.Overlay
 {
 	private static final long		serialVersionUID = 1L;
 
@@ -62,6 +76,16 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 
 	protected ExecArch				running;				// Architecture being executed (null when none)
 	protected Simulator				simulator;				// Simulation engine of the running architecture
+	protected List<RobotView>		robots	= new ArrayList<RobotView> ();		// simulated robots being displayed
+
+	/** A simulated robot as seen by the window: description, last data and its index in the 3D view. */
+	protected static class RobotView
+	{
+		RobotDesc		rdesc;
+		SimulatorDesc	sdesc;
+		RobotData		data;			// last data received (null until the first update)
+		int				index3d	= -1;	// index in the 3D view (-1: not added yet)
+	}
 
 	protected WorldCanvas			canvas;
 	protected StatusBar				statusBar;
@@ -96,6 +120,7 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 		canvas = new WorldCanvas (world);
 		canvas.setEditable (false);
 		canvas.setListener (this);
+		canvas.setOverlay (this);
 
 		statusBar	= new StatusBar ();
 		view3d		= new View3DController (this, canvas);
@@ -329,7 +354,8 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 	{
 		terminate ();
 		simulator	= new Simulator ();
-		running		= arch.runner (robotId (), simulator);
+		running		= arch.runner (robotId (), simulator);		// loads the architecture's world into the simulator
+		simulator.setVisualization (this);							// robots and objects are reported to this window
 		running.start ();
 		statusBar.setStatus ("Executing " + robotId () + " (" + ((arch.getFile () != null) ? arch.getFile ().getName () : "untitled") + ")");
 		updateExecutionState ();
@@ -340,8 +366,12 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 	{
 		if (running == null)			return;
 		running.terminate ();
+		if (simulator != null)		simulator.closeVisualization3D ();		// stops the refresh thread
 		running		= null;
 		simulator	= null;
+		synchronized (robots) { robots.clear (); }
+		view3d.clearRobots ();
+		canvas.repaint ();
 		statusBar.setStatus ("Execution terminated");
 		updateExecutionState ();
 	}
@@ -360,6 +390,124 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 		startAction.setEnabled (on);
 		stepAction.setEnabled (on);
 		stopAction.setEnabled (on);
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* SimulatorListener: robots and objects reported by the Simulator      */
+	/* (called from the module / refresh threads)                           */
+	/* ------------------------------------------------------------------ */
+
+	public void setWorldmap (World map)
+	{
+		// the simulator works on its own World instance loaded from the same file the window shows
+	}
+
+	public int addRobot (RobotDesc rdesc, SimulatorDesc sdesc)
+	{
+		RobotView	rv = new RobotView ();
+		rv.rdesc	= rdesc;
+		rv.sdesc	= sdesc;
+		synchronized (robots)
+		{
+			robots.add (rv);
+			return robots.size () - 1;
+		}
+	}
+
+	public void updateData (int roboindex, RobotData data)
+	{
+		synchronized (robots)
+		{
+			if ((roboindex < 0) || (roboindex >= robots.size ()))		return;
+			robots.get (roboindex).data = data;
+		}
+	}
+
+	public int addObject (SimObject object)					{ return -1; }		// scene objects: not displayed yet
+	public int addObject (SimObject object, Point3 pos, double a)	{ return -1; }
+	public void removeObject (int objindex)					{ }
+	public void removeAllObjects ()								{ }
+	public void updateObjectData (int objindex, Point3 pt, double a)	{ }
+
+	/** End of a simulator refresh cycle: redraw the 2D view and move the 3D robots (on the event thread). */
+	public void repaint ()
+	{
+		SwingUtilities.invokeLater (new Runnable ()
+		{
+			public void run ()
+			{
+				canvas.repaint ();
+				update3DRobots ();
+			}
+		});
+	}
+
+	private void update3DRobots ()
+	{
+		if (!view3d.isVisible ())		return;
+		synchronized (robots)
+		{
+			for (RobotView rv : robots)
+			{
+				if (rv.data == null)		continue;
+				if (rv.index3d < 0)		rv.index3d = view3d.addRobot (rv.rdesc, rv.sdesc, rv.data.real_x, rv.data.real_y, rv.data.real_a);
+				view3d.updateRobot (rv.index3d, rv.data);
+			}
+		}
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* WorldCanvas.Overlay: robots on the 2D view                           */
+	/* ------------------------------------------------------------------ */
+
+	static private final Color		C_ROBOT		= new Color (30, 90, 200);
+	static private final Color		C_ROBOT_FILL	= new Color (30, 90, 200, 60);
+
+	public void paint (Graphics2D g, WorldCanvas c)
+	{
+		synchronized (robots)
+		{
+			for (RobotView rv : robots)
+				if (rv.data != null)		drawRobot (g, c, rv);
+		}
+	}
+
+	private void drawRobot (Graphics2D g, WorldCanvas c, RobotView rv)
+	{
+		double		x = rv.data.real_x, y = rv.data.real_y, a = rv.data.real_a;
+		double		ca = Math.cos (a), sa = Math.sin (a);
+		Line2[]		icon = rv.rdesc.icon;
+
+		g.setStroke (new BasicStroke (2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		if ((icon != null) && (icon.length > 0))
+		{
+			// icon segments (robot frame) placed at the robot pose; closed outlines get a light fill
+			Path2D	path = new Path2D.Double ();
+			for (Line2 l : icon)
+			{
+				double	x1 = x + l.orig ().x () * ca - l.orig ().y () * sa, y1 = y + l.orig ().x () * sa + l.orig ().y () * ca;
+				double	x2 = x + l.dest ().x () * ca - l.dest ().y () * sa, y2 = y + l.dest ().x () * sa + l.dest ().y () * ca;
+				path.moveTo (c.toPixelX (x1), c.toPixelY (y1));
+				path.lineTo (c.toPixelX (x2), c.toPixelY (y2));
+			}
+			g.setColor (C_ROBOT_FILL);
+			g.fill (path);
+			g.setColor (C_ROBOT);
+			g.draw (path);
+		}
+		else
+		{
+			double	r = Math.max (3.0, rv.rdesc.RADIUS * c.getScale ());
+			g.setColor (C_ROBOT_FILL);
+			g.fillOval ((int) Math.round (c.toPixelX (x) - r), (int) Math.round (c.toPixelY (y) - r), (int) Math.round (2 * r), (int) Math.round (2 * r));
+			g.setColor (C_ROBOT);
+			g.drawOval ((int) Math.round (c.toPixelX (x) - r), (int) Math.round (c.toPixelY (y) - r), (int) Math.round (2 * r), (int) Math.round (2 * r));
+		}
+		// heading
+		double	len = Math.max (0.5, rv.rdesc.RADIUS * 1.5);
+		g.setColor (C_ROBOT);
+		g.draw (new Line2D.Double (c.toPixelX (x), c.toPixelY (y), c.toPixelX (x + len * ca), c.toPixelY (y + len * sa)));
+		g.fillOval (c.toPixelX (x) - 3, c.toPixelY (y) - 3, 6, 6);
 	}
 
 	/* ------------------------------------------------------------------ */
