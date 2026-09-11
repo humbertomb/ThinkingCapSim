@@ -3,7 +3,7 @@
   "globalLinda": {
     "address": "localhost",
     "port": 5500,
-    "instantiate": false
+    "instantiate": true
   },
   "robots": [
     {

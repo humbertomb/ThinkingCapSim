@@ -101,13 +101,14 @@ public class DeployArch
 	{
 		public String				name			= DEFAULT_ROBOT;
 		public Linda				linda			= new Linda ();
-		public Module				router;											// null when the robot has no router
+		public Module				router;											// null when the robot has no router (see the note in toProperties)
 		public List<Module>			modules			= new ArrayList<Module> ();
 		public Module				virtualRobot	= newVirtualRobot ();
 		public Map<String, String>	properties		= new LinkedHashMap<String, String> ();
 
 		public Robot ()										{ }
-		public Robot (String name)							{ this.name = name; }
+		/** A new robot of the editor: with a Linda router (a robot without router receives its own COORD/SYNC tuples). */
+		public Robot (String name)							{ this.name = name; this.router = newRouter (); }
 
 		public Robot copy ()
 		{
@@ -295,6 +296,16 @@ public class DeployArch
 			p.setProperty ("GLINADDR", globalLinda.address);
 			p.setProperty ("GLINPORT", String.valueOf (globalLinda.port));
 			p.setProperty ("GLINCREATE", String.valueOf (globalLinda.instantiate));
+		}
+		else if (r.router != null)
+		{
+			// The router needs a global space to connect to: host one in-process. Without a router
+			// the robot's own COORD/SYNC tuples would be delivered back to its own modules (the
+			// router is what takes them out of the local space), which makes the iFork wander.
+			Linda	g = newGlobalLinda ();
+			p.setProperty ("GLINADDR", g.address);
+			p.setProperty ("GLINPORT", String.valueOf (g.port));
+			p.setProperty ("GLINCREATE", "true");
 		}
 		p.setProperty ("LLINADDR", r.linda.address);
 		p.setProperty ("LLINPORT", String.valueOf (r.linda.port));
