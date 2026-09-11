@@ -43,7 +43,7 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 	private static final long		serialVersionUID = 1L;
 
 	static public final long		LPS_PERIOD	= 500;		// min. ms between position updates of a robot
-	static public final int			VISIBLE_ROWS	= 6;	// rows of the Robots table visible at start
+	static public final int			VISIBLE_ROWS	= 6;	// preferred rows of the tables
 
 	protected RobotList				robots;
 	protected EventList				events;
@@ -85,37 +85,7 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 
 		insertTab ("Robots", null, robotSP, null, 0);
 		insertTab ("Events", null, eventSP, null, 1);
-		// usually little information here: the panel's natural height is just what the two tabs need
-		setMinimumSize (new Dimension (300, minimumHeight ()));
-	}
-
-	/** Height of the two tab labels (laid out vertically on the left), measured on the real layout. */
-	public int tabsHeight ()
-	{
-		if (getWidth () > 0)		validate ();								// make sure the tab bounds are current
-		// sum of the tab heights: the tabs must fit stacked in one column (when the panel is too
-		// short the look and feel wraps them into several columns, so max(y + height) is not enough)
-		int	h = 0;
-		for (int i = 0; i < getTabCount (); i++)
-		{
-			java.awt.Rectangle	r = getBoundsAt (i);
-			if (r != null)		h += r.height;
-		}
-		if (h == 0)		h = 2 * (getFontMetrics (getFont ()).getHeight () + 12);		// not laid out yet: estimate
-		return h;
-	}
-
-	/**
-	 * Initial height of the panel: three times what the two tabs need, and in
-	 * any case enough for the table header plus {@link #VISIBLE_ROWS} rows.
-	 */
-	public int minimumHeight ()
-	{
-		java.awt.Insets	in = getInsets ();
-		int	tabs	= 3 * (tabsHeight () + in.top + in.bottom + 12);
-		int	header	= (robotTB.getTableHeader () != null) ? robotTB.getTableHeader ().getPreferredSize ().height : 24;
-		int	rows	= header + VISIBLE_ROWS * robotTB.getRowHeight () + robotSP.getInsets ().top + robotSP.getInsets ().bottom + in.top + in.bottom + 8;
-		return Math.max (tabs, rows);
+		setMinimumSize (new Dimension (300, 60));
 	}
 
 	public RobotList	getRobotList ()		{ return robots; }
