@@ -65,12 +65,11 @@ public class DeployArch
 	 * the INFO of the ADF; <code>properties</code> holds the rest with the ADF
 	 * suffixes (CLASS, MODE, PASSIVE, QUEUED, POLLED, EXTIME, PRI, GFX, GMODE,
 	 * DESC, CUST, WORLD, TOPOL, APW, RADDR, RPORT, LPORT, ...); the events are
-	 * the CONNECT entries. The prefix is only needed to rebuild an ADF.
+	 * the CONNECT entries. ADF prefixes are generated when an ADF is rebuilt.
 	 */
 	static public class Module
 	{
 		public String				name		= "Module";
-		public String				prefix;								// ADF prefix (NAV, COO, ROB, ...), generated when null
 		public Map<String, String>	properties	= new LinkedHashMap<String, String> ();
 		public List<Event>			events		= new ArrayList<Event> ();
 
@@ -87,7 +86,6 @@ public class DeployArch
 		public Module copy ()
 		{
 			Module	m = new Module (name);
-			m.prefix	= prefix;
 			m.properties.putAll (properties);
 			for (Event e : events)		m.events.add (e.copy ());
 			return m;
@@ -238,7 +236,6 @@ public class DeployArch
 	static public Module newVirtualRobot ()
 	{
 		Module	m = new Module ("Virtual Robot");
-		m.prefix	= "ROB";
 		m.set ("CLASS", "tc.vrobot.VirtualRobot");
 		m.set ("MODE", "shared");
 		m.set ("PASSIVE", "false");
@@ -250,7 +247,6 @@ public class DeployArch
 	static public Module newRouter ()
 	{
 		Module	m = new Module ("Linda Router");
-		m.prefix	= "COO";
 		m.set ("CLASS", "tc.coord.LindaRouter");
 		m.set ("MODE", "shared");
 		m.set ("GMODE", "tcp");
@@ -291,35 +287,19 @@ public class DeployArch
 		p.setProperty ("NAME", r.name);
 		for (Map.Entry<String, String> e : r.properties.entrySet ())		p.setProperty (e.getKey (), e.getValue ());
 
-		List<String>	used = new ArrayList<String> ();
-		used.add ("GLIN"); used.add ("LLIN");
+		// ADF prefixes: MOD1, MOD2, ... for the modules, COO for the router, ROB for the virtual robot
 		List<String>	prefixes = new ArrayList<String> ();
-		for (Module m : r.modules)		prefixes.add (assignPrefix (m, "MOD", used));
+		for (int i = 0; i < r.modules.size (); i++)		prefixes.add ("MOD" + (i + 1));
 		p.setProperty ("MODULES", String.join (", ", prefixes));
 		for (int i = 0; i < r.modules.size (); i++)		writeModule (p, r.modules.get (i), prefixes.get (i));
 		if (r.router != null)
 		{
-			String	pre = assignPrefix (r.router, "COO", used);
-			p.setProperty ("ROUTER", pre);
-			writeModule (p, r.router, pre);
+			p.setProperty ("ROUTER", "COO");
+			writeModule (p, r.router, "COO");
 		}
-		String	pre = assignPrefix (r.virtualRobot, "ROB", used);
-		p.setProperty ("VROBOT", pre);
-		writeModule (p, r.virtualRobot, pre);
+		p.setProperty ("VROBOT", "ROB");
+		writeModule (p, r.virtualRobot, "ROB");
 		return p;
-	}
-
-	static private String assignPrefix (Module m, String base, List<String> used)
-	{
-		String	pre = m.prefix;
-		if ((pre == null) || (pre.trim ().length () == 0) || used.contains (pre.trim ()))
-		{
-			pre = base;
-			for (int i = 1; used.contains (pre); i++)		pre = base + i;
-		}
-		pre = pre.trim ();
-		used.add (pre);
-		return pre;
 	}
 
 	static private void writeModule (Properties p, Module m, String pre)
@@ -352,22 +332,24 @@ public class DeployArch
 		String	name = props.getProperty ("NAME");
 		Robot	r = new Robot (((name != null) && (name.trim ().length () > 0)) ? name.trim () : robotName);
 		r.linda	= readLinda (props, "LLIN", 3000, true);
+		List<String>	prefixes = new ArrayList<String> ();						// blocks read, to spot the loose entries
+		prefixes.add ("GLIN"); prefixes.add ("LLIN");
 		String	mods = props.getProperty ("MODULES");
 		if (mods != null)
 		{
 			StringTokenizer	st = new StringTokenizer (mods, ", \t");
-			while (st.hasMoreTokens ())		r.modules.add (readModule (props, st.nextToken ()));
+			while (st.hasMoreTokens ())
+			{
+				String	pre = st.nextToken ();
+				prefixes.add (pre);
+				r.modules.add (readModule (props, pre));
+			}
 		}
 		String	router = props.getProperty ("ROUTER");
-		if ((router != null) && (router.trim ().length () > 0))		r.router = readModule (props, router.trim ());
+		if ((router != null) && (router.trim ().length () > 0))		{ prefixes.add (router.trim ()); r.router = readModule (props, router.trim ()); }
 		String	vrobot = props.getProperty ("VROBOT");
-		if ((vrobot != null) && (vrobot.trim ().length () > 0))		r.virtualRobot = readModule (props, vrobot.trim ());
+		if ((vrobot != null) && (vrobot.trim ().length () > 0))		{ prefixes.add (vrobot.trim ()); r.virtualRobot = readModule (props, vrobot.trim ()); }
 		// entries that belong to no block: robot-wide properties
-		List<String>	prefixes = new ArrayList<String> ();
-		prefixes.add ("GLIN"); prefixes.add ("LLIN");
-		for (Module m : r.modules)		prefixes.add (m.prefix);
-		if (r.router != null)			prefixes.add (r.router.prefix);
-		prefixes.add (r.virtualRobot.prefix);
 		List<String>	keys = new ArrayList<String> (props.stringPropertyNames ());
 		java.util.Collections.sort (keys);
 		for (String k : keys)
@@ -410,7 +392,6 @@ public class DeployArch
 	static private Module readModule (Properties props, String prefix)
 	{
 		Module	m = new Module (prefix);
-		m.prefix	= prefix;
 		List<String>	keys = new ArrayList<String> (props.stringPropertyNames ());
 		java.util.Collections.sort (keys);
 		for (String k : keys)

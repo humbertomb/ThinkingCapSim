@@ -14,7 +14,6 @@
       },
       "router": {
         "name": "Linda Router",
-        "prefix": "COO",
         "properties": {
           "CLASS": "tcrob.ingenia.ifork.IForkLindaRouter",
           "GFX": "true",
@@ -26,7 +25,6 @@
       "modules": [
         {
           "name": "Navigation",
-          "prefix": "NAV",
           "properties": {
             "CLASS": "tcrob.ingenia.ifork.IForkNavigation",
             "GFX": "true",
@@ -60,7 +58,6 @@
         },
         {
           "name": "Controller",
-          "prefix": "CON",
           "properties": {
             "CLASS": "tcrob.ingenia.ifork.IForkController",
             "GFX": "false",
@@ -87,7 +84,6 @@
         },
         {
           "name": "Planner",
-          "prefix": "PLA",
           "properties": {
             "CLASS": "tcrob.ingenia.ifork.IForkPlanner",
             "EXTIME": "1000",
@@ -127,7 +123,6 @@
         },
         {
           "name": "Perception",
-          "prefix": "PER",
           "properties": {
             "CLASS": "tcrob.ingenia.ifork.IForkPerception",
             "GFX": "true",
@@ -165,7 +160,6 @@
       ],
       "virtualRobot": {
         "name": "Virtual Robot",
-        "prefix": "ROB",
         "properties": {
           "APW": "true",
           "CLASS": "tcrob.ingenia.ifork.IFork",
