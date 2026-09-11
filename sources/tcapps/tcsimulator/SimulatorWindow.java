@@ -57,7 +57,7 @@ import wucore.utils.geom.Point3;
 /**
  * Main window of the new ThinkingCap simulator. Everything the simulator
  * runs (modules, robot type, world, ...) comes from an architecture
- * ({@link DeployArch}, conf/archs/*.deploy; a legacy .arch can be imported);
+ * ({@link DeployArch}, conf/deploy/*.deploy; a legacy conf/archs/*.arch can be imported);
  * the world shown is the one of the architecture's virtual robot. The
  * visualisation is shared with the editor: the 2D view is a read-only
  * {@link WorldCanvas} and the 3D view a {@link View3DController}.
@@ -69,7 +69,8 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	static public final String		TITLE		= "ThinkingCap Simulator";
 	static public final String		MAPS_DIR	= "./conf/maps";
-	static public final String		ARCHS_DIR	= "./conf/archs";
+	static public final String		ARCHS_DIR	= "./conf/archs";		// legacy .arch files (import)
+	static public final String		DEPLOY_DIR	= "./conf/deploy";		// deployment architectures (.deploy)
 
 	protected DeployArch			deploy;					// Deployment architecture in use (never null)
 	protected World					world;					// World of the architecture's virtual robot
@@ -334,7 +335,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	public void loadArch ()
 	{
 		if (!confirmDiscard ())			return;
-		JFileChooser	fc = chooser (deploy.getFile (), ARCHS_DIR, DeployArch.EXTENSION, "Deployment architectures (*.deploy)");
+		JFileChooser	fc = chooser (deploy.getFile (), DEPLOY_DIR, DeployArch.EXTENSION, "Deployment architectures (*.deploy)");
 		fc.setDialogTitle ("Load Deployment Architecture");
 		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
 		loadArch (fc.getSelectedFile ());
@@ -389,7 +390,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		File	f = deploy.getFile ();
 		if (saveAs || (f == null))
 		{
-			JFileChooser	fc = chooser (f, ARCHS_DIR, DeployArch.EXTENSION, "Deployment architectures (*.deploy)");
+			JFileChooser	fc = chooser (f, DEPLOY_DIR, DeployArch.EXTENSION, "Deployment architectures (*.deploy)");
 			fc.setDialogTitle (saveAs ? "Save Deployment Architecture As" : "Save Deployment Architecture");
 			if (f != null)		fc.setSelectedFile (f);
 			if (fc.showSaveDialog (this) != JFileChooser.APPROVE_OPTION)		return false;
