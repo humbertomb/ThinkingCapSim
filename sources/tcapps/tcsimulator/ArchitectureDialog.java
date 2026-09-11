@@ -78,6 +78,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	protected JTable				eventsTB;
 	protected EventsModel			eventsModel;
 	protected JButton				addEventBT, removeEventBT;
+	protected JComboBox<String>		symbolCB;				// symbols offered in the events table
 	protected JSplitPane			mainSP, rightSP;
 	protected boolean				dividersSet;
 
@@ -176,6 +177,9 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		eventsTB.setRowHeight (20);
 		eventsTB.putClientProperty ("terminateEditOnFocusLost", Boolean.TRUE);
 		eventsTB.getColumnModel ().getColumn (0).setPreferredWidth (70);
+		symbolCB	= new JComboBox<String> ();
+		symbolCB.setEditable (true);										// new symbols can still be typed
+		eventsTB.getColumnModel ().getColumn (0).setCellEditor (new DefaultCellEditor (symbolCB));
 		eventsTB.getColumnModel ().getColumn (1).setPreferredWidth (150);
 		eventsTB.getColumnModel ().getColumn (2).setPreferredWidth (90);
 		eventsTB.getSelectionModel ().addListSelectionListener (new javax.swing.event.ListSelectionListener ()
@@ -296,7 +300,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 				{
 					Block	b = (Block) o;
 					if (b.kind == ArchModel.ROBOT)		setText (model.getRobotId ());
-					else								setText (model.labelOf (b) + (((b.prefix != null) && !b.prefix.equals ("GLIN") && !b.prefix.equals ("LLIN")) ? "  [" + b.prefix + "]" : ""));
+					else								setText (model.labelOf (b));
 					setIcon (new ToolIcon (iconOf (b), 16));
 				}
 				return this;
@@ -559,10 +563,14 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		propsModel.setBlock (b);
 		if (eventsTB.isEditing ())		eventsTB.getCellEditor ().stopCellEditing ();
 		eventsModel.setBlock (b);
+		symbolCB.removeAllItems ();
+		for (String sym : model.symbols ())		symbolCB.addItem (sym);
 		updateEventButtons ();
 		if (b == null)							propsTitle.setText (" ");
 		else if (b.kind == ArchModel.ROBOT)		propsTitle.setText ("Robot " + model.getRobotId ());
-		else									propsTitle.setText (ArchModel.KIND_NAMES[b.kind] + ((b.prefix != null) ? "  [" + b.prefix + "]" : ""));
+		else if ((b.kind == ArchModel.MODULE) || (b.kind == ArchModel.ROUTER) || (b.kind == ArchModel.VROBOT))
+												propsTitle.setText (ArchModel.KIND_NAMES[b.kind] + ": " + model.labelOf (b));
+		else									propsTitle.setText (model.labelOf (b));
 	}
 
 	/* ------------------------------------------------------------------ */

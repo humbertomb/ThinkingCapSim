@@ -300,6 +300,24 @@ public class ArchModel
 		return l;
 	}
 
+	/**
+	 * Symbols an event can register: the keys defined in {@link tc.shared.linda.Tuple}
+	 * (public static String constants) plus any other symbol already used in
+	 * the CONNECT properties of this architecture (COORD, ZONE, ...), sorted.
+	 */
+	public List<String> symbols ()
+	{
+		java.util.TreeSet<String>	set = new java.util.TreeSet<String> ();
+		for (java.lang.reflect.Field f : tc.shared.linda.Tuple.class.getFields ())
+			if (java.lang.reflect.Modifier.isStatic (f.getModifiers ()) && (f.getType () == String.class))
+				try { set.add ((String) f.get (null)); } catch (Exception e) { }
+		for (Block b : robotBlocks ())
+			if (hasEvents (b))
+				for (String[] e : events (b))
+					if (e[0].length () > 0)		set.add (e[0]);
+		return new ArrayList<String> (set);
+	}
+
 	/** Writes the events back to the CONNECT property (removed when empty). */
 	public void setEvents (Block b, List<String[]> events)
 	{
