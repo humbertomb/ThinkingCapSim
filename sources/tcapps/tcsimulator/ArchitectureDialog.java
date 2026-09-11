@@ -75,6 +75,14 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	protected JTable				propsTB;
 	protected PropsModel			propsModel;
 	protected JLabel				propsTitle;
+	protected JTable				eventsTB;
+	protected EventsModel			eventsModel;
+	protected JButton				addEventBT, removeEventBT;
+	protected JSplitPane			mainSP, rightSP;
+	protected boolean				dividersSet;
+
+	static public final int			RIGHT_WIDTH		= 320;		// tree + properties column (as WorldEditorWindow)
+	static public final double		TREE_FRACTION	= 0.55;		// share of the tree in that column (as WorldEditorWindow)
 	protected Action				lindaAC, routerAC, moduleAC, robotAC, deleteAC;
 	protected JButton				okBT, cancelBT;
 	protected Properties			result;
@@ -118,6 +126,118 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		}
 	}
 
+	/** Rows of the events table (CONNECT of a module): symbol, class, method. Edits are written back to the model. */
+	protected class EventsModel extends AbstractTableModel
+	{
+		private static final long	serialVersionUID = 1L;
+		Block			block;
+		List<String[]>	rows	= new ArrayList<String[]> ();
+
+		void setBlock (Block b)
+		{
+			block	= b;
+			rows.clear ();
+			if ((b != null) && model.hasEvents (b))		rows.addAll (model.events (b));
+			fireTableDataChanged ();
+		}
+
+		public int getRowCount ()				{ return rows.size (); }
+		public int getColumnCount ()			{ return 3; }
+		public String getColumnName (int c)		{ return (c == 0) ? "Symbol" : (c == 1) ? "Class" : "Method"; }
+		public Object getValueAt (int r, int c)	{ return rows.get (r)[c]; }
+		public boolean isCellEditable (int r, int c)	{ return (block != null) && model.hasEvents (block); }
+
+		public void setValueAt (Object v, int r, int c)
+		{
+			rows.get (r)[c] = (v == null) ? "" : v.toString ().trim ();
+			fireTableCellUpdated (r, c);
+			model.setEvents (block, rows);
+		}
+
+		void add ()
+		{
+			rows.add (new String[] { "", "", "" });
+			fireTableRowsInserted (rows.size () - 1, rows.size () - 1);
+		}
+
+		void remove (int r)
+		{
+			rows.remove (r);
+			fireTableRowsDeleted (r, r);
+			model.setEvents (block, rows);
+		}
+	}
+
+	private JPanel buildEventsPanel ()
+	{
+		eventsModel	= new EventsModel ();
+		eventsTB	= new JTable (eventsModel);
+		eventsTB.setSelectionMode (ListSelectionModel.SINGLE_SELECTION);
+		eventsTB.setRowHeight (20);
+		eventsTB.putClientProperty ("terminateEditOnFocusLost", Boolean.TRUE);
+		eventsTB.getColumnModel ().getColumn (0).setPreferredWidth (70);
+		eventsTB.getColumnModel ().getColumn (1).setPreferredWidth (150);
+		eventsTB.getColumnModel ().getColumn (2).setPreferredWidth (90);
+		eventsTB.getSelectionModel ().addListSelectionListener (new javax.swing.event.ListSelectionListener ()
+		{
+			public void valueChanged (javax.swing.event.ListSelectionEvent e)		{ updateEventButtons (); }
+		});
+		JScrollPane	sp = new JScrollPane (eventsTB);
+		sp.setPreferredSize (new Dimension (RIGHT_WIDTH, 5 * 20 + 24));
+
+		addEventBT		= new JButton ("Add");
+		removeEventBT	= new JButton ("Remove");
+		addEventBT.putClientProperty ("JComponent.sizeVariant", "small");
+		removeEventBT.putClientProperty ("JComponent.sizeVariant", "small");
+		addEventBT.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)
+			{
+				eventsModel.add ();
+				int	r = eventsModel.getRowCount () - 1;
+				eventsTB.setRowSelectionInterval (r, r);
+				eventsTB.editCellAt (r, 0);
+				eventsTB.requestFocusInWindow ();
+			}
+		});
+		removeEventBT.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)
+			{
+				if (eventsTB.isEditing ())		eventsTB.getCellEditor ().cancelCellEditing ();
+				int	r = eventsTB.getSelectedRow ();
+				if (r >= 0)		eventsModel.remove (r);
+				updateEventButtons ();
+			}
+		});
+		JPanel		buttons = new JPanel (new FlowLayout (FlowLayout.RIGHT, 4, 2));
+		buttons.add (addEventBT);
+		buttons.add (removeEventBT);
+
+		JPanel		pn = new JPanel (new BorderLayout ());
+		pn.setBorder (BorderFactory.createTitledBorder ("Events"));
+		pn.add (sp, BorderLayout.CENTER);
+		pn.add (buttons, BorderLayout.SOUTH);
+		return pn;
+	}
+
+	private void updateEventButtons ()
+	{
+		boolean	on = (eventsModel.block != null) && model.hasEvents (eventsModel.block);
+		eventsTB.setEnabled (on);
+		addEventBT.setEnabled (on);
+		removeEventBT.setEnabled (on && (eventsTB.getSelectedRow () >= 0));
+	}
+
+	/** Puts the split dividers at the world editor proportions. */
+	public void resetDividers ()
+	{
+		if (mainSP.getWidth () <= 0)		return;
+		dividersSet	= true;
+		mainSP.setDividerLocation (mainSP.getWidth () - mainSP.getDividerSize () - RIGHT_WIDTH);
+		rightSP.setDividerLocation (TREE_FRACTION);
+	}
+
 	/**
 	 * @param props    properties of the architecture (copied, not modified)
 	 * @param robotId  name of the robot (category of the tree, e.g. IFORK-1)
@@ -130,7 +250,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		rebuild (null);
 		pack ();
 		setMinimumSize (new Dimension (760, 520));
-		setSize (980, 680);
+		setSize (1040, 780);
 		setLocationRelativeTo (owner);
 	}
 
@@ -241,14 +361,25 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		JPanel		propsPN = new JPanel (new BorderLayout ());
 		propsPN.add (propsTitle, BorderLayout.NORTH);
 		propsPN.add (propsSP, BorderLayout.CENTER);
+		propsPN.add (buildEventsPanel (), BorderLayout.SOUTH);
 
-		JSplitPane	right = new JSplitPane (JSplitPane.VERTICAL_SPLIT, treeSP, propsPN);
-		right.setResizeWeight (0.5);
-		right.setBorder (BorderFactory.createEmptyBorder ());
+		// same proportions as the world editor: right column 320 px, tree 55 % of its height
+		rightSP		= new JSplitPane (JSplitPane.VERTICAL_SPLIT, treeSP, propsPN);
+		rightSP.setResizeWeight (TREE_FRACTION);
+		rightSP.setPreferredSize (new Dimension (RIGHT_WIDTH, 600));
+		rightSP.setBorder (BorderFactory.createEmptyBorder ());
 
-		JSplitPane	main = new JSplitPane (JSplitPane.HORIZONTAL_SPLIT, canvasSP, right);
-		main.setResizeWeight (1.0);
-		main.setBorder (BorderFactory.createEmptyBorder ());
+		mainSP		= new JSplitPane (JSplitPane.HORIZONTAL_SPLIT, canvasSP, rightSP);
+		mainSP.setResizeWeight (1.0);
+		mainSP.setBorder (BorderFactory.createEmptyBorder ());
+		canvasSP.setMinimumSize (new Dimension (300, 200));
+		rightSP.setMinimumSize (new Dimension (240, 200));
+		// the divider positions are only meaningful once the dialog has its real size
+		addComponentListener (new java.awt.event.ComponentAdapter ()
+		{
+			public void componentShown (java.awt.event.ComponentEvent e)		{ resetDividers (); }
+			public void componentResized (java.awt.event.ComponentEvent e)	{ if (!dividersSet && (getWidth () > 0)) resetDividers (); }
+		});
 
 		// --- bottom: cancel / ok
 		cancelBT	= new JButton ("Cancel");
@@ -280,7 +411,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 
 		JPanel		content = new JPanel (new BorderLayout ());
 		content.add (tb, BorderLayout.WEST);
-		content.add (main, BorderLayout.CENTER);
+		content.add (mainSP, BorderLayout.CENTER);
 		content.add (bottom, BorderLayout.SOUTH);
 		setContentPane (content);
 	}
@@ -426,6 +557,9 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	{
 		if (propsTB.isEditing ())		propsTB.getCellEditor ().stopCellEditing ();
 		propsModel.setBlock (b);
+		if (eventsTB.isEditing ())		eventsTB.getCellEditor ().stopCellEditing ();
+		eventsModel.setBlock (b);
+		updateEventButtons ();
 		if (b == null)							propsTitle.setText (" ");
 		else if (b.kind == ArchModel.ROBOT)		propsTitle.setText ("Robot " + model.getRobotId ());
 		else									propsTitle.setText (ArchModel.KIND_NAMES[b.kind] + ((b.prefix != null) ? "  [" + b.prefix + "]" : ""));
@@ -438,6 +572,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	private void accept ()
 	{
 		if (propsTB.isEditing ())		propsTB.getCellEditor ().stopCellEditing ();
+		if (eventsTB.isEditing ())		eventsTB.getCellEditor ().stopCellEditing ();
 		result	= model.getProperties ();
 		dispose ();
 	}

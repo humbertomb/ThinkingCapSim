@@ -89,7 +89,6 @@ public class ArchModel
 		new Property ("POLLED",	"Polled",		P_BOOLEAN),
 		new Property ("EXTIME",	"Exec. time (ms)"),
 		new Property ("GFX",	"Internal Representation",	P_BOOLEAN),
-		new Property ("CONNECT","Events"),
 	};
 	static public final Property[]	VROBOT_PROPS	=
 	{
@@ -107,14 +106,13 @@ public class ArchModel
 		new Property ("RADDR",	"RADDR"),
 		new Property ("RPORT",	"RPORT"),
 		new Property ("LPORT",	"LPORT"),
-		new Property ("CONNECT","Events"),
 	};
 
 	/** Suffixes that exist in the ADF but are not shown in the editor, per kind. */
 	static public final String[]	LINDA_HIDDEN	= { "CLASS" };
 	static public final String[]	ROUTER_HIDDEN	= { "PRI", "CONNECT" };
-	static public final String[]	MODULE_HIDDEN	= { "PRI" };
-	static public final String[]	VROBOT_HIDDEN	= { "PRI" };
+	static public final String[]	MODULE_HIDDEN	= { "PRI", "CONNECT" };		// CONNECT is edited in the events table
+	static public final String[]	VROBOT_HIDDEN	= { "PRI", "CONNECT" };
 
 	/** A block of the architecture: kind + property prefix. */
 	static public class Block
@@ -274,6 +272,47 @@ public class ArchModel
 		return props;
 	}
 
+	/** True when the block registers events (CONNECT property): modules and the virtual robot. */
+	public boolean hasEvents (Block b)
+	{
+		return (b != null) && ((b.kind == MODULE) || (b.kind == VROBOT));
+	}
+
+	/**
+	 * Events of a module, from its CONNECT property: entries separated by
+	 * commas, each one "symbol class method" (the format of EventDesc).
+	 * Incomplete entries are padded with empty strings.
+	 */
+	public List<String[]> events (Block b)
+	{
+		List<String[]>	l = new ArrayList<String[]> ();
+		String			c = props.getProperty (b.prefix + "CONNECT");
+		if (c == null)		return l;
+		StringTokenizer	st = new StringTokenizer (c, ",");
+		while (st.hasMoreTokens ())
+		{
+			StringTokenizer	tk = new StringTokenizer (st.nextToken (), " \t");
+			if (!tk.hasMoreTokens ())		continue;
+			String[]	e = { "", "", "" };
+			for (int i = 0; (i < 3) && tk.hasMoreTokens (); i++)		e[i] = tk.nextToken ();
+			l.add (e);
+		}
+		return l;
+	}
+
+	/** Writes the events back to the CONNECT property (removed when empty). */
+	public void setEvents (Block b, List<String[]> events)
+	{
+		StringBuilder	sb = new StringBuilder ();
+		for (String[] e : events)
+		{
+			if ((e[0].trim ().length () == 0) && (e[1].trim ().length () == 0) && (e[2].trim ().length () == 0))		continue;
+			if (sb.length () > 0)		sb.append (", ");
+			sb.append (e[0].trim ()).append ('\t').append (e[1].trim ()).append ('\t').append (e[2].trim ());
+		}
+		set (b, "CONNECT", sb.toString ());
+	}
+
 	public String get (Block b, String key)
 	{
 		String	v = props.getProperty (b.prefix + key);
@@ -347,7 +386,7 @@ public class ArchModel
 
 	public Block addModule ()
 	{
-		String			p = uniquePrefix ("MOD");
+		String			p = numberedPrefix ("MOD");					// MOD1, MOD2, ...
 		List<String>	mods = modulePrefixes ();
 		mods.add (p);
 		props.setProperty ("MODULES", join (mods));
@@ -417,6 +456,13 @@ public class ArchModel
 	protected String uniquePrefix (String base)
 	{
 		if (!hasPrefix (base) && !isReserved (base))		return base;
+		for (int i = 1; ; i++)
+			if (!hasPrefix (base + i) && !isReserved (base + i))		return base + i;
+	}
+
+	/** Three upper-case letters plus a number, the first one free: MOD1, MOD2, ... */
+	protected String numberedPrefix (String base)
+	{
 		for (int i = 1; ; i++)
 			if (!hasPrefix (base + i) && !isReserved (base + i))		return base + i;
 	}
