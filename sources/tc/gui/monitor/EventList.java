@@ -61,6 +61,14 @@ public class EventList extends AbstractTableModel
 		return obj;
 	}
 	
+	/** Removes every event. */
+	public void clear ()
+	{
+		int	n = num;
+		num	= 0;
+		if (n > 0)		fireTableRowsDeleted (0, n - 1);
+	}
+
 	public void addRow (String id, long stamp, int type, String desc)
 	{
 		EventEntry		entry;

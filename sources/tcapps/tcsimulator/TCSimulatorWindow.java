@@ -27,6 +27,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -90,6 +91,8 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 	}
 
 	protected WorldCanvas			canvas;
+	protected RobotMonitorPanel		monitorPanel;			// Robots / Events tabs (as in the TCMonitor)
+	protected JSplitPane			splitPane;
 	protected StatusBar				statusBar;
 	protected View3DController		view3d;
 	protected Action				executeAction, startAction, stepAction, stopAction;
@@ -127,9 +130,17 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 		statusBar	= new StatusBar ();
 		view3d		= new View3DController (this, canvas);
 
+		// world view on top, Robots / Events tables below (as the monitor's main panel)
+		monitorPanel	= new RobotMonitorPanel ();
+		monitorPanel.setWorld (world);
+		splitPane		= new JSplitPane (JSplitPane.VERTICAL_SPLIT, canvas, monitorPanel);
+		splitPane.setOneTouchExpandable (true);
+		splitPane.setResizeWeight (0.8);
+		splitPane.setDividerLocation (560);
+
 		getContentPane ().setLayout (new BorderLayout ());
 		getContentPane ().add (buildToolBar (), BorderLayout.WEST);
-		getContentPane ().add (canvas, BorderLayout.CENTER);
+		getContentPane ().add (splitPane, BorderLayout.CENTER);
 		getContentPane ().add (statusBar, BorderLayout.SOUTH);
 		setJMenuBar (buildMenuBar ());
 	}
@@ -368,7 +379,19 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 		simulator	= new Simulator ();
 		running		= arch.runner (robotId (), simulator);		// loads the architecture's world into the simulator
 		simulator.setVisualization (this);							// robots and objects are reported to this window
+		monitorPanel.clear ();
 		running.start ();
+		// the local Linda space exists once the executor thread has created it
+		new Thread (new Runnable ()
+		{
+			public void run ()
+			{
+				ExecArch	r = running;
+				for (int i = 0; (i < 100) && (r != null) && (r.getLocalLinda () == null) && (r == running); i++)
+					try { Thread.sleep (50); } catch (InterruptedException e) { return; }
+				if ((r != null) && (r == running) && (r.getLocalLinda () != null))		monitorPanel.attach (r.getLocalLinda (), r.getRobotId ());
+			}
+		}, "TCSim-monitor-attach").start ();
 		statusBar.setStatus ("Executing " + robotId () + " (" + ((arch.getFile () != null) ? arch.getFile ().getName () : "untitled") + ")");
 		updateExecutionState ();
 	}
@@ -377,6 +400,7 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 	public void terminate ()
 	{
 		if (running == null)			return;
+		monitorPanel.detach ();
 		running.terminate ();
 		if (simulator != null)		simulator.closeVisualization3D ();		// stops the refresh thread
 		running		= null;
@@ -581,6 +605,7 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 		}
 		world		= w;
 		worldFile	= f;
+		monitorPanel.setWorld (world);
 		canvas.setWorld (world);
 		canvas.zoomToFit ();
 		view3d.worldChanged ();
