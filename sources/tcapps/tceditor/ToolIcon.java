@@ -43,6 +43,7 @@ public class ToolIcon implements Icon
 	static public final int		ICON		= 28;
 	static public final int		NEW_ICON	= 29;
 	static public final int		WORLD		= 30;
+	static public final int		FOLDER		= 31;
 
 	protected int				type;
 	protected int				size;
@@ -185,6 +186,16 @@ public class ToolIcon implements Icon
 			g.setColor (new Color (30, 140, 40));
 			g.setStroke (new BasicStroke (2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 			g.drawLine (16, 3, 16, 11);	g.drawLine (12, 7, 20, 7);
+			break;
+		case FOLDER:		// classic folder
+			g.setColor (new Color (255, 210, 110));
+			g.fillRoundRect (2, 6, 18, 13, 3, 3);
+			g.setColor (new Color (255, 228, 150));
+			g.fillPolygon (new int[] { 2, 9, 11, 20, 20, 2 }, new int[] { 6, 6, 4, 4, 9, 9 }, 6);
+			g.setColor (new Color (170, 120, 30));
+			g.setStroke (new BasicStroke (1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawRoundRect (2, 6, 18, 13, 3, 3);
+			g.drawLine (2, 9, 20, 9);
 			break;
 		case WORLD:			// folded map with a route on it
 			g.setColor (new Color (255, 248, 220));
