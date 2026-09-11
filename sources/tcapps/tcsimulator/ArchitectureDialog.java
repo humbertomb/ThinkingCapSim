@@ -71,7 +71,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	protected ArchCanvas			canvas;
 	protected JTree					tree;
 	protected DefaultTreeModel		treeModel;
-	protected DefaultMutableTreeNode	root, globalNode, robotNode;
+	protected DefaultMutableTreeNode	root, globalNode;
 	protected JTable				propsTB;
 	protected PropsModel			propsModel;
 	protected javax.swing.border.TitledBorder	propsBorder;	// title: the selected block
@@ -271,9 +271,9 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		JToolBar	tb = new JToolBar (JToolBar.VERTICAL);
 		tb.setFloatable (false);
 		lindaAC		= ToolButtons.action ("Linda", ToolIcon.LINDA, "Add a Linda space (global first, then the local one of the robot)", new Runnable () { public void run () { addLinda (); } });
-		routerAC	= ToolButtons.action ("Router", ToolIcon.ROUTER, "Add the Linda router of the robot", new Runnable () { public void run () { select (model.addRouter ()); } });
-		moduleAC	= ToolButtons.action ("Module", ToolIcon.MODULE, "Add a module to the robot", new Runnable () { public void run () { select (model.addModule ()); } });
-		robotAC		= ToolButtons.action ("Robot", ToolIcon.ROBOT, "Add the robot (local Linda space and virtual robot)", new Runnable () { public void run () { select (model.addRobot ()); } });
+		routerAC	= ToolButtons.action ("Router", ToolIcon.ROUTER, "Add the Linda router of the selected robot", new Runnable () { public void run () { select (model.addRouter (currentRobot ())); } });
+		moduleAC	= ToolButtons.action ("Module", ToolIcon.MODULE, "Add a module to the selected robot", new Runnable () { public void run () { select (model.addModule (currentRobot ())); } });
+		robotAC		= ToolButtons.action ("Robot", ToolIcon.ROBOT, "Add a robot (local Linda space and virtual robot)", new Runnable () { public void run () { select (model.addRobot ()); } });
 		deleteAC	= ToolButtons.action ("Delete", ToolIcon.DELETE, "Delete the selected block  [Delete]", new Runnable () { public void run () { deleteSelection (); } });
 		tb.add (ToolButtons.flatButton (lindaAC));
 		tb.add (ToolButtons.flatButton (robotAC));
@@ -300,7 +300,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 				if (o instanceof Block)
 				{
 					Block	b = (Block) o;
-					if (b.kind == ArchModel.ROBOT)		setText (model.getRobotId ());
+					if (b.kind == ArchModel.ROBOT)		setText (model.getRobotId (b.robot));
 					else								setText (model.labelOf (b));
 					setIcon (new ToolIcon (iconOf (b), 16));
 				}
@@ -425,11 +425,25 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	/* Edition                                                             */
 	/* ------------------------------------------------------------------ */
 
-	/** Linda button: the global space when missing, otherwise the local one of the robot. */
+	/** Robot the toolbar acts on: the one of the selection, or the first one (created when there is none). */
+	private int currentRobot ()
+	{
+		Block	sel = canvas.getSelection ();
+		if ((sel != null) && (sel.robot >= 0))		return sel.robot;
+		List<Integer>	robots = model.robots ();
+		if (robots.size () > 0)		return robots.get (0);
+		return model.addRobot ().robot;
+	}
+
+	/** Linda button: the global space when missing, otherwise the local one of the current robot. */
 	private void addLinda ()
 	{
 		if (!model.hasGlobalLinda ())		select (model.addGlobalLinda ());
-		else if (!model.hasLocalLinda ())	select (model.addLocalLinda ());
+		else
+		{
+			int	r = currentRobot ();
+			if (!model.hasLocalLinda (r))	select (model.addLocalLinda (r));
+		}
 	}
 
 	private void deleteSelection ()
@@ -438,7 +452,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		if (b == null)					return;
 		if (b.kind == ArchModel.ROBOT)
 		{
-			if (JOptionPane.showConfirmDialog (this, "Delete the robot " + model.getRobotId () + " with all its modules?", getTitle (),
+			if (JOptionPane.showConfirmDialog (this, "Delete the robot " + model.getRobotId (b.robot) + " with all its modules?", getTitle (),
 					JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION)		return;
 		}
 		model.remove (b);
@@ -451,12 +465,11 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		root.removeAllChildren ();
 		globalNode	= new DefaultMutableTreeNode ("Global");
 		root.add (globalNode);
-		if (model.hasGlobalLinda ())		globalNode.add (new DefaultMutableTreeNode (new Block (ArchModel.GLOBAL_LINDA, "GLIN")));
-		robotNode	= null;
-		if (model.hasRobot ())
+		if (model.hasGlobalLinda ())		globalNode.add (new DefaultMutableTreeNode (new Block (ArchModel.GLOBAL_LINDA, "GLIN", -1)));
+		for (int r : model.robots ())									// one category per robot
 		{
-			robotNode	= new DefaultMutableTreeNode (new Block (ArchModel.ROBOT, null));
-			for (Block b : model.robotBlocks ())		robotNode.add (new DefaultMutableTreeNode (b));
+			DefaultMutableTreeNode	robotNode = new DefaultMutableTreeNode (new Block (ArchModel.ROBOT, null, r));
+			for (Block b : model.robotBlocks (r))		robotNode.add (new DefaultMutableTreeNode (b));
 			root.add (robotNode);
 		}
 		treeModel.reload ();
@@ -482,7 +495,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	/** Selects a block everywhere (diagram, tree, property editor). */
 	private void select (Block b)
 	{
-		if ((b != null) && (b.kind == ArchModel.ROBOT) && !model.hasRobot ())	b = null;
+		if ((b != null) && (b.kind == ArchModel.ROBOT) && !model.hasRobot (b.robot))	b = null;
 		if ((b != null) && (treeNode (b) == null))
 		{
 			if (!canvas.blockExists (b))		b = null;			// cannot be shown: nothing selected
@@ -505,19 +518,18 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 
 	private void updateActions ()
 	{
-		lindaAC.setEnabled (!model.hasGlobalLinda () || !model.hasLocalLinda ());
-		routerAC.setEnabled (!model.hasRouter ());
-		robotAC.setEnabled (!model.hasVRobot ());				// only one robot for now
-		deleteAC.setEnabled (canvas.getSelection () != null);
+		Block	sel = canvas.getSelection ();
+		int		r = ((sel != null) && (sel.robot >= 0)) ? sel.robot : (model.robots ().size () > 0 ? model.robots ().get (0) : -1);
+		lindaAC.setEnabled (!model.hasGlobalLinda () || (r < 0) || !model.hasLocalLinda (r));
+		routerAC.setEnabled ((r < 0) || !model.hasRouter (r));
+		robotAC.setEnabled (true);
+		deleteAC.setEnabled (sel != null);
 	}
 
-	/** Asks for a new name of the robot (double click on its name in the diagram). */
-	private void renameRobot ()
+	/** A name was edited in place on the diagram (robot name or module INFO): tree and properties follow. */
+	public void blockRenamed (Block b)
 	{
-		String	name = (String) JOptionPane.showInputDialog (this, "Robot name:", getTitle (), JOptionPane.PLAIN_MESSAGE, null, null, model.getRobotId ());
-		if ((name == null) || (name.trim ().length () == 0) || name.trim ().equals (model.getRobotId ()))		return;
-		model.setRobotName (name);
-		rebuild (new Block (ArchModel.ROBOT, null));
+		rebuild (b);
 	}
 
 	/* --- selection synchronisation --- */
@@ -544,11 +556,6 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 
 	public void blockActivated (Block b)
 	{
-		if (b.kind == ArchModel.ROBOT)
-		{
-			renameRobot ();
-			return;
-		}
 		if (propsModel.getRowCount () > 0)
 		{
 			propsTB.requestFocusInWindow ();
@@ -588,7 +595,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		for (String sym : model.symbols ())		symbolCB.addItem (sym);
 		updateEventButtons ();
 		if (b == null)							setPropsTitle (" ");
-		else if (b.kind == ArchModel.ROBOT)		setPropsTitle ("Robot " + model.getRobotId ());
+		else if (b.kind == ArchModel.ROBOT)		setPropsTitle ("Robot " + model.getRobotId (b.robot));
 		else if ((b.kind == ArchModel.MODULE) || (b.kind == ArchModel.ROUTER) || (b.kind == ArchModel.VROBOT))
 												setPropsTitle (ArchModel.KIND_NAMES[b.kind] + ": " + model.labelOf (b));
 		else									setPropsTitle (model.labelOf (b));
