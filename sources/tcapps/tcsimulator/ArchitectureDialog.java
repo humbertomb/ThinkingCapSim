@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -86,7 +85,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	static public final double		TREE_FRACTION	= 0.55;		// share of the tree in that column (as WorldEditorWindow)
 	protected Action				lindaAC, routerAC, moduleAC, robotAC, deleteAC;
 	protected JButton				okBT, cancelBT;
-	protected Properties			result;
+	protected DeployArch			result;
 	protected boolean				syncing;				// tree <-> canvas selection in progress
 
 	/** Rows of the property editor: the visible properties of the block ({@link ArchModel#propertiesOf}). */
@@ -243,14 +242,11 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		rightSP.setDividerLocation (TREE_FRACTION);
 	}
 
-	/**
-	 * @param props    properties of the architecture (copied, not modified)
-	 * @param robotId  name of the robot (category of the tree, e.g. IFORK-1)
-	 */
-	public ArchitectureDialog (Frame owner, Properties props, String robotId)
+	/** @param deploy  deployment architecture to edit (a copy is edited; {@link #showDialog()} returns it when accepted) */
+	public ArchitectureDialog (Frame owner, DeployArch deploy)
 	{
-		super (owner, "Architecture Editor", true);
-		model	= new ArchModel ((Properties) props.clone (), robotId);
+		super (owner, "Deployment Architecture Editor", true);
+		model	= new ArchModel (deploy.copy ());
 		buildGUI ();
 		rebuild (null);
 		pack ();
@@ -454,10 +450,10 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		root.removeAllChildren ();
 		globalNode	= new DefaultMutableTreeNode ("Global");
 		root.add (globalNode);
-		if (model.hasGlobalLinda ())		globalNode.add (new DefaultMutableTreeNode (new Block (ArchModel.GLOBAL_LINDA, "GLIN", -1)));
+		if (model.hasGlobalLinda ())		globalNode.add (new DefaultMutableTreeNode (new Block (ArchModel.GLOBAL_LINDA, -1)));
 		for (int r : model.robots ())									// one category per robot
 		{
-			DefaultMutableTreeNode	robotNode = new DefaultMutableTreeNode (new Block (ArchModel.ROBOT, null, r));
+			DefaultMutableTreeNode	robotNode = new DefaultMutableTreeNode (new Block (ArchModel.ROBOT, r));
 			for (Block b : model.robotBlocks (r))		robotNode.add (new DefaultMutableTreeNode (b));
 			root.add (robotNode);
 		}
@@ -598,14 +594,14 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	{
 		if (propsTB.isEditing ())		propsTB.getCellEditor ().stopCellEditing ();
 		if (eventsTB.isEditing ())		eventsTB.getCellEditor ().stopCellEditing ();
-		result	= model.getProperties ();
+		result	= model.getDeploy ();
 		dispose ();
 	}
 
 	public ArchModel getModel ()	{ return model; }
 
-	/** Shows the dialog; returns the edited properties, or null when cancelled. */
-	public Properties showDialog ()
+	/** Shows the dialog; returns the edited deployment, or null when cancelled. */
+	public DeployArch showDialog ()
 	{
 		result = null;
 		setVisible (true);

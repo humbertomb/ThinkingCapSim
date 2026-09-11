@@ -57,7 +57,7 @@ import wucore.utils.geom.Point3;
 /**
  * Main window of the new ThinkingCap simulator. Everything the simulator
  * runs (modules, robot type, world, ...) comes from an architecture
- * definition file (conf/archs/*.arch) managed through {@link ExecArch};
+ * ({@link DeployArch}, conf/archs/*.deploy; a legacy .arch can be imported);
  * the world shown is the one of the architecture's virtual robot. The
  * visualisation is shared with the editor: the 2D view is a read-only
  * {@link WorldCanvas} and the 3D view a {@link View3DController}.
@@ -71,7 +71,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	static public final String		MAPS_DIR	= "./conf/maps";
 	static public final String		ARCHS_DIR	= "./conf/archs";
 
-	protected ExecArch				arch;					// Architecture in use (never null)
+	protected DeployArch			deploy;					// Deployment architecture in use (never null)
 	protected World					world;					// World of the architecture's virtual robot
 	protected File					worldFile;
 	protected boolean				worldModified;			// world changed since the architecture was loaded/saved
@@ -100,7 +100,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	public SimulatorWindow ()
 	{
 		super (TITLE);
-		arch	= ExecArch.create ();
+		deploy	= DeployArch.create ();
 		world	= WorldEdit.newWorld ();
 
 		buildGUI ();
@@ -200,7 +200,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	private Action openArchAction ()
 	{
-		return ToolButtons.action ("Load Architecture...", ToolIcon.FOLDER, "Load architecture  [Ctrl+O]", new Runnable () { public void run () { loadArch (); } });
+		return ToolButtons.action ("Load Deployment Architecture...", ToolIcon.FOLDER, "Load deployment architecture  [Ctrl+O]", new Runnable () { public void run () { loadArch (); } });
 	}
 
 	private Action openWorldAction ()
@@ -210,7 +210,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	private Action editArchAction ()
 	{
-		return ToolButtons.action ("Edit Architecture...", ToolIcon.ARCHITECTURE, "Edit the architecture: Linda spaces, router and modules  [Ctrl+E]", new Runnable () { public void run () { editArchitecture (); } });
+		return ToolButtons.action ("Edit Deployment Architecture...", ToolIcon.ARCHITECTURE, "Edit the deployment architecture: Linda spaces, robots and modules  [Ctrl+E]", new Runnable () { public void run () { editArchitecture (); } });
 	}
 
 	private Action tasksAction ()
@@ -224,12 +224,18 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		JMenuBar	mb = new JMenuBar ();
 
 		JMenu		mfile = new JMenu ("File");
-		mfile.add (item ("New Architecture", KeyEvent.VK_N, mask, new Runnable () { public void run () { newArch (); } }));
+		mfile.add (item ("New Deployment Architecture", KeyEvent.VK_N, mask, new Runnable () { public void run () { newArch (); } }));
 		JMenuItem	load = new JMenuItem (openArchAction ());
 		load.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_O, mask));
 		mfile.add (load);
-		mfile.add (item ("Save Architecture", KeyEvent.VK_S, mask, new Runnable () { public void run () { saveArch (false); } }));
-		mfile.add (item ("Save Architecture As...", KeyEvent.VK_S, mask | KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { saveArch (true); } }));
+		mfile.add (item ("Save Deployment Architecture", KeyEvent.VK_S, mask, new Runnable () { public void run () { saveArch (false); } }));
+		mfile.add (item ("Save Deployment Architecture As...", KeyEvent.VK_S, mask | KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { saveArch (true); } }));
+		JMenuItem	imp = new JMenuItem ("Import Architecture (.arch)...");
+		imp.addActionListener (new java.awt.event.ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ importArch (); }
+		});
+		mfile.add (imp);
 		mfile.addSeparator ();
 		JMenuItem	wld = new JMenuItem (openWorldAction ());
 		wld.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_W, mask));
@@ -301,18 +307,18 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	}
 
 	/* ------------------------------------------------------------------ */
-	/* Architectures                                                       */
+	/* Deployment architectures                                            */
 	/* ------------------------------------------------------------------ */
 
-	public ExecArch getArch ()			{ return arch; }
+	public DeployArch getDeploy ()		{ return deploy; }
 
-	private boolean isModified ()		{ return worldModified || arch.isModified (); }
+	private boolean isModified ()		{ return worldModified || deploy.isModified (); }
 
 	/** Asks what to do with unsaved changes; false when the user cancels. */
 	private boolean confirmDiscard ()
 	{
 		if (!isModified ())				return true;
-		int		r = JOptionPane.showConfirmDialog (this, "The architecture has unsaved changes. Save them first?",
+		int		r = JOptionPane.showConfirmDialog (this, "The deployment architecture has unsaved changes. Save them first?",
 					TITLE, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 		if (r == JOptionPane.CANCEL_OPTION)	return false;
 		if (r == JOptionPane.YES_OPTION)		return saveArch (false);
@@ -322,23 +328,25 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	public void newArch ()
 	{
 		if (!confirmDiscard ())			return;
-		setArch (ExecArch.create ());
+		setDeploy (DeployArch.create ());
 	}
 
 	public void loadArch ()
 	{
 		if (!confirmDiscard ())			return;
-		JFileChooser	fc = chooser (arch.getFile (), ARCHS_DIR, "arch", "Architecture definition files (*.arch)");
-		fc.setDialogTitle ("Load Architecture");
+		JFileChooser	fc = chooser (deploy.getFile (), ARCHS_DIR, DeployArch.EXTENSION, "Deployment architectures (*.deploy)");
+		fc.setDialogTitle ("Load Deployment Architecture");
 		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
 		loadArch (fc.getSelectedFile ());
 	}
 
+	/** Loads a .deploy file (a legacy .arch is imported instead). */
 	public void loadArch (File f)
 	{
 		try
 		{
-			setArch (ExecArch.load (f));
+			if (f.getName ().toLowerCase ().endsWith (".arch"))		setDeploy (importArch (f));
+			else														setDeploy (DeployArch.load (f));
 		} catch (Exception e)
 		{
 			e.printStackTrace ();
@@ -346,12 +354,31 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		}
 	}
 
-	/** Installs an architecture and shows the world of its virtual robot. */
-	private void setArch (ExecArch a)
+	/** Imports a legacy architecture definition file (.arch) as a new, unsaved deployment. */
+	public void importArch ()
 	{
-		arch			= a;
+		if (!confirmDiscard ())			return;
+		JFileChooser	fc = chooser (null, ARCHS_DIR, "arch", "Architecture definition files (*.arch)");
+		fc.setDialogTitle ("Import Architecture (.arch)");
+		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+		loadArch (fc.getSelectedFile ());
+	}
+
+	/** Deployment built from a .arch: one robot named after the file (IFORK-1) unless the ADF has a NAME. */
+	static public DeployArch importArch (File f) throws java.io.IOException
+	{
+		String	n = f.getName ();
+		int		dot = n.lastIndexOf ('.');
+		if (dot > 0)		n = n.substring (0, dot);
+		return DeployArch.fromProperties (ExecArch.load (f).getProperties (), n.toUpperCase () + "-1");
+	}
+
+	/** Installs a deployment and shows the world of its first robot. */
+	private void setDeploy (DeployArch d)
+	{
+		deploy			= d;
 		worldModified	= false;
-		String	wname = arch.getWorldFile ();
+		String	wname = deploy.getWorldFile ();
 		if (wname != null)		showWorld (new File (wname));
 		else					showWorld (null);
 		updateTitle ();
@@ -359,21 +386,21 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	public boolean saveArch (boolean saveAs)
 	{
-		File	f = arch.getFile ();
+		File	f = deploy.getFile ();
 		if (saveAs || (f == null))
 		{
-			JFileChooser	fc = chooser (f, ARCHS_DIR, "arch", "Architecture definition files (*.arch)");
-			fc.setDialogTitle (saveAs ? "Save Architecture As" : "Save Architecture");
+			JFileChooser	fc = chooser (f, ARCHS_DIR, DeployArch.EXTENSION, "Deployment architectures (*.deploy)");
+			fc.setDialogTitle (saveAs ? "Save Deployment Architecture As" : "Save Deployment Architecture");
 			if (f != null)		fc.setSelectedFile (f);
 			if (fc.showSaveDialog (this) != JFileChooser.APPROVE_OPTION)		return false;
 			f = fc.getSelectedFile ();
-			if (!f.getName ().toLowerCase ().endsWith (".arch"))		f = new File (f.getPath () + ".arch");
+			if (!f.getName ().toLowerCase ().endsWith ("." + DeployArch.EXTENSION))		f = new File (f.getPath () + "." + DeployArch.EXTENSION);
 			if (f.exists () && (JOptionPane.showConfirmDialog (this, f.getName () + " already exists. Overwrite?", TITLE,
 					JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION))		return false;
 		}
 		try
 		{
-			arch.save (f);
+			deploy.save (f);
 			worldModified	= false;
 			updateTitle ();
 			return true;
@@ -386,18 +413,18 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	}
 
 	/**
-	 * Opens the block editor of the architecture. The dialog works on a copy
-	 * of the properties; on OK they replace the ones of the architecture and
-	 * the world is reloaded when the virtual robot now points to another one.
+	 * Opens the block editor of the deployment. The dialog works on a copy;
+	 * on OK it replaces the current deployment and the world is reloaded when
+	 * the first robot now points to another one.
 	 */
 	public void editArchitecture ()
 	{
-		ArchitectureDialog	dlg = new ArchitectureDialog (this, arch.getProperties (), robotId ());
-		java.util.Properties	result = dlg.showDialog ();
+		ArchitectureDialog	dlg = new ArchitectureDialog (this, deploy);
+		DeployArch			result = dlg.showDialog ();
 		if (result == null)				return;
-		String	before = arch.getWorldFile ();
-		arch.replaceProperties (result);
-		String	after = arch.getWorldFile ();
+		String	before = deploy.getWorldFile ();
+		deploy.replaceWith (result);
+		String	after = deploy.getWorldFile ();
 		if ((after == null) ? (before != null) : !after.equals (before))
 			showWorld ((after != null) ? new File (after) : null);
 		updateTitle ();
@@ -407,16 +434,10 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	/* Execution                                                           */
 	/* ------------------------------------------------------------------ */
 
-	/** Identifier of the simulated robot: the NAME property of the architecture, or the file name in upper case plus "-1" (e.g. IFORK-1). */
+	/** Identifier of the simulated robot: the name of the first robot of the deployment. */
 	protected String robotId ()
 	{
-		String	name = arch.getProperties ().getProperty ("NAME");		// name given in the architecture editor
-		if ((name != null) && (name.trim ().length () > 0))		return name.trim ();
-		File	f = arch.getFile ();
-		String	n = (f != null) ? f.getName () : "robot";
-		int		dot = n.lastIndexOf ('.');
-		if (dot > 0)		n = n.substring (0, dot);
-		return n.toUpperCase () + "-1";
+		return deploy.robots.isEmpty () ? DeployArch.DEFAULT_ROBOT : deploy.robots.get (0).name;
 	}
 
 	/**
@@ -428,7 +449,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		terminate ();
 		simulator	= new Simulator ();
-		running		= arch.runner (robotId (), simulator);		// loads the architecture's world into the simulator
+		running		= new ExecArch (robotId (), deploy.toProperties (0), null, simulator);	// first robot; loads its world into the simulator
 		simulator.setVisualization (this);							// robots and objects are reported to this window
 		monitorPanel.clear ();
 		running.start ();
@@ -443,7 +464,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 				if ((r != null) && (r == running) && (r.getLocalLinda () != null))		monitorPanel.attach (r.getLocalLinda (), r.getRobotId ());
 			}
 		}, "TCSim-monitor-attach").start ();
-		statusBar.setStatus ("Executing " + robotId () + " (" + ((arch.getFile () != null) ? arch.getFile ().getName () : "untitled") + ")");
+		statusBar.setStatus ("Executing " + robotId () + " (" + ((deploy.getFile () != null) ? deploy.getFile ().getName () : "untitled") + ")");
 		updateExecutionState ();
 	}
 
@@ -631,7 +652,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	public void loadWorld (File f)
 	{
 		if (!showWorld (f))				return;
-		arch.setWorldFile (relativePath (f));
+		deploy.setWorldFile (relativePath (f));
 		worldModified	= true;
 		updateTitle ();
 	}
@@ -677,8 +698,8 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	private void updateTitle ()
 	{
-		File	f = arch.getFile ();
-		setTitle (TITLE + " - " + ((f != null) ? f.getName () : "untitled.arch") + (isModified () ? " *" : ""));
+		File	f = deploy.getFile ();
+		setTitle (TITLE + " - " + ((f != null) ? f.getName () : "untitled." + DeployArch.EXTENSION) + (isModified () ? " *" : ""));
 	}
 
 	public void quit ()

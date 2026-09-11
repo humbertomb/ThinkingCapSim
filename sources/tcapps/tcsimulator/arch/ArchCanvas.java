@@ -254,7 +254,7 @@ public class ArchCanvas extends JPanel
 
 		if (model.hasGlobalLinda ())
 		{
-			bounds.put (new Block (ArchModel.GLOBAL_LINDA, "GLIN", -1), new Rectangle (cx - LINDA_W / 2, y, LINDA_W, LINDA_H));
+			bounds.put (new Block (ArchModel.GLOBAL_LINDA, -1), new Rectangle (cx - LINDA_W / 2, y, LINDA_W, LINDA_H));
 			y += LINDA_H + 52;
 		}
 
@@ -265,29 +265,29 @@ public class ArchCanvas extends JPanel
 			int		rcx = MARGIN + REGION_HW + i * (2 * REGION_HW + REGION_GAP);
 			int		top = y + BOX_H / 2;								// region top: the router straddles it
 			if (model.hasRouter (r))
-				bounds.put (new Block (ArchModel.ROUTER, model.routerPrefix (r), r), new Rectangle (rcx - BOX_W / 2, y, BOX_W, BOX_H));
+				bounds.put (new Block (ArchModel.ROUTER, r), new Rectangle (rcx - BOX_W / 2, y, BOX_W, BOX_H));
 			int		modTop = top + BOX_H / 2 + 34;
-			List<String>	mods = model.modulePrefixes (r);
-			int		nrows = (mods.size () + 1) / 2;
+			int		nmods = model.moduleCount (r);
+			int		nrows = (nmods + 1) / 2;
 			int		modsH = Math.max (nrows * ROW_DY - (ROW_DY - BOX_H), LINDA_H);
-			for (int m = 0; m < mods.size (); m++)
+			for (int m = 0; m < nmods; m++)
 			{
 				int		col = (m % 2 == 0) ? -1 : 1;
 				int		row = m / 2;
 				int		my = modTop + row * ROW_DY;
 				if (nrows * ROW_DY - (ROW_DY - BOX_H) < LINDA_H)		my += (LINDA_H - (nrows * ROW_DY - (ROW_DY - BOX_H))) / 2;
-				bounds.put (new Block (ArchModel.MODULE, mods.get (m), r), new Rectangle (rcx + col * COL_DX - BOX_W / 2, my, BOX_W, BOX_H));
+				bounds.put (new Block (ArchModel.MODULE, r, m), new Rectangle (rcx + col * COL_DX - BOX_W / 2, my, BOX_W, BOX_H));
 			}
 			if (model.hasLocalLinda (r))
-				bounds.put (new Block (ArchModel.LOCAL_LINDA, "LLIN", r), new Rectangle (rcx - LINDA_W / 2, modTop + (modsH - LINDA_H) / 2, LINDA_W, LINDA_H));
+				bounds.put (new Block (ArchModel.LOCAL_LINDA, r), new Rectangle (rcx - LINDA_W / 2, modTop + (modsH - LINDA_H) / 2, LINDA_W, LINDA_H));
 			int		vy = modTop + modsH + 40;
 			if (model.hasVRobot (r))
 			{
-				bounds.put (new Block (ArchModel.VROBOT, model.vrobotPrefix (r), r), new Rectangle (rcx - VROB_W / 2, vy, VROB_W, VROB_H));
+				bounds.put (new Block (ArchModel.VROBOT, r), new Rectangle (rcx - VROB_W / 2, vy, VROB_W, VROB_H));
 				vy += VROB_H;
 			}
 			Rectangle	region = new Rectangle (rcx - REGION_HW, top, 2 * REGION_HW, vy + REGION_PAD - top);
-			Block		robot = new Block (ArchModel.ROBOT, null, r);
+			Block		robot = new Block (ArchModel.ROBOT, r);
 			bounds.put (robot, region);
 			// bounds of the robot name (top-left corner of the region), for hit testing and in-place editing
 			FontMetrics	fm = getFontMetrics (getFont ().deriveFont (Font.BOLD, 12f));
@@ -345,13 +345,13 @@ public class ArchCanvas extends JPanel
 		}
 
 		// --- arrows (below the blocks)
-		Rectangle	glinda = bounds.get (new Block (ArchModel.GLOBAL_LINDA, "GLIN", -1));
+		Rectangle	glinda = bounds.get (new Block (ArchModel.GLOBAL_LINDA, -1));
 		g.setColor (C_ARROW);
 		g.setStroke (new BasicStroke (1.5f));
 		for (int r : model.robots ())
 		{
-			Rectangle	llinda = bounds.get (new Block (ArchModel.LOCAL_LINDA, "LLIN", r));
-			Rectangle	router = model.hasRouter (r) ? bounds.get (new Block (ArchModel.ROUTER, model.routerPrefix (r), r)) : null;
+			Rectangle	llinda = bounds.get (new Block (ArchModel.LOCAL_LINDA, r));
+			Rectangle	router = model.hasRouter (r) ? bounds.get (new Block (ArchModel.ROUTER, r)) : null;
 			if ((router != null) && (glinda != null))		doubleArrow (g, router, glinda);
 			if (llinda != null)
 				for (Map.Entry<Block, Rectangle> e : bounds.entrySet ())
