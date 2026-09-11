@@ -135,8 +135,21 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 		monitorPanel.setWorld (world);
 		splitPane		= new JSplitPane (JSplitPane.VERTICAL_SPLIT, canvas, monitorPanel);
 		splitPane.setOneTouchExpandable (true);
-		splitPane.setResizeWeight (0.8);
-		splitPane.setDividerLocation (560);
+		splitPane.setResizeWeight (1.0);							// extra space goes to the world view
+		// start with the bottom panel as small as possible while both tabs remain visible
+		splitPane.addComponentListener (new java.awt.event.ComponentAdapter ()
+		{
+			boolean	done = false;
+			public void componentResized (java.awt.event.ComponentEvent e)
+			{
+				if (done || (splitPane.getHeight () <= 0))		return;
+				done = true;
+				SwingUtilities.invokeLater (new Runnable ()
+				{
+					public void run ()		{ resetDivider (); }
+				});
+			}
+		});
 
 		getContentPane ().setLayout (new BorderLayout ());
 		getContentPane ().add (buildToolBar (), BorderLayout.WEST);
@@ -173,6 +186,13 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 		tb.addSeparator ();
 		tb.add (view3d.button ());
 		return tb;
+	}
+
+	/** Puts the split divider so that the Robots/Events panel takes only the height of its tabs. */
+	public void resetDivider ()
+	{
+		int	bottom = monitorPanel.minimumHeight ();
+		splitPane.setDividerLocation (splitPane.getHeight () - splitPane.getDividerSize () - bottom - splitPane.getInsets ().bottom);
 	}
 
 	private Action openArchAction ()

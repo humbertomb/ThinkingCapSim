@@ -62,7 +62,7 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 		events	= new EventList ();
 
 		robotTB	= new JTable (robots);
-		robotTB.setPreferredScrollableViewportSize (new Dimension (500, 75));
+		robotTB.setPreferredScrollableViewportSize (new Dimension (500, 40));
 		robotTB.setGridColor (Color.lightGray);
 		robotTB.setShowGrid (true);
 		robotTB.setShowHorizontalLines (true);
@@ -71,7 +71,7 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 		robotSP	= new JScrollPane (robotTB);
 
 		eventTB	= new JTable (events);
-		eventTB.setPreferredScrollableViewportSize (new Dimension (500, 75));
+		eventTB.setPreferredScrollableViewportSize (new Dimension (500, 40));
 		eventTB.setDefaultRenderer (Object.class, new EventListRenderer (eventTB));
 		eventTB.setGridColor (Color.lightGray);
 		eventTB.setShowGrid (true);
@@ -80,9 +80,23 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 		eventTB.setSelectionMode (ListSelectionModel.SINGLE_SELECTION);
 		eventSP	= new JScrollPane (eventTB);
 
-		setMinimumSize (new Dimension (300, 75));
 		insertTab ("Robots", null, robotSP, null, 0);
 		insertTab ("Events", null, eventSP, null, 1);
+		// usually little information here: the panel's natural height is just what the two tabs need
+		setMinimumSize (new Dimension (300, minimumHeight ()));
+	}
+
+	/** Height needed to show the two tabs (they are laid out vertically on the left). */
+	public int minimumHeight ()
+	{
+		int	h = 0;
+		for (int i = 0; i < getTabCount (); i++)
+		{
+			java.awt.Rectangle	r = getBoundsAt (i);
+			if (r != null)		h = Math.max (h, r.y + r.height);
+		}
+		if (h == 0)		h = 2 * (getFontMetrics (getFont ()).getHeight () + 8);		// not laid out yet: estimate
+		return h + 6;
 	}
 
 	public RobotList	getRobotList ()		{ return robots; }
