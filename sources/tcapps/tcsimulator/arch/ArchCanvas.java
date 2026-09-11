@@ -390,8 +390,8 @@ public class ArchCanvas extends JPanel
 			g.drawLine (r.x + r.width, r.y + eh / 2, r.x + r.width, r.y + r.height - eh / 2);
 			g.drawArc (r.x, r.y + r.height - eh, r.width, eh, 180, 180);
 			String	label = model.labelOf (b);
-			String[] lines = (b.kind == ArchModel.GLOBAL_LINDA) ? new String[] { "Multi-Robot", "Linda Space" } : new String[] { "Local", "Linda Space" };
-			if (!label.equals ("Multi-Robot Linda Space") && !label.equals ("Local Linda Space"))		lines = new String[] { label };
+			String[] lines = (b.kind == ArchModel.GLOBAL_LINDA) ? new String[] { "Global", "Linda Space" } : new String[] { "Local", "Linda Space" };
+			if (!label.equals ("Global Linda Space") && !label.equals ("Local Linda Space"))		lines = new String[] { label };
 			centeredText (g, lines, new Rectangle (r.x, r.y + eh, r.width, r.height - eh - eh / 2), Font.PLAIN);
 			break;
 		}

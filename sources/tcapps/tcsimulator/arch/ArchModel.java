@@ -33,7 +33,7 @@ public class ArchModel
 	static public final int		VROBOT			= 4;
 	static public final int		ROBOT			= 5;		// the robot container itself
 
-	static public final String[]	KIND_NAMES	= { "Global Linda", "Local Linda", "Router", "Module", "Virtual Robot", "Robot" };
+	static public final String[]	KIND_NAMES	= { "Global Linda Space", "Local Linda Space", "Router", "Module", "Virtual Robot", "Robot" };
 
 	/** Property suffixes edited for each kind (existing ones with the prefix are shown too). */
 	static public final String[]	LINDA_KEYS	= { "ADDR", "PORT", "CREATE", "CLASS" };
@@ -314,7 +314,7 @@ public class ArchModel
 	public String labelOf (Block b)
 	{
 		if (b.kind == ROBOT)			return "ROBOT " + getRobotId (b.robot);
-		if (b.kind == GLOBAL_LINDA)		return "Multi-Robot Linda Space";
+		if (b.kind == GLOBAL_LINDA)		return "Global Linda Space";
 		if (b.kind == LOCAL_LINDA)		return "Local Linda Space";
 		String	info = getp (b.robot, b.prefix + "INFO");
 		return ((info != null) && (info.trim ().length () > 0)) ? info.trim () : b.prefix;
