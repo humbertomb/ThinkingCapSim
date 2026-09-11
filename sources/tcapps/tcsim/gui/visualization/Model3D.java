@@ -16,8 +16,8 @@ import tc.vrobot.*;
 import wucore.utils.geom.*;
 
 import tcapps.tcsim.gui.visualization.objects.*;
-import tcapps.tcsim.simul.*;
-import tcapps.tcsim.simul.objects.*;
+import tcapps.tcsimulator.simulator.*;
+import tcapps.tcsimulator.simulator.objects.*;
 
 public class Model3D extends Scene3D
 {

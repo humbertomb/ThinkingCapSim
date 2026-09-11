@@ -16,8 +16,8 @@ import tc.runtime.thread.ThreadDesc;
 import tc.shared.linda.Linda;
 import tc.shared.linda.LindaNetClient;
 import tc.shared.linda.net.LindaNet;
-import tcapps.tcsim.simul.Simulator;
-import tcapps.tcsim.simul.objects.SimMultiCargo;
+import tcapps.tcsimulator.simulator.Simulator;
+import tcapps.tcsimulator.simulator.objects.SimMultiCargo;
 
 
 /**

@@ -4,13 +4,13 @@
  * To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package tcapps.tcsim.simul.objects;
+package tcapps.tcsimulator.simulator.objects;
 
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 
-import tcapps.tcsim.simul.*;
+import tcapps.tcsimulator.simulator.*;
 
 import devices.pos.*;
 import wucore.utils.geom.*;

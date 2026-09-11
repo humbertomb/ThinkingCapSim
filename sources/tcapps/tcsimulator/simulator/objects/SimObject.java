@@ -2,7 +2,7 @@
  * (c) 2004 Humberto Martinez Barbera
  */
  
-package tcapps.tcsim.simul.objects;
+package tcapps.tcsimulator.simulator.objects;
 
 import java.io.*;
 import java.util.*;

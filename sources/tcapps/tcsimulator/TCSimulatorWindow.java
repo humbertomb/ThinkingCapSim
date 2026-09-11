@@ -36,6 +36,7 @@ import tcapps.tceditor.View3DController;
 import tcapps.tceditor.WorldCanvas;
 import tcapps.tceditor.WorldEdit;
 import tcapps.tceditor.WorldItem;
+import tcapps.tcsimulator.simulator.Simulator;
 
 /**
  * Main window of the new ThinkingCap simulator. Everything the simulator
@@ -60,6 +61,7 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 	protected boolean				worldModified;			// world changed since the architecture was loaded/saved
 
 	protected ExecArch				running;				// Architecture being executed (null when none)
+	protected Simulator				simulator;				// Simulation engine of the running architecture
 
 	protected WorldCanvas			canvas;
 	protected StatusBar				statusBar;
@@ -318,11 +320,16 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 		return n.toUpperCase () + "-1";
 	}
 
-	/** Executes the current architecture; a running execution is terminated first. */
+	/**
+	 * Executes the current architecture in simulation (its virtual robot runs
+	 * as a SimRobot inside a new Simulator loaded with the architecture's
+	 * world); a running execution is terminated first.
+	 */
 	public void execute ()
 	{
 		terminate ();
-		running	= arch.runner (robotId ());
+		simulator	= new Simulator ();
+		running		= arch.runner (robotId (), simulator);
 		running.start ();
 		statusBar.setStatus ("Executing " + robotId () + " (" + ((arch.getFile () != null) ? arch.getFile ().getName () : "untitled") + ")");
 		updateExecutionState ();
@@ -333,7 +340,8 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 	{
 		if (running == null)			return;
 		running.terminate ();
-		running	= null;
+		running		= null;
+		simulator	= null;
 		statusBar.setStatus ("Execution terminated");
 		updateExecutionState ();
 	}

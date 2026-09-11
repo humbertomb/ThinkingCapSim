@@ -26,4 +26,4 @@ VCARGO		= CAR
 #----------------------------------------------------
 CARMODE	= tcp
 CARPASSIVE	= true
-CARCONNECT	= 	PALLETCTRL	tcapps.tcsim.simul.ItemPallet			notify_pallet
+CARCONNECT	= 	PALLETCTRL	tcapps.tcsimulator.simulator.ItemPallet			notify_pallet

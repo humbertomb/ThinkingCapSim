@@ -10,7 +10,7 @@ import java.io.*;
 
 import tcapps.tcsim.*;
 import tcapps.tcsim.gui.*;
-import tcapps.tcsim.simul.*;
+import tcapps.tcsimulator.simulator.*;
 
 import tc.*;
 import wucore.utils.geom.*;
@@ -30,7 +30,7 @@ public class IForkMultiWindow
 	public IForkMultiWindow()
 	{
 		Simulator		simul;
-		ExecArchSim		exec;
+		ExecArch		exec;
 		
 //		Create Standard Service
 		new ExecArchMulti ("conf/archs/glinda.arch").start ();
@@ -45,7 +45,7 @@ public class IForkMultiWindow
 		new ExecArchMultiPallet("."+File.separator+"conf"+File.separator+"pallet"+File.separator+"pallet.arch","."+File.separator+"conf"+File.separator+"pallet"+File.separator+"typepallet.cfg",simul).start();
 		
 		for(int i=1;i<=NUMAGV;i++){
-			exec		= new ExecArchSim ("IFORK-"+i, "conf/archs/ifork.arch", null, simul);
+			exec		= new ExecArch ("IFORK-"+i, "conf/archs/ifork.arch", null, simul);
 			exec.start ();
 			exec.setStart (new Point3 (75.0, 65.0-((i-1)*2), Math.PI));
 			

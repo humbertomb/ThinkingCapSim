@@ -208,12 +208,24 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	
 	public void open_plot ()
 	{
-		if (plot == null)			plot	= new PlotWindow (this, "Motion Commands");
-		
-		plot.setLegend (labels);
-		plot.setLabels ("time", "values");
-		plot.setYRange (-1.0, 1.0);
-		plot.open ();
+		// Swing components must be created on the event thread (creating the plot from the
+		// module thread deadlocks against the AWT tree lock when other windows are laying out)
+		Runnable	open = new Runnable ()
+		{
+			public void run ()
+			{
+				if (plot == null)			plot	= new PlotWindow (VirtualRobot.this, "Motion Commands");
+				
+				plot.setLegend (labels);
+				plot.setLabels ("time", "values");
+				plot.setYRange (-1.0, 1.0);
+				plot.open ();
+			}
+		};
+		if (javax.swing.SwingUtilities.isEventDispatchThread ())
+			open.run ();
+		else
+			try { javax.swing.SwingUtilities.invokeAndWait (open); } catch (Exception e) { e.printStackTrace (); }
 	}
 	
 	public void childClosed (Object window)

@@ -5,7 +5,7 @@
 package tcapps.tcsim;
 
 import tcapps.tcsim.replay.*;
-import tcapps.tcsim.simul.*;
+import tcapps.tcsimulator.simulator.*;
 
 import tc.*;
 import tc.runtime.thread.*;

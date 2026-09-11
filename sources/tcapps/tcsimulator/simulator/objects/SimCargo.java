@@ -4,7 +4,7 @@
  * To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package tcapps.tcsim.simul.objects;
+package tcapps.tcsimulator.simulator.objects;
 
 /**
  * @author Humberto Martinez Barbera

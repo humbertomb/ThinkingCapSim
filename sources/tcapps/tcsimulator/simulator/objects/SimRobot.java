@@ -3,11 +3,11 @@
  * (c) 2003 Bernardo Canovas Segura
  */
 
-package tcapps.tcsim.simul.objects;
+package tcapps.tcsimulator.simulator.objects;
 
 import java.util.*;
 
-import tcapps.tcsim.simul.*;
+import tcapps.tcsimulator.simulator.*;
 import tcrob.ingenia.ifork.linda.*;
 
 import tc.vrobot.*;

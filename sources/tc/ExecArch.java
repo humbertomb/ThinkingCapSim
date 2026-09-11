@@ -10,6 +10,10 @@ import java.util.*;
 
 import tc.runtime.thread.*;
 import tc.shared.linda.*;
+import tc.shared.linda.net.*;
+import tcapps.tcsimulator.simulator.Simulator;
+import tcapps.tcsimulator.simulator.objects.SimRobot;
+import wucore.utils.geom.Point3;
 
 public class ExecArch extends Thread
 {
@@ -34,6 +38,10 @@ public class ExecArch extends Thread
 	protected volatile boolean	running		= false;
 	protected Properties			props;
 	protected String				robotid;
+
+	// Simulation: when a Simulator is given the virtual robot module is replaced by a SimRobot bound to it
+	protected Simulator			sim;
+	protected Point3			start;				// Optional initial pose of the simulated robot
 
 	// Source file (when loaded from / saved to an ADF), kept to preserve comments and layout on save
 	protected File				file;
@@ -103,6 +111,50 @@ public class ExecArch extends Thread
 	{
 		initialise (robotid, props, pdefs);
 	}
+
+	/**
+	 * Simulated execution (former ExecArchSim): the architecture is read from
+	 * <code>name</code> and its virtual robot runs as a {@link SimRobot} inside
+	 * <code>sim</code>. If the simulator has no world yet, the architecture's
+	 * world is loaded into it; otherwise the simulator's world is imposed.
+	 */
+	public ExecArch (String robotid, String name, Properties pdefs, Simulator sim)
+	{
+		this (robotid, name, pdefs);
+		simulate (sim);
+	}
+
+	/** Simulated execution of an architecture given as properties (see the file-based constructor). */
+	public ExecArch (String robotid, Properties props, Properties pdefs, Simulator sim)
+	{
+		this (robotid, props, pdefs);
+		simulate (sim);
+	}
+
+	protected void simulate (Simulator sim)
+	{
+		this.sim	= sim;
+		if ((sim == null) || (vrdesc == null))		return;
+
+		// Load a world description if none available
+		if (sim.getWorld () == null)
+		{
+			try  { sim.setWorld (props.getProperty (vrdesc.preffix + "WORLD")); }
+			catch (Exception e)
+			{
+				System.out.println ("[ExecArch]: Exception loading world: " + e);
+				return;
+			}
+		}
+		if (sim.getWorldName () != null)
+			props.setProperty (vrdesc.preffix + "WORLD", sim.getWorldName ());
+
+		// The simulated robot replaces the real one
+		vrdesc.classn = SimRobot.class.getName ();
+	}
+
+	public Simulator	getSimulator ()					{ return sim; }
+	public void			setStart (Point3 start)			{ this.start = start; }
 
 	// Class methods
 	public static void main (String[] argv)
@@ -217,10 +269,16 @@ public class ExecArch extends Thread
 	/** True between the start of the modules and {@link #terminate}. */
 	public boolean isRunning ()			{ return running; }
 
-	/** The architecture is being executed (by a copy of this description). */
+	/** Executable copy of this description (a Thread can only be started once). */
 	public ExecArch runner (String robotid)
 	{
 		return new ExecArch (robotid, (Properties) props.clone ());
+	}
+
+	/** Executable copy of this description whose virtual robot is simulated in <code>sim</code>. */
+	public ExecArch runner (String robotid, Simulator sim)
+	{
+		return new ExecArch (robotid, (Properties) props.clone (), null, sim);
 	}
 
 	/**
@@ -455,8 +513,40 @@ public class ExecArch extends Thread
 
 	protected void virtual_robot ()
 	{
-		if (vrdesc != null)
+		if (vrdesc == null)				return;
+		if (sim == null)
+		{
 			vrdesc.start_thread (robotid, props, lldesc, linda_loc);
+			return;
+		}
+
+		// Simulated robot (former ExecArchSim.virtual_robot)
+		System.out.println (">> Starting Simulated Robot [" + vrdesc.preffix + "@" + robotid + "]");
+		Linda	linda = null;
+		try
+		{
+			if (linda_loc != null)
+				linda = linda_loc;
+			else if (vrdesc.mode == ThreadDesc.M_UDP)
+				linda = new LindaNetClient (LindaNet.UDP, null, lldesc.addr, lldesc.port);
+			else if (vrdesc.mode == ThreadDesc.M_TCP)
+				linda = new LindaNetClient (LindaNet.TCP, null, lldesc.addr, lldesc.port);
+		} catch (Exception e)
+		{
+			e.printStackTrace ();
+			linda = null;
+		}
+		if (linda == null)
+		{
+			System.out.println ("--[ExecArch] Can not create Linda client. Aborting simulated robot [" + vrdesc.preffix + "@" + robotid + "]");
+			return;
+		}
+
+		SimRobot	thread = new SimRobot (robotid, props, linda, sim);
+		thread.setTDesc (vrdesc);
+		if (start != null)		thread.reset (start);
+		vrdesc.thread	= thread;
+		thread.start ();
 	}
 	
 	public String toString ()

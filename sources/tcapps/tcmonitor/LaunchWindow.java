@@ -17,7 +17,7 @@ import wucore.utils.geom.*;
 
 import tcapps.tcsim.*;
 import tcapps.tcsim.gui.*;
-import tcapps.tcsim.simul.*;
+import tcapps.tcsimulator.simulator.*;
 
 class LoginServers extends AbstractTableModel
 {
@@ -303,7 +303,7 @@ public class LaunchWindow extends JFrame
 	public void siforkBUActionPerformed(java.awt.event.ActionEvent ev) 
 	{
 		Simulator		simul;
-		ExecArchSim		exec;
+		ExecArch		exec;
 		
 		// Create linda space and open monitor
 		new ExecArchMulti ("conf/archs/glinda.arch").start ();
@@ -317,7 +317,7 @@ public class LaunchWindow extends JFrame
 			new SimulatorWindow(simul,SimulatorWindow.ADMIN);
 		new ExecArchMultiPallet("."+File.separator+"conf"+File.separator+"pallet"+File.separator+"pallet.arch","."+File.separator+"conf"+File.separator+"pallet"+File.separator+"typepallet.cfg",simul).start();
 		
-		exec		= new ExecArchSim ("IFORK-1", "conf/archs/ifork.arch", null, simul);
+		exec		= new ExecArch ("IFORK-1", "conf/archs/ifork.arch", null, simul);
 		exec.start ();		
 		exec.setStart (new Point3 (75.0, 65.0, Math.PI));
 	}
@@ -325,7 +325,7 @@ public class LaunchWindow extends JFrame
 	public void miforkBUActionPerformed(java.awt.event.ActionEvent ev) 
 	{
 		Simulator		simul;
-		ExecArchSim		exec;
+		ExecArch		exec;
 		
 		// Create linda space and open monitor
 		new ExecArchMulti ("conf/archs/glinda.arch").start ();
@@ -339,22 +339,22 @@ public class LaunchWindow extends JFrame
 			new SimulatorWindow(simul,SimulatorWindow.ADMIN);
 		new ExecArchMultiPallet("."+File.separator+"conf"+File.separator+"pallet"+File.separator+"pallet.arch","."+File.separator+"conf"+File.separator+"pallet"+File.separator+"typepallet.cfg",simul).start();
 				
-		exec		= new ExecArchSim ("IFORK-1", "conf/archs/ifork.arch", null, simul);
+		exec		= new ExecArch ("IFORK-1", "conf/archs/ifork.arch", null, simul);
 		exec.start ();		
 		exec.setStart (new Point3 (73.0, 77.0, Math.PI));
 		try { Thread.sleep (2000); } catch (Exception e) { }
 		
-		exec		= new ExecArchSim ("IFORK-2", "conf/archs/ifork.arch", null, simul);
+		exec		= new ExecArch ("IFORK-2", "conf/archs/ifork.arch", null, simul);
 		exec.start ();
 		exec.setStart (new Point3 (73.0, 73.0, Math.PI));
 		try { Thread.sleep (2000); } catch (Exception e) { }
 		
-		exec		= new ExecArchSim ("IFORK-3", "conf/archs/ifork.arch", null, simul);
+		exec		= new ExecArch ("IFORK-3", "conf/archs/ifork.arch", null, simul);
 		exec.start ();
 		exec.setStart (new Point3 (73.0, 70.0, Math.PI));
 		try { Thread.sleep (2000); } catch (Exception e) { }
 		
-		exec		= new ExecArchSim ("IFORK-4", "conf/archs/ifork.arch", null, simul);
+		exec		= new ExecArch ("IFORK-4", "conf/archs/ifork.arch", null, simul);
 		exec.start ();
 		exec.setStart (new Point3 (73.0, 67.0, Math.PI));
 	}
@@ -362,7 +362,7 @@ public class LaunchWindow extends JFrame
 	public void siboatBUActionPerformed(java.awt.event.ActionEvent ev) 
 	{
 		Simulator		simul;
-		ExecArchSim		exec;
+		ExecArch		exec;
 		
 		// Create linda space and open monitor
 		new ExecArchMulti ("conf/archs/glinda.arch").start ();
@@ -372,7 +372,7 @@ public class LaunchWindow extends JFrame
 		try { Thread.sleep (2000); } catch (Exception e) { }
 		simul	= new Simulator ();
 		
-		exec = new ExecArchSim ("RASMUS", "conf/archs/rasmus.arch", null, simul);
+		exec = new ExecArch ("RASMUS", "conf/archs/rasmus.arch", null, simul);
 		exec.start ();		
 		exec.setStart (new Point3 (0.0, 0.0, Math.PI));
 	}
@@ -380,7 +380,7 @@ public class LaunchWindow extends JFrame
 	public void spioneerBUActionPerformed(java.awt.event.ActionEvent ev) 
 	{
 		Simulator		simul;
-		ExecArchSim		exec;
+		ExecArch		exec;
 		
 		// Create linda space and open monitor
 		new ExecArchMulti ("conf/archs/glinda.arch").start ();
@@ -393,15 +393,15 @@ public class LaunchWindow extends JFrame
 		if (SimulatorWindow.isJ3DInstalled ())
 			new SimulatorWindow (simul, SimulatorWindow.ADMIN);
 
-		exec = new ExecArchSim ("PIONEER3-AT", "conf/archs/pioneer3.arch", null, simul);
-//		exec = new ExecArchSim ("QUAKY2", "conf/archs/quaky2.arch", null, simul);
+		exec = new ExecArch ("PIONEER3-AT", "conf/archs/pioneer3.arch", null, simul);
+//		exec = new ExecArch ("QUAKY2", "conf/archs/quaky2.arch", null, simul);
 		exec.start ();
 	}
 		
 	public void siasfBUActionPerformed(java.awt.event.ActionEvent ev) 
 	{
 		Simulator		simul;
-		ExecArchSim		exec;
+		ExecArch		exec;
 		
 		// Create linda space and open monitor
 		new ExecArchMulti ("conf/archs/glinda.arch").start ();
@@ -414,7 +414,7 @@ public class LaunchWindow extends JFrame
 		if (SimulatorWindow.isJ3DInstalled ())
 			new SimulatorWindow (simul, SimulatorWindow.ADMIN);
 
-		exec = new ExecArchSim ("IASF", "conf/archs/iasf.arch", null, simul);
+		exec = new ExecArch ("IASF", "conf/archs/iasf.arch", null, simul);
 		exec.start ();
 	}
 		

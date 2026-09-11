@@ -7,7 +7,7 @@ package tcapps.tcsim.replay;
 import java.io.*;
 import java.util.*;
 
-import tcapps.tcsim.simul.*;
+import tcapps.tcsimulator.simulator.*;
 
 import tc.vrobot.*;
 import tc.shared.linda.*;

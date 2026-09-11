@@ -4,9 +4,9 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package tcapps.tcsim.simul.objects;
+package tcapps.tcsimulator.simulator.objects;
 
-import tcapps.tcsim.simul.ItemPallet;
+import tcapps.tcsimulator.simulator.ItemPallet;
 
 /**
  * @author SergioPC

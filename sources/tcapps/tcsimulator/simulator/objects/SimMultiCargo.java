@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package tcapps.tcsim.simul.objects;
+package tcapps.tcsimulator.simulator.objects;
 
 import java.lang.reflect.Constructor;
 import java.util.Enumeration;
@@ -17,8 +17,8 @@ import tc.shared.linda.ItemConfig;
 import tc.shared.linda.ItemDebug;
 import tc.shared.linda.Linda;
 import tc.shared.linda.Tuple;
-import tcapps.tcsim.simul.ItemPallet;
-import tcapps.tcsim.simul.Simulator;
+import tcapps.tcsimulator.simulator.ItemPallet;
+import tcapps.tcsimulator.simulator.Simulator;
 import devices.pos.Position;
 import wucore.utils.geom.Point3;
 

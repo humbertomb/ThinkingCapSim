@@ -128,4 +128,4 @@ ROBCONNECT	= 	MOTION		tc.shared.linda.ItemMotion 			notify_motion, \
 				DATACTRL 	tc.shared.linda.ItemDataCtrl 		notify_data_ctrl, \
 				DELROBOT	tc.shared.linda.ItemDelRobot		notify_delrobot, \
 				STATUS 		tc.shared.linda.ItemStatus 			notify_status,
-				PALLETCTRL	tcapps.tcsim.simul.ItemPallet				notify_pallet
+				PALLETCTRL	tcapps.tcsimulator.simulator.ItemPallet				notify_pallet

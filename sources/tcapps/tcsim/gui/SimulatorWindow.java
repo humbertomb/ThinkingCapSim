@@ -48,13 +48,13 @@ import tc.shared.world.World;
 import tc.vrobot.RobotData;
 import tc.vrobot.RobotDesc;
 import tcapps.tcsim.ExecArchMultiPallet;
+import tc.ExecArch;
 import tcapps.tcsim.ExecArchReplay;
-import tcapps.tcsim.ExecArchSim;
 import tcapps.tcsim.gui.visualization.Model3D;
 import tcapps.tcsim.gui.visualization.Scene3D;
-import tcapps.tcsim.simul.Simulator;
-import tcapps.tcsim.simul.SimulatorDesc;
-import tcapps.tcsim.simul.objects.SimObject;
+import tcapps.tcsimulator.simulator.Simulator;
+import tcapps.tcsimulator.simulator.SimulatorDesc;
+import tcapps.tcsimulator.simulator.objects.SimObject;
 import wucore.utils.geom.Point3;
 
 import com.sun.j3d.utils.universe.SimpleUniverse;
@@ -701,7 +701,7 @@ public class SimulatorWindow extends JFrame
 		
 		if (filename != null)
 		{
-			new ExecArchSim (robotTF.getText(), filename, pdefs, simulator).start ();
+			new ExecArch (robotTF.getText(), filename, pdefs, simulator).start ();
 			worldTF.setText (simulator.getWorldName());
 		}
 		if(!man_pallet){

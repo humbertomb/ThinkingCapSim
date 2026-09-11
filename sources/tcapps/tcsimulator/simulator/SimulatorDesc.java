@@ -3,7 +3,7 @@
  * (c) 2003 Bernardo Cánovas Segura (added 3D representation attributes)
  */
  
-package tcapps.tcsim.simul;
+package tcapps.tcsimulator.simulator;
 
 import java.util.*;
 

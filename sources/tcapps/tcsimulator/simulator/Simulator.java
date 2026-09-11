@@ -5,7 +5,7 @@
  * (c) 2004 Humberto Martinez
  */
 
-package tcapps.tcsim.simul;
+package tcapps.tcsimulator.simulator;
 
 import java.util.Enumeration;
 import java.util.Random;
@@ -19,10 +19,10 @@ import tc.vrobot.SensorPos;
 import tc.vrobot.TrackerData;
 import tc.vrobot.models.TricycleDrive;
 import tcapps.tcsim.gui.SimulatorWindow;
-import tcapps.tcsim.simul.objects.SimCargo;
-import tcapps.tcsim.simul.objects.SimMultiCargo;
-import tcapps.tcsim.simul.objects.SimObject;
-import tcapps.tcsim.simul.objects.SimScene;
+import tcapps.tcsimulator.simulator.objects.SimCargo;
+import tcapps.tcsimulator.simulator.objects.SimMultiCargo;
+import tcapps.tcsimulator.simulator.objects.SimObject;
+import tcapps.tcsimulator.simulator.objects.SimScene;
 import devices.pos.Position;
 import devices.pos.UTMPos;
 import wucore.utils.geom.Line2;

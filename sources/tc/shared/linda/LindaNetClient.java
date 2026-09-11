@@ -18,7 +18,7 @@ public class LindaNetClient implements Linda, LindaNetProcessor
 	protected Hashtable<String, LindaListener>	listeners 	= null;	
 	protected LindaNet				lclient;
 	protected Tuple					ltuple;
-	protected Integer				lock;
+	protected Object				lock;
 	protected boolean				answered;
 	
 	protected String				sourceid;				// Source identification for outgoing messages
