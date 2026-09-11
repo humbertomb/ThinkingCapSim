@@ -1,4 +1,5 @@
 {
+  "world": "conf/maps/dulzem3d.world",
   "globalLinda": {
     "address": "localhost",
     "port": 5500,

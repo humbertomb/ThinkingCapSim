@@ -123,6 +123,7 @@ public class DeployArch
 
 	/* ------------------------------------------------------------------ */
 
+	public String				world;											// world map used by the simulation (all robots); see getWorldFile
 	public Linda				globalLinda;									// null when there is none
 	public List<Robot>			robots		= new ArrayList<Robot> ();
 
@@ -174,6 +175,7 @@ public class DeployArch
 	public DeployArch copy ()
 	{
 		DeployArch	d = new DeployArch ();
+		d.world			= world;
 		d.globalLinda	= (globalLinda == null) ? null : globalLinda.copy ();
 		for (Robot r : robots)		d.robots.add (r.copy ());
 		d.file			= file;
@@ -184,6 +186,7 @@ public class DeployArch
 	/** Takes the content of another deployment (after editing a copy), keeping the file. */
 	public void replaceWith (DeployArch d)
 	{
+		world		= d.world;
 		globalLinda	= (d.globalLinda == null) ? null : d.globalLinda.copy ();
 		robots.clear ();
 		for (Robot r : d.robots)	robots.add (r.copy ());
@@ -193,6 +196,7 @@ public class DeployArch
 	protected void normalise ()
 	{
 		if (robots == null)		robots = new ArrayList<Robot> ();
+		if ((world != null) && (world.trim ().length () == 0))		world = null;
 		for (Robot r : robots)
 		{
 			if (r.name == null)			r.name = DEFAULT_ROBOT;
@@ -210,23 +214,34 @@ public class DeployArch
 				if (m.events == null)		m.events = new ArrayList<Event> ();
 			}
 		}
+		getWorldFile ();														// adopt the first robot's world when the file has none
 	}
 
 	public File		getFile ()						{ return file; }
 	public boolean	isModified ()					{ return (original == null) || !original.equals (toJson ()); }
 
-	/** World map of the virtual robot of the first robot (property WORLD), or null. */
+	/**
+	 * World map of the deployment (attribute <code>world</code>), or null.
+	 * When unset, the WORLD of the first robot's virtual robot is adopted and
+	 * copied into the attribute.
+	 */
 	public String getWorldFile ()
 	{
-		if (robots.isEmpty ())		return null;
-		String	w = robots.get (0).virtualRobot.get ("WORLD");
-		return ((w == null) || (w.trim ().length () == 0)) ? null : w.trim ();
+		if ((world == null) || (world.trim ().length () == 0))
+		{
+			world = null;
+			if (!robots.isEmpty ())
+			{
+				String	w = robots.get (0).virtualRobot.get ("WORLD");
+				if ((w != null) && (w.trim ().length () > 0))		world = w.trim ();
+			}
+		}
+		return world;
 	}
 
 	public void setWorldFile (String path)
 	{
-		if (robots.isEmpty ())		robots.add (new Robot (DEFAULT_ROBOT));
-		robots.get (0).virtualRobot.set ("WORLD", path);
+		world = ((path == null) || (path.trim ().length () == 0)) ? null : path.trim ();
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -299,6 +314,8 @@ public class DeployArch
 		}
 		p.setProperty ("VROBOT", "ROB");
 		writeModule (p, r.virtualRobot, "ROB");
+		String	w = getWorldFile ();											// the deployment world applies to every robot
+		if (w != null)		p.setProperty ("ROBWORLD", w);
 		return p;
 	}
 
@@ -372,6 +389,7 @@ public class DeployArch
 			if (!owned)		r.properties.put (k, props.getProperty (k).trim ());
 		}
 		d.robots.add (r);
+		d.getWorldFile ();													// adopt the robot's world as the deployment world
 		d.original	= null;												// imported: counts as modified until saved
 		return d;
 	}
