@@ -42,6 +42,7 @@ public class ToolIcon implements Icon
 	static public final int		VIEW3D		= 27;
 	static public final int		ICON		= 28;
 	static public final int		NEW_ICON	= 29;
+	static public final int		WORLD		= 30;
 
 	protected int				type;
 	protected int				size;
@@ -184,6 +185,19 @@ public class ToolIcon implements Icon
 			g.setColor (new Color (30, 140, 40));
 			g.setStroke (new BasicStroke (2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 			g.drawLine (16, 3, 16, 11);	g.drawLine (12, 7, 20, 7);
+			break;
+		case WORLD:			// folded map with a route on it
+			g.setColor (new Color (255, 248, 220));
+			g.fillPolygon (new int[] { 2, 8, 14, 20, 20, 14, 8, 2 }, new int[] { 5, 3, 5, 3, 17, 19, 17, 19 }, 8);
+			g.setColor (fg);
+			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawPolygon (new int[] { 2, 8, 14, 20, 20, 14, 8, 2 }, new int[] { 5, 3, 5, 3, 17, 19, 17, 19 }, 8);
+			g.setStroke (new BasicStroke (1f));
+			g.drawLine (8, 3, 8, 17);	g.drawLine (14, 5, 14, 19);
+			g.setColor (new Color (200, 40, 40));
+			g.setStroke (new BasicStroke (1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawLine (4, 14, 8, 9);	g.drawLine (8, 9, 13, 13);	g.drawLine (13, 13, 18, 7);
+			g.fillOval (16, 5, 4, 4);
 			break;
 		case VIEW3D:		// isometric cube
 			g.setColor (new Color (120, 160, 220, 110));

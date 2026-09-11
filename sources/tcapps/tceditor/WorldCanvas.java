@@ -137,6 +137,7 @@ public class WorldCanvas extends JPanel
 	protected double				curX, curY;					// current world coords of the mouse
 	protected List<Point2>			polyPoints	= new ArrayList<Point2> ();	// points of the area being drawn
 	protected boolean				spaceDown	= false;
+	protected boolean				editable	= true;		// false: viewer mode (select, pan and zoom only)
 	protected int					iconVertex	= -1;		// icon tool: vertex being dragged / last clicked
 	protected int					iconSegment	= -1;		// icon tool: segment under the last click
 
@@ -202,8 +203,22 @@ public class WorldCanvas extends JPanel
 		showUsage ();
 	}
 
+	/**
+	 * Viewer mode: when not editable the canvas only allows selecting, panning
+	 * and zooming (no creation tools, dragging, deleting or nudging).
+	 */
+	public void setEditable (boolean editable)
+	{
+		this.editable = editable;
+		if (!editable && (tool != T_SELECT) && (tool != T_PAN))		setTool (T_SELECT);
+		showUsage ();
+	}
+
+	public boolean isEditable ()		{ return editable; }
+
 	public void setTool (int tool)
 	{
+		if (!editable && (tool != T_SELECT) && (tool != T_PAN))		tool = T_SELECT;
 		this.tool = tool;
 		polyPoints.clear ();
 		iconVertex	= -1;
@@ -274,7 +289,7 @@ public class WorldCanvas extends JPanel
 	/** Deletes the current selection. */
 	public void deleteSelection ()
 	{
-		if (selection == null)			return;
+		if ((selection == null) || !editable)		return;
 		if ((selection.kind == WorldItem.ICON) && (WorldEdit.iconUsers (world, world.icons ().at (selection.index).label) > 0))
 		{
 			javax.swing.JOptionPane.showMessageDialog (this, "Icon '" + world.icons ().at (selection.index).label + "' is used by "
@@ -294,7 +309,7 @@ public class WorldCanvas extends JPanel
 	/** Moves the selection by (dx, dy) grid steps (keyboard nudging). */
 	public void nudgeSelection (int dx, int dy)
 	{
-		if (selection == null)			return;
+		if ((selection == null) || !editable)		return;
 		double	step = snapGrid ? gridStep : gridStep / 10.0;
 		WorldEdit.translate (world, selection, dx * step, dy * step);
 		changed ("Move " + WorldItem.NAMES[selection.kind].toLowerCase ());
@@ -366,7 +381,7 @@ public class WorldCanvas extends JPanel
 		case T_SELECT:
 		{
 			// handle of the current selection?
-			if (selection != null)
+			if ((selection != null) && editable)
 			{
 				Point2[]	hs = WorldEdit.handles (world, selection);
 				int			best = -1;
@@ -389,7 +404,7 @@ public class WorldCanvas extends JPanel
 					&& (WorldEdit.distance (world, selection, curX, curY) < tol))
 				hit = selection;
 			setSelection (hit);
-			if (hit != null)
+			if ((hit != null) && editable)
 			{
 				dragMode = 1;
 				anchorX	= curX;	anchorY = curY;			// unsnapped: movement is relative
@@ -567,7 +582,7 @@ public class WorldCanvas extends JPanel
 			if (SwingUtilities.isRightMouseButton (e))		onIconRightClick (e);
 			return;
 		}
-		if ((tool == T_SELECT) && (e.getClickCount () == 2) && SwingUtilities.isLeftMouseButton (e)
+		if (editable && (tool == T_SELECT) && (e.getClickCount () == 2) && SwingUtilities.isLeftMouseButton (e)
 				&& (selection != null) && (selection.kind == WorldItem.OBJECT))
 		{
 			// double click on an object: edit its icon
@@ -645,6 +660,7 @@ public class WorldCanvas extends JPanel
 		switch (tool)
 		{
 		case T_SELECT:
+			if (!editable)				return "Click an element to select it. Wheel: zoom, middle button / Space+drag: pan, Esc: deselect";
 			if (selection == null)		return "Click an element to select it; drag to move it. Double-click an object to edit its icon. Wheel: zoom, middle button / Space+drag: pan";
 			return "Drag the element or its handles (round handle: orientation). Del: delete, arrows: nudge, Esc: deselect";
 		case T_PAN:			return "Drag to pan the view. Wheel: zoom";

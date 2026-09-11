@@ -21,7 +21,6 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
-import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
@@ -90,8 +89,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 	protected DefaultMutableTreeNode	treeRoot;
 	protected JTable				propTable;
 	protected PropertyModel			propModel;
-	protected JLabel				statusLabel;			// cursor info (left)
-	protected JLabel				usageLabel;				// how to use the current tool (right)
+	protected StatusBar				statusBar;
 	protected JLabel				selLabel;
 	protected JToggleButton[]		toolButtons	= new JToggleButton[14];
 	protected Action				undoAction, redoAction, deleteAction;
@@ -100,9 +98,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 	protected boolean				syncing		= false;	// avoids selection feedback loops
 
 	/* 3D view */
-	protected WorldView3DWindow		view3d;
-	protected JToggleButton			view3dButton;
-	protected JCheckBoxMenuItem		view3dItem;
+	protected View3DController		view3d;
 
 	/* ------------------------------------------------------------------ */
 
@@ -226,14 +222,8 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		center.setResizeWeight (1.0);
 
 		// --- status bar
-		statusLabel	= new JLabel (" ");
-		statusLabel.setBorder (BorderFactory.createEmptyBorder (3, 8, 3, 8));
-		usageLabel	= new JLabel (" ", JLabel.RIGHT);
-		usageLabel.setBorder (BorderFactory.createEmptyBorder (3, 8, 3, 8));
-		usageLabel.setForeground (new java.awt.Color (70, 70, 70));
-		JPanel			statusBar = new JPanel (new BorderLayout ());
-		statusBar.add (statusLabel, BorderLayout.WEST);
-		statusBar.add (usageLabel, BorderLayout.CENTER);
+		statusBar	= new StatusBar ();
+		view3d		= new View3DController (this, canvas);
 
 		getContentPane ().setLayout (new BorderLayout ());
 		getContentPane ().add (buildToolBar (), BorderLayout.WEST);
@@ -261,7 +251,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 			public void actionPerformed (ActionEvent e)		{ canvas.newIcon (); }
 		};
 		newIcon.putValue (Action.SHORT_DESCRIPTION, "New icon  [Ctrl+I]");
-		tb.add (flatButton (newIcon));
+		tb.add (ToolButtons.flatButton (newIcon));
 		getRootPane ().getInputMap (JComponent.WHEN_IN_FOCUSED_WINDOW).put (KeyStroke.getKeyStroke (KeyEvent.VK_I, Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ()), "newIcon");
 		getRootPane ().getActionMap ().put ("newIcon", newIcon);
 		addTool (tb, group, WorldCanvas.T_ICON,		ToolIcon.ICON,		"Edit icon",			"I");
@@ -283,109 +273,23 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 			public void actionPerformed (ActionEvent e)		{ canvas.deleteSelection (); }
 		};
 		deleteAction.putValue (Action.SHORT_DESCRIPTION, "Delete  [Del]");
-		tb.add (flatButton (deleteAction));
+		tb.add (ToolButtons.flatButton (deleteAction));
 
-		Action	fit = new AbstractAction ("Zoom to fit", new ToolIcon (ToolIcon.ZOOM_FIT))
-		{
-			public void actionPerformed (ActionEvent e)		{ canvas.zoomToFit (); }
-		};
-		fit.putValue (Action.SHORT_DESCRIPTION, "Zoom to fit  [Ctrl+0]");
-		tb.add (flatButton (fit));
-
-		Action	zin = new AbstractAction ("Zoom in", new ToolIcon (ToolIcon.ZOOM_IN))
-		{
-			public void actionPerformed (ActionEvent e)		{ canvas.zoom (1.25); }
-		};
-		zin.putValue (Action.SHORT_DESCRIPTION, "Zoom in");
-		tb.add (flatButton (zin));
-
-		Action	zout = new AbstractAction ("Zoom out", new ToolIcon (ToolIcon.ZOOM_OUT))
-		{
-			public void actionPerformed (ActionEvent e)		{ canvas.zoom (0.8); }
-		};
-		zout.putValue (Action.SHORT_DESCRIPTION, "Zoom out");
-		tb.add (flatButton (zout));
+		tb.add (ToolButtons.flatButton (ToolButtons.zoomFit (canvas)));
+		tb.add (ToolButtons.flatButton (ToolButtons.zoomIn (canvas)));
+		tb.add (ToolButtons.flatButton (ToolButtons.zoomOut (canvas)));
 
 		// --- 3D view toggle, at the bottom of the toolbar
 		tb.add (Box.createVerticalGlue ());
 		tb.addSeparator ();
-		view3dButton = new JToggleButton (new ToolIcon (ToolIcon.VIEW3D));
-		view3dButton.setToolTipText ("3D view  [Ctrl+3]");
-		view3dButton.setFocusable (false);
-		view3dButton.addActionListener (new java.awt.event.ActionListener ()
-		{
-			public void actionPerformed (ActionEvent e)		{ show3D (view3dButton.isSelected ()); }
-		});
-		tb.add (view3dButton);
+		tb.add (view3d.button ());
 
 		toolButtons[WorldCanvas.T_SELECT].setSelected (true);
 		return tb;
 	}
 
-	/* ------------------------------------------------------------------ */
-	/* 3D view                                                             */
-	/* ------------------------------------------------------------------ */
-
-	/** Shows or hides the Java 3D view window, creating it on first use. */
-	public void show3D (boolean show)
-	{
-		if (show && (view3d == null))
-		{
-			try
-			{
-				view3d = new WorldView3DWindow (world, new Runnable ()
-				{
-					public void run ()		{ set3DToggles (false); }
-				});
-				view3d.setSize (900, 700);
-				// place it beside the editor when there is room
-				java.awt.Rectangle	r = getBounds ();
-				java.awt.Rectangle	scr = getGraphicsConfiguration ().getBounds ();
-				if (r.x + r.width + 900 <= scr.x + scr.width)	view3d.setLocation (r.x + r.width, r.y);
-				else											view3d.setLocation (r.x + 60, r.y + 60);
-			} catch (Throwable e)
-			{
-				e.printStackTrace ();
-				view3d = null;
-				set3DToggles (false);
-				JOptionPane.showMessageDialog (this, "The 3D view cannot be created. Check that Java 3D and JOGL (jarlibs/jsdn_java3d.jar, jarlibs/jogl/*.jar) are in the classpath.\n\n" + e,
-						TITLE, JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-		}
-		if (view3d == null)				return;
-		if (show)
-		{
-			view3d.setWorld (world);
-			view3d.setSelection (canvas.getSelection ());
-		}
-		view3d.setVisible (show);
-		set3DToggles (show);
-	}
-
-	private void set3DToggles (boolean on)
-	{
-		view3dButton.setSelected (on);
-		if (view3dItem != null)		view3dItem.setSelected (on);
-	}
-
-	private void sync3D ()
-	{
-		if ((view3d != null) && view3d.isVisible ())		view3d.setWorld (world);
-	}
-
-	/** Action button with the same flat look as the tool toggles (no push-button frame, macOS included). */
-	private static JButton flatButton (Action action)
-	{
-		JButton	b = new JButton (action);
-		b.setHideActionText (true);
-		b.setFocusable (false);
-		b.setBorderPainted (false);
-		b.setContentAreaFilled (false);
-		b.setOpaque (false);
-		b.putClientProperty ("JButton.buttonType", "toolbar");
-		return b;
-	}
+	/** Shows or hides the Java 3D view window. */
+	public void show3D (boolean show)		{ view3d.show (show); }
 
 	private void addTool (JToolBar tb, ButtonGroup group, final int tool, int icon, String tip, String key)
 	{
@@ -546,13 +450,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		}));
 		mview.add (mlayers);
 		mview.addSeparator ();
-		view3dItem = new JCheckBoxMenuItem ("3D View", false);
-		view3dItem.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_3, mask));
-		view3dItem.addActionListener (new java.awt.event.ActionListener ()
-		{
-			public void actionPerformed (ActionEvent e)		{ show3D (view3dItem.isSelected ()); }
-		});
-		mview.add (view3dItem);
+		mview.add (view3d.menuItem (mask));
 		mb.add (mview);
 
 		// --- Help
@@ -628,7 +526,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		boolean	hasIcon = (item != null) && ((item.kind == WorldItem.OBJECT) || (item.kind == WorldItem.ICON));
 		toolButtons[WorldCanvas.T_ICON].setEnabled (hasIcon);
 		if (!hasIcon && (canvas.getTool () == WorldCanvas.T_ICON))		selectTool (WorldCanvas.T_SELECT);
-		if (view3d != null)		view3d.setSelection (item);
+		view3d.selectionChanged (item);
 		if (!syncing)
 		{
 			syncing = true;
@@ -643,17 +541,17 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		refreshTree ();
 		propModel.refresh ();
 		selectionChanged (canvas.getSelection ());
-		sync3D ();
+		view3d.worldChanged ();
 	}
 
 	public void worldPreview ()
 	{
-		if ((view3d != null) && view3d.isVisible ())		view3d.worldChanged ();
+		view3d.worldPreview ();
 	}
 
 	public void statusChanged (String text)
 	{
-		statusLabel.setText ((text.length () == 0) ? " " : text);
+		statusBar.setStatus (text);
 	}
 
 	public void toolFinished ()
@@ -663,7 +561,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 
 	public void usageChanged (String text)
 	{
-		usageLabel.setText ((text.length () == 0) ? " " : text);
+		statusBar.setUsage (text);
 	}
 
 	public void toolRequested (int tool)
@@ -721,7 +619,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		canvas.setSelection (sel);		// kept if it still exists
 		updateTitle ();
 		updateUndoActions ();
-		sync3D ();
+		view3d.worldChanged ();
 	}
 
 	private void updateUndoActions ()
@@ -794,7 +692,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		refreshAll ();
 		updateTitle ();
 		updateUndoActions ();
-		sync3D ();
+		view3d.worldChanged ();
 		SwingUtilities.invokeLater (new Runnable ()
 		{
 			public void run ()		{ canvas.zoomToFit (); }
@@ -880,7 +778,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 	public void quit ()
 	{
 		if (!confirmDiscard ())			return;
-		if (view3d != null)				view3d.dispose ();
+		view3d.dispose ();
 		dispose ();
 		System.exit (0);
 	}

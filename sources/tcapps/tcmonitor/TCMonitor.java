@@ -23,18 +23,18 @@ public class TCMonitor extends JFrame implements GUIApplication
 
 	// Global & Common structures
 	protected Monitor	 				monitor				= null;
-	protected Properties					confProps 			= new Properties();
+	protected Properties				confProps 			= new Properties();
 	protected MultiRobotPanelInterf		multiPanel			= null;
 	protected boolean					ready				= false;
 
 	// GUI components
 	protected JMenuBar 					mainMB 				= new JMenuBar();
-	protected JMenu 						monitorMI 			= new JMenu();
-	protected JMenu 						windowMI				= new JMenu();
+	protected JMenu 					monitorMI 			= new JMenu();
+	protected JMenu 					windowMI			= new JMenu();
 
-	protected JMenuItem 					newThreadsMI 		= new JMenuItem();
+	protected JMenuItem 				newThreadsMI 		= new JMenuItem();
 	protected JMenu						changePanelMI		= new JMenu();
-	protected JMenu 						applicationsMI 		= new JMenu();
+	protected JMenu 					applicationsMI 		= new JMenu();
 	protected JTabbedPane 				robotsTP 			= new JTabbedPane(SwingConstants.TOP);
 
 	public TCMonitor() 
