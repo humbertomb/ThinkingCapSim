@@ -302,6 +302,21 @@ public class ExecArch extends Thread
 		interrupt ();
 	}
 
+	/**
+	 * Sends a task sequence (plan) to the robot through the local Linda space,
+	 * as the monitor's Task panel does. Returns false when there is no local space.
+	 */
+	public boolean sendPlan (tclib.planning.sequence.Sequence seq)
+	{
+		if (linda_loc == null)			return false;
+		ItemPlan	item = new ItemPlan ();
+		item.set (seq, System.currentTimeMillis ());
+		Tuple		tuple = new Tuple (Tuple.PLAN, item);
+		tuple.space	= robotid;
+		linda_loc.write (tuple);
+		return true;
+	}
+
 	/** Local Linda space of the running architecture (null in remote modes or before start). */
 	public Linda getLocalLinda ()		{ return linda_loc; }
 

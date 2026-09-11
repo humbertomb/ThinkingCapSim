@@ -48,6 +48,7 @@ public class ToolIcon implements Icon
 	static public final int		RUN			= 33;
 	static public final int		STEP		= 34;
 	static public final int		STOP		= 35;
+	static public final int		TASKS		= 36;
 
 	protected int				type;
 	protected int				size;
@@ -216,6 +217,18 @@ public class ToolIcon implements Icon
 		case STOP:			// square
 			g.setColor (new Color (200, 40, 40));
 			g.fillRoundRect (5, 5, 12, 12, 2, 2);
+			break;
+		case TASKS:			// check list
+			g.setColor (new Color (250, 250, 250));
+			g.fillRoundRect (3, 2, 16, 18, 3, 3);
+			g.setColor (fg);
+			g.setStroke (new BasicStroke (1.2f));
+			g.drawRoundRect (3, 2, 16, 18, 3, 3);
+			g.setStroke (new BasicStroke (1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.setColor (new Color (30, 140, 40));
+			for (int yy = 6; yy <= 16; yy += 5)		{ g.drawLine (5, yy + 1, 7, yy + 3); g.drawLine (7, yy + 3, 10, yy - 1); }
+			g.setColor (fg);
+			for (int yy = 6; yy <= 16; yy += 5)		g.drawLine (12, yy + 1, 17, yy + 1);
 			break;
 		case FOLDER:		// classic folder
 			g.setColor (new Color (255, 210, 110));

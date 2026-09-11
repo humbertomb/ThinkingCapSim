@@ -49,6 +49,7 @@ import tcapps.tcsimulator.simulator.Simulator;
 import tcapps.tcsimulator.simulator.SimulatorDesc;
 import tcapps.tcsimulator.simulator.SimulatorListener;
 import tcapps.tcsimulator.simulator.objects.SimObject;
+import tclib.planning.sequence.Sequence;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point3;
 
@@ -77,6 +78,7 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 	protected ExecArch				running;				// Architecture being executed (null when none)
 	protected Simulator				simulator;				// Simulation engine of the running architecture
 	protected List<RobotView>		robots	= new ArrayList<RobotView> ();		// simulated robots being displayed
+	protected Sequence				lastTasks;				// last task set edited (shown again when the dialog reopens)
 
 	/** A simulated robot as seen by the window: description, last data and its index in the 3D view. */
 	protected static class RobotView
@@ -139,6 +141,7 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 
 		tb.add (ToolButtons.flatButton (openArchAction ()));
 		tb.add (ToolButtons.flatButton (openWorldAction ()));
+		tb.add (ToolButtons.flatButton (tasksAction ()));
 		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomFit (canvas)));
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomIn (canvas)));
@@ -169,6 +172,11 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 	private Action openWorldAction ()
 	{
 		return ToolButtons.action ("Change World...", ToolIcon.WORLD, "Change the world of the architecture  [Ctrl+W]", new Runnable () { public void run () { loadWorld (); } });
+	}
+
+	private Action tasksAction ()
+	{
+		return ToolButtons.action ("Tasks...", ToolIcon.TASKS, "Tasks: edit and send a task set to the robot  [Ctrl+T]", new Runnable () { public void run () { editTasks (); } });
 	}
 
 	private JMenuBar buildMenuBar ()
@@ -203,6 +211,10 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 		mexec.add (accel (new JMenuItem (startAction), KeyEvent.VK_F6, 0));
 		mexec.add (accel (new JMenuItem (stepAction), KeyEvent.VK_F7, 0));
 		mexec.add (accel (new JMenuItem (stopAction), KeyEvent.VK_F8, 0));
+		mexec.addSeparator ();
+		JMenuItem	tasks = new JMenuItem (tasksAction ());
+		tasks.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_T, mask));
+		mexec.add (tasks);
 		mexec.addSeparator ();
 		mexec.add (item ("Terminate", KeyEvent.VK_F5, KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { terminate (); } }));
 		mb.add (mexec);
@@ -382,6 +394,24 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 		if (running == null)			return;
 		if (!running.sendCommand (cmd))
 			JOptionPane.showMessageDialog (this, "The architecture has no local Linda space to send commands to.", TITLE, JOptionPane.WARNING_MESSAGE);
+	}
+
+	/** Opens the task set editor and sends the resulting plan to the running robot. */
+	public void editTasks ()
+	{
+		TaskDialog	dlg = new TaskDialog (this, TaskDialog.placesOf (world), lastTasks);
+		Sequence	seq = dlg.showDialog ();
+		if (seq == null)				return;
+		lastTasks = seq;
+		if (running == null)
+		{
+			JOptionPane.showMessageDialog (this, "Execute the architecture before sending tasks.", TITLE, JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+		if (!running.sendPlan (seq))
+			JOptionPane.showMessageDialog (this, "The architecture has no local Linda space to send the plan to.", TITLE, JOptionPane.WARNING_MESSAGE);
+		else
+			statusBar.setStatus ("Plan sent to " + robotId () + ": " + seq);
 	}
 
 	private void updateExecutionState ()
