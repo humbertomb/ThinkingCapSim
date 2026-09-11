@@ -57,6 +57,7 @@ public class ArchCanvas extends JPanel
 	static final int				ROW_DY		= 66;						// module row pitch
 	static final int				REGION_HW	= 290;						// robot region half width
 	static final int				REGION_PAD	= 22;
+	static final int				LABEL_DY	= 20;						// baseline of the robot name below the region top
 	static final int				REGION_GAP	= 40;						// between robots
 
 	// --- colours
@@ -291,7 +292,7 @@ public class ArchCanvas extends JPanel
 			// bounds of the robot name (top-left corner of the region), for hit testing and in-place editing
 			FontMetrics	fm = getFontMetrics (getFont ().deriveFont (Font.BOLD, 12f));
 			String		name = model.labelOf (robot);
-			int			lx = region.x + 14, ly = region.y + BOX_H / 2 + 22;
+			int			lx = region.x + 14, ly = region.y + LABEL_DY;
 			robotLabels.put (r, new Rectangle (lx - 4, ly - fm.getAscent () - 2, fm.stringWidth (name) + 8, fm.getHeight () + 4));
 			bottom = Math.max (bottom, region.y + region.height);
 		}
@@ -340,7 +341,7 @@ public class ArchCanvas extends JPanel
 			g.drawRoundRect (region.x, region.y, region.width, region.height, 18, 18);
 			g.setStroke (old);
 			g.setFont (getFont ().deriveFont (Font.BOLD, 12f));
-			if (!robot.equals (editing))		g.drawString (model.labelOf (robot), region.x + 14, region.y + BOX_H / 2 + 22);
+			if (!robot.equals (editing))		g.drawString (model.labelOf (robot), region.x + 14, region.y + LABEL_DY);
 		}
 
 		// --- arrows (below the blocks)
