@@ -63,7 +63,7 @@ import wucore.utils.geom.Point3;
  * {@link WorldCanvas} and the 3D view a {@link View3DController}.
  * Functionality will be added incrementally.
  */
-public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, SimulatorListener, WorldCanvas.Overlay
+public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, SimulatorListener, WorldCanvas.Overlay
 {
 	private static final long		serialVersionUID = 1L;
 
@@ -97,7 +97,7 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 	protected View3DController		view3d;
 	protected Action				executeAction, startAction, stepAction, stopAction;
 
-	public TCSimulatorWindow ()
+	public SimulatorWindow ()
 	{
 		super (TITLE);
 		arch	= ExecArch.create ();
@@ -188,7 +188,7 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 		return tb;
 	}
 
-	static public final double		BOTTOM_FRACTION	= 0.20;		// initial share of the Robots/Events panel
+	static public final double		BOTTOM_FRACTION	= 0.22;		// initial share of the Robots/Events panel
 
 	/** Puts the split divider so that the Robots/Events panel takes {@link #BOTTOM_FRACTION} of the height. */
 	public void resetDivider ()
@@ -691,7 +691,7 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener, S
 		{
 			public void run ()
 			{
-				TCSimulatorWindow	win = new TCSimulatorWindow ();
+				SimulatorWindow	win = new SimulatorWindow ();
 				win.setVisible (true);
 				if (name != null)		win.loadArch (new File (name));
 				else					win.canvas.zoomToFit ();
