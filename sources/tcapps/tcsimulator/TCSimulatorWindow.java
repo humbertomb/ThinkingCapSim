@@ -27,6 +27,7 @@ import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tc.ExecArch;
+import tc.shared.linda.ItemDebug;
 import tc.shared.world.World;
 import tcapps.tceditor.StatusBar;
 import tcapps.tceditor.ToolButtons;
@@ -58,9 +59,12 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 	protected File					worldFile;
 	protected boolean				worldModified;			// world changed since the architecture was loaded/saved
 
+	protected ExecArch				running;				// Architecture being executed (null when none)
+
 	protected WorldCanvas			canvas;
 	protected StatusBar				statusBar;
 	protected View3DController		view3d;
+	protected Action				executeAction, startAction, stepAction, stopAction;
 
 	public TCSimulatorWindow ()
 	{
@@ -112,6 +116,16 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomFit (canvas)));
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomIn (canvas)));
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomOut (canvas)));
+		tb.addSeparator ();
+		executeAction	= ToolButtons.action ("Execute", ToolIcon.EXECUTE, "Execute the architecture (restarts it if running)  [F5]", new Runnable () { public void run () { execute (); } });
+		startAction		= ToolButtons.action ("Start", ToolIcon.RUN, "Start  [F6]", new Runnable () { public void run () { command (ItemDebug.START); } });
+		stepAction		= ToolButtons.action ("Step", ToolIcon.STEP, "Step  [F7]", new Runnable () { public void run () { command (ItemDebug.STEP); } });
+		stopAction		= ToolButtons.action ("Stop", ToolIcon.STOP, "Stop  [F8]", new Runnable () { public void run () { command (ItemDebug.STOP); } });
+		tb.add (ToolButtons.flatButton (executeAction));
+		tb.add (ToolButtons.flatButton (startAction));
+		tb.add (ToolButtons.flatButton (stepAction));
+		tb.add (ToolButtons.flatButton (stopAction));
+		updateExecutionState ();
 
 		// --- 3D view toggle, at the bottom of the toolbar
 		tb.add (Box.createVerticalGlue ());
@@ -156,6 +170,16 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 		mfile.add (quit);
 		mb.add (mfile);
 
+		JMenu		mexec = new JMenu ("Execution");
+		mexec.add (accel (new JMenuItem (executeAction), KeyEvent.VK_F5, 0));
+		mexec.addSeparator ();
+		mexec.add (accel (new JMenuItem (startAction), KeyEvent.VK_F6, 0));
+		mexec.add (accel (new JMenuItem (stepAction), KeyEvent.VK_F7, 0));
+		mexec.add (accel (new JMenuItem (stopAction), KeyEvent.VK_F8, 0));
+		mexec.addSeparator ();
+		mexec.add (item ("Terminate", KeyEvent.VK_F5, KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { terminate (); } }));
+		mb.add (mexec);
+
 		JMenu		mview = new JMenu ("View");
 		JMenuItem	fit = new JMenuItem (ToolButtons.zoomFit (canvas));
 		fit.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_0, mask));
@@ -167,6 +191,12 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 		mb.add (mview);
 
 		return mb;
+	}
+
+	private JMenuItem accel (JMenuItem mi, int key, int mask)
+	{
+		mi.setAccelerator (KeyStroke.getKeyStroke (key, mask));
+		return mi;
 	}
 
 	private JMenuItem item (String name, int key, int mask, final Runnable body)
@@ -275,6 +305,56 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 	}
 
 	/* ------------------------------------------------------------------ */
+	/* Execution                                                           */
+	/* ------------------------------------------------------------------ */
+
+	/** Identifier of the simulated robot: architecture file name in upper case plus "-1" (e.g. IFORK-1). */
+	protected String robotId ()
+	{
+		File	f = arch.getFile ();
+		String	n = (f != null) ? f.getName () : "robot";
+		int		dot = n.lastIndexOf ('.');
+		if (dot > 0)		n = n.substring (0, dot);
+		return n.toUpperCase () + "-1";
+	}
+
+	/** Executes the current architecture; a running execution is terminated first. */
+	public void execute ()
+	{
+		terminate ();
+		running	= arch.runner (robotId ());
+		running.start ();
+		statusBar.setStatus ("Executing " + robotId () + " (" + ((arch.getFile () != null) ? arch.getFile ().getName () : "untitled") + ")");
+		updateExecutionState ();
+	}
+
+	/** Stops the modules and Linda servers of the running architecture. */
+	public void terminate ()
+	{
+		if (running == null)			return;
+		running.terminate ();
+		running	= null;
+		statusBar.setStatus ("Execution terminated");
+		updateExecutionState ();
+	}
+
+	/** Sends a start/step/stop command to the modules (as the monitor's execution control). */
+	public void command (int cmd)
+	{
+		if (running == null)			return;
+		if (!running.sendCommand (cmd))
+			JOptionPane.showMessageDialog (this, "The architecture has no local Linda space to send commands to.", TITLE, JOptionPane.WARNING_MESSAGE);
+	}
+
+	private void updateExecutionState ()
+	{
+		boolean	on = (running != null);
+		startAction.setEnabled (on);
+		stepAction.setEnabled (on);
+		stopAction.setEnabled (on);
+	}
+
+	/* ------------------------------------------------------------------ */
 	/* Worlds                                                              */
 	/* ------------------------------------------------------------------ */
 
@@ -342,6 +422,7 @@ public class TCSimulatorWindow extends JFrame implements WorldCanvas.Listener
 	public void quit ()
 	{
 		if (!confirmDiscard ())			return;
+		terminate ();
 		view3d.dispose ();
 		dispose ();
 		System.exit (0);

@@ -31,6 +31,7 @@ public class ExecArch extends Thread
 		
 	// Additional execution variables
 	protected boolean			initialised	= false;
+	protected volatile boolean	running		= false;
 	protected Properties			props;
 	protected String				robotid;
 
@@ -202,9 +203,64 @@ public class ExecArch extends Thread
 		}
 		catch (Exception e) { e.printStackTrace (); }
 		
-		try { Thread.currentThread ().join (); } catch (Exception e) {  e.printStackTrace ();  }
+		running	= true;
+		try { Thread.currentThread ().join (); } catch (InterruptedException e) { /* terminate () */ }
+		running	= false;
 		
 		System.out.println ("Program finished.");
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Execution control (used by the simulator GUI)                        */
+	/* ------------------------------------------------------------------ */
+
+	/** True between the start of the modules and {@link #terminate}. */
+	public boolean isRunning ()			{ return running; }
+
+	/** The architecture is being executed (by a copy of this description). */
+	public ExecArch runner (String robotid)
+	{
+		return new ExecArch (robotid, (Properties) props.clone ());
+	}
+
+	/**
+	 * Stops every module thread and the Linda servers created by this
+	 * architecture and finishes the executor thread.
+	 */
+	public void terminate ()
+	{
+		int		i;
+
+		System.out.println ("ExecArch: terminating [" + robotid + "]");
+		try
+		{
+			if ((vrdesc != null) && (vrdesc.thread != null))		vrdesc.thread.stop ();
+			for (i = 0; i < num; i++)
+				if (thdesc[i].thread != null)						thdesc[i].thread.stop ();
+			if (linda_loc != null)									linda_loc.stop ();
+			if (linda_glob != null)									linda_glob.stop ();
+		} catch (Exception e) { e.printStackTrace (); }
+		running	= false;
+		interrupt ();
+	}
+
+	/** Local Linda space of the running architecture (null in remote modes or before start). */
+	public Linda getLocalLinda ()		{ return linda_loc; }
+
+	/**
+	 * Sends an execution command (ItemDebug.START, STOP, STEP, ...) to every
+	 * module of the robot through the local Linda space, as the monitor's
+	 * execution control does. Returns false when there is no local space.
+	 */
+	public boolean sendCommand (int command)
+	{
+		if (linda_loc == null)			return false;
+		ItemDebug	item = new ItemDebug ();
+		item.command (command, System.currentTimeMillis ());
+		Tuple		tuple = new Tuple (Tuple.DEBUG, item);
+		tuple.space	= robotid;
+		linda_loc.write (tuple);
+		return true;
 	}
 	
 	/* ------------------------------------------------------------------ */

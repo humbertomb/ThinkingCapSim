@@ -44,6 +44,10 @@ public class ToolIcon implements Icon
 	static public final int		NEW_ICON	= 29;
 	static public final int		WORLD		= 30;
 	static public final int		FOLDER		= 31;
+	static public final int		EXECUTE		= 32;
+	static public final int		RUN			= 33;
+	static public final int		STEP		= 34;
+	static public final int		STOP		= 35;
 
 	protected int				type;
 	protected int				size;
@@ -186,6 +190,32 @@ public class ToolIcon implements Icon
 			g.setColor (new Color (30, 140, 40));
 			g.setStroke (new BasicStroke (2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 			g.drawLine (16, 3, 16, 11);	g.drawLine (12, 7, 20, 7);
+			break;
+		case EXECUTE:		// gear-like wheel with a play sign (launch the architecture)
+			g.setColor (new Color (60, 60, 60));
+			g.setStroke (new BasicStroke (2.2f));
+			g.drawOval (4, 4, 14, 14);
+			for (int i = 0; i < 8; i++)
+			{
+				double	an = i * Math.PI / 4;
+				g.drawLine ((int) Math.round (11 + 7 * Math.cos (an)), (int) Math.round (11 + 7 * Math.sin (an)),
+							(int) Math.round (11 + 10 * Math.cos (an)), (int) Math.round (11 + 10 * Math.sin (an)));
+			}
+			g.setColor (new Color (30, 140, 40));
+			g.fillPolygon (new int[] { 9, 9, 15 }, new int[] { 7, 15, 11 }, 3);
+			break;
+		case RUN:			// play
+			g.setColor (new Color (30, 140, 40));
+			g.fillPolygon (new int[] { 5, 5, 19 }, new int[] { 3, 19, 11 }, 3);
+			break;
+		case STEP:			// play + bar
+			g.setColor (new Color (30, 110, 200));
+			g.fillPolygon (new int[] { 4, 4, 15 }, new int[] { 3, 19, 11 }, 3);
+			g.fillRect (16, 3, 3, 16);
+			break;
+		case STOP:			// square
+			g.setColor (new Color (200, 40, 40));
+			g.fillRoundRect (5, 5, 12, 12, 2, 2);
 			break;
 		case FOLDER:		// classic folder
 			g.setColor (new Color (255, 210, 110));
