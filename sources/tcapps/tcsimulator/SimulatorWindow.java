@@ -165,6 +165,8 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 		tb.add (ToolButtons.flatButton (openArchAction ()));
 		tb.add (ToolButtons.flatButton (openWorldAction ()));
+		tb.addSeparator ();
+		tb.add (ToolButtons.flatButton (editArchAction ()));
 		tb.add (ToolButtons.flatButton (tasksAction ()));
 		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomFit (canvas)));
@@ -206,6 +208,11 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		return ToolButtons.action ("Change World...", ToolIcon.WORLD, "Change the world of the architecture  [Ctrl+W]", new Runnable () { public void run () { loadWorld (); } });
 	}
 
+	private Action editArchAction ()
+	{
+		return ToolButtons.action ("Edit Architecture...", ToolIcon.ARCHITECTURE, "Edit the architecture: Linda spaces, router and modules  [Ctrl+E]", new Runnable () { public void run () { editArchitecture (); } });
+	}
+
 	private Action tasksAction ()
 	{
 		return ToolButtons.action ("Tasks...", ToolIcon.TASKS, "Tasks: edit and send a task set to the robot  [Ctrl+T]", new Runnable () { public void run () { editTasks (); } });
@@ -227,6 +234,9 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		JMenuItem	wld = new JMenuItem (openWorldAction ());
 		wld.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_W, mask));
 		mfile.add (wld);
+		JMenuItem	edit = new JMenuItem (editArchAction ());
+		edit.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_E, mask));
+		mfile.add (edit);
 		mfile.addSeparator ();
 		JMenuItem	quit = new JMenuItem ("Quit");
 		quit.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_Q, mask));
@@ -373,6 +383,24 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			JOptionPane.showMessageDialog (this, "Cannot save " + f.getName () + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
+	}
+
+	/**
+	 * Opens the block editor of the architecture. The dialog works on a copy
+	 * of the properties; on OK they replace the ones of the architecture and
+	 * the world is reloaded when the virtual robot now points to another one.
+	 */
+	public void editArchitecture ()
+	{
+		ArchitectureDialog	dlg = new ArchitectureDialog (this, arch.getProperties (), robotId ());
+		java.util.Properties	result = dlg.showDialog ();
+		if (result == null)				return;
+		String	before = arch.getWorldFile ();
+		arch.replaceProperties (result);
+		String	after = arch.getWorldFile ();
+		if ((after == null) ? (before != null) : !after.equals (before))
+			showWorld ((after != null) ? new File (after) : null);
+		updateTitle ();
 	}
 
 	/* ------------------------------------------------------------------ */

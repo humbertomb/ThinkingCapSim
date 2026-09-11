@@ -49,6 +49,11 @@ public class ToolIcon implements Icon
 	static public final int		STEP		= 34;
 	static public final int		STOP		= 35;
 	static public final int		TASKS		= 36;
+	static public final int		ARCHITECTURE	= 37;	// block diagram (edit the architecture)
+	static public final int		LINDA		= 38;		// database-like cylinder
+	static public final int		ROUTER		= 39;		// box with two vertical bars
+	static public final int		MODULE		= 40;		// plain box
+	static public final int		ROBOT		= 41;		// rounded box with wheels
 
 	protected int				type;
 	protected int				size;
@@ -262,6 +267,51 @@ public class ToolIcon implements Icon
 			g.drawPolygon (new int[] { 3, 11, 19, 11 }, new int[] { 5, 1, 5, 9 }, 4);
 			g.drawPolygon (new int[] { 3, 11, 11, 3 }, new int[] { 5, 9, 18, 14 }, 4);
 			g.drawPolygon (new int[] { 11, 19, 19, 11 }, new int[] { 9, 5, 14, 18 }, 4);
+			break;
+		case ARCHITECTURE:	// three blocks connected by lines
+			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.setColor (new Color (200, 225, 250));
+			g.fillRect (7, 2, 8, 6);	g.fillRect (2, 14, 8, 6);	g.fillRect (12, 14, 8, 6);
+			g.setColor (fg);
+			g.drawRect (7, 2, 8, 6);	g.drawRect (2, 14, 8, 6);	g.drawRect (12, 14, 8, 6);
+			g.drawLine (11, 8, 11, 11);	g.drawLine (6, 11, 16, 11);
+			g.drawLine (6, 11, 6, 14);	g.drawLine (16, 11, 16, 14);
+			break;
+		case LINDA:			// database cylinder
+			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.setColor (new Color (200, 225, 250));
+			g.fillRect (4, 6, 14, 10);
+			g.fillOval (4, 12, 14, 7);
+			g.fillOval (4, 3, 14, 7);
+			g.setColor (fg);
+			g.drawOval (4, 3, 14, 7);
+			g.drawLine (4, 6, 4, 16);	g.drawLine (18, 6, 18, 16);
+			g.drawArc (4, 12, 14, 7, 180, 180);
+			g.drawArc (4, 8, 14, 7, 180, 180);
+			break;
+		case ROUTER:		// box with two vertical bars
+			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.setColor (new Color (255, 240, 200));
+			g.fillRect (3, 5, 16, 12);
+			g.setColor (fg);
+			g.drawRect (3, 5, 16, 12);
+			g.drawLine (7, 5, 7, 17);	g.drawLine (15, 5, 15, 17);
+			break;
+		case MODULE:		// plain box
+			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.setColor (new Color (225, 245, 225));
+			g.fillRect (3, 5, 16, 12);
+			g.setColor (fg);
+			g.drawRect (3, 5, 16, 12);
+			break;
+		case ROBOT:			// rounded body with two wheels and a heading mark
+			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.setColor (new Color (250, 220, 220));
+			g.fillRoundRect (4, 4, 14, 12, 6, 6);
+			g.setColor (fg);
+			g.drawRoundRect (4, 4, 14, 12, 6, 6);
+			g.fillRoundRect (5, 16, 5, 3, 2, 2);	g.fillRoundRect (12, 16, 5, 3, 2, 2);
+			g.drawLine (11, 7, 11, 4);	g.fillOval (9, 8, 4, 4);
 			break;
 		}
 		g.dispose ();

@@ -1,0 +1,368 @@
+/*
+ * (c) 2026 Humberto Martinez Barbera
+ */
+
+package tcapps.tcsimulator.arch;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Stroke;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.JPanel;
+
+import tcapps.tcsimulator.arch.ArchModel.Block;
+
+/**
+ * Block diagram of an architecture ({@link ArchModel}): the global Linda
+ * space on top, and below it the robot as a dashed region with its router
+ * straddling the upper border, the local Linda space in the centre, the
+ * modules on both sides and the virtual robot at the bottom, every one of
+ * them linked to the local Linda with a double arrow. The layout is
+ * automatic; blocks can be selected with the mouse.
+ */
+public class ArchCanvas extends JPanel
+{
+	private static final long		serialVersionUID = 1L;
+
+	/** Notified when the selected block changes (null: nothing selected). */
+	public interface Listener
+	{
+		public void blockSelected (Block block);
+		public void blockActivated (Block block);		// double click
+	}
+
+	// --- geometry (pixels)
+	static final int				MARGIN		= 24;
+	static final int				BOX_W		= 124,	BOX_H		= 44;
+	static final int				LINDA_W		= 132,	LINDA_H		= 66;
+	static final int				VROB_W		= 136,	VROB_H		= 50;
+	static final int				COL_DX		= 205;						// module column offset from the centre
+	static final int				ROW_DY		= 66;						// module row pitch
+	static final int				REGION_HW	= 290;						// robot region half width
+	static final int				REGION_PAD	= 22;
+
+	// --- colours
+	static final Color				C_LINDA		= new Color (205, 225, 250);
+	static final Color				C_ROUTER	= new Color (255, 238, 195);
+	static final Color				C_MODULE	= new Color (222, 242, 222);
+	static final Color				C_VROBOT	= new Color (250, 222, 222);
+	static final Color				C_LINE		= new Color (60, 60, 60);
+	static final Color				C_REGION	= new Color (150, 150, 150);
+	static final Color				C_REGION_BG	= new Color (245, 245, 245);
+	static final Color				C_SELECT	= new Color (30, 110, 230);
+	static final Color				C_ARROW		= new Color (90, 90, 90);
+
+	protected ArchModel				model;
+	protected Block					selection;
+	protected List<Listener>		listeners	= new ArrayList<Listener> ();
+
+	// layout, rebuilt at every paint
+	protected Map<Block, Rectangle>	bounds		= new LinkedHashMap<Block, Rectangle> ();
+	protected Rectangle				region;				// robot region (null without robot)
+	protected Dimension				layoutSize	= new Dimension (600, 400);
+	protected int					offx, offy;			// centring offset
+
+	public ArchCanvas (ArchModel model)
+	{
+		this.model	= model;
+		setBackground (Color.white);
+		setFont (getFont ().deriveFont (Font.PLAIN, 12f));
+		addMouseListener (new MouseAdapter ()
+		{
+			public void mousePressed (MouseEvent e)
+			{
+				requestFocusInWindow ();
+				Block	b = blockAt (e.getPoint ());
+				setSelection (b);
+				if ((e.getClickCount () == 2) && (b != null))
+					for (Listener l : listeners)		l.blockActivated (b);
+			}
+		});
+	}
+
+	public void addListener (Listener l)		{ listeners.add (l); }
+	public void removeListener (Listener l)		{ listeners.remove (l); }
+
+	public void setModel (ArchModel m)			{ model = m; selection = null; modelChanged (); }
+	public ArchModel getModel ()				{ return model; }
+
+	/** The model changed: recomputes the layout and repaints. */
+	public void modelChanged ()
+	{
+		if ((selection != null) && !exists (selection))		selection = null;
+		layoutBlocks ();
+		revalidate ();
+		repaint ();
+	}
+
+	public Block getSelection ()				{ return selection; }
+
+	public void setSelection (Block b)
+	{
+		if ((b == null) ? (selection == null) : b.equals (selection))
+		{
+			repaint ();
+			return;
+		}
+		selection = b;
+		repaint ();
+		for (Listener l : listeners)		l.blockSelected (b);
+	}
+
+	/** True when the block is part of the current model. */
+	public boolean blockExists (Block b)		{ return exists (b); }
+
+	protected boolean exists (Block b)
+	{
+		if (b.kind == ArchModel.GLOBAL_LINDA)	return model.hasGlobalLinda ();
+		if (b.kind == ArchModel.ROBOT)			return model.hasRobot ();
+		return model.robotBlocks ().contains (b);
+	}
+
+	/** Block under a point (the robot region counts when nothing else does). */
+	public Block blockAt (Point p)
+	{
+		Point	q = new Point (p.x - offx, p.y - offy);
+		for (Map.Entry<Block, Rectangle> e : bounds.entrySet ())
+			if ((e.getKey ().kind != ArchModel.ROBOT) && e.getValue ().contains (q))		return e.getKey ();
+		if ((region != null) && region.contains (q))		return new Block (ArchModel.ROBOT, null);
+		return null;
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Layout                                                              */
+	/* ------------------------------------------------------------------ */
+
+	protected void layoutBlocks ()
+	{
+		bounds.clear ();
+		region	= null;
+		int		cx = MARGIN + REGION_HW;
+		int		y = MARGIN;
+
+		if (model.hasGlobalLinda ())
+		{
+			bounds.put (new Block (ArchModel.GLOBAL_LINDA, "GLIN"), new Rectangle (cx - LINDA_W / 2, y, LINDA_W, LINDA_H));
+			y += LINDA_H + 52;
+		}
+
+		if (model.hasRobot ())
+		{
+			int		top = y + BOX_H / 2;								// region top: the router straddles it
+			if (model.hasRouter ())
+				bounds.put (new Block (ArchModel.ROUTER, model.routerPrefix ()), new Rectangle (cx - BOX_W / 2, y, BOX_W, BOX_H));
+			int		modTop = top + BOX_H / 2 + 34;
+			List<String>	mods = model.modulePrefixes ();
+			int		nrows = (mods.size () + 1) / 2;
+			int		modsH = Math.max (nrows * ROW_DY - (ROW_DY - BOX_H), LINDA_H);
+			for (int i = 0; i < mods.size (); i++)
+			{
+				int		col = (i % 2 == 0) ? -1 : 1;
+				int		row = i / 2;
+				int		my = modTop + row * ROW_DY;
+				if (nrows * ROW_DY - (ROW_DY - BOX_H) < LINDA_H)		my += (LINDA_H - (nrows * ROW_DY - (ROW_DY - BOX_H))) / 2;
+				bounds.put (new Block (ArchModel.MODULE, mods.get (i)), new Rectangle (cx + col * COL_DX - BOX_W / 2, my, BOX_W, BOX_H));
+			}
+			if (model.hasLocalLinda ())
+				bounds.put (new Block (ArchModel.LOCAL_LINDA, "LLIN"), new Rectangle (cx - LINDA_W / 2, modTop + (modsH - LINDA_H) / 2, LINDA_W, LINDA_H));
+			int		vy = modTop + modsH + 40;
+			if (model.hasVRobot ())
+			{
+				bounds.put (new Block (ArchModel.VROBOT, model.vrobotPrefix ()), new Rectangle (cx - VROB_W / 2, vy, VROB_W, VROB_H));
+				vy += VROB_H;
+			}
+			region	= new Rectangle (cx - REGION_HW, top, 2 * REGION_HW, vy + REGION_PAD - top);
+			bounds.put (new Block (ArchModel.ROBOT, null), region);
+			y = region.y + region.height;
+		}
+		layoutSize	= new Dimension (2 * (MARGIN + REGION_HW), y + MARGIN);
+		setPreferredSize (layoutSize);
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Painting                                                            */
+	/* ------------------------------------------------------------------ */
+
+	protected void paintComponent (Graphics g0)
+	{
+		super.paintComponent (g0);
+		layoutBlocks ();
+		Graphics2D	g = (Graphics2D) g0.create ();
+		g.setRenderingHint (RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHint (RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		offx	= Math.max (0, (getWidth () - layoutSize.width) / 2);
+		offy	= Math.max (0, (getHeight () - layoutSize.height) / 2);
+		g.translate (offx, offy);
+
+		if (bounds.isEmpty ())
+		{
+			g.setColor (Color.gray);
+			String	msg = "Empty architecture: add a Linda space or a robot with the toolbar";
+			FontMetrics	fm = g.getFontMetrics ();
+			g.drawString (msg, (getWidth () - fm.stringWidth (msg)) / 2 - offx, getHeight () / 2 - offy);
+			g.dispose ();
+			return;
+		}
+
+		// --- robot region
+		Block	robot = new Block (ArchModel.ROBOT, null);
+		if (region != null)
+		{
+			g.setColor (C_REGION_BG);
+			g.fillRoundRect (region.x, region.y, region.width, region.height, 18, 18);
+			Stroke	old = g.getStroke ();
+			g.setStroke (new BasicStroke (robot.equals (selection) ? 2.4f : 1.6f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 0f, new float[] { 7f, 5f }, 0f));
+			g.setColor (robot.equals (selection) ? C_SELECT : C_REGION);
+			g.drawRoundRect (region.x, region.y, region.width, region.height, 18, 18);
+			g.setStroke (old);
+			g.setFont (getFont ().deriveFont (Font.BOLD, 12f));
+			g.drawString (model.labelOf (robot), region.x + 14, region.y + BOX_H / 2 + 22);
+		}
+
+		// --- arrows (below the blocks)
+		Rectangle	llinda = bounds.get (new Block (ArchModel.LOCAL_LINDA, "LLIN"));
+		Rectangle	glinda = bounds.get (new Block (ArchModel.GLOBAL_LINDA, "GLIN"));
+		Rectangle	router = model.hasRouter () ? bounds.get (new Block (ArchModel.ROUTER, model.routerPrefix ())) : null;
+		g.setColor (C_ARROW);
+		g.setStroke (new BasicStroke (1.5f));
+		if ((router != null) && (glinda != null))		doubleArrow (g, router, glinda);
+		if (llinda != null)
+			for (Map.Entry<Block, Rectangle> e : bounds.entrySet ())
+			{
+				int	k = e.getKey ().kind;
+				if ((k == ArchModel.ROUTER) || (k == ArchModel.MODULE) || (k == ArchModel.VROBOT))		doubleArrow (g, e.getValue (), llinda);
+			}
+
+		// --- blocks
+		for (Map.Entry<Block, Rectangle> e : bounds.entrySet ())
+		{
+			Block		b = e.getKey ();
+			if (b.kind == ArchModel.ROBOT)		continue;
+			paintBlock (g, b, e.getValue (), b.equals (selection));
+		}
+		g.dispose ();
+	}
+
+	protected void paintBlock (Graphics2D g, Block b, Rectangle r, boolean selected)
+	{
+		Color	border = selected ? C_SELECT : C_LINE;
+		g.setStroke (new BasicStroke (selected ? 2.4f : 1.4f));
+		switch (b.kind)
+		{
+		case ArchModel.GLOBAL_LINDA:
+		case ArchModel.LOCAL_LINDA:
+		{
+			int		eh = 16;										// ellipse height
+			g.setColor (C_LINDA);
+			g.fillRect (r.x, r.y + eh / 2, r.width, r.height - eh);
+			g.fillOval (r.x, r.y + r.height - eh, r.width, eh);
+			g.fillOval (r.x, r.y, r.width, eh);
+			g.setColor (border);
+			g.drawOval (r.x, r.y, r.width, eh);
+			g.drawLine (r.x, r.y + eh / 2, r.x, r.y + r.height - eh / 2);
+			g.drawLine (r.x + r.width, r.y + eh / 2, r.x + r.width, r.y + r.height - eh / 2);
+			g.drawArc (r.x, r.y + r.height - eh, r.width, eh, 180, 180);
+			String	label = model.labelOf (b);
+			String[] lines = (b.kind == ArchModel.GLOBAL_LINDA) ? new String[] { "Multi-Robot", "Linda Space" } : new String[] { "Local", "Linda Space" };
+			if (!label.equals ("Multi-Robot Linda Space") && !label.equals ("Local Linda Space"))		lines = new String[] { label };
+			centeredText (g, lines, new Rectangle (r.x, r.y + eh, r.width, r.height - eh - eh / 2), Font.PLAIN);
+			break;
+		}
+		case ArchModel.ROUTER:
+			g.setColor (C_ROUTER);
+			g.fillRect (r.x, r.y, r.width, r.height);
+			g.setColor (border);
+			g.drawRect (r.x, r.y, r.width, r.height);
+			g.drawLine (r.x + 12, r.y, r.x + 12, r.y + r.height);
+			g.drawLine (r.x + r.width - 12, r.y, r.x + r.width - 12, r.y + r.height);
+			centeredText (g, new String[] { model.labelOf (b) }, new Rectangle (r.x + 12, r.y, r.width - 24, r.height), Font.BOLD);
+			break;
+		case ArchModel.MODULE:
+			g.setColor (C_MODULE);
+			g.fillRect (r.x, r.y, r.width, r.height);
+			g.setColor (border);
+			g.drawRect (r.x, r.y, r.width, r.height);
+			centeredText (g, new String[] { model.labelOf (b) }, r, Font.BOLD);
+			break;
+		case ArchModel.VROBOT:
+		{
+			g.setColor (C_VROBOT);
+			g.fillRoundRect (r.x, r.y, r.width, r.height, 22, 22);
+			g.setColor (border);
+			g.drawRoundRect (r.x, r.y, r.width, r.height, 22, 22);
+			// wheels
+			g.setColor (C_LINE);
+			g.fillRoundRect (r.x + 16, r.y + r.height - 3, 22, 6, 3, 3);
+			g.fillRoundRect (r.x + r.width - 38, r.y + r.height - 3, 22, 6, 3, 3);
+			g.setColor (border);
+			centeredText (g, new String[] { model.labelOf (b) }, r, Font.BOLD);
+			break;
+		}
+		}
+	}
+
+	protected void centeredText (Graphics2D g, String[] lines, Rectangle r, int style)
+	{
+		g.setFont (getFont ().deriveFont (style, 12f));
+		FontMetrics	fm = g.getFontMetrics ();
+		int			lh = fm.getHeight ();
+		int			y = r.y + (r.height - lh * lines.length) / 2 + fm.getAscent ();
+		for (String s : lines)
+		{
+			String	t = s;
+			while ((fm.stringWidth (t) > r.width - 6) && (t.length () > 3))		t = t.substring (0, t.length () - 2).trim () + "…";
+			g.drawString (t, r.x + (r.width - fm.stringWidth (t)) / 2, y);
+			y += lh;
+		}
+	}
+
+	/** Double-headed arrow between the borders of two rectangles, along the line joining their centres. */
+	protected void doubleArrow (Graphics2D g, Rectangle a, Rectangle b)
+	{
+		Point2D	ca = new Point2D.Double (a.getCenterX (), a.getCenterY ());
+		Point2D	cb = new Point2D.Double (b.getCenterX (), b.getCenterY ());
+		Point2D	pa = exit (a, ca, cb);
+		Point2D	pb = exit (b, cb, ca);
+		if ((pa == null) || (pb == null))		return;
+		g.draw (new Line2D.Double (pa, pb));
+		arrowHead (g, pb, pa);
+		arrowHead (g, pa, pb);
+	}
+
+	/** Point where the segment from the centre <code>c</code> of <code>r</code> towards <code>t</code> leaves the rectangle. */
+	static protected Point2D exit (Rectangle r, Point2D c, Point2D t)
+	{
+		double	dx = t.getX () - c.getX (), dy = t.getY () - c.getY ();
+		if ((dx == 0) && (dy == 0))		return null;
+		double	tx = (dx != 0) ? (r.width / 2.0) / Math.abs (dx) : Double.MAX_VALUE;
+		double	ty = (dy != 0) ? (r.height / 2.0) / Math.abs (dy) : Double.MAX_VALUE;
+		double	k = Math.min (tx, ty);
+		return new Point2D.Double (c.getX () + dx * k, c.getY () + dy * k);
+	}
+
+	/** Arrow head at <code>tip</code>, pointing away from <code>from</code>. */
+	static protected void arrowHead (Graphics2D g, Point2D tip, Point2D from)
+	{
+		double	ang = Math.atan2 (tip.getY () - from.getY (), tip.getX () - from.getX ());
+		double	len = 9, w = 0.45;
+		int[]	xs = { (int) Math.round (tip.getX ()), (int) Math.round (tip.getX () - len * Math.cos (ang - w)), (int) Math.round (tip.getX () - len * Math.cos (ang + w)) };
+		int[]	ys = { (int) Math.round (tip.getY ()), (int) Math.round (tip.getY () - len * Math.sin (ang - w)), (int) Math.round (tip.getY () - len * Math.sin (ang + w)) };
+		g.fillPolygon (xs, ys, 3);
+	}
+}

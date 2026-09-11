@@ -400,6 +400,21 @@ public class ExecArch extends Thread
 		props.setProperty (getVRobotPrefix () + "WORLD", (path == null) ? "" : path);
 	}
 
+	/**
+	 * Replaces the whole set of properties (the architecture was edited) and
+	 * rebuilds the module descriptors. The source text is kept, so a later
+	 * {@link #save(File)} preserves the layout of the unchanged lines. Not
+	 * allowed while the architecture is running.
+	 */
+	public void replaceProperties (Properties p)
+	{
+		if (isRunning ())			throw new IllegalStateException ("The architecture is running");
+		initialised		= false;
+		lrdesc			= null;
+		vrdesc			= null;
+		initialise (robotid, p, null);
+	}
+
 	/** True when some property differs from the ones read from the source file. */
 	public boolean isModified ()
 	{

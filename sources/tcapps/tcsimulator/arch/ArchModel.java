@@ -1,0 +1,327 @@
+/*
+ * (c) 2026 Humberto Martinez Barbera
+ */
+
+package tcapps.tcsimulator.arch;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+import java.util.StringTokenizer;
+
+/**
+ * Structural view of an architecture definition (the Properties of an ADF)
+ * as blocks: the global Linda space, and one robot made of its local Linda
+ * space, an optional router, the modules of MODULES and the virtual robot
+ * (VROBOT). Every block is identified by the prefix of its properties
+ * (GLIN, LLIN, COO, NAV, ROB, ...). Only one robot is supported for now.
+ */
+public class ArchModel
+{
+	/** Block kinds. */
+	static public final int		GLOBAL_LINDA	= 0;
+	static public final int		LOCAL_LINDA		= 1;
+	static public final int		ROUTER			= 2;
+	static public final int		MODULE			= 3;
+	static public final int		VROBOT			= 4;
+	static public final int		ROBOT			= 5;		// the robot container itself
+
+	static public final String[]	KIND_NAMES	= { "Global Linda", "Local Linda", "Router", "Module", "Virtual Robot", "Robot" };
+
+	/** Property suffixes edited for each kind (existing ones with the prefix are shown too). */
+	static public final String[]	LINDA_KEYS	= { "ADDR", "PORT", "CREATE", "CLASS" };
+	static public final String[]	ROUTER_KEYS	= { "INFO", "CLASS", "MODE", "GMODE", "GFX", "PRI", "CONNECT" };
+	static public final String[]	MODULE_KEYS	= { "INFO", "CLASS", "MODE", "PASSIVE", "QUEUED", "POLLED", "EXTIME", "PRI", "GFX", "CONNECT" };
+	static public final String[]	VROBOT_KEYS	= { "INFO", "CLASS", "MODE", "PASSIVE", "EXTIME", "PRI", "GFX", "DESC", "CUST", "WORLD", "TOPOL", "APW", "RADDR", "RPORT", "LPORT", "CONNECT" };
+
+	/** A block of the architecture: kind + property prefix. */
+	static public class Block
+	{
+		public int		kind;
+		public String	prefix;			// null for the robot container
+
+		public Block (int kind, String prefix)		{ this.kind = kind; this.prefix = prefix; }
+
+		public boolean equals (Object o)
+		{
+			if (!(o instanceof Block))		return false;
+			Block	b = (Block) o;
+			return (b.kind == kind) && ((prefix == null) ? (b.prefix == null) : prefix.equals (b.prefix));
+		}
+		public int hashCode ()		{ return kind * 31 + ((prefix == null) ? 0 : prefix.hashCode ()); }
+		public String toString ()	{ return KIND_NAMES[kind] + ((prefix != null) ? " (" + prefix + ")" : ""); }
+	}
+
+	protected Properties		props;
+	protected String			robotId;
+
+	public ArchModel (Properties props, String robotId)
+	{
+		this.props		= props;
+		this.robotId	= robotId;
+	}
+
+	public Properties	getProperties ()		{ return props; }
+	public String		getRobotId ()			{ return robotId; }
+
+	/* ------------------------------------------------------------------ */
+	/* Queries                                                             */
+	/* ------------------------------------------------------------------ */
+
+	public boolean hasGlobalLinda ()		{ return hasPrefix ("GLIN"); }
+	public boolean hasLocalLinda ()			{ return hasPrefix ("LLIN"); }
+	public boolean hasRouter ()				{ return routerPrefix () != null; }
+	public boolean hasVRobot ()				{ return vrobotPrefix () != null; }
+
+	/** The robot exists when it has a local Linda, a router, modules or a virtual robot. */
+	public boolean hasRobot ()				{ return hasLocalLinda () || hasRouter () || hasVRobot () || (modulePrefixes ().size () > 0); }
+
+	public String routerPrefix ()
+	{
+		String	p = props.getProperty ("ROUTER");
+		return ((p == null) || (p.trim ().length () == 0)) ? null : p.trim ();
+	}
+
+	public String vrobotPrefix ()
+	{
+		String	p = props.getProperty ("VROBOT");
+		return ((p == null) || (p.trim ().length () == 0)) ? null : p.trim ();
+	}
+
+	public List<String> modulePrefixes ()
+	{
+		List<String>	l = new ArrayList<String> ();
+		String			m = props.getProperty ("MODULES");
+		if (m != null)
+		{
+			StringTokenizer	st = new StringTokenizer (m, ", \t");
+			while (st.hasMoreTokens ())		l.add (st.nextToken ());
+		}
+		return l;
+	}
+
+	/** Top-level keys of the ADF that are not "prefix + suffix" of a block. */
+	static public final String[]	GLOBAL_KEYS	= { "MODULES", "ROUTER", "VROBOT", "ROBNAME" };
+
+	static protected boolean isGlobalKey (String k)
+	{
+		for (String g : GLOBAL_KEYS)		if (g.equals (k))		return true;
+		return false;
+	}
+
+	protected boolean hasPrefix (String prefix)
+	{
+		for (String k : props.stringPropertyNames ())
+			if (!isGlobalKey (k) && k.startsWith (prefix) && (k.length () > prefix.length ()) && Character.isUpperCase (k.charAt (prefix.length ())))
+				return true;
+		return false;
+	}
+
+	/** Blocks of the robot in display order: local Linda, router, modules, virtual robot. */
+	public List<Block> robotBlocks ()
+	{
+		List<Block>	l = new ArrayList<Block> ();
+		if (hasLocalLinda ())		l.add (new Block (LOCAL_LINDA, "LLIN"));
+		if (hasRouter ())			l.add (new Block (ROUTER, routerPrefix ()));
+		for (String p : modulePrefixes ())	l.add (new Block (MODULE, p));
+		if (hasVRobot ())			l.add (new Block (VROBOT, vrobotPrefix ()));
+		return l;
+	}
+
+	/** Display label of a block: its INFO property, or the kind name. */
+	public String labelOf (Block b)
+	{
+		if (b.kind == ROBOT)			return "ROBOT " + robotId;
+		if (b.kind == GLOBAL_LINDA)		return "Multi-Robot Linda Space";
+		if (b.kind == LOCAL_LINDA)		return "Local Linda Space";
+		String	info = props.getProperty (b.prefix + "INFO");
+		return ((info != null) && (info.trim ().length () > 0)) ? info.trim () : b.prefix;
+	}
+
+	/** Property suffixes shown for a block: the standard ones of its kind plus any other existing with its prefix. */
+	public List<String> keysOf (Block b)
+	{
+		String[]		std;
+		switch (b.kind)
+		{
+		case GLOBAL_LINDA:
+		case LOCAL_LINDA:	std = LINDA_KEYS;	break;
+		case ROUTER:		std = ROUTER_KEYS;	break;
+		case MODULE:		std = MODULE_KEYS;	break;
+		case VROBOT:		std = VROBOT_KEYS;	break;
+		default:			return new ArrayList<String> ();
+		}
+		List<String>	keys = new ArrayList<String> ();
+		for (String k : std)		keys.add (k);
+		List<String>	extra = new ArrayList<String> ();
+		for (String k : props.stringPropertyNames ())
+			if (!isGlobalKey (k) && k.startsWith (b.prefix) && (k.length () > b.prefix.length ()) && Character.isUpperCase (k.charAt (b.prefix.length ())))
+			{
+				String	suffix = k.substring (b.prefix.length ());
+				if (!keys.contains (suffix))		extra.add (suffix);
+			}
+		Collections.sort (extra);
+		keys.addAll (extra);
+		return keys;
+	}
+
+	public String get (Block b, String key)
+	{
+		String	v = props.getProperty (b.prefix + key);
+		return (v == null) ? "" : v;
+	}
+
+	public void set (Block b, String key, String value)
+	{
+		if ((value == null) || (value.trim ().length () == 0))		props.remove (b.prefix + key);
+		else															props.setProperty (b.prefix + key, value.trim ());
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Edition                                                             */
+	/* ------------------------------------------------------------------ */
+
+	public Block addGlobalLinda ()
+	{
+		if (!hasGlobalLinda ())
+		{
+			props.setProperty ("GLINADDR", "localhost");
+			props.setProperty ("GLINPORT", "5500");
+			props.setProperty ("GLINCREATE", "false");
+		}
+		return new Block (GLOBAL_LINDA, "GLIN");
+	}
+
+	/** Creates the robot: its local Linda space (and the virtual robot section when missing). */
+	public Block addRobot ()
+	{
+		if (!hasLocalLinda ())		addLocalLinda ();
+		if (!hasVRobot ())
+		{
+			props.setProperty ("VROBOT", "ROB");
+			props.setProperty ("ROBINFO", "Virtual Robot");
+			props.setProperty ("ROBMODE", "shared");
+			props.setProperty ("ROBCLASS", "tc.vrobot.VirtualRobot");
+			props.setProperty ("ROBPASSIVE", "false");
+			props.setProperty ("ROBEXTIME", "100");
+			props.setProperty ("ROBGFX", "true");
+		}
+		return new Block (ROBOT, null);
+	}
+
+	public Block addLocalLinda ()
+	{
+		if (!hasLocalLinda ())
+		{
+			props.setProperty ("LLINADDR", "localhost");
+			props.setProperty ("LLINPORT", "3000");
+			props.setProperty ("LLINCREATE", "true");
+		}
+		return new Block (LOCAL_LINDA, "LLIN");
+	}
+
+	public Block addRouter ()
+	{
+		String	p = routerPrefix ();
+		if (p == null)
+		{
+			p = uniquePrefix ("COO");
+			props.setProperty ("ROUTER", p);
+			props.setProperty (p + "INFO", "Linda Router");
+			props.setProperty (p + "MODE", "shared");
+			props.setProperty (p + "CLASS", "tc.coord.LindaRouter");
+			props.setProperty (p + "GMODE", "tcp");
+			props.setProperty (p + "GFX", "false");
+		}
+		return new Block (ROUTER, p);
+	}
+
+	public Block addModule ()
+	{
+		String			p = uniquePrefix ("MOD");
+		List<String>	mods = modulePrefixes ();
+		mods.add (p);
+		props.setProperty ("MODULES", join (mods));
+		props.setProperty (p + "INFO", "Module");
+		props.setProperty (p + "MODE", "shared");
+		props.setProperty (p + "CLASS", "tc.runtime.thread.StdThread");
+		props.setProperty (p + "PASSIVE", "true");
+		props.setProperty (p + "GFX", "false");
+		return new Block (MODULE, p);
+	}
+
+	/** Removes a block and all its properties (the robot container removes everything local). */
+	public void remove (Block b)
+	{
+		switch (b.kind)
+		{
+		case GLOBAL_LINDA:	removePrefix ("GLIN");		break;
+		case LOCAL_LINDA:	removePrefix ("LLIN");		break;
+		case ROUTER:		removePrefix (b.prefix);	props.remove ("ROUTER");	break;
+		case VROBOT:		removePrefix (b.prefix);	props.remove ("VROBOT");	break;
+		case MODULE:
+		{
+			List<String>	mods = modulePrefixes ();
+			mods.remove (b.prefix);
+			if (mods.size () > 0)		props.setProperty ("MODULES", join (mods));
+			else						props.remove ("MODULES");
+			removePrefix (b.prefix);
+			break;
+		}
+		case ROBOT:
+			for (Block rb : robotBlocks ())		remove (rb);
+			break;
+		}
+	}
+
+	/** Renames the prefix of a router, module or virtual robot (all its properties follow). */
+	public Block rename (Block b, String newPrefix)
+	{
+		newPrefix = newPrefix.trim ().toUpperCase ();
+		if ((newPrefix.length () == 0) || newPrefix.equals (b.prefix) || (b.prefix == null))		return b;
+		if (hasPrefix (newPrefix) || newPrefix.equals ("GLIN") || newPrefix.equals ("LLIN"))		return b;
+		for (String k : new ArrayList<String> (props.stringPropertyNames ()))
+			if (!isGlobalKey (k) && k.startsWith (b.prefix) && (k.length () > b.prefix.length ()) && Character.isUpperCase (k.charAt (b.prefix.length ())))
+			{
+				props.setProperty (newPrefix + k.substring (b.prefix.length ()), props.getProperty (k));
+				props.remove (k);
+			}
+		if (b.kind == ROUTER)		props.setProperty ("ROUTER", newPrefix);
+		if (b.kind == VROBOT)		props.setProperty ("VROBOT", newPrefix);
+		if (b.kind == MODULE)
+		{
+			List<String>	mods = modulePrefixes ();
+			int				i = mods.indexOf (b.prefix);
+			if (i >= 0)		mods.set (i, newPrefix);
+			props.setProperty ("MODULES", join (mods));
+		}
+		return new Block (b.kind, newPrefix);
+	}
+
+	protected void removePrefix (String prefix)
+	{
+		for (String k : new ArrayList<String> (props.stringPropertyNames ()))
+			if (!isGlobalKey (k) && k.startsWith (prefix) && (k.length () > prefix.length ()) && Character.isUpperCase (k.charAt (prefix.length ())))
+				props.remove (k);
+	}
+
+	protected String uniquePrefix (String base)
+	{
+		if (!hasPrefix (base) && !isReserved (base))		return base;
+		for (int i = 1; ; i++)
+			if (!hasPrefix (base + i) && !isReserved (base + i))		return base + i;
+	}
+
+	protected boolean isReserved (String p)
+	{
+		return p.equals (routerPrefix ()) || p.equals (vrobotPrefix ()) || modulePrefixes ().contains (p);
+	}
+
+	static protected String join (List<String> l)
+	{
+		StringBuilder	sb = new StringBuilder ();
+		for (String s : l)		sb.append ((sb.length () > 0) ? ", " : "").append (s);
+		return sb.toString ();
+	}
+}
