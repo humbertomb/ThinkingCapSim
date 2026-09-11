@@ -74,7 +74,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	protected DefaultMutableTreeNode	root, globalNode, robotNode;
 	protected JTable				propsTB;
 	protected PropsModel			propsModel;
-	protected JLabel				propsTitle;
+	protected javax.swing.border.TitledBorder	propsBorder;	// title: the selected block
 	protected JTable				eventsTB;
 	protected EventsModel			eventsModel;
 	protected JButton				addEventBT, removeEventBT;
@@ -187,7 +187,8 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 			public void valueChanged (javax.swing.event.ListSelectionEvent e)		{ updateEventButtons (); }
 		});
 		JScrollPane	sp = new JScrollPane (eventsTB);
-		sp.setPreferredSize (new Dimension (RIGHT_WIDTH, 5 * 20 + 24));
+		sp.setVerticalScrollBarPolicy (JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);		// modules may register many events
+		sp.setPreferredSize (new Dimension (RIGHT_WIDTH, 3 * 20 + 20));
 
 		addEventBT		= new JButton ("Add");
 		removeEventBT	= new JButton ("Remove");
@@ -275,9 +276,9 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		robotAC		= ToolButtons.action ("Robot", ToolIcon.ROBOT, "Add the robot (local Linda space and virtual robot)", new Runnable () { public void run () { select (model.addRobot ()); } });
 		deleteAC	= ToolButtons.action ("Delete", ToolIcon.DELETE, "Delete the selected block  [Delete]", new Runnable () { public void run () { deleteSelection (); } });
 		tb.add (ToolButtons.flatButton (lindaAC));
+		tb.add (ToolButtons.flatButton (robotAC));
 		tb.add (ToolButtons.flatButton (routerAC));
 		tb.add (ToolButtons.flatButton (moduleAC));
-		tb.add (ToolButtons.flatButton (robotAC));
 		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (deleteAC));
 		tb.add (Box.createVerticalGlue ());
@@ -360,10 +361,10 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		propsTB.getColumnModel ().getColumn (1).setPreferredWidth (150);
 		JScrollPane	propsSP = new JScrollPane (propsTB);
 		propsSP.setPreferredSize (new Dimension (300, 240));
-		propsTitle	= new JLabel (" ");
-		propsTitle.setBorder (BorderFactory.createEmptyBorder (4, 4, 2, 4));
-		JPanel		propsPN = new JPanel (new BorderLayout ());
-		propsPN.add (propsTitle, BorderLayout.NORTH);
+		// properties and events grouped under one border titled with the selected block
+		propsBorder	= BorderFactory.createTitledBorder (" ");
+		JPanel		propsPN = new JPanel (new BorderLayout (0, 4));
+		propsPN.setBorder (propsBorder);
 		propsPN.add (propsSP, BorderLayout.CENTER);
 		propsPN.add (buildEventsPanel (), BorderLayout.SOUTH);
 
@@ -510,6 +511,15 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		deleteAC.setEnabled (canvas.getSelection () != null);
 	}
 
+	/** Asks for a new name of the robot (double click on its name in the diagram). */
+	private void renameRobot ()
+	{
+		String	name = (String) JOptionPane.showInputDialog (this, "Robot name:", getTitle (), JOptionPane.PLAIN_MESSAGE, null, null, model.getRobotId ());
+		if ((name == null) || (name.trim ().length () == 0) || name.trim ().equals (model.getRobotId ()))		return;
+		model.setRobotName (name);
+		rebuild (new Block (ArchModel.ROBOT, null));
+	}
+
 	/* --- selection synchronisation --- */
 
 	public void blockSelected (Block b)
@@ -534,6 +544,11 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 
 	public void blockActivated (Block b)
 	{
+		if (b.kind == ArchModel.ROBOT)
+		{
+			renameRobot ();
+			return;
+		}
 		if (propsModel.getRowCount () > 0)
 		{
 			propsTB.requestFocusInWindow ();
@@ -557,6 +572,12 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		updateActions ();
 	}
 
+	private void setPropsTitle (String t)
+	{
+		propsBorder.setTitle (t);
+		((JComponent) propsTB.getParent ().getParent ().getParent ()).repaint ();
+	}
+
 	private void showProperties (Block b)
 	{
 		if (propsTB.isEditing ())		propsTB.getCellEditor ().stopCellEditing ();
@@ -566,11 +587,11 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 		symbolCB.removeAllItems ();
 		for (String sym : model.symbols ())		symbolCB.addItem (sym);
 		updateEventButtons ();
-		if (b == null)							propsTitle.setText (" ");
-		else if (b.kind == ArchModel.ROBOT)		propsTitle.setText ("Robot " + model.getRobotId ());
+		if (b == null)							setPropsTitle (" ");
+		else if (b.kind == ArchModel.ROBOT)		setPropsTitle ("Robot " + model.getRobotId ());
 		else if ((b.kind == ArchModel.MODULE) || (b.kind == ArchModel.ROUTER) || (b.kind == ArchModel.VROBOT))
-												propsTitle.setText (ArchModel.KIND_NAMES[b.kind] + ": " + model.labelOf (b));
-		else									propsTitle.setText (model.labelOf (b));
+												setPropsTitle (ArchModel.KIND_NAMES[b.kind] + ": " + model.labelOf (b));
+		else									setPropsTitle (model.labelOf (b));
 	}
 
 	/* ------------------------------------------------------------------ */

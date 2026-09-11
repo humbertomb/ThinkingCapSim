@@ -407,9 +407,11 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	/* Execution                                                           */
 	/* ------------------------------------------------------------------ */
 
-	/** Identifier of the simulated robot: architecture file name in upper case plus "-1" (e.g. IFORK-1). */
+	/** Identifier of the simulated robot: the NAME property of the architecture, or the file name in upper case plus "-1" (e.g. IFORK-1). */
 	protected String robotId ()
 	{
+		String	name = arch.getProperties ().getProperty ("NAME");		// name given in the architecture editor
+		if ((name != null) && (name.trim ().length () > 0))		return name.trim ();
 		File	f = arch.getFile ();
 		String	n = (f != null) ? f.getName () : "robot";
 		int		dot = n.lastIndexOf ('.');

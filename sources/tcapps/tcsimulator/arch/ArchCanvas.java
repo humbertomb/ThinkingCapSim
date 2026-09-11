@@ -75,6 +75,7 @@ public class ArchCanvas extends JPanel
 	// layout, rebuilt at every paint
 	protected Map<Block, Rectangle>	bounds		= new LinkedHashMap<Block, Rectangle> ();
 	protected Rectangle				region;				// robot region (null without robot)
+	protected Rectangle				robotLabel;			// bounds of the robot name inside the region
 	protected Dimension				layoutSize	= new Dimension (600, 400);
 	protected int					offx, offy;			// centring offset
 
@@ -91,7 +92,11 @@ public class ArchCanvas extends JPanel
 				Block	b = blockAt (e.getPoint ());
 				setSelection (b);
 				if ((e.getClickCount () == 2) && (b != null))
+				{
+					// the robot itself is only activated (renamed) by double-clicking on its name
+					if ((b.kind == ArchModel.ROBOT) && !isOnRobotName (e.getPoint ()))		return;
 					for (Listener l : listeners)		l.blockActivated (b);
+				}
 			}
 		});
 	}
@@ -135,6 +140,12 @@ public class ArchCanvas extends JPanel
 		return model.robotBlocks ().contains (b);
 	}
 
+	/** True when the point is over the name of the robot (top-left corner of its region). */
+	public boolean isOnRobotName (Point p)
+	{
+		return (robotLabel != null) && robotLabel.contains (p.x - offx, p.y - offy);
+	}
+
 	/** Block under a point (the robot region counts when nothing else does). */
 	public Block blockAt (Point p)
 	{
@@ -152,7 +163,8 @@ public class ArchCanvas extends JPanel
 	protected void layoutBlocks ()
 	{
 		bounds.clear ();
-		region	= null;
+		region		= null;
+		robotLabel	= null;
 		int		cx = MARGIN + REGION_HW;
 		int		y = MARGIN;
 
@@ -232,7 +244,11 @@ public class ArchCanvas extends JPanel
 			g.drawRoundRect (region.x, region.y, region.width, region.height, 18, 18);
 			g.setStroke (old);
 			g.setFont (getFont ().deriveFont (Font.BOLD, 12f));
-			g.drawString (model.labelOf (robot), region.x + 14, region.y + BOX_H / 2 + 22);
+			String		name = model.labelOf (robot);
+			FontMetrics	fm = g.getFontMetrics ();
+			int			lx = region.x + 14, ly = region.y + BOX_H / 2 + 22;
+			g.drawString (name, lx, ly);
+			robotLabel	= new Rectangle (lx - 4, ly - fm.getAscent () - 2, fm.stringWidth (name) + 8, fm.getHeight () + 4);
 		}
 
 		// --- arrows (below the blocks)

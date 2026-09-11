@@ -141,8 +141,22 @@ public class ArchModel
 		this.robotId	= robotId;
 	}
 
+	static public final String	DEFAULT_ROBOT_NAME	= "Unnamed";
+
 	public Properties	getProperties ()		{ return props; }
-	public String		getRobotId ()			{ return robotId; }
+
+	/** Name of the robot: the NAME property when present, otherwise the default given to the constructor. */
+	public String getRobotId ()
+	{
+		String	n = props.getProperty ("NAME");
+		return ((n != null) && (n.trim ().length () > 0)) ? n.trim () : robotId;
+	}
+
+	public void setRobotName (String name)
+	{
+		if ((name == null) || (name.trim ().length () == 0))		props.remove ("NAME");
+		else														props.setProperty ("NAME", name.trim ());
+	}
 
 	/* ------------------------------------------------------------------ */
 	/* Queries                                                             */
@@ -181,7 +195,7 @@ public class ArchModel
 	}
 
 	/** Top-level keys of the ADF that are not "prefix + suffix" of a block. */
-	static public final String[]	GLOBAL_KEYS	= { "MODULES", "ROUTER", "VROBOT", "ROBNAME" };
+	static public final String[]	GLOBAL_KEYS	= { "MODULES", "ROUTER", "VROBOT", "ROBNAME", "NAME" };
 
 	static protected boolean isGlobalKey (String k)
 	{
@@ -211,7 +225,7 @@ public class ArchModel
 	/** Display label of a block: its INFO property, or the kind name. */
 	public String labelOf (Block b)
 	{
-		if (b.kind == ROBOT)			return "ROBOT " + robotId;
+		if (b.kind == ROBOT)			return "ROBOT " + getRobotId ();
 		if (b.kind == GLOBAL_LINDA)		return "Multi-Robot Linda Space";
 		if (b.kind == LOCAL_LINDA)		return "Local Linda Space";
 		String	info = props.getProperty (b.prefix + "INFO");
@@ -358,9 +372,10 @@ public class ArchModel
 		return new Block (GLOBAL_LINDA, "GLIN");
 	}
 
-	/** Creates the robot: its local Linda space (and the virtual robot section when missing). */
+	/** Creates the robot ("Unnamed" unless it already has a name): its local Linda space and the virtual robot section when missing. */
 	public Block addRobot ()
 	{
+		if (props.getProperty ("NAME") == null)		props.setProperty ("NAME", DEFAULT_ROBOT_NAME);
 		if (!hasLocalLinda ())		addLocalLinda ();
 		if (!hasVRobot ())
 		{

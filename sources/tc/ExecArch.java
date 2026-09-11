@@ -346,11 +346,9 @@ public class ExecArch extends Thread
 		"#---------------------------------------------------------------------\n" +
 		"\n" +
 		"#---------------------------------------------------------------------\n" +
-		"# Global Linda shared server\n" +
+		"# Robot (no global Linda server: add it explicitly when needed)\n" +
 		"#---------------------------------------------------------------------\n" +
-		"GLINADDR\t\t= localhost\n" +
-		"GLINPORT\t\t= 5500\n" +
-		"GLINCREATE\t= false\n" +
+		"NAME\t\t= Unnamed\n" +
 		"\n" +
 		"#---------------------------------------------------------------------\n" +
 		"# Linda intra-architecture server\n" +
