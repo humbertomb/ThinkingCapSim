@@ -11,6 +11,7 @@ import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,7 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -54,7 +56,7 @@ import tcapps.tcsimulator.arch.ArchModel.Block;
 import tcapps.tcsimulator.arch.ArchModel.Property;
 
 /**
- * Block editor of an architecture (.arch): a toolbar on the left adds Linda
+ * Block editor of a deployment architecture ({@link DeployArch}): a toolbar on the left adds Linda
  * spaces, routers, modules and the robot; the centre shows the block diagram
  * ({@link ArchCanvas}); on the right, like in the world editor, a tree with
  * the "Global" category (the global Linda space) and one category per robot
@@ -62,7 +64,7 @@ import tcapps.tcsimulator.arch.ArchModel.Property;
  * The dialog edits a copy of the properties; {@link #showDialog()} returns
  * them when accepted, or null when cancelled.
  */
-public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
+public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 {
 	private static final long		serialVersionUID = 1L;
 
@@ -243,7 +245,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	}
 
 	/** @param deploy  deployment architecture to edit (a copy is edited; {@link #showDialog()} returns it when accepted) */
-	public ArchitectureDialog (Frame owner, DeployArch deploy)
+	public DeploymentDialog (Frame owner, DeployArch deploy)
 	{
 		super (owner, "Deployment Architecture Editor", true);
 		model	= new ArchModel (deploy.copy ());
@@ -410,6 +412,19 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 			c.getActionMap ().put ("delete", deleteAC);
 		}
 
+		// --- menu: File > Import Execution Architecture...
+		javax.swing.JMenuBar	mb = new javax.swing.JMenuBar ();
+		javax.swing.JMenu		mfile = new javax.swing.JMenu ("File");
+		javax.swing.JMenuItem	imp = new javax.swing.JMenuItem ("Import Execution Architecture...");
+		imp.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_I, java.awt.Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ()));
+		imp.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ importExecutionArchitecture (); }
+		});
+		mfile.add (imp);
+		mb.add (mfile);
+		setJMenuBar (mb);
+
 		JPanel		content = new JPanel (new BorderLayout ());
 		content.add (tb, BorderLayout.WEST);
 		content.add (mainSP, BorderLayout.CENTER);
@@ -420,6 +435,31 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	/* ------------------------------------------------------------------ */
 	/* Edition                                                             */
 	/* ------------------------------------------------------------------ */
+
+	/**
+	 * Imports an execution architecture (.arch) as a new robot of the
+	 * deployment: its local Linda space, router, modules and virtual robot.
+	 * The global Linda space of the file is discarded (the deployment keeps
+	 * its own, if any).
+	 */
+	private void importExecutionArchitecture ()
+	{
+		File		dir = new File (SimulatorWindow.ARCHS_DIR);
+		JFileChooser	fc = new JFileChooser (dir.isDirectory () ? dir : new File ("."));
+		fc.setDialogTitle ("Import Execution Architecture");
+		fc.setFileFilter (new FileNameExtensionFilter ("Architecture definition files (*.arch)", "arch"));
+		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+		try
+		{
+			DeployArch	imported = DeployArch.importArch (fc.getSelectedFile ());
+			if (imported.robots.isEmpty ())		return;
+			select (model.addRobot (imported.robots.get (0)));
+		} catch (Exception e)
+		{
+			e.printStackTrace ();
+			JOptionPane.showMessageDialog (this, "Cannot import " + fc.getSelectedFile ().getName () + ":\n" + e, getTitle (), JOptionPane.ERROR_MESSAGE);
+		}
+	}
 
 	/** Robot the toolbar acts on: the one of the selection, or the first one (created when there is none). */
 	private int currentRobot ()

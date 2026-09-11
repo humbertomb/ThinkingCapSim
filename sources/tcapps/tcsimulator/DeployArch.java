@@ -319,6 +319,18 @@ public class DeployArch
 	}
 
 	/**
+	 * Imports a legacy architecture definition file (.arch) as a deployment
+	 * with one robot, named after the file (IFORK-1) unless the ADF has a NAME.
+	 */
+	static public DeployArch importArch (File f) throws IOException
+	{
+		String	n = f.getName ();
+		int		dot = n.lastIndexOf ('.');
+		if (dot > 0)		n = n.substring (0, dot);
+		return fromProperties (tc.ExecArch.load (f).getProperties (), n.toUpperCase () + "-1");
+	}
+
+	/**
 	 * Imports a legacy architecture definition (the Properties of a .arch) as
 	 * a deployment with one robot; <code>robotName</code> is used when the
 	 * ADF has no NAME property.

@@ -226,24 +226,9 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 		JMenu		mfile = new JMenu ("File");
 		mfile.add (item ("New Deployment Architecture", KeyEvent.VK_N, mask, new Runnable () { public void run () { newArch (); } }));
-		JMenuItem	load = new JMenuItem (openArchAction ());
-		load.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_O, mask));
-		mfile.add (load);
+		mfile.add (item ("Load Deployment Architecture...", KeyEvent.VK_O, mask, new Runnable () { public void run () { loadArch (); } }));
 		mfile.add (item ("Save Deployment Architecture", KeyEvent.VK_S, mask, new Runnable () { public void run () { saveArch (false); } }));
 		mfile.add (item ("Save Deployment Architecture As...", KeyEvent.VK_S, mask | KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { saveArch (true); } }));
-		JMenuItem	imp = new JMenuItem ("Import Architecture (.arch)...");
-		imp.addActionListener (new java.awt.event.ActionListener ()
-		{
-			public void actionPerformed (ActionEvent e)		{ importArch (); }
-		});
-		mfile.add (imp);
-		mfile.addSeparator ();
-		JMenuItem	wld = new JMenuItem (openWorldAction ());
-		wld.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_W, mask));
-		mfile.add (wld);
-		JMenuItem	edit = new JMenuItem (editArchAction ());
-		edit.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_E, mask));
-		mfile.add (edit);
 		mfile.addSeparator ();
 		JMenuItem	quit = new JMenuItem ("Quit");
 		quit.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_Q, mask));
@@ -346,32 +331,13 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		try
 		{
-			if (f.getName ().toLowerCase ().endsWith (".arch"))		setDeploy (importArch (f));
+			if (f.getName ().toLowerCase ().endsWith (".arch"))		setDeploy (DeployArch.importArch (f));
 			else														setDeploy (DeployArch.load (f));
 		} catch (Exception e)
 		{
 			e.printStackTrace ();
 			JOptionPane.showMessageDialog (this, "Cannot load " + f.getName () + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
 		}
-	}
-
-	/** Imports a legacy architecture definition file (.arch) as a new, unsaved deployment. */
-	public void importArch ()
-	{
-		if (!confirmDiscard ())			return;
-		JFileChooser	fc = chooser (null, ARCHS_DIR, "arch", "Architecture definition files (*.arch)");
-		fc.setDialogTitle ("Import Architecture (.arch)");
-		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
-		loadArch (fc.getSelectedFile ());
-	}
-
-	/** Deployment built from a .arch: one robot named after the file (IFORK-1) unless the ADF has a NAME. */
-	static public DeployArch importArch (File f) throws java.io.IOException
-	{
-		String	n = f.getName ();
-		int		dot = n.lastIndexOf ('.');
-		if (dot > 0)		n = n.substring (0, dot);
-		return DeployArch.fromProperties (ExecArch.load (f).getProperties (), n.toUpperCase () + "-1");
 	}
 
 	/** Installs a deployment and shows the world of its first robot. */
@@ -420,7 +386,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	 */
 	public void editArchitecture ()
 	{
-		ArchitectureDialog	dlg = new ArchitectureDialog (this, deploy);
+		DeploymentDialog	dlg = new DeploymentDialog (this, deploy);
 		DeployArch			result = dlg.showDialog ();
 		if (result == null)				return;
 		String	before = deploy.getWorldFile ();
