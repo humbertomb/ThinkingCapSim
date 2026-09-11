@@ -68,12 +68,23 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 	protected String				title;
 	protected String				defaultDir;
 	protected FileNameExtensionFilter	filter;
+	protected boolean				dotSlash	= true;		// "./conf/x" (worlds) or "conf/x" (architectures)
 
 	public FileCellEditor (String title, String defaultDir, FileNameExtensionFilter filter)
+	{
+		this (title, defaultDir, filter, true);
+	}
+
+	/**
+	 * @param dotSlash  true: paths under the working directory are stored as "./conf/x" (the .world
+	 *                  convention); false: as "conf/x" (the .arch convention)
+	 */
+	public FileCellEditor (String title, String defaultDir, FileNameExtensionFilter filter, boolean dotSlash)
 	{
 		this.title		= title;
 		this.defaultDir	= defaultDir;
 		this.filter		= filter;
+		this.dotSlash	= dotSlash;
 
 		field	= new JTextField ();
 		field.setBorder (null);
@@ -126,7 +137,9 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 
 		if (fc.showOpenDialog (panel) == JFileChooser.APPROVE_OPTION)
 		{
-			field.setText (relativize (fc.getSelectedFile ()));
+			String	path = relativize (fc.getSelectedFile ());
+			if (!dotSlash && path.startsWith ("./"))		path = path.substring (2);
+			field.setText (path);
 			stopCellEditing ();
 		}
 	}

@@ -12,7 +12,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.swing.Action;
@@ -33,17 +35,24 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JComboBox;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import tcapps.tceditor.FileCellEditor;
 import tcapps.tceditor.ToolButtons;
 import tcapps.tceditor.ToolIcon;
 import tcapps.tcsimulator.arch.ArchCanvas;
 import tcapps.tcsimulator.arch.ArchModel;
 import tcapps.tcsimulator.arch.ArchModel.Block;
+import tcapps.tcsimulator.arch.ArchModel.Property;
 
 /**
  * Block editor of an architecture (.arch): a toolbar on the left adds Linda
@@ -58,8 +67,6 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 {
 	private static final long		serialVersionUID = 1L;
 
-	static public final String		PREFIX_ROW	= "Prefix";
-
 	protected ArchModel				model;
 	protected ArchCanvas			canvas;
 	protected JTree					tree;
@@ -73,59 +80,41 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	protected Properties			result;
 	protected boolean				syncing;				// tree <-> canvas selection in progress
 
-	/** Rows of the property editor: the prefix (when renameable) plus the keys of the block. */
+	/** Rows of the property editor: the visible properties of the block ({@link ArchModel#propertiesOf}). */
 	protected class PropsModel extends AbstractTableModel
 	{
 		private static final long	serialVersionUID = 1L;
 		Block			block;
-		List<String>	keys	= new ArrayList<String> ();
+		List<Property>	rows	= new ArrayList<Property> ();
 
 		void setBlock (Block b)
 		{
 			block	= b;
-			keys.clear ();
-			if (b != null)
-			{
-				if ((b.kind == ArchModel.ROUTER) || (b.kind == ArchModel.MODULE) || (b.kind == ArchModel.VROBOT))		keys.add (PREFIX_ROW);
-				keys.addAll (model.keysOf (b));
-			}
+			rows.clear ();
+			if (b != null)		rows.addAll (model.propertiesOf (b));
 			fireTableDataChanged ();
 		}
 
-		public int getRowCount ()				{ return keys.size (); }
+		Property propertyAt (int r)				{ return rows.get (r); }
+
+		public int getRowCount ()				{ return rows.size (); }
 		public int getColumnCount ()			{ return 2; }
 		public String getColumnName (int c)		{ return (c == 0) ? "Property" : "Value"; }
 		public boolean isCellEditable (int r, int c)	{ return c == 1; }
 
 		public Object getValueAt (int r, int c)
 		{
-			String	k = keys.get (r);
-			if (c == 0)						return k;
-			if (k.equals (PREFIX_ROW))		return block.prefix;
-			return model.get (block, k);
+			Property	p = rows.get (r);
+			return (c == 0) ? p.label : model.get (block, p.key);
 		}
 
 		public void setValueAt (Object v, int r, int c)
 		{
-			String	k = keys.get (r);
-			String	s = (v == null) ? "" : v.toString ();
-			if (k.equals (PREFIX_ROW))
-			{
-				Block	nb = model.rename (block, s);
-				if (nb.equals (block))
-				{
-					if (!s.trim ().toUpperCase ().equals (block.prefix))
-						JOptionPane.showMessageDialog (ArchitectureDialog.this, "The prefix '" + s.trim ().toUpperCase () + "' is not valid or is already in use.", getTitle (), JOptionPane.WARNING_MESSAGE);
-					return;
-				}
-				block = nb;
-				rebuild (nb);
-				return;
-			}
-			model.set (block, k, s);
+			Property	p = rows.get (r);
+			model.set (block, p.key, (v == null) ? "" : v.toString ());
 			fireTableCellUpdated (r, c);
-			if (k.equals ("INFO"))		rebuild (block);				// the label of the block changed
-			else						canvas.repaint ();
+			if (p.key.equals ("INFO"))		rebuild (block);				// the label of the block changed
+			else							canvas.repaint ();
 		}
 	}
 
@@ -135,7 +124,7 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 	 */
 	public ArchitectureDialog (Frame owner, Properties props, String robotId)
 	{
-		super (owner, "Architecture", true);
+		super (owner, "Architecture Editor", true);
 		model	= new ArchModel ((Properties) props.clone (), robotId);
 		buildGUI ();
 		rebuild (null);
@@ -198,17 +187,55 @@ public class ArchitectureDialog extends JDialog implements ArchCanvas.Listener
 			public void valueChanged (TreeSelectionEvent e)		{ treeSelected (); }
 		});
 		JScrollPane	treeSP = new JScrollPane (tree);
-		treeSP.setPreferredSize (new Dimension (260, 260));
+		treeSP.setPreferredSize (new Dimension (300, 260));
 
 		propsModel	= new PropsModel ();
-		propsTB		= new JTable (propsModel);
+		propsTB		= new JTable (propsModel)
+		{
+			private static final long	serialVersionUID = 1L;
+			private final FileCellEditor.Renderer	fileRenderer = new FileCellEditor.Renderer ();
+			private final DefaultCellEditor			boolEditor = new DefaultCellEditor (new JComboBox<String> (new String[] { "true", "false" }));
+			private final Map<String, TableCellEditor>	editors = new HashMap<String, TableCellEditor> ();
+
+			public TableCellEditor getCellEditor (int row, int column)
+			{
+				if (column == 1)
+				{
+					Property	p = propsModel.propertyAt (row);
+					switch (p.type)
+					{
+					case ArchModel.P_BOOLEAN:	return boolEditor;
+					case ArchModel.P_CHOICE:
+					case ArchModel.P_FILE:
+					{
+						String			id = ArchModel.KIND_NAMES[propsModel.block.kind] + "/" + p.key;
+						TableCellEditor	ed = editors.get (id);
+						if (ed == null)
+						{
+							if (p.type == ArchModel.P_CHOICE)	ed = new DefaultCellEditor (new JComboBox<String> (p.choices));
+							else								ed = new FileCellEditor ("Select " + p.label, p.fileDir, new FileNameExtensionFilter (p.fileDesc, p.fileExts), false);
+							editors.put (id, ed);
+						}
+						return ed;
+					}
+					}
+				}
+				return super.getCellEditor (row, column);
+			}
+
+			public TableCellRenderer getCellRenderer (int row, int column)
+			{
+				if ((column == 1) && (propsModel.propertyAt (row).type == ArchModel.P_FILE))		return fileRenderer;
+				return super.getCellRenderer (row, column);
+			}
+		};
 		propsTB.setSelectionMode (ListSelectionModel.SINGLE_SELECTION);
 		propsTB.setRowHeight (20);
 		propsTB.putClientProperty ("terminateEditOnFocusLost", Boolean.TRUE);
-		propsTB.getColumnModel ().getColumn (0).setPreferredWidth (90);
-		propsTB.getColumnModel ().getColumn (1).setPreferredWidth (170);
+		propsTB.getColumnModel ().getColumn (0).setPreferredWidth (150);
+		propsTB.getColumnModel ().getColumn (1).setPreferredWidth (150);
 		JScrollPane	propsSP = new JScrollPane (propsTB);
-		propsSP.setPreferredSize (new Dimension (260, 240));
+		propsSP.setPreferredSize (new Dimension (300, 240));
 		propsTitle	= new JLabel (" ");
 		propsTitle.setBorder (BorderFactory.createEmptyBorder (4, 4, 2, 4));
 		JPanel		propsPN = new JPanel (new BorderLayout ());

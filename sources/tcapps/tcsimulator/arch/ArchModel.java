@@ -35,6 +35,87 @@ public class ArchModel
 	static public final String[]	MODULE_KEYS	= { "INFO", "CLASS", "MODE", "PASSIVE", "QUEUED", "POLLED", "EXTIME", "PRI", "GFX", "CONNECT" };
 	static public final String[]	VROBOT_KEYS	= { "INFO", "CLASS", "MODE", "PASSIVE", "EXTIME", "PRI", "GFX", "DESC", "CUST", "WORLD", "TOPOL", "APW", "RADDR", "RPORT", "LPORT", "CONNECT" };
 
+	/* --- property presentation ---------------------------------------- */
+
+	/** Editor types of a property. */
+	static public final int		P_TEXT		= 0;
+	static public final int		P_BOOLEAN	= 1;
+	static public final int		P_CHOICE	= 2;
+	static public final int		P_FILE		= 3;
+
+	/** Execution modes of a module (ThreadDesc.parse_mode) and protocols towards the global Linda (RouterDesc GMODE). */
+	static public final String[]	MODES		= { "shared", "udp", "tcp" };
+	static public final String[]	PROTOCOLS	= { "tcp", "udp", "shared" };
+
+	/** How a property (suffix) of a block is shown and edited. */
+	static public class Property
+	{
+		public String	key;			// suffix of the ADF key (INFO, CLASS, ...)
+		public String	label;			// name shown to the user
+		public int		type;			// P_TEXT, P_BOOLEAN, P_CHOICE, P_FILE
+		public String[]	choices;		// P_CHOICE values
+		public String	fileDir;		// P_FILE: default directory
+		public String	fileDesc;		// P_FILE: filter description
+		public String[]	fileExts;		// P_FILE: filter extensions
+
+		public Property (String key, String label)								{ this (key, label, P_TEXT); }
+		public Property (String key, String label, int type)						{ this.key = key; this.label = label; this.type = type; }
+		public Property (String key, String label, String[] choices)				{ this (key, label, P_CHOICE); this.choices = choices; }
+		public Property (String key, String label, String dir, String desc, String... exts)	{ this (key, label, P_FILE); fileDir = dir; fileDesc = desc; fileExts = exts; }
+		public String toString ()	{ return label; }
+	}
+
+	static public final Property[]	LINDA_PROPS	=
+	{
+		new Property ("ADDR",	"Address"),
+		new Property ("PORT",	"Port"),
+		new Property ("CREATE",	"Instantiate",	P_BOOLEAN),
+	};
+	static public final Property[]	ROUTER_PROPS	=
+	{
+		new Property ("INFO",	"Name"),
+		new Property ("CLASS",	"Class"),
+		new Property ("MODE",	"Mode",			MODES),
+		new Property ("GMODE",	"Protocol",		PROTOCOLS),
+		new Property ("GFX",	"Internal Representation",	P_BOOLEAN),
+	};
+	static public final Property[]	MODULE_PROPS	=
+	{
+		new Property ("INFO",	"Name"),
+		new Property ("CLASS",	"Class"),
+		new Property ("MODE",	"Mode",			MODES),
+		new Property ("PASSIVE","Passive",		P_BOOLEAN),
+		new Property ("QUEUED",	"Queued",		P_BOOLEAN),
+		new Property ("POLLED",	"Polled",		P_BOOLEAN),
+		new Property ("EXTIME",	"Exec. time (ms)"),
+		new Property ("GFX",	"Internal Representation",	P_BOOLEAN),
+		new Property ("CONNECT","Events"),
+	};
+	static public final Property[]	VROBOT_PROPS	=
+	{
+		new Property ("INFO",	"Name"),
+		new Property ("CLASS",	"Class"),
+		new Property ("MODE",	"Mode",			MODES),
+		new Property ("PASSIVE","Passive",		P_BOOLEAN),
+		new Property ("EXTIME",	"Exec. time (ms)"),
+		new Property ("GFX",	"Internal Representation",	P_BOOLEAN),
+		new Property ("DESC",	"DESC",			"./conf/robots",	"Robot descriptions (*.robot)",	"robot"),
+		new Property ("CUST",	"CUST",			"./conf/robots",	"Robot customisations (*.cust)",	"cust"),
+		new Property ("WORLD",	"WORLD",		"./conf/maps",		"World maps (*.world)",			"world"),
+		new Property ("TOPOL",	"TOPOL",		"./conf/maps",		"Topological maps (*.topol)",	"topol"),
+		new Property ("APW",	"APW",			P_BOOLEAN),
+		new Property ("RADDR",	"RADDR"),
+		new Property ("RPORT",	"RPORT"),
+		new Property ("LPORT",	"LPORT"),
+		new Property ("CONNECT","Events"),
+	};
+
+	/** Suffixes that exist in the ADF but are not shown in the editor, per kind. */
+	static public final String[]	LINDA_HIDDEN	= { "CLASS" };
+	static public final String[]	ROUTER_HIDDEN	= { "PRI", "CONNECT" };
+	static public final String[]	MODULE_HIDDEN	= { "PRI" };
+	static public final String[]	VROBOT_HIDDEN	= { "PRI" };
+
 	/** A block of the architecture: kind + property prefix. */
 	static public class Block
 	{
@@ -164,6 +245,33 @@ public class ArchModel
 		Collections.sort (extra);
 		keys.addAll (extra);
 		return keys;
+	}
+
+	/**
+	 * Properties shown in the editor for a block: the standard ones of its
+	 * kind (with their labels and editors), then any other existing with the
+	 * prefix as plain text, minus the hidden ones.
+	 */
+	public List<Property> propertiesOf (Block b)
+	{
+		Property[]		std;
+		String[]		hidden;
+		switch (b.kind)
+		{
+		case GLOBAL_LINDA:
+		case LOCAL_LINDA:	std = LINDA_PROPS;	hidden = LINDA_HIDDEN;	break;
+		case ROUTER:		std = ROUTER_PROPS;	hidden = ROUTER_HIDDEN;	break;
+		case MODULE:		std = MODULE_PROPS;	hidden = MODULE_HIDDEN;	break;
+		case VROBOT:		std = VROBOT_PROPS;	hidden = VROBOT_HIDDEN;	break;
+		default:			return new ArrayList<Property> ();
+		}
+		List<Property>	props = new ArrayList<Property> ();
+		List<String>	known = new ArrayList<String> ();
+		for (Property p : std)		{ props.add (p); known.add (p.key); }
+		for (String h : hidden)		known.add (h);
+		for (String k : keysOf (b))
+			if (!known.contains (k))		props.add (new Property (k, k));
+		return props;
 	}
 
 	public String get (Block b, String key)
