@@ -43,6 +43,7 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 	private static final long		serialVersionUID = 1L;
 
 	static public final long		LPS_PERIOD	= 500;		// min. ms between position updates of a robot
+	static public final int			VISIBLE_ROWS	= 6;	// rows of the Robots table visible at start
 
 	protected RobotList				robots;
 	protected EventList				events;
@@ -62,7 +63,8 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 		events	= new EventList ();
 
 		robotTB	= new JTable (robots);
-		robotTB.setPreferredScrollableViewportSize (new Dimension (500, 40));
+		robotTB.setRowHeight (20);
+		robotTB.setPreferredScrollableViewportSize (new Dimension (500, VISIBLE_ROWS * 20));
 		robotTB.setGridColor (Color.lightGray);
 		robotTB.setShowGrid (true);
 		robotTB.setShowHorizontalLines (true);
@@ -71,7 +73,8 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 		robotSP	= new JScrollPane (robotTB);
 
 		eventTB	= new JTable (events);
-		eventTB.setPreferredScrollableViewportSize (new Dimension (500, 40));
+		eventTB.setRowHeight (20);
+		eventTB.setPreferredScrollableViewportSize (new Dimension (500, VISIBLE_ROWS * 20));
 		eventTB.setDefaultRenderer (Object.class, new EventListRenderer (eventTB));
 		eventTB.setGridColor (Color.lightGray);
 		eventTB.setShowGrid (true);
@@ -102,11 +105,17 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 		return h;
 	}
 
-	/** Initial height of the panel: just what the two tabs need (plus the border of the tab area). */
+	/**
+	 * Initial height of the panel: three times what the two tabs need, and in
+	 * any case enough for the table header plus {@link #VISIBLE_ROWS} rows.
+	 */
 	public int minimumHeight ()
 	{
 		java.awt.Insets	in = getInsets ();
-		return tabsHeight () + in.top + in.bottom + 12;
+		int	tabs	= 3 * (tabsHeight () + in.top + in.bottom + 12);
+		int	header	= (robotTB.getTableHeader () != null) ? robotTB.getTableHeader ().getPreferredSize ().height : 24;
+		int	rows	= header + VISIBLE_ROWS * robotTB.getRowHeight () + robotSP.getInsets ().top + robotSP.getInsets ().bottom + in.top + in.bottom + 8;
+		return Math.max (tabs, rows);
 	}
 
 	public RobotList	getRobotList ()		{ return robots; }
