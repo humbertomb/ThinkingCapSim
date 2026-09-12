@@ -118,7 +118,6 @@ ROBCLASS	= tcrob.ingenia.ifork.IFork
 ROBPASSIVE	= false
 ROBEXTIME	= 115
 ROBDESC		= conf/robots/ifork.robot
-ROBCUST		= conf/robots/ifork.cust
 ROBWORLD	= conf/maps/dulzem3d.world
 ROBTOPOL	= conf/maps/dulzem.topol
 ROBGFX		= true

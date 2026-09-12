@@ -64,7 +64,7 @@ public class DeployArch
 	 * A module of a robot (also the router and the virtual robot). The name is
 	 * the INFO of the ADF; <code>properties</code> holds the rest with the ADF
 	 * suffixes (CLASS, MODE, PASSIVE, QUEUED, POLLED, EXTIME, PRI, GFX, GMODE,
-	 * DESC, CUST, WORLD, TOPOL, APW, RADDR, RPORT, LPORT, ...); the events are
+	 * DESC, WORLD, TOPOL, APW, RADDR, RPORT, LPORT, ...); the events are
 	 * the CONNECT entries. ADF prefixes are generated when an ADF is rebuilt.
 	 */
 	static public class Module

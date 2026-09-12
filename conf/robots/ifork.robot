@@ -43,9 +43,9 @@ ERRORLSB 		= 0.05
 ERRORLSBGAUSS 	= 0.5
 MODELSB 			= 2
 
-lsbfeat0 		= 6
-lsblen0 			= 0.623
-lsbrho0 			= -5.0
+lsbfeat0 		= 2.8
+lsblen0 			= 0.63
+lsbrho0 			= -0.25
 lsbstep0			= 1
 
 MAXLAYER			= 5

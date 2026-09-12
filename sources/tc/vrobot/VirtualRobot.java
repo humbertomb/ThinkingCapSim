@@ -6,7 +6,6 @@ package tc.vrobot;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Enumeration;
 import java.util.Properties;
 
 import tc.runtime.thread.StdThread;
@@ -75,14 +74,12 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected void initialise (Properties props)
 	{		
 		String			rname;
-		String			rcname, name;
 		File				file;
 		FileInputStream	stream;
 		boolean			wapriori;
 		
 		// Load robot environment description and parameters
 		rname			= props.getProperty ("ROBDESC");
-		rcname			= props.getProperty ("ROBCUST");
 		raddress		= props.getProperty ("ROBRADDR");
 		try { rport 	= Integer.valueOf (props.getProperty ("ROBRPORT")).intValue (); } 	catch (Exception e) 		{ rport		= 0; }
 		try { lport 	= Integer.valueOf (props.getProperty ("ROBLPORT")).intValue (); } 	catch (Exception e) 		{ lport		= 0; }
@@ -99,35 +96,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 			rprops.load (stream);
 			stream.close ();
 		} catch (Exception e) { e.printStackTrace (); }
-
-		// Load robot custom description and parameters (these parameters will overwrite the generic ones)
-		if (rcname != null)
-		{
-			Properties		rcprops;
-			Enumeration<Object>	keys;
-			String			key;
-			
-			rcprops			= new Properties ();
-			try
-			{
-				file 		= new File (rcname);
-				stream 		= new FileInputStream (file);
-				rcprops.load (stream);
-				stream.close ();
-			} catch (Exception e) { e.printStackTrace (); }
-			
-			// Load customised parameters
-			name		= rcprops.getProperty ("NAME");
-			
-			keys		= rcprops.keys ();
-			while (keys.hasMoreElements ())
-			{
-				key		= (String) keys.nextElement ();
-				rprops.put (key, rcprops.get (key));
-			}
-			
-			System.out.println ("  [VRob] Loaded customization for robot <"+name+">");
-		}
 
 		// Load world description and parameters (in case "a priori" world is selected)
 		wprops			= null;

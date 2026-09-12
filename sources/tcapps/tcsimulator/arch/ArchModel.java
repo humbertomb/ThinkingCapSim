@@ -111,7 +111,6 @@ public class ArchModel
 		new Property ("EXTIME",	"Exec. time (ms)"),
 		new Property ("GFX",	"Graphics",	P_BOOLEAN),
 		new Property ("DESC",	"DESC",			"./conf/robots",	"Robot descriptions (*.robot)",	"robot"),
-		new Property ("CUST",	"CUST",			"./conf/robots",	"Robot customisations (*.cust)",	"cust"),
 		new Property ("WORLD",	"WORLD",		"./conf/maps",		"World maps (*.world)",			"world"),
 		new Property ("TOPOL",	"TOPOL",		"./conf/maps",		"Topological maps (*.topol)",	"topol"),
 		new Property ("APW",	"APW",			P_BOOLEAN),
