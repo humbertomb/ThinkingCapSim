@@ -957,14 +957,14 @@ public class WorldCanvas extends JPanel
 		g.draw (new Rectangle2D.Double (cxp - rp, cyp - rp, 2 * rp, 2 * rp));
 
 		// material flow along the dock orientation: OUT points away from the dock,
-		// IN points towards its centre, INOUT has a head at both ends
+		// IN points towards its centre (head at the centre), INOUT has a head at both ends
 		double	len = Math.max (rp * 1.8, 0.35 * scale);
 		double	ax = cxp + len * Math.cos (a), ay = cyp - len * Math.sin (a);
 		g.draw (new Line2D.Double (cxp, cyp, ax, ay));
 		boolean	out = (d.flow == WMDock.FlowType.OUT) || (d.flow == WMDock.FlowType.INOUT);
 		boolean	in  = (d.flow == WMDock.FlowType.IN)  || (d.flow == WMDock.FlowType.INOUT);
 		if (out)		arrowHead (g, ax, ay, a);
-		if (in)			arrowHead (g, cxp + rp * Math.cos (a), cyp - rp * Math.sin (a), a + Math.PI);
+		if (in)			arrowHead (g, cxp, cyp, a + Math.PI);				// head at the dock centre
 		label (g, d.label, d.pos.x (), d.pos.y (), sel ? C_SEL : C_DOCK);
 	}
 
