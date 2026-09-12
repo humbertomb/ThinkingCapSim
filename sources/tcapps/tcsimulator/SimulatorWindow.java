@@ -508,7 +508,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	/** Opens the task set editor and sends the resulting plan to the chosen robot. */
 	public void editTasks ()
 	{
-		TaskDialog	dlg = new TaskDialog (this, TaskDialog.placesOf (world), lastTasks, robotNames ());
+		TaskDialog	dlg = new TaskDialog (this, world, lastTasks, robotNames ());
 		Sequence	seq = dlg.showDialog ();
 		if (seq == null)				return;
 		lastTasks = seq;

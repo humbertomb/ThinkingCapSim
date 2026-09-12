@@ -10,7 +10,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.Properties;
-import java.util.StringTokenizer;
 import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
@@ -269,7 +268,6 @@ public class World extends Object
 	
 	public void fromProperties (Properties worldprop)
 	{		
-		StringTokenizer		st;
 		String				prop;
 		
 		if (worldprop == null)				return;

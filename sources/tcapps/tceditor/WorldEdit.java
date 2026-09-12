@@ -801,7 +801,7 @@ public final class WorldEdit
 		case WorldItem.BEACON:		return new String[] { "label", "x", "y", "z", "orientation", "width", "height" };
 		case WorldItem.CBEACON:		return new String[] { "label", "x", "y", "z", "diameter", "height" };
 		case WorldItem.WAYPOINT:	return new String[] { "label", "x", "y", "z", "orientation" };
-		case WorldItem.DOCK:		return new String[] { "label", "x", "y", "z", "orientation" };
+		case WorldItem.DOCK:		return new String[] { "label", "x", "y", "z", "orientation", "flow" };
 		case WorldItem.START:		return new String[] { "x", "y", "z", "orientation" };
 		case WorldItem.DEFAULTS:	return new String[] { "wall width", "wall height", "wall texture", "connector width", "connector height", "connector texture", "zone texture", "farea texture" };
 		}
@@ -944,6 +944,7 @@ public final class WorldEdit
 			if (name.equals ("y"))			return fmt (d.pos.y ());
 			if (name.equals ("z"))			return fmt (d.pos.z ());
 			if (name.equals ("orientation"))		return fmt (Math.toDegrees (d.pos.alpha ()));
+			if (name.equals ("flow"))		return d.flow.name ();
 			break;
 		}
 		case WorldItem.START:
@@ -1130,6 +1131,7 @@ public final class WorldEdit
 			else if (name.equals ("y"))			d.pos.y (num (value));
 			else if (name.equals ("z"))			d.pos.z (num (value));
 			else if (name.equals ("orientation"))		d.pos.alpha (Math.toRadians (num (value)));
+			else if (name.equals ("flow"))		d.flow = WMDock.parseFlow (value);
 			return;
 		}
 		case WorldItem.START:
@@ -1168,6 +1170,15 @@ public final class WorldEdit
 	static public boolean isBooleanProperty (String name)
 	{
 		return name.equals ("usecolor");
+	}
+
+	/** Names of the dock flow types, the choices of the "flow" property. */
+	static public String[] flowNames ()
+	{
+		WMDock.FlowType[]	types = WMDock.FlowType.values ();
+		String[]			names = new String[types.length];
+		for (int i = 0; i < types.length; i++)		names[i] = types[i].name ();
+		return names;
 	}
 
 	static private Point2 toWorld (double lx, double ly, double rx, double ry, double ra)

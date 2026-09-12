@@ -31,6 +31,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
+import tc.shared.world.WMDock;
 import tc.shared.world.World;
 import tclib.planning.sequence.Sequence;
 
@@ -46,6 +47,8 @@ public class TaskDialog extends JDialog
 
 	static public final String[]	ACTIONS	= { "load", "unload", "goto", "stay" };
 
+	protected World					world;					// docks with their flow type (null: no filtering)
+	protected String[]				places;					// all the places offered
 	protected String[]				robots;
 	protected JComboBox<String>		robotCB;				// null with one robot or none
 	protected JComboBox<String>		placeCB;
@@ -84,7 +87,24 @@ public class TaskDialog extends JDialog
 	/** @param robots  robots the task set can be sent to (a selector is shown when there is more than one) */
 	public TaskDialog (Frame owner, String[] places, Sequence initial, String[] robots)
 	{
+		this (owner, null, places, initial, robots);
+	}
+
+	/**
+	 * Task editor over the docks of a world: the Place selector only offers the
+	 * docks whose material flow ({@link WMDock.FlowType}) admits the selected
+	 * action (load: OUT or INOUT; unload: IN or INOUT; others: all).
+	 */
+	public TaskDialog (Frame owner, World world, Sequence initial, String[] robots)
+	{
+		this (owner, world, placesOf (world), initial, robots);
+	}
+
+	protected TaskDialog (Frame owner, World world, String[] places, Sequence initial, String[] robots)
+	{
 		super (owner, "Tasks", true);
+		this.world	= world;
+		this.places	= places;
 		this.robots	= robots;
 		buildGUI (places);
 		if (initial != null)
@@ -103,13 +123,41 @@ public class TaskDialog extends JDialog
 		return p;
 	}
 
+	/** Places admitting the given action: docks whose flow accepts it (all of them without a world). */
+	protected String[] placesFor (String action)
+	{
+		if (world == null)				return places;
+		List<String>	sel = new ArrayList<String> ();
+		for (int i = 0; i < world.docks ().n (); i++)
+		{
+			WMDock	d = world.docks ().at (i);
+			if (d.accepts (action))		sel.add (d.label);
+		}
+		return sel.toArray (new String[sel.size ()]);
+	}
+
+	/** Refills the Place selector for the current action, keeping the selected place when still offered. */
+	protected void updatePlaces ()
+	{
+		String		current = (String) placeCB.getSelectedItem ();
+		String[]	offered = placesFor ((String) actionCB.getSelectedItem ());
+		placeCB.setModel (new javax.swing.DefaultComboBoxModel<String> (offered));
+		if (current != null)
+			for (String p : offered)		if (p.equals (current))		{ placeCB.setSelectedItem (current); break; }
+		addBT.setEnabled (offered.length > 0);
+	}
+
 	private void buildGUI (String[] places)
 	{
-		// --- first line: place, action, add
-		placeCB		= new JComboBox<String> (places);
+		// --- first line: action, place, add
 		actionCB	= new JComboBox<String> (ACTIONS);
+		placeCB		= new JComboBox<String> (places);
 		addBT		= new JButton ("Add Task");
-		addBT.setEnabled (places.length > 0);
+		actionCB.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ updatePlaces (); }
+		});
+		updatePlaces ();
 		addBT.addActionListener (new ActionListener ()
 		{
 			public void actionPerformed (ActionEvent e)
@@ -120,11 +168,11 @@ public class TaskDialog extends JDialog
 			}
 		});
 		JPanel		top = new JPanel (new FlowLayout (FlowLayout.LEFT, 6, 4));
-		top.add (new JLabel ("Place"));
-		top.add (placeCB);
-		top.add (Box.createHorizontalStrut (8));
 		top.add (new JLabel ("Action"));
 		top.add (actionCB);
+		top.add (Box.createHorizontalStrut (8));
+		top.add (new JLabel ("Place"));
+		top.add (placeCB);
 		top.add (Box.createHorizontalStrut (8));
 		top.add (addBT);
 

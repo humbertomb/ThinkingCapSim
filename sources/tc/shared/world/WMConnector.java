@@ -28,8 +28,8 @@ import wucore.utils.geom.Point3;
 public class WMConnector extends WMElement
 {
     // 2D components
-    public Line2					edge;		// Physical location of the door
-    public Line2					path;		// Points for crossing the door
+    public Line2				edge;		// Physical location of the door
+    public Line2				path;		// Points for crossing the door
     
     // 2 1/2 D components
     public double				width;

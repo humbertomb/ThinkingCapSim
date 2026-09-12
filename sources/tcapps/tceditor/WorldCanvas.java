@@ -949,8 +949,32 @@ public class WorldCanvas extends JPanel
 
 	private void drawDock (Graphics2D g, WMDock d, boolean sel)
 	{
-		drawPose (g, d.pos.x (), d.pos.y (), d.pos.alpha (), world.D_LENGHT / 2.0, C_DOCK, sel, true);
+		double	a = d.pos.alpha ();
+		double	cxp = px (d.pos.x ()), cyp = py (d.pos.y ());
+		double	rp = Math.max (5.0, (world.D_LENGHT / 2.0) * scale);
+		g.setColor (sel ? C_SEL : C_DOCK);
+		g.setStroke (stroke (sel ? 2.5f : 1.5f));
+		g.draw (new Rectangle2D.Double (cxp - rp, cyp - rp, 2 * rp, 2 * rp));
+
+		// material flow along the dock orientation: OUT points away from the dock,
+		// IN points towards its centre, INOUT has a head at both ends
+		double	len = Math.max (rp * 1.8, 0.35 * scale);
+		double	ax = cxp + len * Math.cos (a), ay = cyp - len * Math.sin (a);
+		g.draw (new Line2D.Double (cxp, cyp, ax, ay));
+		boolean	out = (d.flow == WMDock.FlowType.OUT) || (d.flow == WMDock.FlowType.INOUT);
+		boolean	in  = (d.flow == WMDock.FlowType.IN)  || (d.flow == WMDock.FlowType.INOUT);
+		if (out)		arrowHead (g, ax, ay, a);
+		if (in)			arrowHead (g, cxp + rp * Math.cos (a), cyp - rp * Math.sin (a), a + Math.PI);
 		label (g, d.label, d.pos.x (), d.pos.y (), sel ? C_SEL : C_DOCK);
+	}
+
+	/** Arrow head at pixel (x, y) pointing in world direction a (radians, counter-clockwise). */
+	private void arrowHead (Graphics2D g, double x, double y, double a)
+	{
+		double	hx1 = x - 7 * Math.cos (a - 0.5), hy1 = y + 7 * Math.sin (a - 0.5);
+		double	hx2 = x - 7 * Math.cos (a + 0.5), hy2 = y + 7 * Math.sin (a + 0.5);
+		g.draw (new Line2D.Double (x, y, hx1, hy1));
+		g.draw (new Line2D.Double (x, y, hx2, hy2));
 	}
 
 	private void drawStart (Graphics2D g, int i, boolean sel)

@@ -180,6 +180,8 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 					if (name.endsWith ("texture"))		return FileCellEditor.TEXTURE;
 					if (name.equals ("color"))			return ColorCellEditor.INSTANCE;
 					if (WorldEdit.isBooleanProperty (name))	return boolEditor;
+					if (name.equals ("flow") && (propModel.item != null) && (propModel.item.kind == WorldItem.DOCK))
+						return new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (WorldEdit.flowNames ()));
 					if (name.equals ("icon") && (propModel.item != null) && (propModel.item.kind == WorldItem.OBJECT))
 					{
 						// choose among the icons defined in the world
