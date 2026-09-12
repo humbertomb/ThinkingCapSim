@@ -191,6 +191,12 @@ public class IndoorPerception extends Perception
 		l_fsegs.merge_inviews ();
 	}
 	
+	protected void close_gfx ()
+	{
+		if (win != null)		win.close ();
+		win		= null;
+	}
+
 	public void step (long ctime)
 	{
 		if ((state != RUN) || (data == null))		return;

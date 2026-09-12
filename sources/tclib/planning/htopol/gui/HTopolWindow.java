@@ -304,6 +304,7 @@ public class HTopolWindow extends JFrame implements Runnable
 
 	public void close ()
 	{
+		relaxing		= false;										// stop the relaxation thread, if running
 		if (parent != null)
 			parent.childClosed (this); 
 

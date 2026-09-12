@@ -122,12 +122,15 @@ public abstract class StdThread implements Runnable, LindaListener
 		}
 		
 		thlock		= false;
-		
+
 		if (linda != null)
 		{
 			linda.stop ();
 			linda		= null;
 		}
+
+		// Close the graphical windows opened by the module
+		close_gfx_safe ();
 		
 		// Shut down threads and connections
 		if (thread != null)			
@@ -271,7 +274,42 @@ public abstract class StdThread implements Runnable, LindaListener
 	
 	// Template instance methods. Subclasses COULD implement
 	public void poll ()										{ }
-	
+
+	/**
+	 * Closes the windows the module opened when running with local graphics
+	 * ({@link #localgfx}). Called from {@link #stop} on the event dispatch
+	 * thread; the default implementation does nothing. Subclasses that open
+	 * windows in {@link #initialise} should dispose them here, so that the
+	 * windows do not survive the termination of the execution.
+	 */
+	protected void close_gfx ()								{ }
+
+	/** Runs {@link #close_gfx} on the event dispatch thread, ignoring failures. */
+	protected void close_gfx_safe ()
+	{
+		Runnable		close = new Runnable ()
+		{
+			public void run ()
+			{
+				try { close_gfx (); } catch (Exception e) { e.printStackTrace (); }
+			}
+		};
+		try
+		{
+			if (javax.swing.SwingUtilities.isEventDispatchThread ())
+				close.run ();
+			else
+				javax.swing.SwingUtilities.invokeAndWait (close);
+		}
+		catch (Exception e) { e.printStackTrace (); }
+	}
+
+	/** Disposes a window if it exists (helper for {@link #close_gfx}). */
+	protected static void dispose_window (java.awt.Window win)
+	{
+		if (win != null)		win.dispose ();
+	}
+
 	// Abstract instance methods. Subclasses MUST implement
 	public abstract void step (long ctime);
 	protected abstract void initialise (Properties props);

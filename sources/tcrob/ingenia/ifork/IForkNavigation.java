@@ -93,6 +93,13 @@ public class IForkNavigation extends IndoorNavigation
 		linda.write (ztuple);
 	}
 	
+	protected void close_gfx ()
+	{
+		super.close_gfx ();
+		if (win != null)		win.close ();
+		win		= null;
+	}
+
 	public void notify_goal (String space, ItemGoal item)
 	{		
 		super.notify_goal (space, item);

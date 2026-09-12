@@ -276,6 +276,12 @@ public class FHBController extends Controller
 	/**
 	 * This method is called every control cycle and it represent the core of the controller
 	 */
+	protected void close_gfx ()
+	{
+		if (c_plot != null)		c_plot.close ();
+		if (b_plot != null)		b_plot.close ();
+	}
+
 	public void step (long ctime) 
 	{
 		int				i;

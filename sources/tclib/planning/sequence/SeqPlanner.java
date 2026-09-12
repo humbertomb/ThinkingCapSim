@@ -33,6 +33,12 @@ public class SeqPlanner extends Planner
 	}
 	
 	// Instance methods
+	protected void close_gfx ()
+	{
+		if (swin != null)		swin.close ();
+		swin		= null;
+	}
+
 	public void step (long ctime) 
 	{
 		// Check if a plan can be computed

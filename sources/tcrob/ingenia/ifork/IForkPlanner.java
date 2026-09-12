@@ -199,6 +199,13 @@ public class IForkPlanner extends SeqPlanner
 		return STAY;
 	}
 	
+	protected void close_gfx ()
+	{
+		super.close_gfx ();
+		if (win != null)		win.close ();
+		win		= null;
+	}
+
 	public void step (long ctime) 
 	{
 		// Check if a plan can be computed

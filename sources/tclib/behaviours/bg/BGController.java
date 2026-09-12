@@ -277,6 +277,12 @@ public class BGController extends Controller
 		new_id = goal.timestamp.longValue ();
 	}
 	
+	protected void close_gfx ()
+	{
+		if (c_plot != null)		c_plot.close ();
+		if (b_plot != null)		b_plot.close ();
+	}
+
 	public void step (long ctime) 
 	{
 		if (state != RUN)												return;

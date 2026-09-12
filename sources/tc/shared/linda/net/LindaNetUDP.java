@@ -116,11 +116,11 @@ public class LindaNetUDP extends LindaNet
 	
 	public synchronized void close ()
 	{ 
+		if (nserver != null)		nserver.stop ();					// stop the receive loop before closing its socket
+		nserver		= null;
+		
 		if (socket != null) 		socket.close ();
 		socket		= null;
-		
-		if (nserver != null)		nserver.stop ();
-		nserver		= null;
 	}
 	
 	public boolean sendTuple (LindaNetConn dconn, int command, Tuple tuple)

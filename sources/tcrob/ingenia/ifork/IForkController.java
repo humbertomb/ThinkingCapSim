@@ -1146,6 +1146,13 @@ public class IForkController extends Controller
 		linda.write (miftuple);
 	}
 	
+	protected void close_gfx ()
+	{
+		if (win != null)		win.close ();
+		win		= null;
+		if (c_plot != null)		c_plot.close ();
+	}
+
 	public void step (long ctime) 
 	{
 		if (state != RUN)						return;

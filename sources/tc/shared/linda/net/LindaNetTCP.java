@@ -222,7 +222,11 @@ public class LindaNetTCP extends LindaNet
 					
 					client	= new LindaNetTCPClient (socket, linda);
 					pserver.put (new String (socket.getInetAddress()+" "+socket.getPort ()), client);
-				} catch (Exception e) { e.printStackTrace(); }
+				} catch (Exception e)
+				{
+					if (!running || ssocket.isClosed ())		break;			// server being stopped: accept() fails on the closed socket
+					e.printStackTrace();
+				}
 	
 				Thread.yield ();
 			}

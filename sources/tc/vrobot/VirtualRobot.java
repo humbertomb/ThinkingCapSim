@@ -228,6 +228,12 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 			try { javax.swing.SwingUtilities.invokeAndWait (open); } catch (Exception e) { e.printStackTrace (); }
 	}
 	
+	protected void close_gfx ()
+	{
+		if (plot != null)		plot.close ();
+		plot		= null;
+	}
+
 	public void childClosed (Object window)
 	{
 		if (window instanceof PlotWindow)

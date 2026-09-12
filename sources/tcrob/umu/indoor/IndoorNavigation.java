@@ -91,6 +91,14 @@ public class IndoorNavigation extends Navigation
 		dilation	= DEF_DIL / cell_size;
 	}
 	
+	protected void close_gfx ()
+	{
+		if (gwin != null)		gwin.close ();
+		if (fwin != null)		fwin.close ();
+		gwin		= null;
+		fwin		= null;
+	}
+
 	public void step (long ctime)
 	{
 		if (!initialised)		return;
