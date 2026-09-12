@@ -24,6 +24,7 @@ import tc.shared.world.WMPath;
 import tc.shared.world.WMWall;
 import tc.shared.world.WMWaypoint;
 import tc.shared.world.WMZone;
+import tc.shared.world.WMStart;
 import tc.shared.world.World;
 import wucore.utils.color.ColorTool;
 import wucore.utils.color.WColor;
@@ -59,7 +60,7 @@ public final class WorldEdit
 	{
 		Properties		props = new Properties ();
 
-		props.setProperty ("START", w.start_x () + ", " + w.start_y () + ", " + w.start_z () + ", " + Math.toDegrees (w.start_a ()));
+		w.startsToProperties (props);
 		w.path ().toProperties (props);
 		w.walls ().toProperties (props);
 		w.icons ().toProperties (props);
@@ -118,7 +119,7 @@ public final class WorldEdit
 		case WorldItem.WAYPOINT:	return w.wps ().n ();
 		case WorldItem.DOCK:		return w.docks ().n ();
 		case WorldItem.ICON:		return w.icons ().n ();
-		case WorldItem.START:
+		case WorldItem.START:		return w.n_starts ();
 		case WorldItem.DEFAULTS:	return 1;
 		}
 		return 0;
@@ -150,7 +151,7 @@ public final class WorldEdit
 		case WorldItem.CBEACON:		return w.cbeacons ().at (it.index).label;
 		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).label;
 		case WorldItem.DOCK:		return w.docks ().at (it.index).label;
-		case WorldItem.START:		return "START (" + fmt (w.start_x ()) + ", " + fmt (w.start_y ()) + ", " + fmt (Math.toDegrees (w.start_a ())) + "º)";
+		case WorldItem.START:		{ WMStart st = w.start (it.index); return "START_" + (it.index + 1) + " (" + fmt (st.x ()) + ", " + fmt (st.y ()) + ", " + fmt (Math.toDegrees (st.orientation)) + "º)"; }
 		case WorldItem.ICON:
 		{
 			WMIcon	ic = w.icons ().at (it.index);
@@ -319,6 +320,14 @@ public final class WorldEdit
 		return new WorldItem (WorldItem.OBJECT, w.objects ().n () - 1);
 	}
 
+	/** Adds a start point (START_n) with the orientation of the last one. */
+	static public WorldItem addStart (World w, double x, double y)
+	{
+		WMStart	last = w.start (w.n_starts () - 1);
+		w.addStart (x, y, last.z (), last.orientation);
+		return new WorldItem (WorldItem.START, w.n_starts () - 1);
+	}
+
 	static public WorldItem addWaypoint (World w, double x, double y)
 	{
 		w.wps ().add (new WMWaypoint (new Position (x, y, 0.0), uniqueLabel (w, "wp")));
@@ -369,8 +378,9 @@ public final class WorldEdit
 			if (iconUsers (w, w.icons ().at (it.index).label) > 0)		return false;		// still referenced
 			w.icons ().remove (it.index);
 			return true;
+		case WorldItem.START:		return w.removeStart (it.index);		// the last one stays
 		}
-		return false;		// START and DEFAULTS cannot be removed
+		return false;		// DEFAULTS cannot be removed
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -449,7 +459,7 @@ public final class WorldEdit
 		}
 		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).pos.distance (x, y);
 		case WorldItem.DOCK:		return w.docks ().at (it.index).pos.distance (x, y);
-		case WorldItem.START:		return Math.hypot (w.start_x () - x, w.start_y () - y);
+		case WorldItem.START:		return Math.hypot (w.start (it.index).x () - x, w.start (it.index).y () - y);
 		}
 		return Double.MAX_VALUE;
 	}
@@ -537,7 +547,7 @@ public final class WorldEdit
 			p.x (p.x () + dx);	p.y (p.y () + dy);
 			break;
 		}
-		case WorldItem.START:		w.setStart (w.start_x () + dx, w.start_y () + dy, w.start_a ());	break;
+		case WorldItem.START:		{ WMStart st = w.start (it.index); st.set (st.x () + dx, st.y () + dy, st.z (), st.orientation); break; }
 		}
 	}
 
@@ -606,7 +616,7 @@ public final class WorldEdit
 			Position	p = w.docks ().at (it.index).pos;
 			return new Point2[] { new Point2 (p.x (), p.y ()), arrow (p.x (), p.y (), p.alpha ()) };
 		}
-		case WorldItem.START:		return new Point2[] { new Point2 (w.start_x (), w.start_y ()), arrow (w.start_x (), w.start_y (), w.start_a ()) };
+		case WorldItem.START:		{ WMStart st = w.start (it.index); return new Point2[] { new Point2 (st.x (), st.y ()), arrow (st.x (), st.y (), st.orientation) }; }
 		}
 		return new Point2[0];
 	}
@@ -689,9 +699,12 @@ public final class WorldEdit
 			break;
 		}
 		case WorldItem.START:
-			if (h == 0)		w.setStart (x, y, w.start_a ());
-			else			w.setStart (w.start_x (), w.start_y (), Math.atan2 (y - w.start_y (), x - w.start_x ()));
+		{
+			WMStart	st = w.start (it.index);
+			if (h == 0)		st.set (x, y, st.z (), st.orientation);
+			else			st.orientation = Math.atan2 (y - st.y (), x - st.x ());
 			break;
+		}
 		}
 	}
 
@@ -763,7 +776,7 @@ public final class WorldEdit
 		case WorldItem.CBEACON:		return w.cbeacons ().at (it.index).pos.z ();
 		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).pos.z ();
 		case WorldItem.DOCK:		return w.docks ().at (it.index).pos.z ();
-		case WorldItem.START:		return w.start_z ();
+		case WorldItem.START:		return w.start (it.index).z ();
 		}
 		return 0.0;
 	}
@@ -934,11 +947,14 @@ public final class WorldEdit
 			break;
 		}
 		case WorldItem.START:
-			if (name.equals ("x"))			return fmt (w.start_x ());
-			if (name.equals ("y"))			return fmt (w.start_y ());
-			if (name.equals ("z"))			return fmt (w.start_z ());
-			if (name.equals ("orientation"))		return fmt (Math.toDegrees (w.start_a ()));
+		{
+			WMStart	st = w.start (it.index);
+			if (name.equals ("x"))			return fmt (st.x ());
+			if (name.equals ("y"))			return fmt (st.y ());
+			if (name.equals ("z"))			return fmt (st.z ());
+			if (name.equals ("orientation"))		return fmt (Math.toDegrees (st.orientation));
 			break;
+		}
 		case WorldItem.DEFAULTS:
 			if (name.equals ("wall width"))		return fmt (w.walls ().defaultWidth ());
 			if (name.equals ("wall height"))	return fmt (w.walls ().defaultHeight ());
@@ -1117,11 +1133,14 @@ public final class WorldEdit
 			return;
 		}
 		case WorldItem.START:
-			if (name.equals ("x"))				w.setStart (num (value), w.start_y (), w.start_a ());
-			else if (name.equals ("y"))			w.setStart (w.start_x (), num (value), w.start_a ());
-			else if (name.equals ("z"))			w.setStart (w.start_x (), w.start_y (), num (value), w.start_a ());
-			else if (name.equals ("orientation"))		w.setStart (w.start_x (), w.start_y (), Math.toRadians (num (value)));
+		{
+			WMStart	st = w.start (it.index);
+			if (name.equals ("x"))				st.set (num (value), st.y (), st.z (), st.orientation);
+			else if (name.equals ("y"))			st.set (st.x (), num (value), st.z (), st.orientation);
+			else if (name.equals ("z"))			st.set (st.x (), st.y (), num (value), st.orientation);
+			else if (name.equals ("orientation"))		st.orientation = Math.toRadians (num (value));
 			return;
+		}
 		case WorldItem.DEFAULTS:
 			if (name.equals ("wall width"))			w.walls ().setDefaults (num (value), w.walls ().defaultHeight (), w.walls ().defaultTexture ());
 			else if (name.equals ("wall height"))	w.walls ().setDefaults (w.walls ().defaultWidth (), num (value), w.walls ().defaultTexture ());

@@ -265,7 +265,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		addTool (tb, group, WorldCanvas.T_BEACON,	ToolIcon.BEACON,	"Strip beacon",			"B");
 		addTool (tb, group, WorldCanvas.T_CBEACON,	ToolIcon.CBEACON,	"Cylindrical beacon",	"C");
 		addTool (tb, group, WorldCanvas.T_PATH,		ToolIcon.PATH,		"Path point",			"T");
-		addTool (tb, group, WorldCanvas.T_START,	ToolIcon.START,		"Start point",			"R");
+		addTool (tb, group, WorldCanvas.T_START,	ToolIcon.START,		"Start point (one per robot)",	"R");
 		tb.addSeparator ();
 
 		deleteAction = new AbstractAction ("Delete", new ToolIcon (ToolIcon.DELETE))
@@ -384,7 +384,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.setSelection (new WorldItem (WorldItem.DEFAULTS, 0)); }
 		}));
-		medit.add (item ("Edit Start Point...", null, new AbstractAction ()
+		medit.add (item ("Edit First Start Point...", null, new AbstractAction ()
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.setSelection (new WorldItem (WorldItem.START, 0)); }
 		}));
@@ -521,7 +521,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 	{
 		propModel.setItem (item);
 		selLabel.setText ((item == null) ? " " : WorldItem.NAMES[item.kind] + ":  " + WorldEdit.describe (world, item));
-		deleteAction.setEnabled ((item != null) && (item.kind != WorldItem.START) && (item.kind != WorldItem.DEFAULTS));
+		deleteAction.setEnabled ((item != null) && (item.kind != WorldItem.DEFAULTS) && ((item.kind != WorldItem.START) || (world.n_starts () > 1)));
 		// the icon tool only applies to elements that have an icon (objects) or to icons themselves
 		boolean	hasIcon = (item != null) && ((item.kind == WorldItem.OBJECT) || (item.kind == WorldItem.ICON));
 		toolButtons[WorldCanvas.T_ICON].setEnabled (hasIcon);
@@ -881,7 +881,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		public String toString ()
 		{
 			int	kind = ((Integer) getUserObject ()).intValue ();
-			if ((kind == WorldItem.START) || (kind == WorldItem.DEFAULTS))		return WorldItem.PLURALS[kind];
+			if (kind == WorldItem.DEFAULTS)		return WorldItem.PLURALS[kind];
 			if (kind == WorldItem.BEACON)											return "Beacons  (" + n + ")";
 			return WorldItem.PLURALS[kind] + "  (" + n + ")";
 		}

@@ -35,7 +35,7 @@ public class WorldItem
 
 	static public final String[]	PLURALS	= {
 		"Zones", "Forbidden areas", "Path points", "Walls", "Objects", "Connectors",
-		"Strip beacons", "Cylindrical beacons", "Waypoints", "Docks", "Start point", "Icons", "Defaults"
+		"Strip beacons", "Cylindrical beacons", "Waypoints", "Docks", "Start points", "Icons", "Defaults"
 	};
 
 	public int			kind;

@@ -422,9 +422,12 @@ public class WorldView3DWindow extends JFrame
 		}
 
 		// start point: red disc with heading bar
-		double		sx = world.start_x (), sy = world.start_y (), sz = world.start_z (), sa = world.start_a ();
-		bg.addChild (cylinder (sx, sy, sz, 0.25, 0.04, C_START, 0.3f));
-		bg.addChild (segment (sx, sy, sz + 0.05, sx + 0.5 * Math.cos (sa), sy + 0.5 * Math.sin (sa), sz + 0.05, C_START, 3f));
+		for (tc.shared.world.WMStart st : world.starts ())
+		{
+			double	sx = st.x (), sy = st.y (), sz = st.z (), sa = st.orientation;
+			bg.addChild (cylinder (sx, sy, sz, 0.25, 0.04, C_START, 0.3f));
+			bg.addChild (segment (sx, sy, sz + 0.05, sx + 0.5 * Math.cos (sa), sy + 0.5 * Math.sin (sa), sz + 0.05, C_START, 3f));
+		}
 
 		return bg;
 	}

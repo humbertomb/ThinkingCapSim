@@ -38,11 +38,9 @@ public class World extends Object
 	public double					G_LENGHT	= 0.35;		// Goal point arrow lenght (m)
 	public double					D_LENGHT	= 0.25;		// Dock icon lenght (m)
 	
-	// Robot starting location
-	protected double					sx;
-	protected double					sy;
-	protected double					sz;
-	protected double					sa;
+	// Robot starting locations (at least one; the i-th robot of a simulation takes the i-th one)
+	protected ArrayList<WMStart>		starts		= new ArrayList<WMStart> ();
+	{ starts.add (new WMStart (0.0, 0.0, 0.0, 0.0)); }
 	
 	protected WMPath				path;
 	
@@ -81,11 +79,25 @@ public class World extends Object
 	
 	/* Accessor methods */	
 	
-	// Robot starting location
-	public final double	 	start_x () 			{ return sx; }
-	public final double	 	start_y () 			{ return sy; }
-	public final double	 	start_z () 			{ return sz; }
-	public final double	 	start_a () 			{ return sa; }
+	// Robot starting location (the first one)
+	public final double	 	start_x () 			{ return starts.get (0).x (); }
+	public final double	 	start_y () 			{ return starts.get (0).y (); }
+	public final double	 	start_z () 			{ return starts.get (0).z (); }
+	public final double	 	start_a () 			{ return starts.get (0).orientation; }
+
+	/** All the start points (START_1, START_2, ...). Never empty. */
+	public final java.util.List<WMStart>	starts ()	{ return starts; }
+	public final int		n_starts ()				{ return starts.size (); }
+	/** The i-th start point, or the first one when there are not that many (multi-robot simulations). */
+	public final WMStart	start (int i)			{ return ((i >= 0) && (i < starts.size ())) ? starts.get (i) : starts.get (0); }
+	public final WMStart	addStart (double x, double y, double z, double a)	{ WMStart st = new WMStart (x, y, z, a); starts.add (st); return st; }
+	/** Removes a start point; the last one cannot be removed. */
+	public final boolean	removeStart (int i)
+	{
+		if ((starts.size () <= 1) || (i < 0) || (i >= starts.size ()))		return false;
+		starts.remove (i);
+		return true;
+	}
 	
 	// World components
 	public final WMPath 			path ()				{ return path; }
@@ -118,22 +130,25 @@ public class World extends Object
 	}
 	
 	/* Instance methods */
+
+	/** Writes STARTS and START_1..START_n. */
+	public void startsToProperties (Properties p)
+	{
+		p.setProperty ("STARTS", String.valueOf (starts.size ()));
+		for (int i = 0; i < starts.size (); i++)
+			p.setProperty ("START_" + (i + 1), starts.get (i).toProperty ());
+	}
 	
 	/* Set methods */
 	// Robot starting location
 	public final void setStart (double sx, double sy, double sa) 		
 	{
-		this.sx = sx;
-		this.sy = sy;
-		this.sa = sa;
+		starts.get (0).set (sx, sy, starts.get (0).z (), sa);
 	}
 
 	public final void setStart (double sx, double sy, double sz, double sa) 		
 	{
-		this.sx = sx;
-		this.sy = sy;
-		this.sz = sz;
-		this.sa = sa;
+		starts.get (0).set (sx, sy, sz, sa);
 	}
 	
 	public double getAngle (String label)
@@ -235,12 +250,10 @@ public class World extends Object
 					String texto = ((TextDxf)entity).getText();
 					if(texto.startsWith("START")){
 						String prop = texto.substring(texto.lastIndexOf("=")+1).trim();
-						StringTokenizer st = new StringTokenizer (prop,", \t");
-						// DXF files written by older versions carry "x, y, angle" (no z)
-						sx = Double.parseDouble (st.nextToken());
-						sy = Double.parseDouble (st.nextToken());
-						sz = (st.countTokens () >= 2) ? Double.parseDouble (st.nextToken()) : 0.0;
-						sa = Math.toRadians (Double.parseDouble (st.nextToken()));
+						// DXF files written by older versions carry "x, y, angle" (no z); START_i texts add start points
+						WMStart	st = new WMStart (prop);
+						if (texto.startsWith ("START_") && !texto.startsWith ("START_1"))		starts.add (st);
+						else	starts.set (0, st);
 					}
 				}
 			}
@@ -261,13 +274,17 @@ public class World extends Object
 		
 		if (worldprop == null)				return;
 		
-		// Read in Robot starting location (x, y, alpha)
-		prop = worldprop.getProperty ("START","0.0, 0.0, 0.0, 0.0");
-		st = new StringTokenizer (prop,", \t");
-		sx = Double.parseDouble (st.nextToken());
-		sy = Double.parseDouble (st.nextToken());
-		sz = Double.parseDouble (st.nextToken());
-		sa = Math.toRadians (Double.parseDouble (st.nextToken()));
+		// Read in Robot starting locations: STARTS = n + START_1..START_n, or the legacy single START
+		starts.clear ();
+		int	nstarts = 0;
+		try { nstarts = Integer.parseInt (worldprop.getProperty ("STARTS", "0").trim ()); } catch (Exception e) { }
+		for (int i = 1; i <= nstarts; i++)
+		{
+			prop = worldprop.getProperty ("START_" + i);
+			if (prop != null)		starts.add (new WMStart (prop));
+		}
+		if (starts.isEmpty ())
+			starts.add (new WMStart (worldprop.getProperty ("START", "0.0, 0.0, 0.0, 0.0")));
 		
 		path 			= new WMPath(worldprop);
 		walls			= new WMWalls (worldprop);
@@ -290,8 +307,8 @@ public class World extends Object
 		
 		worldprop = new Properties ();
 		
-		// Store Start Point
-		worldprop.setProperty ("START", sx + ", " + sy + ", " + sz + ", " + Math.toDegrees(sa));
+		// Store Start Points
+		startsToProperties (worldprop);
 		
 		path.toProperties (worldprop);
 		walls.toProperties (worldprop);
@@ -317,11 +334,13 @@ public class World extends Object
 		
 		out = new PrintWriter(new FileOutputStream(name));
 		
-		// Print Start Point
+		// Print Start Points
 		out.println("# ==============================");
-		out.println("# START POINT");
+		out.println("# START POINTS");
 		out.println("# ==============================");
-		out.println("START = " + sx + ", " + sy + ", " + sz + ", " + Math.toDegrees(sa));
+		out.println("STARTS = " + starts.size ());
+		for (int i = 0; i < starts.size (); i++)
+			out.println("START_" + (i + 1) + " = " + starts.get (i).toProperty ());
 		out.println("");
 		
 		path.toFile (out);
@@ -356,10 +375,11 @@ public class World extends Object
 		// Others
 		//	  Define una capa con un color determinado (opcional)
 		dxf.addLayer(new Layer("OTHERS",ACADColor.BLUE));
+		for (int i = 0; i < starts.size (); i++)
 		dxf.addEntity(
 				new TextDxf(
-						"START = "+sx+", "+sy+", "+sz+", "+Math.toDegrees(sa),
-						new Point3(sx,sy,sz),
+						"START_" + (i + 1) + " = " + starts.get (i).toProperty (),
+						new Point3(starts.get (i).x (), starts.get (i).y (), starts.get (i).z ()),
 						0.2,
 						"OTHERS"
 				)

@@ -1077,7 +1077,10 @@ public class Simulator
 		if (MODEL[robotind] != null) 
 		{
 			if (map != null)
-				MODEL[robotind].position (data, map.start_x (), map.start_y (), map.start_a ());
+			{
+				tc.shared.world.WMStart	st = map.start (robotind);			// START_i for the i-th robot (the first one when there are fewer)
+				MODEL[robotind].position (data, st.x (), st.y (), st.orientation);
+			}
 			else
 				MODEL[robotind].position (data, 0.0, 0.0, 0.0);		
 		}

@@ -460,9 +460,8 @@ public class WorldCanvas extends JPanel
 			changed ("Add cylindrical beacon");
 			break;
 		case T_START:
-			world.setStart (anchorX, anchorY, world.start_a ());
-			setSelection (new WorldItem (WorldItem.START, 0));
-			changed ("Set start point");
+			setSelection (WorldEdit.addStart (world, anchorX, anchorY));
+			changed ("Add start point");
 			break;
 		}
 	}
@@ -721,7 +720,7 @@ public class WorldCanvas extends JPanel
 		if (visible[WorldItem.CBEACON])		for (int i = 0; i < world.cbeacons ().n (); i++)	drawCBeacon (g, world.cbeacons ().at (i), isSel (WorldItem.CBEACON, i));
 		if (visible[WorldItem.WAYPOINT])	for (int i = 0; i < world.wps ().n (); i++)			drawWaypoint (g, world.wps ().at (i), isSel (WorldItem.WAYPOINT, i));
 		if (visible[WorldItem.DOCK])		for (int i = 0; i < world.docks ().n (); i++)		drawDock (g, world.docks ().at (i), isSel (WorldItem.DOCK, i));
-		if (visible[WorldItem.START])		drawStart (g, isSel (WorldItem.START, 0));
+		if (visible[WorldItem.START])		for (int i = 0; i < world.n_starts (); i++)		drawStart (g, i, isSel (WorldItem.START, i));
 
 		if (overlay != null)				overlay.paint (g, this);
 
@@ -954,14 +953,15 @@ public class WorldCanvas extends JPanel
 		label (g, d.label, d.pos.x (), d.pos.y (), sel ? C_SEL : C_DOCK);
 	}
 
-	private void drawStart (Graphics2D g, boolean sel)
+	private void drawStart (Graphics2D g, int i, boolean sel)
 	{
-		double	x = world.start_x (), y = world.start_y ();
+		tc.shared.world.WMStart	st = world.start (i);
+		double	x = st.x (), y = st.y ();
 		g.setColor (new Color (220, 30, 30, 60));
 		double	rp = Math.max (6.0, 0.25 * scale);
 		g.fill (new Ellipse2D.Double (px (x) - rp, py (y) - rp, 2 * rp, 2 * rp));
-		drawPose (g, x, y, world.start_a (), 0.25, C_START, sel, false);
-		label (g, "START", x, y, sel ? C_SEL : C_START);
+		drawPose (g, x, y, st.orientation, 0.25, C_START, sel, false);
+		label (g, "START_" + (i + 1), x, y, sel ? C_SEL : C_START);
 	}
 
 	private void drawRubber (Graphics2D g)
