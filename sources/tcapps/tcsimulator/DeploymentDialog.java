@@ -249,8 +249,10 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 	{
 		super (owner, "Deployment Architecture Editor", true);
 		model	= new ArchModel (deploy.copy ());
+		model.setStartNames (startNamesOf (model.getDeploy ()));
 		buildGUI ();
 		rebuild (null);
+		updateTitle ();
 		pack ();
 		setMinimumSize (new Dimension (760, 520));
 		setSize (1040, 780);
@@ -331,7 +333,7 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 					case ArchModel.P_CHOICE:
 					case ArchModel.P_FILE:
 					{
-						String			id = ArchModel.KIND_NAMES[propsModel.block.kind] + "/" + p.key;
+						String			id = ArchModel.KIND_NAMES[propsModel.block.kind] + "/" + p.key + ((p.choices != null) ? "/" + String.join ("|", p.choices) : "");
 						TableCellEditor	ed = editors.get (id);
 						if (ed == null)
 						{
@@ -412,16 +414,16 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 			c.getActionMap ().put ("delete", deleteAC);
 		}
 
-		// --- menu: File > Import Execution Architecture...
+		// --- menu: File (as in the simulator window) + Import Execution...
+		int						mask = java.awt.Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ();
 		javax.swing.JMenuBar	mb = new javax.swing.JMenuBar ();
 		javax.swing.JMenu		mfile = new javax.swing.JMenu ("File");
-		javax.swing.JMenuItem	imp = new javax.swing.JMenuItem ("Import Execution Architecture...");
-		imp.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_I, java.awt.Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ()));
-		imp.addActionListener (new ActionListener ()
-		{
-			public void actionPerformed (ActionEvent e)		{ importExecutionArchitecture (); }
-		});
-		mfile.add (imp);
+		mfile.add (menuItem ("New Deployment", KeyEvent.VK_N, mask, new Runnable () { public void run () { newDeployment (); } }));
+		mfile.add (menuItem ("Load Deployment...", KeyEvent.VK_O, mask, new Runnable () { public void run () { loadDeployment (); } }));
+		mfile.add (menuItem ("Save Deployment", KeyEvent.VK_S, mask, new Runnable () { public void run () { saveDeployment (false); } }));
+		mfile.add (menuItem ("Save Deployment As...", KeyEvent.VK_S, mask | KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { saveDeployment (true); } }));
+		mfile.addSeparator ();
+		mfile.add (menuItem ("Import Execution...", KeyEvent.VK_I, mask, new Runnable () { public void run () { importExecutionArchitecture (); } }));
 		mb.add (mfile);
 		setJMenuBar (mb);
 
@@ -436,6 +438,119 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 	/* Edition                                                             */
 	/* ------------------------------------------------------------------ */
 
+	private javax.swing.JMenuItem menuItem (String name, int key, int mask, final Runnable body)
+	{
+		javax.swing.JMenuItem	mi = new javax.swing.JMenuItem (name);
+		mi.setAccelerator (KeyStroke.getKeyStroke (key, mask));
+		mi.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ body.run (); }
+		});
+		return mi;
+	}
+
+	/** Names of the start points (START_1, ...) of the world of a deployment; empty when it has no readable world. */
+	static public List<String> startNamesOf (DeployArch d)
+	{
+		List<String>	names = new ArrayList<String> ();
+		String			w = d.getWorldFile ();
+		if (w == null)		return names;
+		try
+		{
+			tc.shared.world.World	world = new tc.shared.world.World (w);
+			for (int i = 0; i < world.n_starts (); i++)		names.add (DeployArch.startName (i));
+		} catch (Exception e) { }
+		return names;
+	}
+
+	/** Installs another deployment in the editor (New / Load). */
+	private void setDeployment (DeployArch d)
+	{
+		model	= new ArchModel (d);
+		model.setStartNames (startNamesOf (d));
+		canvas.setModel (model);
+		rebuild (null);
+		updateTitle ();
+	}
+
+	private void updateTitle ()
+	{
+		File	f = model.getDeploy ().getFile ();
+		setTitle ("Deployment Architecture Editor - " + ((f != null) ? f.getName () : "untitled." + DeployArch.EXTENSION) + (model.getDeploy ().isModified () ? " *" : ""));
+	}
+
+	/** Asks what to do with unsaved changes; false when the user cancels. */
+	private boolean confirmDiscard ()
+	{
+		if (!model.getDeploy ().isModified ())		return true;
+		int		r = JOptionPane.showConfirmDialog (this, "The deployment has unsaved changes. Save them first?", getTitle (),
+					JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+		if (r == JOptionPane.CANCEL_OPTION)	return false;
+		if (r == JOptionPane.YES_OPTION)		return saveDeployment (false);
+		return true;
+	}
+
+	private JFileChooser deployChooser (String title)
+	{
+		File			cur = model.getDeploy ().getFile ();
+		File			dir = (cur != null) ? cur.getParentFile () : new File (SimulatorWindow.DEPLOY_DIR);
+		if ((dir == null) || !dir.isDirectory ())		dir = new File (".");
+		JFileChooser	fc = new JFileChooser (dir);
+		fc.setDialogTitle (title);
+		fc.setFileFilter (new FileNameExtensionFilter ("Deployment architectures (*.deploy)", DeployArch.EXTENSION));
+		return fc;
+	}
+
+	private void newDeployment ()
+	{
+		if (!confirmDiscard ())			return;
+		setDeployment (DeployArch.create ());
+	}
+
+	private void loadDeployment ()
+	{
+		if (!confirmDiscard ())			return;
+		JFileChooser	fc = deployChooser ("Load Deployment");
+		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+		try
+		{
+			setDeployment (DeployArch.load (fc.getSelectedFile ()));
+		} catch (Exception e)
+		{
+			e.printStackTrace ();
+			JOptionPane.showMessageDialog (this, "Cannot load " + fc.getSelectedFile ().getName () + ":\n" + e, getTitle (), JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private boolean saveDeployment (boolean saveAs)
+	{
+		DeployArch	d = model.getDeploy ();
+		File		f = d.getFile ();
+		if (saveAs || (f == null))
+		{
+			JFileChooser	fc = deployChooser (saveAs ? "Save Deployment As" : "Save Deployment");
+			if (f != null)		fc.setSelectedFile (f);
+			if (fc.showSaveDialog (this) != JFileChooser.APPROVE_OPTION)		return false;
+			f = fc.getSelectedFile ();
+			if (!f.getName ().toLowerCase ().endsWith ("." + DeployArch.EXTENSION))		f = new File (f.getPath () + "." + DeployArch.EXTENSION);
+			if (f.exists () && (JOptionPane.showConfirmDialog (this, f.getName () + " already exists. Overwrite?", getTitle (),
+					JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION))		return false;
+		}
+		try
+		{
+			if (propsTB.isEditing ())		propsTB.getCellEditor ().stopCellEditing ();
+			if (eventsTB.isEditing ())		eventsTB.getCellEditor ().stopCellEditing ();
+			d.save (f);
+			updateTitle ();
+			return true;
+		} catch (Exception e)
+		{
+			e.printStackTrace ();
+			JOptionPane.showMessageDialog (this, "Cannot save " + f.getName () + ":\n" + e, getTitle (), JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+	}
+
 	/**
 	 * Imports an execution architecture (.arch) as a new robot of the
 	 * deployment: its local Linda space, router, modules and virtual robot.
@@ -446,7 +561,7 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 	{
 		File		dir = new File (SimulatorWindow.ARCHS_DIR);
 		JFileChooser	fc = new JFileChooser (dir.isDirectory () ? dir : new File ("."));
-		fc.setDialogTitle ("Import Execution Architecture");
+		fc.setDialogTitle ("Import Execution");
 		fc.setFileFilter (new FileNameExtensionFilter ("Architecture definition files (*.arch)", "arch"));
 		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
 		try
@@ -502,6 +617,7 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 		canvas.modelChanged ();
 		select (sel);
 		updateActions ();
+		if (propsBorder != null)		updateTitle ();
 	}
 
 	static int iconOf (Block b)

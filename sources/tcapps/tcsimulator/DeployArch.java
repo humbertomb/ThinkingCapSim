@@ -105,7 +105,7 @@ public class DeployArch
 		public List<Module>			modules			= new ArrayList<Module> ();
 		public Module				virtualRobot	= newVirtualRobot ();
 		public Map<String, String>	properties		= new LinkedHashMap<String, String> ();
-		public double[]				start;											// initial pose in simulation {x, y, angle (deg)}; null: the START of the world
+		public String				start;											// start point of the world ("START_2"); null: the i-th one, by order
 
 		public Robot ()										{ }
 		/** A new robot of the editor: with a Linda router (a robot without router receives its own COORD/SYNC tuples). */
@@ -119,7 +119,7 @@ public class DeployArch
 			for (Module m : modules)		r.modules.add (m.copy ());
 			r.virtualRobot	= virtualRobot.copy ();
 			r.properties.putAll (properties);
-			r.start			= (start == null) ? null : start.clone ();
+			r.start			= start;
 			return r;
 		}
 	}
@@ -207,7 +207,7 @@ public class DeployArch
 			if (r.modules == null)		r.modules = new ArrayList<Module> ();
 			if (r.virtualRobot == null)	r.virtualRobot = newVirtualRobot ();
 			if (r.properties == null)	r.properties = new LinkedHashMap<String, String> ();
-			if ((r.start != null) && (r.start.length != 3))		r.start = null;
+			if ((r.start != null) && (r.start.trim ().length () == 0))	r.start = null;
 			List<Module>	all = new ArrayList<Module> (r.modules);
 			all.add (r.virtualRobot);
 			if (r.router != null)		all.add (r.router);
@@ -247,6 +247,16 @@ public class DeployArch
 	{
 		world = ((path == null) || (path.trim ().length () == 0)) ? null : path.trim ();
 	}
+
+	/** Index (0-based) of the start point named "START_k", or -1 when the name is not of that form. */
+	static public int startIndex (String name)
+	{
+		if ((name == null) || !name.startsWith ("START_"))		return -1;
+		try { return Integer.parseInt (name.substring (6).trim ()) - 1; } catch (Exception e) { return -1; }
+	}
+
+	/** Name of the i-th (0-based) start point of a world: START_1, START_2, ... */
+	static public String startName (int i)			{ return "START_" + (i + 1); }
 
 	/* ------------------------------------------------------------------ */
 	/* Defaults                                                            */

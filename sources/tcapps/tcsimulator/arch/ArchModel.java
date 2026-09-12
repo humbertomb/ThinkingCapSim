@@ -64,10 +64,19 @@ public class ArchModel
 		public String toString ()	{ return label; }
 	}
 
-	static public final Property[]	ROBOT_PROPS	=
+	/** Names of the start points of the world (START_1, ...), offered for the robots; set by the editor. */
+	protected List<String>		startNames	= new ArrayList<String> ();
+
+	public void setStartNames (List<String> names)	{ startNames = new ArrayList<String> (names); }
+
+	/** Robot block: the start point of the world it departs from ("" = the i-th one, by order). */
+	protected Property[] robotProps ()
 	{
-		new Property ("START",	"Start pose (x, y, deg)"),
-	};
+		String[]	choices = new String[startNames.size () + 1];
+		choices[0]	= "";
+		for (int i = 0; i < startNames.size (); i++)		choices[i + 1] = startNames.get (i);
+		return new Property[] { new Property ("START", "Start Position", choices) };
+	}
 	static public final Property[]	LINDA_PROPS	=
 	{
 		new Property ("ADDR",	"Address"),
@@ -273,7 +282,7 @@ public class ArchModel
 		String[]		hidden;
 		switch (b.kind)
 		{
-		case ROBOT:			return java.util.Arrays.asList (ROBOT_PROPS);
+		case ROBOT:			return java.util.Arrays.asList (robotProps ());
 		case GLOBAL_LINDA:
 		case LOCAL_LINDA:	return java.util.Arrays.asList (LINDA_PROPS);
 		case ROUTER:		std = ROUTER_PROPS;	hidden = ROUTER_HIDDEN;	break;
@@ -302,8 +311,8 @@ public class ArchModel
 	{
 		if ((b.kind == ROBOT) && key.equals ("START"))
 		{
-			double[]	st = hasRobot (b.robot) ? robot (b.robot).start : null;
-			return (st == null) ? "" : String.format (java.util.Locale.ROOT, "%.3f, %.3f, %.1f", st[0], st[1], st[2]);
+			String	st = hasRobot (b.robot) ? robot (b.robot).start : null;
+			return (st == null) ? "" : st;
 		}
 		Linda	l = lindaOf (b);
 		if (l != null)
@@ -326,12 +335,7 @@ public class ArchModel
 		if ((b.kind == ROBOT) && key.equals ("START"))
 		{
 			if (!hasRobot (b.robot))		return;
-			if (v.length () == 0)		{ robot (b.robot).start = null; return; }
-			try
-			{
-				String[]	t = v.split ("[,\\s]+");
-				robot (b.robot).start = new double[] { Double.parseDouble (t[0]), Double.parseDouble (t[1]), (t.length > 2) ? Double.parseDouble (t[2]) : 0.0 };
-			} catch (Exception e) { }									// malformed: unchanged
+			robot (b.robot).start = (v.length () == 0) ? null : v;
 			return;
 		}
 		Linda	l = lindaOf (b);

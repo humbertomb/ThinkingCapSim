@@ -393,12 +393,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		DeployArch			result = dlg.showDialog ();
 		if (result == null)				return;
 		terminate ();												// the running robots no longer match the deployment
-		String	before = deploy.getWorldFile ();
-		deploy.replaceWith (result);
-		String	after = deploy.getWorldFile ();
-		if ((after == null) ? (before != null) : !after.equals (before))
-			showWorld ((after != null) ? new File (after) : null);
-		updateTitle ();
+		setDeploy (result);											// the copy keeps file and saved state (the editor may have loaded or saved another file)
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -440,7 +435,12 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		{
 			DeployArch.Robot	rob = deploy.robots.get (i);
 			ExecArch			e = new ExecArch (rob.name, deploy.toProperties (i), null, simulator);		// loads the world into the simulator
-			if (rob.start != null)		e.setStart (new Point3 (rob.start[0], rob.start[1], Math.toRadians (rob.start[2])));
+			int	si = DeployArch.startIndex (rob.start);								// start point chosen in the deployment
+			if ((si >= 0) && (si < world.n_starts ()))
+			{
+				tc.shared.world.WMStart	st = world.start (si);
+				e.setStart (new Point3 (st.x (), st.y (), st.orientation));
+			}
 			execs.add (e);
 		}
 		running		= execs;
