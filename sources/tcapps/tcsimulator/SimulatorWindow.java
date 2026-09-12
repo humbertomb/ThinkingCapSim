@@ -765,7 +765,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		try
 		{
-			System.setProperty ("apple.laf.useScreenMenuBar", "true");
+			System.setProperty ("apple.laf.useScreenMenuBar", "false");		// menus inside the window, as in the dialogs
 			UIManager.setLookAndFeel (UIManager.getSystemLookAndFeelClassName ());
 		} catch (Exception e) { }
 
