@@ -80,7 +80,7 @@ public class ArchModel
 		new Property ("CLASS",	"Class"),
 		new Property ("MODE",	"Mode",			MODES),
 		new Property ("GMODE",	"Protocol",		PROTOCOLS),
-		new Property ("GFX",	"Internal Representation",	P_BOOLEAN),
+		new Property ("GFX",	"Graphics",	P_BOOLEAN),
 	};
 	static public final Property[]	MODULE_PROPS	=
 	{
@@ -91,7 +91,7 @@ public class ArchModel
 		new Property ("QUEUED",	"Queued",		P_BOOLEAN),
 		new Property ("POLLED",	"Polled",		P_BOOLEAN),
 		new Property ("EXTIME",	"Exec. time (ms)"),
-		new Property ("GFX",	"Internal Representation",	P_BOOLEAN),
+		new Property ("GFX",	"Graphics",	P_BOOLEAN),
 	};
 	static public final Property[]	VROBOT_PROPS	=
 	{
@@ -100,7 +100,7 @@ public class ArchModel
 		new Property ("MODE",	"Mode",			MODES),
 		new Property ("PASSIVE","Passive",		P_BOOLEAN),
 		new Property ("EXTIME",	"Exec. time (ms)"),
-		new Property ("GFX",	"Internal Representation",	P_BOOLEAN),
+		new Property ("GFX",	"Graphics",	P_BOOLEAN),
 		new Property ("DESC",	"DESC",			"./conf/robots",	"Robot descriptions (*.robot)",	"robot"),
 		new Property ("CUST",	"CUST",			"./conf/robots",	"Robot customisations (*.cust)",	"cust"),
 		new Property ("WORLD",	"WORLD",		"./conf/maps",		"World maps (*.world)",			"world"),

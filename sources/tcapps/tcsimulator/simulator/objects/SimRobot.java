@@ -61,7 +61,7 @@ public class SimRobot extends VirtualRobot
 		model	= rdesc.model;
 		
 		// Notify the simulator of a new robot
-		r_index	= simul.add_robot (rdesc, sdesc, model, data_ctrl);
+		r_index	= simul.add_robot (rdesc, sdesc, model, data_ctrl, r_id);
 		map		= simul.getWorld ();
 		System.out.println ("# Setting robot map to "+map);
 		

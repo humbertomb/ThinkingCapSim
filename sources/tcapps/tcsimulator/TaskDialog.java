@@ -52,7 +52,7 @@ public class TaskDialog extends JDialog
 	protected JComboBox<String>		actionCB;
 	protected JTable				table;
 	protected TaskModel				model;
-	protected JButton				addBT, upBT, downBT, removeBT, sendBT, cancelBT;
+	protected JButton				addBT, upBT, downBT, removeBT, clearBT, sendBT, cancelBT;
 	protected Sequence				result;					// null when cancelled
 
 	/** Rows of the task table. */
@@ -69,6 +69,7 @@ public class TaskDialog extends JDialog
 		void add (String place, String action)	{ tasks.add (new String[] { place, action }); fireTableRowsInserted (tasks.size () - 1, tasks.size () - 1); }
 		void remove (int r)						{ tasks.remove (r); fireTableRowsDeleted (r, r); }
 		void move (int from, int to)			{ String[] t = tasks.remove (from); tasks.add (to, t); fireTableDataChanged (); }
+		void clear ()							{ tasks.clear (); fireTableDataChanged (); }
 	}
 
 	/**
@@ -142,6 +143,11 @@ public class TaskDialog extends JDialog
 		upBT		= new JButton ("Up");
 		downBT		= new JButton ("Down");
 		removeBT	= new JButton ("Remove");
+		clearBT		= new JButton ("Clear");
+		clearBT.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ model.clear (); updateButtons (); }
+		});
 		upBT.addActionListener (new ActionListener ()
 		{
 			public void actionPerformed (ActionEvent e)		{ move (-1); }
@@ -157,7 +163,7 @@ public class TaskDialog extends JDialog
 		JPanel		side = new JPanel ();
 		side.setLayout (new BoxLayout (side, BoxLayout.Y_AXIS));
 		side.setBorder (BorderFactory.createEmptyBorder (0, 6, 0, 0));
-		for (JButton b : new JButton[] { upBT, downBT, removeBT })
+		for (JButton b : new JButton[] { upBT, downBT, removeBT, clearBT })
 		{
 			b.setAlignmentX (0f);
 			b.setMaximumSize (new Dimension (Integer.MAX_VALUE, b.getPreferredSize ().height));
@@ -247,6 +253,7 @@ public class TaskDialog extends JDialog
 		upBT.setEnabled (r > 0);
 		downBT.setEnabled ((r >= 0) && (r < n - 1));
 		removeBT.setEnabled (r >= 0);
+		clearBT.setEnabled (n > 0);
 		sendBT.setEnabled (n > 0);								// Send only with at least one task
 	}
 

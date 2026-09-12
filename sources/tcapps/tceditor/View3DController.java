@@ -130,9 +130,9 @@ public class View3DController
 
 	/* --- simulated robots (delegated to the 3D window; no-ops while it does not exist) --- */
 
-	public int addRobot (tc.vrobot.RobotDesc rdesc, tcapps.tcsimulator.simulator.SimulatorDesc sdesc, double x, double y, double a)
+	public int addRobot (tc.vrobot.RobotDesc rdesc, tcapps.tcsimulator.simulator.SimulatorDesc sdesc, double x, double y, double a, String name)
 	{
-		return (view3d != null) ? view3d.addRobot (rdesc, sdesc, x, y, a) : -1;
+		return (view3d != null) ? view3d.addRobot (rdesc, sdesc, x, y, a, name) : -1;
 	}
 
 	public void updateRobot (int index, tc.vrobot.RobotData data)

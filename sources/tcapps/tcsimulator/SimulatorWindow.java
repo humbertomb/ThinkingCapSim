@@ -87,6 +87,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		RobotDesc		rdesc;
 		SimulatorDesc	sdesc;
+		String			name;			// robot identifier (null when the simulator did not give one)
 		RobotData		data;			// last data received (null until the first update)
 		int				index3d	= -1;	// index in the 3D view (-1: not added yet)
 	}
@@ -314,6 +315,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	public void newArch ()
 	{
 		if (!confirmDiscard ())			return;
+		terminate ();
 		setDeploy (DeployArch.create ());
 	}
 
@@ -329,6 +331,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	/** Loads a .deploy file (a legacy .arch is imported instead). */
 	public void loadArch (File f)
 	{
+		terminate ();
 		try
 		{
 			if (f.getName ().toLowerCase ().endsWith (".arch"))		setDeploy (DeployArch.importArch (f));
@@ -389,6 +392,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		DeploymentDialog	dlg = new DeploymentDialog (this, deploy);
 		DeployArch			result = dlg.showDialog ();
 		if (result == null)				return;
+		terminate ();												// the running robots no longer match the deployment
 		String	before = deploy.getWorldFile ();
 		deploy.replaceWith (result);
 		String	after = deploy.getWorldFile ();
@@ -466,6 +470,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		if (running == null)			return;
 		List<ExecArch>	execs = running;
+		for (ExecArch r : execs)		r.sendCommand (ItemDebug.STOP);		// stop the modules before tearing them down
 		running		= null;
 		monitorPanel.detach ();
 		for (int i = execs.size () - 1; i >= 0; i--)				// last first: the first robot hosts the global Linda space
@@ -540,9 +545,15 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	public int addRobot (RobotDesc rdesc, SimulatorDesc sdesc)
 	{
+		return addRobot (rdesc, sdesc, null);
+	}
+
+	public int addRobot (RobotDesc rdesc, SimulatorDesc sdesc, String name)
+	{
 		RobotView	rv = new RobotView ();
 		rv.rdesc	= rdesc;
 		rv.sdesc	= sdesc;
+		rv.name		= name;
 		synchronized (robots)
 		{
 			robots.add (rv);
@@ -586,7 +597,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			for (RobotView rv : robots)
 			{
 				if (rv.data == null)		continue;
-				if (rv.index3d < 0)		rv.index3d = view3d.addRobot (rv.rdesc, rv.sdesc, rv.data.real_x, rv.data.real_y, rv.data.real_a);
+				if (rv.index3d < 0)		rv.index3d = view3d.addRobot (rv.rdesc, rv.sdesc, rv.data.real_x, rv.data.real_y, rv.data.real_a, rv.name);
 				view3d.updateRobot (rv.index3d, rv.data);
 			}
 		}
@@ -644,6 +655,17 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		g.setColor (C_ROBOT);
 		g.draw (new Line2D.Double (c.toPixelX (x), c.toPixelY (y), c.toPixelX (x + len * ca), c.toPixelY (y + len * sa)));
 		g.fillOval (c.toPixelX (x) - 3, c.toPixelY (y) - 3, 6, 6);
+		// name, beside the robot (top-right of its bounding circle), with a light halo for readability
+		if (rv.name != null)
+		{
+			double	r = Math.max (0.5, rv.rdesc.RADIUS);
+			int		tx = (int) Math.round (c.toPixelX (x + r * 0.7)) + 4, ty = (int) Math.round (c.toPixelY (y + r * 0.7)) - 4;
+			g.setFont (g.getFont ().deriveFont (java.awt.Font.BOLD, 12f));
+			g.setColor (new Color (255, 255, 255, 200));
+			for (int dx = -1; dx <= 1; dx++)	for (int dy = -1; dy <= 1; dy++)	if ((dx != 0) || (dy != 0))	g.drawString (rv.name, tx + dx, ty + dy);
+			g.setColor (C_ROBOT);
+			g.drawString (rv.name, tx, ty);
+		}
 	}
 
 	/* ------------------------------------------------------------------ */

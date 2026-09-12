@@ -36,11 +36,20 @@ public class Robot3D extends BranchGroup
 
 	protected Vector3d				pos;
 	protected Vector3d				lpos;
+	protected TransformGroup			label;				// robot name floating above the robot (null when unnamed)
+	protected Transform3D				tlabel;
+	static public final double		LABEL_HEIGHT	= 2.2;	// m above the floor
 	private Matrix3d					rot = new Matrix3d ();
 	private Transform3D				mov = new Transform3D ();
 
 	// Constructors
 	public Robot3D (RobotDesc rdesc, TransformGroup ro, TransformGroup rl, Point3 pt, double fhgt, double a)
+	{
+		this (rdesc, ro, rl, pt, fhgt, a, null);
+	}
+
+	/** @param name  robot name shown above the robot (null: none) */
+	public Robot3D (RobotDesc rdesc, TransformGroup ro, TransformGroup rl, Point3 pt, double fhgt, double a, String name)
 	{
 		pos		= new Vector3d (pt.x(), pt.y(), pt.z());
 		lpos		= new Vector3d (pt.x(), pt.y(), fhgt);
@@ -73,6 +82,18 @@ public class Robot3D extends BranchGroup
 			addChild (lift);
 		}
 
+		// Robot name: flat text above the robot, as the dock labels of the world
+		if ((name != null) && (name.length () > 0))
+		{
+			com.sun.j3d.utils.geometry.Text2D	text = new com.sun.j3d.utils.geometry.Text2D (name, new Color3f (0.1f, 0.1f, 0.6f), "Application", 140, java.awt.Font.BOLD);
+			tlabel	= new Transform3D ();
+			tlabel.setTranslation (new Vector3d (pos.x, pos.y, LABEL_HEIGHT));
+			label	= new TransformGroup (tlabel);
+			label.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
+			label.addChild (text);
+			addChild (label);
+		}
+
 		// Create sensors structures
 		sonars	= new Range3D (rdesc.sonfeat, rdesc.CONESON, Color3D.yellow, rdesc.MAXSONAR);
 		irs		= new Range3D (rdesc.irfeat, rdesc.CONEIR, Color3D.orange, rdesc.MAXIR);
@@ -97,6 +118,11 @@ public class Robot3D extends BranchGroup
 			tlift.setIdentity ();
 			tlift.set (rot, lpos, tlift.getScale ());
 			lift.setTransform (tlift);
+		}
+		if (label != null)
+		{
+			tlabel.setTranslation (new Vector3d (pt.x (), pt.y (), LABEL_HEIGHT));
+			label.setTransform (tlabel);
 		}
 		
 		if (sonarActive)		sonars.move (data.sonars, pt, a);

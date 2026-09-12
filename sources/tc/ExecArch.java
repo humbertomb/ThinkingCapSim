@@ -44,9 +44,6 @@ public class ExecArch extends Thread
 	protected Point3			start;				// Optional initial pose of the simulated robot
 
 	// Source file (when loaded from / saved to an ADF), kept to preserve comments and layout on save
-	protected File				file;
-	protected List<String>		source;				// Original text lines (null when built from Properties only)
-	protected Properties			original;			// Properties as read from the source text
 
 	/* Constructors */
 	protected ExecArch ()
@@ -64,39 +61,22 @@ public class ExecArch extends Thread
 
 		// Read properties from file
 		props			= new Properties ();
-		try
-		{
-			readSource (new File (name));
-			props.load (new StringReader (joinLines (source)));
-		} catch (Exception e) { e.printStackTrace (); }
-		original		= (Properties) props.clone ();
+		try { props.load (new FileInputStream (name)); } catch (Exception e) { e.printStackTrace (); }
 		
 		initialise (robotid, props, pdefs);
 	}
 
 	/**
-	 * Loads an ADF for inspection/editing (no robot identifier is injected into
-	 * the properties). Throws if the file cannot be read.
+	 * Loads a legacy ADF (.arch) for inspection (no robot identifier is injected
+	 * into the properties); used to import it into a deployment. Throws if the
+	 * file cannot be read.
 	 */
 	public static ExecArch load (File f) throws IOException
 	{
 		ExecArch	arch = new ExecArch ();
-		arch.readSource (f);
 		Properties	props = new Properties ();
-		props.load (new StringReader (joinLines (arch.source)));
-		arch.original	= (Properties) props.clone ();
-		arch.initialise (null, props, null);
-		return arch;
-	}
-
-	/** Creates an empty architecture (single virtual robot module, no world) from the built-in template. */
-	public static ExecArch create ()
-	{
-		ExecArch	arch = new ExecArch ();
-		arch.source		= new ArrayList<String> (Arrays.asList (TEMPLATE.split ("\n")));
-		Properties	props = new Properties ();
-		try { props.load (new StringReader (TEMPLATE)); } catch (IOException e) { }
-		arch.original	= (Properties) props.clone ();
+		InputStream	in = new FileInputStream (f);
+		try { props.load (in); } finally { in.close (); }
 		arch.initialise (null, props, null);
 		return arch;
 	}
@@ -336,208 +316,8 @@ public class ExecArch extends Thread
 		return true;
 	}
 	
-	/* ------------------------------------------------------------------ */
-	/* ADF file access (used by the simulator GUI)                          */
-	/* ------------------------------------------------------------------ */
-
-	static public final String		TEMPLATE =
-		"#---------------------------------------------------------------------\n" +
-		"# Architecture definition file (ThinkingCap-II ADF)\n" +
-		"#---------------------------------------------------------------------\n" +
-		"\n" +
-		"#---------------------------------------------------------------------\n" +
-		"# Robot (no global Linda server: add it explicitly when needed)\n" +
-		"#---------------------------------------------------------------------\n" +
-		"NAME\t\t= Unnamed\n" +
-		"\n" +
-		"#---------------------------------------------------------------------\n" +
-		"# Linda intra-architecture server\n" +
-		"#---------------------------------------------------------------------\n" +
-		"LLINADDR\t\t= localhost\n" +
-		"LLINPORT\t\t= 3000\n" +
-		"LLINCREATE\t= true\n" +
-		"\n" +
-		"#---------------------------------------------------------------------\n" +
-		"# Active modules and TC-II execution parameters\n" +
-		"#---------------------------------------------------------------------\n" +
-		"MODULES\t\t= \n" +
-		"VROBOT\t\t= ROB\n" +
-		"\n" +
-		"#---------------------------------------------------------------------\n" +
-		"# Virtual robot section\n" +
-		"#---------------------------------------------------------------------\n" +
-		"ROBINFO\t\t= Virtual Robot\n" +
-		"ROBMODE\t\t= shared\n" +
-		"ROBCLASS\t= tc.vrobot.VirtualRobot\n" +
-		"ROBPASSIVE\t= false\n" +
-		"ROBEXTIME\t= 100\n" +
-		"ROBDESC\t\t= \n" +
-		"ROBWORLD\t= \n" +
-		"ROBGFX\t\t= true\n";
-
-	public File getFile ()					{ return file; }
 	public Properties getProperties ()		{ return props; }
 	public String getRobotId ()				{ return robotid; }
-
-	/** Prefix of the virtual robot module (VROBOT property, e.g. "ROB"). */
-	public String getVRobotPrefix ()
-	{
-		String	p = props.getProperty ("VROBOT");
-		return (p == null) ? "ROB" : p.trim ();
-	}
-
-	/** World map used by the virtual robot (property VROBOT+"WORLD"), or null. */
-	public String getWorldFile ()
-	{
-		String	w = props.getProperty (getVRobotPrefix () + "WORLD");
-		return ((w == null) || (w.trim ().length () == 0)) ? null : w.trim ();
-	}
-
-	public void setWorldFile (String path)
-	{
-		props.setProperty (getVRobotPrefix () + "WORLD", (path == null) ? "" : path);
-	}
-
-	/**
-	 * Replaces the whole set of properties (the architecture was edited) and
-	 * rebuilds the module descriptors. The source text is kept, so a later
-	 * {@link #save(File)} preserves the layout of the unchanged lines. Not
-	 * allowed while the architecture is running.
-	 */
-	public void replaceProperties (Properties p)
-	{
-		if (isRunning ())			throw new IllegalStateException ("The architecture is running");
-		initialised		= false;
-		lrdesc			= null;
-		vrdesc			= null;
-		initialise (robotid, p, null);
-	}
-
-	/** True when some property differs from the ones read from the source file. */
-	public boolean isModified ()
-	{
-		if (original == null)			return true;
-		for (String key : props.stringPropertyNames ())
-		{
-			if (key.equals ("ROBNAME") && !original.containsKey ("ROBNAME"))		continue;		// injected at runtime
-			if (!props.getProperty (key).equals (original.getProperty (key)))		return true;
-		}
-		for (String key : original.stringPropertyNames ())
-			if (!props.containsKey (key))		return true;
-		return false;
-	}
-
-	/**
-	 * Writes the architecture to <code>f</code>, preserving the comments and
-	 * layout of the source file: only the entries whose value changed are
-	 * rewritten (as a single line), new properties are appended at the end.
-	 */
-	public void save (File f) throws IOException
-	{
-		List<String>	out = new ArrayList<String> ();
-		Set<String>		written = new HashSet<String> ();
-		List<String>	src = (source != null) ? source : new ArrayList<String> ();
-
-		for (int i = 0; i < src.size (); i++)
-		{
-			String	line = src.get (i);
-			String	t = line.trim ();
-			if ((t.length () == 0) || t.startsWith ("#") || t.startsWith ("!"))
-			{
-				out.add (line);
-				continue;
-			}
-			// logical entry: this line plus its continuation lines
-			int		start = i;
-			while (continues (src.get (i)) && (i + 1 < src.size ()))		i++;
-			String	key = keyOf (t);
-			String	value = props.getProperty (key);
-			if ((value == null) || (key.equals ("ROBNAME") && !original.containsKey ("ROBNAME")))
-				continue;												// property removed: drop the entry
-			written.add (key);
-			if (value.equals (original.getProperty (key)))
-				for (int j = start; j <= i; j++)		out.add (src.get (j));		// unchanged: keep the original text
-			else
-				out.add (prefixOf (src.get (start)) + value);
-		}
-		// new properties
-		List<String>	added = new ArrayList<String> ();
-		for (String key : props.stringPropertyNames ())
-			if (!written.contains (key) && !(key.equals ("ROBNAME") && !original.containsKey ("ROBNAME")))
-				added.add (key);
-		if (added.size () > 0)
-		{
-			Collections.sort (added);
-			if ((out.size () > 0) && (out.get (out.size () - 1).trim ().length () > 0))		out.add ("");
-			for (String key : added)		out.add (key + "\t= " + props.getProperty (key));
-		}
-
-		Writer	w = new OutputStreamWriter (new FileOutputStream (f), "ISO-8859-1");
-		try
-		{
-			for (String line : out)		{ w.write (line); w.write ("\n"); }
-		} finally { w.close (); }
-
-		file		= f;
-		source		= out;
-		original	= (Properties) props.clone ();
-		if (!written.contains ("ROBNAME") && !added.contains ("ROBNAME"))		original.remove ("ROBNAME");
-	}
-
-	protected void readSource (File f) throws IOException
-	{
-		BufferedReader	in = new BufferedReader (new InputStreamReader (new FileInputStream (f), "ISO-8859-1"));
-		List<String>	lines = new ArrayList<String> ();
-		try
-		{
-			String	line;
-			while ((line = in.readLine ()) != null)		lines.add (line);
-		} finally { in.close (); }
-		file	= f;
-		source	= lines;
-	}
-
-	static protected String joinLines (List<String> lines)
-	{
-		StringBuilder	sb = new StringBuilder ();
-		for (String l : lines)		sb.append (l).append ('\n');
-		return sb.toString ();
-	}
-
-	/** True when a properties line ends with an odd number of backslashes (continues on the next line). */
-	static protected boolean continues (String line)
-	{
-		int	n = 0;
-		for (int i = line.length () - 1; (i >= 0) && (line.charAt (i) == '\\'); i--)		n++;
-		return (n % 2) == 1;
-	}
-
-	/** Key of a (trimmed) properties line: text up to the first unescaped '=', ':' or blank. */
-	static protected String keyOf (String t)
-	{
-		int	i = 0;
-		while (i < t.length ())
-		{
-			char	c = t.charAt (i);
-			if (c == '\\')									{ i += 2; continue; }
-			if ((c == '=') || (c == ':') || Character.isWhitespace (c))		break;
-			i++;
-		}
-		return t.substring (0, Math.min (i, t.length ()));
-	}
-
-	/** Text of a properties line up to (and including) the separator, i.e. everything before the value. */
-	static protected String prefixOf (String line)
-	{
-		String	t = line.trim ();
-		int		k = line.indexOf (t) + keyOf (t).length ();
-		int		i = k;
-		while ((i < line.length ()) && Character.isWhitespace (line.charAt (i)))		i++;
-		if ((i < line.length ()) && ((line.charAt (i) == '=') || (line.charAt (i) == ':')))		i++;
-		while ((i < line.length ()) && Character.isWhitespace (line.charAt (i)))		i++;
-		String	prefix = line.substring (0, i);
-		return (prefix.indexOf ('=') >= 0 || prefix.indexOf (':') >= 0) ? prefix : prefix + "= ";
-	}
 
 	protected void virtual_robot ()
 	{

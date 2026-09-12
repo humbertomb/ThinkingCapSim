@@ -23,6 +23,9 @@ public interface SimulatorListener
 	/** A robot was added; returns the index to be used in {@link #updateData}. */
 	public int addRobot (RobotDesc rdesc, SimulatorDesc sdesc);
 
+	/** Same, with the name of the robot; by default the name is ignored. */
+	default public int addRobot (RobotDesc rdesc, SimulatorDesc sdesc, String name)	{ return addRobot (rdesc, sdesc); }
+
 	/** Current data (pose, sensors) of a robot. Called from the simulator refresh thread. */
 	public void updateData (int roboindex, RobotData data);
 

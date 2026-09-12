@@ -619,6 +619,12 @@ public class WorldView3DWindow extends JFrame
 	 */
 	public int addRobot (RobotDesc rdesc, SimulatorDesc sdesc, double x, double y, double a)
 	{
+		return addRobot (rdesc, sdesc, x, y, a, null);
+	}
+
+	/** Adds a simulated robot with its name shown above it. */
+	public int addRobot (RobotDesc rdesc, SimulatorDesc sdesc, double x, double y, double a, String name)
+	{
 		if (robotsBranch == null)
 		{
 			robotsBranch = new BranchGroup ();
@@ -639,7 +645,7 @@ public class WorldView3DWindow extends JFrame
 		}
 		body.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
 		if (lift != null)		lift.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
-		Robot3D		r3d = new Robot3D (rdesc, body, lift, new Point3 (x, y, 0.0), 0.0, a);
+		Robot3D		r3d = new Robot3D (rdesc, body, lift, new Point3 (x, y, 0.0), 0.0, a, name);
 		robots.add (r3d);
 		robotsBranch.addChild (r3d);
 		return robots.size () - 1;

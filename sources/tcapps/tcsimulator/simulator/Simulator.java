@@ -320,6 +320,12 @@ public class Simulator
 	
 	synchronized public int add_robot (RobotDesc rdesc, SimulatorDesc sdesc, RobotModel model, RobotDataCtrl datactrl)
 	{
+		return add_robot (rdesc, sdesc, model, datactrl, null);
+	}
+
+	/** Adds a robot with its name (shown by the visualisation). */
+	synchronized public int add_robot (RobotDesc rdesc, SimulatorDesc sdesc, RobotModel model, RobotDataCtrl datactrl, String name)
+	{
 		RDESC[numrobots] = rdesc;
 		SDESC[numrobots] = sdesc;
 		MODEL[numrobots] = model;
@@ -328,7 +334,7 @@ public class Simulator
 		moveIcon (ROBOINDEX[numrobots], rdesc.icon,model.real_x, model.real_y, model.real_a);;
 		
 		if (win!=null)
-			win.addRobot (rdesc, sdesc);
+			win.addRobot (rdesc, sdesc, name);
 
 		return (numrobots++);				
 	}
