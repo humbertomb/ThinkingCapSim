@@ -81,10 +81,12 @@ public class SimRobot extends VirtualRobot
 		simul.reset (r_index, data, map);
 	}
 	
+	/** Places the robot at a given pose (x, y, angle) instead of the START of the world; the world START is left untouched. */
 	public void reset (Point3 start)
 	{
-		reset ();
-		simul.changeStart (start.x (), start.y (), start.z ());
+		turn	= 0.0;
+		speed	= 0.0;
+		simul.reset (r_index, data, start.x (), start.y (), start.z ());
 		data.location (start.x (), start.y (), start.z ());
 	}
 	

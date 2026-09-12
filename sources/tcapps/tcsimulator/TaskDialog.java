@@ -46,6 +46,8 @@ public class TaskDialog extends JDialog
 
 	static public final String[]	ACTIONS	= { "load", "unload", "goto", "stay" };
 
+	protected String[]				robots;
+	protected JComboBox<String>		robotCB;				// null with one robot or none
 	protected JComboBox<String>		placeCB;
 	protected JComboBox<String>		actionCB;
 	protected JTable				table;
@@ -75,7 +77,14 @@ public class TaskDialog extends JDialog
 	 */
 	public TaskDialog (Frame owner, String[] places, Sequence initial)
 	{
+		this (owner, places, initial, new String[0]);
+	}
+
+	/** @param robots  robots the task set can be sent to (a selector is shown when there is more than one) */
+	public TaskDialog (Frame owner, String[] places, Sequence initial, String[] robots)
+	{
 		super (owner, "Tasks", true);
+		this.robots	= robots;
 		buildGUI (places);
 		if (initial != null)
 			for (int i = 0; i < initial.size (); i++)		model.add (initial.place[i], initial.action[i]);
@@ -171,9 +180,19 @@ public class TaskDialog extends JDialog
 		{
 			public void actionPerformed (ActionEvent e)		{ result = sequence (); dispose (); }
 		});
-		JPanel		bottom = new JPanel (new FlowLayout (FlowLayout.RIGHT, 6, 6));
-		bottom.add (cancelBT);
-		bottom.add (sendBT);
+		JPanel		bottom = new JPanel (new BorderLayout ());
+		JPanel		buttons = new JPanel (new FlowLayout (FlowLayout.RIGHT, 6, 6));
+		buttons.add (cancelBT);
+		buttons.add (sendBT);
+		bottom.add (buttons, BorderLayout.EAST);
+		if (robots.length > 1)
+		{
+			robotCB	= new JComboBox<String> (robots);
+			JPanel	rp = new JPanel (new FlowLayout (FlowLayout.LEFT, 6, 6));
+			rp.add (new JLabel ("Send to robot"));
+			rp.add (robotCB);
+			bottom.add (rp, BorderLayout.WEST);
+		}
 		getRootPane ().setDefaultButton (sendBT);
 		getRootPane ().getInputMap (JComponent.WHEN_IN_FOCUSED_WINDOW).put (KeyStroke.getKeyStroke (KeyEvent.VK_ESCAPE, 0), "cancel");
 		getRootPane ().getActionMap ().put ("cancel", new javax.swing.AbstractAction ()
@@ -229,6 +248,13 @@ public class TaskDialog extends JDialog
 		downBT.setEnabled ((r >= 0) && (r < n - 1));
 		removeBT.setEnabled (r >= 0);
 		sendBT.setEnabled (n > 0);								// Send only with at least one task
+	}
+
+	/** Robot the task set is addressed to (the only one when there is no selector). */
+	public String getRobot ()
+	{
+		if (robotCB != null)		return (String) robotCB.getSelectedItem ();
+		return (robots.length > 0) ? robots[0] : null;
 	}
 
 	/** The task set as a plan. */

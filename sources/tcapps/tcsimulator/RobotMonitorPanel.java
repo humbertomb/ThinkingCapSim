@@ -38,7 +38,7 @@ import tclib.utils.fusion.FusionDesc;
  * the global monitor), GOAL its destination and STATUS its state and the event
  * log. Same table models as the monitor: {@link RobotList} and {@link EventList}.
  */
-public class RobotMonitorPanel extends JTabbedPane implements LindaListener
+public class RobotMonitorPanel extends JTabbedPane
 {
 	private static final long		serialVersionUID = 1L;
 
@@ -51,10 +51,8 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 	protected JScrollPane			robotSP, eventSP;
 
 	protected World					world;					// to name the zone of the robot position
-	protected Linda					linda;					// registered space (null when detached)
-	protected String				robotid	= "robot";		// id shown for tuples written locally with space "any"
-	protected MonitorData			mdata	= new MonitorData ();
-	protected long					ltime;
+	protected java.util.Map<String, MonitorData>	mdatas	= new java.util.HashMap<String, MonitorData> ();	// per robot
+	protected java.util.Map<String, Long>			ltimes	= new java.util.HashMap<String, Long> ();
 
 	public RobotMonitorPanel ()
 	{
@@ -96,35 +94,59 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 	/* Linda                                                               */
 	/* ------------------------------------------------------------------ */
 
+	/** A local Linda space being listened to, with the robot it belongs to. */
+	protected class Attachment implements LindaListener
+	{
+		Linda	linda;
+		String	robotid;
+
+		Attachment (Linda linda, String robotid)	{ this.linda = linda; this.robotid = robotid; }
+
+		public void notify (Tuple tuple)			{ RobotMonitorPanel.this.notify (tuple, robotid); }
+
+		void register ()
+		{
+			linda.register (new Tuple (Tuple.CONFIG), this);
+			linda.register (new Tuple (Tuple.LPS), this);
+			linda.register (new Tuple (Tuple.STATUS), this);
+			linda.register (new Tuple (Tuple.GOAL), this);
+		}
+
+		void unregister ()
+		{
+			try
+			{
+				linda.unregister (new Tuple (Tuple.CONFIG), this);
+				linda.unregister (new Tuple (Tuple.LPS), this);
+				linda.unregister (new Tuple (Tuple.STATUS), this);
+				linda.unregister (new Tuple (Tuple.GOAL), this);
+			} catch (Exception e) { }
+		}
+	}
+
+	protected java.util.List<Attachment>	attachments	= new java.util.ArrayList<Attachment> ();
+
 	/**
-	 * Starts listening to the robots of a local Linda space (detaching from
-	 * the previous one). Inside the robot the modules write with space "any";
-	 * the router relabels the tuples with the robot id before forwarding them
-	 * to the global monitor, so <code>robotid</code> plays that role here.
+	 * Starts listening to the robot of a local Linda space (several robots
+	 * can be attached, one Linda space each). Inside the robot the modules
+	 * write with space "any"; the router relabels the tuples with the robot id
+	 * before forwarding them to the global monitor, so <code>robotid</code>
+	 * plays that role here.
 	 */
 	public void attach (Linda linda, String robotid)
 	{
-		detach ();
-		this.linda		= linda;
-		this.robotid	= robotid;
 		if (linda == null)		return;
-		linda.register (new Tuple (Tuple.CONFIG), this);
-		linda.register (new Tuple (Tuple.LPS), this);
-		linda.register (new Tuple (Tuple.STATUS), this);
-		linda.register (new Tuple (Tuple.GOAL), this);
+		Attachment	a = new Attachment (linda, robotid);
+		synchronized (attachments) { attachments.add (a); }
+		a.register ();
 	}
 
+	/** Stops listening to every robot. */
 	public void detach ()
 	{
-		if (linda == null)		return;
-		try
-		{
-			linda.unregister (new Tuple (Tuple.CONFIG), this);
-			linda.unregister (new Tuple (Tuple.LPS), this);
-			linda.unregister (new Tuple (Tuple.STATUS), this);
-			linda.unregister (new Tuple (Tuple.GOAL), this);
-		} catch (Exception e) { }
-		linda = null;
+		java.util.List<Attachment>	l;
+		synchronized (attachments) { l = new java.util.ArrayList<Attachment> (attachments); attachments.clear (); }
+		for (Attachment a : l)		a.unregister ();
 	}
 
 	/** Removes every robot and event (a new execution starts). */
@@ -137,12 +159,14 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 			{
 				for (String id : ids)		robots.delete (id);
 				events.clear ();
+				mdatas.clear ();
+				ltimes.clear ();
 			}
 		});
 	}
 
-	/** Linda callback (module threads): dispatched to the event thread. */
-	public void notify (final Tuple tuple)
+	/** Linda callback (module threads) of one robot: dispatched to the event thread. */
+	protected void notify (final Tuple tuple, String robotid)
 	{
 		if ((tuple.key == null) || (tuple.value == null))		return;
 		final String	id = ((tuple.space == null) || tuple.space.equals (tc.shared.linda.LindaEntryFilter.ANY)) ? robotid : tuple.space;
@@ -160,13 +184,16 @@ public class RobotMonitorPanel extends JTabbedPane implements LindaListener
 		{
 			// same throttling as LindaRouter when it builds the MONITOR tuple for the global monitor
 			long	now = System.currentTimeMillis ();
-			if (now - ltime < LPS_PERIOD)		return;
-			ltime	= now;
+			Long	last = ltimes.get (id);
+			if ((last != null) && (now - last < LPS_PERIOD))		return;
+			ltimes.put (id, now);
 			final ItemLPS	item = (ItemLPS) tuple.value;
 			SwingUtilities.invokeLater (new Runnable ()
 			{
 				public void run ()
 				{
+					MonitorData	mdata = mdatas.get (id);
+					if (mdata == null)		mdatas.put (id, mdata = new MonitorData ());
 					mdata.update (item.lps);
 					String	posmsg = (world != null) ? world.toString (mdata.cur.x (), mdata.cur.y ()) : "unknown";
 					robots.update (id, mdata, new tc.shared.lps.lpo.LPO[0], posmsg);

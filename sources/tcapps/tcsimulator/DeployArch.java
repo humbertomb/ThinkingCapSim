@@ -105,6 +105,7 @@ public class DeployArch
 		public List<Module>			modules			= new ArrayList<Module> ();
 		public Module				virtualRobot	= newVirtualRobot ();
 		public Map<String, String>	properties		= new LinkedHashMap<String, String> ();
+		public double[]				start;											// initial pose in simulation {x, y, angle (deg)}; null: the START of the world
 
 		public Robot ()										{ }
 		/** A new robot of the editor: with a Linda router (a robot without router receives its own COORD/SYNC tuples). */
@@ -118,6 +119,7 @@ public class DeployArch
 			for (Module m : modules)		r.modules.add (m.copy ());
 			r.virtualRobot	= virtualRobot.copy ();
 			r.properties.putAll (properties);
+			r.start			= (start == null) ? null : start.clone ();
 			return r;
 		}
 	}
@@ -205,6 +207,7 @@ public class DeployArch
 			if (r.modules == null)		r.modules = new ArrayList<Module> ();
 			if (r.virtualRobot == null)	r.virtualRobot = newVirtualRobot ();
 			if (r.properties == null)	r.properties = new LinkedHashMap<String, String> ();
+			if ((r.start != null) && (r.start.length != 3))		r.start = null;
 			List<Module>	all = new ArrayList<Module> (r.modules);
 			all.add (r.virtualRobot);
 			if (r.router != null)		all.add (r.router);
@@ -291,21 +294,19 @@ public class DeployArch
 	{
 		Properties	p = new Properties ();
 		Robot		r = robots.get (robot);
-		if (globalLinda != null)
+		// Global Linda space: the one of the deployment or, when it has none but some robot has a
+		// router, one hosted in-process (a robot without router would otherwise receive its own
+		// COORD/SYNC tuples back). When it is hosted here only the first robot creates the server;
+		// the others connect to it, so the robots must be started in order.
+		boolean	anyRouter = false;
+		for (Robot x : robots)		if (x.router != null)	anyRouter = true;
+		Linda	g = (globalLinda != null) ? globalLinda : (anyRouter ? newGlobalLinda () : null);
+		if (g != null)
 		{
-			p.setProperty ("GLINADDR", globalLinda.address);
-			p.setProperty ("GLINPORT", String.valueOf (globalLinda.port));
-			p.setProperty ("GLINCREATE", String.valueOf (globalLinda.instantiate));
-		}
-		else if (r.router != null)
-		{
-			// The router needs a global space to connect to: host one in-process. Without a router
-			// the robot's own COORD/SYNC tuples would be delivered back to its own modules (the
-			// router is what takes them out of the local space), which makes the iFork wander.
-			Linda	g = newGlobalLinda ();
+			boolean	create = (globalLinda != null) ? globalLinda.instantiate : true;
 			p.setProperty ("GLINADDR", g.address);
 			p.setProperty ("GLINPORT", String.valueOf (g.port));
-			p.setProperty ("GLINCREATE", "true");
+			p.setProperty ("GLINCREATE", String.valueOf (create && (robot == 0)));
 		}
 		p.setProperty ("LLINADDR", r.linda.address);
 		p.setProperty ("LLINPORT", String.valueOf (r.linda.port));

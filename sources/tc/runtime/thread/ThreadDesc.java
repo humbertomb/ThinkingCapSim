@@ -107,7 +107,8 @@ public class ThreadDesc extends Object
 
 		case ThreadDesc.M_SHARED:
 		default:
-			client	= server;
+			// modules of a robot see their own tuples with the robot id as space (as with the network clients)
+			client	= (robotid != null) ? new LindaSharedClient (server, robotid) : server;
 			port		= 0;
 		}
 		

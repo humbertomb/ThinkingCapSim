@@ -77,7 +77,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	protected File					worldFile;
 	protected boolean				worldModified;			// world changed since the architecture was loaded/saved
 
-	protected ExecArch				running;				// Architecture being executed (null when none)
+	protected List<ExecArch>		running;				// Robots being executed, one ExecArch each (null when none)
 	protected Simulator				simulator;				// Simulation engine of the running architecture
 	protected List<RobotView>		robots	= new ArrayList<RobotView> ();		// simulated robots being displayed
 	protected Sequence				lastTasks;				// last task set edited (shown again when the dialog reopens)
@@ -407,42 +407,73 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		return deploy.robots.isEmpty () ? DeployArch.DEFAULT_ROBOT : deploy.robots.get (0).name;
 	}
 
+	/** Names of the robots of the deployment, in order. */
+	protected String[] robotNames ()
+	{
+		String[]	n = new String[deploy.robots.size ()];
+		for (int i = 0; i < n.length; i++)		n[i] = deploy.robots.get (i).name;
+		return n;
+	}
+
 	/**
-	 * Executes the current architecture in simulation (its virtual robot runs
-	 * as a SimRobot inside a new Simulator loaded with the architecture's
-	 * world); a running execution is terminated first.
+	 * Executes every robot of the deployment in simulation: each one is an
+	 * ExecArch (its virtual robot runs as a SimRobot) sharing one Simulator
+	 * loaded with the deployment world. The robots are started in order, each
+	 * one once the previous is running (the first hosts the global Linda space
+	 * the others connect to). A running execution is terminated first.
 	 */
 	public void execute ()
 	{
 		terminate ();
+		if (deploy.robots.isEmpty ())
+		{
+			JOptionPane.showMessageDialog (this, "The deployment has no robots to execute.", TITLE, JOptionPane.WARNING_MESSAGE);
+			return;
+		}
 		simulator	= new Simulator ();
-		running		= new ExecArch (robotId (), deploy.toProperties (0), null, simulator);	// first robot; loads its world into the simulator
+		final List<ExecArch>	execs = new ArrayList<ExecArch> ();
+		for (int i = 0; i < deploy.robots.size (); i++)
+		{
+			DeployArch.Robot	rob = deploy.robots.get (i);
+			ExecArch			e = new ExecArch (rob.name, deploy.toProperties (i), null, simulator);		// loads the world into the simulator
+			if (rob.start != null)		e.setStart (new Point3 (rob.start[0], rob.start[1], Math.toRadians (rob.start[2])));
+			execs.add (e);
+		}
+		running		= execs;
 		simulator.setVisualization (this);							// robots and objects are reported to this window
 		monitorPanel.clear ();
-		running.start ();
-		// the local Linda space exists once the executor thread has created it
 		new Thread (new Runnable ()
 		{
 			public void run ()
 			{
-				ExecArch	r = running;
-				for (int i = 0; (i < 100) && (r != null) && (r.getLocalLinda () == null) && (r == running); i++)
-					try { Thread.sleep (50); } catch (InterruptedException e) { return; }
-				if ((r != null) && (r == running) && (r.getLocalLinda () != null))		monitorPanel.attach (r.getLocalLinda (), r.getRobotId ());
+				for (ExecArch r : execs)
+				{
+					if (running != execs)		return;					// terminated meanwhile
+					r.start ();
+					// wait until its modules run (and its local Linda exists) before the next robot
+					for (int i = 0; (i < 200) && !r.isRunning () && (running == execs); i++)
+						try { Thread.sleep (50); } catch (InterruptedException e) { return; }
+					if ((running == execs) && (r.getLocalLinda () != null))		monitorPanel.attach (r.getLocalLinda (), r.getRobotId ());
+				}
 			}
-		}, "TCSim-monitor-attach").start ();
-		statusBar.setStatus ("Executing " + robotId () + " (" + ((deploy.getFile () != null) ? deploy.getFile ().getName () : "untitled") + ")");
+		}, "TCSim-launcher").start ();
+		statusBar.setStatus ("Executing " + String.join (", ", robotNames ()) + " (" + ((deploy.getFile () != null) ? deploy.getFile ().getName () : "untitled") + ")");
 		updateExecutionState ();
 	}
 
-	/** Stops the modules and Linda servers of the running architecture. */
+	/** Stops the modules and Linda servers of the running robots. */
 	public void terminate ()
 	{
 		if (running == null)			return;
-		monitorPanel.detach ();
-		running.terminate ();
-		if (simulator != null)		simulator.closeVisualization3D ();		// stops the refresh thread
+		List<ExecArch>	execs = running;
 		running		= null;
+		monitorPanel.detach ();
+		for (int i = execs.size () - 1; i >= 0; i--)				// last first: the first robot hosts the global Linda space
+		{
+			ExecArch	r = execs.get (i);
+			if (r.isRunning () || (r.getLocalLinda () != null))		r.terminate ();
+		}
+		if (simulator != null)		simulator.closeVisualization3D ();		// stops the refresh thread
 		simulator	= null;
 		synchronized (robots) { robots.clear (); }
 		view3d.clearRobots ();
@@ -451,30 +482,42 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		updateExecutionState ();
 	}
 
-	/** Sends a start/step/stop command to the modules (as the monitor's execution control). */
+	/** Sends a start/step/stop command to the modules of every robot (as the monitor's execution control). */
 	public void command (int cmd)
 	{
 		if (running == null)			return;
-		if (!running.sendCommand (cmd))
-			JOptionPane.showMessageDialog (this, "The architecture has no local Linda space to send commands to.", TITLE, JOptionPane.WARNING_MESSAGE);
+		boolean	sent = false;
+		for (ExecArch r : running)		sent |= r.sendCommand (cmd);
+		if (!sent)
+			JOptionPane.showMessageDialog (this, "No robot has a local Linda space to send commands to yet.", TITLE, JOptionPane.WARNING_MESSAGE);
 	}
 
-	/** Opens the task set editor and sends the resulting plan to the running robot. */
+	/** The running ExecArch of a robot name, or null. */
+	private ExecArch runningRobot (String name)
+	{
+		if ((running == null) || (name == null))		return null;
+		for (ExecArch r : running)		if (name.equals (r.getRobotId ()))		return r;
+		return null;
+	}
+
+	/** Opens the task set editor and sends the resulting plan to the chosen robot. */
 	public void editTasks ()
 	{
-		TaskDialog	dlg = new TaskDialog (this, TaskDialog.placesOf (world), lastTasks);
+		TaskDialog	dlg = new TaskDialog (this, TaskDialog.placesOf (world), lastTasks, robotNames ());
 		Sequence	seq = dlg.showDialog ();
 		if (seq == null)				return;
 		lastTasks = seq;
-		if (running == null)
+		String		robot = dlg.getRobot ();
+		ExecArch	r = runningRobot (robot);
+		if (r == null)
 		{
-			JOptionPane.showMessageDialog (this, "Execute the architecture before sending tasks.", TITLE, JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog (this, "Execute the deployment before sending tasks to " + robot + ".", TITLE, JOptionPane.WARNING_MESSAGE);
 			return;
 		}
-		if (!running.sendPlan (seq))
-			JOptionPane.showMessageDialog (this, "The architecture has no local Linda space to send the plan to.", TITLE, JOptionPane.WARNING_MESSAGE);
+		if (!r.sendPlan (seq))
+			JOptionPane.showMessageDialog (this, "The robot " + robot + " has no local Linda space to send the plan to.", TITLE, JOptionPane.WARNING_MESSAGE);
 		else
-			statusBar.setStatus ("Plan sent to " + robotId () + ": " + seq);
+			statusBar.setStatus ("Plan sent to " + robot + ": " + seq);
 	}
 
 	private void updateExecutionState ()

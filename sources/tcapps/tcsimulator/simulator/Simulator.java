@@ -1077,6 +1077,12 @@ public class Simulator
 		}
 	}
 	
+	/** Places a robot at an explicit pose. */
+	public void reset (int robotind, RobotData data, double x, double y, double a)
+	{
+		if (MODEL[robotind] != null)		MODEL[robotind].position (data, x, y, a);
+	}
+
 	/** Change the START position for the next added robot */
 	public void changeStart (double x, double y)
 	{

@@ -554,7 +554,7 @@ public class ExecArch extends Thread
 		try
 		{
 			if (linda_loc != null)
-				linda = linda_loc;
+				linda = new LindaSharedClient (linda_loc, robotid);			// own tuples delivered with the robot id as space
 			else if (vrdesc.mode == ThreadDesc.M_UDP)
 				linda = new LindaNetClient (LindaNet.UDP, null, lldesc.addr, lldesc.port);
 			else if (vrdesc.mode == ThreadDesc.M_TCP)
@@ -571,6 +571,7 @@ public class ExecArch extends Thread
 		}
 
 		SimRobot	thread = new SimRobot (robotid, props, linda, sim);
+		vrdesc.robotid	= robotid;
 		thread.setTDesc (vrdesc);
 		if (start != null)		thread.reset (start);
 		vrdesc.thread	= thread;

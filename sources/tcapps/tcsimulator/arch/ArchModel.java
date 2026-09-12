@@ -64,6 +64,10 @@ public class ArchModel
 		public String toString ()	{ return label; }
 	}
 
+	static public final Property[]	ROBOT_PROPS	=
+	{
+		new Property ("START",	"Start pose (x, y, deg)"),
+	};
 	static public final Property[]	LINDA_PROPS	=
 	{
 		new Property ("ADDR",	"Address"),
@@ -269,6 +273,7 @@ public class ArchModel
 		String[]		hidden;
 		switch (b.kind)
 		{
+		case ROBOT:			return java.util.Arrays.asList (ROBOT_PROPS);
 		case GLOBAL_LINDA:
 		case LOCAL_LINDA:	return java.util.Arrays.asList (LINDA_PROPS);
 		case ROUTER:		std = ROUTER_PROPS;	hidden = ROUTER_HIDDEN;	break;
@@ -295,6 +300,11 @@ public class ArchModel
 	/** Value of a property of a block ("" when unset). Linda blocks: ADDR, PORT, CREATE; modules: INFO (name) or a property. */
 	public String get (Block b, String key)
 	{
+		if ((b.kind == ROBOT) && key.equals ("START"))
+		{
+			double[]	st = hasRobot (b.robot) ? robot (b.robot).start : null;
+			return (st == null) ? "" : String.format (java.util.Locale.ROOT, "%.3f, %.3f, %.1f", st[0], st[1], st[2]);
+		}
 		Linda	l = lindaOf (b);
 		if (l != null)
 		{
@@ -313,6 +323,17 @@ public class ArchModel
 	public void set (Block b, String key, String value)
 	{
 		String	v = (value == null) ? "" : value.trim ();
+		if ((b.kind == ROBOT) && key.equals ("START"))
+		{
+			if (!hasRobot (b.robot))		return;
+			if (v.length () == 0)		{ robot (b.robot).start = null; return; }
+			try
+			{
+				String[]	t = v.split ("[,\\s]+");
+				robot (b.robot).start = new double[] { Double.parseDouble (t[0]), Double.parseDouble (t[1]), (t.length > 2) ? Double.parseDouble (t[2]) : 0.0 };
+			} catch (Exception e) { }									// malformed: unchanged
+			return;
+		}
 		Linda	l = lindaOf (b);
 		if (l != null)
 		{
