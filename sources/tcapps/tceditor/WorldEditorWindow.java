@@ -379,15 +379,6 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.setSelection (null); selectTool (WorldCanvas.T_SELECT); }
 		}));
-		medit.addSeparator ();
-		medit.add (item ("Edit Default Values...", null, new AbstractAction ()
-		{
-			public void actionPerformed (ActionEvent e)		{ canvas.setSelection (new WorldItem (WorldItem.DEFAULTS, 0)); }
-		}));
-		medit.add (item ("Edit First Start Point...", null, new AbstractAction ()
-		{
-			public void actionPerformed (ActionEvent e)		{ canvas.setSelection (new WorldItem (WorldItem.START, 0)); }
-		}));
 
 		mb.add (medit);
 
