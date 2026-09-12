@@ -123,15 +123,25 @@ public class TaskDialog extends JDialog
 		return p;
 	}
 
-	/** Places admitting the given action: docks whose flow accepts it (all of them without a world). */
+	/**
+	 * Places admitting the given action (all of them without a world): load and
+	 * unload offer the docks whose flow accepts them; the other actions (goto,
+	 * stay) offer every dock, waypoint and zone of the world.
+	 */
 	protected String[] placesFor (String action)
 	{
 		if (world == null)				return places;
+		boolean			material = (action != null) && (action.equalsIgnoreCase ("load") || action.equalsIgnoreCase ("unload"));
 		List<String>	sel = new ArrayList<String> ();
 		for (int i = 0; i < world.docks ().n (); i++)
 		{
 			WMDock	d = world.docks ().at (i);
-			if (d.accepts (action))		sel.add (d.label);
+			if (!material || d.accepts (action))		sel.add (d.label);
+		}
+		if (!material)
+		{
+			for (int i = 0; i < world.wps ().n (); i++)			sel.add (world.wps ().at (i).label);
+			for (int i = 0; i < world.zones ().n (); i++)		sel.add (world.zones ().at (i).label);
 		}
 		return sel.toArray (new String[sel.size ()]);
 	}
