@@ -202,7 +202,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	private Action openArchAction ()
 	{
-		return ToolButtons.action ("Load Deployment Architecture...", ToolIcon.FOLDER, "Load deployment architecture  [Ctrl+O]", new Runnable () { public void run () { loadArch (); } });
+		return ToolButtons.action ("Load Deployment...", ToolIcon.FOLDER, "Load deployment  [Ctrl+O]", new Runnable () { public void run () { loadArch (); } });
 	}
 
 	private Action openWorldAction ()
@@ -212,7 +212,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	private Action editArchAction ()
 	{
-		return ToolButtons.action ("Edit Deployment Architecture...", ToolIcon.ARCHITECTURE, "Edit the deployment architecture: Linda spaces, robots and modules  [Ctrl+E]", new Runnable () { public void run () { editArchitecture (); } });
+		return ToolButtons.action ("Edit Deployment...", ToolIcon.ARCHITECTURE, "Edit the deployment: Linda spaces, robots and modules  [Ctrl+E]", new Runnable () { public void run () { editArchitecture (); } });
 	}
 
 	private Action tasksAction ()
@@ -226,10 +226,10 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		JMenuBar	mb = new JMenuBar ();
 
 		JMenu		mfile = new JMenu ("File");
-		mfile.add (item ("New Deployment Architecture", KeyEvent.VK_N, mask, new Runnable () { public void run () { newArch (); } }));
-		mfile.add (item ("Load Deployment Architecture...", KeyEvent.VK_O, mask, new Runnable () { public void run () { loadArch (); } }));
-		mfile.add (item ("Save Deployment Architecture", KeyEvent.VK_S, mask, new Runnable () { public void run () { saveArch (false); } }));
-		mfile.add (item ("Save Deployment Architecture As...", KeyEvent.VK_S, mask | KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { saveArch (true); } }));
+		mfile.add (item ("New Deployment", KeyEvent.VK_N, mask, new Runnable () { public void run () { newArch (); } }));
+		mfile.add (item ("Load Deployment...", KeyEvent.VK_O, mask, new Runnable () { public void run () { loadArch (); } }));
+		mfile.add (item ("Save Deployment", KeyEvent.VK_S, mask, new Runnable () { public void run () { saveArch (false); } }));
+		mfile.add (item ("Save Deployment As...", KeyEvent.VK_S, mask | KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { saveArch (true); } }));
 		mfile.addSeparator ();
 		JMenuItem	quit = new JMenuItem ("Quit");
 		quit.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_Q, mask));
@@ -323,7 +323,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		if (!confirmDiscard ())			return;
 		JFileChooser	fc = chooser (deploy.getFile (), DEPLOY_DIR, DeployArch.EXTENSION, "Deployment architectures (*.deploy)");
-		fc.setDialogTitle ("Load Deployment Architecture");
+		fc.setDialogTitle ("Load Deployment");
 		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
 		loadArch (fc.getSelectedFile ());
 	}
@@ -360,7 +360,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		if (saveAs || (f == null))
 		{
 			JFileChooser	fc = chooser (f, DEPLOY_DIR, DeployArch.EXTENSION, "Deployment architectures (*.deploy)");
-			fc.setDialogTitle (saveAs ? "Save Deployment Architecture As" : "Save Deployment Architecture");
+			fc.setDialogTitle (saveAs ? "Save Deployment As" : "Save Deployment");
 			if (f != null)		fc.setSelectedFile (f);
 			if (fc.showSaveDialog (this) != JFileChooser.APPROVE_OPTION)		return false;
 			f = fc.getSelectedFile ();
