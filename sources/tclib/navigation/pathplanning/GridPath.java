@@ -7,13 +7,12 @@ package tclib.navigation.pathplanning;
 import tclib.navigation.mapbuilding.*;
 
 import devices.pos.*;
-import wucore.utils.math.*;
 
 class PathNode extends Object
 {
 	protected int 				x;			/* Location of cell to expand 		*/
 	protected int				y;
-	protected double				fn;			/* Best cost found					*/
+	protected double			fn;			/* Best cost found					*/
 	protected int				next;
 }
 
@@ -140,7 +139,7 @@ public abstract class GridPath extends Object
 	public final int 				goal_y ()					{ return goal_y; }
 	
 	public final Path	 			path ()						{ return rpath; }
-	public final boolean				newPath ()					{ return finished; }
+	public final boolean			newPath ()					{ return finished; }
 	
 	public final void				setDilation (int dil)		{ DILATION = dil; }
 	public final void				setTimeStep (int tstep)		{ TIME_STEP = tstep; }
@@ -148,13 +147,13 @@ public abstract class GridPath extends Object
 	public final void				setExtension (double ext)	{ EXTENSION = ext; }
 	public final void				setHeuristic (int heur)		{ heuristic = heur; }
 
-	public final double[][] 			cost ()						{ if (lck_buffer) return f2; return f1; }
+	public final double[][] 		cost ()						{ if (lck_buffer) return f2; return f1; }
 	public final double				kmax ()						{ return Km; }
-	public final void 				curve (int c, int s)			{ curve = c; source = s; }
+	public final void 				curve (int c, int s)		{ curve = c; source = s; }
 	
 	public final double				time ()						{ return time; }
 	public final double				avg ()						{ if (tcount > 0) return (tsum / (double) tcount); return 0.0; }
-	public final int					expanded ()					{ return expanded; }
+	public final int				expanded ()					{ return expanded; }
 	
 	// Instance methods 
 	public void location (Position pos)
@@ -242,7 +241,7 @@ public abstract class GridPath extends Object
 	 Extract the full path in order to go from the robot 
 	 position to the desired one. 
 	 ------------------------------------------------ */
-	protected Position generate_extension (Position p1, Position p2)
+	static public  Position generate_extension (Position p1, Position p2, double extension)
 	{
 		Position			p3;
 		double				m, n;
@@ -255,24 +254,24 @@ public abstract class GridPath extends Object
 		{
 			x	= p1.x ();
 			if (dy > 0.0)
-				y	= p2.y () + EXTENSION;
+				y	= p2.y () + extension;
 			else
-				y	= p2.y () - EXTENSION;
+				y	= p2.y () - extension;
 		}
 		else if (dy == 0.0)			// Over X axis (0, 180 deg)
 		{
 			y	= p1.y ();
 			if (dx > 0.0)
-				x	= p2.x () + EXTENSION;
+				x	= p2.x () + extension;
 			else
-				x	= p2.x () - EXTENSION;
+				x	= p2.x () - extension;
 		}
 		else						// Other angles
 		{
 			m	= dy / dx;
 			n	= p1.y () - m * p1.x ();
 			a	= Math.atan2 (p2.y () - p1.y (), p2.x () - p1.x ());
-			x	= p2.x () + EXTENSION * Math.cos (a);
+			x	= p2.x () + extension * Math.cos (a);
 			y	= m * x + n;
 		}
 		p3	= new Position (x, y, p2.alpha ());
@@ -288,7 +287,7 @@ public abstract class GridPath extends Object
 	{
 		int			plast = 0;
 		int			n;
-		double		dst, firstang;
+		double		firstang;
 		double 		alf;
 
 		switch (source)
@@ -308,19 +307,15 @@ public abstract class GridPath extends Object
 			path.add (robot);
 			alf = Math.atan2(goal.y()-robot.y(), goal.x()-robot.x());
 			n = (int)Math.round(robot.distance(goal) / 0.1);
-			for(int i = 1; i < n; i++){
-				dst = i * 0.1;
-				path.add(robot.x()+ i*0.1 * Math.cos(alf),
-					robot.y()+ i*0.1 * Math.sin(alf),
-					alf);
-			}
+			for(int i = 1; i < n; i++)
+				path.add (robot.x()+ i*0.1 * Math.cos(alf), robot.y()+ i*0.1 * Math.sin(alf), alf);		
 			path.add (goal);				
 			firstang = robot.alpha ();
 		break;
 		
 		case POINTS:
 			plast		= DockingPath.controlPoints (path, robot, goal);
-			path.add (generate_extension (path.last (-plast/2-1), goal));	
+			path.add (generate_extension (path.last (-plast/2-1), goal, EXTENSION));	
 			firstang 	= robot.alpha ()+Math.PI;
 			
 			break;

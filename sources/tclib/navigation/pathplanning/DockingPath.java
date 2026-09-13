@@ -262,36 +262,6 @@ public final class DockingPath
 		return plast;
 	}
 
-	/** A point <code>extension</code> metres beyond p2 along the line p1-p2 (the same rule as GridPath.generate_extension). */
-	static public Position extend (Position p1, Position p2, double extension)
-	{
-		double		m, n;
-		double		dx, dy;
-		double		a, x, y;
-
-		dx	= p2.x () - p1.x ();
-		dy	= p2.y () - p1.y ();
-		if (dx == 0.0)
-		{
-			x	= p1.x ();
-			y	= (dy > 0.0) ? p2.y () + extension : p2.y () - extension;
-		}
-		else if (dy == 0.0)
-		{
-			y	= p1.y ();
-			x	= (dx > 0.0) ? p2.x () + extension : p2.x () - extension;
-		}
-		else
-		{
-			m	= dy / dx;
-			n	= p1.y () - m * p1.x ();
-			a	= Math.atan2 (p2.y () - p1.y (), p2.x () - p1.x ());
-			x	= p2.x () + extension * Math.cos (a);
-			y	= m * x + n;
-		}
-		return new Position (x, y, p2.alpha ());
-	}
-
 	/**
 	 * The docking trajectory (B-spline through the control points, as the
 	 * navigation module builds it) from the robot pose to the goal pose.
@@ -301,7 +271,7 @@ public final class DockingPath
 	{
 		Path	path = new Path (1000);
 		int		plast = controlPoints (path, robot, goal);
-		path.add (extend (path.last (-plast/2-1), goal, extension));
+		path.add (GridPath.generate_extension (path.last (-plast/2-1), goal, extension));
 		return new BSpline (path, robot.alpha () + Math.PI);
 	}
 }

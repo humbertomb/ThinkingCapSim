@@ -2736,29 +2736,6 @@ public class PathFinder {
 		return ifresnel;
 	}
 	
-	public static void main(String args[]) {
-		PathFinder pfinder = new PathFinder();
-		
-		//System.out.println("angle1: " + (Math.toRadians(-136.8)+Math.PI));
-		//System.out.println("angle2: " + (Math.toRadians(90.0)+Math.PI));
-		
-		//Position posi = new Position(59.94, 56.37, Math.toRadians(-136.8));
-		//Position pose = new Position(58.34, 52.7, Math.toRadians(90.0));
-		
-		Position posi = new Position(59.94, 56.37, Math.toRadians(-136.8)+Math.PI);
-		Position pose = new Position(58.34, 52.7, Math.toRadians(90.0)+Math.PI);
-		
-		//Position posi = new Position(-3.0, -2.0, Math.toRadians(-30.0)+Math.PI);
-		//Position pose = new Position(2.0, 2.0, Math.toRadians(90.0)+Math.PI);
-		
-		//Position posi = new Position (3.5, 4.5, 60.0*Angles.DTOR+Math.PI);
-		//Position pose = new Position (5.5, 6.0, -70.0*Angles.DTOR+Math.PI);
-		
-		pfinder.calculatePath(posi, pose, 0.8357, 0.366, 0.1, 0.1, 10.0, 0.0);
-		//pfinder.calculatePath(10.0, -1.0, Math.toRadians(0.0), 3.0, -5.0, Math.toRadians(180.0), 0.8, 0.3, 0.01, 0.1);
-		//pfinder.calculatePath( 3.0, 5.0, Math.PI, 15.0, 18.0, 0.0, 0.8, 0.3, 0.1, 0.1);
-		//pfinder.calculatePath(3.0, 5.0 , Math.PI, 0.0, 7.0 ,-Math.PI,	0.8, 0.3, 0.1, 0.1);
-	}
 	
 	public void calculatePath (Position pos_i, Position pos_e, double k_max, double sigma_max, double spacement, double th_sp, double extension, double post_extension)
 	{
@@ -2779,11 +2756,7 @@ public class PathFinder {
 		
 		this.spacement = spacement;
 		this.th_sp = th_sp;
-		
-		//System.out.println(" x_i: " + x_i + " y_i: " + y_i + " theta_i: " + Math.toDegrees(theta_i));
-		//System.out.println(" x_e: " + x_e + " y_e: " + y_e + " theta_e: " + Math.toDegrees(theta_e));
-		//System.out.println(" k_max: " + k_max + " sigma_max: " + sigma_max);
-		
+				
 		// Rv and gamma computation
 		double b_lim;
 		b_lim = (k_max*k_max) / sigma_max;
@@ -2849,48 +2822,31 @@ public class PathFinder {
 			
 			path = new Position[path_aux.length + 1];
 			for (int i = 0; i < (path.length-1); i++)
-			{
-				path[i] = new Position(path_aux[i]);
-			}
+				path[i] = new Position(path_aux[i]);		
 			path[path.length-1] = new Position(xaux_e, yaux_e, 0.0);
 			
 			length = Math.sqrt( ((xaux_e-x_i)*(xaux_e-x_i)) + ((yaux_e-y_i)*(yaux_e-y_i)) );
 			
 		} else {
 			
-			// Calculate possible paths
-			Position[] lrl_trajectory, rlr_trajectory, rsl_trajectory, lsr_trajectory, lsl_trajectory, rsr_trajectory;
-			
+			// Calculate possible paths			
 			plrl = new PathLRL(x_i, y_i, theta_i, xaux_e, yaux_e, theta_e, rv, gamma, b_lim);
 			plrl.calculatePath ();
-			lrl_trajectory = plrl.getTrajectory();
 			
 			prlr = new PathRLR(x_i, y_i, theta_i, xaux_e, yaux_e, theta_e, rv, gamma, b_lim);
 			prlr.calculatePath ();
-			rlr_trajectory = prlr.getTrajectory();
 			
 			prsl = new PathRSL(x_i, y_i, theta_i, xaux_e, yaux_e, theta_e, rv, gamma, b_lim);
 			prsl.calculatePath(ang_df, slope);
-			rsl_trajectory = prsl.getTrajectory();
 			
 			plsr = new PathLSR(x_i, y_i, theta_i, xaux_e, yaux_e, theta_e, rv, gamma, b_lim);
 			plsr.calculatePath(ang_df, slope);
-			lsr_trajectory = plsr.getTrajectory();
 			
 			plsl = new PathLSL(x_i, y_i, theta_i, xaux_e, yaux_e, theta_e, rv, gamma, b_lim);
 			plsl.calculatePath(ang_df, slope);
-			lsl_trajectory = plsl.getTrajectory();
 			
 			prsr = new PathRSR(x_i, y_i, theta_i, xaux_e, yaux_e, theta_e, rv, gamma, b_lim);
-			prsr.calculatePath(ang_df, slope);
-			rsr_trajectory = prsr.getTrajectory();
-			
-			//System.out.println(" long: " + plrl.getLength());
-			//int i;
-			//if(lrl_trajectory != null)
-			//	for(i = 0; i < lrl_trajectory.length; i++)
-			//		System.out.println(" lrl_trajectory[" + i + "]: <" + lrl_trajectory[i].x() + "," + lrl_trajectory[i].y() + ">");
-			//System.out.println("");
+			prsr.calculatePath(ang_df, slope);			
 			
 			// Choice the path with minimum length
 			double aux = Double.MAX_VALUE;
@@ -2898,43 +2854,31 @@ public class PathFinder {
 			{
 				aux = plrl.getLength();
 				path = plrl.getTrajectory();
-				
-				// System.out.println(" LRL: aux: " + aux);
 			}
 			if((prlr.getLength() < aux) && (prlr.getTrajectory() != null))	// RLR
 			{
 				aux = prlr.getLength();
 				path = prlr.getTrajectory();
-				
-				// System.out.println(" RLR: aux: " + aux);
 			}
 			if((prsl.getLength() < aux) && (prsl.getTrajectory() != null))	// RSL
 			{
 				aux = prsl.getLength();
 				path = prsl.getTrajectory();
-				
-				// System.out.println(" RSL: aux: " + aux);
 			}
 			if((plsr.getLength() < aux) && (plsr.getTrajectory() != null))	// LSR
 			{
 				aux = plsr.getLength();
 				path = plsr.getTrajectory();
-				
-				// System.out.println(" LSR: aux: " + aux);
 			}
 			if((plsl.getLength() < aux) && (plsl.getTrajectory() != null))	// LSL
 			{
 				aux = plsl.getLength();
 				path = plsl.getTrajectory();
-				
-				// System.out.println(" LSL: aux: " + aux);
 			}
 			if((prsr.getLength() < aux) && (prsr.getTrajectory() != null))	// RSR
 			{
 				aux = prsr.getLength();
 				path = prsr.getTrajectory();
-				
-				// System.out.println(" RSR: aux: " + aux);
 			}
 			
 			length = aux;
@@ -2954,16 +2898,11 @@ public class PathFinder {
 			
 			for(j = 0; j< pextension.length; i++, j++)
 				path_tmp[i] = new Position(pextension[j]);
-			
-			//System.out.println(" length: " + length);
-			//System.out.println(" size: path: " + path.length + " extension: " + pextension.length + " path_tmp.length: " + path_tmp.length);
-			
+						
 			path = new Position[path_tmp.length];
 			for(i = 0; i< path_tmp.length; i++)
 				path[i] = new Position(path_tmp[i]);
-			
-			//System.out.println(" Path: length: " + length + " npoints: " + path.length);
-			
+						
 			// Post Path extension
 			double x_f, y_f;
 			x_f = x_e + post_extension*Math.cos(theta_e);
