@@ -17,26 +17,30 @@ public class WorldItem
 	static public final int		PATH		= 2;
 	static public final int		WALL		= 3;
 	static public final int		OBJECT		= 4;
-	static public final int		CONNECTOR		= 5;
-	static public final int		BEACON		= 6;
-	static public final int		CBEACON		= 7;
-	static public final int		WAYPOINT	= 8;
-	static public final int		DOCK		= 9;
-	static public final int		START		= 10;
-	static public final int		ICON		= 11;		// icon definitions (local coordinates, no position in the world)
-	static public final int		DEFAULTS	= 12;
+	static public final int		AOBJECT		= 5;		// animated objects
+	static public final int		CONNECTOR		= 6;
+	static public final int		BEACON		= 7;
+	static public final int		CBEACON		= 8;
+	static public final int		WAYPOINT	= 9;
+	static public final int		DOCK		= 10;
+	static public final int		START		= 11;
+	static public final int		ICON		= 12;		// icon definitions (local coordinates, no position in the world)
+	static public final int		DEFAULTS	= 13;
 
-	static public final int		NKINDS		= 13;
+	static public final int		NKINDS		= 14;
 
 	static public final String[]	NAMES	= {
-		"Zone", "Forbidden area", "Path point", "Wall", "Object", "Connector",
+		"Zone", "Forbidden area", "Path point", "Wall", "Object", "Animated object", "Connector",
 		"Strip beacon", "Cylindrical beacon", "Waypoint", "Dock", "Start point", "Icon", "Defaults"
 	};
 
 	static public final String[]	PLURALS	= {
-		"Zones", "Forbidden areas", "Path points", "Walls", "Objects", "Connectors",
+		"Zones", "Forbidden areas", "Path points", "Walls", "Objects", "Animated objects", "Connectors",
 		"Strip beacons", "Cylindrical beacons", "Waypoints", "Docks", "Start points", "Icons", "Defaults"
 	};
+
+	/** True for the kinds that are objects (static or animated). */
+	static public boolean isObject (int kind)		{ return (kind == OBJECT) || (kind == AOBJECT); }
 
 	public int			kind;
 	public int			index;

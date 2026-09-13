@@ -102,6 +102,7 @@
   },
   "icons": [],
   "objects": [],
+  "aobjects": [],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
     "items": [

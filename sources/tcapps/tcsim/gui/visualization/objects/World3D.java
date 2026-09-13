@@ -50,11 +50,11 @@ public class World3D extends BranchGroup
 			addChild (createWall (map.walls ().at (i)));
 		
 		// Add External Objects
-		for (i = 0; i < map.objects() .size (); i++)
+		for (WMObject object : map.allObjects ())		// static and animated (initial pose)
 		{
 			Object3D		obj;
 
-			obj	= createObject (map.objects ().get (i));
+			obj	= createObject (object);
 			if (obj != null)
 				addChild (obj);
 		}

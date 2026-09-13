@@ -30,6 +30,7 @@ import java.util.List;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import tc.shared.world.WMAObject;
 import tc.shared.world.WMBeacon;
 import tc.shared.world.WMCBeacon;
 import tc.shared.world.WMDock;
@@ -74,6 +75,8 @@ public class WorldCanvas extends JPanel
 	static public final int		T_CBEACON	= 11;
 	static public final int		T_PATH		= 12;
 	static public final int		T_ICON		= 13;		// edit the icon (segments) of the selected object
+	static public final int		T_AOBJECT	= 14;
+	static public final int		NTOOLS		= 15;
 
 	/** Receives notifications from the canvas. */
 	/** Extra layer painted over the world (e.g. the simulated robots); coordinates via toPixelX/Y and getScale. */
@@ -446,6 +449,10 @@ public class WorldCanvas extends JPanel
 			setSelection (WorldEditor.addObject (world, anchorX, anchorY, 0.4));
 			changed ("Add object");
 			break;
+		case T_AOBJECT:
+			setSelection (WorldEditor.addAObject (world, anchorX, anchorY));
+			changed ("Add animated object");
+			break;
 		case T_WAYPOINT:
 			setSelection (WorldEditor.addWaypoint (world, anchorX, anchorY));
 			changed ("Add waypoint");
@@ -594,7 +601,7 @@ public class WorldCanvas extends JPanel
 			return;
 		}
 		if (editable && (tool == T_SELECT) && (e.getClickCount () == 2) && SwingUtilities.isLeftMouseButton (e)
-				&& (selection != null) && (selection.kind == WorldItem.OBJECT))
+				&& (selection != null) && WorldItem.isObject (selection.kind))
 		{
 			// double click on an object: edit its icon
 			if (listener != null)		listener.toolRequested (T_ICON);
@@ -680,6 +687,7 @@ public class WorldCanvas extends JPanel
 		case T_ZONE:		return "Drag a rectangle. Right click / Esc: back to Select";
 		case T_FAREA:		return "Click the vertices, double-click / Enter to close the area, Esc to cancel";
 		case T_OBJECT:		return "Click to place an object (icon, shape and colour in Properties). Right click / Esc: back to Select";
+		case T_AOBJECT:		return "Click to place an animated object (icon, shape, colour and dynamics in Properties). Right click / Esc: back to Select";
 		case T_WAYPOINT:	return "Click to place a waypoint. Right click / Esc: back to Select";
 		case T_DOCK:		return "Click to place a dock. Right click / Esc: back to Select";
 		case T_BEACON:		return "Click to place a strip beacon. Right click / Esc: back to Select";
@@ -718,6 +726,7 @@ public class WorldCanvas extends JPanel
 		if (visible[WorldItem.PATH])		drawPath (g);
 		if (visible[WorldItem.WALL])		for (int i = 0; i < world.walls ().n (); i++)		drawWall (g, world.walls ().at (i), isSel (WorldItem.WALL, i));
 		if (visible[WorldItem.OBJECT])		for (int i = 0; i < world.objects ().size (); i++)		drawObject (g, world.objects ().get (i), isSel (WorldItem.OBJECT, i));
+		if (visible[WorldItem.AOBJECT])		for (int i = 0; i < world.aobjects ().size (); i++)		drawAObject (g, world.aobjects ().get (i), isSel (WorldItem.AOBJECT, i));
 		if (visible[WorldItem.CONNECTOR])		for (int i = 0; i < world.connectors ().n (); i++)		drawConnector (g, world.connectors ().at (i), isSel (WorldItem.CONNECTOR, i));
 		if (visible[WorldItem.BEACON])		for (int i = 0; i < world.beacons ().size (); i++)		drawBeacon (g, world.beacons ().get (i), isSel (WorldItem.BEACON, i));
 		if (visible[WorldItem.CBEACON])		for (int i = 0; i < world.cbeacons ().size (); i++)	drawCBeacon (g, world.cbeacons ().get (i), isSel (WorldItem.CBEACON, i));
@@ -885,6 +894,26 @@ public class WorldCanvas extends JPanel
 			g.draw (new Line2D.Double (x, y, ax, ay));
 			if (sel)	label (g, o.shape, o.pos.x (), o.pos.y (), C_SEL);
 		}
+	}
+
+	/** An animated object: drawn as an object plus a small motion mark (two chevrons) at its position. */
+	private void drawAObject (Graphics2D g, WMAObject o, boolean sel)
+	{
+		drawObject (g, o, sel);
+		Color	c = sel ? C_SEL : ColorTool.fromWColorToColor (o.color);
+		double	x = px (o.pos.x ()), y = py (o.pos.y ());
+		g.setColor (c);
+		g.setStroke (stroke (1.5f));
+		double	cs = Math.cos (o.a), sn = Math.sin (o.a);
+		for (int k = 0; k < 2; k++)
+		{
+			double	bx = x + (8 + 5 * k) * cs, by = y - (8 + 5 * k) * sn;		// tip of the chevron along the heading
+			double	tx = -4 * cs, ty = 4 * sn;									// back along the heading
+			double	nx = -4 * sn, ny = -4 * cs;									// perpendicular
+			g.draw (new Line2D.Double (bx, by, bx + tx + nx, by + ty + ny));
+			g.draw (new Line2D.Double (bx, by, bx + tx - nx, by + ty - ny));
+		}
+		if (sel && (o.dynamics != null))		label (g, o.dynamics.substring (o.dynamics.lastIndexOf ('.') + 1), o.pos.x (), o.pos.y () - 0.3, C_SEL);
 	}
 
 	private void drawConnector (Graphics2D g, WMConnector d, boolean sel)
@@ -1084,8 +1113,7 @@ public class WorldCanvas extends JPanel
 
 	private WMObject selectedObject ()
 	{
-		if ((selection == null) || (selection.kind != WorldItem.OBJECT) || !WorldEditor.valid (world, selection))		return null;
-		return world.objects ().get (selection.index);
+		return WorldEditor.object (world, selection);
 	}
 
 	/** The icon the icon tool works on, or null. */
@@ -1112,7 +1140,7 @@ public class WorldCanvas extends JPanel
 		java.util.List<WorldItem>	users = WorldEditor.iconUserItems (world, ic.label);
 		if (users.size () > 0)
 		{
-			WMObject	u = world.objects ().get (users.get (0).index);
+			WMObject	u = WorldEditor.object (world, users.get (0));
 			anchor = new double[] { u.pos.x (), u.pos.y (), u.a };
 		}
 		else
@@ -1147,7 +1175,7 @@ public class WorldCanvas extends JPanel
 		{
 			// nothing suitable selected: pick an object
 			WorldItem	hit = WorldEditor.pick (world, curX, curY, tol, visible);
-			if ((hit != null) && (hit.kind == WorldItem.OBJECT))		setSelection (hit);
+			if ((hit != null) && WorldItem.isObject (hit.kind))		setSelection (hit);
 			return;
 		}
 		if (awaitingAnchor)
@@ -1296,7 +1324,7 @@ public class WorldCanvas extends JPanel
 		{
 			int		x = toPixelX (hs[i].x ()), y = toPixelY (hs[i].y ());
 			boolean	rot = (i == hs.length - 1) && ((selection.kind == WorldItem.WAYPOINT) || (selection.kind == WorldItem.DOCK)
-						|| (selection.kind == WorldItem.START) || (selection.kind == WorldItem.OBJECT));
+						|| (selection.kind == WorldItem.START) || WorldItem.isObject (selection.kind));
 			if (rot)
 			{
 				g.setColor (C_SEL);

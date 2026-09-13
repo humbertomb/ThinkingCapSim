@@ -184,9 +184,10 @@ public class World2D extends Object2D
 		WMObject		object;
 		Line2[]		icon;
 		
-		for (i = 0; i < map.objects ().size (); i++)
+		java.util.List<WMObject>	objects = map.allObjects ();		// static and animated (initial pose)
+		for (i = 0; i < objects.size (); i++)
 		{
-			object	= map.objects ().get (i);
+			object	= objects.get (i);
 			icon		= object.absIcon ();
 			for (j = 0; j < icon.length; j++)
 			{

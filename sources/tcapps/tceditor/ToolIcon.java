@@ -58,6 +58,7 @@ public class ToolIcon implements Icon
 	static public final int		NODE		= 43;		// a single node
 	static public final int		ARC			= 44;		// arrow between two nodes
 	static public final int		SUBGRAPH	= 45;		// node with a small graph below (open its level)
+	static public final int		AOBJECT		= 47;		// object box with motion chevrons (animated object)
 	static public final int		EDIT_WORLD	= 46;		// map with a pencil (edit the world)
 
 	protected int				type;
@@ -109,6 +110,15 @@ public class ToolIcon implements Icon
 			g.setColor (new Color (90, 90, 90));
 			g.drawRect (4, 6, 14, 11);
 			g.drawLine (4, 6, 8, 3);	g.drawLine (18, 6, 21, 3);	g.drawLine (8, 3, 21, 3);
+			break;
+		case AOBJECT:
+			g.setColor (new Color (90, 90, 90));
+			g.drawRect (3, 7, 10, 9);
+			g.drawLine (3, 7, 6, 4);	g.drawLine (13, 7, 16, 4);	g.drawLine (6, 4, 16, 4);
+			g.setColor (new Color (0, 120, 200));
+			g.setStroke (new BasicStroke (1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawLine (15, 9, 18, 12);	g.drawLine (18, 12, 15, 15);
+			g.drawLine (18, 9, 21, 12);	g.drawLine (21, 12, 18, 15);
 			break;
 		case FAREA:
 			g.setColor (new Color (255, 90, 90, 90));

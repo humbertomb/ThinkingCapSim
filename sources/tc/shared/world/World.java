@@ -53,6 +53,7 @@ public class World extends Object
 	// Map components
 	protected ArrayList<WMIcon>		icons		= new ArrayList<WMIcon> ();		// Icon library the objects refer to
 	protected ArrayList<WMObject>	objects		= new ArrayList<WMObject> ();
+	protected ArrayList<WMAObject>	aobjects	= new ArrayList<WMAObject> ();	// Animated objects
 	protected WMFAreas				fareas;
 	protected WMWalls				walls;
 	protected WMZones				zones;
@@ -102,6 +103,16 @@ public class World extends Object
 	public final List<Point2>	path ()				{ return path; }
 	public final WMWalls 		walls ()			{ return walls; }
 	public final List<WMObject>	objects ()			{ return objects; }
+	public final List<WMAObject> aobjects ()		{ return aobjects; }
+
+	/** All the objects, static and animated (a new list; editing it does not change the world). */
+	public final List<WMObject>	allObjects ()
+	{
+		List<WMObject>	all = new ArrayList<WMObject> (objects.size () + aobjects.size ());
+		all.addAll (objects);
+		all.addAll (aobjects);
+		return all;
+	}
 	public final List<WMIcon>	icons ()			{ return icons; }
 	public final WMZones		zones ()			{ return zones; }
 	public final WMFAreas		fareas ()			{ return fareas; }
@@ -305,7 +316,7 @@ public class World extends Object
 		Files.write (Paths.get (name), toJsonText ().getBytes (StandardCharsets.UTF_8));
 	}
 
-	/* JSON representation: {starts, path, walls, icons, objects, zones, fareas, connectors, waypoints, docks, beacons, cbeacons} */
+	/* JSON representation: {starts, path, walls, icons, objects, aobjects, zones, fareas, connectors, waypoints, docks, beacons, cbeacons} */
 
 	/** An empty world (one start point at the origin and every collection created but empty). */
 	static public World empty ()
@@ -338,6 +349,8 @@ public class World extends Object
 		for (JsonElement e : getArray (o, "icons"))			icons.add (new WMIcon (e.getAsJsonObject ()));
 		objects.clear ();
 		for (JsonElement e : getArray (o, "objects"))		objects.add (new WMObject (e.getAsJsonObject (), icons));
+		aobjects.clear ();
+		for (JsonElement e : getArray (o, "aobjects"))		aobjects.add (new WMAObject (e.getAsJsonObject (), icons));
 		fareas		= new WMFAreas (o.get ("fareas"));
 		zones		= new WMZones (o.get ("zones"));
 		connectors	= new WMConnectors (o.get ("connectors"));
@@ -368,6 +381,9 @@ public class World extends Object
 		JsonArray	oa = new JsonArray ();
 		for (WMObject x : objects)		oa.add (x.toJson ());
 		o.add ("objects", oa);
+		JsonArray	aa = new JsonArray ();
+		for (WMAObject x : aobjects)	aa.add (x.toJson ());
+		o.add ("aobjects", aa);
 		o.add ("zones", zones.toJson ());
 		o.add ("fareas", fareas.toJson ());
 		o.add ("connectors", connectors.toJson ());

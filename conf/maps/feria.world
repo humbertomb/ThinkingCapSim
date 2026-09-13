@@ -30,6 +30,7 @@
     { "icon": "net", "x": -2.2356, "y": 2.168, "z": 0, "orientation": -45, "color": "red", "shape": "./conf/3dmodels/net.3ds", "usecolor": true },
     { "icon": "net_2", "x": 2.2993, "y": -2.3159, "z": 0, "orientation": 135, "color": "blue", "shape": "./conf/3dmodels/net.3ds", "usecolor": true }
   ],
+  "aobjects": [],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
     "items": [

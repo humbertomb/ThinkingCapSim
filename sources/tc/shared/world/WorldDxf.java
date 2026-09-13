@@ -33,7 +33,8 @@ import wucore.utils.geom.Point3;
  * elements themselves are persisted in JSON (see {@link World}).
  *
  * Layers: "0" walls (lines and polylines), ZONES (closed polylines), DOORS
- * (lines), OBJECTS (block inserts), PATH (one polyline), WAYPOINTS and
+ * (lines), OBJECTS and AOBJECTS (block inserts; animated objects carry the
+ * dynamics class as extended text), PATH (one polyline), WAYPOINTS and
  * DOCKINGS (texts), BEACONS (texts or lines), CBEACONS (circles or texts) and
  * OTHERS (start points). Defaults travel as "NAME = value" texts.
  */
@@ -175,16 +176,24 @@ public class WorldDxf
 	{
 		for (Entity entity : dxf.getEntities ())
 		{
-			if (!entity.getLayer ().equalsIgnoreCase ("OBJECTS") || !(entity instanceof InsertDxf))		continue;
+			if (!(entity instanceof InsertDxf))		continue;
 			InsertDxf	insert = (InsertDxf) entity;
-			w.objects ().add (toObject (insert, dxf.getBlocks (insert.getBlockname ()), w));
+			if (entity.getLayer ().equalsIgnoreCase ("OBJECTS"))
+				w.objects ().add (toObject (new WMObject (), insert, dxf.getBlocks (insert.getBlockname ()), w));
+			else if (entity.getLayer ().equalsIgnoreCase ("AOBJECTS"))
+			{
+				WMAObject	o = new WMAObject ();
+				toObject (o, insert, dxf.getBlocks (insert.getBlockname ()), w);
+				o.dynamics	= (insert.ExtTextSize () > 3) ? insert.getExtText (3) : null;
+				if ((o.dynamics != null) && (o.dynamics.trim ().length () == 0 || o.dynamics.equalsIgnoreCase ("none")))		o.dynamics = null;
+				w.aobjects ().add (o);
+			}
 		}
 	}
 
-	/** An object from a DXF insert: the block lines become its (shared) icon. */
-	static private WMObject toObject (InsertDxf insert, BlockDxf block, World w)
+	/** Fills an object from a DXF insert: the block lines become its (shared) icon. */
+	static private WMObject toObject (WMObject o, InsertDxf insert, BlockDxf block, World w)
 	{
-		WMObject	o = new WMObject ();
 		o.pos		= insert.getPos ();
 		o.a			= insert.getRot ();
 		o.color		= (insert.ExtTextSize () > 0) ? ColorTool.getColorFromName (insert.getExtText (0)) : WColor.BLACK;
@@ -202,7 +211,7 @@ public class WorldDxf
 		if ((icon == null) || !icon.sameGeometry (new WMIcon (name, arr)))
 			icon = w.registerIcon (arr, name);
 		o.setIcon (icon);
-		o.label		= "OBJECT";
+		o.label		= (o instanceof WMAObject) ? "AOBJECT" : "OBJECT";
 		return o;
 	}
 
@@ -373,22 +382,29 @@ public class WorldDxf
 	static private void writeObjects (DXFWorldFile dxf, World w)
 	{
 		dxf.addLayer (new Layer ("OBJECTS", ACADColor.GREEN));
-		for (int i = 0; i < w.objects ().size (); i++)
+		for (WMObject o : w.objects ())		writeObject (dxf, o, "OBJECTS");
+		if (w.aobjects ().size () > 0)
 		{
-			WMObject	o = w.objects ().get (i);
-			String		name = (o.iconId != null) ? o.iconId : "icon";
-			InsertDxf	insert = new InsertDxf (o.pos, (o.shape != null) ? o.shape : name, "OBJECTS");
-			insert.setRot (o.a);
-			insert.setBlockname (name);
-			BlockDxf	block = new BlockDxf (name);
-			for (Line2 l : o.getLocalIcon ())
-				block.entities.add (new LineDxf (new Point3 (l.orig ().x (), l.orig ().y (), l.z1 ()), new Point3 (l.dest ().x (), l.dest ().y (), l.z2 ())));
-			insert.addExtText (0, ColorTool.getNameFromColor (o.color));
-			insert.addExtText (1, (o.shape != null) ? o.shape : "none");
-			insert.addExtText (2, Boolean.toString (o.usecolor));
-			dxf.addBlock (block);
-			dxf.insertBlock (insert);
+			dxf.addLayer (new Layer ("AOBJECTS", ACADColor.GREEN));
+			for (WMAObject o : w.aobjects ())	writeObject (dxf, o, "AOBJECTS");
 		}
+	}
+
+	static private void writeObject (DXFWorldFile dxf, WMObject o, String layer)
+	{
+		String		name = (o.iconId != null) ? o.iconId : "icon";
+		InsertDxf	insert = new InsertDxf (o.pos, (o.shape != null) ? o.shape : name, layer);
+		insert.setRot (o.a);
+		insert.setBlockname (name);
+		BlockDxf	block = new BlockDxf (name);
+		for (Line2 l : o.getLocalIcon ())
+			block.entities.add (new LineDxf (new Point3 (l.orig ().x (), l.orig ().y (), l.z1 ()), new Point3 (l.dest ().x (), l.dest ().y (), l.z2 ())));
+		insert.addExtText (0, ColorTool.getNameFromColor (o.color));
+		insert.addExtText (1, (o.shape != null) ? o.shape : "none");
+		insert.addExtText (2, Boolean.toString (o.usecolor));
+		if (o instanceof WMAObject)		insert.addExtText (3, (((WMAObject) o).dynamics != null) ? ((WMAObject) o).dynamics : "none");
+		dxf.addBlock (block);
+		dxf.insertBlock (insert);
 	}
 
 	static private void writeZones (DXFWorldFile dxf, World w)

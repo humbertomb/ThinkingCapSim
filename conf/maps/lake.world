@@ -27,6 +27,7 @@
     { "icon": "barrera", "x": -50, "y": -50, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 50, "y": 50, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false }
   ],
+  "aobjects": [],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/036metal.jpg" },
     "items": [

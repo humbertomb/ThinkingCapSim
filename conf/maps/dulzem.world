@@ -254,6 +254,7 @@
     { "icon": "barrera", "x": 42, "y": 59.026, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "linea.prod1", "x": 37.3308, "y": 54.4173, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false }
   ],
+  "aobjects": [],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/036metal.jpg" },
     "items": [
