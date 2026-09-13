@@ -39,7 +39,8 @@ public class ToolButtons
 		return b;
 	}
 
-	private static void flat (javax.swing.AbstractButton b)
+	/** Gives a button the flat look of the toolbar buttons (no frame, not focusable). */
+	public static void flat (javax.swing.AbstractButton b)
 	{
 		b.setFocusable (false);
 		b.setBorderPainted (false);

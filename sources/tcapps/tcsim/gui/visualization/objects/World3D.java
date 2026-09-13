@@ -143,7 +143,7 @@ public class World3D extends BranchGroup
 		yo	= (map.walls ().maxy () - map.walls ().miny ()) / 2.0;
 		
 		floort 	= new Transform3D ();
-		floort.setTranslation (new Vector3d(map.walls ().minx()+xo,map.walls ().miny()+yo,-0.01f));
+		floort.setTranslation (new Vector3d(map.walls ().minx()+xo,map.walls ().miny()+yo,-0.10f));		// below the zones (z = 0 +/- 0.01): no z-fighting
 		floortg	= new TransformGroup (floort);
 		
 		app		= scene.getCachedTexture (map.zones ().defaultTexture(), true);		

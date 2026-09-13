@@ -82,10 +82,10 @@ public class WorldView3DWindow extends JFrame
 
 	static public final String		TITLE		= "World 3D View";
 	static private final int		REBUILD_MS	= 120;		// coalescing delay for scene rebuilds
-	/** Height of the top face of the plain floor (m). Slightly below 0 so that zones,
-	 *  areas and markers lying on z = 0 never z-fight with it. */
-	static private final double		FLOOR_TOP	= -0.02;
-	static private final double		FLOOR_THICK	= 0.02;
+	/** Height of the top face of the plain floor (m). Clearly below 0 so that zones
+	 *  (boxes 1 cm thick around z = 0), areas and markers never z-fight with it. */
+	static private final double		FLOOR_TOP	= -0.10;
+	static private final double		FLOOR_THICK	= 0.05;
 
 	/* Colours */
 	static private final Color3f	C_SEL		= new Color3f (1.0f, 0.55f, 0.0f);
@@ -176,7 +176,7 @@ public class WorldView3DWindow extends JFrame
 
 		JButton		fit = new JButton ("Fit", new ToolIcon (ToolIcon.ZOOM_FIT, 16));
 		fit.setToolTipText ("Centre the view on the whole map");
-		fit.setFocusable (false);
+		ToolButtons.flat (fit);
 		fit.addActionListener (new ActionListener ()
 		{
 			public void actionPerformed (ActionEvent e)		{ fitView (); }
@@ -185,7 +185,7 @@ public class WorldView3DWindow extends JFrame
 
 		JButton		top = new JButton ("Top");
 		top.setToolTipText ("View from above");
-		top.setFocusable (false);
+		ToolButtons.flat (top);
 		top.addActionListener (new ActionListener ()
 		{
 			public void actionPerformed (ActionEvent e)		{ scene.setAngles (-Math.PI / 2.0, Math.PI / 2.0 - 0.01); }
