@@ -17,6 +17,210 @@
         "name": "Linda Router",
         "properties": {
           "CLASS": "tcrob.ingenia.ifork.IForkLindaRouter",
+          "MODE": "shared",
+          "GMODE": "tcp",
+          "GFX": "false"
+        },
+        "events": []
+      },
+      "modules": [
+        {
+          "name": "Navigation",
+          "properties": {
+            "CLASS": "tcrob.ingenia.ifork.IForkNavigation",
+            "GFX": "true",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "POLLED": "false",
+            "QUEUED": "false"
+          },
+          "events": [
+            {
+              "symbol": "LPS",
+              "itemClass": "tc.shared.linda.ItemLPS",
+              "method": "notify_lps"
+            },
+            {
+              "symbol": "GOAL",
+              "itemClass": "tc.shared.linda.ItemGoal",
+              "method": "notify_goal"
+            },
+            {
+              "symbol": "COORD",
+              "itemClass": "tcrob.ingenia.ifork.linda.ItemCoordination",
+              "method": "notify_coord"
+            },
+            {
+              "symbol": "DELROBOT",
+              "itemClass": "tc.shared.linda.ItemDelRobot",
+              "method": "notify_delrobot"
+            }
+          ]
+        },
+        {
+          "name": "Controller",
+          "properties": {
+            "CLASS": "tcrob.ingenia.ifork.IForkController",
+            "GFX": "false",
+            "MODE": "shared",
+            "PASSIVE": "true"
+          },
+          "events": [
+            {
+              "symbol": "LPS",
+              "itemClass": "tc.shared.linda.ItemLPS",
+              "method": "notify_lps"
+            },
+            {
+              "symbol": "GOAL",
+              "itemClass": "tc.shared.linda.ItemGoal",
+              "method": "notify_goal"
+            },
+            {
+              "symbol": "PATH",
+              "itemClass": "tc.shared.linda.ItemPath",
+              "method": "notify_path"
+            }
+          ]
+        },
+        {
+          "name": "Planner",
+          "properties": {
+            "CLASS": "tcrob.ingenia.ifork.IForkPlanner",
+            "EXTIME": "1000",
+            "GFX": "true",
+            "MODE": "shared",
+            "PASSIVE": "false",
+            "POLLED": "true",
+            "QUEUED": "false"
+          },
+          "events": [
+            {
+              "symbol": "PLAN",
+              "itemClass": "tc.shared.linda.ItemPlan",
+              "method": "notify_plan"
+            },
+            {
+              "symbol": "BEHRESULT",
+              "itemClass": "tc.shared.linda.ItemBehResult",
+              "method": "notify_beh_result"
+            },
+            {
+              "symbol": "STATUS",
+              "itemClass": "tc.shared.linda.ItemStatus",
+              "method": "notify_status"
+            },
+            {
+              "symbol": "COORD",
+              "itemClass": "tcrob.ingenia.ifork.linda.ItemCoordination",
+              "method": "notify_coord"
+            },
+            {
+              "symbol": "DELROBOT",
+              "itemClass": "tc.shared.linda.ItemDelRobot",
+              "method": "notify_delrobot"
+            }
+          ]
+        },
+        {
+          "name": "Perception",
+          "properties": {
+            "CLASS": "tcrob.ingenia.ifork.IForkPerception",
+            "GFX": "true",
+            "MODE": "shared",
+            "PASSIVE": "true"
+          },
+          "events": [
+            {
+              "symbol": "DATA",
+              "itemClass": "tc.shared.linda.ItemData",
+              "method": "notify_data"
+            },
+            {
+              "symbol": "OBJECT",
+              "itemClass": "tc.shared.linda.ItemObject",
+              "method": "notify_object"
+            },
+            {
+              "symbol": "NAVIGATION",
+              "itemClass": "tc.shared.linda.ItemNavigation",
+              "method": "notify_navigation"
+            },
+            {
+              "symbol": "COORD",
+              "itemClass": "tcrob.ingenia.ifork.linda.ItemCoordination",
+              "method": "notify_coord"
+            },
+            {
+              "symbol": "DELROBOT",
+              "itemClass": "tc.shared.linda.ItemDelRobot",
+              "method": "notify_delrobot"
+            }
+          ]
+        }
+      ],
+      "virtualRobot": {
+        "name": "Virtual Robot",
+        "properties": {
+          "APW": "true",
+          "CLASS": "tcrob.ingenia.ifork.IFork",
+          "DESC": "conf/robots/ifork.robot",
+          "EXTIME": "115",
+          "GFX": "true",
+          "MODE": "shared",
+          "PASSIVE": "false",
+          "TOPOL": "conf/maps/dulzem.topol",
+          "WORLD": "conf/maps/dulzem3d.world"
+        },
+        "events": [
+          {
+            "symbol": "MOTION",
+            "itemClass": "tc.shared.linda.ItemMotion",
+            "method": "notify_motion"
+          },
+          {
+            "symbol": "ZONE",
+            "itemClass": "tcrob.ingenia.ifork.linda.ItemIForkZone",
+            "method": "notify_zone"
+          },
+          {
+            "symbol": "DATACTRL",
+            "itemClass": "tc.shared.linda.ItemDataCtrl",
+            "method": "notify_data_ctrl"
+          },
+          {
+            "symbol": "DELROBOT",
+            "itemClass": "tc.shared.linda.ItemDelRobot",
+            "method": "notify_delrobot"
+          },
+          {
+            "symbol": "STATUS",
+            "itemClass": "tc.shared.linda.ItemStatus",
+            "method": "notify_status"
+          },
+          {
+            "symbol": "PALLETCTRL",
+            "itemClass": "tcapps.tcsimulator.simulator.ItemPallet",
+            "method": "notify_pallet"
+          }
+        ]
+      },
+      "properties": {
+        "WHCOORD": "false"
+      },
+      "start": "START_1"
+    },
+    {
+      "name": "IFORK-2",
+      "linda": {
+        "address": "localhost",
+        "port": 3001,
+        "instantiate": true
+      },
+      "router": {
+        "name": "Linda Router",
+        "properties": {
+          "CLASS": "tcrob.ingenia.ifork.IForkLindaRouter",
           "GFX": "true",
           "GMODE": "tcp",
           "MODE": "shared"
@@ -164,7 +368,6 @@
         "properties": {
           "APW": "true",
           "CLASS": "tcrob.ingenia.ifork.IFork",
-          "CUST": "conf/robots/ifork.cust",
           "DESC": "conf/robots/ifork.robot",
           "EXTIME": "115",
           "GFX": "true",
@@ -208,7 +411,8 @@
       },
       "properties": {
         "WHCOORD": "false"
-      }
+      },
+      "start": "START_2"
     }
   ]
 }

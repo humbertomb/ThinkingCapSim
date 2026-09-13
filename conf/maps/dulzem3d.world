@@ -1,7 +1,12 @@
 # ==============================
-# START POINT
+# START POINTS
 # ==============================
-START = 73.0, 67.0, 0.0, 180.0
+STARTS = 5
+START_1 = 72.47682476637856, 67.4941099428647, 0.0, 180.0
+START_2 = 72.49643684944304, 68.73868739838794, 0.0, 180.0
+START_3 = 72.51554774991597, 70.00956227983689, 0.0, 180.0
+START_4 = 72.51554774991597, 71.29954806175874, 0.0, 180.0
+START_5 = 72.5059922996795, 72.49397934131603, 0.0, 180.0
 
 # ==============================
 # PATH POINTS
@@ -234,8 +239,8 @@ ZONES = 6
 
 ZONE_DEF_TEXTURE = ./conf/3dmodels/textures/036metal.jpg
 
-ZONE_0 = 54.9537, 45.0069, 0.0, 30.0, 40.0, ZoneA, ./conf/3dmodels/textures/floor2.jpg
-ZONE_1 = 22.0, 45.0, 0.0, 30.0, 40.0, ZoneB, ./conf/3dmodels/textures/floor2.jpg
+ZONE_0 = 52.02, 45.0069, 0.0, 30.0337, 39.9976, ZoneA, ./conf/3dmodels/textures/floor2.jpg
+ZONE_1 = 22.0, 44.9802, 0.0, 30.0, 40.0, ZoneB, ./conf/3dmodels/textures/floor2.jpg
 ZONE_2 = 52.0, 8.931, 0.0, 30.0, 36.069, ZoneC, ./conf/3dmodels/textures/floor2.jpg
 ZONE_3 = 22.0, 0.0, 0.0, 30.0, 45.0, ZoneD, ./conf/3dmodels/textures/floor2.jpg
 ZONE_4 = 52.0, 0.0, 0.0, 30.0, 8.931, ZoneE, ./conf/3dmodels/textures/floor2.jpg
@@ -305,28 +310,28 @@ WPOINT_27 = 32.252, 10.3377, 0.0, 0.0, wpLA-Entrada
 # ==============================
 DOCKINGS = 22
 
-DOCKING_0 = 65.701, 57.771, 0.84, 90.0, L1-Entrada
-DOCKING_1 = 69.1473, 61.082, 0.81, 90.0, L1-Salida
-DOCKING_2 = 56.375, 57.979, 0.84, 90.0, L2-Entrada
-DOCKING_3 = 59.847, 61.101, 0.81, 90.0, L2-Salida
-DOCKING_4 = 79.721, 72.227, 0.08, 180.0, Carga1
-DOCKING_5 = 79.721, 70.627, 0.08, 180.0, Carga2
-DOCKING_6 = 79.721, 68.427, 0.08, 180.0, Carga3
-DOCKING_7 = 79.721, 66.827, 0.08, 180.0, Carga4
-DOCKING_8 = 32.785, 80.39, 0.085, 0.0, Cout1
-DOCKING_9 = 32.785, 78.71, 0.085, 0.0, Cout2
-DOCKING_10 = 32.785, 82.069, 0.085, 0.0, Cout0
-DOCKING_11 = 32.785, 77.121, 0.085, 0.0, Cout3
-DOCKING_12 = 32.785, 75.575, 0.1, 0.0, Din0
-DOCKING_13 = 32.785, 73.703, 0.1, 0.0, Din1
-DOCKING_14 = 32.785, 72.165, 0.1, 0.0, Din2
-DOCKING_15 = 32.785, 70.313, 0.1, 0.0, Din3
-DOCKING_16 = 46.614, 60.662, 0.81, 90.0, L3-Salida
-DOCKING_17 = 50.028, 57.528, 0.84, 90.0, L3-Entrada
-DOCKING_18 = 37.245, 60.966, 0.81, 90.0, L4-Salida
-DOCKING_19 = 40.713, 57.867, 0.84, 90.0, L4-Entrada
-DOCKING_20 = 29.2092, 14.1761, 0.1, 1.7402, LA-Salida
-DOCKING_21 = 29.252, 11.8377, 0.1, 0.8173, LA-Entrada
+DOCKING_0 = 65.701, 57.771, 0.84, 90.0, L1-Entrada, IN
+DOCKING_1 = 69.1473, 61.082, 0.81, 90.0, L1-Salida, OUT
+DOCKING_2 = 56.375, 57.979, 0.84, 90.0, L2-Entrada, IN
+DOCKING_3 = 59.847, 61.101, 0.81, 90.0, L2-Salida, OUT
+DOCKING_4 = 79.721, 72.227, 0.08, 180.0, Carga1, INOUT
+DOCKING_5 = 79.721, 70.627, 0.08, 180.0, Carga2, INOUT
+DOCKING_6 = 79.721, 68.427, 0.08, 180.0, Carga3, INOUT
+DOCKING_7 = 79.721, 66.827, 0.08, 180.0, Carga4, INOUT
+DOCKING_8 = 32.785, 80.39, 0.085, 0.0, Cout1, OUT
+DOCKING_9 = 32.785, 78.71, 0.085, 0.0, Cout2, OUT
+DOCKING_10 = 32.785, 82.069, 0.085, 0.0, Cout0, OUT
+DOCKING_11 = 32.785, 77.121, 0.085, 0.0, Cout3, OUT
+DOCKING_12 = 32.785, 75.575, 0.1, 0.0, Din0, IN
+DOCKING_13 = 32.785, 73.703, 0.1, 0.0, Din1, IN
+DOCKING_14 = 32.785, 72.165, 0.1, 0.0, Din2, IN
+DOCKING_15 = 32.785, 70.313, 0.1, 0.0, Din3, IN
+DOCKING_16 = 46.614, 60.662, 0.81, 90.0, L3-Salida, OUT
+DOCKING_17 = 50.028, 57.528, 0.84, 90.0, L3-Entrada, IN
+DOCKING_18 = 37.245, 60.966, 0.81, 90.0, L4-Salida, OUT
+DOCKING_19 = 40.7528, 57.867, 0.84, 90.0, L4-Entrada, IN
+DOCKING_20 = 29.2092, 14.1761, 0.1, 1.7402, LA-Salida, OUT
+DOCKING_21 = 29.252, 11.8377, 0.1, 0.8173, LA-Entrada, IN
 
 # ==============================
 # STRIP BEACONS
