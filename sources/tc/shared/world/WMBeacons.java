@@ -11,12 +11,6 @@ import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.Entity;
-import wucore.utils.dxf.entities.LineDxf;
-import wucore.utils.dxf.entities.TextDxf;
-import wucore.utils.dxf.sections.ACADColor;
-import wucore.utils.dxf.sections.Layer;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
 
@@ -31,23 +25,6 @@ public class WMBeacons
 	
 	protected WMBeacon[]			beacons;
 
-	
-	public WMBeacons (DXFWorldFile dxf){
-	    ArrayList<Entity> entities = dxf.getEntities();
-	    ArrayList<WMBeacon> beac = new ArrayList<WMBeacon>();
-	    Entity entity;
-	    for(int i = 0; i<entities.size(); i++){
-	        entity = entities.get(i);
-	        if(entity.getLayer().equalsIgnoreCase("BEACONS")){
-	            if(entity instanceof TextDxf) 
-	                beac.add(new WMBeacon((TextDxf) entity));  
-	            if(entity instanceof LineDxf)
-	                beac.add(new WMBeacon((LineDxf) entity));
-	        }
-	    }
-	    beacons = new WMBeacon[beac.size()];
-	    beac.toArray(beacons);
-	}
 	
 	// Accessors
 	public final int	 		n () 				{ return beacons.length; }
@@ -101,14 +78,6 @@ public class WMBeacons
 		return index;
     }
 	
-	public void toDxfFile (DXFWorldFile dxf){
-	   //	  Define una capa con un color determinado (opcional)
-      dxf.addLayer(new Layer("BEACONS",ACADColor.RED));
-		for(int i = 0; i < beacons.length; i++){
-		    beacons[i].toDxf(dxf);
-		}
-	}
-
 	/* Edition methods (world editor) */
 	public void add (WMBeacon e)
 	{

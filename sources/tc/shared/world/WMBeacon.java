@@ -10,9 +10,6 @@ import com.google.gson.JsonObject;
 
 
 import devices.pos.Position;
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.LineDxf;
-import wucore.utils.dxf.entities.TextDxf;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point3;
 
@@ -40,43 +37,6 @@ public class WMBeacon extends WMElement
         this.pos = pos;
         this.width = width;
         this.height = height;
-    }
-    
-    public WMBeacon(TextDxf text) {
-        Point3 p3 = text.getPos();
-        label = text.getText();
-        double rot = 0.0;
-        width = 0.0;
-        if(text.ExtendedDouble.size()>0) rot = Math.toRadians(text.getExtDouble(0));	
-        if(text.ExtendedDouble.size()>1) width = text.getExtDouble(1);	
-        if(text.ExtendedDouble.size()>2) height = text.getExtDouble(2);	
-        pos = new Position(p3.x(),p3.y(),rot);
-    }
-    
-    public WMBeacon(LineDxf linedxf) {
-        Line2 line = new Line2();
-        line.set(linedxf.getStart(),linedxf.getEnd());
-        Point3 p3 = new Point3(line.center());
-        if(linedxf.ExtendedText.size()>0) label = linedxf.getExtText(0);	
-        
-        pos = new Position(p3.x(),p3.y(),line.angle());
-    }
-    
-    public void toDxf(DXFWorldFile dxf) {
-        TextDxf text = new TextDxf(label,new Point3(pos.x(),pos.y(),0.0),0.2,"BEACONS");		
-        text.addExtDouble(Math.toDegrees(pos.alpha()));
-        text.addExtDouble(width);
-        text.addExtDouble(height);
-        
-        dxf.addEntity(text);  
-    }
-    
-    public void toDxf1(DXFWorldFile dxf) {
-        Line2 line = getLine();
-        LineDxf linedxf = new LineDxf(new Point3(line.orig()),new Point3(line.dest()),"BEACONS");		
-        linedxf.addExtText(label);
-        
-        dxf.addEntity(linedxf);
     }
     
     public Line2 getLine(){

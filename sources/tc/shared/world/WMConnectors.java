@@ -12,12 +12,6 @@ import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.Entity;
-import wucore.utils.dxf.entities.LineDxf;
-import wucore.utils.dxf.entities.TextDxf;
-import wucore.utils.dxf.sections.ACADColor;
-import wucore.utils.dxf.sections.Layer;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
 
@@ -35,38 +29,6 @@ public class WMConnectors
 	private double					defHeight	= 1.90;
 	private String					defTexture	= "./conf/3dmodels/textures/wall.jpg";
 		
-	
-	public WMConnectors (DXFWorldFile dxf)
-	{
-		ArrayList<Entity> entities = dxf.getEntities();
-		ArrayList<LineDxf> doors = new ArrayList<LineDxf>();
-		Entity entity;
-		for(int i = 0; i<entities.size(); i++){
-			entity = entities.get(i);
-			if(entity.getLayer().equalsIgnoreCase("DOORS")){
-				if(entity instanceof LineDxf) 
-					doors.add((LineDxf)entity);  
-			}
-			if(entity instanceof TextDxf){
-				try{
-					String texto = ((TextDxf)entity).getText();
-					if(texto.startsWith("DOOR_DEF_WIDTH")){
-						defWidth = Double.parseDouble(texto.substring(texto.lastIndexOf("=")+1));
-					}
-					else if(texto.startsWith("DOOR_DEF_HEIGHT")){
-						defHeight = Double.parseDouble(texto.substring(texto.lastIndexOf("=")+1));
-					}
-					else if(texto.startsWith("DOOR_DEF_TEXTURE")){
-						defTexture =texto.substring(texto.lastIndexOf("=")+1).trim();
-					}
-				}catch(Exception e){}
-			}
-		}
-		edges	= new WMConnector[doors.size()];
-		for(int i = 0; i<doors.size(); i++){
-			edges[i] = new WMConnector(doors.get(i),defWidth, defHeight, defTexture); 
-		}
-	}
 	
 	// Accessors
 	public final int	 		n () 				{ return edges.length; }
@@ -111,16 +73,6 @@ public class WMConnectors
 		return -1;
 	}
 	
-	public void toDxfFile (DXFWorldFile dxf){
-			
-	   // Define una capa con un color determinado (opcional)
-	   dxf.addLayer(new Layer("DOORS",ACADColor.LIGHT_GRAY));
-	    
-		for(int i = 0; i<edges.length; i++){
-			edges[i].toDxf(dxf);
-		}
-	}
-
 	/* Edition methods (world editor) */
 	public void add (WMConnector e)
 	{

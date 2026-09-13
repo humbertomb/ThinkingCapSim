@@ -10,11 +10,7 @@ import java.util.StringTokenizer;
 
 import wucore.utils.color.ColorTool;
 import wucore.utils.color.WColor;
-import wucore.utils.dxf.DXFWorldFile;
 import wucore.utils.dxf.DoubleFormat;
-import wucore.utils.dxf.entities.BlockDxf;
-import wucore.utils.dxf.entities.InsertDxf;
-import wucore.utils.dxf.entities.LineDxf;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point3;
 import wucore.utils.math.Angles;
@@ -94,40 +90,6 @@ public class WMObject extends WMElement
 		}
 	}
 
-	/** Builds an object from a DXF insert: the block lines become its (local) icon. */
-	public WMObject (InsertDxf insert, BlockDxf block, WMIcons icons)
-	{
-		pos		= insert.getPos ();
-		a		= insert.getRot ();
-		color	= (insert.ExtTextSize () > 0) ? ColorTool.getColorFromName (insert.getExtText (0)) : WColor.BLACK;
-		shape	= (insert.ExtTextSize () > 1) ? insert.getExtText (1) : null;
-		if ((shape != null) && shape.equalsIgnoreCase ("none"))		shape = null;
-		usecolor = (insert.ExtTextSize () > 2) && Boolean.parseBoolean (insert.getExtText (2));
-
-		int		size = 0;
-		for (int i = 0; i < block.entities.size (); i++)
-			if (block.entities.get (i) instanceof LineDxf)		size++;
-		Line2[]	lines = new Line2[size];
-		int		k = 0;
-		for (int i = 0; i < block.entities.size (); i++)
-			if (block.entities.get (i) instanceof LineDxf)
-			{
-				LineDxf	line = (LineDxf) block.entities.get (i);
-				lines[k++] = new Line2 (line.getStart ().x (), line.getStart ().y (), line.getStart ().z (), line.getEnd ().x (), line.getEnd ().y (), line.getEnd ().z ());
-			}
-		String	name = insert.getBlockname ();
-		if (icons != null)
-		{
-			icon = icons.at (name);
-			if ((icon == null) || !icon.sameGeometry (new WMIcon (name, lines)))
-				icon = icons.register (lines, name);
-		}
-		else
-			icon = new WMIcon (name, lines);
-		iconId	= icon.label;
-		label	= "OBJECT";
-	}
-
 	/* Accessors */
 
 	/** Assigns a (shared) icon to the object. */
@@ -186,22 +148,6 @@ public class WMObject extends WMElement
 	}
 
 	/* Persistence */
-
-	public void toDxf (DXFWorldFile dxf)
-	{
-		String		name = (iconId != null) ? iconId : "icon";
-		InsertDxf	insert = new InsertDxf (pos, (shape != null) ? shape : name, "OBJECTS");
-		insert.setRot (a);
-		insert.setBlockname (name);
-		BlockDxf	block = new BlockDxf (name);
-		for (Line2 l : getLocalIcon ())
-			block.entities.add (new LineDxf (new Point3 (l.orig ().x (), l.orig ().y (), l.z1 ()), new Point3 (l.dest ().x (), l.dest ().y (), l.z2 ())));
-		insert.addExtText (0, ColorTool.getNameFromColor (color));
-		insert.addExtText (1, (shape != null) ? shape : "none");
-		insert.addExtText (2, Boolean.toString (usecolor));
-		dxf.addBlock (block);
-		dxf.insertBlock (insert);
-	}
 
 	public String toRawString ()
 	{

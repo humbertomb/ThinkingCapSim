@@ -10,8 +10,6 @@ import com.google.gson.JsonObject;
 
 import java.util.StringTokenizer;
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.LineDxf;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point3;
 
@@ -41,36 +39,6 @@ public class WMConnector extends WMElement
     
     
     public WMConnector(){
-    }
-    
-    public WMConnector(LineDxf line,double dwidth, double dheight, String dtexture) {
-        texture = dtexture;
-        width = dwidth;
-        height = dheight;
-        
-        path = new Line2(line.getStart().x(),line.getStart().y(),line.getStart().z(),line.getEnd().x(),line.getEnd().y(),line.getEnd().z());
-        if(line.ExtendedText.size()>0) label = line.getExtText(0);
-        else									label = "DOOR_?";
-        if(line.ExtendedText.size()>1){
-            StringTokenizer tk = new StringTokenizer(line.getExtText(1), ", ");
-            if(tk.countTokens()>=4)
-                edge = new Line2(Double.parseDouble(tk.nextToken()),Double.parseDouble(tk.nextToken()),Double.parseDouble(tk.nextToken()),Double.parseDouble(tk.nextToken()));
-            else
-                edge = new Line2();
-        }
-        if(line.ExtendedText.size()>2) texture = line.getExtText(2);
-        if(line.ExtendedDouble.size()>0) height = line.getExtDouble(0);
-        if(line.ExtendedDouble.size()>1) width = line.getExtDouble(1);
-    }
-    
-    public void toDxf(DXFWorldFile dxf) {
-        LineDxf line = new LineDxf(new Point3(path.orig()),new Point3(path.dest()),"DOORS");
-        line.addExtText(0,label);
-        line.addExtText(1,edge.toRawString());
-        line.addExtText(2,texture);
-        line.addExtDouble(0,height);
-        line.addExtDouble(1,width);
-        dxf.addEntity(line);
     }
     
 

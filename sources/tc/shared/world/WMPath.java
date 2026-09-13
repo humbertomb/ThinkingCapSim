@@ -11,12 +11,6 @@ import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.Entity;
-import wucore.utils.dxf.entities.PolylineDxf;
-import wucore.utils.dxf.entities.VertexDxf;
-import wucore.utils.dxf.sections.ACADColor;
-import wucore.utils.dxf.sections.Layer;
 import wucore.utils.geom.Point2;
 import wucore.utils.geom.Point3;
 
@@ -33,24 +27,6 @@ public class WMPath
  	protected Point2[]			points;
 
 	
-	public WMPath (DXFWorldFile dxf){
-	    ArrayList<Entity> entities = dxf.getEntities();
-	    Entity entity;
-	    for(int i = 0; i<entities.size(); i++){
-	        entity = entities.get(i);
-	        if(entity.getLayer().equalsIgnoreCase("PATH")){
-	            if(entity instanceof PolylineDxf){ 
-	                points = new Point2[((PolylineDxf)entity).vertexs.size()];
-	                for(int j = 0; j<points.length; j++){
-	                    points[j] = new Point2(((PolylineDxf)entity).getPoint(j).x(), ((PolylineDxf)entity).getPoint(j).y());
-	                } 
-	                return;	// solo coge la primera polilinea
-	            }
-	        }
-	    }
-	    points = new Point2[0];
-	}
-	
     // Accessors
 	public final int	 		n () 				{ return points.length; }
 
@@ -65,18 +41,6 @@ public class WMPath
 		return points[i];
 	}
 	
-	public void toDxfFile (DXFWorldFile dxf){
-		//	  Define una capa con un color determinado (opcional)
-		dxf.addLayer(new Layer("PATH",ACADColor.CYAN));	
-	   if(points == null || points.length == 0) return;
-	   PolylineDxf pol = new PolylineDxf();
-	   pol.setLayer("PATH");
-		for(int i = 0; i < points.length; i++){
-		    pol.addVertex(new VertexDxf(new Point3(points[i])));		
-		}
-		dxf.addEntity(pol);
-	}
-
 	/* Edition methods (world editor) */
 	public final Point2[]		points ()			{ return points; }
 

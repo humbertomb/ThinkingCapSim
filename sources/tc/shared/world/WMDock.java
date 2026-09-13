@@ -10,8 +10,6 @@ import com.google.gson.JsonObject;
 
 
 import devices.pos.Position;
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.TextDxf;
 import wucore.utils.geom.Point3;
 
 /**
@@ -59,22 +57,6 @@ public class WMDock extends WMElement
     public WMDock(Position pos, String label){
         this.pos = pos;
         this.label = label;
-    }
-    
-    public WMDock(TextDxf text) {
-        Point3 p3 = text.getPos();
-        label = text.getText();
-        double ang = 0;
-        if(text.ExtendedDouble.size()>0) ang = Math.toRadians(text.getExtDouble(0));
-        if(text.ExtendedText.size()>0) flow = parseFlow (text.getExtText(0));
-        pos = new Position(p3.x(),p3.y(),p3.z(),ang);
-    }
-    
-    public void toDxf(DXFWorldFile dxf) {
-        TextDxf text = new TextDxf(label,getPos(),0.2,"DOCKINGS");
-        text.addExtDouble(Math.toDegrees(getAng()));
-        text.addExtText(flow.name ());
-        dxf.addEntity(text); 
     }
     
     public Point3 getPos(){

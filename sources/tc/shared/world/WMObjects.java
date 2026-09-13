@@ -12,11 +12,6 @@ import com.google.gson.JsonElement;
 import java.util.LinkedList;
 import java.util.ArrayList;
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.Entity;
-import wucore.utils.dxf.entities.InsertDxf;
-import wucore.utils.dxf.sections.ACADColor;
-import wucore.utils.dxf.sections.Layer;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
 
@@ -34,24 +29,6 @@ public class WMObjects extends Object
 			
 
 	
-	public WMObjects (DXFWorldFile dxf, WMIcons icons){
-			this.icons = (icons != null) ? icons : new WMIcons ();
-			ArrayList<Entity> entities = dxf.getEntities();
-			ArrayList<WMObject> object = new ArrayList<WMObject>();
-			Entity entity;
-			for(int i = 0; i<entities.size(); i++){
-				entity = entities.get(i);
-				if(entity.getLayer().equalsIgnoreCase("OBJECTS")){
-					if(entity instanceof InsertDxf) 
-						object.add(new WMObject((InsertDxf)entity, dxf.getBlocks(((InsertDxf)entity).getBlockname()), this.icons));
-				}
-			}
-			objects	= new WMObject[object.size()];
-			for(int i = 0; i<object.size(); i++){
-				objects[i] = object.get(i);
-			}
-	}
-	
 	// Accessors
 	public final int	 		n () 				{ return objects.length; }
 	public final WMObject[]	object ()			{ return objects; }
@@ -63,15 +40,6 @@ public class WMObjects extends Object
 		if ((i < 0) || (i >= objects.length)) 
 		    return null;
 		return objects[i];
-	}
-	
-	public void toDxfFile (DXFWorldFile dxf){
-		//	  Define una capa con un color determinado (opcional)
-		dxf.addLayer(new Layer("OBJECTS",ACADColor.GREEN));
-		
-		for (int i = 0; i < objects.length; i++){
-		    objects[i].toDxf(dxf);
-		}
 	}
 	
 	// calcula la primera linea del obstaculo que intersecta

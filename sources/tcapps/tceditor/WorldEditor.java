@@ -62,6 +62,7 @@ import tc.shared.world.WMWall;
 import tc.shared.world.WMWaypoint;
 import tc.shared.world.WMZone;
 import tc.shared.world.World;
+import tc.shared.world.WorldDxf;
 import wucore.utils.color.ColorTool;
 import wucore.utils.color.WColor;
 import wucore.utils.geom.Line2;
@@ -816,11 +817,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
 		try
 		{
-			World	w = newWorld ();
-			w.fromDxfFile (fc.getSelectedFile ().getPath ());
-			// a DXF-loaded world has no forbidden areas collection: rebuild from a snapshot
-			w = restore (snapshot (w));
-			setWorld (w, null);
+			setWorld (WorldDxf.read (fc.getSelectedFile ().getPath ()), null);
 			dirty = true;
 			updateTitle ();
 		} catch (Exception e)
@@ -840,7 +837,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			f = new File (f.getParentFile (), f.getName () + ".dxf");
 		try
 		{
-			world.toDxfFile (f.getPath ());
+			WorldDxf.write (world, f.getPath ());
 			statusChanged ("Exported " + f.getPath ());
 		} catch (Exception e)
 		{

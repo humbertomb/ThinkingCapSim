@@ -13,12 +13,6 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 
 import devices.pos.Position;
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.Entity;
-import wucore.utils.dxf.entities.PolylineDxf;
-import wucore.utils.dxf.entities.TextDxf;
-import wucore.utils.dxf.sections.ACADColor;
-import wucore.utils.dxf.sections.Layer;
 import wucore.utils.geom.Point2;
 import wucore.utils.geom.Point3;
 
@@ -34,31 +28,6 @@ public class WMZones
 	
 	private String					defTexture		= "./conf/3dmodels/textures/floor.jpg";
 	
-	
-	public WMZones (DXFWorldFile dxf){
-		ArrayList<Entity> entities = dxf.getEntities();
-		ArrayList<PolylineDxf> zones = new ArrayList<PolylineDxf>();
-		Entity entity;
-		for(int i = 0; i<entities.size(); i++){
-			entity = entities.get(i);
-			if(entity.getLayer().equalsIgnoreCase("ZONES")){
-				if(entity instanceof PolylineDxf) 
-					zones.add((PolylineDxf)entity);  
-			}
-			if(entity instanceof TextDxf){
-				try{
-					String texto = ((TextDxf)entity).getText();
-					if(texto.startsWith("ZONE_DEF_TEXTURE")){
-						defTexture =texto.substring(texto.lastIndexOf("=")+1).trim();
-					}
-				}catch(Exception e){}
-			}
-		}
-		areas	= new WMZone[zones.size()];
-		for(int i = 0; i<zones.size(); i++){
-			areas[i] = new WMZone(zones.get(i),defTexture);
-		}
-	}
 	
 	// Accessors
 	public final int	 		n () 				{ return areas.length; }
@@ -117,28 +86,6 @@ public class WMZones
 		return -1;
 	}
 	
-	public void toDxfFile (DXFWorldFile dxf){
-		
-	   //	  Define una capa con un color determinado (opcional)
-	   dxf.addLayer(new Layer("ZONES",ACADColor.YELLOW));	
-	   
-		for (int i = 0; i < areas.length; i++){
-			areas[i].toDxf(dxf);
-		}
-
-	
-		dxf.addEntity(new TextDxf(
-				"ZONE_DEF_TEXTURE = "+defTexture,
-				new Point3(dxf.posx,dxf.posy,0.0),
-				0.2,
-				"ZONES"
-			)
-		);
-		dxf.posy-= 0.5;
-	
-
-	}
-
 	/* Edition methods (world editor) */
 	public void add (WMZone e)
 	{

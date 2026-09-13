@@ -11,11 +11,6 @@ import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.Entity;
-import wucore.utils.dxf.entities.TextDxf;
-import wucore.utils.dxf.sections.ACADColor;
-import wucore.utils.dxf.sections.Layer;
 
 /**
  * @author Humberto Martinez Barbera
@@ -28,22 +23,6 @@ public class WMDocks
 	protected WMDock[] docks;
 	
 
-	
-	public WMDocks (DXFWorldFile dxf){
-		ArrayList<Entity> entities = dxf.getEntities();
-		ArrayList<WMDock> dk = new ArrayList<WMDock>();
-		Entity entity;
-		for(int i = 0; i<entities.size(); i++){
-			entity = entities.get(i);
-			if(entity.getLayer().equalsIgnoreCase("DOCKINGS")){
-				if(entity instanceof TextDxf){ 
-				    dk.add(new WMDock((TextDxf)entity)); 
-				}
-			}
-		}
-		docks = new WMDock[dk.size()];
-		dk.toArray(docks);
-	}
 	
 	// Accessors	
 	public final int	 		n () 				{ return docks.length; }
@@ -73,15 +52,6 @@ public class WMDocks
 		return -1;
 	}
 	
-	public void toDxfFile (DXFWorldFile dxf){
-	    
-	    // Define una capa con un color determinado (opcional)
-	    dxf.addLayer(new Layer("DOCKINGS",ACADColor.CYAN));
-	    for (int i = 0; i < docks.length; i++){
-	        docks[i].toDxf(dxf);
-	    }
-	}
-
 	/* Edition methods (world editor) */
 	public void add (WMDock e)
 	{

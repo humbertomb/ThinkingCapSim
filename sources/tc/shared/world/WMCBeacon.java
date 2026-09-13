@@ -9,9 +9,6 @@ package tc.shared.world;
 import com.google.gson.JsonObject;
 
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.CircleDxf;
-import wucore.utils.dxf.entities.TextDxf;
 import wucore.utils.geom.Point3;
 
 /**
@@ -36,41 +33,10 @@ public class WMCBeacon extends WMElement
 		this.label		= label;
 	}
 
-	public WMCBeacon(TextDxf text) {
-	    Point3 p = text.getPos();
-	    label = text.getText();
-	    if(text.ExtendedDouble.size()>0) diameter = text.getExtDouble(0);
-	    if(text.ExtendedDouble.size()>1) height = text.getExtDouble(1);
-	    pos = new Point3 (p.x(), p.y(), 0.0);
-	}
-
-	public WMCBeacon(CircleDxf circle) {
-	    Point3 p = circle.getCenter();
-	    if(circle.ExtendedText.size()>0) label = circle.getExtText(0);
-	    else label = "CBEAC";
-	    diameter = 2.0 * circle.getRadius();
-	    pos = new Point3 (p.x(), p.y(), 0.0);
-	}
-
 	public double x ()			{ return pos.x (); }
 	public double y ()			{ return pos.y (); }
 	public double z ()			{ return pos.z (); }
 	public double radius ()		{ return diameter / 2.0; }
-
-	// Lo convierte en un circulo
-   public void toDxf(DXFWorldFile dxf) {
-	    CircleDxf circle = new CircleDxf(new Point3(pos.x(),pos.y(),0.0),radius(),"CBEACONS");
-	    circle.addExtText(label);
-	    dxf.addEntity(circle);
-	}
-
-   // Lo convierte en un texto
-   public void toDxf1(DXFWorldFile dxf) {
-	    TextDxf text = new TextDxf(label,new Point3(pos.x(),pos.y(),0.0),0.2,"CBEACONS");
-	    text.addExtDouble(diameter);
-	    text.addExtDouble(height);
-	    dxf.addEntity(text);
-	}
 
 	/* JSON: {label, x, y, z, diameter, height} */
 

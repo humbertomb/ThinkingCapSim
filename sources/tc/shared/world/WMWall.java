@@ -9,8 +9,6 @@ package tc.shared.world;
 import com.google.gson.JsonObject;
 
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.LineDxf;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point3;
 
@@ -35,35 +33,6 @@ public class WMWall extends WMElement
 	public WMWall(){
 	}
 	
-	
-	public WMWall (LineDxf line, double dwidth, double dheight, String dtexture){
-	      edge = new Line2(line.getStart().x(),line.getStart().y(),line.getStart().z(),line.getEnd().x(),line.getEnd().y(),line.getEnd().z());
-			if(line.ExtendedDouble.size()>0) 
-			    height = line.getExtDouble(0);
-			else
-			    height = dheight;
-			if(line.ExtendedDouble.size()>1) 
-			    width = line.getExtDouble(1);
-			else										
-			    width = dwidth;
-			if(line.ExtendedText.size()>0) 
-			    texture = line.getExtText(0);
-			else
-			    texture = dtexture;
-			label = "LINE_?";
-	}
-	
-	public void toDxf(DXFWorldFile dxf){
-	    LineDxf line = new LineDxf(
-               new Point3(edge.orig().x(), edge.orig().y(), edge.z1()),
-               new Point3(edge.dest().x(), edge.dest().y(), edge.z2()),
-               "0"
-       );
-       line.addExtDouble(0,height);
-       line.addExtDouble(1,width);
-       line.addExtText(0,texture);
-       dxf.addEntity(line);
-	}
 	
 
 

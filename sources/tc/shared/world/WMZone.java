@@ -10,9 +10,6 @@ import com.google.gson.JsonObject;
 
 import java.awt.geom.Rectangle2D;
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.PolylineDxf;
-import wucore.utils.dxf.entities.VertexDxf;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point3;
 
@@ -38,23 +35,6 @@ public class WMZone extends WMElement
     public WMZone(){
     }
     
-    public WMZone(PolylineDxf polyline, String defTexture) {
-        texture = defTexture;
-        double x = polyline.minlimit.x();
-        double y = polyline.minlimit.y();
-        z = polyline.minlimit.z();
-        double w = polyline.maxlimit.x()-polyline.minlimit.x();
-        double h = polyline.maxlimit.y()-polyline.minlimit.y();
-        
-        area = new Rectangle2D.Double(x,y,w,h);
-        if(polyline.ExtendedText.size()>0)
-            label = polyline.getExtText(0);	
-        else
-            label = "ZONE_?";
-        if(polyline.ExtendedText.size()>1)
-            texture = polyline.getExtText(1);	
-    }
-    
     public Line2[] toLines(){
     	Line2[] lines = new Line2[4];
     	lines[0] = new Line2(area.getMinX(),area.getMinY(),area.getMinX(),area.getMaxY());
@@ -62,20 +42,6 @@ public class WMZone extends WMElement
     	lines[2] = new Line2(area.getMaxX(),area.getMaxY(),area.getMinX(),area.getMaxY());
     	lines[3] = new Line2(area.getMaxX(),area.getMaxY(),area.getMaxX(),area.getMinY());
     	return lines;
-    }
-    
-    public void toDxf(DXFWorldFile dxf) {
-        PolylineDxf pol = new PolylineDxf();
-        
-        // Se define los vertices del cuadrado
-        pol.addVertex(new VertexDxf(new Point3(minx(),miny(),z)));		
-        pol.addVertex(new VertexDxf(new Point3(minx()+width(),miny(),z)));		
-        pol.addVertex(new VertexDxf(new Point3(minx()+width(),miny()+height(),z)));		
-        pol.addVertex(new VertexDxf(new Point3(minx(),miny()+height(),z)));		
-        pol.addExtText(0,label);
-        pol.addExtText(1,texture);
-        pol.setLayer("ZONES");
-        dxf.addEntity(pol);   
     }
     
 

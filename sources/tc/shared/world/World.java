@@ -19,11 +19,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.Entity;
-import wucore.utils.dxf.entities.TextDxf;
-import wucore.utils.dxf.sections.ACADColor;
-import wucore.utils.dxf.sections.Layer;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
 import wucore.utils.geom.Point3;
@@ -289,75 +284,6 @@ public class World extends Object
 
 	/** Pretty-printed JSON text of the world (the file contents). */
 	public String toJsonText ()					{ return toText (toJson ()); }
-	
-	public void fromDxfFile (String name) throws Exception{
-		DXFWorldFile dxf = new DXFWorldFile();
-		dxf.load(name);	// Carga archivo dxf
-		System.out.println(dxf);
-		
-		path = new WMPath(dxf);
-		walls	= new WMWalls (dxf);
-		zones	= new WMZones (dxf);
-		connectors	= new WMConnectors (dxf);
-		icons	= new WMIcons ();
-		objects	= new WMObjects (dxf, icons);
-		fareas	= new WMFAreas ();
-		
-		ArrayList<Entity> entities = dxf.getEntities();
-		
-		Entity entity;
-		for(int i = 0; i<entities.size(); i++){
-			entity = entities.get(i);
-			if(entity.getLayer().equalsIgnoreCase("OTHERS")){
-				if(entity instanceof TextDxf){ 
-					String texto = ((TextDxf)entity).getText();
-					if(texto.startsWith("START")){
-						String prop = texto.substring(texto.lastIndexOf("=")+1).trim();
-						// DXF files written by older versions carry "x, y, angle" (no z); START_i texts add start points
-						WMStart	st = new WMStart (prop);
-						if (texto.startsWith ("START_") && !texto.startsWith ("START_1"))		starts.add (st);
-						else	starts.set (0, st);
-					}
-				}
-			}
-		}	
-		
-		waypoints	= new WMWaypoints (dxf);
-		docks			= new WMDocks (dxf);
-		beacons		= new WMBeacons (dxf);
-		cbeacons		= new WMCBeacons (dxf);
-		
-		
-	}
-	
-	public void toDxfFile (String name) throws Exception{
-		
-		DXFWorldFile dxf = new DXFWorldFile();
-		
-		path.toDxfFile(dxf);
-		walls.toDxfFile(dxf);
-		objects.toDxfFile(dxf);
-		zones.toDxfFile(dxf);
-		waypoints.toDxfFile(dxf);
-		docks.toDxfFile(dxf);
-		cbeacons.toDxfFile(dxf);
-		beacons.toDxfFile(dxf);
-		connectors.toDxfFile(dxf);
-		// Others
-		//	  Define una capa con un color determinado (opcional)
-		dxf.addLayer(new Layer("OTHERS",ACADColor.BLUE));
-		for (int i = 0; i < starts.size (); i++)
-		dxf.addEntity(
-				new TextDxf(
-						"START_" + (i + 1) + " = " + starts.get (i).toProperty (),
-						new Point3(starts.get (i).x (), starts.get (i).y (), starts.get (i).z ()),
-						0.2,
-						"OTHERS"
-				)
-		);
-		dxf.createDxf(name);
-		
-	}
 	
 	
 	

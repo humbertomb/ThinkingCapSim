@@ -12,11 +12,6 @@ import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.Entity;
-import wucore.utils.dxf.entities.LineDxf;
-import wucore.utils.dxf.entities.PolylineDxf;
-import wucore.utils.dxf.entities.TextDxf;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
 import wucore.utils.geom.Point3;
@@ -44,48 +39,6 @@ public class WMWalls extends Object
 	// Constructors
 	public WMWalls (int n){
 		edges = new WMWall[n];
-	}
-	
-	public WMWalls (DXFWorldFile dxf)
-	{
-		ArrayList<Entity> entities = dxf.getEntities();
-		ArrayList<LineDxf> walls = new ArrayList<LineDxf>();
-		Entity entity;
-		
-		// Se guardan las lineas de la Capa 0 (lineas de Wall) en un vector y se leen las propiedades por defecto
-		for(int i = 0; i<entities.size(); i++){
-			entity = entities.get(i);
-			if(entity.getLayer().equalsIgnoreCase("0")){
-				if(entity instanceof LineDxf){
-				  walls.add((LineDxf)entity);
-				}
-				else if(entity instanceof PolylineDxf){
-				    LineDxf[] poly = ((PolylineDxf)entity).toDxfLines();
-				    for(int j = 0; j<poly.length; j++) walls.add(poly[j]);
-				}
-			}
-			if(entity instanceof TextDxf){
-				try{
-					String texto = ((TextDxf)entity).getText();
-					if(texto.startsWith("LINE_DEF_WIDTH")){
-						defWidth = Double.parseDouble(texto.substring(texto.lastIndexOf("=")+1));
-					}
-					else if(texto.startsWith("LINE_DEF_HEIGHT")){
-						defHeight = Double.parseDouble(texto.substring(texto.lastIndexOf("=")+1));
-					}
-					else if(texto.startsWith("LINE_DEF_TEXTURE")){
-						defTexture =texto.substring(texto.lastIndexOf("=")+1).trim();
-					}
-				}catch(Exception e){}
-			}
-		}
-		
-		// Se generan las lineas Wall (WMWall)
-		edges	= new WMWall[walls.size()];
-		for(int i = 0; i<walls.size(); i++){
-			edges[i] = new WMWall(walls.get(i),defWidth, defHeight, defTexture);
-			update(edges[i].edge);
-		}
 	}
 	
 	// Accessors
@@ -144,41 +97,6 @@ public class WMWalls extends Object
 	}
 	
 	
-	public void toDxfFile (DXFWorldFile dxf){
-	    TextDxf text;
-	    
-	    for (int i = 0; i < edges.length; i++)
-	        edges[i].toDxf(dxf);
-   
-	    text = new TextDxf(
-	            "LINE_DEF_HEIGHT = "+defHeight,
-	            new Point3(dxf.posx,dxf.posy,0.0),
-	            0.2,
-	            "0"
-	    );
-	    dxf.addEntity(text);
-	    dxf.posy-= 0.5;
-	    
-	    text = new TextDxf(
-	            "LINE_DEF_WIDTH = "+defWidth,
-	            new Point3(dxf.posx,dxf.posy,0.0),
-	            0.2,
-	            "0"
-	    );
-	    dxf.addEntity(text);
-	    dxf.posy-= 0.5;
-	    
-	    text = new TextDxf(
-	            "LINE_DEF_TEXTURE = "+defTexture,
-	            new Point3(dxf.posx,dxf.posy,0.0),
-	            0.2,
-	            "0"
-	    );
-	    dxf.addEntity(text);
-	    dxf.posy-= 0.5;
-	    
-	}
-
 	public Line2 crossline (double x1, double y1, double x2, double y2)
 	{
 		int				i;

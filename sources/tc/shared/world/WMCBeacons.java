@@ -11,12 +11,6 @@ import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.CircleDxf;
-import wucore.utils.dxf.entities.Entity;
-import wucore.utils.dxf.entities.TextDxf;
-import wucore.utils.dxf.sections.ACADColor;
-import wucore.utils.dxf.sections.Layer;
 
 /**
  * @author Humberto Martinez Barbera
@@ -30,27 +24,6 @@ public class WMCBeacons
 	protected WMCBeacon[]			beacons;
 
 	
-	public WMCBeacons (DXFWorldFile dxf){
-		ArrayList<Entity> entities = dxf.getEntities();
-		ArrayList<WMCBeacon> cbeac = new ArrayList<WMCBeacon>();
-		Entity entity;
-		int index = 0;
-		for(int i = 0; i<entities.size(); i++){
-			entity = entities.get(i);
-			if(entity.getLayer().equalsIgnoreCase("CBEACONS")){
-				if(entity instanceof TextDxf) 
-					cbeac.add(new WMCBeacon((TextDxf) entity));
-				if(entity instanceof CircleDxf){ 
-				    WMCBeacon beac = new WMCBeacon((CircleDxf) entity);	
-				    if(beac.label == null)	beac.label = "CB"+(index++);
-				    cbeac.add(beac);
-				}
-			}
-		}
-		beacons = new WMCBeacon[cbeac.size()];
-		cbeac.toArray(beacons);
-	}
-	
 	// Accessors
 	public final int	 		n () 				{ return beacons.length; }
 	public final WMCBeacon[]	edges ()			{ return beacons; }
@@ -62,14 +35,6 @@ public class WMCBeacons
 		return beacons[i];
 	}
 	
-	public void toDxfFile (DXFWorldFile dxf){
-	   //	  Define una capa con un color determinado (opcional)
-	   dxf.addLayer(new Layer("CBEACONS",ACADColor.RED));
-		for(int i = 0; i < beacons.length; i++){
-			beacons[i].toDxf(dxf);
-		}
-	}
-
 	/* Edition methods (world editor) */
 	public void add (WMCBeacon e)
 	{

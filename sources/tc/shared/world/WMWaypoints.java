@@ -11,11 +11,6 @@ import com.google.gson.JsonElement;
 
 import java.util.ArrayList;
 
-import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.entities.Entity;
-import wucore.utils.dxf.entities.TextDxf;
-import wucore.utils.dxf.sections.ACADColor;
-import wucore.utils.dxf.sections.Layer;
 
 /**
  * @author Humberto Martinez Barbera
@@ -28,22 +23,6 @@ public class WMWaypoints
 	protected WMWaypoint[] waypoints;
 	
 
-	
-	public WMWaypoints (DXFWorldFile dxf){
-		ArrayList<Entity> entities = dxf.getEntities();
-		ArrayList<WMWaypoint> wp = new ArrayList<WMWaypoint>();
-		Entity entity;
-		for(int i = 0; i<entities.size(); i++){
-			entity = entities.get(i);
-			if(entity.getLayer().equalsIgnoreCase("WAYPOINTS")){
-				if(entity instanceof TextDxf){ 
-					wp.add(new WMWaypoint((TextDxf)entity)); 
-				}
-			}
-		}
-		waypoints = new WMWaypoint[wp.size()];
-		wp.toArray(waypoints);
-	}
 	
 	// Accessors	
 	public final int	 		n () 				{ return waypoints.length; }
@@ -77,15 +56,6 @@ public class WMWaypoints
 		return -1;
 	}
 	
-	public void toDxfFile (DXFWorldFile dxf){
-		 // Define una capa con un color determinado (opcional)
-		 dxf.addLayer(new Layer("WAYPOINTS",ACADColor.MAGENTA));
-
-	    for (int i = 0; i < waypoints.length; i++){
-	        waypoints[i].toDxf(dxf);
-	    }
-	}
-
 	/* Edition methods (world editor) */
 	public void add (WMWaypoint e)
 	{
