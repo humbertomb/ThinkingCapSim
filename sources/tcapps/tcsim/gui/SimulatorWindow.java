@@ -612,7 +612,7 @@ public class SimulatorWindow extends JFrame implements SimulatorListener
 		for (i=0; i < files.length; i++)
 			worldCombo.addItem (files[i]);
 		
-		//worldCombo.setSelectedItem("dulzem3d.world");
+		//worldCombo.setSelectedItem("dulzem.world");
 		
 		filter = new FilenameFilter ()
 		{

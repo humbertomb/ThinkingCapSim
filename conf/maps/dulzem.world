@@ -324,7 +324,7 @@
     { "label": "wpCout2", "x": 35.79, "y": 77.18, "z": 0, "orientation": 0 },
     { "label": "wpCout0", "x": 35.785, "y": 80.569, "z": 0, "orientation": 0 },
     { "label": "wpCout3", "x": 35.804, "y": 75.621, "z": 0, "orientation": 0 },
-    { "label": "wpDin0", "x": 35.79, "y": 74.06, "z": 0, "orientation": 0 },
+    { "label": "wpDin0", "x": 35.838, "y": 74.008, "z": 0, "orientation": 0 },
     { "label": "wpDin1", "x": 35.79, "y": 72.25, "z": 0, "orientation": 0 },
     { "label": "wpDin2", "x": 35.79, "y": 70.65, "z": 0, "orientation": 0 },
     { "label": "wpDin3", "x": 35.79, "y": 68.85, "z": 0, "orientation": 0 },

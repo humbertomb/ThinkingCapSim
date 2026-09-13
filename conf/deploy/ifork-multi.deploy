@@ -1,5 +1,5 @@
 {
-  "world": "conf/maps/dulzem3d.world",
+  "world": "conf/maps/dulzem.world",
   "globalLinda": {
     "address": "localhost",
     "port": 5500,
@@ -169,7 +169,7 @@
           "GFX": "true",
           "MODE": "shared",
           "PASSIVE": "false",
-          "WORLD": "conf/maps/dulzem3d.world"
+          "WORLD": "conf/maps/dulzem.world"
         },
         "events": [
           {
@@ -372,7 +372,7 @@
           "GFX": "true",
           "MODE": "shared",
           "PASSIVE": "false",
-          "WORLD": "conf/maps/dulzem3d.world"
+          "WORLD": "conf/maps/dulzem.world"
         },
         "events": [
           {

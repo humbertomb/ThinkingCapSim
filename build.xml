@@ -187,7 +187,7 @@
        password="rootme"
        remotedir="/root/thinkingcap/conf/maps"
 	   verbose="true">
-			<fileset file="../TCApps/conf/maps/dulzem3d.world"/>
+			<fileset file="../TCApps/conf/maps/dulzem.world"/>
 			<fileset file="../TCApps/conf/maps/dulzem.topol"/>
 		</ftp>
 	</target>
@@ -206,7 +206,7 @@
        password="rootme"
        remotedir="/root/thinkingcap/conf/maps"
 	   verbose="true">
-			<fileset file="../TCApps/conf/maps/dulzem3d.world"/>
+			<fileset file="../TCApps/conf/maps/dulzem.world"/>
 			<fileset file="../TCApps/conf/maps/dulzem.topol"/>
 		</ftp>
 	</target>
@@ -225,7 +225,7 @@
        password="rootme"
        remotedir="/root/thinkingcap/conf/maps"
 	   verbose="true">
-			<fileset file="../TCApps/conf/maps/dulzem3d.world"/>
+			<fileset file="../TCApps/conf/maps/dulzem.world"/>
 			<fileset file="../TCApps/conf/maps/dulzem.topol"/>
 		</ftp>
 	</target>
@@ -244,7 +244,7 @@
        password="rootme"
        remotedir="/root/thinkingcap/conf/maps"
 	   verbose="true">
-			<fileset file="../TCApps/conf/maps/dulzem3d.world"/>
+			<fileset file="../TCApps/conf/maps/dulzem.world"/>
 			<fileset file="../TCApps/conf/maps/dulzem.topol"/>
 		</ftp>
 	</target>
@@ -263,7 +263,7 @@
        password="rootme"
        remotedir="/root/thinkingcap/conf/maps"
 	   verbose="true">
-			<fileset file="../TCApps/conf/maps/dulzem3d.world"/>
+			<fileset file="../TCApps/conf/maps/dulzem.world"/>
 			<fileset file="../TCApps/conf/maps/dulzem.topol"/>
 		</ftp>
 	</target>
