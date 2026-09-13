@@ -41,6 +41,9 @@ import tc.shared.world.WMWall;
 import tc.shared.world.WMWaypoint;
 import tc.shared.world.WMZone;
 import tc.shared.world.World;
+import tclib.navigation.pathplanning.DockingPath;
+import devices.pos.Path;
+import devices.pos.Position;
 import wucore.utils.color.ColorTool;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
@@ -722,6 +725,7 @@ public class WorldCanvas extends JPanel
 		if (visible[WorldItem.DOCK])		for (int i = 0; i < world.docks ().n (); i++)		drawDock (g, world.docks ().at (i), isSel (WorldItem.DOCK, i));
 		if (visible[WorldItem.START])		for (int i = 0; i < world.n_starts (); i++)		drawStart (g, i, isSel (WorldItem.START, i));
 
+		if ((selection != null) && (selection.kind == WorldItem.WAYPOINT))		drawDockingPaths (g, selection.index);
 		if (overlay != null)				overlay.paint (g, this);
 
 		drawRubber (g);
@@ -939,6 +943,44 @@ public class WorldCanvas extends JPanel
 		double	hx2 = ax - 7 * Math.cos (a + 0.5), hy2 = ay + 7 * Math.sin (a + 0.5);
 		g.draw (new Line2D.Double (ax, ay, hx1, hy1));
 		g.draw (new Line2D.Double (ax, ay, hx2, hy2));
+	}
+
+	/**
+	 * Docking trajectories generated from a waypoint: one dashed curve per
+	 * dock the waypoint is linked to in the topological map (the same path the
+	 * iFork navigation builds, see {@link DockingPath}), so that the shape can
+	 * be tuned by moving the waypoint or the dock.
+	 */
+	private void drawDockingPaths (Graphics2D g, int wpIndex)
+	{
+		if ((world.topology () == null) || (wpIndex < 0) || (wpIndex >= world.wps ().n ()))		return;
+		WMWaypoint	wp = world.wps ().at (wpIndex);
+		Position	robot = new Position (wp.pos.x (), wp.pos.y (), wp.pos.z (), wp.pos.alpha ());		// the vehicle reaches the waypoint with its heading
+
+		g.setColor (C_DOCK);
+		g.setStroke (dashed (1.5f));
+		for (String dockLabel : DockingPath.linkedDocks (world, wp.label))
+		{
+			WMDock	d = world.docks ().at (dockLabel);
+			if (d == null)		continue;
+			Path	path;
+			try { path = DockingPath.generate (robot, new Position (d.pos.x (), d.pos.y (), d.pos.z (), d.pos.alpha ()), DockingPath.NAV_EXTENSION); }
+			catch (RuntimeException e)		{ continue; }			// degenerate geometry: no preview
+			Path2D	shape = new Path2D.Double ();
+			int		n = path.num ();
+			double	best = Double.MAX_VALUE;
+			for (int i = 0; i < n; i++)
+			{
+				Position	p = path.at (i);
+				if (p == null)		break;
+				double		dist = p.distance (d.pos);
+				if ((dist > best) && (best < 0.5))		break;			// past the dock: the rest is the extension of the path
+				best = Math.min (best, dist);
+				if (i == 0)		shape.moveTo (px (p.x ()), py (p.y ()));
+				else			shape.lineTo (px (p.x ()), py (p.y ()));
+			}
+			g.draw (shape);
+		}
 	}
 
 	private void drawWaypoint (Graphics2D g, WMWaypoint p, boolean sel)
