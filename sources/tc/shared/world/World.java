@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gson.Gson;
@@ -46,7 +47,8 @@ public class World extends Object
 	protected ArrayList<WMStart>		starts		= new ArrayList<WMStart> ();
 	{ starts.add (new WMStart (0.0, 0.0, 0.0, 0.0)); }
 	
-	protected WMPath				path;
+	// Proposed robot's path points
+	protected ArrayList<Point2>		path		= new ArrayList<Point2> ();
 	
 	// Map components
 	protected WMIcons				icons;
@@ -55,10 +57,10 @@ public class World extends Object
 	protected WMWalls				walls;
 	protected WMZones				zones;
 	protected WMConnectors			connectors;	
-	protected WMCBeacons			cbeacons;
-	protected WMBeacons				beacons;	
-	protected WMWaypoints			waypoints;
-	protected WMDocks				docks;
+	protected ArrayList<WMCBeacon>	cbeacons	= new ArrayList<WMCBeacon> ();
+	protected ArrayList<WMBeacon>	beacons		= new ArrayList<WMBeacon> ();
+	protected ArrayList<WMWaypoint>	waypoints	= new ArrayList<WMWaypoint> ();
+	protected ArrayList<WMDock>		docks		= new ArrayList<WMDock> ();
 	
 	protected HTopolMap				topol;
 		
@@ -97,17 +99,65 @@ public class World extends Object
 	}
 	
 	// World components
-	public final WMPath 		path ()				{ return path; }
+	public final List<Point2>	path ()				{ return path; }
 	public final WMWalls 		walls ()			{ return walls; }
 	public final WMObjects 		objects ()			{ return objects; }
 	public final WMIcons		icons ()			{ return icons; }
 	public final WMZones		zones ()			{ return zones; }
 	public final WMFAreas		fareas ()			{ return fareas; }
 	public final WMConnectors	connectors ()		{ return connectors; }
-	public final WMBeacons		beacons ()			{ return beacons; }
-	public final WMCBeacons		cbeacons ()			{ return cbeacons; }
-	public final WMWaypoints	wps ()				{ return waypoints; }
-	public final WMDocks		docks ()			{ return docks; }
+	public final List<WMBeacon>	beacons ()			{ return beacons; }
+	public final List<WMCBeacon> cbeacons ()		{ return cbeacons; }
+	public final List<WMWaypoint> wps ()			{ return waypoints; }
+	public final List<WMDock>	docks ()			{ return docks; }
+
+	/* Lookup by label */
+
+	/** Index of the element with the given label in a list, or -1. */
+	static public int index (List<? extends WMElement> list, String label)
+	{
+		if ((label == null) || (list == null))		return -1;
+		for (int i = 0; i < list.size (); i++)
+			if (label.equals (list.get (i).label))	return i;
+		return -1;
+	}
+
+	/** The element with the given label in a list, or null. */
+	static public <T extends WMElement> T find (List<T> list, String label)
+	{
+		int		i = index (list, label);
+		return (i < 0) ? null : list.get (i);
+	}
+
+	public final WMWaypoint		waypoint (String label)		{ return find (waypoints, label); }
+	public final WMDock			dock (String label)			{ return find (docks, label); }
+	public final WMBeacon		beacon (String label)		{ return find (beacons, label); }
+	public final WMCBeacon		cbeacon (String label)		{ return find (cbeacons, label); }
+
+	/** Elevation of a path point (0 if it carries none). */
+	static public double z (Point2 p)			{ return (p instanceof Point3) ? ((Point3) p).z () : 0.0; }
+
+	/** Index of the (plate) beacon first crossed by a segment, or -1 when it crosses none. */
+	public int crossBeacon (Line2 line)
+	{
+		return crossBeacon (line.orig ().x (), line.orig ().y (), line.dest ().x (), line.dest ().y ());
+	}
+
+	public int crossBeacon (double x1, double y1, double x2, double y2)
+	{
+		int			index = -1;
+		double		d = Double.MAX_VALUE;
+		for (int i = 0; i < beacons.size (); i++)
+		{
+			Point2	pt = beacons.get (i).getLine ().intersection (x1, y1, x2, y2);
+			if ((pt != null) && (pt.distance (x1, y1) < d))
+			{
+				d		= pt.distance (x1, y1);
+				index	= i;
+			}
+		}
+		return index;
+	}
 
 	/** The hierarchical topological map of the world, or null when the world has none. */
 	public final HTopolMap		topology ()			{ return topol; }
@@ -153,9 +203,9 @@ public class World extends Object
 		switch(type)
 		{
 		case DOCK:
-			return docks.at(label).getAng();
+			return dock (label).getAng();
 		case WP:
-			return waypoints.at(label).getAng();
+			return waypoint (label).getAng();
 		}
 		
 		return 0.0;	    
@@ -172,9 +222,9 @@ public class World extends Object
 		
 		switch(type){
 		case DOCK:
-			return docks.at(label).getPos();
+			return dock (label).getPos();
 		case WP:
-			return waypoints.at(label).getPos();
+			return waypoint (label).getPos();
 		case ZONE:
 			return new Point3 (zones.at (label).area.getCenterX(), zones.at (label).area.getCenterY(), 0.0);
 		case DOOR:
@@ -190,7 +240,7 @@ public class World extends Object
 	// Determina el tipo de un label
 	public int getType (String name)
 	{
-		if (waypoints.index (name) != -1)
+		if (index (waypoints, name) != -1)
 			return WP;	
 		
 		if (connectors.index (name) != -1)
@@ -199,7 +249,7 @@ public class World extends Object
 		if (zones.index (name) != -1)
 			return ZONE;
 		
-		if (docks.index (name) != -1)
+		if (index (docks, name) != -1)
 			return DOCK;
 		
 		
@@ -247,17 +297,22 @@ public class World extends Object
 		for (JsonElement e : getArray (o, "starts"))		starts.add (new WMStart (e.getAsJsonObject ()));
 		if (starts.isEmpty ())		starts.add (new WMStart (0.0, 0.0, 0.0, 0.0));
 
-		path 		= new WMPath (o.get ("path"));
+		path.clear ();
+		for (JsonElement e : getArray (o, "path"))			path.add (toPoint (e.getAsJsonObject ()));
 		walls		= new WMWalls (o.get ("walls"));
 		icons		= new WMIcons (o.get ("icons"));
 		objects		= new WMObjects (o.get ("objects"), icons);
 		fareas		= new WMFAreas (o.get ("fareas"));
 		zones		= new WMZones (o.get ("zones"));
 		connectors	= new WMConnectors (o.get ("connectors"));
-		waypoints	= new WMWaypoints (o.get ("waypoints"));
-		docks		= new WMDocks (o.get ("docks"));
-		beacons		= new WMBeacons (o.get ("beacons"));
-		cbeacons	= new WMCBeacons (o.get ("cbeacons"));
+		waypoints.clear ();
+		for (JsonElement e : getArray (o, "waypoints"))		waypoints.add (new WMWaypoint (e.getAsJsonObject ()));
+		docks.clear ();
+		for (JsonElement e : getArray (o, "docks"))			docks.add (new WMDock (e.getAsJsonObject ()));
+		beacons.clear ();
+		for (JsonElement e : getArray (o, "beacons"))		beacons.add (new WMBeacon (e.getAsJsonObject ()));
+		cbeacons.clear ();
+		for (JsonElement e : getArray (o, "cbeacons"))		cbeacons.add (new WMCBeacon (e.getAsJsonObject ()));
 		topol		= o.has ("topology") ? new HTopolMap (this, getObject (o, "topology")) : null;
 	}
 
@@ -267,17 +322,27 @@ public class World extends Object
 		JsonArray	st = new JsonArray ();
 		for (WMStart s : starts)		st.add (s.toJson ());
 		o.add ("starts", st);
-		o.add ("path", path.toJson ());
+		JsonArray	pa = new JsonArray ();
+		for (Point2 p : path)			pa.add (point (p));
+		o.add ("path", pa);
 		o.add ("walls", walls.toJson ());
 		o.add ("icons", icons.toJson ());
 		o.add ("objects", objects.toJson ());
 		o.add ("zones", zones.toJson ());
 		o.add ("fareas", fareas.toJson ());
 		o.add ("connectors", connectors.toJson ());
-		o.add ("waypoints", waypoints.toJson ());
-		o.add ("docks", docks.toJson ());
-		o.add ("beacons", beacons.toJson ());
-		o.add ("cbeacons", cbeacons.toJson ());
+		JsonArray	wa = new JsonArray ();
+		for (WMWaypoint x : waypoints)	wa.add (x.toJson ());
+		o.add ("waypoints", wa);
+		JsonArray	da = new JsonArray ();
+		for (WMDock x : docks)			da.add (x.toJson ());
+		o.add ("docks", da);
+		JsonArray	ba = new JsonArray ();
+		for (WMBeacon x : beacons)		ba.add (x.toJson ());
+		o.add ("beacons", ba);
+		JsonArray	ca = new JsonArray ();
+		for (WMCBeacon x : cbeacons)	ca.add (x.toJson ());
+		o.add ("cbeacons", ca);
 		if (topol != null)		o.add ("topology", topol.toJson ());
 		return o;
 	}
@@ -369,9 +434,9 @@ public class World extends Object
 		
 		mindist = Double.POSITIVE_INFINITY;
 		index = -1;
-		for (i=0; i < docks.n(); i++)
+		for (i=0; i < docks.size (); i++)
 		{
-			d = docks.at(i).pos.distance (x,y);
+			d = docks.get (i).pos.distance (x,y);
 			if (d < mindist)
 			{
 				mindist = d;
@@ -379,7 +444,7 @@ public class World extends Object
 			}
 		}
 		if (index != -1)
-			stret += "Nearest dock: "+docks.at(index).label;
+			stret += "Nearest dock: "+docks.get (index).label;
 		
 		return (stret);
 	} 	
@@ -460,7 +525,7 @@ public class World extends Object
 	}
 
 	static public JsonObject point (Point3 p)			{ return point (p.x (), p.y (), p.z ()); }
-	static public JsonObject point (Point2 p)			{ return point (p.x (), p.y (), WMPath.z (p)); }
+	static public JsonObject point (Point2 p)			{ return point (p.x (), p.y (), z (p)); }
 
 	/** Adds x, y, z to an existing object. */
 	static public void putPoint (JsonObject o, double x, double y, double z)

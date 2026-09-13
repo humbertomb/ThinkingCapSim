@@ -805,8 +805,8 @@ public class Simulator
 				if (p != null)	distMuro	= p.distance (xx1, yy1);						// Calculo de la distancia entre sensor y el muro
 			}
 			
-			index = map.beacons().crossline(rout);														
-			wall=map.beacons().at(index).getLine();
+			index = map.crossBeacon (rout);														
+			wall = (index >= 0) ? map.beacons().get(index).getLine() : null;
 			if(wall != null){
 				p			= rout.intersection (wall);
 				if (p != null)	distBeac	= p.distance (xx1, yy1);						// Calcula la interseccion entre el sensor y baliza			
@@ -819,7 +819,7 @@ public class Simulator
 						
 						range=distBeac; // Para el rango
 						bearing=Math.atan2(yy2-yy1,xx2-xx1);				// Calcula el angulo absoluto entre la baliza y sensor(PI a -PI)
-						angle=Angles.radnorm_180(map.beacons().at(index).getAng()-bearing);		// Calcula el angulo entre balizas y barrido
+						angle=Angles.radnorm_180(map.beacons().get(index).getAng()-bearing);		// Calcula el angulo entre balizas y barrido
 						
 						//System.out.println(" range ="+ range);
 						
@@ -890,9 +890,9 @@ public class Simulator
 		rout	= new Line2 ();
 		i		= 0;
 		
-		for (a = 0; a < map.beacons().n(); a++)			// map.bn() es el numero de balizas                  
+		for (a = 0; a < map.beacons().size(); a++)			// map.bn() es el numero de balizas                  
 		{	
-			rout.set(map.beacons().at(a).getLine());
+			rout.set(map.beacons().get(a).getLine());
 			xx2		=(rout.orig().x()+rout.dest().x())/2;		// Posicion X de la baliza
 			yy2		=(rout.orig().y()+rout.dest().y())/2;		// Posicion Y de la baliza
 			range =Math.sqrt((xx2-xx1)*(xx2-xx1)+(yy2-yy1)*(yy2-yy1));	// rango entre sensor y balizas
@@ -910,7 +910,7 @@ public class Simulator
 				bearing=Math.atan2(yy2-yy1,xx2-xx1);											// Calcula el angulo absoluto entre la baliza y sensor(PI a -PI)
 				
 				if(bearing<=a2 & bearing>=(-a2)){												// Si no se supera el angulo de barrido del laser ...
-					angle=Angles.radnorm_180(map.beacons().at(a).getAng()-bearing);									// Calcula el angulo entre balizas y barrido
+					angle=Angles.radnorm_180(map.beacons().get(a).getAng()-bearing);									// Calcula el angulo entre balizas y barrido
 					
 					if ((angle>RDESC[roboindex].REFLSB) && (angle<(Math.PI-RDESC[roboindex].REFLSB)))
 					{lsb_measures[i++] = Angles.radnorm_180(bearing-a1.alpha()-MODEL[roboindex].real_a);		// Calculo del angulo relativo de la baliza (radianes)

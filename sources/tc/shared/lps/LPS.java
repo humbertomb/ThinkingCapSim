@@ -200,11 +200,11 @@ public class LPS extends Object
 		double		x, y;
 		
 		// Draw docks
-		for (i = 0; i < map.docks().n(); i++)
+		for (i = 0; i < map.docks().size(); i++)
 		{
-			x1 = map.docks().at(i).pos.x ();
-			y1 = map.docks().at(i).pos.y ();
-			ra = map.docks().at(i).getAng() - Math.PI*0.5;
+			x1 = map.docks().get(i).pos.x ();
+			y1 = map.docks().get(i).pos.y ();
+			ra = map.docks().get(i).getAng() - Math.PI*0.5;
 			
 			x	= x1 - cur.x ();
 			y	= y1 - cur.y ();
@@ -213,10 +213,10 @@ public class LPS extends Object
 			x	= ll * Math.cos (aa - cur.alpha ());
 			y	= ll * Math.sin (aa - cur.alpha ());
 
-			lpos[i]	= new LPODock (x, y, ra, map.D_LENGHT, map.docks().at(i).label, LPO.MAP);
+			lpos[i]	= new LPODock (x, y, ra, map.D_LENGHT, map.docks().get(i).label, LPO.MAP);
 			lpos[i].active (true);
 		}
-		lpos_n += map.docks().n();
+		lpos_n += map.docks().size();
 	}
 						
 	public void set_lpo (VisionData data)

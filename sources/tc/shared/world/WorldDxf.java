@@ -345,11 +345,11 @@ public class WorldDxf
 	static private void writePath (DXFWorldFile dxf, World w)
 	{
 		dxf.addLayer (new Layer ("PATH", ACADColor.CYAN));
-		if (w.path ().n () == 0)		return;
+		if (w.path ().size () == 0)		return;
 		PolylineDxf	pol = new PolylineDxf ();
 		pol.setLayer ("PATH");
-		for (int i = 0; i < w.path ().n (); i++)
-			pol.addVertex (new VertexDxf (new Point3 (w.path ().at (i))));
+		for (int i = 0; i < w.path ().size (); i++)
+			pol.addVertex (new VertexDxf (new Point3 (w.path ().get (i))));
 		dxf.addEntity (pol);
 	}
 
@@ -413,9 +413,9 @@ public class WorldDxf
 	static private void writeWaypoints (DXFWorldFile dxf, World w)
 	{
 		dxf.addLayer (new Layer ("WAYPOINTS", ACADColor.MAGENTA));
-		for (int i = 0; i < w.wps ().n (); i++)
+		for (int i = 0; i < w.wps ().size (); i++)
 		{
-			WMWaypoint	wp = w.wps ().at (i);
+			WMWaypoint	wp = w.wps ().get (i);
 			TextDxf		text = new TextDxf (wp.label, wp.getPos (), TEXT_H, "WAYPOINTS");
 			text.addExtDouble (Math.toDegrees (wp.pos.alpha ()));
 			dxf.addEntity (text);
@@ -425,9 +425,9 @@ public class WorldDxf
 	static private void writeDocks (DXFWorldFile dxf, World w)
 	{
 		dxf.addLayer (new Layer ("DOCKINGS", ACADColor.CYAN));
-		for (int i = 0; i < w.docks ().n (); i++)
+		for (int i = 0; i < w.docks ().size (); i++)
 		{
-			WMDock		d = w.docks ().at (i);
+			WMDock		d = w.docks ().get (i);
 			TextDxf		text = new TextDxf (d.label, d.getPos (), TEXT_H, "DOCKINGS");
 			text.addExtDouble (Math.toDegrees (d.getAng ()));
 			text.addExtText (d.flow.name ());
@@ -438,9 +438,9 @@ public class WorldDxf
 	static private void writeCBeacons (DXFWorldFile dxf, World w)
 	{
 		dxf.addLayer (new Layer ("CBEACONS", ACADColor.RED));
-		for (int i = 0; i < w.cbeacons ().n (); i++)
+		for (int i = 0; i < w.cbeacons ().size (); i++)
 		{
-			WMCBeacon	b = w.cbeacons ().at (i);
+			WMCBeacon	b = w.cbeacons ().get (i);
 			CircleDxf	circle = new CircleDxf (new Point3 (b.pos.x (), b.pos.y (), 0.0), b.radius (), "CBEACONS");
 			circle.addExtText (b.label);
 			dxf.addEntity (circle);
@@ -450,9 +450,9 @@ public class WorldDxf
 	static private void writeBeacons (DXFWorldFile dxf, World w)
 	{
 		dxf.addLayer (new Layer ("BEACONS", ACADColor.RED));
-		for (int i = 0; i < w.beacons ().n (); i++)
+		for (int i = 0; i < w.beacons ().size (); i++)
 		{
-			WMBeacon	b = w.beacons ().at (i);
+			WMBeacon	b = w.beacons ().get (i);
 			TextDxf		text = new TextDxf (b.label, new Point3 (b.pos.x (), b.pos.y (), 0.0), TEXT_H, "BEACONS");
 			text.addExtDouble (Math.toDegrees (b.pos.alpha ()));
 			text.addExtDouble (b.width);

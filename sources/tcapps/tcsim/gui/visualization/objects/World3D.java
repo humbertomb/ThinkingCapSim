@@ -68,12 +68,12 @@ public class World3D extends BranchGroup
 			addChild (createZone (map.zones().at(i)));
 		
 		// Add docks
-		for (i = 0; i < map.docks().n(); i++)
-			addChild (createDock (map.docks().at(i)));
+		for (i = 0; i < map.docks().size(); i++)
+			addChild (createDock (map.docks().get(i)));
 		
 		// Add waypoints
-		for (i = 0; i < map.wps().n(); i++)
-			addChild (createWaypoint (map.wps().at(i)));
+		for (i = 0; i < map.wps().size(); i++)
+			addChild (createWaypoint (map.wps().get(i)));
 		
 		// Add doors
 		WMConnectors			doors;

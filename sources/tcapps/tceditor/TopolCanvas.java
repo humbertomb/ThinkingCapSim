@@ -186,12 +186,12 @@ public class TopolCanvas extends JPanel
 		}
 		else if (zone != null)
 		{
-			for (int i = 0; i < world.wps ().n (); i++)
-				if (zone.equals (world.zones ().inZone (world.wps ().at (i).pos)))
-					places.add (new Place (world.wps ().at (i).label, K_WAYPOINT, world.wps ().at (i).pos.x (), world.wps ().at (i).pos.y ()));
-			for (int i = 0; i < world.docks ().n (); i++)
-				if (zone.equals (world.zones ().inZone (world.docks ().at (i).pos)))
-					places.add (new Place (world.docks ().at (i).label, K_DOCK, world.docks ().at (i).pos.x (), world.docks ().at (i).pos.y ()));
+			for (int i = 0; i < world.wps ().size (); i++)
+				if (zone.equals (world.zones ().inZone (world.wps ().get (i).pos)))
+					places.add (new Place (world.wps ().get (i).label, K_WAYPOINT, world.wps ().get (i).pos.x (), world.wps ().get (i).pos.y ()));
+			for (int i = 0; i < world.docks ().size (); i++)
+				if (zone.equals (world.zones ().inZone (world.docks ().get (i).pos)))
+					places.add (new Place (world.docks ().get (i).label, K_DOCK, world.docks ().get (i).pos.x (), world.docks ().get (i).pos.y ()));
 			for (int i = 0; i < world.connectors ().n (); i++)
 			{
 				WMConnector	c = world.connectors ().at (i);

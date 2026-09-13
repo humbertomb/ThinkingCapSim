@@ -944,7 +944,7 @@ public class IForkPlanner extends SeqPlanner
 			// Si el WP ocupado es el suyo lo ignora
 			if ((booked != null) && booked.equalsIgnoreCase (wpname)) 			continue;
 			
-			//System.out.println("["+robotid+"] dist a "+wpname+" = "+world.wps().at(wpname).getPos());
+			//System.out.println("["+robotid+"] dist a "+wpname+" = "+world.waypoint(wpname).getPos());
 			
 			// Si esta Navegando hacia un WP ocupado cede el paso (Prioridad = 0)
 			if ( ((IForkController.parseTask (subplan[subplan_k].task) == IForkController.NAVIGATE) || (givenway && givencause==1) ) ) // TODO esto es una chapuza
@@ -1516,7 +1516,7 @@ public class IForkPlanner extends SeqPlanner
 //		int type = world.getType(wpname);
 //		boolean cond = false;
 //		if(type == World.WP)
-//			cond = lps.cur.distance (world.wps().at(wpname).getPos()) < dist;	
+//			cond = lps.cur.distance (world.waypoint(wpname).getPos()) < dist;	
 //		else if(type == World.DOOR){
 //			Line2 path = world.connectors ().at(wpname).path;
 //			cond = path.segDistance(lps.cur.x(),lps.cur.y()) < dist;
@@ -1527,7 +1527,7 @@ public class IForkPlanner extends SeqPlanner
 	public double distTo(String wpname){
 		int type = world.getType(wpname);
 		if(type == World.WP)
-			return lps.cur.distance (world.wps().at(wpname).getPos());	
+			return lps.cur.distance (world.waypoint(wpname).getPos());	
 		else if(type == World.DOOR){
 			Line2 path = world.connectors ().at(wpname).path;
 			return path.segDistance(lps.cur.x(),lps.cur.y());
@@ -1538,7 +1538,7 @@ public class IForkPlanner extends SeqPlanner
 	public double distTo(Position pos, String wpname){
 		int type = world.getType(wpname);
 		if(type == World.WP)
-			return pos.distance (world.wps().at(wpname).getPos());	
+			return pos.distance (world.waypoint(wpname).getPos());	
 		else if(type == World.DOOR){
 			Line2 path = world.connectors ().at(wpname).path;
 			return path.segDistance(pos.x(),pos.y());
@@ -1624,18 +1624,18 @@ public class IForkPlanner extends SeqPlanner
 		int type2 = world.getType(wp2);
 		
 		if(type1 == World.WP && type2 == World.WP){
-			Point3 pos1 = world.wps().at(wp1).getPos();
-			Point3 pos2 = world.wps().at(wp2).getPos();
+			Point3 pos1 = world.waypoint(wp1).getPos();
+			Point3 pos2 = world.waypoint(wp2).getPos();
 			return pos1.distance(pos2);
 		}
 		else if(type1 == World.DOOR && type2 == World.WP){
 			Line2 path = world.connectors ().at(wp1).path;
-			Point3 pos2 = world.wps().at(wp2).getPos();
+			Point3 pos2 = world.waypoint(wp2).getPos();
 			return path.segDistance(pos2.x(),pos2.y());
 		}
 		else if(type1 == World.WP && type2 == World.DOOR){
 			Line2 path = world.connectors ().at(wp2).path;
-			Point3 pos1 = world.wps().at(wp1).getPos();
+			Point3 pos1 = world.waypoint(wp1).getPos();
 			return path.segDistance(pos1.x(),pos1.y());
 		}
 		return Double.MAX_VALUE;

@@ -719,10 +719,10 @@ public class WorldCanvas extends JPanel
 		if (visible[WorldItem.WALL])		for (int i = 0; i < world.walls ().n (); i++)		drawWall (g, world.walls ().at (i), isSel (WorldItem.WALL, i));
 		if (visible[WorldItem.OBJECT])		for (int i = 0; i < world.objects ().n (); i++)		drawObject (g, world.objects ().at (i), isSel (WorldItem.OBJECT, i));
 		if (visible[WorldItem.CONNECTOR])		for (int i = 0; i < world.connectors ().n (); i++)		drawConnector (g, world.connectors ().at (i), isSel (WorldItem.CONNECTOR, i));
-		if (visible[WorldItem.BEACON])		for (int i = 0; i < world.beacons ().n (); i++)		drawBeacon (g, world.beacons ().at (i), isSel (WorldItem.BEACON, i));
-		if (visible[WorldItem.CBEACON])		for (int i = 0; i < world.cbeacons ().n (); i++)	drawCBeacon (g, world.cbeacons ().at (i), isSel (WorldItem.CBEACON, i));
-		if (visible[WorldItem.WAYPOINT])	for (int i = 0; i < world.wps ().n (); i++)			drawWaypoint (g, world.wps ().at (i), isSel (WorldItem.WAYPOINT, i));
-		if (visible[WorldItem.DOCK])		for (int i = 0; i < world.docks ().n (); i++)		drawDock (g, world.docks ().at (i), isSel (WorldItem.DOCK, i));
+		if (visible[WorldItem.BEACON])		for (int i = 0; i < world.beacons ().size (); i++)		drawBeacon (g, world.beacons ().get (i), isSel (WorldItem.BEACON, i));
+		if (visible[WorldItem.CBEACON])		for (int i = 0; i < world.cbeacons ().size (); i++)	drawCBeacon (g, world.cbeacons ().get (i), isSel (WorldItem.CBEACON, i));
+		if (visible[WorldItem.WAYPOINT])	for (int i = 0; i < world.wps ().size (); i++)			drawWaypoint (g, world.wps ().get (i), isSel (WorldItem.WAYPOINT, i));
+		if (visible[WorldItem.DOCK])		for (int i = 0; i < world.docks ().size (); i++)		drawDock (g, world.docks ().get (i), isSel (WorldItem.DOCK, i));
 		if (visible[WorldItem.START])		for (int i = 0; i < world.n_starts (); i++)		drawStart (g, i, isSel (WorldItem.START, i));
 
 		if ((selection != null) && (selection.kind == WorldItem.WAYPOINT))		drawDockingPaths (g, selection.index);
@@ -838,18 +838,18 @@ public class WorldCanvas extends JPanel
 
 	private void drawPath (Graphics2D g)
 	{
-		int		n = world.path ().n ();
+		int		n = world.path ().size ();
 		if (n == 0)			return;
 		g.setColor (C_PATH);
 		g.setStroke (stroke (1.5f));
 		for (int i = 0; i < n - 1; i++)
 		{
-			Point2	a = world.path ().at (i), b = world.path ().at (i + 1);
+			Point2	a = world.path ().get (i), b = world.path ().get (i + 1);
 			g.drawLine (toPixelX (a.x ()), toPixelY (a.y ()), toPixelX (b.x ()), toPixelY (b.y ()));
 		}
 		for (int i = 0; i < n; i++)
 		{
-			Point2	a = world.path ().at (i);
+			Point2	a = world.path ().get (i);
 			boolean	sel = isSel (WorldItem.PATH, i);
 			g.setColor (sel ? C_SEL : C_PATH);
 			g.fill (new Ellipse2D.Double (px (a.x ()) - 3.5, py (a.y ()) - 3.5, 7, 7));
@@ -953,15 +953,15 @@ public class WorldCanvas extends JPanel
 	 */
 	private void drawDockingPaths (Graphics2D g, int wpIndex)
 	{
-		if ((world.topology () == null) || (wpIndex < 0) || (wpIndex >= world.wps ().n ()))		return;
-		WMWaypoint	wp = world.wps ().at (wpIndex);
+		if ((world.topology () == null) || (wpIndex < 0) || (wpIndex >= world.wps ().size ()))		return;
+		WMWaypoint	wp = world.wps ().get (wpIndex);
 		Position	robot = new Position (wp.pos.x (), wp.pos.y (), wp.pos.z (), wp.pos.alpha ());		// the vehicle reaches the waypoint with its heading
 
 		g.setColor (C_DOCK);
 		g.setStroke (dashed (1.5f));
 		for (String dockLabel : DockingPath.linkedDocks (world, wp.label))
 		{
-			WMDock	d = world.docks ().at (dockLabel);
+			WMDock	d = world.dock (dockLabel);
 			if (d == null)		continue;
 			Path	path;
 			try { path = DockingPath.generate (robot, new Position (d.pos.x (), d.pos.y (), d.pos.z (), d.pos.alpha ()), DockingPath.NAV_EXTENSION); }

@@ -56,7 +56,6 @@ import tc.shared.world.WMDock;
 import tc.shared.world.WMFArea;
 import tc.shared.world.WMIcon;
 import tc.shared.world.WMObject;
-import tc.shared.world.WMPath;
 import tc.shared.world.WMStart;
 import tc.shared.world.WMWall;
 import tc.shared.world.WMWaypoint;
@@ -1057,14 +1056,14 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		{
 		case WorldItem.ZONE:		return w.zones ().n ();
 		case WorldItem.FAREA:		return w.fareas ().n ();
-		case WorldItem.PATH:		return w.path ().n ();
+		case WorldItem.PATH:		return w.path ().size ();
 		case WorldItem.WALL:		return w.walls ().n ();
 		case WorldItem.OBJECT:		return w.objects ().n ();
 		case WorldItem.CONNECTOR:		return w.connectors ().n ();
-		case WorldItem.BEACON:		return w.beacons ().n ();
-		case WorldItem.CBEACON:		return w.cbeacons ().n ();
-		case WorldItem.WAYPOINT:	return w.wps ().n ();
-		case WorldItem.DOCK:		return w.docks ().n ();
+		case WorldItem.BEACON:		return w.beacons ().size ();
+		case WorldItem.CBEACON:		return w.cbeacons ().size ();
+		case WorldItem.WAYPOINT:	return w.wps ().size ();
+		case WorldItem.DOCK:		return w.docks ().size ();
 		case WorldItem.ICON:		return w.icons ().n ();
 		case WorldItem.START:		return w.n_starts ();
 		case WorldItem.DEFAULTS:	return 1;
@@ -1086,7 +1085,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		{
 		case WorldItem.ZONE:		return w.zones ().at (it.index).label;
 		case WorldItem.FAREA:		return w.fareas ().at (it.index).label;
-		case WorldItem.PATH:		return "P" + it.index + " (" + fmt (w.path ().at (it.index).x ()) + ", " + fmt (w.path ().at (it.index).y ()) + ")";
+		case WorldItem.PATH:		return "P" + it.index + " (" + fmt (w.path ().get (it.index).x ()) + ", " + fmt (w.path ().get (it.index).y ()) + ")";
 		case WorldItem.WALL:		return "LINE_" + it.index;
 		case WorldItem.OBJECT:
 		{
@@ -1094,10 +1093,10 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			return "OBJECT_" + it.index + "  [" + o.iconId + "]" + ((o.shape != null) ? " " + shortName (o.shape) : "");
 		}
 		case WorldItem.CONNECTOR:		return w.connectors ().at (it.index).label;
-		case WorldItem.BEACON:		return w.beacons ().at (it.index).label;
-		case WorldItem.CBEACON:		return w.cbeacons ().at (it.index).label;
-		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).label;
-		case WorldItem.DOCK:		return w.docks ().at (it.index).label;
+		case WorldItem.BEACON:		return w.beacons ().get (it.index).label;
+		case WorldItem.CBEACON:		return w.cbeacons ().get (it.index).label;
+		case WorldItem.WAYPOINT:	return w.wps ().get (it.index).label;
+		case WorldItem.DOCK:		return w.docks ().get (it.index).label;
 		case WorldItem.START:		{ WMStart st = w.start (it.index); return "START_" + (it.index + 1) + " (" + fmt (st.x ()) + ", " + fmt (st.y ()) + ", " + fmt (Math.toDegrees (st.orientation)) + "º)"; }
 		case WorldItem.ICON:
 		{
@@ -1161,10 +1160,10 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.ZONE:		return w.zones ().at (it.index).label;
 		case WorldItem.FAREA:		return w.fareas ().at (it.index).label;
 		case WorldItem.CONNECTOR:		return w.connectors ().at (it.index).label;
-		case WorldItem.BEACON:		return w.beacons ().at (it.index).label;
-		case WorldItem.CBEACON:		return w.cbeacons ().at (it.index).label;
-		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).label;
-		case WorldItem.DOCK:		return w.docks ().at (it.index).label;
+		case WorldItem.BEACON:		return w.beacons ().get (it.index).label;
+		case WorldItem.CBEACON:		return w.cbeacons ().get (it.index).label;
+		case WorldItem.WAYPOINT:	return w.wps ().get (it.index).label;
+		case WorldItem.DOCK:		return w.docks ().get (it.index).label;
 		case WorldItem.ICON:		return w.icons ().at (it.index).label;
 		}
 		return null;
@@ -1278,31 +1277,31 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	static public WorldItem addWaypoint (World w, double x, double y)
 	{
 		w.wps ().add (new WMWaypoint (new Position (x, y, 0.0), uniqueLabel (w, "wp")));
-		return new WorldItem (WorldItem.WAYPOINT, w.wps ().n () - 1);
+		return new WorldItem (WorldItem.WAYPOINT, w.wps ().size () - 1);
 	}
 
 	static public WorldItem addDock (World w, double x, double y)
 	{
 		w.docks ().add (new WMDock (new Position (x, y, 0.0, 0.0), uniqueLabel (w, "dock")));
-		return new WorldItem (WorldItem.DOCK, w.docks ().n () - 1);
+		return new WorldItem (WorldItem.DOCK, w.docks ().size () - 1);
 	}
 
 	static public WorldItem addBeacon (World w, double x, double y)
 	{
 		w.beacons ().add (new WMBeacon (uniqueLabel (w, "b"), new Position (x, y, 0.0), 0.2));
-		return new WorldItem (WorldItem.BEACON, w.beacons ().n () - 1);
+		return new WorldItem (WorldItem.BEACON, w.beacons ().size () - 1);
 	}
 
 	static public WorldItem addCBeacon (World w, double x, double y)
 	{
 		w.cbeacons ().add (new WMCBeacon (x, y, 0.0, WMCBeacon.DEF_DIAMETER, WMCBeacon.DEF_HEIGHT, uniqueLabel (w, "cb")));
-		return new WorldItem (WorldItem.CBEACON, w.cbeacons ().n () - 1);
+		return new WorldItem (WorldItem.CBEACON, w.cbeacons ().size () - 1);
 	}
 
 	static public WorldItem addPathPoint (World w, double x, double y)
 	{
 		w.path ().add (new Point3 (x, y, 0.0));
-		return new WorldItem (WorldItem.PATH, w.path ().n () - 1);
+		return new WorldItem (WorldItem.PATH, w.path ().size () - 1);
 	}
 
 	static public boolean remove (World w, WorldItem it)
@@ -1380,7 +1379,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			}
 			return d;
 		}
-		case WorldItem.PATH:		return w.path ().at (it.index).distance (x, y);
+		case WorldItem.PATH:		return w.path ().get (it.index).distance (x, y);
 		case WorldItem.WALL:		return segDist (w.walls ().at (it.index).edge, x, y);
 		case WorldItem.OBJECT:
 		{
@@ -1396,16 +1395,16 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.BEACON:
 		{
-			WMBeacon	b = w.beacons ().at (it.index);
+			WMBeacon	b = w.beacons ().get (it.index);
 			return Math.min (b.pos.distance (x, y), segDist (b.getLine (), x, y));
 		}
 		case WorldItem.CBEACON:
 		{
-			WMCBeacon	b = w.cbeacons ().at (it.index);
+			WMCBeacon	b = w.cbeacons ().get (it.index);
 			return Math.max (0.0, b.pos.distance (x, y) - b.radius ());
 		}
-		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).pos.distance (x, y);
-		case WorldItem.DOCK:		return w.docks ().at (it.index).pos.distance (x, y);
+		case WorldItem.WAYPOINT:	return w.wps ().get (it.index).pos.distance (x, y);
+		case WorldItem.DOCK:		return w.docks ().get (it.index).pos.distance (x, y);
 		case WorldItem.START:		return Math.hypot (w.start (it.index).x () - x, w.start (it.index).y () - y);
 		}
 		return Double.MAX_VALUE;
@@ -1455,7 +1454,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			break;
 		}
 		case WorldItem.FAREA:		w.fareas ().at (it.index).polygon.translate (dx, dy);	break;
-		case WorldItem.PATH:		w.path ().at (it.index).add (dx, dy);					break;
+		case WorldItem.PATH:		w.path ().get (it.index).add (dx, dy);					break;
 		case WorldItem.WALL:		moveLine (w.walls ().at (it.index).edge, dx, dy);	w.walls ().recomputeBounds ();	break;
 		case WorldItem.OBJECT:
 		{
@@ -1472,25 +1471,25 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.BEACON:
 		{
-			Position	p = w.beacons ().at (it.index).pos;
+			Position	p = w.beacons ().get (it.index).pos;
 			p.x (p.x () + dx);	p.y (p.y () + dy);
 			break;
 		}
 		case WorldItem.CBEACON:
 		{
-			Point3		p = w.cbeacons ().at (it.index).pos;
+			Point3		p = w.cbeacons ().get (it.index).pos;
 			p.x (p.x () + dx);	p.y (p.y () + dy);
 			break;
 		}
 		case WorldItem.WAYPOINT:
 		{
-			Position	p = w.wps ().at (it.index).pos;
+			Position	p = w.wps ().get (it.index).pos;
 			p.x (p.x () + dx);	p.y (p.y () + dy);
 			break;
 		}
 		case WorldItem.DOCK:
 		{
-			Position	p = w.docks ().at (it.index).pos;
+			Position	p = w.docks ().get (it.index).pos;
 			p.x (p.x () + dx);	p.y (p.y () + dy);
 			break;
 		}
@@ -1527,7 +1526,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			for (int i = 0; i < p.npoints; i++)		h[i] = new Point2 (p.xpoints[i], p.ypoints[i]);
 			return h;
 		}
-		case WorldItem.PATH:		return new Point2[] { new Point2 (w.path ().at (it.index)) };
+		case WorldItem.PATH:		return new Point2[] { new Point2 (w.path ().get (it.index)) };
 		case WorldItem.WALL:
 		{
 			Line2	l = w.walls ().at (it.index).edge;
@@ -1545,22 +1544,22 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.BEACON:
 		{
-			WMBeacon	b = w.beacons ().at (it.index);
+			WMBeacon	b = w.beacons ().get (it.index);
 			return new Point2[] { new Point2 (b.pos.x (), b.pos.y ()), new Point2 (b.getLine ().dest ()) };
 		}
 		case WorldItem.CBEACON:
 		{
-			WMCBeacon	b = w.cbeacons ().at (it.index);
+			WMCBeacon	b = w.cbeacons ().get (it.index);
 			return new Point2[] { new Point2 (b.pos), new Point2 (b.pos.x () + b.radius (), b.pos.y ()) };
 		}
 		case WorldItem.WAYPOINT:
 		{
-			Position	p = w.wps ().at (it.index).pos;
+			Position	p = w.wps ().get (it.index).pos;
 			return new Point2[] { new Point2 (p.x (), p.y ()), arrow (p.x (), p.y (), p.alpha ()) };
 		}
 		case WorldItem.DOCK:
 		{
-			Position	p = w.docks ().at (it.index).pos;
+			Position	p = w.docks ().get (it.index).pos;
 			return new Point2[] { new Point2 (p.x (), p.y ()), arrow (p.x (), p.y (), p.alpha ()) };
 		}
 		case WorldItem.START:		{ WMStart st = w.start (it.index); return new Point2[] { new Point2 (st.x (), st.y ()), arrow (st.x (), st.y (), st.orientation) }; }
@@ -1595,7 +1594,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if ((h >= 0) && (h < p.npoints)) { p.xpoints[h] = x; p.ypoints[h] = y; }
 			break;
 		}
-		case WorldItem.PATH:		w.path ().at (it.index).set (x, y);		break;
+		case WorldItem.PATH:		w.path ().get (it.index).set (x, y);		break;
 		case WorldItem.WALL:
 		{
 			Line2	l = w.walls ().at (it.index).edge;
@@ -1621,7 +1620,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.BEACON:
 		{
-			WMBeacon	b = w.beacons ().at (it.index);
+			WMBeacon	b = w.beacons ().get (it.index);
 			if (h == 0)		{ b.pos.x (x);	b.pos.y (y); }
 			else
 			{
@@ -1632,7 +1631,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.CBEACON:
 		{
-			WMCBeacon	b = w.cbeacons ().at (it.index);
+			WMCBeacon	b = w.cbeacons ().get (it.index);
 			if (h == 0)		{ b.pos.x (x); b.pos.y (y); }
 			else			b.diameter = 2.0 * Math.max (0.005, b.pos.distance (x, y));
 			break;
@@ -1640,7 +1639,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.WAYPOINT:
 		case WorldItem.DOCK:
 		{
-			Position	p = (it.kind == WorldItem.WAYPOINT) ? w.wps ().at (it.index).pos : w.docks ().at (it.index).pos;
+			Position	p = (it.kind == WorldItem.WAYPOINT) ? w.wps ().get (it.index).pos : w.docks ().get (it.index).pos;
 			if (h == 0)		{ p.x (x);	p.y (y); }
 			else			p.alpha (Math.atan2 (y - p.y (), x - p.x ()));
 			break;
@@ -1715,14 +1714,14 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			for (int i = 0; i < p.npoints; i++)		z += p.zpoints[i];
 			return (p.npoints > 0) ? z / p.npoints : 0.0;
 		}
-		case WorldItem.PATH:		return WMPath.z (w.path ().at (it.index));
+		case WorldItem.PATH:		return World.z (w.path ().get (it.index));
 		case WorldItem.WALL:		return Math.min (w.walls ().at (it.index).edge.z1 (), w.walls ().at (it.index).edge.z2 ());
 		case WorldItem.OBJECT:		return w.objects ().at (it.index).pos.z ();
 		case WorldItem.CONNECTOR:		return Math.min (w.connectors ().at (it.index).edge.z1 (), w.connectors ().at (it.index).edge.z2 ());
-		case WorldItem.BEACON:		return w.beacons ().at (it.index).pos.z ();
-		case WorldItem.CBEACON:		return w.cbeacons ().at (it.index).pos.z ();
-		case WorldItem.WAYPOINT:	return w.wps ().at (it.index).pos.z ();
-		case WorldItem.DOCK:		return w.docks ().at (it.index).pos.z ();
+		case WorldItem.BEACON:		return w.beacons ().get (it.index).pos.z ();
+		case WorldItem.CBEACON:		return w.cbeacons ().get (it.index).pos.z ();
+		case WorldItem.WAYPOINT:	return w.wps ().get (it.index).pos.z ();
+		case WorldItem.DOCK:		return w.docks ().get (it.index).pos.z ();
 		case WorldItem.START:		return w.start (it.index).z ();
 		}
 		return 0.0;
@@ -1789,10 +1788,10 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.PATH:
 		{
-			Point2	p = w.path ().at (it.index);
+			Point2	p = w.path ().get (it.index);
 			if (name.equals ("x"))			return fmt (p.x ());
 			if (name.equals ("y"))			return fmt (p.y ());
-			if (name.equals ("z"))			return fmt (WMPath.z (p));
+			if (name.equals ("z"))			return fmt (World.z (p));
 			break;
 		}
 		case WorldItem.WALL:
@@ -1852,7 +1851,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.BEACON:
 		{
-			WMBeacon	b = w.beacons ().at (it.index);
+			WMBeacon	b = w.beacons ().get (it.index);
 			if (name.equals ("label"))		return b.label;
 			if (name.equals ("x"))			return fmt (b.pos.x ());
 			if (name.equals ("y"))			return fmt (b.pos.y ());
@@ -1864,7 +1863,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.CBEACON:
 		{
-			WMCBeacon	b = w.cbeacons ().at (it.index);
+			WMCBeacon	b = w.cbeacons ().get (it.index);
 			if (name.equals ("label"))		return b.label;
 			if (name.equals ("x"))			return fmt (b.pos.x ());
 			if (name.equals ("y"))			return fmt (b.pos.y ());
@@ -1875,7 +1874,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.WAYPOINT:
 		{
-			WMWaypoint	p = w.wps ().at (it.index);
+			WMWaypoint	p = w.wps ().get (it.index);
 			if (name.equals ("label"))		return p.label;
 			if (name.equals ("x"))			return fmt (p.pos.x ());
 			if (name.equals ("y"))			return fmt (p.pos.y ());
@@ -1885,7 +1884,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.DOCK:
 		{
-			WMDock	d = w.docks ().at (it.index);
+			WMDock	d = w.docks ().get (it.index);
 			if (name.equals ("label"))		return d.label;
 			if (name.equals ("x"))			return fmt (d.pos.x ());
 			if (name.equals ("y"))			return fmt (d.pos.y ());
@@ -1958,7 +1957,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.PATH:
 		{
-			Point2	p = w.path ().at (it.index);
+			Point2	p = w.path ().get (it.index);
 			if (name.equals ("x"))				p.x (num (value));
 			else if (name.equals ("y"))			p.y (num (value));
 			else if (name.equals ("z"))			{ if (p instanceof Point3) ((Point3) p).z (num (value)); }
@@ -2039,7 +2038,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.BEACON:
 		{
-			WMBeacon	b = w.beacons ().at (it.index);
+			WMBeacon	b = w.beacons ().get (it.index);
 			if (name.equals ("label"))			b.label = checkLabel (w, it, value);
 			else if (name.equals ("x"))			b.pos.x (num (value));
 			else if (name.equals ("y"))			b.pos.y (num (value));
@@ -2051,7 +2050,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.CBEACON:
 		{
-			WMCBeacon	b = w.cbeacons ().at (it.index);
+			WMCBeacon	b = w.cbeacons ().get (it.index);
 			if (name.equals ("label"))			b.label = checkLabel (w, it, value);
 			else if (name.equals ("x"))			b.pos.x (num (value));
 			else if (name.equals ("y"))			b.pos.y (num (value));
@@ -2062,7 +2061,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.WAYPOINT:
 		{
-			WMWaypoint	p = w.wps ().at (it.index);
+			WMWaypoint	p = w.wps ().get (it.index);
 			if (name.equals ("label"))			p.label = checkLabel (w, it, value);
 			else if (name.equals ("x"))			p.pos.x (num (value));
 			else if (name.equals ("y"))			p.pos.y (num (value));
@@ -2072,7 +2071,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.DOCK:
 		{
-			WMDock	d = w.docks ().at (it.index);
+			WMDock	d = w.docks ().get (it.index);
 			if (name.equals ("label"))			d.label = checkLabel (w, it, value);
 			else if (name.equals ("x"))			d.pos.x (num (value));
 			else if (name.equals ("y"))			d.pos.y (num (value));

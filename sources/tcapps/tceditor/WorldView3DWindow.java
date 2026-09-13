@@ -391,18 +391,18 @@ public class WorldView3DWindow extends JFrame
 		}
 
 		// path
-		if (world.path ().n () >= 2)
+		if (world.path ().size () >= 2)
 		{
-			Point2[]	pts = world.path ().points ();
+			Point2[]	pts = world.path ().toArray (new Point2[0]);
 			bg.addChild (polyline (pts, false, 0.03, C_PATH, 3f));
 		}
-		for (i = 0; i < world.path ().n (); i++)
-			bg.addChild (sphere (world.path ().at (i).x (), world.path ().at (i).y (), pz (world.path ().at (i)) + 0.03, 0.06, C_PATH));
+		for (i = 0; i < world.path ().size (); i++)
+			bg.addChild (sphere (world.path ().get (i).x (), world.path ().get (i).y (), pz (world.path ().get (i)) + 0.03, 0.06, C_PATH));
 
 		// strip beacons: thin vertical plates
-		for (i = 0; i < world.beacons ().n (); i++)
+		for (i = 0; i < world.beacons ().size (); i++)
 		{
-			WMBeacon		b = world.beacons ().at (i);
+			WMBeacon		b = world.beacons ().get (i);
 			Transform3D		t = new Transform3D ();
 			t.rotZ (b.pos.alpha ());
 			double			h = Math.max (0.02, b.height);
@@ -413,9 +413,9 @@ public class WorldView3DWindow extends JFrame
 		}
 
 		// cylindrical beacons
-		for (i = 0; i < world.cbeacons ().n (); i++)
+		for (i = 0; i < world.cbeacons ().size (); i++)
 		{
-			WMCBeacon		b = world.cbeacons ().at (i);
+			WMCBeacon		b = world.cbeacons ().get (i);
 			bg.addChild (cylinder (b.pos.x (), b.pos.y (), b.pos.z (), Math.max (0.01, b.radius ()), Math.max (0.02, b.height), C_BEACON, 0f));
 		}
 

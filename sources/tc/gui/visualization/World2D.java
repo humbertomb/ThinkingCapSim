@@ -212,10 +212,10 @@ public class World2D extends Object2D
 		x1		= 0.0;
 		y1		= 0.0;
 		
-		for (i = 0; i < map.path().n(); i++)
+		for (i = 0; i < map.path().size(); i++)
 		{
-			x2	= map.path().at(i).x ();
-			y2 	= map.path().at(i).y ();
+			x2	= map.path().get(i).x ();
+			y2 	= map.path().get(i).y ();
 			
 			if (!first)
 				model.addRawLine (x1, y1, x2, y2, Color.CYAN);
@@ -232,16 +232,16 @@ public class World2D extends Object2D
 		int i;
 		double ra,x1,y1;	
 		
-		for (i = 0; i < map.docks().n(); i++)
+		for (i = 0; i < map.docks().size(); i++)
 		{
-			x1 = map.docks().at(i).pos.x();
-			y1 = map.docks().at(i).pos.y();
-			ra = map.docks().at(i).getAng() - Math.PI*0.5;
+			x1 = map.docks().get(i).pos.x();
+			y1 = map.docks().get(i).pos.y();
+			ra = map.docks().get(i).getAng() - Math.PI*0.5;
 			model.addRawTransRotLine (-map.D_LENGHT,0,map.D_LENGHT, 0, x1, y1, ra, Color.BLUE);
 			model.addRawTransRotLine (-map.D_LENGHT,0,-map.D_LENGHT,map.D_LENGHT, x1, y1, ra, Color.BLUE);
 			model.addRawTransRotLine (map.D_LENGHT,0,map.D_LENGHT,map.D_LENGHT, x1, y1, ra, Color.BLUE);
 			if (drawlabels)
-				model.addRawText (x1, y1, map.docks().at(i).label, Color.BLUE);				
+				model.addRawText (x1, y1, map.docks().get(i).label, Color.BLUE);				
 		}
 	}
 	
@@ -281,15 +281,15 @@ public class World2D extends Object2D
 		int i;
 		double x1,y1;
 		
-		for (i = 0; i < map.wps().n(); i++)
+		for (i = 0; i < map.wps().size(); i++)
 		{
-			x1 = map.wps().at(i).pos.x();
-			y1 = map.wps().at(i).pos.y();	
+			x1 = map.wps().get(i).pos.x();
+			y1 = map.wps().get(i).pos.y();	
 			
 			model.addRawCircle(x1, y1, 0.1, Color.ORANGE);
-			model.addRawArrow (x1, y1, map.G_LENGHT, map.wps().at(i).pos.alpha(), Color.ORANGE);
+			model.addRawArrow (x1, y1, map.G_LENGHT, map.wps().get(i).pos.alpha(), Color.ORANGE);
 			if (drawlabels)
-				model.addRawText (x1+0.25, y1+0.25, map.wps().at(i).label, Color.ORANGE);	
+				model.addRawText (x1+0.25, y1+0.25, map.wps().get(i).label, Color.ORANGE);	
 		} 
 	}
 	
@@ -352,17 +352,17 @@ public class World2D extends Object2D
 		double x1,y1,x2,y2;
 		Line2 l; 
 		
-		for (i = 0; i < map.beacons().n(); i++)
+		for (i = 0; i < map.beacons().size(); i++)
 		{
-			l = map.beacons().at(i).getLine();
+			l = map.beacons().get(i).getLine();
 			x1 = l.orig().x();
 			y1 = l.orig().y();
 			x2 = l.dest().x();
 			y2 = l.dest().y();
 			
 			model.addRawLine (l, Color.RED);
-			model.addRawText (x1, y1, map.beacons().at(i).label, Color.RED);
-			model.addRawArrow (x2, y2, 0.2, map.beacons().at(i).getAng() + (0.5 * Math.PI), Color.RED);
+			model.addRawText (x1, y1, map.beacons().get(i).label, Color.RED);
+			model.addRawArrow (x2, y2, 0.2, map.beacons().get(i).getAng() + (0.5 * Math.PI), Color.RED);
 		}
 	}
 	
@@ -370,9 +370,9 @@ public class World2D extends Object2D
 	{
 		int i;
 		
-		for (i = 0; i < map.cbeacons().n(); i++)
+		for (i = 0; i < map.cbeacons().size(); i++)
 		{
-			WMCBeacon b = map.cbeacons().at(i);
+			WMCBeacon b = map.cbeacons().get(i);
 			model.addRawCircle (b.x(), b.y(), b.radius(), Color.RED);
 			model.addRawText (b.x(), b.y(), b.label, Color.RED);
 		}

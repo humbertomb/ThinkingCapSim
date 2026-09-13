@@ -522,8 +522,8 @@ public class MultiRobotPanel extends MultiRobotPanelInterf //implements GUIMonit
 
 		if (worldmap != null)
 		{
-			for (int i=0; i < worldmap.docks().n(); i++)
-				gotoCB.addItem (worldmap.docks().at(i).label);
+			for (int i=0; i < worldmap.docks().size(); i++)
+				gotoCB.addItem (worldmap.docks().get(i).label);
 			
 			for (int i=0; i < worldmap.zones().n(); i++)
 				gotoCB.addItem (worldmap.zones().at(i).label);

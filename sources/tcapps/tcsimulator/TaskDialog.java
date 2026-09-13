@@ -118,8 +118,8 @@ public class TaskDialog extends JDialog
 	/** Dock labels of a world, in order (the places a plan can refer to). */
 	static public String[] placesOf (World w)
 	{
-		String[]	p = new String[w.docks ().n ()];
-		for (int i = 0; i < p.length; i++)		p[i] = w.docks ().at (i).label;
+		String[]	p = new String[w.docks ().size ()];
+		for (int i = 0; i < p.length; i++)		p[i] = w.docks ().get (i).label;
 		return p;
 	}
 
@@ -133,14 +133,14 @@ public class TaskDialog extends JDialog
 		if (world == null)				return places;
 		boolean			material = (action != null) && (action.equalsIgnoreCase ("load") || action.equalsIgnoreCase ("unload"));
 		List<String>	sel = new ArrayList<String> ();
-		for (int i = 0; i < world.docks ().n (); i++)
+		for (int i = 0; i < world.docks ().size (); i++)
 		{
-			WMDock	d = world.docks ().at (i);
+			WMDock	d = world.docks ().get (i);
 			if (!material || d.accepts (action))		sel.add (d.label);
 		}
 		if (!material)
 		{
-			for (int i = 0; i < world.wps ().n (); i++)			sel.add (world.wps ().at (i).label);
+			for (int i = 0; i < world.wps ().size (); i++)			sel.add (world.wps ().get (i).label);
 			for (int i = 0; i < world.zones ().n (); i++)		sel.add (world.zones ().at (i).label);
 		}
 		return sel.toArray (new String[sel.size ()]);

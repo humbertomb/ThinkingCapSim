@@ -41,7 +41,7 @@ public final class DockingPath
 			for (int j = 0; j < n.nList (); j++)
 			{
 				String	label = g.getNode (n.getList (j)).getLabel ();
-				if ((world.docks ().at (label) != null) && !docks.contains (label))		docks.add (label);
+				if ((world.dock (label) != null) && !docks.contains (label))		docks.add (label);
 			}
 		}
 		return docks;
