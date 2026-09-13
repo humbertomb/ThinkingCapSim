@@ -44,7 +44,8 @@ import tcapps.tceditor.ToolButtons;
 import tcapps.tceditor.ToolIcon;
 import tcapps.tceditor.View3DController;
 import tcapps.tceditor.WorldCanvas;
-import tcapps.tceditor.WorldEdit;
+import tcapps.tceditor.WorldEditor;
+import tcapps.tceditor.WorldEditorDialog;
 import tcapps.tceditor.WorldItem;
 import tcapps.tcsimulator.simulator.Simulator;
 import tcapps.tcsimulator.simulator.SimulatorDesc;
@@ -103,7 +104,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		super (TITLE);
 		deploy	= DeployArch.create ();
-		world	= WorldEdit.newWorld ();
+		world	= WorldEditor.newWorld ();
 
 		buildGUI ();
 		updateTitle ();
@@ -168,6 +169,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		tb.add (ToolButtons.flatButton (openArchAction ()));
 		tb.add (ToolButtons.flatButton (openWorldAction ()));
 		tb.addSeparator ();
+		tb.add (ToolButtons.flatButton (editWorldAction ()));
 		tb.add (ToolButtons.flatButton (editArchAction ()));
 		tb.add (ToolButtons.flatButton (tasksAction ()));
 		tb.addSeparator ();
@@ -208,6 +210,11 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	private Action openWorldAction ()
 	{
 		return ToolButtons.action ("Change World...", ToolIcon.WORLD, "Change the world of the architecture  [Ctrl+W]", new Runnable () { public void run () { loadWorld (); } });
+	}
+
+	private Action editWorldAction ()
+	{
+		return ToolButtons.action ("Edit World...", ToolIcon.EDIT_WORLD, "Edit the world of the deployment", new Runnable () { public void run () { editWorld (); } });
 	}
 
 	private Action editArchAction ()
@@ -694,7 +701,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		World	w;
 		if (f == null)
-			w = WorldEdit.newWorld ();
+			w = WorldEditor.newWorld ();
 		else
 		{
 			try
@@ -714,6 +721,53 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		canvas.zoomToFit ();
 		view3d.worldChanged ();
 		return true;
+	}
+
+	/**
+	 * Opens the world editor on the current world (a running execution is
+	 * terminated first). The edited world replaces the one shown and is written
+	 * back to its file (or to a new file chosen by the user when the deployment
+	 * has none).
+	 */
+	public void editWorld ()
+	{
+		if (world == null)				return;
+		terminate ();
+		WorldEditorDialog	dlg = new WorldEditorDialog (this, world, worldFile);
+		World				edited = dlg.showDialog ();
+		if (edited == null)				return;
+
+		File	f = worldFile;
+		if (f == null)
+		{
+			JFileChooser	fc = chooser (null, MAPS_DIR, "world", "World maps (*.world)");
+			fc.setDialogTitle ("Save World As");
+			if (fc.showSaveDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+			f = fc.getSelectedFile ();
+			if (!f.getName ().toLowerCase ().endsWith (World.SUFFIX))
+				f = new File (f.getParentFile (), f.getName () + World.SUFFIX);
+		}
+		try
+		{
+			edited.toFile (f.getPath ());
+		} catch (Exception e)
+		{
+			e.printStackTrace ();
+			JOptionPane.showMessageDialog (this, "Cannot save world " + f.getName () + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		world		= edited;
+		worldFile	= f;
+		monitorPanel.setWorld (world);
+		canvas.setWorld (world);
+		view3d.worldChanged ();
+		if (deploy.getWorldFile () == null || !new File (deploy.getWorldFile ()).equals (f))
+		{
+			deploy.setWorldFile (relativePath (f));
+			worldModified	= true;
+			updateTitle ();
+		}
+		statusBar.setStatus ("World saved to " + f.getPath ());
 	}
 
 	/** Path relative to the working directory when possible (as used in the .arch files), with '/' separators. */

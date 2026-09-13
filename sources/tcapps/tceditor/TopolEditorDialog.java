@@ -7,7 +7,6 @@ package tcapps.tceditor;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -76,9 +75,9 @@ public class TopolEditorDialog extends JDialog implements TopolCanvas.Listener
 	protected JPanel				propPanel;
 	protected StatusBar				statusBar;
 
-	public TopolEditorDialog (Frame owner, World world)
+	public TopolEditorDialog (java.awt.Window owner, World world)
 	{
-		super (owner, TITLE, true);
+		super (owner, TITLE, ModalityType.APPLICATION_MODAL);
 		this.world		= world;
 		this.snapshot	= tc.shared.world.WorldJson.toText (world.topology ().toJson ());
 

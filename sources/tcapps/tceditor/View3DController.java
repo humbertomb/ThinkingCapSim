@@ -9,10 +9,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 
 import tc.shared.world.World;
 
@@ -24,13 +24,13 @@ import tc.shared.world.World;
  */
 public class View3DController
 {
-	protected JFrame				owner;
+	protected java.awt.Component	owner;					// window or component whose window the 3D view sits beside
 	protected WorldCanvas			canvas;
 	protected WorldView3DWindow		view3d;
 	protected JToggleButton			button;
 	protected JCheckBoxMenuItem		item;
 
-	public View3DController (JFrame owner, WorldCanvas canvas)
+	public View3DController (java.awt.Component owner, WorldCanvas canvas)
 	{
 		this.owner	= owner;
 		this.canvas	= canvas;
@@ -81,8 +81,9 @@ public class View3DController
 				});
 				view3d.setSize (900, 700);
 				// place it beside the owner when there is room
-				Rectangle	r = owner.getBounds ();
-				Rectangle	scr = owner.getGraphicsConfiguration ().getBounds ();
+				java.awt.Window	win = (owner instanceof java.awt.Window) ? (java.awt.Window) owner : SwingUtilities.getWindowAncestor (owner);
+				Rectangle	r = (win != null) ? win.getBounds () : new Rectangle (0, 0, 0, 0);
+				Rectangle	scr = ((win != null) ? win : owner).getGraphicsConfiguration ().getBounds ();
 				if (r.x + r.width + 900 <= scr.x + scr.width)	view3d.setLocation (r.x + r.width, r.y);
 				else											view3d.setLocation (r.x + 60, r.y + 60);
 			} catch (Throwable e)
@@ -91,7 +92,7 @@ public class View3DController
 				view3d = null;
 				setToggles (false);
 				JOptionPane.showMessageDialog (owner, "The 3D view cannot be created. Check that Java 3D and JOGL (jarlibs/jsdn_java3d.jar, jarlibs/jogl/*.jar) are in the classpath.\n\n" + e,
-						owner.getTitle (), JOptionPane.ERROR_MESSAGE);
+						"3D View", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 		}

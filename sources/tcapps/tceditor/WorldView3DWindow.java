@@ -297,9 +297,9 @@ public class WorldView3DWindow extends JFrame
 		if (isVisible ())
 		{
 			updateSelection ();
-			if (followCB.isSelected () && WorldEdit.valid (world, item))
+			if (followCB.isSelected () && WorldEditor.valid (world, item))
 			{
-				Point2[]	hs = WorldEdit.handles (world, item);
+				Point2[]	hs = WorldEditor.handles (world, item);
 				if (hs.length > 0)		scene.setFocus (hs[0].x (), hs[0].y ());
 			}
 		}
@@ -307,7 +307,7 @@ public class WorldView3DWindow extends JFrame
 
 	public void fitView ()
 	{
-		double[]	b = WorldEdit.bounds (world);
+		double[]	b = WorldEditor.bounds (world);
 		if (b == null)
 			b = new double[] { world.start_x () - 5, world.start_y () - 5, world.start_x () + 5, world.start_y () + 5 };
 		scene.fit (b);
@@ -355,7 +355,7 @@ public class WorldView3DWindow extends JFrame
 			if (needsFit)		fitView ();
 
 			int		n = 0;
-			for (int k = 0; k < WorldItem.DEFAULTS; k++)	n += WorldEdit.count (world, k);
+			for (int k = 0; k < WorldItem.DEFAULTS; k++)	n += WorldEditor.count (world, k);
 			statusLabel.setText (n + " elements   |   left drag: " + modeName () + ", right drag: rotate, wheel: zoom, keys: WASD move, R/F zoom, G/J/H/Y rotate, 0 fit"
 					+ "   |   rebuilt in " + (System.currentTimeMillis () - t0) + " ms");
 		} catch (Throwable e)
@@ -434,7 +434,7 @@ public class WorldView3DWindow extends JFrame
 
 	private BranchGroup createFloor ()
 	{
-		double[]	b = WorldEdit.bounds (world);
+		double[]	b = WorldEditor.bounds (world);
 		if (b == null)			return null;
 		double		m = 1.0;		// margin
 		double		w = (b[2] - b[0]) / 2.0 + m, h = (b[3] - b[1]) / 2.0 + m;
@@ -455,12 +455,12 @@ public class WorldView3DWindow extends JFrame
 			selBranch.detach ();
 			selBranch = null;
 		}
-		if (!WorldEdit.valid (world, selection) || (selection.kind == WorldItem.DEFAULTS) || (selection.kind == WorldItem.ICON))		return;
+		if (!WorldEditor.valid (world, selection) || (selection.kind == WorldItem.DEFAULTS) || (selection.kind == WorldItem.ICON))		return;
 
 		BranchGroup		bg = new BranchGroup ();
 		bg.setCapability (BranchGroup.ALLOW_DETACH);
-		Point2[]		hs = WorldEdit.handles (world, selection);
-		double			base = WorldEdit.elevation (world, selection);		// handles are planar: lift them to the element
+		Point2[]		hs = WorldEditor.handles (world, selection);
+		double			base = WorldEditor.elevation (world, selection);		// handles are planar: lift them to the element
 		double			z = base + 0.08;
 
 		switch (selection.kind)
@@ -742,7 +742,7 @@ public class WorldView3DWindow extends JFrame
 	/** Stand-alone test: java tcapps.tceditor.WorldView3DWindow file.world */
 	static public void main (String[] args) throws Exception
 	{
-		World	w = (args.length > 0) ? new World (args[0]) : WorldEdit.newWorld ();
+		World	w = (args.length > 0) ? new World (args[0]) : WorldEditor.newWorld ();
 		WorldView3DWindow	win = new WorldView3DWindow (w, new Runnable () { public void run () { System.exit (0); } });
 		win.setVisible (true);
 	}

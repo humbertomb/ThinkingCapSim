@@ -58,6 +58,7 @@ public class ToolIcon implements Icon
 	static public final int		NODE		= 43;		// a single node
 	static public final int		ARC			= 44;		// arrow between two nodes
 	static public final int		SUBGRAPH	= 45;		// node with a small graph below (open its level)
+	static public final int		EDIT_WORLD	= 46;		// map with a pencil (edit the world)
 
 	protected int				type;
 	protected int				size;
@@ -340,6 +341,22 @@ public class ToolIcon implements Icon
 			g.drawOval (2, 13, 6, 6);	g.drawOval (14, 3, 6, 6);
 			g.drawLine (7, 13, 14, 8);
 			g.drawLine (14, 8, 10, 9);	g.drawLine (14, 8, 13, 12);
+			break;
+		case EDIT_WORLD:	// folded map with a pencil over it
+			g.setColor (new Color (255, 248, 220));
+			g.fillPolygon (new int[] { 2, 8, 14, 20, 20, 14, 8, 2 }, new int[] { 5, 3, 5, 3, 17, 19, 17, 19 }, 8);
+			g.setColor (fg);
+			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawPolygon (new int[] { 2, 8, 14, 20, 20, 14, 8, 2 }, new int[] { 5, 3, 5, 3, 17, 19, 17, 19 }, 8);
+			g.setStroke (new BasicStroke (1f));
+			g.drawLine (8, 3, 8, 17);	g.drawLine (14, 5, 14, 19);
+			// pencil
+			g.setColor (new Color (200, 40, 40));
+			g.setStroke (new BasicStroke (2.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawLine (9, 15, 18, 6);
+			g.setColor (fg);
+			g.setStroke (new BasicStroke (1f));
+			g.drawLine (9, 15, 7, 17);
 			break;
 		case SUBGRAPH:		// node with a small graph hanging below it
 			g.setStroke (new BasicStroke (1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));

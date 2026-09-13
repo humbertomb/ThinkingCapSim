@@ -121,7 +121,7 @@ public class ColorCellEditor extends AbstractCellEditor implements TableCellEdit
 	{
 		try
 		{
-			WColor	w = WorldEdit.parseColor (text);
+			WColor	w = WorldEditor.parseColor (text);
 			return new Color (w.getRed (), w.getGreen (), w.getBlue ());
 		} catch (Exception e)
 		{

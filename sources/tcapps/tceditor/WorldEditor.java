@@ -4,24 +4,63 @@
 
 package tcapps.tceditor;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
+import javax.swing.JTree;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
+
 import devices.pos.Position;
 import tc.shared.world.WMBeacon;
 import tc.shared.world.WMCBeacon;
-import tc.shared.world.WMDock;
 import tc.shared.world.WMConnector;
+import tc.shared.world.WMDock;
 import tc.shared.world.WMFArea;
 import tc.shared.world.WMIcon;
 import tc.shared.world.WMObject;
 import tc.shared.world.WMPath;
+import tc.shared.world.WMStart;
 import tc.shared.world.WMWall;
 import tc.shared.world.WMWaypoint;
 import tc.shared.world.WMZone;
-import tc.shared.world.WMStart;
 import tc.shared.world.World;
 import wucore.utils.color.ColorTool;
 import wucore.utils.color.WColor;
@@ -31,16 +70,963 @@ import wucore.utils.geom.Point3;
 import wucore.utils.geom.Polygon2;
 
 /**
- * Static helpers that let the editor treat every element of a {@link World}
- * uniformly: creation, deletion, hit-testing, dragging (whole element or one of
- * its handles) and a name/value property view. It also provides text snapshots
- * of the whole world, used for undo/redo.
+ * Editor of {@link World} maps: the toolbar of tools, the 2D canvas, the
+ * element tree, the property table and the status bar, together with the
+ * undo/redo history, the file operations and the topology editor. It is a
+ * panel hosted either by {@link WorldEditorWindow} (the stand-alone
+ * application, with the File menu) or by {@link WorldEditorDialog} (edits a
+ * world in memory, without the File menu). The static helpers let the editor
+ * treat every element of a {@link World} uniformly: creation, deletion,
+ * hit-testing, dragging (whole element or one of its handles) and a
+ * name/value property view; the text snapshots of the whole world serve the
+ * undo/redo.
  */
-public final class WorldEdit
+public class WorldEditor extends JPanel implements WorldCanvas.Listener
 {
-	static public final double		ARROW		= 0.5;		// Length of orientation handles (m)
 
-	private WorldEdit () { }
+	private static final long		serialVersionUID = 1L;
+
+	static public final String		TITLE		= "ThinkingCap World Editor";
+	static public final String		MAPS_DIR	= "./conf/maps";
+	static private final int		MAX_UNDO	= 200;
+
+	/* Model */
+	protected World					world;
+	protected File					file;					// current file, null if unsaved
+	protected boolean				dirty		= false;
+
+	/* Undo/redo (text snapshots of the whole world) */
+	protected List<String>			undoStack	= new ArrayList<String> ();
+	protected List<String>			undoNames	= new ArrayList<String> ();
+	protected List<String>			redoStack	= new ArrayList<String> ();
+	protected List<String>			redoNames	= new ArrayList<String> ();
+	protected String				current;				// snapshot of the current state
+
+	/* GUI */
+	protected WorldCanvas			canvas;
+	protected JTree					tree;
+	protected DefaultTreeModel		treeModel;
+	protected DefaultMutableTreeNode	treeRoot;
+	protected JTable				propTable;
+	protected PropertyModel			propModel;
+	protected StatusBar				statusBar;
+	protected JLabel				selLabel;
+	protected JToggleButton[]		toolButtons	= new JToggleButton[14];
+	protected Action				undoAction, redoAction, deleteAction;
+	protected JCheckBoxMenuItem[]	layerItems	= new JCheckBoxMenuItem[WorldItem.NKINDS];
+	protected JCheckBoxMenuItem		gridItem, snapItem, labelsItem;
+	protected boolean				syncing		= false;	// avoids selection feedback loops
+
+	/* 3D view */
+	protected View3DController		view3d;
+	protected Host					host;
+	protected Action				topolAction;			// opens the topology editor (enabled when the world has zones)
+
+	/* ------------------------------------------------------------------ */
+
+	/** What the window or dialog hosting the editor needs to know. */
+	public interface Host
+	{
+		/** The file or the modified state changed (title). */
+		void editorStateChanged (WorldEditor editor);
+	}
+
+	public WorldEditor (World world, File file, Host host)
+	{
+		super (new BorderLayout ());
+		this.world	= world;
+		this.file	= file;
+		this.host	= host;
+		this.current = snapshot (world);
+
+		buildGUI ();
+		refreshAll ();
+		updateTitle ();
+	}
+
+	public World		getWorld ()			{ return world; }
+	public File			getFile ()			{ return file; }
+	public boolean		isDirty ()			{ return dirty; }
+	public WorldCanvas	getCanvas ()		{ return canvas; }
+
+	/** Title of the hosting window: file name (or untitled) and the modified mark. */
+	public String getTitle ()
+	{
+		return ((file == null) ? "untitled" + World.SUFFIX : file.getName ()) + (dirty ? " *" : "");
+	}
+
+	/** Releases the windows the editor owns (the 3D view). */
+	public void dispose ()
+	{
+		view3d.dispose ();
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* GUI construction                                                    */
+	/* ------------------------------------------------------------------ */
+
+	private void buildGUI ()
+	{
+		canvas = new WorldCanvas (world);
+		canvas.setListener (this);
+
+		// --- element tree
+		treeRoot	= new DefaultMutableTreeNode ("World");
+		treeModel	= new DefaultTreeModel (treeRoot);
+		tree		= new JTree (treeModel);
+		tree.setRootVisible (false);
+		tree.setShowsRootHandles (true);
+		tree.getSelectionModel ().setSelectionMode (TreeSelectionModel.SINGLE_TREE_SELECTION);
+		tree.addTreeSelectionListener (new TreeSelectionListener ()
+		{
+			public void valueChanged (TreeSelectionEvent e)
+			{
+				if (syncing)			return;
+				DefaultMutableTreeNode	node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent ();
+				if ((node != null) && (node.getUserObject () instanceof WorldItem))
+				{
+					syncing = true;
+					canvas.setSelection ((WorldItem) node.getUserObject ());
+					syncing = false;
+				}
+			}
+		});
+		JScrollPane		treeScroll = new JScrollPane (tree);
+		treeScroll.setBorder (BorderFactory.createTitledBorder ("Elements"));
+
+		// --- property table
+		propModel	= new PropertyModel ();
+		propTable	= new JTable (propModel)
+		{
+			private static final long	serialVersionUID = 1L;
+			private final FileCellEditor.Renderer	fileRenderer = new FileCellEditor.Renderer ();
+			private final ColorCellEditor.Renderer	colorRenderer = new ColorCellEditor.Renderer ();
+			private final javax.swing.DefaultCellEditor	boolEditor = new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (new String[] { "true", "false" }));
+
+			// file-path properties get a text field with a "..." browse button
+			public javax.swing.table.TableCellEditor getCellEditor (int row, int column)
+			{
+				if (column == 1)
+				{
+					String	name = propModel.nameAt (row);
+					if (name.equals ("shape"))			return FileCellEditor.SHAPE;
+					if (name.endsWith ("texture"))		return FileCellEditor.TEXTURE;
+					if (name.equals ("color"))			return ColorCellEditor.INSTANCE;
+					if (isBooleanProperty (name))	return boolEditor;
+					if (name.equals ("flow") && (propModel.item != null) && (propModel.item.kind == WorldItem.DOCK))
+						return new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (flowNames ()));
+					if (name.equals ("icon") && (propModel.item != null) && (propModel.item.kind == WorldItem.OBJECT))
+					{
+						// choose among the icons defined in the world
+						String[]	labels = new String[world.icons ().n ()];
+						for (int i = 0; i < labels.length; i++)		labels[i] = world.icons ().at (i).label;
+						return new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (labels));
+					}
+				}
+				return super.getCellEditor (row, column);
+			}
+
+			public javax.swing.table.TableCellRenderer getCellRenderer (int row, int column)
+			{
+				if (column == 1)
+				{
+					String	name = propModel.nameAt (row);
+					if (name.equals ("shape") || name.endsWith ("texture"))		return fileRenderer;
+					if (name.equals ("color"))									return colorRenderer;
+				}
+				return super.getCellRenderer (row, column);
+			}
+		};
+		propTable.setRowHeight (22);
+		propTable.getColumnModel ().getColumn (0).setPreferredWidth (90);
+		propTable.getColumnModel ().getColumn (1).setPreferredWidth (200);
+		propTable.putClientProperty ("terminateEditOnFocusLost", Boolean.TRUE);
+		JScrollPane		propScroll = new JScrollPane (propTable);
+		propScroll.setBorder (BorderFactory.createTitledBorder ("Properties"));
+		selLabel	= new JLabel (" ");
+		selLabel.setBorder (BorderFactory.createEmptyBorder (2, 6, 2, 6));
+		JPanel			propPanel = new JPanel (new BorderLayout ());
+		propPanel.add (selLabel, BorderLayout.NORTH);
+		propPanel.add (propScroll, BorderLayout.CENTER);
+
+		JSplitPane		right = new JSplitPane (JSplitPane.VERTICAL_SPLIT, treeScroll, propPanel);
+		right.setResizeWeight (0.55);
+		right.setPreferredSize (new Dimension (320, 600));
+
+		JSplitPane		center = new JSplitPane (JSplitPane.HORIZONTAL_SPLIT, canvas, right);
+		center.setResizeWeight (1.0);
+
+		// --- status bar
+		statusBar	= new StatusBar ();
+		view3d		= new View3DController (this, canvas);
+
+		add (buildToolBar (), BorderLayout.WEST);
+		add (center, BorderLayout.CENTER);
+		add (statusBar, BorderLayout.SOUTH);
+	}
+
+	private JToolBar buildToolBar ()
+	{
+		JToolBar		tb = new JToolBar (JToolBar.VERTICAL);
+		tb.setFloatable (false);
+		ButtonGroup		group = new ButtonGroup ();
+
+		// tooltips name the tool; how to use it is shown in the status bar (right side)
+		addTool (tb, group, WorldCanvas.T_SELECT,	ToolIcon.SELECT,	"Select",				"S");
+		addTool (tb, group, WorldCanvas.T_PAN,		ToolIcon.PAN,		"Pan",					"H");
+		tb.addSeparator ();
+		addTool (tb, group, WorldCanvas.T_WALL,		ToolIcon.WALL,		"Wall",					"W");
+		addTool (tb, group, WorldCanvas.T_ZONE,		ToolIcon.ZONE,		"Zone",					"Z");
+		addTool (tb, group, WorldCanvas.T_FAREA,	ToolIcon.FAREA,		"Forbidden area",		"F");
+		// icons: create a new one (action) and edit the selected object's / icon's (tool)
+		Action	newIcon = new AbstractAction ("New icon", new ToolIcon (ToolIcon.NEW_ICON))
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.newIcon (); }
+		};
+		newIcon.putValue (Action.SHORT_DESCRIPTION, "New icon  [Ctrl+I]");
+		tb.add (ToolButtons.flatButton (newIcon));
+		getInputMap (JComponent.WHEN_IN_FOCUSED_WINDOW).put (KeyStroke.getKeyStroke (KeyEvent.VK_I, Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ()), "newIcon");
+		getActionMap ().put ("newIcon", newIcon);
+		addTool (tb, group, WorldCanvas.T_ICON,		ToolIcon.ICON,		"Edit icon",			"I");
+		toolButtons[WorldCanvas.T_ICON].setEnabled (false);
+		addTool (tb, group, WorldCanvas.T_OBJECT,	ToolIcon.OBJECT,	"Object",				"O");
+		tb.addSeparator ();
+		addTool (tb, group, WorldCanvas.T_CONNECTOR,	ToolIcon.CONNECTOR,	"Connector",			"D");
+		addTool (tb, group, WorldCanvas.T_WAYPOINT,	ToolIcon.WAYPOINT,	"Waypoint",				"P");
+		addTool (tb, group, WorldCanvas.T_DOCK,		ToolIcon.DOCK,		"Dock",					"K");
+		tb.addSeparator ();
+		addTool (tb, group, WorldCanvas.T_BEACON,	ToolIcon.BEACON,	"Strip beacon",			"B");
+		addTool (tb, group, WorldCanvas.T_CBEACON,	ToolIcon.CBEACON,	"Cylindrical beacon",	"C");
+		addTool (tb, group, WorldCanvas.T_PATH,		ToolIcon.PATH,		"Path point",			"T");
+		addTool (tb, group, WorldCanvas.T_START,	ToolIcon.START,		"Start point (one per robot)",	"R");
+		tb.addSeparator ();
+
+		deleteAction = new AbstractAction ("Delete", new ToolIcon (ToolIcon.DELETE))
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.deleteSelection (); }
+		};
+		deleteAction.putValue (Action.SHORT_DESCRIPTION, "Delete  [Del]");
+		tb.add (ToolButtons.flatButton (deleteAction));
+
+		tb.add (ToolButtons.flatButton (ToolButtons.zoomFit (canvas)));
+		tb.add (ToolButtons.flatButton (ToolButtons.zoomIn (canvas)));
+		tb.add (ToolButtons.flatButton (ToolButtons.zoomOut (canvas)));
+
+		// --- topology editor and 3D view toggle, at the bottom of the toolbar
+		tb.add (Box.createVerticalGlue ());
+		tb.addSeparator ();
+		tb.add (ToolButtons.flatButton (topolAction ()));
+		tb.add (view3d.button ());
+
+		toolButtons[WorldCanvas.T_SELECT].setSelected (true);
+		return tb;
+	}
+
+	/** Shows or hides the Java 3D view window. */
+	public void show3D (boolean show)		{ view3d.show (show); }
+
+	/** Opens the editor of the hierarchical topological map of the world (edited in place; an accepted edition is undoable). */
+	public void editTopology ()
+	{
+		World	w = canvas.getWorld ();
+		if ((w == null) || (w.zones ().n () == 0))		return;
+		boolean	created = false;
+		if (!w.hasTopology ())
+		{
+			int	r = JOptionPane.showConfirmDialog (this, "The world map doesn't contain any topology. Create one?", TopolEditorDialog.TITLE, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if (r != JOptionPane.YES_OPTION)		return;
+			w.setTopology (new tclib.planning.htopol.HTopolMap (w));
+			created = true;
+		}
+		TopolEditorDialog	dlg = new TopolEditorDialog (SwingUtilities.getWindowAncestor (this), w);
+		if (dlg.showDialog ())
+		{
+			if (created || dlg.isModified ())		worldChanged (created ? "Create topology" : "Edit topology");
+		}
+		else if (created)
+			w.setTopology (null);							// cancelled: the world stays without topology
+	}
+
+	/** The topology editor needs zones to work on: its button and menu item follow the world. */
+	private void updateTopologyActions ()
+	{
+		boolean	enabled = (canvas.getWorld () != null) && (canvas.getWorld ().zones ().n () > 0);
+		if (topolAction != null)		topolAction.setEnabled (enabled);
+	}
+
+	private Action topolAction ()
+	{
+		if (topolAction == null)
+			topolAction = ToolButtons.action ("Topology Editor", ToolIcon.TOPOLOGY, "Topology Editor  [Ctrl+T]", new Runnable () { public void run () { editTopology (); } });
+		return topolAction;
+	}
+
+	private void addTool (JToolBar tb, ButtonGroup group, final int tool, int icon, String tip, String key)
+	{
+		JToggleButton	b = new JToggleButton (new ToolIcon (icon));
+		b.setToolTipText (tip + "  [" + key + "]");
+		b.setFocusable (false);
+		b.addActionListener (new java.awt.event.ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.setTool (tool); canvas.requestFocusInWindow (); }
+		});
+		group.add (b);
+		tb.add (b);
+		toolButtons[tool] = b;
+
+		// keyboard shortcut (single letter, when the canvas has the focus)
+		final String	name = "tool" + tool;
+		canvas.getInputMap (JComponent.WHEN_FOCUSED).put (KeyStroke.getKeyStroke (Character.toLowerCase (key.charAt (0))), name);
+		canvas.getActionMap ().put (name, new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ selectTool (tool); }
+		});
+	}
+
+	private void selectTool (int tool)
+	{
+		toolButtons[tool].setSelected (true);
+		canvas.setTool (tool);
+	}
+
+	/**
+	 * The menu bar of the editor (File, Edit, View, Help); the host installs it.
+	 * @param withFile  false to leave out the File menu (the dialog, which edits a world in memory)
+	 */
+	public JMenuBar buildMenuBar (boolean withFile)
+	{
+		int			mask = Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ();
+		JMenuBar	mb = new JMenuBar ();
+
+		// --- File
+		JMenu		mfile = new JMenu ("File");
+		mfile.setMnemonic (KeyEvent.VK_F);
+		mfile.add (item ("New World", KeyStroke.getKeyStroke (KeyEvent.VK_N, mask), new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ clearWorld (); }
+		}));
+		mfile.add (item ("Load World...", KeyStroke.getKeyStroke (KeyEvent.VK_O, mask), new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ loadWorld (); }
+		}));
+		mfile.add (item ("Save World", KeyStroke.getKeyStroke (KeyEvent.VK_S, mask), new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ saveWorld (false); }
+		}));
+		mfile.add (item ("Save World As...", KeyStroke.getKeyStroke (KeyEvent.VK_S, mask | InputEvent.SHIFT_DOWN_MASK), new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ saveWorld (true); }
+		}));
+		mfile.addSeparator ();
+		mfile.add (item ("Import DXF...", null, new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ importDxf (); }
+		}));
+		mfile.add (item ("Export DXF...", null, new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ exportDxf (); }
+		}));
+		mfile.addSeparator ();
+		mfile.add (item ("Quit", KeyStroke.getKeyStroke (KeyEvent.VK_Q, mask), new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ quit (); }
+		}));
+		if (withFile)		mb.add (mfile);
+
+		// --- Edit
+		JMenu		medit = new JMenu ("Edit");
+		medit.setMnemonic (KeyEvent.VK_E);
+		undoAction = new AbstractAction ("Undo", new ToolIcon (ToolIcon.UNDO, 16))
+		{
+			public void actionPerformed (ActionEvent e)		{ undo (); }
+		};
+		redoAction = new AbstractAction ("Redo", new ToolIcon (ToolIcon.REDO, 16))
+		{
+			public void actionPerformed (ActionEvent e)		{ redo (); }
+		};
+		medit.add (item (undoAction, KeyStroke.getKeyStroke (KeyEvent.VK_Z, mask)));
+		medit.add (item (redoAction, KeyStroke.getKeyStroke (KeyEvent.VK_Z, mask | InputEvent.SHIFT_DOWN_MASK)));
+		medit.addSeparator ();
+		medit.add (item (deleteAction, KeyStroke.getKeyStroke (KeyEvent.VK_DELETE, 0)));
+		// (Esc itself is handled by the canvas: it first cancels drawings / leaves the current tool, then deselects)
+		medit.add (item ("Deselect", null, new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.setSelection (null); selectTool (WorldCanvas.T_SELECT); }
+		}));
+
+		mb.add (medit);
+
+		// --- View
+		JMenu		mview = new JMenu ("View");
+		mview.setMnemonic (KeyEvent.VK_V);
+		mview.add (item ("Zoom to Fit", KeyStroke.getKeyStroke (KeyEvent.VK_0, mask), new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.zoomToFit (); }
+		}));
+		mview.add (item ("Zoom In", KeyStroke.getKeyStroke (KeyEvent.VK_PLUS, mask), new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.zoom (1.25); }
+		}));
+		mview.add (item ("Zoom Out", KeyStroke.getKeyStroke (KeyEvent.VK_MINUS, mask), new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.zoom (0.8); }
+		}));
+		mview.addSeparator ();
+		gridItem = new JCheckBoxMenuItem ("Show Grid", true);
+		gridItem.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_G, mask));
+		gridItem.addActionListener (new java.awt.event.ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.setGridVisible (gridItem.isSelected ()); }
+		});
+		mview.add (gridItem);
+		snapItem = new JCheckBoxMenuItem ("Snap to Grid", false);
+		snapItem.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_G, mask | InputEvent.SHIFT_DOWN_MASK));
+		snapItem.addActionListener (new java.awt.event.ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.setSnapEnabled (snapItem.isSelected ()); }
+		});
+		mview.add (snapItem);
+		labelsItem = new JCheckBoxMenuItem ("Show Labels", true);
+		labelsItem.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_L, mask));
+		labelsItem.addActionListener (new java.awt.event.ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.setLabelsVisible (labelsItem.isSelected ()); }
+		});
+		mview.add (labelsItem);
+		mview.addSeparator ();
+		JMenu		mlayers = new JMenu ("Layers");
+		for (int k = 0; k < WorldItem.ICON; k++)
+		{
+			final int	kind = k;
+			layerItems[k] = new JCheckBoxMenuItem (WorldItem.PLURALS[k], true);
+			layerItems[k].addActionListener (new java.awt.event.ActionListener ()
+			{
+				public void actionPerformed (ActionEvent e)		{ canvas.setKindVisible (kind, layerItems[kind].isSelected ()); }
+			});
+			mlayers.add (layerItems[k]);
+		}
+		mlayers.addSeparator ();
+		mlayers.add (item ("Show All Layers", null, new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)
+			{
+				for (int k = 0; k < WorldItem.ICON; k++) { layerItems[k].setSelected (true); canvas.setKindVisible (k, true); }
+			}
+		}));
+		mview.add (mlayers);
+		mview.addSeparator ();
+		JMenuItem	mtopol = new JMenuItem (topolAction ());
+		mtopol.setText ("Topology Editor...");
+		mtopol.setIcon (null);
+		mtopol.setToolTipText (null);
+		mtopol.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_T, mask));
+		mview.add (mtopol);
+		mview.add (view3d.menuItem (mask));
+		mb.add (mview);
+
+		// --- Help
+		JMenu		mhelp = new JMenu ("Help");
+		mhelp.setMnemonic (KeyEvent.VK_H);
+		mhelp.add (item ("Mouse and Keyboard...", KeyStroke.getKeyStroke (KeyEvent.VK_F1, 0), new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)		{ showHelp (); }
+		}));
+		mhelp.add (item ("About...", null, new AbstractAction ()
+		{
+			public void actionPerformed (ActionEvent e)
+			{
+				JOptionPane.showMessageDialog (WorldEditor.this,
+					TITLE + "\n\nEditor of .world maps for the ThinkingCap simulator.\n(c) 2026 Humberto Martinez Barbera",
+					"About", JOptionPane.INFORMATION_MESSAGE);
+			}
+		}));
+		mb.add (mhelp);
+
+		return mb;
+	}
+
+	private JMenuItem item (String name, KeyStroke key, Action action)
+	{
+		action.putValue (Action.NAME, name);
+		return item (action, key);
+	}
+
+	private JMenuItem item (Action action, KeyStroke key)
+	{
+		JMenuItem	mi = new JMenuItem (action);
+		if (key != null)		mi.setAccelerator (key);
+		return mi;
+	}
+
+	private void showHelp ()
+	{
+		String	msg =
+			"Tools (left toolbar, or press the letter with the map focused):\n" +
+			"  S  Select / move: click an element, drag it, or drag its handles.\n" +
+			"       Circular handle of waypoints, docks, objects and start = orientation.\n" +
+			"  H  Pan. Also middle button, Alt+drag or Space+drag with any tool.\n" +
+			"  W  Wall, D  Connector, Z  Zone: drag on the map.\n" +
+			"  F  Forbidden area: click the vertices, double-click / Enter to close.\n" +
+			"  O  Object, P  Waypoint, K  Dock, B  Strip beacon, C  Cylindrical beacon,\n" +
+			"  T  Path point, R  Start point: click to place.\n" +
+			"  I  Edit icon of the selected object / icon (or double-click an object): drag vertices, click a\n" +
+			"       segment to insert a vertex, drag on empty space (Shift+drag from a vertex) to add a segment,\n" +
+			"       right click / Del removes. Icons are shared: editing one changes every object using it.\n" +
+			"       The 'New icon' button (Ctrl+I) creates an icon; its first click sets the reference point.\n" +
+			"  Right click with a creation tool returns to Select.\n\n" +
+			"Keyboard:  Del deletes, arrows nudge the selection, Esc deselects / cancels,\n" +
+			"  Ctrl+Z / Ctrl+Shift+Z undo / redo, mouse wheel zooms, Ctrl+0 zoom to fit.\n\n" +
+			"3D view: the button at the bottom of the toolbar (or Ctrl+3) opens a Java 3D window that\n" +
+			"  follows every change and highlights the selection.\n\n" +
+			"Properties: edit any value in the table and press Enter. Labels of zones, connectors,\n" +
+			"  waypoints and docks must be unique. 'Defaults' (Edit menu) holds the default\n" +
+			"  wall/connector sizes and textures written to the file.";
+		JOptionPane.showMessageDialog (this, msg, "Mouse and Keyboard", JOptionPane.INFORMATION_MESSAGE);
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* WorldCanvas.Listener                                                */
+	/* ------------------------------------------------------------------ */
+
+	public void selectionChanged (WorldItem item)
+	{
+		propModel.setItem (item);
+		selLabel.setText ((item == null) ? " " : WorldItem.NAMES[item.kind] + ":  " + describe (world, item));
+		deleteAction.setEnabled ((item != null) && (item.kind != WorldItem.DEFAULTS) && ((item.kind != WorldItem.START) || (world.n_starts () > 1)));
+		// the icon tool only applies to elements that have an icon (objects) or to icons themselves
+		boolean	hasIcon = (item != null) && ((item.kind == WorldItem.OBJECT) || (item.kind == WorldItem.ICON));
+		toolButtons[WorldCanvas.T_ICON].setEnabled (hasIcon);
+		if (!hasIcon && (canvas.getTool () == WorldCanvas.T_ICON))		selectTool (WorldCanvas.T_SELECT);
+		view3d.selectionChanged (item);
+		if (!syncing)
+		{
+			syncing = true;
+			selectInTree (item);
+			syncing = false;
+		}
+	}
+
+	public void worldChanged (String what)
+	{
+		pushUndo (what);
+		updateTopologyActions ();
+		refreshTree ();
+		propModel.refresh ();
+		selectionChanged (canvas.getSelection ());
+		view3d.worldChanged ();
+	}
+
+	public void worldPreview ()
+	{
+		view3d.worldPreview ();
+	}
+
+	public void statusChanged (String text)
+	{
+		statusBar.setStatus (text);
+	}
+
+	public void toolFinished ()
+	{
+		selectTool (WorldCanvas.T_SELECT);
+	}
+
+	public void usageChanged (String text)
+	{
+		statusBar.setUsage (text);
+	}
+
+	public void toolRequested (int tool)
+	{
+		selectTool (tool);
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Undo / redo                                                         */
+	/* ------------------------------------------------------------------ */
+
+	private void pushUndo (String what)
+	{
+		String	snap = snapshot (world);
+		if (snap.equals (current))		return;			// nothing really changed
+
+		undoStack.add (current);
+		undoNames.add (what);
+		if (undoStack.size () > MAX_UNDO) { undoStack.remove (0); undoNames.remove (0); }
+		redoStack.clear ();
+		redoNames.clear ();
+		current	= snap;
+		dirty	= true;
+		updateTitle ();
+		updateUndoActions ();
+	}
+
+	private void undo ()
+	{
+		if (undoStack.isEmpty ())		return;
+		redoStack.add (current);
+		redoNames.add (undoNames.get (undoNames.size () - 1));
+		current = undoStack.remove (undoStack.size () - 1);
+		undoNames.remove (undoNames.size () - 1);
+		applySnapshot ();
+	}
+
+	private void redo ()
+	{
+		if (redoStack.isEmpty ())		return;
+		undoStack.add (current);
+		undoNames.add (redoNames.get (redoNames.size () - 1));
+		current = redoStack.remove (redoStack.size () - 1);
+		redoNames.remove (redoNames.size () - 1);
+		applySnapshot ();
+	}
+
+	private void applySnapshot ()
+	{
+		WorldItem	sel = canvas.getSelection ();
+		world = restore (current);
+		canvas.setWorld (world);
+		dirty = true;
+		refreshAll ();
+		canvas.setSelection (sel);		// kept if it still exists
+		updateTitle ();
+		updateUndoActions ();
+		view3d.worldChanged ();
+	}
+
+	private void updateUndoActions ()
+	{
+		undoAction.setEnabled (!undoStack.isEmpty ());
+		undoAction.putValue (Action.NAME, undoStack.isEmpty () ? "Undo" : "Undo " + undoNames.get (undoNames.size () - 1));
+		redoAction.setEnabled (!redoStack.isEmpty ());
+		redoAction.putValue (Action.NAME, redoStack.isEmpty () ? "Redo" : "Redo " + redoNames.get (redoNames.size () - 1));
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* File operations                                                     */
+	/* ------------------------------------------------------------------ */
+
+	/** Asks to save unsaved changes; false when the user cancels. */
+	public boolean confirmDiscard ()
+	{
+		if (!dirty)						return true;
+		int		r = JOptionPane.showConfirmDialog (this, "The world has unsaved changes. Save them first?",
+					TITLE, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+		if (r == JOptionPane.CANCEL_OPTION)	return false;
+		if (r == JOptionPane.YES_OPTION)		return saveWorld (false);
+		return true;
+	}
+
+	private JFileChooser chooser (String ext, String desc)
+	{
+		File		dir = (file != null) ? file.getParentFile () : new File (MAPS_DIR);
+		if ((dir == null) || !dir.isDirectory ())		dir = new File (".");
+		JFileChooser	fc = new JFileChooser (dir);
+		fc.setFileFilter (new FileNameExtensionFilter (desc, ext));
+		return fc;
+	}
+
+	/** File > New: replaces the world with an empty one. */
+	public void clearWorld ()
+	{
+		if (!confirmDiscard ())			return;
+		setWorld (newWorld (), null);
+	}
+
+	public void loadWorld ()
+	{
+		if (!confirmDiscard ())			return;
+		JFileChooser	fc = chooser ("world", "World maps (*.world)");
+		fc.setDialogTitle ("Load World");
+		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+		loadWorld (fc.getSelectedFile ());
+	}
+
+	public void loadWorld (File f)
+	{
+		try
+		{
+			World	w = new World (f.getPath ());
+			setWorld (w, f);
+		} catch (Exception e)
+		{
+			e.printStackTrace ();
+			JOptionPane.showMessageDialog (this, "Cannot load " + f.getName () + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private void setWorld (World w, File f)
+	{
+		world	= w;
+		file	= f;
+		dirty	= false;
+		current	= snapshot (world);
+		undoStack.clear ();	undoNames.clear ();	redoStack.clear ();	redoNames.clear ();
+		canvas.setWorld (world);
+		refreshAll ();
+		updateTitle ();
+		updateUndoActions ();
+		view3d.worldChanged ();
+		SwingUtilities.invokeLater (new Runnable ()
+		{
+			public void run ()		{ canvas.zoomToFit (); }
+		});
+	}
+
+	/** @return true if the world was written */
+	public boolean saveWorld (boolean askName)
+	{
+		File	f = file;
+		if (askName || (f == null))
+		{
+			JFileChooser	fc = chooser ("world", "World maps (*.world)");
+			fc.setDialogTitle ("Save World");
+			if (file != null)		fc.setSelectedFile (file);
+			if (fc.showSaveDialog (this) != JFileChooser.APPROVE_OPTION)		return false;
+			f = fc.getSelectedFile ();
+			if (!f.getName ().toLowerCase ().endsWith (World.SUFFIX))
+				f = new File (f.getParentFile (), f.getName () + World.SUFFIX);
+			if (f.exists () && !f.equals (file))
+			{
+				int	r = JOptionPane.showConfirmDialog (this, f.getName () + " already exists. Overwrite?", TITLE, JOptionPane.YES_NO_OPTION);
+				if (r != JOptionPane.YES_OPTION)		return false;
+			}
+		}
+		try
+		{
+			world.toFile (f.getPath ());
+			file	= f;
+			dirty	= false;
+			updateTitle ();
+			statusChanged ("Saved " + f.getPath ());
+			return true;
+		} catch (Exception e)
+		{
+			e.printStackTrace ();
+			JOptionPane.showMessageDialog (this, "Cannot save " + f.getName () + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+	}
+
+	public void importDxf ()
+	{
+		if (!confirmDiscard ())			return;
+		JFileChooser	fc = chooser ("dxf", "AutoCAD DXF (*.dxf)");
+		fc.setDialogTitle ("Import DXF");
+		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+		try
+		{
+			World	w = newWorld ();
+			w.fromDxfFile (fc.getSelectedFile ().getPath ());
+			// a DXF-loaded world has no forbidden areas collection: rebuild from a snapshot
+			w = restore (snapshot (w));
+			setWorld (w, null);
+			dirty = true;
+			updateTitle ();
+		} catch (Exception e)
+		{
+			e.printStackTrace ();
+			JOptionPane.showMessageDialog (this, "Cannot import DXF:\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	public void exportDxf ()
+	{
+		JFileChooser	fc = chooser ("dxf", "AutoCAD DXF (*.dxf)");
+		fc.setDialogTitle ("Export DXF");
+		if (fc.showSaveDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+		File	f = fc.getSelectedFile ();
+		if (!f.getName ().toLowerCase ().endsWith (".dxf"))
+			f = new File (f.getParentFile (), f.getName () + ".dxf");
+		try
+		{
+			world.toDxfFile (f.getPath ());
+			statusChanged ("Exported " + f.getPath ());
+		} catch (Exception e)
+		{
+			e.printStackTrace ();
+			JOptionPane.showMessageDialog (this, "Cannot export DXF:\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	/** Closes the hosting window (after confirming unsaved changes). */
+	public void quit ()
+	{
+		Window	w = SwingUtilities.getWindowAncestor (this);
+		if (w != null)		w.dispatchEvent (new java.awt.event.WindowEvent (w, java.awt.event.WindowEvent.WINDOW_CLOSING));
+	}
+
+	private void updateTitle ()
+	{
+		if (host != null)		host.editorStateChanged (this);
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Element tree                                                        */
+	/* ------------------------------------------------------------------ */
+
+	private void refreshAll ()
+	{
+		updateTopologyActions ();
+		refreshTree ();
+		propModel.setItem (canvas.getSelection ());
+		selectionChanged (canvas.getSelection ());
+	}
+
+	private void refreshTree ()
+	{
+		// remember expanded categories
+		boolean[]	expanded = new boolean[WorldItem.NKINDS];
+		for (int i = 0; i < treeRoot.getChildCount (); i++)
+		{
+			DefaultMutableTreeNode	n = (DefaultMutableTreeNode) treeRoot.getChildAt (i);
+			int						kind = ((Integer) n.getUserObject ()).intValue ();
+			expanded[kind] = tree.isExpanded (new TreePath (n.getPath ()));
+		}
+		boolean		first = (treeRoot.getChildCount () == 0);
+
+		syncing = true;
+		treeRoot.removeAllChildren ();
+		for (int kind = 0; kind < WorldItem.NKINDS; kind++)
+		{
+			if (kind == WorldItem.CBEACON)			continue;			// listed under the strip beacons category
+			int						n = count (world, kind);
+			DefaultMutableTreeNode	cat;
+			if (kind == WorldItem.BEACON)
+			{
+				// both beacon types share the "Beacons" category
+				int		nc = count (world, WorldItem.CBEACON);
+				cat = new KindNode (kind, n + nc);
+				for (int i = 0; i < n; i++)
+					cat.add (new ItemNode (new WorldItem (WorldItem.BEACON, i)));
+				for (int i = 0; i < nc; i++)
+					cat.add (new ItemNode (new WorldItem (WorldItem.CBEACON, i)));
+			}
+			else
+			{
+				cat = new KindNode (kind, n);
+				for (int i = 0; i < n; i++)
+					cat.add (new ItemNode (new WorldItem (kind, i)));
+			}
+			treeRoot.add (cat);
+		}
+		treeModel.reload ();
+		for (int i = 0; i < treeRoot.getChildCount (); i++)
+		{
+			DefaultMutableTreeNode	n = (DefaultMutableTreeNode) treeRoot.getChildAt (i);
+			int						kind = ((Integer) n.getUserObject ()).intValue ();
+			boolean					exp = first ? (n.getChildCount () <= 40) : expanded[kind];
+			if (exp)		tree.expandPath (new TreePath (n.getPath ()));
+		}
+		selectInTree (canvas.getSelection ());
+		syncing = false;
+	}
+
+	private void selectInTree (WorldItem item)
+	{
+		if (item == null)
+		{
+			tree.clearSelection ();
+			return;
+		}
+		for (int i = 0; i < treeRoot.getChildCount (); i++)
+		{
+			DefaultMutableTreeNode	cat = (DefaultMutableTreeNode) treeRoot.getChildAt (i);
+			for (int j = 0; j < cat.getChildCount (); j++)
+			{
+				DefaultMutableTreeNode	n = (DefaultMutableTreeNode) cat.getChildAt (j);
+				if (item.equals (n.getUserObject ()))
+				{
+					TreePath	path = new TreePath (n.getPath ());
+					tree.setSelectionPath (path);
+					tree.scrollPathToVisible (path);
+					return;
+				}
+			}
+		}
+	}
+
+	/** Category node: user object is the kind (Integer). */
+	private class KindNode extends DefaultMutableTreeNode
+	{
+		private static final long	serialVersionUID = 1L;
+		int		n;
+		KindNode (int kind, int n)	{ super (Integer.valueOf (kind)); this.n = n; }
+		public String toString ()
+		{
+			int	kind = ((Integer) getUserObject ()).intValue ();
+			if (kind == WorldItem.DEFAULTS)		return WorldItem.PLURALS[kind];
+			if (kind == WorldItem.BEACON)											return "Beacons  (" + n + ")";
+			return WorldItem.PLURALS[kind] + "  (" + n + ")";
+		}
+	}
+
+	/** Element node: user object is the WorldItem. */
+	private class ItemNode extends DefaultMutableTreeNode
+	{
+		private static final long	serialVersionUID = 1L;
+		ItemNode (WorldItem it)		{ super (it); }
+		public String toString ()	{ return describe (world, (WorldItem) getUserObject ()); }
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Property table                                                      */
+	/* ------------------------------------------------------------------ */
+
+	private class PropertyModel extends AbstractTableModel
+	{
+		private static final long	serialVersionUID = 1L;
+		WorldItem		item;
+		String[]		names = new String[0];
+
+		void setItem (WorldItem it)
+		{
+			if (propTable.isEditing ())		propTable.getCellEditor ().cancelCellEditing ();
+			item	= valid (world, it) ? it : null;
+			names	= (item == null) ? new String[0] : propertyNames (world, item);
+			fireTableDataChanged ();
+		}
+
+		void refresh ()
+		{
+			if (!valid (world, item))		setItem (null);
+			else									fireTableRowsUpdated (0, Math.max (0, names.length - 1));
+		}
+
+		String nameAt (int r)							{ return ((r >= 0) && (r < names.length)) ? names[r] : ""; }
+		public int getRowCount ()						{ return names.length; }
+		public int getColumnCount ()					{ return 2; }
+		public String getColumnName (int c)				{ return (c == 0) ? "Property" : "Value"; }
+		public boolean isCellEditable (int r, int c)	{ return c == 1; }
+
+		public Object getValueAt (int r, int c)
+		{
+			if (item == null)			return "";
+			return (c == 0) ? names[r] : getProperty (world, item, names[r]);
+		}
+
+		public void setValueAt (Object value, int r, int c)
+		{
+			if ((item == null) || (c != 1))		return;
+			String	v = (value == null) ? "" : value.toString ();
+			if (v.equals (getProperty (world, item, names[r])))		return;
+			try
+			{
+				setProperty (world, item, names[r], v);
+				canvas.repaint ();
+				worldChanged ("Edit " + names[r]);
+			} catch (IllegalArgumentException e)
+			{
+				JOptionPane.showMessageDialog (WorldEditor.this, e.getMessage (), "Invalid value", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+	}
+
+	/* ================================================================== */
+	/* Static helpers over the elements of a World                          */
+	/* ================================================================== */
+
+	static public final double		ARROW		= 0.5;		// Length of orientation handles (m)
 
 	/* ------------------------------------------------------------------ */
 	/* World creation and snapshots                                        */

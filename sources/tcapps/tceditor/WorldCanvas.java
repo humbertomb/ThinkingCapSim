@@ -206,7 +206,7 @@ public class WorldCanvas extends JPanel
 
 	public void setSelection (WorldItem item)
 	{
-		if (!WorldEdit.valid (world, item))		item = null;
+		if (!WorldEditor.valid (world, item))		item = null;
 		selection = item;
 		repaint ();
 		if (listener != null)		listener.selectionChanged (item);
@@ -261,7 +261,7 @@ public class WorldCanvas extends JPanel
 	/** Adjusts the view so that the whole world is visible. */
 	public void zoomToFit ()
 	{
-		double[]	b = WorldEdit.bounds (world);
+		double[]	b = WorldEditor.bounds (world);
 		if (b == null)
 		{
 			b = new double[] { world.start_x () - 5, world.start_y () - 5, world.start_x () + 5, world.start_y () + 5 };
@@ -281,7 +281,7 @@ public class WorldCanvas extends JPanel
 	{
 		if ((tool == T_FAREA) && (polyPoints.size () >= 3))
 		{
-			WorldItem	it = WorldEdit.addFArea (world, polyPoints);
+			WorldItem	it = WorldEditor.addFArea (world, polyPoints);
 			polyPoints.clear ();
 			changed ("Add forbidden area");
 			setSelection (it);
@@ -302,14 +302,14 @@ public class WorldCanvas extends JPanel
 	public void deleteSelection ()
 	{
 		if ((selection == null) || !editable)		return;
-		if ((selection.kind == WorldItem.ICON) && (WorldEdit.iconUsers (world, world.icons ().at (selection.index).label) > 0))
+		if ((selection.kind == WorldItem.ICON) && (WorldEditor.iconUsers (world, world.icons ().at (selection.index).label) > 0))
 		{
 			javax.swing.JOptionPane.showMessageDialog (this, "Icon '" + world.icons ().at (selection.index).label + "' is used by "
-					+ WorldEdit.iconUsers (world, world.icons ().at (selection.index).label) + " object(s) and cannot be deleted.",
+					+ WorldEditor.iconUsers (world, world.icons ().at (selection.index).label) + " object(s) and cannot be deleted.",
 					"Delete icon", javax.swing.JOptionPane.WARNING_MESSAGE);
 			return;
 		}
-		if (WorldEdit.remove (world, selection))
+		if (WorldEditor.remove (world, selection))
 		{
 			String	what = "Delete " + WorldItem.NAMES[selection.kind].toLowerCase ();
 			selection = null;
@@ -323,7 +323,7 @@ public class WorldCanvas extends JPanel
 	{
 		if ((selection == null) || !editable)		return;
 		double	step = snapGrid ? gridStep : gridStep / 10.0;
-		WorldEdit.translate (world, selection, dx * step, dy * step);
+		WorldEditor.translate (world, selection, dx * step, dy * step);
 		changed ("Move " + WorldItem.NAMES[selection.kind].toLowerCase ());
 	}
 
@@ -395,7 +395,7 @@ public class WorldCanvas extends JPanel
 			// handle of the current selection?
 			if ((selection != null) && editable)
 			{
-				Point2[]	hs = WorldEdit.handles (world, selection);
+				Point2[]	hs = WorldEditor.handles (world, selection);
 				int			best = -1;
 				double		bd = tol * 1.3;
 				for (int i = 0; i < hs.length; i++)
@@ -410,10 +410,10 @@ public class WorldCanvas extends JPanel
 					return;
 				}
 			}
-			WorldItem	hit = WorldEdit.pick (world, curX, curY, tol, visible);
+			WorldItem	hit = WorldEditor.pick (world, curX, curY, tol, visible);
 			// keep the current selection if it is also under the cursor (areas would steal it)
 			if ((selection != null) && (hit != null) && !hit.equals (selection)
-					&& (WorldEdit.distance (world, selection, curX, curY) < tol))
+					&& (WorldEditor.distance (world, selection, curX, curY) < tol))
 				hit = selection;
 			setSelection (hit);
 			if ((hit != null) && editable)
@@ -439,31 +439,31 @@ public class WorldCanvas extends JPanel
 			}
 			break;
 		case T_PATH:
-			setSelection (WorldEdit.addPathPoint (world, anchorX, anchorY));
+			setSelection (WorldEditor.addPathPoint (world, anchorX, anchorY));
 			changed ("Add path point");
 			break;
 		case T_OBJECT:
-			setSelection (WorldEdit.addObject (world, anchorX, anchorY, 0.4));
+			setSelection (WorldEditor.addObject (world, anchorX, anchorY, 0.4));
 			changed ("Add object");
 			break;
 		case T_WAYPOINT:
-			setSelection (WorldEdit.addWaypoint (world, anchorX, anchorY));
+			setSelection (WorldEditor.addWaypoint (world, anchorX, anchorY));
 			changed ("Add waypoint");
 			break;
 		case T_DOCK:
-			setSelection (WorldEdit.addDock (world, anchorX, anchorY));
+			setSelection (WorldEditor.addDock (world, anchorX, anchorY));
 			changed ("Add dock");
 			break;
 		case T_BEACON:
-			setSelection (WorldEdit.addBeacon (world, anchorX, anchorY));
+			setSelection (WorldEditor.addBeacon (world, anchorX, anchorY));
 			changed ("Add strip beacon");
 			break;
 		case T_CBEACON:
-			setSelection (WorldEdit.addCBeacon (world, anchorX, anchorY));
+			setSelection (WorldEditor.addCBeacon (world, anchorX, anchorY));
 			changed ("Add cylindrical beacon");
 			break;
 		case T_START:
-			setSelection (WorldEdit.addStart (world, anchorX, anchorY));
+			setSelection (WorldEditor.addStart (world, anchorX, anchorY));
 			changed ("Add start point");
 			break;
 		}
@@ -497,7 +497,7 @@ public class WorldCanvas extends JPanel
 			}
 			if ((dx != 0.0) || (dy != 0.0))
 			{
-				WorldEdit.translate (world, selection, dx, dy);
+				WorldEditor.translate (world, selection, dx, dy);
 				dragged = true;
 				repaint ();
 				if (listener != null)		listener.worldPreview ();
@@ -505,7 +505,7 @@ public class WorldCanvas extends JPanel
 			break;
 		}
 		case 2:		// drag handle
-			WorldEdit.setHandle (world, selection, dragHandle, snap (nx), snap (ny));
+			WorldEditor.setHandle (world, selection, dragHandle, snap (nx), snap (ny));
 			dragged = true;
 			repaint ();
 			if (listener != null)		listener.worldPreview ();
@@ -547,12 +547,12 @@ public class WorldCanvas extends JPanel
 				double[]	rp = refPose ();
 				if ((ic != null) && (rp != null))
 				{
-					Point2	wp = WorldEdit.weldIconVertex (ic, rp[0], rp[1], rp[2], iconVertex, PICK_PX / scale);
+					Point2	wp = WorldEditor.weldIconVertex (ic, rp[0], rp[1], rp[2], iconVertex, PICK_PX / scale);
 					if (wp != null)
 					{
-						WorldEdit.removeEmptyIconSegments (ic);
-						iconVertex = WorldEdit.pickIconVertex (ic, rp[0], rp[1], rp[2], wp.x (), wp.y (), WorldEdit.ICON_EPS * 10);
-						WorldEdit.iconChanged (world, ic);
+						WorldEditor.removeEmptyIconSegments (ic);
+						iconVertex = WorldEditor.pickIconVertex (ic, rp[0], rp[1], rp[2], wp.x (), wp.y (), WorldEditor.ICON_EPS * 10);
+						WorldEditor.iconChanged (world, ic);
 					}
 				}
 				changed ("Edit icon");
@@ -568,10 +568,10 @@ public class WorldCanvas extends JPanel
 			{
 				WorldItem	it = null;
 				String		what = null;
-				if (tool == T_WALL)			{ it = WorldEdit.addWall (world, anchorX, anchorY, nx, ny);		what = "Add wall"; }
-				else if (tool == T_CONNECTOR)	{ it = WorldEdit.addConnector (world, anchorX, anchorY, nx, ny);		what = "Add connector"; }
+				if (tool == T_WALL)			{ it = WorldEditor.addWall (world, anchorX, anchorY, nx, ny);		what = "Add wall"; }
+				else if (tool == T_CONNECTOR)	{ it = WorldEditor.addConnector (world, anchorX, anchorY, nx, ny);		what = "Add connector"; }
 				else if ((tool == T_ZONE) && (Math.abs (nx - anchorX) > 1e-6) && (Math.abs (ny - anchorY) > 1e-6))
-											{ it = WorldEdit.addZone (world, anchorX, anchorY, nx, ny);		what = "Add zone"; }
+											{ it = WorldEditor.addZone (world, anchorX, anchorY, nx, ny);		what = "Add zone"; }
 				if (it != null)
 				{
 					setSelection (it);
@@ -658,9 +658,9 @@ public class WorldCanvas extends JPanel
 
 	private void showStatus ()
 	{
-		String	s = "x = " + WorldEdit.fmt (curX) + " m,  y = " + WorldEdit.fmt (curY) + " m";
+		String	s = "x = " + WorldEditor.fmt (curX) + " m,  y = " + WorldEditor.fmt (curY) + " m";
 		if (world.zones ().n () > 0)		s += "   |   zone: " + world.zones ().inZone (curX, curY);
-		s += "   |   grid " + WorldEdit.fmt (gridStep) + " m";
+		s += "   |   grid " + WorldEditor.fmt (gridStep) + " m";
 		status (s);
 		showUsage ();
 	}
@@ -790,7 +790,7 @@ public class WorldCanvas extends JPanel
 		g.drawLine (x, y - 4, x, y + 4);
 		g.drawLine (x + pxl, y - 4, x + pxl, y + 4);
 		g.setFont (g.getFont ().deriveFont (Font.PLAIN, 11f));
-		g.drawString (WorldEdit.fmt (len) + " m", x + 4, y - 5);
+		g.drawString (WorldEditor.fmt (len) + " m", x + 4, y - 5);
 	}
 
 	private void label (Graphics2D g, String text, double x, double y, Color c)
@@ -1047,8 +1047,8 @@ public class WorldCanvas extends JPanel
 				g.draw (new Line2D.Double (px (anchorX), py (anchorY), px (nx), py (ny)));
 			g.setColor (new Color (0, 0, 0, 170));
 			g.setFont (g.getFont ().deriveFont (Font.PLAIN, 11f));
-			g.drawString ((tool == T_ZONE) ? (WorldEdit.fmt (Math.abs (nx - anchorX)) + " x " + WorldEdit.fmt (Math.abs (ny - anchorY)) + " m")
-										   : (WorldEdit.fmt (Math.hypot (nx - anchorX, ny - anchorY)) + " m"),
+			g.drawString ((tool == T_ZONE) ? (WorldEditor.fmt (Math.abs (nx - anchorX)) + " x " + WorldEditor.fmt (Math.abs (ny - anchorY)) + " m")
+										   : (WorldEditor.fmt (Math.hypot (nx - anchorX, ny - anchorY)) + " m"),
 						  toPixelX (nx) + 10, toPixelY (ny) - 10);
 		}
 		if ((tool == T_FAREA) && (polyPoints.size () > 0))
@@ -1084,7 +1084,7 @@ public class WorldCanvas extends JPanel
 
 	private WMObject selectedObject ()
 	{
-		if ((selection == null) || (selection.kind != WorldItem.OBJECT) || !WorldEdit.valid (world, selection))		return null;
+		if ((selection == null) || (selection.kind != WorldItem.OBJECT) || !WorldEditor.valid (world, selection))		return null;
 		return world.objects ().at (selection.index);
 	}
 
@@ -1093,7 +1093,7 @@ public class WorldCanvas extends JPanel
 	{
 		WMObject	o = selectedObject ();
 		if (o != null)				return o.icon;
-		if ((selection != null) && (selection.kind == WorldItem.ICON) && WorldEdit.valid (world, selection))
+		if ((selection != null) && (selection.kind == WorldItem.ICON) && WorldEditor.valid (world, selection))
 			return world.icons ().at (selection.index);
 		return null;
 	}
@@ -1109,7 +1109,7 @@ public class WorldCanvas extends JPanel
 		if (anchor != null)			return anchor;
 		if (awaitingAnchor)			return null;
 		// default anchor: the pose of the first object using the icon, else the view centre
-		java.util.List<WorldItem>	users = WorldEdit.iconUserItems (world, ic.label);
+		java.util.List<WorldItem>	users = WorldEditor.iconUserItems (world, ic.label);
 		if (users.size () > 0)
 		{
 			WMObject	u = world.objects ().at (users.get (0).index);
@@ -1124,7 +1124,7 @@ public class WorldCanvas extends JPanel
 	/** Creates a new empty icon, selects it and starts the icon tool waiting for its reference point. */
 	public void newIcon ()
 	{
-		WorldItem	it = WorldEdit.addIcon (world, "icon");
+		WorldItem	it = WorldEditor.addIcon (world, "icon");
 		awaitingAnchor = true;
 		changed ("New icon");
 		setSelection (it);
@@ -1136,7 +1136,7 @@ public class WorldCanvas extends JPanel
 	private void iconEdited (String what)
 	{
 		WMIcon	ic = editIcon ();
-		if (ic != null)		WorldEdit.iconChanged (world, ic);
+		if (ic != null)		WorldEditor.iconChanged (world, ic);
 		changed (what);
 	}
 
@@ -1146,7 +1146,7 @@ public class WorldCanvas extends JPanel
 		if (ic == null)
 		{
 			// nothing suitable selected: pick an object
-			WorldItem	hit = WorldEdit.pick (world, curX, curY, tol, visible);
+			WorldItem	hit = WorldEditor.pick (world, curX, curY, tol, visible);
 			if ((hit != null) && (hit.kind == WorldItem.OBJECT))		setSelection (hit);
 			return;
 		}
@@ -1162,11 +1162,11 @@ public class WorldCanvas extends JPanel
 		double[]	rp = refPose ();
 		if (rp == null)				return;
 
-		int		vi = WorldEdit.pickIconVertex (ic, rp[0], rp[1], rp[2], curX, curY, tol * 1.3);
+		int		vi = WorldEditor.pickIconVertex (ic, rp[0], rp[1], rp[2], curX, curY, tol * 1.3);
 		if ((vi >= 0) && e.isShiftDown ())
 		{
 			// new segment starting at this vertex
-			Point2	p = WorldEdit.iconWorldVertices (ic, rp[0], rp[1], rp[2])[vi];
+			Point2	p = WorldEditor.iconWorldVertices (ic, rp[0], rp[1], rp[2])[vi];
 			anchorX = p.x ();	anchorY = p.y ();
 			dragMode = 6;
 			return;
@@ -1177,11 +1177,11 @@ public class WorldCanvas extends JPanel
 			dragMode	= 5;
 			return;
 		}
-		int		si = WorldEdit.pickIconSegment (ic, rp[0], rp[1], rp[2], curX, curY, tol);
+		int		si = WorldEditor.pickIconSegment (ic, rp[0], rp[1], rp[2], curX, curY, tol);
 		if (si >= 0)
 		{
 			// insert a vertex on the segment and start dragging it
-			iconVertex	= WorldEdit.splitIconSegment (ic, rp[0], rp[1], rp[2], si, anchorX, anchorY);
+			iconVertex	= WorldEditor.splitIconSegment (ic, rp[0], rp[1], rp[2], si, anchorX, anchorY);
 			dragMode	= 5;
 			dragged		= true;
 			repaint ();
@@ -1196,8 +1196,8 @@ public class WorldCanvas extends JPanel
 		WMIcon		ic = editIcon ();
 		double[]	rp = refPose ();
 		if ((ic == null) || (rp == null))		return;
-		WorldEdit.moveIconVertex (ic, rp[0], rp[1], rp[2], iconVertex, snap (nx), snap (ny));
-		WorldEdit.iconChanged (world, ic);
+		WorldEditor.moveIconVertex (ic, rp[0], rp[1], rp[2], iconVertex, snap (nx), snap (ny));
+		WorldEditor.iconChanged (world, ic);
 		dragged = true;
 		repaint ();
 		if (listener != null)		listener.worldPreview ();
@@ -1208,8 +1208,8 @@ public class WorldCanvas extends JPanel
 		WMIcon		ic = editIcon ();
 		double[]	rp = refPose ();
 		if ((ic == null) || (rp == null) || (Math.hypot (nx - anchorX, ny - anchorY) <= 1e-6))		return;
-		WorldEdit.addIconSegment (ic, rp[0], rp[1], rp[2], anchorX, anchorY, nx, ny);
-		iconVertex = WorldEdit.pickIconVertex (ic, rp[0], rp[1], rp[2], nx, ny, WorldEdit.ICON_EPS * 10);
+		WorldEditor.addIconSegment (ic, rp[0], rp[1], rp[2], anchorX, anchorY, nx, ny);
+		iconVertex = WorldEditor.pickIconVertex (ic, rp[0], rp[1], rp[2], nx, ny, WorldEditor.ICON_EPS * 10);
 		iconEdited ("Add icon segment");
 	}
 
@@ -1220,18 +1220,18 @@ public class WorldCanvas extends JPanel
 		if ((ic == null) || (rp == null))		return;
 		double	tol = PICK_PX / scale;
 		double	x = toWorldX (e.getX ()), y = toWorldY (e.getY ());
-		int		vi = WorldEdit.pickIconVertex (ic, rp[0], rp[1], rp[2], x, y, tol * 1.3);
+		int		vi = WorldEditor.pickIconVertex (ic, rp[0], rp[1], rp[2], x, y, tol * 1.3);
 		if (vi >= 0)
 		{
-			WorldEdit.removeIconVertex (ic, vi);
+			WorldEditor.removeIconVertex (ic, vi);
 			iconVertex = -1;
 			iconEdited ("Remove icon vertex");
 			return;
 		}
-		int		si = WorldEdit.pickIconSegment (ic, rp[0], rp[1], rp[2], x, y, tol);
+		int		si = WorldEditor.pickIconSegment (ic, rp[0], rp[1], rp[2], x, y, tol);
 		if (si >= 0)
 		{
-			WorldEdit.removeIconSegment (ic, si);
+			WorldEditor.removeIconSegment (ic, si);
 			iconVertex = -1;
 			iconEdited ("Remove icon segment");
 		}
@@ -1241,7 +1241,7 @@ public class WorldCanvas extends JPanel
 	{
 		WMIcon		ic = editIcon ();
 		if ((ic == null) || (iconVertex < 0))		return;
-		WorldEdit.removeIconVertex (ic, iconVertex);
+		WorldEditor.removeIconVertex (ic, iconVertex);
 		iconVertex = -1;
 		iconEdited ("Remove icon vertex");
 	}
@@ -1270,13 +1270,13 @@ public class WorldCanvas extends JPanel
 		g.drawLine (cxp, cyp, cxp + (int) Math.round (12 * Math.cos (rp[2])), cyp - (int) Math.round (12 * Math.sin (rp[2])));
 		// segments
 		g.setStroke (stroke (editing ? 2f : 1.5f));
-		for (Line2 l : WorldEdit.iconWorldLines (ic, rp[0], rp[1], rp[2]))
+		for (Line2 l : WorldEditor.iconWorldLines (ic, rp[0], rp[1], rp[2]))
 			g.draw (new Line2D.Double (px (l.orig ().x ()), py (l.orig ().y ()), px (l.dest ().x ()), py (l.dest ().y ())));
 		if (selectedObject () == null)
 			label (g, ic.label, rp[0], rp[1], C_SEL);
 		if (!editing)				return;
 		// vertices
-		Point2[]	vs = WorldEdit.iconWorldVertices (ic, rp[0], rp[1], rp[2]);
+		Point2[]	vs = WorldEditor.iconWorldVertices (ic, rp[0], rp[1], rp[2]);
 		g.setStroke (stroke (1.2f));
 		for (int i = 0; i < vs.length; i++)
 		{
@@ -1290,7 +1290,7 @@ public class WorldCanvas extends JPanel
 
 	private void drawHandles (Graphics2D g)
 	{
-		Point2[]	hs = WorldEdit.handles (world, selection);
+		Point2[]	hs = WorldEditor.handles (world, selection);
 		g.setStroke (stroke (1.2f));
 		for (int i = 0; i < hs.length; i++)
 		{
