@@ -54,16 +54,16 @@ public class WMWaypoint extends WMElement
 
     public WMWaypoint (JsonObject o)
     {
-        label	= WorldJson.getString (o, "label", "wp");
-        pos		= new Position (WorldJson.getDouble (o, "x"), WorldJson.getDouble (o, "y"), WorldJson.getDouble (o, "z", 0.0), Math.toRadians (WorldJson.getDouble (o, "orientation", 0.0)));
+        label	= World.getString (o, "label", "wp");
+        pos		= new Position (World.getDouble (o, "x"), World.getDouble (o, "y"), World.getDouble (o, "z", 0.0), Math.toRadians (World.getDouble (o, "orientation", 0.0)));
     }
 
     public JsonObject toJson ()
     {
         JsonObject	o = new JsonObject ();
         o.addProperty ("label", label);
-        WorldJson.putPoint (o, pos.x (), pos.y (), pos.z ());
-        o.addProperty ("orientation", WorldJson.num (Math.toDegrees (pos.alpha ())));
+        World.putPoint (o, pos.x (), pos.y (), pos.z ());
+        o.addProperty ("orientation", World.num (Math.toDegrees (pos.alpha ())));
         return o;
     }
 }

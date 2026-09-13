@@ -176,9 +176,9 @@ public class WMZones
 	public void fromJson (JsonElement e)
 	{
 		JsonObject	o = ((e != null) && e.isJsonObject ()) ? e.getAsJsonObject () : new JsonObject ();
-		JsonObject	def = WorldJson.getObject (o, "defaults");
-		JsonArray	arr = WorldJson.getArray (o, "items");
-		defTexture	= WorldJson.getString (def, "texture", defTexture);
+		JsonObject	def = World.getObject (o, "defaults");
+		JsonArray	arr = World.getArray (o, "items");
+		defTexture	= World.getString (def, "texture", defTexture);
 		areas	= new WMZone[arr.size ()];
 		for (int i = 0; i < areas.length; i++)		areas[i] = new WMZone (arr.get (i).getAsJsonObject (), defTexture);
 	}

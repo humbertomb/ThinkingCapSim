@@ -58,14 +58,14 @@ public class WMStart
 
 	public WMStart (JsonObject o)
 	{
-		pos			= WorldJson.toPoint (o);
-		orientation	= Math.toRadians (WorldJson.getDouble (o, "orientation", 0.0));
+		pos			= World.toPoint (o);
+		orientation	= Math.toRadians (World.getDouble (o, "orientation", 0.0));
 	}
 
 	public JsonObject toJson ()
 	{
-		JsonObject	o = WorldJson.point (pos);
-		o.addProperty ("orientation", WorldJson.num (Math.toDegrees (orientation)));
+		JsonObject	o = World.point (pos);
+		o.addProperty ("orientation", World.num (Math.toDegrees (orientation)));
 		return o;
 	}
 }

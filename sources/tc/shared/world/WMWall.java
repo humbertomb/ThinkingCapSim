@@ -71,18 +71,18 @@ public class WMWall extends WMElement
 
 	public WMWall (JsonObject o, double dwidth, double dheight, String dtexture)
 	{
-		edge	= WorldJson.toLine (o);
-		width	= WorldJson.getDouble (o, "width", dwidth);
-		height	= WorldJson.getDouble (o, "height", dheight);
-		texture	= WorldJson.getString (o, "texture", dtexture);
+		edge	= World.toLine (o);
+		width	= World.getDouble (o, "width", dwidth);
+		height	= World.getDouble (o, "height", dheight);
+		texture	= World.getString (o, "texture", dtexture);
 	}
 
 	/** Width, height and texture are only written when they differ from the defaults. */
 	public JsonObject toJson (double dwidth, double dheight, String dtexture)
 	{
-		JsonObject	o = WorldJson.line (edge);
-		if (width != dwidth)							o.addProperty ("width", WorldJson.num (width));
-		if (height != dheight)							o.addProperty ("height", WorldJson.num (height));
+		JsonObject	o = World.line (edge);
+		if (width != dwidth)							o.addProperty ("width", World.num (width));
+		if (height != dheight)							o.addProperty ("height", World.num (height));
 		if ((texture != null) && !texture.equals (dtexture))	o.addProperty ("texture", texture);
 		return o;
 	}

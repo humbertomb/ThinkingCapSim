@@ -139,10 +139,10 @@ public class WMIcon extends WMElement
 
 	public WMIcon (JsonObject o)
 	{
-		label	= WorldJson.getString (o, "label", "icon");
-		JsonArray	arr = WorldJson.getArray (o, "lines");
+		label	= World.getString (o, "label", "icon");
+		JsonArray	arr = World.getArray (o, "lines");
 		lines	= new Line2[arr.size ()];
-		for (int i = 0; i < lines.length; i++)		lines[i] = WorldJson.toLine (arr.get (i).getAsJsonObject ());
+		for (int i = 0; i < lines.length; i++)		lines[i] = World.toLine (arr.get (i).getAsJsonObject ());
 	}
 
 	public JsonObject toJson ()
@@ -150,7 +150,7 @@ public class WMIcon extends WMElement
 		JsonObject	o = new JsonObject ();
 		JsonArray	arr = new JsonArray ();
 		o.addProperty ("label", label);
-		for (Line2 l : lines)		arr.add (WorldJson.line (l));
+		for (Line2 l : lines)		arr.add (World.line (l));
 		o.add ("lines", arr);
 		return o;
 	}

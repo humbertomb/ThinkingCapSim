@@ -84,19 +84,19 @@ public class WMZone extends WMElement
 
     public WMZone (JsonObject o, String dtexture)
     {
-        label	= WorldJson.getString (o, "label", "zone");
-        z		= WorldJson.getDouble (o, "z", 0.0);
-        area 	= new Rectangle2D.Double (WorldJson.getDouble (o, "x"), WorldJson.getDouble (o, "y"), WorldJson.getDouble (o, "width"), WorldJson.getDouble (o, "height"));
-        texture	= WorldJson.getString (o, "texture", dtexture);
+        label	= World.getString (o, "label", "zone");
+        z		= World.getDouble (o, "z", 0.0);
+        area 	= new Rectangle2D.Double (World.getDouble (o, "x"), World.getDouble (o, "y"), World.getDouble (o, "width"), World.getDouble (o, "height"));
+        texture	= World.getString (o, "texture", dtexture);
     }
 
     public JsonObject toJson (String dtexture)
     {
         JsonObject	o = new JsonObject ();
         o.addProperty ("label", label);
-        WorldJson.putPoint (o, area.getX (), area.getY (), z);
-        o.addProperty ("width", WorldJson.num (area.getWidth ()));
-        o.addProperty ("height", WorldJson.num (area.getHeight ()));
+        World.putPoint (o, area.getX (), area.getY (), z);
+        o.addProperty ("width", World.num (area.getWidth ()));
+        o.addProperty ("height", World.num (area.getHeight ()));
         if ((texture != null) && !texture.equals (dtexture))		o.addProperty ("texture", texture);
         return o;
     }

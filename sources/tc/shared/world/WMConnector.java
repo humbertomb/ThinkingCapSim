@@ -78,22 +78,22 @@ public class WMConnector extends WMElement
 
     public WMConnector (JsonObject o, double dwidth, double dheight, String dtexture)
     {
-        label	= WorldJson.getString (o, "label", "door");
-        edge	= WorldJson.toLine (WorldJson.getObject (o, "edge"));
-        path	= o.has ("path") ? WorldJson.toLine (WorldJson.getObject (o, "path")) : new Line2 (edge.orig ().x (), edge.orig ().y (), edge.z1 (), edge.dest ().x (), edge.dest ().y (), edge.z2 ());
-        width	= WorldJson.getDouble (o, "width", dwidth);
-        height	= WorldJson.getDouble (o, "height", dheight);
-        texture	= WorldJson.getString (o, "texture", dtexture);
+        label	= World.getString (o, "label", "door");
+        edge	= World.toLine (World.getObject (o, "edge"));
+        path	= o.has ("path") ? World.toLine (World.getObject (o, "path")) : new Line2 (edge.orig ().x (), edge.orig ().y (), edge.z1 (), edge.dest ().x (), edge.dest ().y (), edge.z2 ());
+        width	= World.getDouble (o, "width", dwidth);
+        height	= World.getDouble (o, "height", dheight);
+        texture	= World.getString (o, "texture", dtexture);
     }
 
     public JsonObject toJson (double dwidth, double dheight, String dtexture)
     {
         JsonObject	o = new JsonObject ();
         o.addProperty ("label", label);
-        o.add ("edge", WorldJson.line (edge));
-        o.add ("path", WorldJson.line (path));
-        if (width != dwidth)							o.addProperty ("width", WorldJson.num (width));
-        if (height != dheight)							o.addProperty ("height", WorldJson.num (height));
+        o.add ("edge", World.line (edge));
+        o.add ("path", World.line (path));
+        if (width != dwidth)							o.addProperty ("width", World.num (width));
+        if (height != dheight)							o.addProperty ("height", World.num (height));
         if ((texture != null) && !texture.equals (dtexture))	o.addProperty ("texture", texture);
         return o;
     }

@@ -96,20 +96,20 @@ public class WMBeacon extends WMElement
 
     public WMBeacon (JsonObject o)
     {
-        label	= WorldJson.getString (o, "label", "b");
-        pos		= new Position (WorldJson.getDouble (o, "x"), WorldJson.getDouble (o, "y"), WorldJson.getDouble (o, "z", 0.0), Math.toRadians (WorldJson.getDouble (o, "orientation", 0.0)));
-        width	= WorldJson.getDouble (o, "width", 0.2);
-        height	= WorldJson.getDouble (o, "height", DEF_HEIGHT);
+        label	= World.getString (o, "label", "b");
+        pos		= new Position (World.getDouble (o, "x"), World.getDouble (o, "y"), World.getDouble (o, "z", 0.0), Math.toRadians (World.getDouble (o, "orientation", 0.0)));
+        width	= World.getDouble (o, "width", 0.2);
+        height	= World.getDouble (o, "height", DEF_HEIGHT);
     }
 
     public JsonObject toJson ()
     {
         JsonObject	o = new JsonObject ();
         o.addProperty ("label", label);
-        WorldJson.putPoint (o, pos.x (), pos.y (), pos.z ());
-        o.addProperty ("orientation", WorldJson.num (Math.toDegrees (pos.alpha ())));
-        o.addProperty ("width", WorldJson.num (width));
-        o.addProperty ("height", WorldJson.num (height));
+        World.putPoint (o, pos.x (), pos.y (), pos.z ());
+        o.addProperty ("orientation", World.num (Math.toDegrees (pos.alpha ())));
+        o.addProperty ("width", World.num (width));
+        o.addProperty ("height", World.num (height));
         return o;
     }
 }

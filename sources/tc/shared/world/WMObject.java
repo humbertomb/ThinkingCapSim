@@ -216,14 +216,14 @@ public class WMObject extends WMElement
 
 	public WMObject (JsonObject o, WMIcons icons)
 	{
-		iconId	= WorldJson.getString (o, "icon", "");
-		pos		= WorldJson.toPoint (o);
-		a		= Math.toRadians (WorldJson.getDouble (o, "orientation", 0.0));
-		String	cname = WorldJson.getString (o, "color", null);
+		iconId	= World.getString (o, "icon", "");
+		pos		= World.toPoint (o);
+		a		= Math.toRadians (World.getDouble (o, "orientation", 0.0));
+		String	cname = World.getString (o, "color", null);
 		color	= (cname != null) ? ColorTool.getColorFromName (cname) : WColor.BLACK;
-		shape	= WorldJson.getString (o, "shape", null);
+		shape	= World.getString (o, "shape", null);
 		if ((shape != null) && shape.equalsIgnoreCase ("none"))		shape = null;
-		usecolor = WorldJson.getBoolean (o, "usecolor", false);
+		usecolor = World.getBoolean (o, "usecolor", false);
 		icon = (icons != null) ? icons.at (iconId) : null;
 		if (icon == null)
 		{
@@ -236,8 +236,8 @@ public class WMObject extends WMElement
 	{
 		JsonObject	o = new JsonObject ();
 		o.addProperty ("icon", iconId);
-		WorldJson.putPoint (o, pos.x (), pos.y (), pos.z ());
-		o.addProperty ("orientation", WorldJson.num (a * Angles.RTOD));
+		World.putPoint (o, pos.x (), pos.y (), pos.z ());
+		o.addProperty ("orientation", World.num (a * Angles.RTOD));
 		o.addProperty ("color", ColorTool.getNameFromColor (color));
 		if (shape != null)
 		{

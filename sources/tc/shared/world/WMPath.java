@@ -116,13 +116,13 @@ public class WMPath
 	{
 		JsonArray	arr = ((e != null) && e.isJsonArray ()) ? e.getAsJsonArray () : new JsonArray ();
 		points	= new Point2[arr.size ()];
-		for (int i = 0; i < points.length; i++)		points[i] = WorldJson.toPoint (arr.get (i).getAsJsonObject ());
+		for (int i = 0; i < points.length; i++)		points[i] = World.toPoint (arr.get (i).getAsJsonObject ());
 	}
 
 	public JsonArray toJson ()
 	{
 		JsonArray	arr = new JsonArray ();
-		for (Point2 p : points)		arr.add (WorldJson.point (p));
+		for (Point2 p : points)		arr.add (World.point (p));
 		return arr;
 	}
 }

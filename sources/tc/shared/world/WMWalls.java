@@ -383,12 +383,12 @@ public class WMWalls extends Object
 	public void fromJson (JsonElement e)
 	{
 		JsonObject	o = ((e != null) && e.isJsonObject ()) ? e.getAsJsonObject () : new JsonObject ();
-		JsonObject	def = WorldJson.getObject (o, "defaults");
-		JsonArray	arr = WorldJson.getArray (o, "items");
+		JsonObject	def = World.getObject (o, "defaults");
+		JsonArray	arr = World.getArray (o, "items");
 
-		defWidth	= WorldJson.getDouble (def, "width", defWidth);
-		defHeight	= WorldJson.getDouble (def, "height", defHeight);
-		defTexture	= WorldJson.getString (def, "texture", defTexture);
+		defWidth	= World.getDouble (def, "width", defWidth);
+		defHeight	= World.getDouble (def, "height", defHeight);
+		defTexture	= World.getString (def, "texture", defTexture);
 
 		edges	= new WMWall[arr.size ()];
 		for (int i = 0; i < edges.length; i++)		edges[i] = new WMWall (arr.get (i).getAsJsonObject (), defWidth, defHeight, defTexture);
@@ -400,8 +400,8 @@ public class WMWalls extends Object
 		JsonObject	o = new JsonObject ();
 		JsonObject	def = new JsonObject ();
 		JsonArray	arr = new JsonArray ();
-		def.addProperty ("width", WorldJson.num (defWidth));
-		def.addProperty ("height", WorldJson.num (defHeight));
+		def.addProperty ("width", World.num (defWidth));
+		def.addProperty ("height", World.num (defHeight));
 		def.addProperty ("texture", defTexture);
 		for (WMWall w : edges)		arr.add (w.toJson (defWidth, defHeight, defTexture));
 		o.add ("defaults", def);

@@ -76,19 +76,19 @@ public class WMCBeacon extends WMElement
 
 	public WMCBeacon (JsonObject o)
 	{
-		label		= WorldJson.getString (o, "label", "cb");
-		pos			= WorldJson.toPoint (o);
-		diameter	= WorldJson.getDouble (o, "diameter", DEF_DIAMETER);
-		height		= WorldJson.getDouble (o, "height", DEF_HEIGHT);
+		label		= World.getString (o, "label", "cb");
+		pos			= World.toPoint (o);
+		diameter	= World.getDouble (o, "diameter", DEF_DIAMETER);
+		height		= World.getDouble (o, "height", DEF_HEIGHT);
 	}
 
 	public JsonObject toJson ()
 	{
 		JsonObject	o = new JsonObject ();
 		o.addProperty ("label", label);
-		WorldJson.putPoint (o, pos.x (), pos.y (), pos.z ());
-		o.addProperty ("diameter", WorldJson.num (diameter));
-		o.addProperty ("height", WorldJson.num (height));
+		World.putPoint (o, pos.x (), pos.y (), pos.z ());
+		o.addProperty ("diameter", World.num (diameter));
+		o.addProperty ("height", World.num (height));
 		return o;
 	}
 }

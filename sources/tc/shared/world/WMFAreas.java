@@ -28,7 +28,7 @@ public class WMFAreas
 		return fareas[i];
 	}
 	
-	public String toString ()					{ return WorldJson.toText (toJson ()); }
+	public String toString ()					{ return World.toText (toJson ()); }
 
 	public Polygon2[] getPolygons(){
 		Polygon2[] polygons = new Polygon2[fareas.length];
@@ -76,9 +76,9 @@ public class WMFAreas
 	public void fromJson (JsonElement e)
 	{
 		JsonObject	o = ((e != null) && e.isJsonObject ()) ? e.getAsJsonObject () : new JsonObject ();
-		JsonObject	def = WorldJson.getObject (o, "defaults");
-		JsonArray	arr = WorldJson.getArray (o, "items");
-		defTexture	= WorldJson.getString (def, "texture", defTexture);
+		JsonObject	def = World.getObject (o, "defaults");
+		JsonArray	arr = World.getArray (o, "items");
+		defTexture	= World.getString (def, "texture", defTexture);
 		fareas	= new WMFArea[arr.size ()];
 		for (int i = 0; i < fareas.length; i++)		fareas[i] = new WMFArea (arr.get (i).getAsJsonObject (), defTexture);
 	}

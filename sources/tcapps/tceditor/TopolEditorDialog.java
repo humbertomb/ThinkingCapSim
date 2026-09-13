@@ -79,7 +79,7 @@ public class TopolEditorDialog extends JDialog implements TopolCanvas.Listener
 	{
 		super (owner, TITLE, ModalityType.APPLICATION_MODAL);
 		this.world		= world;
-		this.snapshot	= tc.shared.world.WorldJson.toText (world.topology ().toJson ());
+		this.snapshot	= World.toText (world.topology ().toJson ());
 
 		buildGUI ();
 		setSize (1040, 720);
@@ -368,7 +368,7 @@ public class TopolEditorDialog extends JDialog implements TopolCanvas.Listener
 	private void accept ()
 	{
 		if (propTable.isEditing ())		propTable.getCellEditor ().stopCellEditing ();
-		modified	= !snapshot.equals (tc.shared.world.WorldJson.toText (world.topology ().toJson ()));
+		modified	= !snapshot.equals (World.toText (world.topology ().toJson ()));
 		accepted	= true;
 		dispose ();
 	}
@@ -377,7 +377,7 @@ public class TopolEditorDialog extends JDialog implements TopolCanvas.Listener
 	{
 		if (propTable.isEditing ())		propTable.getCellEditor ().cancelCellEditing ();
 		// restore the topology the world had when the dialog was opened
-		world.setTopology (new HTopolMap (world, tc.shared.world.WorldJson.parse (snapshot)));
+		world.setTopology (new HTopolMap (world, World.parse (snapshot)));
 		modified	= false;
 		accepted	= false;
 		dispose ();
