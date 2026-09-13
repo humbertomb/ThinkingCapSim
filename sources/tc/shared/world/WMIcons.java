@@ -4,7 +4,10 @@
 
 package tc.shared.world;
 
-import java.io.PrintWriter;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.Properties;
 
 import wucore.utils.geom.Line2;
@@ -127,22 +130,21 @@ public class WMIcons
 			icons[i] = new WMIcon (props.getProperty ("ICON_" + i));
 	}
 
-	public void toProperties (Properties props)
+	/* JSON: [{label, lines}, ...] */
+
+	public WMIcons (JsonElement e)				{ fromJson (e); }
+
+	public void fromJson (JsonElement e)
 	{
-		props.setProperty ("ICONS", Integer.toString (icons.length));
-		for (int i = 0; i < icons.length; i++)
-			props.setProperty ("ICON_" + i, icons[i].toRawString ());
+		JsonArray	arr = ((e != null) && e.isJsonArray ()) ? e.getAsJsonArray () : new JsonArray ();
+		icons	= new WMIcon[arr.size ()];
+		for (int i = 0; i < icons.length; i++)		icons[i] = new WMIcon (arr.get (i).getAsJsonObject ());
 	}
 
-	public void toFile (PrintWriter out)
+	public JsonArray toJson ()
 	{
-		out.println ("# ==============================");
-		out.println ("# ICONS (2D shapes, local coordinates)");
-		out.println ("# ==============================");
-		out.println ("ICONS = " + icons.length);
-		out.println ();
-		for (int i = 0; i < icons.length; i++)
-			out.println ("ICON_" + i + " = " + icons[i].toRawString ());
-		out.println ();
+		JsonArray	arr = new JsonArray ();
+		for (WMIcon ic : icons)		arr.add (ic.toJson ());
+		return arr;
 	}
 }

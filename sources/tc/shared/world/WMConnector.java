@@ -6,10 +6,13 @@
  */
 package tc.shared.world;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.StringTokenizer;
 
 import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.DoubleFormat;
 import wucore.utils.dxf.entities.LineDxf;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point3;
@@ -38,50 +41,6 @@ public class WMConnector extends WMElement
     // Visualization components
     public String				texture;					
     
-    // Constructors
-    public WMConnector (String prop, double dwidth, double dheight, String dtexture)
-    {
-        StringTokenizer		st;
-        double				x1, x2, y1, y2, z1, z2;
-        double				px1, px2, py1, py2, pz1, pz2;
-        
-        st		= new StringTokenizer (prop,", \t");
-        x1		= Double.parseDouble (st.nextToken());
-        y1		= Double.parseDouble (st.nextToken());
-        z1		= Double.parseDouble (st.nextToken());
-        x2		= Double.parseDouble (st.nextToken());
-        y2		= Double.parseDouble (st.nextToken());
-        z2		= Double.parseDouble (st.nextToken());
-        label	= st.nextToken(); 
-        edge		= new Line2 (x1, y1, z1, x2, y2, z2);
-        
-        px1		= x1;	py1		= y1;	pz1		= z1;
-        px2		= x2;	py2		= y2;	pz2		= z2;
-        
-        if (st.hasMoreTokens())
-        {
-            px1		= Double.parseDouble (st.nextToken());
-            py1		= Double.parseDouble (st.nextToken());
-            pz1		= Double.parseDouble (st.nextToken());
-            px2		= Double.parseDouble (st.nextToken());
-            py2		= Double.parseDouble (st.nextToken());
-            pz2		= Double.parseDouble (st.nextToken());
-        }
-        path		= new Line2 (px1, py1, pz1, px2, py2, pz2);
-        
-        height	= dheight;
-        width	= dwidth;
-        texture	= dtexture;
-        
-        if (st.hasMoreTokens())
-            width	= Double.parseDouble (st.nextToken());
-        
-        if (st.hasMoreTokens())
-            height	= Double.parseDouble (st.nextToken());
-        
-        if (st.hasMoreTokens())
-            texture	= st.nextToken();
-    }
     
     public WMConnector(){
     }
@@ -116,22 +75,28 @@ public class WMConnector extends WMElement
         dxf.addEntity(line);
     }
     
-    // Instance methods
-    public String toRawString ()
+
+    /* JSON: {label, edge: {x1..z2}, path: {x1..z2} [, width, height, texture]} */
+
+    public WMConnector (JsonObject o, double dwidth, double dheight, String dtexture)
     {
-        return pointsRawString ()+", "+DoubleFormat.format(width)+", "+DoubleFormat.format(height)+", "+texture;
+        label	= WorldJson.getString (o, "label", "door");
+        edge	= WorldJson.toLine (WorldJson.getObject (o, "edge"));
+        path	= o.has ("path") ? WorldJson.toLine (WorldJson.getObject (o, "path")) : new Line2 (edge.orig ().x (), edge.orig ().y (), edge.z1 (), edge.dest ().x (), edge.dest ().y (), edge.z2 ());
+        width	= WorldJson.getDouble (o, "width", dwidth);
+        height	= WorldJson.getDouble (o, "height", dheight);
+        texture	= WorldJson.getString (o, "texture", dtexture);
     }
 
-    /** "x1, y1, z1, x2, y2, z2, label, px1, py1, pz1, px2, py2, pz2" */
-    public String pointsRawString ()
+    public JsonObject toJson (double dwidth, double dheight, String dtexture)
     {
-        return line3 (edge)+", "+label+", "+line3 (path);
+        JsonObject	o = new JsonObject ();
+        o.addProperty ("label", label);
+        o.add ("edge", WorldJson.line (edge));
+        o.add ("path", WorldJson.line (path));
+        if (width != dwidth)							o.addProperty ("width", WorldJson.num (width));
+        if (height != dheight)							o.addProperty ("height", WorldJson.num (height));
+        if ((texture != null) && !texture.equals (dtexture))	o.addProperty ("texture", texture);
+        return o;
     }
-
-    static String line3 (Line2 l)
-    {
-        return DoubleFormat.format(l.orig().x())+", "+DoubleFormat.format(l.orig().y())+", "+DoubleFormat.format(l.z1())
-             +", "+DoubleFormat.format(l.dest().x())+", "+DoubleFormat.format(l.dest().y())+", "+DoubleFormat.format(l.z2());
-    }
-    
 }

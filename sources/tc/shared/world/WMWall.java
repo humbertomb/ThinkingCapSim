@@ -6,10 +6,12 @@
  */
 package tc.shared.world;
 
-import java.util.StringTokenizer;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 
 import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.DoubleFormat;
 import wucore.utils.dxf.entities.LineDxf;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point3;
@@ -35,35 +37,6 @@ public class WMWall extends WMElement
 	public WMWall(){
 	}
 	
-	// Constructors
-	public WMWall (String prop, double dwidth, double dheight, String dtexture)
-	{
-		StringTokenizer		st;
-		double				x1, x2, y1, y2;
-		
-		double				z1, z2;
-		st		= new StringTokenizer (prop,", \t");
-		x1		= Double.parseDouble (st.nextToken());
-		y1		= Double.parseDouble (st.nextToken());
-		z1		= Double.parseDouble (st.nextToken());
-		x2		= Double.parseDouble (st.nextToken());
-		y2		= Double.parseDouble (st.nextToken());
-		z2		= Double.parseDouble (st.nextToken());
-		edge		= new Line2 (x1, y1, z1, x2, y2, z2);
-		
-		height	= dheight;
-		width	= dwidth;
-		texture	= dtexture;
-		
-		if (st.hasMoreTokens())
-			width	= Double.parseDouble (st.nextToken());
-		
-		if (st.hasMoreTokens())
-			height	= Double.parseDouble (st.nextToken());
-		
-		if (st.hasMoreTokens())
-			texture	= st.nextToken();
-	}
 	
 	public WMWall (LineDxf line, double dwidth, double dheight, String dtexture){
 	      edge = new Line2(line.getStart().x(),line.getStart().y(),line.getStart().z(),line.getEnd().x(),line.getEnd().y(),line.getEnd().z());
@@ -94,16 +67,25 @@ public class WMWall extends WMElement
        dxf.addEntity(line);
 	}
 	
-	// Instance methods
-	public String toRawString ()
+
+
+	/* JSON: {x1, y1, z1, x2, y2, z2 [, width, height, texture]} (missing values take the collection defaults) */
+
+	public WMWall (JsonObject o, double dwidth, double dheight, String dtexture)
 	{
-		return pointsRawString ()+", "+DoubleFormat.format(width)+", "+DoubleFormat.format(height)+", "+texture;
+		edge	= WorldJson.toLine (o);
+		width	= WorldJson.getDouble (o, "width", dwidth);
+		height	= WorldJson.getDouble (o, "height", dheight);
+		texture	= WorldJson.getString (o, "texture", dtexture);
 	}
 
-	/** "x1, y1, z1, x2, y2, z2" */
-	public String pointsRawString ()
+	/** Width, height and texture are only written when they differ from the defaults. */
+	public JsonObject toJson (double dwidth, double dheight, String dtexture)
 	{
-		return DoubleFormat.format(edge.orig().x())+", "+DoubleFormat.format(edge.orig().y())+", "+DoubleFormat.format(edge.z1())
-			+", "+DoubleFormat.format(edge.dest().x())+", "+DoubleFormat.format(edge.dest().y())+", "+DoubleFormat.format(edge.z2());
+		JsonObject	o = WorldJson.line (edge);
+		if (width != dwidth)							o.addProperty ("width", WorldJson.num (width));
+		if (height != dheight)							o.addProperty ("height", WorldJson.num (height));
+		if ((texture != null) && !texture.equals (dtexture))	o.addProperty ("texture", texture);
+		return o;
 	}
 }

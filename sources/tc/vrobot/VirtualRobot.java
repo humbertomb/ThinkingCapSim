@@ -39,7 +39,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected int					lport;				// Local robot port (VR to robot driver)
 	protected Properties			rprops;				// Contents of robot description file
 	protected String				wname;				// Description of robot environment
-	protected Properties			wprops;				// Contents of world description file
+	protected String				wtext;				// Contents (JSON text) of the world description file
 	protected String				tname;				// Description of topologic map
 	protected Properties			tprops;				// Contents of topologic description file
 	
@@ -98,20 +98,14 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		} catch (Exception e) { e.printStackTrace (); }
 
 		// Load world description and parameters (in case "a priori" world is selected)
-		wprops			= null;
+		wtext			= null;
 		tprops			= null;
 		if (wapriori)
 		{
 			if (wname != null)
 			{
-				wprops			= new Properties ();
-				try
-				{
-					file 		= new File (wname);
-					stream 		= new FileInputStream (file);
-					wprops.load (stream);
-					stream.close ();
-				} catch (Exception e) { e.printStackTrace (); }
+				try { wtext = new String (java.nio.file.Files.readAllBytes (java.nio.file.Paths.get (wname)), java.nio.charset.StandardCharsets.UTF_8); }
+				catch (Exception e) { e.printStackTrace (); }
 			}
 			
 			if (tname != null)
@@ -149,7 +143,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		System.out.println ("  [VRob] Sending new RDF");
 		
 		// Send robot description to Linda space
-		tuple	= new Tuple (Tuple.CONFIG, new ItemConfig (rprops, wprops, tprops, 0));
+		tuple	= new Tuple (Tuple.CONFIG, new ItemConfig (rprops, wtext, tprops, 0));
 		linda.write (tuple);
 	}
 	

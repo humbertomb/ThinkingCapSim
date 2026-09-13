@@ -1,6 +1,9 @@
 package tc.shared.world;
 
-import java.util.StringTokenizer;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 
 import wucore.utils.geom.Polygon2;
 
@@ -12,48 +15,29 @@ public class WMFArea extends WMElement
 	// Constructors
 	public WMFArea(){
 	}
-	
-	public WMFArea (String prop, String dtexture)
+
+	/* JSON: {label, points: [{x, y, z}, ...] [, texture]} */
+
+	public WMFArea (JsonObject o, String dtexture)
 	{
-		StringTokenizer		st;
-		int					npoints;
-		double				x1, y1;
-		
-		polygon = new Polygon2();
-		
-		st		= new StringTokenizer (prop,", \t");
-		npoints	= Integer.parseInt(st.nextToken());
-		double				z1;
-		for (int i = 0; i < npoints; i++)
+		polygon	= new Polygon2 ();
+		label	= WorldJson.getString (o, "label", "farea");
+		for (JsonElement e : WorldJson.getArray (o, "points"))
 		{
-			x1	= Double.parseDouble (st.nextToken());
-			y1	= Double.parseDouble (st.nextToken());
-			z1	= Double.parseDouble (st.nextToken());
-			polygon.addPoint(x1, y1, z1);
+			JsonObject	p = e.getAsJsonObject ();
+			polygon.addPoint (WorldJson.getDouble (p, "x"), WorldJson.getDouble (p, "y"), WorldJson.getDouble (p, "z", 0.0));
 		}
-		
-		label	= st.nextToken();
-		
-		texture	= dtexture;
-		if (st.hasMoreTokens())
-			texture	= st.nextToken();
+		texture	= WorldJson.getString (o, "texture", dtexture);
 	}
-	
-	// Instance methods
-	public String toRawString ()
+
+	public JsonObject toJson (String dtexture)
 	{
-		return toRawString2 ().concat(", ").concat(texture);
-	}
-	
-	public String toRawString2 ()
-	{
-		String rname = new String(Integer.toString(polygon.npoints));
-		for(int i = 0; i < polygon.npoints; i++)
-		{
-			rname = rname.concat(", " + polygon.xpoints[i] + ", " + polygon.ypoints[i] + ", " + polygon.zpoints[i]);
-		}
-		rname = rname.concat(", ").concat(label);
-		
-		return rname;
+		JsonObject	o = new JsonObject ();
+		JsonArray	arr = new JsonArray ();
+		o.addProperty ("label", label);
+		for (int i = 0; i < polygon.npoints; i++)		arr.add (WorldJson.point (polygon.xpoints[i], polygon.ypoints[i], polygon.zpoints[i]));
+		o.add ("points", arr);
+		if ((texture != null) && !texture.equals (dtexture))		o.addProperty ("texture", texture);
+		return o;
 	}
 }

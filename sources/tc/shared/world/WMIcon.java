@@ -4,9 +4,12 @@
 
 package tc.shared.world;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.StringTokenizer;
 
-import wucore.utils.dxf.DoubleFormat;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point3;
 
@@ -133,19 +136,23 @@ public class WMIcon extends WMElement
 		return new WMIcon (newLabel, l);
 	}
 
-	/** "n, x1, y1, x2, y2, ..." (without the label) */
-	public String linesRawString ()
+	/* JSON: {label, lines: [{x1, y1, z1, x2, y2, z2}, ...]} */
+
+	public WMIcon (JsonObject o)
 	{
-		StringBuffer	sb = new StringBuffer ();
-		sb.append (lines.length);
-		for (Line2 l : lines)
-			sb.append (", ").append (DoubleFormat.format (l.orig ().x ())).append (", ").append (DoubleFormat.format (l.orig ().y ())).append (", ").append (DoubleFormat.format (l.z1 ()))
-			  .append (", ").append (DoubleFormat.format (l.dest ().x ())).append (", ").append (DoubleFormat.format (l.dest ().y ())).append (", ").append (DoubleFormat.format (l.z2 ()));
-		return sb.toString ();
+		label	= WorldJson.getString (o, "label", "icon");
+		JsonArray	arr = WorldJson.getArray (o, "lines");
+		lines	= new Line2[arr.size ()];
+		for (int i = 0; i < lines.length; i++)		lines[i] = WorldJson.toLine (arr.get (i).getAsJsonObject ());
 	}
 
-	public String toRawString ()
+	public JsonObject toJson ()
 	{
-		return label + ", " + linesRawString ();
+		JsonObject	o = new JsonObject ();
+		JsonArray	arr = new JsonArray ();
+		o.addProperty ("label", label);
+		for (Line2 l : lines)		arr.add (WorldJson.line (l));
+		o.add ("lines", arr);
+		return o;
 	}
 }

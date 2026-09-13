@@ -6,11 +6,13 @@
  */
 package tc.shared.world;
 
-import java.util.StringTokenizer;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 
 import devices.pos.Position;
 import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.DoubleFormat;
 import wucore.utils.dxf.entities.TextDxf;
 import wucore.utils.geom.Point3;
 
@@ -33,17 +35,6 @@ public class WMDock extends WMElement
 
     public Position					pos;
     public FlowType					flow	= DEFAULT_FLOW;
-    
-    public WMDock(String prop) {
-        StringTokenizer st = new StringTokenizer (prop,", \t");
-        double x1 = Double.parseDouble (st.nextToken());
-        double y1 = Double.parseDouble (st.nextToken());
-        double z1 = Double.parseDouble (st.nextToken());
-        double	r  = Double.parseDouble (st.nextToken()); 				//orientation - degrees
-        pos = new Position(x1,y1,z1,Math.toRadians(r));
-        label = new String (st.nextToken());
-        if (st.hasMoreTokens ())		flow = parseFlow (st.nextToken ());		// optional: older files have no flow
-    }
 
     public WMDock(Position pos, String label, FlowType flow){
         this.pos = pos;
@@ -94,9 +85,23 @@ public class WMDock extends WMElement
     public double getAng(){
         return pos.alpha();
     }
-    
-    public String toRawString ()
+
+    /* JSON: {label, x, y, z, orientation (deg), flow} */
+
+    public WMDock (JsonObject o)
     {
-        return DoubleFormat.format(pos.x ()) + ", " + DoubleFormat.format(pos.y ()) + ", " + DoubleFormat.format(pos.z ()) + ", " + DoubleFormat.format(Math.toDegrees (pos.alpha())) + ", " + label + ", " + flow.name ();
+        label	= WorldJson.getString (o, "label", "dock");
+        pos		= new Position (WorldJson.getDouble (o, "x"), WorldJson.getDouble (o, "y"), WorldJson.getDouble (o, "z", 0.0), Math.toRadians (WorldJson.getDouble (o, "orientation", 0.0)));
+        flow	= parseFlow (WorldJson.getString (o, "flow", null));
+    }
+
+    public JsonObject toJson ()
+    {
+        JsonObject	o = new JsonObject ();
+        o.addProperty ("label", label);
+        WorldJson.putPoint (o, pos.x (), pos.y (), pos.z ());
+        o.addProperty ("orientation", WorldJson.num (Math.toDegrees (pos.alpha ())));
+        o.addProperty ("flow", flow.name ());
+        return o;
     }
 }

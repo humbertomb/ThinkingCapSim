@@ -230,7 +230,7 @@ public class Monitor extends Controller
 		
 		if (listener != null)
 		{
-			listener.updateWorldMap (space, item.props_world);
+			listener.updateWorldMap (space, item.world);
 
 			if (item.props_robot != null)
 				listener.changeConfiguration (space, new RobotDesc (item.props_robot), new FusionDesc (item.props_robot));

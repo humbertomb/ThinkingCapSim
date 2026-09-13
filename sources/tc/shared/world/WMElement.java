@@ -15,7 +15,4 @@ package tc.shared.world;
 public abstract class WMElement extends Object
 {
 	public String					label;
-	
-	// Abstract methods
-	public abstract String toRawString ();
 }

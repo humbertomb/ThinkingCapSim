@@ -6,11 +6,13 @@
  */
 package tc.shared.world;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.awt.geom.Rectangle2D;
-import java.util.StringTokenizer;
 
 import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.DoubleFormat;
 import wucore.utils.dxf.entities.PolylineDxf;
 import wucore.utils.dxf.entities.VertexDxf;
 import wucore.utils.geom.Line2;
@@ -34,26 +36,6 @@ public class WMZone extends WMElement
     public double		width ()			{ return area.getWidth (); }
     public double		height ()		{ return area.getHeight (); }
     
-    // Constructors
-    public WMZone (String prop, String dtexture)
-    {
-        StringTokenizer		st;
-        double				x1, y1;
-        double				w, h;
-        
-        st		= new StringTokenizer (prop,", \t");
-        x1		= Double.parseDouble (st.nextToken());
-        y1		= Double.parseDouble (st.nextToken());
-        z		= Double.parseDouble (st.nextToken());
-        w		= Double.parseDouble (st.nextToken());
-        h		= Double.parseDouble (st.nextToken());
-        area 	= new Rectangle2D.Double (x1, y1, w, h);
-        label	= st.nextToken(); 
-        
-        texture	= dtexture;
-        if (st.hasMoreTokens())
-            texture	= st.nextToken();
-    }
     
     public WMZone(){
     }
@@ -98,15 +80,26 @@ public class WMZone extends WMElement
         dxf.addEntity(pol);   
     }
     
-    // Instance methods
-    public String toRawString ()
+
+
+    /* JSON: {label, x, y, z, width, height [, texture]} */
+
+    public WMZone (JsonObject o, String dtexture)
     {
-        return pointsRawString ()+", "+texture;
+        label	= WorldJson.getString (o, "label", "zone");
+        z		= WorldJson.getDouble (o, "z", 0.0);
+        area 	= new Rectangle2D.Double (WorldJson.getDouble (o, "x"), WorldJson.getDouble (o, "y"), WorldJson.getDouble (o, "width"), WorldJson.getDouble (o, "height"));
+        texture	= WorldJson.getString (o, "texture", dtexture);
     }
 
-    /** "x, y, z, width, height, label" */
-    public String pointsRawString ()
+    public JsonObject toJson (String dtexture)
     {
-        return DoubleFormat.format(area.getX())+", "+DoubleFormat.format(area.getY())+", "+DoubleFormat.format(z)+", "+DoubleFormat.format(area.getWidth())+", "+DoubleFormat.format(area.getHeight())+", "+label;
+        JsonObject	o = new JsonObject ();
+        o.addProperty ("label", label);
+        WorldJson.putPoint (o, area.getX (), area.getY (), z);
+        o.addProperty ("width", WorldJson.num (area.getWidth ()));
+        o.addProperty ("height", WorldJson.num (area.getHeight ()));
+        if ((texture != null) && !texture.equals (dtexture))		o.addProperty ("texture", texture);
+        return o;
     }
 }

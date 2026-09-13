@@ -6,8 +6,10 @@
  */
 package tc.shared.world;
 
-import java.io.PrintWriter;
-import java.util.Properties;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
@@ -27,11 +29,6 @@ public class WMDocks
 	protected WMDock[] docks;
 	
 
-	// Constructors
-	public WMDocks (Properties props)
-	{
-		fromProperties (props);
-	}
 	
 	public WMDocks (DXFWorldFile dxf){
 		ArrayList<Entity> entities = dxf.getEntities();
@@ -77,42 +74,6 @@ public class WMDocks
 		return -1;
 	}
 	
-
-
-	
-	public void fromProperties (Properties props)
-	{
-		String				prop;
-		docks = new WMDock[Integer.parseInt (props.getProperty ("DOCKINGS","0"))];
-		for (int i=0; i < docks.length; i++){
-			prop		= props.getProperty ("DOCKING_"+i);		
-			docks[i] = new WMDock (prop);
-		}
-	}
-	
-	public void toProperties (Properties props)
-	{
-		int			i;
-		
-		props.setProperty ("DOCKINGS",Integer.toString (docks.length));
-		
-		for (i = 0; i < docks.length; i++)
-			props.setProperty ("DOCKING_"+i, docks[i].toRawString ());
-	}
-	
-	public void toFile (PrintWriter out)
-	{
-		// Print Cilindrical Beacon
-		out.println("# ==============================");
-		out.println("# DOCKS");
-		out.println("# ==============================");
-		out.println ("DOCKINGS = " + n());
-		out.println("");
-		for (int i = 0; i < docks.length; i++)
-			out.println ("DOCKING_" + i + " = " + docks[i].toRawString ());
-		out.println ();
-	}
-	
 	public void toDxfFile (DXFWorldFile dxf){
 	    
 	    // Define una capa con un color determinado (opcional)
@@ -147,5 +108,24 @@ public class WMDocks
 		for (int i = 0; i < docks.length; i++)
 			if (docks[i] == e)				return i;
 		return -1;
+	}
+
+	/* JSON: [{label, x, y, z, orientation, flow}, ...] */
+
+	public WMDocks ()							{ docks = new WMDock[0]; }
+	public WMDocks (JsonElement e)				{ fromJson (e); }
+
+	public void fromJson (JsonElement e)
+	{
+		JsonArray	arr = ((e != null) && e.isJsonArray ()) ? e.getAsJsonArray () : new JsonArray ();
+		docks	= new WMDock[arr.size ()];
+		for (int i = 0; i < docks.length; i++)		docks[i] = new WMDock (arr.get (i).getAsJsonObject ());
+	}
+
+	public JsonArray toJson ()
+	{
+		JsonArray	arr = new JsonArray ();
+		for (WMDock x : docks)		arr.add (x.toJson ());
+		return arr;
 	}
 }

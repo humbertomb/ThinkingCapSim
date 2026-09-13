@@ -13,14 +13,14 @@ public class ItemConfig extends Item implements Serializable
 {
 	// Robot and environment properties
 	public Properties			props_robot;
-	public Properties			props_world;
+	public String				world;				// JSON text of the world (tc.shared.world.World), or null
 	public Properties 			props_topol;
 	
 	// Constructors
 	public ItemConfig () 
 	{
 		this.props_robot	= null;
-		this.props_world	= null;
+		this.world			= null;
 		this.props_topol	= null;
 		
 		set (0);
@@ -31,9 +31,9 @@ public class ItemConfig extends Item implements Serializable
 		this (name_robot, name_world, null, tstamp);
 	}
 	
-	public ItemConfig (Properties props_robot, Properties props_world, long tstamp) 
+	public ItemConfig (Properties props_robot, String world, long tstamp) 
 	{
-		this (props_robot, props_world, null, tstamp);
+		this (props_robot, world, null, tstamp);
 	}	
 	
 	public ItemConfig (String name_robot, String name_world, String name_topol, long tstamp) 
@@ -55,14 +55,8 @@ public class ItemConfig extends Item implements Serializable
 
 		if (name_world != null)
 		{
-			this.props_world		= new Properties ();
-			try 
-			{
-				file 		= new File (name_world);
-				stream 		= new FileInputStream (file);
-				props_world.load (stream);
-				stream.close ();
-			} catch (Exception e) { e.printStackTrace (); }
+			try { this.world = new String (java.nio.file.Files.readAllBytes (java.nio.file.Paths.get (name_world)), java.nio.charset.StandardCharsets.UTF_8); }
+			catch (Exception e) { e.printStackTrace (); }
 		}
 		
 		if (name_topol != null)
@@ -79,10 +73,11 @@ public class ItemConfig extends Item implements Serializable
 		set (tstamp);
 	}	
 	
-	public ItemConfig (Properties props_robot, Properties props_world, Properties props_topol, long tstamp) 
+	/** @param world  JSON text of the world file (see {@link tc.shared.world.World#toJsonText}), or null */
+	public ItemConfig (Properties props_robot, String world, Properties props_topol, long tstamp) 
 	{
 		this.props_robot	= props_robot;
-		this.props_world	= props_world;
+		this.world			= world;
 		this.props_topol 	= props_topol;
 		
 		set (tstamp);

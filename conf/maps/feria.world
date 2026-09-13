@@ -1,94 +1,54 @@
-# ==============================
-# START POINT
-# ==============================
-START = 0.0, 0.0, 0.0, 0.0
-
-# ==============================
-# PATH POINTS
-# ==============================
-PATH_POINTS = 0
-
-
-# ==============================
-# MAP WALL LINES
-# ==============================
-MAX_LINES = 4
-
-LINE_DEF_HEIGHT = 0.75
-LINE_DEF_WIDTH = 0.01
-LINE_DEF_TEXTURE = ./conf/3dmodels/textures/wall.jpg
-
-LINE_0 = -2.5, -2.5, 0.0, 2.5, -2.5, 0.0
-LINE_1 = 2.5, -2.5, 0.0, 2.5, 2.5, 0.0
-LINE_2 = 2.5, 2.5, 0.0, -2.5, 2.5, 0.0
-LINE_3 = -2.5, 2.5, 0.0, -2.5, -2.5, 0.0
-
-# ==============================
-# ICONS (2D shapes, local coordinates)
-# ==============================
-ICONS = 2
-
-ICON_0 = net, 1, -0.0233, -0.264, 0.0, 0.0127, 0.3125, 0.0
-ICON_1 = net_2, 1, 0.0433, -0.3485, 0.0, 0.0072, 0.2459, 0.0
-
-# ==============================
-# EXTERNAL OBJECTS
-# ==============================
-MAX_OBJECTS = 2
-
-OBJECT_0 = net, -2.2356, 2.168, 0.0, -45.0, red, ./conf/3dmodels/net.3ds, true
-OBJECT_1 = net_2, 2.2993, -2.3159, 0.0, 135.0, blue, ./conf/3dmodels/net.3ds, true
-
-# ==============================
-# ZONES
-# ==============================
-ZONES = 2
-
-ZONE_DEF_TEXTURE = ./conf/3dmodels/textures/floor.jpg
-
-ZONE_0 = -3.0, -3.0, 0.0, 6.0, 6.0, Tarima
-ZONE_1 = 2.0, 2.0, 0.0, 0.2, 0.2, Gol-1
-
-# ==============================
-# NON NAVIGABLE AREAS
-# ==============================
-FAREAS = 0
-
-FAREA_DEF_TEXTURE = ./conf/3dmodels/textures/farea.jpg
-
-
-# ==============================
-# DOORS
-# ==============================
-DOORS = 0
-
-DOOR_DEF_HEIGHT = 1.9
-DOOR_DEF_WIDTH = 0.005
-DOOR_DEF_TEXTURE = ./conf/3dmodels/textures/wall.jpg
-
-
-# ==============================
-# WAYPOINTS
-# ==============================
-WPOINTS = 0
-
-
-# ==============================
-# DOCKS
-# ==============================
-DOCKINGS = 1
-
-DOCKING_0 = -3.0, -3.0, 0.0, 0.0, AA0
-
-# ==============================
-# STRIP BEACONS
-# ==============================
-BEACONS = 0
-
-
-# ==============================
-# CILINDRICAL BEACONS
-# ==============================
-CBEACONS = 0
-
-
+{
+  "starts": [
+    { "x": 0, "y": 0, "z": 0, "orientation": 0 }
+  ],
+  "path": [],
+  "walls": {
+    "defaults": { "width": 0.01, "height": 0.75, "texture": "./conf/3dmodels/textures/wall.jpg" },
+    "items": [
+      { "x1": -2.5, "y1": -2.5, "z1": 0, "x2": 2.5, "y2": -2.5, "z2": 0 },
+      { "x1": 2.5, "y1": -2.5, "z1": 0, "x2": 2.5, "y2": 2.5, "z2": 0 },
+      { "x1": 2.5, "y1": 2.5, "z1": 0, "x2": -2.5, "y2": 2.5, "z2": 0 },
+      { "x1": -2.5, "y1": 2.5, "z1": 0, "x2": -2.5, "y2": -2.5, "z2": 0 }
+    ]
+  },
+  "icons": [
+    {
+      "label": "net",
+      "lines": [
+        { "x1": -0.0233, "y1": -0.264, "z1": 0, "x2": 0.0127, "y2": 0.3125, "z2": 0 }
+      ]
+    },
+    {
+      "label": "net_2",
+      "lines": [
+        { "x1": 0.0433, "y1": -0.3485, "z1": 0, "x2": 0.0072, "y2": 0.2459, "z2": 0 }
+      ]
+    }
+  ],
+  "objects": [
+    { "icon": "net", "x": -2.2356, "y": 2.168, "z": 0, "orientation": -45, "color": "red", "shape": "./conf/3dmodels/net.3ds", "usecolor": true },
+    { "icon": "net_2", "x": 2.2993, "y": -2.3159, "z": 0, "orientation": 135, "color": "blue", "shape": "./conf/3dmodels/net.3ds", "usecolor": true }
+  ],
+  "zones": {
+    "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
+    "items": [
+      { "label": "Tarima", "x": -3, "y": -3, "z": 0, "width": 6, "height": 6 },
+      { "label": "Gol-1", "x": 2, "y": 2, "z": 0, "width": 0.2, "height": 0.2 }
+    ]
+  },
+  "fareas": {
+    "defaults": { "texture": "./conf/3dmodels/textures/farea.jpg" },
+    "items": []
+  },
+  "connectors": {
+    "defaults": { "width": 0.005, "height": 1.9, "texture": "./conf/3dmodels/textures/wall.jpg" },
+    "items": []
+  },
+  "waypoints": [],
+  "docks": [
+    { "label": "AA0", "x": -3, "y": -3, "z": 0, "orientation": 0, "flow": "INOUT" }
+  ],
+  "beacons": [],
+  "cbeacons": []
+}

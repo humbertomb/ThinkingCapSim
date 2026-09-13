@@ -6,9 +6,10 @@
  */
 package tc.shared.world;
 
-import java.io.PrintWriter;
-import java.util.Properties;
-import java.util.StringTokenizer;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
@@ -32,11 +33,6 @@ public class WMPath
  	// Proposed robot's path points
  	protected Point2[]			points;
 
-	// Constructors
-	public WMPath (Properties props)
-	{
-		fromProperties (props);
-	}
 	
 	public WMPath (DXFWorldFile dxf){
 	    ArrayList<Entity> entities = dxf.getEntities();
@@ -62,56 +58,12 @@ public class WMPath
 	/** Elevation of a path point (0 if it carries none). */
 	static public double z (Point2 p)			{ return (p instanceof Point3) ? ((Point3) p).z () : 0.0; }
 
-	/** "x, y, z" */
-	static public String pointRawString (Point2 p)
-	{
-		return p.x () + ", " + p.y () + ", " + z (p);
-	}
 	
 	// Instance methods
 	public Point2 at (int i)
 	{
 		if ((i < 0) || (i >= points.length)) return null;
 		return points[i];
-	}
-	
-	public void fromProperties (Properties props)
-	{
-		String				prop;
-		double				x1,y1,z1;
-		StringTokenizer 	st;
-		points = new Point2[Integer.parseInt (props.getProperty ("PATH_POINTS","0"))];
-		for (int i=0; i < points.length; i++){
-			prop		= props.getProperty ("PATHPOINT_"+i);		
-			if (prop != null)
-			{
-				st = new StringTokenizer (prop,", \t");
-				x1 = Double.parseDouble (st.nextToken());
-				y1 = Double.parseDouble (st.nextToken());
-				z1 = Double.parseDouble (st.nextToken());
-				points[i] = new Point3(x1, y1, z1);		// Point3 extends Point2: the elevation travels with the point	 
-			}
-		}
-	}
-	
-	public void toProperties (Properties props)
-	{
-		props.setProperty ("PATH_POINTS",Integer.toString (points.length));
-		
-		for (int i = 0; i < points.length; i++)
-			props.setProperty ("PATHPOINT_"+i, pointRawString (points[i]));
-	}
-	
-	public void toFile (PrintWriter out)
-	{
-			out.println("# ==============================");
-			out.println("# PATH POINTS");
-			out.println("# ==============================");
-			out.println ("PATH_POINTS = " + n());		
-			out.println();	
-			for (int i = 0; i < n(); i++) 
-				out.println("PATHPOINT_" + i + " = " + pointRawString (points[i]));
-			out.println();
 	}
 	
 	public void toDxfFile (DXFWorldFile dxf){
@@ -154,5 +106,24 @@ public class WMPath
 		System.arraycopy (points, i + 1, tmp, i, points.length - i - 1);
 		points = tmp;
 		return old;
+	}
+
+	/* JSON: [{x, y, z}, ...] */
+
+	public WMPath ()							{ points = new Point2[0]; }
+	public WMPath (JsonElement e)				{ fromJson (e); }
+
+	public void fromJson (JsonElement e)
+	{
+		JsonArray	arr = ((e != null) && e.isJsonArray ()) ? e.getAsJsonArray () : new JsonArray ();
+		points	= new Point2[arr.size ()];
+		for (int i = 0; i < points.length; i++)		points[i] = WorldJson.toPoint (arr.get (i).getAsJsonObject ());
+	}
+
+	public JsonArray toJson ()
+	{
+		JsonArray	arr = new JsonArray ();
+		for (Point2 p : points)		arr.add (WorldJson.point (p));
+		return arr;
 	}
 }

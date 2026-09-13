@@ -1,27 +1,35 @@
-# ==============================
-# START POINT
-# ==============================
-START = 0.0, 0.0, 0.0, 90.0
-
-# ==============================
-# MAP WALL LINES
-# ==============================
-MAX_LINES = 4
-
-LINE_DEF_HEIGHT = 0.75
-LINE_DEF_WIDTH = 0.01
-LINE_DEF_TEXTURE = ./conf/3dmodels/textures/wall.jpg
-
-LINE_0 = -10, -10, 0.0, -10, 10, 0.0
-LINE_1 = -10, 10, 0.0, 10, 10, 0.0
-LINE_2 = 10, 10, 0.0, 10, -10, 0.0
-LINE_3 = 10, -10, 0.0, -10, -10, 0.0
-
-# ==============================
-# ZONES
-# ==============================
-ZONES = 1
-
-ZONE_DEF_TEXTURE = ./conf/3dmodels/textures/floor.jpg
-
-ZONE_0 = 15.0, 0.0, 0.0, 2, 2, Ficticio, ./conf/3dmodels/textures/floor2.jpg
+{
+  "starts": [
+    { "x": 0, "y": 0, "z": 0, "orientation": 90 }
+  ],
+  "path": [],
+  "walls": {
+    "defaults": { "width": 0.01, "height": 0.75, "texture": "./conf/3dmodels/textures/wall.jpg" },
+    "items": [
+      { "x1": -10, "y1": -10, "z1": 0, "x2": -10, "y2": 10, "z2": 0 },
+      { "x1": -10, "y1": 10, "z1": 0, "x2": 10, "y2": 10, "z2": 0 },
+      { "x1": 10, "y1": 10, "z1": 0, "x2": 10, "y2": -10, "z2": 0 },
+      { "x1": 10, "y1": -10, "z1": 0, "x2": -10, "y2": -10, "z2": 0 }
+    ]
+  },
+  "icons": [],
+  "objects": [],
+  "zones": {
+    "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
+    "items": [
+      { "label": "Ficticio", "x": 15, "y": 0, "z": 0, "width": 2, "height": 2, "texture": "./conf/3dmodels/textures/floor2.jpg" }
+    ]
+  },
+  "fareas": {
+    "defaults": { "texture": "./conf/3dmodels/textures/farea.jpg" },
+    "items": []
+  },
+  "connectors": {
+    "defaults": { "width": 0.005, "height": 1.9, "texture": "./conf/3dmodels/textures/wall.jpg" },
+    "items": []
+  },
+  "waypoints": [],
+  "docks": [],
+  "beacons": [],
+  "cbeacons": []
+}

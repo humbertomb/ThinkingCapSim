@@ -1,7 +1,9 @@
 package tc.shared.world;
 
-import java.io.PrintWriter;
-import java.util.Properties;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 
 import wucore.utils.geom.Polygon2;
 
@@ -11,11 +13,6 @@ public class WMFAreas
 	
 	private String defTexture		= "./conf/3dmodels/textures/farea.jpg";
 	
-	// Constructors
-	public WMFAreas (Properties props)
-	{
-		fromProperties (props);
-	}
 	
 	// Accessors
 	public final int	 	n () 		{ return fareas.length; }
@@ -31,70 +28,8 @@ public class WMFAreas
 		return fareas[i];
 	}
 	
-	public void fromProperties (Properties props)
-	{
-		int					i;
-		String				prop;
-		
-		fareas	= new WMFArea[Integer.parseInt (props.getProperty ("FAREAS", "0"))];
-		
-		if ((prop = props.getProperty ("FAREA_DEF_TEXTURE")) != null)	
-			defTexture	= prop;
-		
-		for (i = 0; i < fareas.length; i++)
-		{
-			prop		= props.getProperty ("FAREA_"+i);	
-			fareas[i]	= new WMFArea (prop, defTexture);
-		}
-	}
-	
-	public void toProperties (Properties props)
-	{
-		int			i;
-		
-		props.setProperty ("FAREAS",Integer.toString (fareas.length));
-		
-		for (i = 0; i < fareas.length; i++)
-			props.setProperty ("FAREA_"+i, fareas[i].toRawString ());
-	}
-	
-	public void toFile (PrintWriter out)
-	{
-		int i;
-		
-		// Print Line Segments
-		out.println("# ==============================");
-		out.println("# NON NAVIGABLE AREAS");
-		out.println("# ==============================");
-		out.println ("FAREAS = " + fareas.length);	
-		out.println ();
-		out.println ("FAREA_DEF_TEXTURE = "+defTexture);
-		out.println ();
-		
-		for (i = 0; i < fareas.length; i++) 
-			if(fareas[i].texture.equals(defTexture))
-				out.println ("FAREA_" + i + " = " + fareas[i].toRawString2 ());
-			else
-				out.println ("FAREA_" + i + " = " + fareas[i].toRawString ());
-		out.println ();
-	}
-	
-	public String toString()
-	{
-		String rname = new String();
-		rname = rname.concat(" ==============================\n");
-		rname = rname.concat(" NON NAVIGABLE AREAS\n");
-		rname = rname.concat(" ==============================\n");
-		rname = rname.concat(" FAREAS = " + fareas.length + "\n");
-		
-		for (int i = 0; i < fareas.length; i++)
-		{
-			rname = rname.concat("FAREA_" + i + " = " + fareas[i].toRawString () + "\n");
-		}
-		
-		return rname;
-	}
-	
+	public String toString ()					{ return WorldJson.toText (toJson ()); }
+
 	public Polygon2[] getPolygons(){
 		Polygon2[] polygons = new Polygon2[fareas.length];
 		
@@ -132,4 +67,31 @@ public class WMFAreas
 	}
 
 	public void setDefaultTexture (String texture)		{ defTexture = texture; }
+
+	/* JSON: {defaults: {texture}, items: [...]} */
+
+	public WMFAreas ()							{ fareas = new WMFArea[0]; }
+	public WMFAreas (JsonElement e)				{ fromJson (e); }
+
+	public void fromJson (JsonElement e)
+	{
+		JsonObject	o = ((e != null) && e.isJsonObject ()) ? e.getAsJsonObject () : new JsonObject ();
+		JsonObject	def = WorldJson.getObject (o, "defaults");
+		JsonArray	arr = WorldJson.getArray (o, "items");
+		defTexture	= WorldJson.getString (def, "texture", defTexture);
+		fareas	= new WMFArea[arr.size ()];
+		for (int i = 0; i < fareas.length; i++)		fareas[i] = new WMFArea (arr.get (i).getAsJsonObject (), defTexture);
+	}
+
+	public JsonObject toJson ()
+	{
+		JsonObject	o = new JsonObject ();
+		JsonObject	def = new JsonObject ();
+		JsonArray	arr = new JsonArray ();
+		def.addProperty ("texture", defTexture);
+		for (WMFArea f : fareas)		arr.add (f.toJson (defTexture));
+		o.add ("defaults", def);
+		o.add ("items", arr);
+		return o;
+	}
 }

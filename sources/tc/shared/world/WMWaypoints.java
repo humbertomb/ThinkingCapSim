@@ -6,8 +6,10 @@
  */
 package tc.shared.world;
 
-import java.io.PrintWriter;
-import java.util.Properties;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
@@ -27,11 +29,6 @@ public class WMWaypoints
 	protected WMWaypoint[] waypoints;
 	
 
-	// Constructors
-	public WMWaypoints (Properties props)
-	{
-		fromProperties (props);
-	}
 	
 	public WMWaypoints (DXFWorldFile dxf){
 		ArrayList<Entity> entities = dxf.getEntities();
@@ -81,39 +78,6 @@ public class WMWaypoints
 		return -1;
 	}
 	
-	public void fromProperties (Properties props)
-	{
-		String				prop;
-		waypoints = new WMWaypoint[Integer.parseInt (props.getProperty ("WPOINTS","0"))];
-		for (int i=0; i < waypoints.length; i++){
-			prop		= props.getProperty ("WPOINT_"+i);		
-			waypoints[i] = new WMWaypoint (prop);
-		}
-	}
-	
-	public void toProperties (Properties props)
-	{
-		int			i;
-		
-		props.setProperty ("WPOINTS",Integer.toString (waypoints.length));
-		
-		for (i = 0; i < waypoints.length; i++)
-			props.setProperty ("WPOINT_"+i, waypoints[i].toRawString ());
-	}
-	
-	public void toFile (PrintWriter out)
-	{
-		// Print Cilindrical Beacon
-		out.println("# ==============================");
-		out.println("# WAYPOINTS");
-		out.println("# ==============================");
-		out.println ("WPOINTS = " + n());
-		out.println("");
-		for (int i = 0; i < waypoints.length; i++)
-			out.println ("WPOINT_" + i + " = " + waypoints[i].toRawString ());
-		out.println ();
-	}
-	
 	public void toDxfFile (DXFWorldFile dxf){
 		 // Define una capa con un color determinado (opcional)
 		 dxf.addLayer(new Layer("WAYPOINTS",ACADColor.MAGENTA));
@@ -148,5 +112,24 @@ public class WMWaypoints
 		for (int i = 0; i < waypoints.length; i++)
 			if (waypoints[i] == e)				return i;
 		return -1;
+	}
+
+	/* JSON: [{label, x, y, z, orientation}, ...] */
+
+	public WMWaypoints ()							{ waypoints = new WMWaypoint[0]; }
+	public WMWaypoints (JsonElement e)				{ fromJson (e); }
+
+	public void fromJson (JsonElement e)
+	{
+		JsonArray	arr = ((e != null) && e.isJsonArray ()) ? e.getAsJsonArray () : new JsonArray ();
+		waypoints	= new WMWaypoint[arr.size ()];
+		for (int i = 0; i < waypoints.length; i++)		waypoints[i] = new WMWaypoint (arr.get (i).getAsJsonObject ());
+	}
+
+	public JsonArray toJson ()
+	{
+		JsonArray	arr = new JsonArray ();
+		for (WMWaypoint x : waypoints)		arr.add (x.toJson ());
+		return arr;
 	}
 }

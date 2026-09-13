@@ -4,6 +4,10 @@
 
 package tc.shared.world;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.StringTokenizer;
 
 import wucore.utils.geom.Point3;
@@ -50,5 +54,20 @@ public class WMStart
 	public String toProperty ()
 	{
 		return pos.x () + ", " + pos.y () + ", " + pos.z () + ", " + Math.toDegrees (orientation);
+	}
+
+	/* JSON: {x, y, z, orientation (deg)} */
+
+	public WMStart (JsonObject o)
+	{
+		pos			= WorldJson.toPoint (o);
+		orientation	= Math.toRadians (WorldJson.getDouble (o, "orientation", 0.0));
+	}
+
+	public JsonObject toJson ()
+	{
+		JsonObject	o = WorldJson.point (pos);
+		o.addProperty ("orientation", WorldJson.num (Math.toDegrees (orientation)));
+		return o;
 	}
 }

@@ -22,7 +22,8 @@ public interface GUIMonitor
 	public void			close ();
 	
 	// Robot monitoring methods
-	public void			updateWorldMap (String id, Properties worldprops);
+	/** @param world  JSON text of the robot's world, or null */
+	public void			updateWorldMap (String id, String world);
 	public void 		updateRobot (String id, MonitorData data, LPO[] lpos);
 	public void 		updateGoal (String id, Position goal);
 	public void 		updateStatus (String id, long tstamp, int type, String msg);

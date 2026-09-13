@@ -104,8 +104,8 @@ public abstract class Planner extends StdThread
 	public void notify_config (String space, ItemConfig item)
 	{
 		// Update world models
-		if (item.props_world != null)
-			world	= new World (item.props_world);
+		if (item.world != null)
+			world	= World.fromJsonText (item.world);
 		
 		// Initialise variables
 		robotid		= space;

@@ -6,8 +6,10 @@
  */
 package tc.shared.world;
 
-import java.io.PrintWriter;
-import java.util.Properties;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 
 import devices.pos.Position;
@@ -32,11 +34,6 @@ public class WMZones
 	
 	private String					defTexture		= "./conf/3dmodels/textures/floor.jpg";
 	
-	// Constructors
-	public WMZones (Properties props)
-	{
-		fromProperties (props);
-	}
 	
 	public WMZones (DXFWorldFile dxf){
 		ArrayList<Entity> entities = dxf.getEntities();
@@ -120,54 +117,6 @@ public class WMZones
 		return -1;
 	}
 	
-	public void fromProperties (Properties props)
-	{
-		int					i;
-		String				prop;
-		
-		areas	= new WMZone[Integer.parseInt (props.getProperty ("ZONES", "0"))];
-
-		if ((prop = props.getProperty ("ZONE_DEF_TEXTURE")) != null)	
-			defTexture	= prop;
-				
-		for (i = 0; i < areas.length; i++)
-		{
-			prop		= props.getProperty ("ZONE_"+i);	
-			areas[i]	= new WMZone (prop, defTexture);
-		}		
-	}	
-	
-	public void toProperties (Properties props)
-	{
-		int			i;
-		
-		props.setProperty ("ZONES",Integer.toString (areas.length));
-		
-		for (i = 0; i < areas.length; i++)
-			props.setProperty ("ZONE_"+i, areas[i].toRawString ());
-	}
-	
-	public void toFile (PrintWriter out)
-	{
-		int				i;
-		
-		// Print Line Segments
-		out.println("# ==============================");
-		out.println("# ZONES");
-		out.println("# ==============================");
-		out.println ("ZONES = " + areas.length);	
-		out.println ();
-		out.println ("ZONE_DEF_TEXTURE = "+defTexture);
-		out.println ();
-		
-		for (i = 0; i < areas.length; i++) 
-			if(areas[i].texture.equals(defTexture))
-				out.println ("ZONE_" + i + " = " + areas[i].pointsRawString ());
-			else
-				out.println ("ZONE_" + i + " = " + areas[i].toRawString ());
-		out.println ();		
-	}
-	
 	public void toDxfFile (DXFWorldFile dxf){
 		
 	   //	  Define una capa con un color determinado (opcional)
@@ -218,4 +167,31 @@ public class WMZones
 	}
 
 	public void setDefaultTexture (String texture)		{ defTexture = texture; }
+
+	/* JSON: {defaults: {texture}, items: [...]} */
+
+	public WMZones ()							{ areas = new WMZone[0]; }
+	public WMZones (JsonElement e)				{ fromJson (e); }
+
+	public void fromJson (JsonElement e)
+	{
+		JsonObject	o = ((e != null) && e.isJsonObject ()) ? e.getAsJsonObject () : new JsonObject ();
+		JsonObject	def = WorldJson.getObject (o, "defaults");
+		JsonArray	arr = WorldJson.getArray (o, "items");
+		defTexture	= WorldJson.getString (def, "texture", defTexture);
+		areas	= new WMZone[arr.size ()];
+		for (int i = 0; i < areas.length; i++)		areas[i] = new WMZone (arr.get (i).getAsJsonObject (), defTexture);
+	}
+
+	public JsonObject toJson ()
+	{
+		JsonObject	o = new JsonObject ();
+		JsonObject	def = new JsonObject ();
+		JsonArray	arr = new JsonArray ();
+		def.addProperty ("texture", defTexture);
+		for (WMZone z : areas)		arr.add (z.toJson (defTexture));
+		o.add ("defaults", def);
+		o.add ("items", arr);
+		return o;
+	}
 }

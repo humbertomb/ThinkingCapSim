@@ -6,11 +6,15 @@
 
 package tc.shared.world;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.ArrayList;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import wucore.utils.dxf.DXFWorldFile;
 import wucore.utils.dxf.entities.Entity;
@@ -70,12 +74,6 @@ public class World extends Object
 		fromFile (name);
 	}
 	
-	public World (Properties props)
-	{
-		this ();
-		fromProperties (props);
-	}
-	
 	/* Accessor methods */	
 	
 	// Robot starting location (the first one)
@@ -130,13 +128,6 @@ public class World extends Object
 	
 	/* Instance methods */
 
-	/** Writes STARTS and START_1..START_n. */
-	public void startsToProperties (Properties p)
-	{
-		p.setProperty ("STARTS", String.valueOf (starts.size ()));
-		for (int i = 0; i < starts.size (); i++)
-			p.setProperty ("START_" + (i + 1), starts.get (i).toProperty ());
-	}
 	
 	/* Set methods */
 	// Robot starting location
@@ -211,20 +202,81 @@ public class World extends Object
 		return NONE;
 	}
 	
+	/** Reads a JSON <code>.world</code> file. */
 	public void fromFile (String name) throws Exception
 	{
-		FileInputStream		worldfile;
-		Properties			worldprop = null;	
-		
 		if (!name.endsWith (SUFFIX))
 			System.out.println ("Loading world: Unknown file-extension. Continue loading ...");
-		
-		worldprop = new Properties ();
-		worldfile = new FileInputStream (name);
-		worldprop.load (worldfile);
-		
-		fromProperties (worldprop);
+		fromJson (WorldJson.parse (new String (Files.readAllBytes (Paths.get (name)), StandardCharsets.UTF_8)));
 	}
+
+	/** Writes the world as a JSON <code>.world</code> file. */
+	public void toFile (String name) throws Exception
+	{
+		Files.write (Paths.get (name), toJsonText ().getBytes (StandardCharsets.UTF_8));
+	}
+
+	/* JSON representation: {starts, path, walls, icons, objects, zones, fareas, connectors, waypoints, docks, beacons, cbeacons} */
+
+	/** An empty world (one start point at the origin and every collection created but empty). */
+	static public World empty ()
+	{
+		World	w = new World ();
+		w.fromJson (null);
+		return w;
+	}
+
+	/** A world built from its JSON text (the form in which it travels between modules through Linda). */
+	static public World fromJsonText (String jsonText)
+	{
+		World	w = new World ();
+		w.fromJson (WorldJson.parse (jsonText));
+		return w;
+	}
+
+	public void fromJson (JsonObject o)
+	{
+		if (o == null)			o = new JsonObject ();
+
+		starts.clear ();
+		for (JsonElement e : WorldJson.getArray (o, "starts"))		starts.add (new WMStart (e.getAsJsonObject ()));
+		if (starts.isEmpty ())		starts.add (new WMStart (0.0, 0.0, 0.0, 0.0));
+
+		path 		= new WMPath (o.get ("path"));
+		walls		= new WMWalls (o.get ("walls"));
+		icons		= new WMIcons (o.get ("icons"));
+		objects		= new WMObjects (o.get ("objects"), icons);
+		fareas		= new WMFAreas (o.get ("fareas"));
+		zones		= new WMZones (o.get ("zones"));
+		connectors	= new WMConnectors (o.get ("connectors"));
+		waypoints	= new WMWaypoints (o.get ("waypoints"));
+		docks		= new WMDocks (o.get ("docks"));
+		beacons		= new WMBeacons (o.get ("beacons"));
+		cbeacons	= new WMCBeacons (o.get ("cbeacons"));
+	}
+
+	public JsonObject toJson ()
+	{
+		JsonObject	o = new JsonObject ();
+		JsonArray	st = new JsonArray ();
+		for (WMStart s : starts)		st.add (s.toJson ());
+		o.add ("starts", st);
+		o.add ("path", path.toJson ());
+		o.add ("walls", walls.toJson ());
+		o.add ("icons", icons.toJson ());
+		o.add ("objects", objects.toJson ());
+		o.add ("zones", zones.toJson ());
+		o.add ("fareas", fareas.toJson ());
+		o.add ("connectors", connectors.toJson ());
+		o.add ("waypoints", waypoints.toJson ());
+		o.add ("docks", docks.toJson ());
+		o.add ("beacons", beacons.toJson ());
+		o.add ("cbeacons", cbeacons.toJson ());
+		return o;
+	}
+
+	/** Pretty-printed JSON text of the world (the file contents). */
+	public String toJsonText ()					{ return WorldJson.toText (toJson ()); }
 	
 	public void fromDxfFile (String name) throws Exception{
 		DXFWorldFile dxf = new DXFWorldFile();
@@ -237,7 +289,7 @@ public class World extends Object
 		connectors	= new WMConnectors (dxf);
 		icons	= new WMIcons ();
 		objects	= new WMObjects (dxf, icons);
-		fareas	= new WMFAreas (new Properties ());
+		fareas	= new WMFAreas ();
 		
 		ArrayList<Entity> entities = dxf.getEntities();
 		
@@ -263,97 +315,6 @@ public class World extends Object
 		beacons		= new WMBeacons (dxf);
 		cbeacons		= new WMCBeacons (dxf);
 		
-		
-	}
-	
-	public void fromProperties (Properties worldprop)
-	{		
-		String				prop;
-		
-		if (worldprop == null)				return;
-		
-		// Read in Robot starting locations: STARTS = n + START_1..START_n, or the legacy single START
-		starts.clear ();
-		int	nstarts = 0;
-		try { nstarts = Integer.parseInt (worldprop.getProperty ("STARTS", "0").trim ()); } catch (Exception e) { }
-		for (int i = 1; i <= nstarts; i++)
-		{
-			prop = worldprop.getProperty ("START_" + i);
-			if (prop != null)		starts.add (new WMStart (prop));
-		}
-		if (starts.isEmpty ())
-			starts.add (new WMStart (worldprop.getProperty ("START", "0.0, 0.0, 0.0, 0.0")));
-		
-		path 			= new WMPath(worldprop);
-		walls			= new WMWalls (worldprop);
-		icons			= new WMIcons (worldprop);
-		objects			= new WMObjects (worldprop, icons);
-		fareas			= new WMFAreas(worldprop);
-		zones			= new WMZones (worldprop);
-		connectors			= new WMConnectors (worldprop);
-		waypoints		= new WMWaypoints (worldprop);
-		docks			= new WMDocks (worldprop);
-		beacons			= new WMBeacons (worldprop);		
-		cbeacons		= new WMCBeacons (worldprop);
-	}
-	
-	public void toFileProperties (String name) throws Exception
-	{
-		
-		Properties			worldprop;
-		FileOutputStream	worldfile;
-		
-		worldprop = new Properties ();
-		
-		// Store Start Points
-		startsToProperties (worldprop);
-		
-		path.toProperties (worldprop);
-		walls.toProperties (worldprop);
-		icons.toProperties (worldprop);
-		objects.toProperties (worldprop);
-		zones.toProperties (worldprop);
-		fareas.toProperties(worldprop);
-		connectors.toProperties (worldprop);
-		waypoints.toProperties (worldprop);
-		docks.toProperties (worldprop);
-		beacons.toProperties (worldprop);
-		cbeacons.toProperties (worldprop);
-		
-		worldfile = new FileOutputStream (name);
-		worldprop.store (worldfile,"World map");
-		
-		worldfile.close ();				
-	}
-	
-	public void toFile (String name) throws Exception
-	{	
-		PrintWriter out;
-		
-		out = new PrintWriter(new FileOutputStream(name));
-		
-		// Print Start Points
-		out.println("# ==============================");
-		out.println("# START POINTS");
-		out.println("# ==============================");
-		out.println("STARTS = " + starts.size ());
-		for (int i = 0; i < starts.size (); i++)
-			out.println("START_" + (i + 1) + " = " + starts.get (i).toProperty ());
-		out.println("");
-		
-		path.toFile (out);
-		walls.toFile (out);
-		icons.toFile (out);
-		objects.toFile (out);
-		zones.toFile (out);
-		fareas.toFile(out);
-		connectors.toFile (out);	
-		waypoints.toFile (out);
-		docks.toFile (out);
-		beacons.toFile(out);
-		cbeacons.toFile(out);
-		
-		out.close();
 		
 	}
 	

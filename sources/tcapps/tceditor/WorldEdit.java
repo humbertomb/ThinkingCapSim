@@ -4,12 +4,9 @@
 
 package tcapps.tceditor;
 
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Properties;
 import java.util.StringTokenizer;
 
 import devices.pos.Position;
@@ -52,52 +49,19 @@ public final class WorldEdit
 	/** A world with all its collections created but empty. */
 	static public World newWorld ()
 	{
-		return new World (new Properties ());
+		return World.empty ();
 	}
 
-	/** Serialises the world to the .world property format (in memory). */
+	/** Serialises the world to its JSON text (in memory, for undo/redo). */
 	static public String snapshot (World w)
 	{
-		Properties		props = new Properties ();
-
-		w.startsToProperties (props);
-		w.path ().toProperties (props);
-		w.walls ().toProperties (props);
-		w.icons ().toProperties (props);
-		w.objects ().toProperties (props);
-		w.zones ().toProperties (props);
-		w.fareas ().toProperties (props);
-		w.connectors ().toProperties (props);
-		w.wps ().toProperties (props);
-		w.docks ().toProperties (props);
-		w.beacons ().toProperties (props);
-		w.cbeacons ().toProperties (props);
-
-		// toProperties() does not save the default values, toFile() does
-		props.setProperty ("LINE_DEF_WIDTH", Double.toString (w.walls ().defaultWidth ()));
-		props.setProperty ("LINE_DEF_HEIGHT", Double.toString (w.walls ().defaultHeight ()));
-		props.setProperty ("LINE_DEF_TEXTURE", w.walls ().defaultTexture ());
-		props.setProperty ("DOOR_DEF_WIDTH", Double.toString (w.connectors ().defaultWidth ()));
-		props.setProperty ("DOOR_DEF_HEIGHT", Double.toString (w.connectors ().defaultHeight ()));
-		props.setProperty ("DOOR_DEF_TEXTURE", w.connectors ().defaultTexture ());
-		props.setProperty ("ZONE_DEF_TEXTURE", w.zones ().defaultTexture ());
-		props.setProperty ("FAREA_DEF_TEXTURE", w.fareas ().defaultTexture ());
-
-		try
-		{
-			StringWriter	out = new StringWriter ();
-			props.store (out, null);
-			return out.toString ();
-		} catch (Exception e) { return ""; }
+		return w.toJsonText ();
 	}
 
 	/** Rebuilds a world from a {@link #snapshot(World)} string. */
 	static public World restore (String snapshot)
 	{
-		Properties		props = new Properties ();
-
-		try { props.load (new StringReader (snapshot)); } catch (Exception e) { }
-		return new World (props);
+		return World.fromJsonText (snapshot);
 	}
 
 	/* ------------------------------------------------------------------ */

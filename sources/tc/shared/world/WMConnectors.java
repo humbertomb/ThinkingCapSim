@@ -6,8 +6,10 @@
  */
 package tc.shared.world;
 
-import java.io.PrintWriter;
-import java.util.Properties;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
@@ -33,11 +35,6 @@ public class WMConnectors
 	private double					defHeight	= 1.90;
 	private String					defTexture	= "./conf/3dmodels/textures/wall.jpg";
 		
-	// Constructors
-	public WMConnectors (Properties props)
-	{
-		fromProperties (props);
-	}
 	
 	public WMConnectors (DXFWorldFile dxf)
 	{
@@ -114,61 +111,6 @@ public class WMConnectors
 		return -1;
 	}
 	
-	public void fromProperties (Properties props)
-	{
-		int					i;
-		String				prop;
-	
-		edges	= new WMConnector[Integer.parseInt (props.getProperty ("DOORS", "0"))];
-
-		if ((prop = props.getProperty ("DOOR_DEF_WIDTH")) != null)
-			defWidth	= Double.parseDouble (prop);
-		if ((prop = props.getProperty ("DOOR_DEF_HEIGHT")) != null)	
-			defHeight	= Double.parseDouble (prop);
-		if ((prop = props.getProperty ("DOOR_DEF_TEXTURE")) != null)	
-			defTexture	= prop;
-				
-		// Read in world door segments
-		for (i=0; i < edges.length; i++)
-		{
-			prop		= props.getProperty ("DOOR_"+i);		
-			edges[i]	= new WMConnector (prop, defWidth, defHeight, defTexture);
-		}		
-	}	
-	
-	public void toProperties (Properties props)
-	{
-		int			i;
-		
-		props.setProperty ("DOORS",Integer.toString (edges.length));
-		
-		for (i = 0; i < edges.length; i++)
-			props.setProperty ("DOOR_"+i, edges[i].toRawString ());
-	}
-	
-	public void toFile (PrintWriter out)
-	{
-		int				i;
-		
-		// Print Line Segments
-		out.println("# ==============================");
-		out.println("# DOORS");
-		out.println("# ==============================");
-		out.println ("DOORS = " + edges.length);	
-		out.println("");
-		out.println("DOOR_DEF_HEIGHT = "+defHeight);
-		out.println("DOOR_DEF_WIDTH = "+defWidth);
-		out.println("DOOR_DEF_TEXTURE = "+defTexture);
-		out.println("");
-		
-		for (i = 0; i < edges.length; i++) 
-			if(edges[i].texture.equals(defTexture) && edges[i].width == defWidth && edges[i].height == defHeight)
-				out.println ("DOOR_" + i + " = " + edges[i].pointsRawString ());
-			else
-				out.println ("DOOR_" + i + " = " + edges[i].toRawString ());		
-		out.println ();		
-	}
-	
 	public void toDxfFile (DXFWorldFile dxf){
 			
 	   // Define una capa con un color determinado (opcional)
@@ -214,5 +156,36 @@ public class WMConnectors
 		defWidth	= width;
 		defHeight	= height;
 		defTexture	= texture;
+	}
+
+	/* JSON: {defaults: {width, height, texture}, items: [...]} */
+
+	public WMConnectors ()						{ edges = new WMConnector[0]; }
+	public WMConnectors (JsonElement e)			{ fromJson (e); }
+
+	public void fromJson (JsonElement e)
+	{
+		JsonObject	o = ((e != null) && e.isJsonObject ()) ? e.getAsJsonObject () : new JsonObject ();
+		JsonObject	def = WorldJson.getObject (o, "defaults");
+		JsonArray	arr = WorldJson.getArray (o, "items");
+		defWidth	= WorldJson.getDouble (def, "width", defWidth);
+		defHeight	= WorldJson.getDouble (def, "height", defHeight);
+		defTexture	= WorldJson.getString (def, "texture", defTexture);
+		edges	= new WMConnector[arr.size ()];
+		for (int i = 0; i < edges.length; i++)		edges[i] = new WMConnector (arr.get (i).getAsJsonObject (), defWidth, defHeight, defTexture);
+	}
+
+	public JsonObject toJson ()
+	{
+		JsonObject	o = new JsonObject ();
+		JsonObject	def = new JsonObject ();
+		JsonArray	arr = new JsonArray ();
+		def.addProperty ("width", WorldJson.num (defWidth));
+		def.addProperty ("height", WorldJson.num (defHeight));
+		def.addProperty ("texture", defTexture);
+		for (WMConnector c : edges)		arr.add (c.toJson (defWidth, defHeight, defTexture));
+		o.add ("defaults", def);
+		o.add ("items", arr);
+		return o;
 	}
 }

@@ -494,7 +494,7 @@ public class MultiRobotPanel extends MultiRobotPanelInterf //implements GUIMonit
 		mapPA.repaint ();
 	}
 	
-	public void	updateWorldMap (String id, Properties worldprops) 
+	public void	updateWorldMap (String id, String world) 
 	{
 		Dimension		dim;
 		
@@ -503,13 +503,13 @@ public class MultiRobotPanel extends MultiRobotPanelInterf //implements GUIMonit
 		dim		= rootSP.getSize ();
 		rootSP.setDividerLocation((int) Math.round (dim.getHeight () * 0.8));
 
-		if (worldprops == null)
+		if (world == null)
 		{
 			JOptionPane.showConfirmDialog (this, "The current robot has no associated map.", "Warning", JOptionPane.DEFAULT_OPTION);
-			worldprops	= new Properties ();
+			worldmap	= World.empty ();
 		}
-
-		worldmap = new World (worldprops);
+		else
+			worldmap	= World.fromJsonText (world);
 		
 		map = new World2D (map2D.getModel (), worldmap);
 		map.drawsensors (false);

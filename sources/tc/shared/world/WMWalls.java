@@ -6,8 +6,10 @@
  */
 package tc.shared.world;
 
-import java.io.PrintWriter;
-import java.util.Properties;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
@@ -42,11 +44,6 @@ public class WMWalls extends Object
 	// Constructors
 	public WMWalls (int n){
 		edges = new WMWall[n];
-	}
-	
-	public WMWalls (Properties props)
-	{
-		fromProperties (props);
 	}
 	
 	public WMWalls (DXFWorldFile dxf)
@@ -123,68 +120,6 @@ public class WMWalls extends Object
 		if (edge.orig().y() > maxy) 	maxy = edge.orig().y();
 		if (edge.dest().y() < miny) 	miny = edge.dest().y();
 		if (edge.dest().y() > maxy) 	maxy = edge.dest().y();
-	}
-	
-	public void fromProperties (Properties props)
-	{
-		int					i;
-		String				prop;
-		
-		// Initialise size of the map
-		minx	= Double.MAX_VALUE;
-		miny	= Double.MAX_VALUE;
-		maxx	= Double.MIN_VALUE;
-		maxy	= Double.MIN_VALUE;	
-
-		edges	= new WMWall[Integer.parseInt (props.getProperty ("MAX_LINES", "0"))];
-
-		if ((prop = props.getProperty ("LINE_DEF_WIDTH")) != null)
-			defWidth	= Double.parseDouble (prop);
-		if ((prop = props.getProperty ("LINE_DEF_HEIGHT")) != null)	
-			defHeight	= Double.parseDouble (prop);
-		if ((prop = props.getProperty ("LINE_DEF_TEXTURE")) != null)	
-			defTexture	= prop;
-				
-		// Read in world line segments
-		for (i=0; i < edges.length; i++)
-		{
-			prop		= props.getProperty ("LINE_"+i);		
-			edges[i]	= new WMWall (prop, defWidth, defHeight, defTexture);
-			update (edges[i].edge);
-		}		
-	}	
-	
-	public void toProperties (Properties props)
-	{
-		int			i;
-		
-		props.setProperty ("MAX_LINES",Integer.toString (edges.length));
-		
-		for (i = 0; i < edges.length; i++)
-			props.setProperty ("LINE_"+i, edges[i].toRawString ());
-	}
-	
-	public void toFile (PrintWriter out)
-	{
-		int				i;
-		// Print Line Segments
-		out.println("# ==============================");
-		out.println("# MAP WALL LINES");
-		out.println("# ==============================");
-		out.println ("MAX_LINES = " + edges.length);	
-		out.println("");
-		out.println("LINE_DEF_HEIGHT = "+defHeight);
-		out.println("LINE_DEF_WIDTH = "+defWidth);
-		out.println("LINE_DEF_TEXTURE = "+defTexture);
-		out.println("");
-		
-		for (i = 0; i < edges.length; i++){ 
-			if(edges[i].texture.equals(defTexture) && edges[i].width == defWidth && edges[i].height == defHeight)
-				out.println ("LINE_" + i + " = " + edges[i].pointsRawString ());
-			else
-				out.println ("LINE_" + i + " = " + edges[i].toRawString ());
-		}
-		out.println ();		
 	}
 	
 	public double intersection (double x1, double y1, double x2, double y2)
@@ -438,5 +373,39 @@ public class WMWalls extends Object
 		maxy	= -Double.MAX_VALUE;
 		for (int i = 0; i < edges.length; i++)
 			update (edges[i].edge);
+	}
+
+	/* JSON: {defaults: {width, height, texture}, items: [...]} */
+
+	public WMWalls ()							{ this (0); recomputeBounds (); }
+	public WMWalls (JsonElement e)				{ fromJson (e); }
+
+	public void fromJson (JsonElement e)
+	{
+		JsonObject	o = ((e != null) && e.isJsonObject ()) ? e.getAsJsonObject () : new JsonObject ();
+		JsonObject	def = WorldJson.getObject (o, "defaults");
+		JsonArray	arr = WorldJson.getArray (o, "items");
+
+		defWidth	= WorldJson.getDouble (def, "width", defWidth);
+		defHeight	= WorldJson.getDouble (def, "height", defHeight);
+		defTexture	= WorldJson.getString (def, "texture", defTexture);
+
+		edges	= new WMWall[arr.size ()];
+		for (int i = 0; i < edges.length; i++)		edges[i] = new WMWall (arr.get (i).getAsJsonObject (), defWidth, defHeight, defTexture);
+		recomputeBounds ();
+	}
+
+	public JsonObject toJson ()
+	{
+		JsonObject	o = new JsonObject ();
+		JsonObject	def = new JsonObject ();
+		JsonArray	arr = new JsonArray ();
+		def.addProperty ("width", WorldJson.num (defWidth));
+		def.addProperty ("height", WorldJson.num (defHeight));
+		def.addProperty ("texture", defTexture);
+		for (WMWall w : edges)		arr.add (w.toJson (defWidth, defHeight, defTexture));
+		o.add ("defaults", def);
+		o.add ("items", arr);
+		return o;
 	}
 }

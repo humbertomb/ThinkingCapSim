@@ -64,8 +64,8 @@ public abstract class Perception extends StdThread
 		}
 		
 		// A new world model is available
-		if (item.props_world != null)
-			world	= new World (item.props_world);
+		if (item.world != null)
+			world	= World.fromJsonText (item.world);
 	}
 	
 	public void notify_debug (String space, ItemDebug item) 

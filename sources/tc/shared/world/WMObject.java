@@ -4,6 +4,10 @@
  */
 package tc.shared.world;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.StringTokenizer;
 
 import wucore.utils.color.ColorTool;
@@ -208,5 +212,40 @@ public class WMObject extends WMElement
 		if (shape != null)
 			out += ", " + shape + ", " + usecolor;
 		return out;
+	}
+
+	/* JSON: {icon, x, y, z, orientation (deg), color [, shape, usecolor]} */
+
+	public WMObject (JsonObject o, WMIcons icons)
+	{
+		iconId	= WorldJson.getString (o, "icon", "");
+		pos		= WorldJson.toPoint (o);
+		a		= Math.toRadians (WorldJson.getDouble (o, "orientation", 0.0));
+		String	cname = WorldJson.getString (o, "color", null);
+		color	= (cname != null) ? ColorTool.getColorFromName (cname) : WColor.BLACK;
+		shape	= WorldJson.getString (o, "shape", null);
+		if ((shape != null) && shape.equalsIgnoreCase ("none"))		shape = null;
+		usecolor = WorldJson.getBoolean (o, "usecolor", false);
+		icon = (icons != null) ? icons.at (iconId) : null;
+		if (icon == null)
+		{
+			System.out.println ("  [WMObject] Warning: icon <" + iconId + "> not found, using an empty icon");
+			icon = new WMIcon (iconId, new Line2[0]);
+		}
+	}
+
+	public JsonObject toJson ()
+	{
+		JsonObject	o = new JsonObject ();
+		o.addProperty ("icon", iconId);
+		WorldJson.putPoint (o, pos.x (), pos.y (), pos.z ());
+		o.addProperty ("orientation", WorldJson.num (a * Angles.RTOD));
+		o.addProperty ("color", ColorTool.getNameFromColor (color));
+		if (shape != null)
+		{
+			o.addProperty ("shape", shape);
+			o.addProperty ("usecolor", usecolor);
+		}
+		return o;
 	}
 }

@@ -6,8 +6,10 @@
  */
 package tc.shared.world;
 
-import java.io.PrintWriter;
-import java.util.Properties;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
@@ -28,11 +30,6 @@ public class WMCBeacons
 	
 	protected WMCBeacon[]			beacons;
 
-	// Constructors
-	public WMCBeacons (Properties props)
-	{
-		fromProperties (props);
-	}
 	
 	public WMCBeacons (DXFWorldFile dxf){
 		ArrayList<Entity> entities = dxf.getEntities();
@@ -64,39 +61,6 @@ public class WMCBeacons
 	{
 		if ((i < 0) || (i >= beacons.length)) return null;
 		return beacons[i];
-	}
-	
-	public void fromProperties (Properties props)
-	{
-		String				prop;
-		beacons = new WMCBeacon[Integer.parseInt (props.getProperty ("CBEACONS","0"))];
-		for (int i=0; i < beacons.length; i++){
-			prop		= props.getProperty ("CBEACON_"+i);		
-			beacons[i]	= new WMCBeacon (prop);
-		}
-	}
-	
-	public void toProperties (Properties props)
-	{
-		int			i;
-		
-		props.setProperty ("CBEACONS",Integer.toString (beacons.length));
-		
-		for (i = 0; i < beacons.length; i++)
-			props.setProperty ("CBEACON_"+i, beacons[i].toRawString ());
-	}
-	
-	public void toFile (PrintWriter out)
-	{
-		// Print Cilindrical Beacon
-		out.println("# ==============================");
-		out.println("# CILINDRICAL BEACONS");
-		out.println("# ==============================");
-		out.println ("CBEACONS = " + n());
-		out.println("");
-		for (int i = 0; i < beacons.length; i++) 
-			out.println ("CBEACON_" + i + " = " + beacons[i].toRawString ());
-		out.println ();
 	}
 	
 	public void toDxfFile (DXFWorldFile dxf){
@@ -132,5 +96,24 @@ public class WMCBeacons
 		for (int i = 0; i < beacons.length; i++)
 			if (beacons[i] == e)				return i;
 		return -1;
+	}
+
+	/* JSON: [{label, x, y, z, diameter, height}, ...] */
+
+	public WMCBeacons ()							{ beacons = new WMCBeacon[0]; }
+	public WMCBeacons (JsonElement e)				{ fromJson (e); }
+
+	public void fromJson (JsonElement e)
+	{
+		JsonArray	arr = ((e != null) && e.isJsonArray ()) ? e.getAsJsonArray () : new JsonArray ();
+		beacons	= new WMCBeacon[arr.size ()];
+		for (int i = 0; i < beacons.length; i++)		beacons[i] = new WMCBeacon (arr.get (i).getAsJsonObject ());
+	}
+
+	public JsonArray toJson ()
+	{
+		JsonArray	arr = new JsonArray ();
+		for (WMCBeacon x : beacons)		arr.add (x.toJson ());
+		return arr;
 	}
 }

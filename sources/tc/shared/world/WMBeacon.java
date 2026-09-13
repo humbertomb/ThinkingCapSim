@@ -6,11 +6,13 @@
  */
 package tc.shared.world;
 
-import java.util.StringTokenizer;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 
 import devices.pos.Position;
 import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.DoubleFormat;
 import wucore.utils.dxf.entities.LineDxf;
 import wucore.utils.dxf.entities.TextDxf;
 import wucore.utils.geom.Line2;
@@ -30,20 +32,6 @@ public class WMBeacon extends WMElement
     public Position			pos;
     public double				width;
     public double				height	= DEF_HEIGHT;
-    
-    
-    public WMBeacon(String prop) {
-        StringTokenizer st = new StringTokenizer (prop,", \t");
-        double px	= Double.parseDouble (st.nextToken()); 
-        double py 	= Double.parseDouble (st.nextToken());
-        double pz 	= Double.parseDouble (st.nextToken());
-        double r		= Double.parseDouble (st.nextToken()); 	//orientation -  degrees
-        pos 			= new Position(px,py,pz,Math.toRadians(r));
-        width 		= Double.parseDouble (st.nextToken()); 	//width
-        height 		= Double.parseDouble (st.nextToken()); 	//height
-        
-        label = new String (st.nextToken());	
-    }
     
     public WMBeacon(String label, Position pos, double width){
         this (label, pos, width, DEF_HEIGHT);
@@ -105,9 +93,25 @@ public class WMBeacon extends WMElement
         return pos.alpha();
     }
     
-    public String toRawString ()
+
+    /* JSON: {label, x, y, z, orientation (deg), width, height} */
+
+    public WMBeacon (JsonObject o)
     {
-        return DoubleFormat.format(pos.x()) + ", " + DoubleFormat.format(pos.y()) + ", " + DoubleFormat.format(pos.z()) + ", " + DoubleFormat.format(Math.toDegrees(pos.alpha())) + ", " + DoubleFormat.format(width) + ", " + DoubleFormat.format(height) + ", " + label;
+        label	= WorldJson.getString (o, "label", "b");
+        pos		= new Position (WorldJson.getDouble (o, "x"), WorldJson.getDouble (o, "y"), WorldJson.getDouble (o, "z", 0.0), Math.toRadians (WorldJson.getDouble (o, "orientation", 0.0)));
+        width	= WorldJson.getDouble (o, "width", 0.2);
+        height	= WorldJson.getDouble (o, "height", DEF_HEIGHT);
     }
-    
+
+    public JsonObject toJson ()
+    {
+        JsonObject	o = new JsonObject ();
+        o.addProperty ("label", label);
+        WorldJson.putPoint (o, pos.x (), pos.y (), pos.z ());
+        o.addProperty ("orientation", WorldJson.num (Math.toDegrees (pos.alpha ())));
+        o.addProperty ("width", WorldJson.num (width));
+        o.addProperty ("height", WorldJson.num (height));
+        return o;
+    }
 }

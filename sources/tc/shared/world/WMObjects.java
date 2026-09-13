@@ -6,9 +6,11 @@
  */
 package tc.shared.world;
 
-import java.io.PrintWriter;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.LinkedList;
-import java.util.Properties;
 import java.util.ArrayList;
 
 import wucore.utils.dxf.DXFWorldFile;
@@ -31,18 +33,7 @@ public class WMObjects extends Object
 			
 	protected WMIcons					icons;			// Icon library the objects refer to
 			
-	// Constructors
-	public WMObjects (Properties props, WMIcons icons)
-	{
-		this.icons = (icons != null) ? icons : new WMIcons ();
-		fromProperties (props);
-	}
 
-	/** Legacy: objects with inline icons and a private icon library. */
-	public WMObjects (Properties props)
-	{
-		this (props, new WMIcons ());
-	}
 	
 	public WMObjects (DXFWorldFile dxf, WMIcons icons){
 			this.icons = (icons != null) ? icons : new WMIcons ();
@@ -73,49 +64,6 @@ public class WMObjects extends Object
 		if ((i < 0) || (i >= objects.length)) 
 		    return null;
 		return objects[i];
-	}
-	
-	public void fromProperties (Properties props)
-	{
-		String				prop;
-		
-		objects	= new WMObject[Integer.parseInt (props.getProperty ("MAX_OBJECTS", "0"))];
-				
-		// Read in objects
-		for (int i = 0; i < objects.length; i++)
-		{
-			prop = props.getProperty ("OBJECT_"+i);		
-			objects[i] = new WMObject (prop, icons);
-		}
-	}
-	
-	
-	
-	public void toProperties (Properties props)
-	{
-		int			i;
-		
-		props.setProperty ("MAX_OBJECTS",Integer.toString (objects.length));
-		
-		for (i = 0; i < objects.length; i++)
-			props.setProperty ("OBJECT_"+i, objects[i].toRawString ());
-	}
-	
-	public void toFile (PrintWriter out)
-	{
-		int				i;
-		
-		// Print Line Segments
-		out.println("# ==============================");
-		out.println("# EXTERNAL OBJECTS");
-		out.println("# ==============================");
-		out.println ("MAX_OBJECTS = " + objects.length);	
-		out.println("");
-		
-		for (i = 0; i < objects.length; i++) 
-			out.println ("OBJECT_" + i + " = " + objects[i].toRawString ());
-
-		out.println ();		
 	}
 	
 	public void toDxfFile (DXFWorldFile dxf){
@@ -221,5 +169,24 @@ public class WMObjects extends Object
 		for (int i = 0; i < objects.length; i++)
 			if (objects[i] == e)				return i;
 		return -1;
+	}
+
+	/* JSON: [{icon, x, y, z, orientation, color, ...}, ...] (icons resolved against the world's icon library) */
+
+	public WMObjects (WMIcons icons)					{ this.icons = (icons != null) ? icons : new WMIcons (); objects = new WMObject[0]; }
+	public WMObjects (JsonElement e, WMIcons icons)		{ this.icons = (icons != null) ? icons : new WMIcons (); fromJson (e); }
+
+	public void fromJson (JsonElement e)
+	{
+		JsonArray	arr = ((e != null) && e.isJsonArray ()) ? e.getAsJsonArray () : new JsonArray ();
+		objects	= new WMObject[arr.size ()];
+		for (int i = 0; i < objects.length; i++)		objects[i] = new WMObject (arr.get (i).getAsJsonObject (), icons);
+	}
+
+	public JsonArray toJson ()
+	{
+		JsonArray	arr = new JsonArray ();
+		for (WMObject ob : objects)		arr.add (ob.toJson ());
+		return arr;
 	}
 }

@@ -1,79 +1,40 @@
-# ==============================
-# START POINT
-# ==============================
-START = 1, 249, 0.0, 0
-
-# ==============================
-# PATH POINTS
-# ==============================
-PATH_POINTS = 0
-
-
-# ==============================
-# MAP WALL LINES
-# ==============================
-MAX_LINES = 7
-
-LINE_DEF_HEIGHT = 0.75
-LINE_DEF_WIDTH = 0.01
-LINE_DEF_TEXTURE = ./conf/3dmodels/textures/wall.jpg
-
-LINE_0 = 0, 0, 0.0, 250, 0, 0.0
-LINE_1 = 250, 0, 0.0, 250, 250, 0.0
-LINE_2 = 250, 250, 0.0, 0, 250, 0.0
-LINE_3 = 0, 250, 0.0, 0, 0, 0.0
-LINE_4 = 120, 250, 0.0, 120, 100, 0.0
-LINE_5 = 120, 100, 0.0, 160, 100, 0.0
-LINE_6 = 160, 100, 0.0, 160, 250, 0.0
-
-# ==============================
-# EXTERNAL OBJECTS
-# ==============================
-MAX_OBJECTS = 0
-
-
-# ==============================
-# ZONES
-# ==============================
-ZONES = 1
-
-ZONE_DEF_TEXTURE = ./conf/3dmodels/textures/floor.jpg
-
-ZONE_0 = 160.0, 160.0, 0.0, 80, 80, Zone, ./conf/3dmodels/textures/floor2.jpg
-
-
-# ==============================
-# DOORS
-# ==============================
-DOORS = 0
-
-DOOR_DEF_HEIGHT = 1.9
-DOOR_DEF_WIDTH = 0.0050
-DOOR_DEF_TEXTURE = ./conf/3dmodels/textures/wall.jpg
-
-
-# ==============================
-# WAYPOINTS
-# ==============================
-WPOINTS = 1
-
-WPOINT_0 = 6, 9, 0.0, 0.0, wp0
-
-# ==============================
-# DOCKS
-# ==============================
-DOCKINGS = 0
-
-
-# ==============================
-# STRIP BEACONS
-# ==============================
-BEACONS = 0
-
-
-# ==============================
-# CILINDRICAL BEACONS
-# ==============================
-CBEACONS = 0
-
-
+{
+  "starts": [
+    { "x": 1, "y": 249, "z": 0, "orientation": 0 }
+  ],
+  "path": [],
+  "walls": {
+    "defaults": { "width": 0.01, "height": 0.75, "texture": "./conf/3dmodels/textures/wall.jpg" },
+    "items": [
+      { "x1": 0, "y1": 0, "z1": 0, "x2": 250, "y2": 0, "z2": 0 },
+      { "x1": 250, "y1": 0, "z1": 0, "x2": 250, "y2": 250, "z2": 0 },
+      { "x1": 250, "y1": 250, "z1": 0, "x2": 0, "y2": 250, "z2": 0 },
+      { "x1": 0, "y1": 250, "z1": 0, "x2": 0, "y2": 0, "z2": 0 },
+      { "x1": 120, "y1": 250, "z1": 0, "x2": 120, "y2": 100, "z2": 0 },
+      { "x1": 120, "y1": 100, "z1": 0, "x2": 160, "y2": 100, "z2": 0 },
+      { "x1": 160, "y1": 100, "z1": 0, "x2": 160, "y2": 250, "z2": 0 }
+    ]
+  },
+  "icons": [],
+  "objects": [],
+  "zones": {
+    "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
+    "items": [
+      { "label": "Zone", "x": 160, "y": 160, "z": 0, "width": 80, "height": 80, "texture": "./conf/3dmodels/textures/floor2.jpg" }
+    ]
+  },
+  "fareas": {
+    "defaults": { "texture": "./conf/3dmodels/textures/farea.jpg" },
+    "items": []
+  },
+  "connectors": {
+    "defaults": { "width": 0.005, "height": 1.9, "texture": "./conf/3dmodels/textures/wall.jpg" },
+    "items": []
+  },
+  "waypoints": [
+    { "label": "wp0", "x": 6, "y": 9, "z": 0, "orientation": 0 }
+  ],
+  "docks": [],
+  "beacons": [],
+  "cbeacons": []
+}

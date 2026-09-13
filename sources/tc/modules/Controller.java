@@ -88,8 +88,8 @@ public abstract class Controller extends StdThread
 		    state 		= RUN;
 	    }
 		
-		if (item.props_world != null)
-			world = new World (item.props_world);
+		if (item.world != null)
+			world = World.fromJsonText (item.world);
 	}
 	
 	public void notify_debug (String space, ItemDebug item) 

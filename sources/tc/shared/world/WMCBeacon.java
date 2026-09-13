@@ -6,10 +6,12 @@
  */
 package tc.shared.world;
 
-import java.util.StringTokenizer;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 
 import wucore.utils.dxf.DXFWorldFile;
-import wucore.utils.dxf.DoubleFormat;
 import wucore.utils.dxf.entities.CircleDxf;
 import wucore.utils.dxf.entities.TextDxf;
 import wucore.utils.geom.Point3;
@@ -28,17 +30,6 @@ public class WMCBeacon extends WMElement
 	public Point3			pos;						// Centre of the base
 	public double			diameter	= DEF_DIAMETER;
 	public double			height		= DEF_HEIGHT;
-
-	public WMCBeacon(String prop) {
-		StringTokenizer st = new StringTokenizer (prop,", \t");
-		double px			 	= Double.parseDouble (st.nextToken());
-		double py 				= Double.parseDouble (st.nextToken());
-		double pz				= Double.parseDouble (st.nextToken());
-		pos						= new Point3 (px, py, pz);
-		diameter				= Double.parseDouble (st.nextToken());
-		height				 	= Double.parseDouble (st.nextToken());
-		label = new String (st.nextToken());
-	}
 
 	public WMCBeacon(double x, double y, double z, double diameter, double height, String label){
 		this.pos		= new Point3 (x, y, z);
@@ -83,8 +74,23 @@ public class WMCBeacon extends WMElement
 	    dxf.addEntity(text);
 	}
 
-	public String toRawString ()
+	/* JSON: {label, x, y, z, diameter, height} */
+
+	public WMCBeacon (JsonObject o)
 	{
-		return DoubleFormat.format(pos.x()) + ", " + DoubleFormat.format(pos.y()) + ", " + DoubleFormat.format(pos.z()) + ", " + DoubleFormat.format(diameter) + ", " + DoubleFormat.format(height) + ", " + label;
+		label		= WorldJson.getString (o, "label", "cb");
+		pos			= WorldJson.toPoint (o);
+		diameter	= WorldJson.getDouble (o, "diameter", DEF_DIAMETER);
+		height		= WorldJson.getDouble (o, "height", DEF_HEIGHT);
+	}
+
+	public JsonObject toJson ()
+	{
+		JsonObject	o = new JsonObject ();
+		o.addProperty ("label", label);
+		WorldJson.putPoint (o, pos.x (), pos.y (), pos.z ());
+		o.addProperty ("diameter", WorldJson.num (diameter));
+		o.addProperty ("height", WorldJson.num (height));
+		return o;
 	}
 }
