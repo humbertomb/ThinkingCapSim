@@ -250,18 +250,16 @@ public class ToolIcon implements Icon
 			g.drawRoundRect (2, 6, 18, 13, 3, 3);
 			g.drawLine (2, 9, 20, 9);
 			break;
-		case WORLD:			// folded map with a route on it
-			g.setColor (new Color (255, 248, 220));
-			g.fillPolygon (new int[] { 2, 8, 14, 20, 20, 14, 8, 2 }, new int[] { 5, 3, 5, 3, 17, 19, 17, 19 }, 8);
-			g.setColor (fg);
-			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-			g.drawPolygon (new int[] { 2, 8, 14, 20, 20, 14, 8, 2 }, new int[] { 5, 3, 5, 3, 17, 19, 17, 19 }, 8);
-			g.setStroke (new BasicStroke (1f));
-			g.drawLine (8, 3, 8, 17);	g.drawLine (14, 5, 14, 19);
-			g.setColor (new Color (200, 40, 40));
-			g.setStroke (new BasicStroke (1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-			g.drawLine (4, 14, 8, 9);	g.drawLine (8, 9, 13, 13);	g.drawLine (13, 13, 18, 7);
-			g.fillOval (16, 5, 4, 4);
+		case WORLD:			// folder (load) with a small floor plan at its bottom right corner
+			g.setColor (new Color (255, 210, 110));
+			g.fillRoundRect (1, 5, 16, 12, 3, 3);
+			g.setColor (new Color (255, 228, 150));
+			g.fillPolygon (new int[] { 1, 7, 9, 17, 17, 1 }, new int[] { 5, 5, 3, 3, 8, 8 }, 6);
+			g.setColor (new Color (170, 120, 30));
+			g.setStroke (new BasicStroke (1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawRoundRect (1, 5, 16, 12, 3, 3);
+			g.drawLine (1, 8, 17, 8);
+			plan (g, fg, 11, 11, 10);
 			break;
 		case VIEW3D:		// isometric cube
 			g.setColor (new Color (120, 160, 220, 110));
@@ -342,21 +340,8 @@ public class ToolIcon implements Icon
 			g.drawLine (7, 13, 14, 8);
 			g.drawLine (14, 8, 10, 9);	g.drawLine (14, 8, 13, 12);
 			break;
-		case EDIT_WORLD:	// folded map with a pencil over it
-			g.setColor (new Color (255, 248, 220));
-			g.fillPolygon (new int[] { 2, 8, 14, 20, 20, 14, 8, 2 }, new int[] { 5, 3, 5, 3, 17, 19, 17, 19 }, 8);
-			g.setColor (fg);
-			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-			g.drawPolygon (new int[] { 2, 8, 14, 20, 20, 14, 8, 2 }, new int[] { 5, 3, 5, 3, 17, 19, 17, 19 }, 8);
-			g.setStroke (new BasicStroke (1f));
-			g.drawLine (8, 3, 8, 17);	g.drawLine (14, 5, 14, 19);
-			// pencil
-			g.setColor (new Color (200, 40, 40));
-			g.setStroke (new BasicStroke (2.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-			g.drawLine (9, 15, 18, 6);
-			g.setColor (fg);
-			g.setStroke (new BasicStroke (1f));
-			g.drawLine (9, 15, 7, 17);
+		case EDIT_WORLD:	// simplified floor plan of a world (walls, a door and a zone)
+			plan (g, fg, 2, 3, 18);
 			break;
 		case SUBGRAPH:		// node with a small graph hanging below it
 			g.setStroke (new BasicStroke (1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
@@ -371,5 +356,30 @@ public class ToolIcon implements Icon
 			break;
 		}
 		g.dispose ();
+	}
+
+	/**
+	 * A simplified floor plan (outer walls, an inner wall with a door gap and a
+	 * shaded zone) in a square of side <code>size</code> at (x, y).
+	 */
+	static private void plan (Graphics2D g, Color fg, int x, int y, int size)
+	{
+		double	s = size / 18.0;
+		Graphics2D	p = (Graphics2D) g.create ();
+		p.translate (x, y);
+		p.scale (s, s);
+		p.setColor (new Color (255, 250, 230));
+		p.fillRect (0, 0, 18, 18);
+		p.setColor (new Color (215, 230, 250));							// a zone
+		p.fillRect (1, 1, 8, 9);
+		p.setColor (fg);
+		p.setStroke (new BasicStroke (1.6f / (float) s, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
+		p.drawRect (0, 0, 18, 18);												// outer walls
+		p.drawLine (9, 0, 9, 6);	p.drawLine (9, 11, 9, 18);						// inner wall with a door gap
+		p.drawLine (0, 10, 6, 10);
+		p.setColor (new Color (200, 120, 40));
+		p.setStroke (new BasicStroke (1.2f / (float) s));
+		p.drawLine (9, 6, 9, 11);												// the door
+		p.dispose ();
 	}
 }

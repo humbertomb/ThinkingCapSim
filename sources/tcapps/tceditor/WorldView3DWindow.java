@@ -193,7 +193,7 @@ public class WorldView3DWindow extends JFrame
 		tb.add (top);
 		tb.addSeparator ();
 
-		floorCB	= new JCheckBox ("Floor", true);
+		floorCB	= new JCheckBox ("Floor", (world == null) || (world.zones ().n () == 0));	// off by default when the world has zones
 		floorCB.setToolTipText ("Draw a plain floor under the map");
 		floorCB.setFocusable (false);
 		floorCB.addActionListener (new ActionListener ()
@@ -280,7 +280,12 @@ public class WorldView3DWindow extends JFrame
 	/** The editor's world changed (or is another instance). */
 	public void setWorld (World world)
 	{
-		if (this.world != world)		needsFit = true;
+		if (this.world != world)
+		{
+			needsFit = true;
+			// the plain floor is only useful when the world has no zones of its own
+			if ((floorCB != null) && (world != null))		floorCB.setSelected (world.zones ().n () == 0);
+		}
 		this.world	= world;
 		scheduleRebuild ();
 	}
