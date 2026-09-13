@@ -10,8 +10,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import java.util.ArrayList;
-
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
 

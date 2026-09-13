@@ -8,10 +8,7 @@ package tc.shared.world;
 
 import com.google.gson.JsonObject;
 
-import java.util.StringTokenizer;
-
 import wucore.utils.geom.Line2;
-import wucore.utils.geom.Point3;
 
 /**
  * @author Humberto Martinez Barbera

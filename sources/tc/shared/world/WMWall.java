@@ -10,7 +10,6 @@ import com.google.gson.JsonObject;
 
 
 import wucore.utils.geom.Line2;
-import wucore.utils.geom.Point3;
 
 /**
  * @author Humberto Martinez Barbera

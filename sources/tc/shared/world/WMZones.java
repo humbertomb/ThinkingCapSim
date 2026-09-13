@@ -10,11 +10,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import java.util.ArrayList;
 
 import devices.pos.Position;
 import wucore.utils.geom.Point2;
-import wucore.utils.geom.Point3;
 
 /**
  * @author Humberto Martinez Barbera
