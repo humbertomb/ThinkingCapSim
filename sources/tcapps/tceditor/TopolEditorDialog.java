@@ -5,6 +5,7 @@
 package tcapps.tceditor;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -46,7 +47,7 @@ import tclib.utils.graphs.GNode;
 import tclib.utils.graphs.Graph;
 
 /**
- * Editor of the hierarchical topological map of a world ({@link World#topology}).
+ * Editor of the hierarchical topological map of a world ({@link World#topology}, which must exist).
  * The toolbar on the left holds the tools (select, node, arc, delete, open
  * level); the centre is a tabbed pane with one tab per level: <i>Root</i>
  * (the zones of the world) plus one tab, named after the node, for every

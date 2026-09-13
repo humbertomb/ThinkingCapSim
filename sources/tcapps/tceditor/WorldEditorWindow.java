@@ -99,6 +99,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 
 	/* 3D view */
 	protected View3DController		view3d;
+	protected Action				topolAction;			// opens the topology editor (enabled when the world has zones)
 
 	/* ------------------------------------------------------------------ */
 
@@ -284,7 +285,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		// --- topology editor and 3D view toggle, at the bottom of the toolbar
 		tb.add (Box.createVerticalGlue ());
 		tb.addSeparator ();
-		tb.add (ToolButtons.flatButton (ToolButtons.action ("Topology Editor", ToolIcon.TOPOLOGY, "Topology Editor  [Ctrl+T]", new Runnable () { public void run () { editTopology (); } })));
+		tb.add (ToolButtons.flatButton (topolAction ()));
 		tb.add (view3d.button ());
 
 		toolButtons[WorldCanvas.T_SELECT].setSelected (true);
@@ -297,10 +298,37 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 	/** Opens the editor of the hierarchical topological map of the world (edited in place; an accepted edition is undoable). */
 	public void editTopology ()
 	{
-		if (canvas.getWorld () == null)		return;
-		TopolEditorDialog	dlg = new TopolEditorDialog (this, canvas.getWorld ());
-		if (dlg.showDialog () && dlg.isModified ())
-			worldChanged ("Edit topology");
+		World	w = canvas.getWorld ();
+		if ((w == null) || (w.zones ().n () == 0))		return;
+		boolean	created = false;
+		if (!w.hasTopology ())
+		{
+			int	r = JOptionPane.showConfirmDialog (this, "The world map doesn't contain any topology. Create one?", TopolEditorDialog.TITLE, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if (r != JOptionPane.YES_OPTION)		return;
+			w.setTopology (new tclib.planning.htopol.HTopolMap (w));
+			created = true;
+		}
+		TopolEditorDialog	dlg = new TopolEditorDialog (this, w);
+		if (dlg.showDialog ())
+		{
+			if (created || dlg.isModified ())		worldChanged (created ? "Create topology" : "Edit topology");
+		}
+		else if (created)
+			w.setTopology (null);							// cancelled: the world stays without topology
+	}
+
+	/** The topology editor needs zones to work on: its button and menu item follow the world. */
+	private void updateTopologyActions ()
+	{
+		boolean	enabled = (canvas.getWorld () != null) && (canvas.getWorld ().zones ().n () > 0);
+		if (topolAction != null)		topolAction.setEnabled (enabled);
+	}
+
+	private Action topolAction ()
+	{
+		if (topolAction == null)
+			topolAction = ToolButtons.action ("Topology Editor", ToolIcon.TOPOLOGY, "Topology Editor  [Ctrl+T]", new Runnable () { public void run () { editTopology (); } });
+		return topolAction;
 	}
 
 	private void addTool (JToolBar tb, ButtonGroup group, final int tool, int icon, String tip, String key)
@@ -453,9 +481,11 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		}));
 		mview.add (mlayers);
 		mview.addSeparator ();
-		JMenuItem	mtopol = new JMenuItem ("Topology Editor...");
+		JMenuItem	mtopol = new JMenuItem (topolAction ());
+		mtopol.setText ("Topology Editor...");
+		mtopol.setIcon (null);
+		mtopol.setToolTipText (null);
 		mtopol.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_T, mask));
-		mtopol.addActionListener (new java.awt.event.ActionListener () { public void actionPerformed (ActionEvent e) { editTopology (); } });
 		mview.add (mtopol);
 		mview.add (view3d.menuItem (mask));
 		mb.add (mview);
@@ -545,6 +575,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 	public void worldChanged (String what)
 	{
 		pushUndo (what);
+		updateTopologyActions ();
 		refreshTree ();
 		propModel.refresh ();
 		selectionChanged (canvas.getSelection ());
@@ -801,6 +832,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 
 	private void refreshAll ()
 	{
+		updateTopologyActions ();
 		refreshTree ();
 		propModel.setItem (canvas.getSelection ());
 		selectionChanged (canvas.getSelection ());

@@ -9,6 +9,7 @@ package tc.shared.world;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Properties;
 import java.util.ArrayList;
 
 import com.google.gson.JsonArray;
@@ -50,16 +51,20 @@ public class World extends Object
 	
 	// Map components
 	protected WMIcons				icons;
-	protected WMObjects				objects;
-	protected WMFAreas				fareas;
+	protected WMObjects			objects;
+	protected WMFAreas			fareas;
 	protected WMWalls				walls;
 	protected WMZones				zones;
-	protected WMConnectors			connectors;	
+	protected WMConnectors			connectors;
+	
 	protected WMCBeacons			cbeacons;
-	protected WMBeacons				beacons;
-	protected WMWaypoints			waypoints;
+	protected WMBeacons			beacons;
+	
+	protected WMWaypoints		waypoints;
 	protected WMDocks				docks;
-	protected HTopolMap				topol;
+
+	// Hierarchical topological map (persisted with the world)
+	protected HTopolMap			topol;
 	
 	
 	/* Constructors */
@@ -97,20 +102,21 @@ public class World extends Object
 	}
 	
 	// World components
-	public final WMPath 		path ()				{ return path; }
-	public final WMWalls 		walls ()			{ return walls; }
+	public final WMPath 			path ()				{ return path; }
+	public final WMWalls 		walls ()				{ return walls; }
 	public final WMObjects 		objects ()			{ return objects; }
-	public final WMIcons		icons ()			{ return icons; }
-	public final WMZones		zones ()			{ return zones; }
-	public final WMFAreas		fareas ()			{ return fareas; }
+	public final WMIcons			icons ()			{ return icons; }
+	public final WMZones			zones ()				{ return zones; }
+	public final WMFAreas			fareas ()				{ return fareas; }
 	public final WMConnectors	connectors ()		{ return connectors; }
 	public final WMBeacons		beacons ()			{ return beacons; }
 	public final WMCBeacons		cbeacons ()			{ return cbeacons; }
 	public final WMWaypoints	wps ()				{ return waypoints; }
-	public final WMDocks		docks ()			{ return docks; }
+	public final WMDocks			docks ()				{ return docks; }
 
-	/** The hierarchical topological map of the world (never null; may be empty). */
-	public final HTopolMap		topology ()			{ if (topol == null) topol = new HTopolMap (this); return topol; }
+	/** The hierarchical topological map of the world, or null when the world has none. */
+	public final HTopolMap		topology ()				{ return topol; }
+	public final boolean		hasTopology ()			{ return topol != null; }
 	public final void			setTopology (HTopolMap t)	{ topol = t; if (t != null) t.setWorld (this); }
 	
 	public final Line2[] getLines()	
@@ -257,7 +263,7 @@ public class World extends Object
 		docks		= new WMDocks (o.get ("docks"));
 		beacons		= new WMBeacons (o.get ("beacons"));
 		cbeacons	= new WMCBeacons (o.get ("cbeacons"));
-		topol		= new HTopolMap (this, WorldJson.getObject (o, "topology"));
+		topol		= o.has ("topology") ? new HTopolMap (this, WorldJson.getObject (o, "topology")) : null;
 	}
 
 	public JsonObject toJson ()
@@ -277,7 +283,7 @@ public class World extends Object
 		o.add ("docks", docks.toJson ());
 		o.add ("beacons", beacons.toJson ());
 		o.add ("cbeacons", cbeacons.toJson ());
-		o.add ("topology", topology ().toJson ());
+		if (topol != null)		o.add ("topology", topol.toJson ());
 		return o;
 	}
 

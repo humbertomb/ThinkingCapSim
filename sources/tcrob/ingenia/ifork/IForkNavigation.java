@@ -121,7 +121,7 @@ public class IForkNavigation extends IndoorNavigation
 
 		super.notify_config (space, item);
 
-		if ((world == null) || (world.topology ().numNodes () == 0))
+		if ((world == null) || (world.topology () == null) || (world.topology ().numNodes () == 0))
 		{
 			System.err.println ("--[iFrkNav] World and topological maps MUST be specified. Aborting module.");
 			
