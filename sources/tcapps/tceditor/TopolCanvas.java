@@ -61,7 +61,10 @@ public class TopolCanvas extends JPanel
 	static private final Color		C_ZONE_FILL	= new Color (120, 160, 210, 22);
 	static private final Color		C_PLACE		= new Color (150, 150, 150);
 	static private final Color		C_NODE		= new Color (40, 90, 170);
-	static private final Color		C_NODE_FILL	= new Color (215, 230, 250);
+	static private final Color		C_NODE_FILL	= new Color (215, 230, 250);		// zones and waypoints (circle)
+	static private final Color		C_DOCK_FILL	= new Color (170, 200, 240);		// docks (square)
+	static private final Color		C_DOOR_FILL	= new Color (120, 165, 225);		// doors (diamond)
+	static private final Color		C_DOOR		= new Color (200, 120, 40);			// connector colour (edge and node link)
 	static private final Color		C_ARC		= new Color (60, 60, 60);
 	static private final Color		C_SEL		= new Color (220, 60, 40);
 	static private final Color		C_PENDING	= new Color (240, 150, 40);
@@ -75,12 +78,20 @@ public class TopolCanvas extends JPanel
 		void usageChanged (String text);
 	}
 
+	/** Kinds of places a node can stand for (they decide the shape of the node). */
+	static public final int			K_ZONE		= 0;
+	static public final int			K_WAYPOINT	= 1;
+	static public final int			K_DOCK		= 2;
+	static public final int			K_DOOR		= 3;
+
 	/** A candidate place for a node: a labelled element of the world. */
 	static class Place
 	{
 		String	label;
+		int		kind;
 		double	x, y;
-		Place (String label, double x, double y)		{ this.label = label; this.x = x; this.y = y; }
+		double	dx, dy;				// doors: centre of the connector edge (the node is drawn joined to it)
+		Place (String label, int kind, double x, double y)		{ this.label = label; this.kind = kind; this.x = x; this.y = y; this.dx = x; this.dy = y; }
 	}
 
 	protected World					world;
@@ -169,24 +180,30 @@ public class TopolCanvas extends JPanel
 			for (int i = 0; i < world.zones ().n (); i++)
 			{
 				WMZone	z = world.zones ().at (i);
-				places.add (new Place (z.label, z.area.getCenterX (), z.area.getCenterY ()));
+				places.add (new Place (z.label, K_ZONE, z.area.getCenterX (), z.area.getCenterY ()));
 			}
 		}
 		else if (zone != null)
 		{
 			for (int i = 0; i < world.wps ().n (); i++)
 				if (zone.equals (world.zones ().inZone (world.wps ().at (i).pos)))
-					places.add (new Place (world.wps ().at (i).label, world.wps ().at (i).pos.x (), world.wps ().at (i).pos.y ()));
+					places.add (new Place (world.wps ().at (i).label, K_WAYPOINT, world.wps ().at (i).pos.x (), world.wps ().at (i).pos.y ()));
 			for (int i = 0; i < world.docks ().n (); i++)
 				if (zone.equals (world.zones ().inZone (world.docks ().at (i).pos)))
-					places.add (new Place (world.docks ().at (i).label, world.docks ().at (i).pos.x (), world.docks ().at (i).pos.y ()));
+					places.add (new Place (world.docks ().at (i).label, K_DOCK, world.docks ().at (i).pos.x (), world.docks ().at (i).pos.y ()));
 			for (int i = 0; i < world.connectors ().n (); i++)
 			{
 				WMConnector	c = world.connectors ().at (i);
 				Point3		p = null;
 				if (zone.equals (world.zones ().inZone (c.path.orig ())))			p = new Point3 (c.path.orig ());
 				else if (zone.equals (world.zones ().inZone (c.path.dest ())))		p = new Point3 (c.path.dest ());
-				if (p != null)		places.add (new Place (c.label, p.x (), p.y ()));
+				if (p != null)
+				{
+					Place	pl = new Place (c.label, K_DOOR, p.x (), p.y ());
+					pl.dx	= (c.edge.orig ().x () + c.edge.dest ().x ()) / 2.0;
+					pl.dy	= (c.edge.orig ().y () + c.edge.dest ().y ()) / 2.0;
+					places.add (pl);
+				}
 			}
 		}
 		repaint ();
@@ -397,7 +414,7 @@ public class TopolCanvas extends JPanel
 			g.draw (new Line2D.Double (px (l.orig ().x ()), py (l.orig ().y ()), px (l.dest ().x ()), py (l.dest ().y ())));
 		}
 		// doors
-		g.setColor (new Color (200, 120, 40));
+		g.setColor (C_DOOR);
 		g.setStroke (new BasicStroke (2f));
 		for (int i = 0; i < world.connectors ().n (); i++)
 		{
@@ -413,10 +430,11 @@ public class TopolCanvas extends JPanel
 		for (Place p : places)
 		{
 			if (hasNode (p.label))		continue;
+			java.awt.Shape	sh = nodeShape (p.kind, px (p.x), py (p.y), PLACE_R);
 			g.setColor (Color.WHITE);
-			g.fill (new Ellipse2D.Double (px (p.x) - PLACE_R, py (p.y) - PLACE_R, 2 * PLACE_R, 2 * PLACE_R));
+			g.fill (sh);
 			g.setColor (C_PLACE);
-			g.draw (new Ellipse2D.Double (px (p.x) - PLACE_R, py (p.y) - PLACE_R, 2 * PLACE_R, 2 * PLACE_R));
+			g.draw (sh);
 			label (g, p.label, p.x, p.y, C_PLACE, true);
 		}
 	}
@@ -485,18 +503,45 @@ public class TopolCanvas extends JPanel
 			if (p == null)		continue;
 			boolean		sel = (n == selNode), pend = (n == pending);
 			boolean		deeper = (n instanceof GNodeFL) ? (((GNodeFL) n).getGraph ().numNodes () > 0) : ((n instanceof GNodeSL) && ((GNodeSL) n).hasGraph ());
-			Ellipse2D	e = new Ellipse2D.Double (px (p[0]) - NODE_R, py (p[1]) - NODE_R, 2 * NODE_R, 2 * NODE_R);
-			g.setColor (sel ? new Color (250, 215, 205) : C_NODE_FILL);
+			Place		place = placeOf (n.getLabel ());
+			int			kind = place.kind;
+			if (kind == K_DOOR)													// door node: joined to the centre of its connector
+			{
+				g.setColor (C_DOOR);
+				g.setStroke (new BasicStroke (1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[] { 4f, 3f }, 0f));
+				g.draw (new Line2D.Double (px (p[0]), py (p[1]), px (place.dx), py (place.dy)));
+			}
+			java.awt.Shape	e = nodeShape (kind, px (p[0]), py (p[1]), NODE_R);
+			g.setColor (sel ? new Color (250, 215, 205) : ((kind == K_DOCK) ? C_DOCK_FILL : ((kind == K_DOOR) ? C_DOOR_FILL : C_NODE_FILL)));
 			g.fill (e);
 			g.setColor (sel ? C_SEL : (pend ? C_PENDING : C_NODE));
 			g.setStroke (new BasicStroke ((sel || pend) ? 2.5f : 1.6f));
 			g.draw (e);
-			if (deeper)															// a level below: inner ring
+			if (deeper)															// a level below: inner outline
 			{
 				g.setStroke (new BasicStroke (1f));
-				g.draw (new Ellipse2D.Double (px (p[0]) - NODE_R + 3, py (p[1]) - NODE_R + 3, 2 * NODE_R - 6, 2 * NODE_R - 6));
+				g.draw (nodeShape (kind, px (p[0]), py (p[1]), NODE_R - 3));
 			}
 			label (g, n.getLabel (), p[0], p[1], sel ? C_SEL : C_NODE, true);
+		}
+	}
+
+	/** Shape of a node by the kind of place: circle (zones, waypoints), square (docks), diamond (doors). */
+	static private java.awt.Shape nodeShape (int kind, double x, double y, double r)
+	{
+		switch (kind)
+		{
+		case K_DOCK:
+			return new Rectangle2D.Double (x - r, y - r, 2 * r, 2 * r);
+		case K_DOOR:
+		{
+			Path2D	d = new Path2D.Double ();
+			double	rr = r * 1.2;
+			d.moveTo (x, y - rr);	d.lineTo (x + rr, y);	d.lineTo (x, y + rr);	d.lineTo (x - rr, y);	d.closePath ();
+			return d;
+		}
+		default:
+			return new Ellipse2D.Double (x - r, y - r, 2 * r, 2 * r);
 		}
 	}
 
