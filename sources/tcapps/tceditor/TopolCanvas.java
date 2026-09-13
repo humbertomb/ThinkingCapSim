@@ -68,6 +68,7 @@ public class TopolCanvas extends JPanel
 	static private final Color		C_ARC		= new Color (60, 60, 60);
 	static private final Color		C_SEL		= new Color (220, 60, 40);
 	static private final Color		C_PENDING	= new Color (240, 150, 40);
+	static private final Color		C_OUT		= new Color (235, 170, 0);			// arcs leaving the selected node
 
 	/** What the dialog needs to know. */
 	public interface Listener
@@ -442,22 +443,26 @@ public class TopolCanvas extends JPanel
 	private void paintArcs (Graphics2D g)
 	{
 		g.setFont (getFont ().deriveFont (Font.PLAIN, 10f));
-		for (int i = 0; i < graph.numNodes (); i++)
-		{
-			GNode		from = graph.getNode (i);
-			double[]	a = positionOf (from);
-			if (a == null)		continue;
-			for (int j = 0; j < from.nList (); j++)
+		// two passes: the highlighted arcs (those leaving the selected node, and the selected arc) are drawn last, on top
+		for (int pass = 0; pass < 2; pass++)
+			for (int i = 0; i < graph.numNodes (); i++)
 			{
-				GNode		to = graph.getNode (from.getList (j));
-				double[]	b = positionOf (to);
-				if (b == null)		continue;
-				boolean		sel = (from == selFrom) && (to == selTo);
-				boolean		back = to.hasArc (from.index ());		// reciprocal arc: offset both sideways
-				String		txt = root ? ((GNodeFL) from).getDoor (to.getLabel ()) : ((from.getPeso (j) != 0) ? String.valueOf (from.getPeso (j)) : null);
-				arrow (g, px (a[0]), py (a[1]), px (b[0]), py (b[1]), back ? ARC_GAP : 0.0, sel ? C_SEL : C_ARC, sel ? 2.4f : 1.4f, txt, back);
+				GNode		from = graph.getNode (i);
+				double[]	a = positionOf (from);
+				if (a == null)		continue;
+				for (int j = 0; j < from.nList (); j++)
+				{
+					GNode		to = graph.getNode (from.getList (j));
+					double[]	b = positionOf (to);
+					if (b == null)		continue;
+					boolean		sel = (from == selFrom) && (to == selTo);
+					boolean		out = (from == selNode);					// arcs leaving the selected node are highlighted
+					if ((sel || out) != (pass == 1))		continue;
+					boolean		back = to.hasArc (from.index ());		// reciprocal arc: offset both sideways
+					String		txt = root ? ((GNodeFL) from).getDoor (to.getLabel ()) : ((from.getPeso (j) != 0) ? String.valueOf (from.getPeso (j)) : null);
+					arrow (g, px (a[0]), py (a[1]), px (b[0]), py (b[1]), back ? ARC_GAP : 0.0, sel ? C_SEL : (out ? C_OUT : C_ARC), (sel || out) ? 2.4f : 1.4f, txt, back);
+				}
 			}
-		}
 	}
 
 	private void arrow (Graphics2D g, double x1, double y1, double x2, double y2, double gap, Color c, float width, String txt, boolean reciprocal)
