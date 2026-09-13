@@ -84,7 +84,7 @@ public class WorldView3DWindow extends JFrame
 	static private final int		REBUILD_MS	= 120;		// coalescing delay for scene rebuilds
 	/** Height of the top face of the plain floor (m). Clearly below 0 so that zones
 	 *  (boxes 1 cm thick around z = 0), areas and markers never z-fight with it. */
-	static private final double		FLOOR_TOP	= -0.10;
+	static private final double		FLOOR_TOP	= -0.20;
 	static private final double		FLOOR_THICK	= 0.05;
 
 	/* Colours */
