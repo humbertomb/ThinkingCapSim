@@ -218,8 +218,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 					if (name.equals ("icon") && (propModel.item != null) && (propModel.item.kind == WorldItem.OBJECT))
 					{
 						// choose among the icons defined in the world
-						String[]	labels = new String[world.icons ().n ()];
-						for (int i = 0; i < labels.length; i++)		labels[i] = world.icons ().at (i).label;
+						String[]	labels = new String[world.icons ().size ()];
+						for (int i = 0; i < labels.length; i++)		labels[i] = world.icons ().get (i).label;
 						return new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (labels));
 					}
 				}
@@ -1058,13 +1058,13 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.FAREA:		return w.fareas ().n ();
 		case WorldItem.PATH:		return w.path ().size ();
 		case WorldItem.WALL:		return w.walls ().n ();
-		case WorldItem.OBJECT:		return w.objects ().n ();
+		case WorldItem.OBJECT:		return w.objects ().size ();
 		case WorldItem.CONNECTOR:		return w.connectors ().n ();
 		case WorldItem.BEACON:		return w.beacons ().size ();
 		case WorldItem.CBEACON:		return w.cbeacons ().size ();
 		case WorldItem.WAYPOINT:	return w.wps ().size ();
 		case WorldItem.DOCK:		return w.docks ().size ();
-		case WorldItem.ICON:		return w.icons ().n ();
+		case WorldItem.ICON:		return w.icons ().size ();
 		case WorldItem.START:		return w.n_starts ();
 		case WorldItem.DEFAULTS:	return 1;
 		}
@@ -1089,7 +1089,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.WALL:		return "LINE_" + it.index;
 		case WorldItem.OBJECT:
 		{
-			WMObject	o = w.objects ().at (it.index);
+			WMObject	o = w.objects ().get (it.index);
 			return "OBJECT_" + it.index + "  [" + o.iconId + "]" + ((o.shape != null) ? " " + shortName (o.shape) : "");
 		}
 		case WorldItem.CONNECTOR:		return w.connectors ().at (it.index).label;
@@ -1100,7 +1100,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.START:		{ WMStart st = w.start (it.index); return "START_" + (it.index + 1) + " (" + fmt (st.x ()) + ", " + fmt (st.y ()) + ", " + fmt (Math.toDegrees (st.orientation)) + "º)"; }
 		case WorldItem.ICON:
 		{
-			WMIcon	ic = w.icons ().at (it.index);
+			WMIcon	ic = w.icons ().get (it.index);
 			int		users = iconUsers (w, ic.label);
 			return ic.label + "  (" + ic.n () + " seg, " + users + " obj)";
 		}
@@ -1164,7 +1164,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.CBEACON:		return w.cbeacons ().get (it.index).label;
 		case WorldItem.WAYPOINT:	return w.wps ().get (it.index).label;
 		case WorldItem.DOCK:		return w.docks ().get (it.index).label;
-		case WorldItem.ICON:		return w.icons ().at (it.index).label;
+		case WorldItem.ICON:		return w.icons ().get (it.index).label;
 		}
 		return null;
 	}
@@ -1173,8 +1173,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	static public int iconUsers (World w, String iconLabel)
 	{
 		int		n = 0;
-		for (int i = 0; i < w.objects ().n (); i++)
-			if (iconLabel.equals (w.objects ().at (i).iconId))		n++;
+		for (int i = 0; i < w.objects ().size (); i++)
+			if (iconLabel.equals (w.objects ().get (i).iconId))		n++;
 		return n;
 	}
 
@@ -1182,17 +1182,17 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	static public List<WorldItem> iconUserItems (World w, String iconLabel)
 	{
 		List<WorldItem>	v = new ArrayList<WorldItem> ();
-		for (int i = 0; i < w.objects ().n (); i++)
-			if (iconLabel.equals (w.objects ().at (i).iconId))		v.add (new WorldItem (WorldItem.OBJECT, i));
+		for (int i = 0; i < w.objects ().size (); i++)
+			if (iconLabel.equals (w.objects ().get (i).iconId))		v.add (new WorldItem (WorldItem.OBJECT, i));
 		return v;
 	}
 
 	/** Creates an empty icon with a unique label and returns its item. */
 	static public WorldItem addIcon (World w, String prefix)
 	{
-		WMIcon	ic = new WMIcon (w.icons ().uniqueLabel (prefix), new Line2[0]);
+		WMIcon	ic = new WMIcon (w.uniqueIconLabel (prefix), new Line2[0]);
 		w.icons ().add (ic);
-		return new WorldItem (WorldItem.ICON, w.icons ().n () - 1);
+		return new WorldItem (WorldItem.ICON, w.icons ().size () - 1);
 	}
 
 	/** The default icon for new objects: a 0.4 m square, created on demand. */
@@ -1200,7 +1200,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	{
 		double		h = 0.2;
 		Line2[]		sq = { new Line2 (-h, -h, h, -h), new Line2 (h, -h, h, h), new Line2 (h, h, -h, h), new Line2 (-h, h, -h, -h) };
-		return w.icons ().register (sq, "box");
+		return w.registerIcon (sq, "box");
 	}
 
 	static public WorldItem addWall (World w, double x1, double y1, double x2, double y2)
@@ -1260,10 +1260,10 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		obj.color		= ColorTool.getColorFromName ("gray_dark");
 		obj.usecolor	= false;
 		obj.visible		= true;
-		obj.label		= "OBJECT_" + w.objects ().n ();
-		obj.setIcon ((w.icons ().n () > 0) ? w.icons ().at (0) : defaultIcon (w));
+		obj.label		= "OBJECT_" + w.objects ().size ();
+		obj.setIcon ((w.icons ().size () > 0) ? w.icons ().get (0) : defaultIcon (w));
 		w.objects ().add (obj);
-		return new WorldItem (WorldItem.OBJECT, w.objects ().n () - 1);
+		return new WorldItem (WorldItem.OBJECT, w.objects ().size () - 1);
 	}
 
 	/** Adds a start point (START_n) with the orientation of the last one. */
@@ -1321,7 +1321,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.WAYPOINT:	w.wps ().remove (it.index);			return true;
 		case WorldItem.DOCK:		w.docks ().remove (it.index);		return true;
 		case WorldItem.ICON:
-			if (iconUsers (w, w.icons ().at (it.index).label) > 0)		return false;		// still referenced
+			if (iconUsers (w, w.icons ().get (it.index).label) > 0)		return false;		// still referenced
 			w.icons ().remove (it.index);
 			return true;
 		case WorldItem.START:		return w.removeStart (it.index);		// the last one stays
@@ -1383,7 +1383,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.WALL:		return segDist (w.walls ().at (it.index).edge, x, y);
 		case WorldItem.OBJECT:
 		{
-			WMObject	o = w.objects ().at (it.index);
+			WMObject	o = w.objects ().get (it.index);
 			double	d = o.pos.distance (x, y);
 			for (Line2 l : o.absIcon ())	d = Math.min (d, segDist (l, x, y));
 			return d;
@@ -1458,7 +1458,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.WALL:		moveLine (w.walls ().at (it.index).edge, dx, dy);	w.walls ().recomputeBounds ();	break;
 		case WorldItem.OBJECT:
 		{
-			WMObject	o = w.objects ().at (it.index);
+			WMObject	o = w.objects ().get (it.index);
 			o.pos = new Point3 (o.pos.x () + dx, o.pos.y () + dy, o.pos.z ());
 			break;
 		}
@@ -1534,7 +1534,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.OBJECT:
 		{
-			WMObject	o = w.objects ().at (it.index);
+			WMObject	o = w.objects ().get (it.index);
 			return new Point2[] { new Point2 (o.pos.x (), o.pos.y ()), arrow (o.pos.x (), o.pos.y (), o.a) };
 		}
 		case WorldItem.CONNECTOR:
@@ -1605,7 +1605,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.OBJECT:
 		{
-			WMObject	o = w.objects ().at (it.index);
+			WMObject	o = w.objects ().get (it.index);
 			if (h == 0)		translate (w, it, x - o.pos.x (), y - o.pos.y ());
 			else			setObjectPose (o, o.pos.x (), o.pos.y (), o.pos.z (), Math.atan2 (y - o.pos.y (), x - o.pos.x ()));
 			break;
@@ -1678,7 +1678,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 				if (kind == WorldItem.OBJECT)
 				{
 					hs = new Point2[0];
-					for (Line2 l : w.objects ().at (i).absIcon ())
+					for (Line2 l : w.objects ().get (i).absIcon ())
 						hs = concat (hs, new Point2[] { l.orig (), l.dest () });
 				}
 				for (Point2 p : hs)
@@ -1716,7 +1716,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.PATH:		return World.z (w.path ().get (it.index));
 		case WorldItem.WALL:		return Math.min (w.walls ().at (it.index).edge.z1 (), w.walls ().at (it.index).edge.z2 ());
-		case WorldItem.OBJECT:		return w.objects ().at (it.index).pos.z ();
+		case WorldItem.OBJECT:		return w.objects ().get (it.index).pos.z ();
 		case WorldItem.CONNECTOR:		return Math.min (w.connectors ().at (it.index).edge.z1 (), w.connectors ().at (it.index).edge.z2 ());
 		case WorldItem.BEACON:		return w.beacons ().get (it.index).pos.z ();
 		case WorldItem.CBEACON:		return w.cbeacons ().get (it.index).pos.z ();
@@ -1810,7 +1810,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.OBJECT:
 		{
-			WMObject	o = w.objects ().at (it.index);
+			WMObject	o = w.objects ().get (it.index);
 			if (name.equals ("x"))			return fmt (o.pos.x ());
 			if (name.equals ("y"))			return fmt (o.pos.y ());
 			if (name.equals ("z"))			return fmt (o.pos.z ());
@@ -1823,7 +1823,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.ICON:
 		{
-			WMIcon	ic = w.icons ().at (it.index);
+			WMIcon	ic = w.icons ().get (it.index);
 			if (name.equals ("label"))		return ic.label;
 			if (name.equals ("segments"))	return segmentsText (ic.lines);
 			break;
@@ -1981,7 +1981,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.OBJECT:
 		{
-			WMObject	o = w.objects ().at (it.index);
+			WMObject	o = w.objects ().get (it.index);
 			if (name.equals ("x"))				setObjectPose (o, num (value), o.pos.y (), o.pos.z (), o.a);
 			else if (name.equals ("y"))			setObjectPose (o, o.pos.x (), num (value), o.pos.z (), o.a);
 			else if (name.equals ("z"))			setObjectPose (o, o.pos.x (), o.pos.y (), num (value), o.a);
@@ -1991,7 +1991,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			else if (name.equals ("usecolor"))	o.usecolor = bool (value);
 			else if (name.equals ("icon"))
 			{
-				WMIcon	ic = w.icons ().at (token (value));
+				WMIcon	ic = w.icon (token (value));
 				if (ic == null)		throw new IllegalArgumentException ("Unknown icon '" + value + "'");
 				o.setIcon (ic);
 			}
@@ -1999,16 +1999,16 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.ICON:
 		{
-			WMIcon	ic = w.icons ().at (it.index);
+			WMIcon	ic = w.icons ().get (it.index);
 			if (name.equals ("label"))
 			{
 				String	old = ic.label;
 				token (value);
-				if (!value.equals (old) && (w.icons ().index (value) >= 0))
+				if (!value.equals (old) && (World.index (w.icons (), value) >= 0))
 					throw new IllegalArgumentException ("Icon '" + value + "' already exists");
 				ic.label = value;
-				for (int i = 0; i < w.objects ().n (); i++)			// keep the references
-					if (old.equals (w.objects ().at (i).iconId))		w.objects ().at (i).setIcon (ic);
+				for (int i = 0; i < w.objects ().size (); i++)			// keep the references
+					if (old.equals (w.objects ().get (i).iconId))		w.objects ().get (i).setIcon (ic);
 			}
 			else if (name.equals ("segments"))
 				ic.lines = parseSegments (value);
@@ -2328,8 +2328,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	/** Invalidates the cached absolute icons of the objects using an icon (after editing it). */
 	static public void iconChanged (World w, WMIcon ic)
 	{
-		for (int i = 0; i < w.objects ().n (); i++)
-			if (w.objects ().at (i).icon == ic)		w.objects ().at (i).invalidate ();
+		for (int i = 0; i < w.objects ().size (); i++)
+			if (w.objects ().get (i).icon == ic)		w.objects ().get (i).invalidate ();
 	}
 
 	static public String segmentsText (Line2[] lines)

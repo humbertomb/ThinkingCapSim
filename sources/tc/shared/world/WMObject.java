@@ -6,6 +6,7 @@ package tc.shared.world;
 
 import com.google.gson.JsonObject;
 
+import java.util.List;
 import java.util.StringTokenizer;
 
 import wucore.utils.color.ColorTool;
@@ -61,13 +62,13 @@ public class WMObject extends WMElement
 	 * @param icons icon library used to resolve the icon name (a missing icon
 	 *              yields a warning and an empty icon)
 	 */
-	public WMObject (String prop, WMIcons icons)
+	public WMObject (String prop, List<WMIcon> icons)
 	{
 		StringTokenizer		st = new StringTokenizer (prop, ", \t");
 		fromCurrent (st.nextToken (), st, icons);
 	}
 
-	private void fromCurrent (String first, StringTokenizer st, WMIcons icons)
+	private void fromCurrent (String first, StringTokenizer st, List<WMIcon> icons)
 	{
 		iconId	= first;
 		double	x = Double.parseDouble (st.nextToken ());
@@ -82,7 +83,7 @@ public class WMObject extends WMElement
 			if (shape.equalsIgnoreCase ("none"))		shape = null;
 			usecolor = st.hasMoreTokens () && Boolean.parseBoolean (st.nextToken ());
 		}
-		icon = (icons != null) ? icons.at (iconId) : null;
+		icon = World.find (icons, iconId);
 		if (icon == null)
 		{
 			System.out.println ("  [WMObject] Warning: icon <" + iconId + "> not found, using an empty icon");
@@ -160,7 +161,7 @@ public class WMObject extends WMElement
 
 	/* JSON: {icon, x, y, z, orientation (deg), color [, shape, usecolor]} */
 
-	public WMObject (JsonObject o, WMIcons icons)
+	public WMObject (JsonObject o, List<WMIcon> icons)
 	{
 		iconId	= World.getString (o, "icon", "");
 		pos		= World.toPoint (o);
@@ -170,7 +171,7 @@ public class WMObject extends WMElement
 		shape	= World.getString (o, "shape", null);
 		if ((shape != null) && shape.equalsIgnoreCase ("none"))		shape = null;
 		usecolor = World.getBoolean (o, "usecolor", false);
-		icon = (icons != null) ? icons.at (iconId) : null;
+		icon = World.find (icons, iconId);
 		if (icon == null)
 		{
 			System.out.println ("  [WMObject] Warning: icon <" + iconId + "> not found, using an empty icon");

@@ -52,7 +52,7 @@ public class SimObject
 		
 		prop		= props.getProperty ("OBJECT");
 		// The descriptor may carry its own icon library (ICONS / ICON_i); legacy inline icons are also accepted
-		odesc	= new WMObject (prop, new WMIcons (props));
+		odesc	= new WMObject (prop, WMIcon.fromProperties (props));
 		
 		// Compute bounding circle radius (icon in local coordinates)
 		min		= Double.MAX_VALUE;

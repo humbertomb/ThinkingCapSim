@@ -302,10 +302,10 @@ public class WorldCanvas extends JPanel
 	public void deleteSelection ()
 	{
 		if ((selection == null) || !editable)		return;
-		if ((selection.kind == WorldItem.ICON) && (WorldEditor.iconUsers (world, world.icons ().at (selection.index).label) > 0))
+		if ((selection.kind == WorldItem.ICON) && (WorldEditor.iconUsers (world, world.icons ().get (selection.index).label) > 0))
 		{
-			javax.swing.JOptionPane.showMessageDialog (this, "Icon '" + world.icons ().at (selection.index).label + "' is used by "
-					+ WorldEditor.iconUsers (world, world.icons ().at (selection.index).label) + " object(s) and cannot be deleted.",
+			javax.swing.JOptionPane.showMessageDialog (this, "Icon '" + world.icons ().get (selection.index).label + "' is used by "
+					+ WorldEditor.iconUsers (world, world.icons ().get (selection.index).label) + " object(s) and cannot be deleted.",
 					"Delete icon", javax.swing.JOptionPane.WARNING_MESSAGE);
 			return;
 		}
@@ -717,7 +717,7 @@ public class WorldCanvas extends JPanel
 		if (visible[WorldItem.FAREA])		for (int i = 0; i < world.fareas ().n (); i++)		drawFArea (g, world.fareas ().at (i), isSel (WorldItem.FAREA, i));
 		if (visible[WorldItem.PATH])		drawPath (g);
 		if (visible[WorldItem.WALL])		for (int i = 0; i < world.walls ().n (); i++)		drawWall (g, world.walls ().at (i), isSel (WorldItem.WALL, i));
-		if (visible[WorldItem.OBJECT])		for (int i = 0; i < world.objects ().n (); i++)		drawObject (g, world.objects ().at (i), isSel (WorldItem.OBJECT, i));
+		if (visible[WorldItem.OBJECT])		for (int i = 0; i < world.objects ().size (); i++)		drawObject (g, world.objects ().get (i), isSel (WorldItem.OBJECT, i));
 		if (visible[WorldItem.CONNECTOR])		for (int i = 0; i < world.connectors ().n (); i++)		drawConnector (g, world.connectors ().at (i), isSel (WorldItem.CONNECTOR, i));
 		if (visible[WorldItem.BEACON])		for (int i = 0; i < world.beacons ().size (); i++)		drawBeacon (g, world.beacons ().get (i), isSel (WorldItem.BEACON, i));
 		if (visible[WorldItem.CBEACON])		for (int i = 0; i < world.cbeacons ().size (); i++)	drawCBeacon (g, world.cbeacons ().get (i), isSel (WorldItem.CBEACON, i));
@@ -1085,7 +1085,7 @@ public class WorldCanvas extends JPanel
 	private WMObject selectedObject ()
 	{
 		if ((selection == null) || (selection.kind != WorldItem.OBJECT) || !WorldEditor.valid (world, selection))		return null;
-		return world.objects ().at (selection.index);
+		return world.objects ().get (selection.index);
 	}
 
 	/** The icon the icon tool works on, or null. */
@@ -1094,7 +1094,7 @@ public class WorldCanvas extends JPanel
 		WMObject	o = selectedObject ();
 		if (o != null)				return o.icon;
 		if ((selection != null) && (selection.kind == WorldItem.ICON) && WorldEditor.valid (world, selection))
-			return world.icons ().at (selection.index);
+			return world.icons ().get (selection.index);
 		return null;
 	}
 
@@ -1112,7 +1112,7 @@ public class WorldCanvas extends JPanel
 		java.util.List<WorldItem>	users = WorldEditor.iconUserItems (world, ic.label);
 		if (users.size () > 0)
 		{
-			WMObject	u = world.objects ().at (users.get (0).index);
+			WMObject	u = world.objects ().get (users.get (0).index);
 			anchor = new double[] { u.pos.x (), u.pos.y (), u.a };
 		}
 		else

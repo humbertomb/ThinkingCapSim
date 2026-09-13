@@ -492,7 +492,7 @@ public class WorldView3DWindow extends JFrame
 			bg.addChild (polyline (world.fareas ().at (selection.index).polygon, true, 0.04, C_SEL, 4f));
 			break;
 		case WorldItem.OBJECT:
-			for (wucore.utils.geom.Line2 l : world.objects ().at (selection.index).absIcon ())
+			for (wucore.utils.geom.Line2 l : world.objects ().get (selection.index).absIcon ())
 				bg.addChild (polyline (new Point2[] { l.orig (), l.dest () }, false, 0.04, C_SEL, 3f));
 			bg.addChild (polyline (hs, false, base + 0.05, C_SEL, 3f));
 			break;

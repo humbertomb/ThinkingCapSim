@@ -7,6 +7,9 @@ package tc.shared.world;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import java.util.StringTokenizer;
 
 import wucore.utils.geom.Line2;
@@ -47,6 +50,16 @@ public class WMIcon extends WMElement
 
 		label	= st.nextToken ();
 		lines	= parseLines (st);
+	}
+
+	/** The icon library of a properties file (ICONS = n, ICON_i = ...), as used by the .obj descriptors. */
+	static public List<WMIcon> fromProperties (Properties props)
+	{
+		int				n = Integer.parseInt (props.getProperty ("ICONS", "0"));
+		List<WMIcon>	icons = new ArrayList<WMIcon> (n);
+		for (int i = 0; i < n; i++)
+			icons.add (new WMIcon (props.getProperty ("ICON_" + i)));
+		return icons;
 	}
 
 	/** Parses "n, x1, y1, z1, x2, y2, z2, ..." from the current tokenizer position. */

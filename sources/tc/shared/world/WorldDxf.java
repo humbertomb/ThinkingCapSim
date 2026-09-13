@@ -177,12 +177,12 @@ public class WorldDxf
 		{
 			if (!entity.getLayer ().equalsIgnoreCase ("OBJECTS") || !(entity instanceof InsertDxf))		continue;
 			InsertDxf	insert = (InsertDxf) entity;
-			w.objects ().add (toObject (insert, dxf.getBlocks (insert.getBlockname ()), w.icons ()));
+			w.objects ().add (toObject (insert, dxf.getBlocks (insert.getBlockname ()), w));
 		}
 	}
 
 	/** An object from a DXF insert: the block lines become its (shared) icon. */
-	static private WMObject toObject (InsertDxf insert, BlockDxf block, WMIcons icons)
+	static private WMObject toObject (InsertDxf insert, BlockDxf block, World w)
 	{
 		WMObject	o = new WMObject ();
 		o.pos		= insert.getPos ();
@@ -198,9 +198,9 @@ public class WorldDxf
 				if (e instanceof LineDxf)		lines.add (toLine ((LineDxf) e));
 		Line2[]		arr = lines.toArray (new Line2[0]);
 		String		name = insert.getBlockname ();
-		WMIcon		icon = icons.at (name);
+		WMIcon		icon = w.icon (name);
 		if ((icon == null) || !icon.sameGeometry (new WMIcon (name, arr)))
-			icon = icons.register (arr, name);
+			icon = w.registerIcon (arr, name);
 		o.setIcon (icon);
 		o.label		= "OBJECT";
 		return o;
@@ -373,9 +373,9 @@ public class WorldDxf
 	static private void writeObjects (DXFWorldFile dxf, World w)
 	{
 		dxf.addLayer (new Layer ("OBJECTS", ACADColor.GREEN));
-		for (int i = 0; i < w.objects ().n (); i++)
+		for (int i = 0; i < w.objects ().size (); i++)
 		{
-			WMObject	o = w.objects ().at (i);
+			WMObject	o = w.objects ().get (i);
 			String		name = (o.iconId != null) ? o.iconId : "icon";
 			InsertDxf	insert = new InsertDxf (o.pos, (o.shape != null) ? o.shape : name, "OBJECTS");
 			insert.setRot (o.a);

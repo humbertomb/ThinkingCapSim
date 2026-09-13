@@ -51,8 +51,8 @@ public class World extends Object
 	protected ArrayList<Point2>		path		= new ArrayList<Point2> ();
 	
 	// Map components
-	protected WMIcons				icons;
-	protected WMObjects			 	objects;
+	protected ArrayList<WMIcon>		icons		= new ArrayList<WMIcon> ();		// Icon library the objects refer to
+	protected ArrayList<WMObject>	objects		= new ArrayList<WMObject> ();
 	protected WMFAreas				fareas;
 	protected WMWalls				walls;
 	protected WMZones				zones;
@@ -101,8 +101,8 @@ public class World extends Object
 	// World components
 	public final List<Point2>	path ()				{ return path; }
 	public final WMWalls 		walls ()			{ return walls; }
-	public final WMObjects 		objects ()			{ return objects; }
-	public final WMIcons		icons ()			{ return icons; }
+	public final List<WMObject>	objects ()			{ return objects; }
+	public final List<WMIcon>	icons ()			{ return icons; }
 	public final WMZones		zones ()			{ return zones; }
 	public final WMFAreas		fareas ()			{ return fareas; }
 	public final WMConnectors	connectors ()		{ return connectors; }
@@ -133,6 +133,40 @@ public class World extends Object
 	public final WMDock			dock (String label)			{ return find (docks, label); }
 	public final WMBeacon		beacon (String label)		{ return find (beacons, label); }
 	public final WMCBeacon		cbeacon (String label)		{ return find (cbeacons, label); }
+	public final WMIcon			icon (String label)			{ return find (icons, label); }
+
+	/* Icon library */
+
+	/** First icon with exactly the same segments, or null. */
+	public WMIcon findIcon (Line2[] lines)
+	{
+		WMIcon		probe = new WMIcon ("?", lines);
+		for (WMIcon ic : icons)
+			if (ic.sameGeometry (probe))		return ic;
+		return null;
+	}
+
+	/** An icon label not yet used: prefix, prefix_2, prefix_3 ... */
+	public String uniqueIconLabel (String prefix)
+	{
+		if ((prefix == null) || (prefix.length () == 0))		prefix = "icon";
+		if (index (icons, prefix) < 0)			return prefix;
+		for (int i = 2; ; i++)
+			if (index (icons, prefix + "_" + i) < 0)	return prefix + "_" + i;
+	}
+
+	/**
+	 * Registers an icon for the given local segments, reusing an existing one
+	 * with the same geometry when possible.
+	 */
+	public WMIcon registerIcon (Line2[] lines, String preferredLabel)
+	{
+		WMIcon		icon = findIcon (lines);
+		if (icon != null)				return icon;
+		icon = new WMIcon (uniqueIconLabel (preferredLabel), lines);
+		icons.add (icon);
+		return icon;
+	}
 
 	/** Elevation of a path point (0 if it carries none). */
 	static public double z (Point2 p)			{ return (p instanceof Point3) ? ((Point3) p).z () : 0.0; }
@@ -167,7 +201,7 @@ public class World extends Object
 	public final Line2[] getLines()	
 	{
 		Line2[] lin = walls.getLines();
-		Line2[] obj = objects.getLines();
+		Line2[] obj = objectLines ();
 		Line2[] all = new Line2[lin.length+obj.length];
 		System.arraycopy(lin,0,all,0,lin.length);
 		System.arraycopy(obj,0,all,lin.length,obj.length); 
@@ -300,8 +334,10 @@ public class World extends Object
 		path.clear ();
 		for (JsonElement e : getArray (o, "path"))			path.add (toPoint (e.getAsJsonObject ()));
 		walls		= new WMWalls (o.get ("walls"));
-		icons		= new WMIcons (o.get ("icons"));
-		objects		= new WMObjects (o.get ("objects"), icons);
+		icons.clear ();
+		for (JsonElement e : getArray (o, "icons"))			icons.add (new WMIcon (e.getAsJsonObject ()));
+		objects.clear ();
+		for (JsonElement e : getArray (o, "objects"))		objects.add (new WMObject (e.getAsJsonObject (), icons));
 		fareas		= new WMFAreas (o.get ("fareas"));
 		zones		= new WMZones (o.get ("zones"));
 		connectors	= new WMConnectors (o.get ("connectors"));
@@ -326,8 +362,12 @@ public class World extends Object
 		for (Point2 p : path)			pa.add (point (p));
 		o.add ("path", pa);
 		o.add ("walls", walls.toJson ());
-		o.add ("icons", icons.toJson ());
-		o.add ("objects", objects.toJson ());
+		JsonArray	ia = new JsonArray ();
+		for (WMIcon x : icons)			ia.add (x.toJson ());
+		o.add ("icons", ia);
+		JsonArray	oa = new JsonArray ();
+		for (WMObject x : objects)		oa.add (x.toJson ());
+		o.add ("objects", oa);
 		o.add ("zones", zones.toJson ());
 		o.add ("fareas", fareas.toJson ());
 		o.add ("connectors", connectors.toJson ());
@@ -364,7 +404,7 @@ public class World extends Object
 	
 	public Line2 crossline (double x1, double y1, double x2, double y2){
 		Line2 line1 = walls.crossline(x1,y1,x2,y2);
-		Line2 line2 = objects.crossline(x1,y1,x2,y2);
+		Line2 line2 = objectsCrossline(x1,y1,x2,y2);
 		
 		if(line1 == null && line2 == null) return null;
 		if(line1 == null && line2 !=null) return line2;
@@ -383,10 +423,9 @@ public class World extends Object
 	public Line2 crossline (double x1, double y1, double x2, double y2, Line2[][] virtuals, int nvirtual, int skip){
 		
 		if (walls == null)			return null;
-		if (objects == null)		return null;
 		
 		Line2 line1 = walls.crossline(x1,y1,x2,y2,virtuals,nvirtual,skip);
-		Line2 line2 = objects.crossline(x1,y1,x2,y2);
+		Line2 line2 = objectsCrossline(x1,y1,x2,y2);
 		
 		if(line1 == null && line2 == null) return null;
 		if(line1 == null && line2 !=null) return line2;
@@ -399,7 +438,7 @@ public class World extends Object
 	
 	public Line2 closer (double x1, double y1){
 		Line2 line1 = walls.closer(x1,y1);
-		Line2 line2 = objects.closer(x1,y1);
+		Line2 line2 = objectsCloser(x1,y1);
 		
 		if(line1 == null && line2 == null) return null;
 		if(line1 == null && line2 !=null) return line2;
@@ -412,7 +451,7 @@ public class World extends Object
 	
 	public Line2 closer (double x1, double y1, Line2[][] virtuals, int nvirtual, int skip){
 		Line2 line1 = walls.closer(x1,y1,virtuals,nvirtual,skip);
-		Line2 line2 = objects.closer(x1,y1);
+		Line2 line2 = objectsCloser(x1,y1);
 		
 		if(line1 == null && line2 == null) return null;
 		if(line1 == null && line2 !=null) return line2;
@@ -423,6 +462,53 @@ public class World extends Object
 		return line2;
 	}
 	
+	/* Geometry of the (visible) objects: the segments of their icons in world coordinates */
+
+	/** Segments of all the visible objects. */
+	public Line2[] objectLines ()
+	{
+		ArrayList<Line2>	lines = new ArrayList<Line2> ();
+		for (WMObject ob : objects)
+			if (ob.visible)
+				for (Line2 l : ob.absIcon ())		lines.add (l);
+		return lines.toArray (new Line2[0]);
+	}
+
+	/** First object segment crossed by a segment, or null. */
+	public Line2 objectsCrossline (double x1, double y1, double x2, double y2)
+	{
+		Line2		cln = null;
+		double		d = Double.MAX_VALUE;
+		for (WMObject ob : objects)
+			if (ob.visible)
+				for (Line2 l : ob.absIcon ())
+				{
+					Point2	pt = l.intersection (x1, y1, x2, y2);
+					if ((pt != null) && (pt.distance (x1, y1) < d))
+					{
+						d	= pt.distance (x1, y1);
+						cln	= l;
+					}
+				}
+		return cln;
+	}
+
+	/** Object segment closest to a point, or null. */
+	public Line2 objectsCloser (double x1, double y1)
+	{
+		Line2		tmp = null;
+		double		d = Double.MAX_VALUE;
+		for (WMObject ob : objects)
+			if (ob.visible)
+				for (Line2 l : ob.absIcon ())
+					if (l.distance (x1, y1) < d)
+					{
+						tmp	= l;
+						d	= l.distance (x1, y1);
+					}
+		return tmp;
+	}
+
 	public String toString (double x, double y)
 	{
 		int i, index;

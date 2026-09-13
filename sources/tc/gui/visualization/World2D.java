@@ -184,9 +184,9 @@ public class World2D extends Object2D
 		WMObject		object;
 		Line2[]		icon;
 		
-		for (i = 0; i < map.objects ().n (); i++)
+		for (i = 0; i < map.objects ().size (); i++)
 		{
-			object	= map.objects ().at (i);
+			object	= map.objects ().get (i);
 			icon		= object.absIcon ();
 			for (j = 0; j < icon.length; j++)
 			{
