@@ -7,6 +7,8 @@ package tclib.planning.htopol;
 
 import java.util.*;
 
+import com.google.gson.JsonObject;
+
 import tclib.navigation.mapbuilding.*;
 import tclib.navigation.pathplanning.*;
 import tclib.utils.fusion.*;
@@ -36,13 +38,13 @@ public class GNodeFL extends GNode
 	protected Hashtable<String,ArrayList<String>>		doors;
 	
 	// Constructors
-	public GNodeFL (String label, int index, Properties props)
+	/** A first level node (a zone of the world) with an empty second level graph. */
+	public GNodeFL (String label)
 	{
 		super (label);
-		
-		fromProps (props, index);
 
-		doors = new Hashtable<String,ArrayList<String>> ();
+		sgraph	= new Graph ();
+		doors	= new Hashtable<String,ArrayList<String>> ();
 	}
 	
 	// Accessors
@@ -56,52 +58,6 @@ public class GNodeFL extends GNode
 	public double	getDilation () 				{ return dilation; }
 	public boolean	isRealized () 				{ return realized; }
 	
-	// Instance methods
-	protected void fromProps (Properties props, int index)
-	{
-		int			i, numnodes;
-		GNodeSL		aux[];
-		
-		sgraph		= new Graph();
-		numnodes		= Integer.parseInt (props.getProperty (("SND_"+index+"_NODES"),"0"));
-		
-		// Parse and create nodes
-		aux = new GNodeSL[numnodes];
-		for (i=0; i < numnodes; i++)
-		{
-			String			aprops;
-			StringTokenizer	st1;
-
-			aprops	= props.getProperty ("SND_"+index+"_NODE_"+i);	
-			st1		= new StringTokenizer (aprops,"\t, ");
-
-			// Create node
-			aux[i] = new GNodeSL (st1.nextToken(), getLabel ());
-			sgraph.insNode (aux[i]);
-		}
-		
-		// Parse and create output links
-		for (i=0; i < numnodes; i++)
-		{
-			String			aprops;
-			StringTokenizer	st1, st2;
-			int				dest, weight;
-
-			aprops	= props.getProperty ("SND_"+index+"_NODE_"+i);	
-			st1		= new StringTokenizer (aprops,"\t, ");
-			st1.nextToken();		// Skip node label
-
-			while (st1.hasMoreTokens ())
-			{
-				st2		= new StringTokenizer (st1.nextToken(), "/");
-
-				dest		= Integer.parseInt (st2.nextToken());
-				weight	= Integer.parseInt (st2.nextToken());
-				
-				sgraph.join (aux[i], aux[dest], weight);
-			}
-		}
-	}
 
 	public void createMaps (World world, FusionDesc fdesc, RobotDesc rdesc)
 	{
@@ -174,7 +130,48 @@ public class GNodeFL extends GNode
 		ArrayList<String>	vector;
 
 		vector	= doors.get (zone);
-		return vector.get (0);
+		return ((vector == null) || vector.isEmpty ()) ? null : vector.get (0);
+	}
+
+	/** Makes the given door the (only) connection to a zone. */
+	public void setDoor (String zone, String door)
+	{
+		ArrayList<String>	vector = new ArrayList<String> ();
+		if (door != null)		vector.add (door);
+		doors.put (zone, vector);
+	}
+
+	/** Forgets the doors to a zone (when the arc to it is removed). */
+	public void removeDoors (String zone)		{ doors.remove (zone); }
+
+	/** Forgets the doors to a zone (when the arc to it is removed). */
+	public void renameZone (String from, String to)
+	{
+		ArrayList<String>	vector = doors.remove (from);
+		if (vector != null)		doors.put (to, vector);
+	}
+
+	/* JSON: {label, cellSize, dilation, arcs: [{to, door}], graph: {nodes: [...]}} */
+
+	public JsonObject toJson (Graph owner)
+	{
+		JsonObject	o = new JsonObject ();
+		o.addProperty ("label", getLabel ());
+		o.addProperty ("cellSize", size);
+		o.addProperty ("dilation", dilation);
+		com.google.gson.JsonArray	arcs = new com.google.gson.JsonArray ();
+		for (int i = 0; i < nList (); i++)
+		{
+			GNode		dest = owner.getNode (getList (i));
+			JsonObject	a = new JsonObject ();
+			a.addProperty ("to", dest.getLabel ());
+			String		door = getDoor (dest.getLabel ());
+			if (door != null)		a.addProperty ("door", door);
+			arcs.add (a);
+		}
+		o.add ("arcs", arcs);
+		o.add ("graph", HTopolMap.graphToJson (sgraph));
+		return o;
 	}
 	
 	public ArrayList<String> getDoors (String zone)

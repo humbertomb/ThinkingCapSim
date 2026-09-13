@@ -119,7 +119,6 @@ ROBPASSIVE	= false
 ROBEXTIME	= 115
 ROBDESC		= conf/robots/ifork.robot
 ROBWORLD	= conf/maps/dulzem3d.world
-ROBTOPOL	= conf/maps/dulzem.topol
 ROBGFX		= true
 ROBAPW		= true
 ROBCONNECT	= 	MOTION		tc.shared.linda.ItemMotion 			notify_motion, \

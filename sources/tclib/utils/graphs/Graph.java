@@ -154,6 +154,23 @@ public class Graph
 		return null;
 	}
 	
+	/** Removes a node from the graph, dropping every arc to it and renumbering the remaining nodes. */
+	public GNode removeNode (int index)
+	{
+		if ((index < 0) || (index >= nNodes))		return null;
+		GNode	removed = tabla.remove (index);
+		nNodes--;
+		for (int i = 0; i < nNodes; i++)
+		{
+			GNode	n = tabla.get (i);
+			n.setIndex (i);
+			n.nodeRemoved (index);
+		}
+		return removed;
+	}
+
+	public GNode removeNode (GNode node)			{ return removeNode (indNode (node.getLabel ())); }
+
 	public int indNode (String name)
 	{
 		for (int i=0; i<nNodes; i++)

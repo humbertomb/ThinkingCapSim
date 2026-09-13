@@ -40,8 +40,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected Properties			rprops;				// Contents of robot description file
 	protected String				wname;				// Description of robot environment
 	protected String				wtext;				// Contents (JSON text) of the world description file
-	protected String				tname;				// Description of topologic map
-	protected Properties			tprops;				// Contents of topologic description file
 	
 	// Time calculation and correction
 	protected long					ltime;				// Previous time mark (ms)
@@ -84,7 +82,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		try { rport 	= Integer.valueOf (props.getProperty ("ROBRPORT")).intValue (); } 	catch (Exception e) 		{ rport		= 0; }
 		try { lport 	= Integer.valueOf (props.getProperty ("ROBLPORT")).intValue (); } 	catch (Exception e) 		{ lport		= 0; }
 		wname			= props.getProperty ("ROBWORLD");
-		tname			= props.getProperty ("ROBTOPOL");
 		try { wapriori	= Boolean.valueOf (props.getProperty ("ROBAPW")).booleanValue (); } catch (Exception e) 		{ wapriori	= false; }
 		
 		// Load robot description and parameters
@@ -99,25 +96,12 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 
 		// Load world description and parameters (in case "a priori" world is selected)
 		wtext			= null;
-		tprops			= null;
 		if (wapriori)
 		{
 			if (wname != null)
 			{
 				try { wtext = new String (java.nio.file.Files.readAllBytes (java.nio.file.Paths.get (wname)), java.nio.charset.StandardCharsets.UTF_8); }
 				catch (Exception e) { e.printStackTrace (); }
-			}
-			
-			if (tname != null)
-			{
-				tprops 			= new Properties ();
-				try
-				{
-					file 		= new File (tname);
-					stream 		= new FileInputStream (file);
-					tprops.load (stream);
-					stream.close ();
-				} catch (Exception e) { e.printStackTrace (); }
 			}
 		}
 		
@@ -143,7 +127,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		System.out.println ("  [VRob] Sending new RDF");
 		
 		// Send robot description to Linda space
-		tuple	= new Tuple (Tuple.CONFIG, new ItemConfig (rprops, wtext, tprops, 0));
+		tuple	= new Tuple (Tuple.CONFIG, new ItemConfig (rprops, wtext, 0));
 		linda.write (tuple);
 	}
 	

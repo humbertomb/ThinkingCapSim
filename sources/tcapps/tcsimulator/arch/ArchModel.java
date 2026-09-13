@@ -112,7 +112,6 @@ public class ArchModel
 		new Property ("GFX",	"Graphics",	P_BOOLEAN),
 		new Property ("DESC",	"DESC",			"./conf/robots",	"Robot descriptions (*.robot)",	"robot"),
 		new Property ("WORLD",	"WORLD",		"./conf/maps",		"World maps (*.world)",			"world"),
-		new Property ("TOPOL",	"TOPOL",		"./conf/maps",		"Topological maps (*.topol)",	"topol"),
 		new Property ("APW",	"APW",			P_BOOLEAN),
 		new Property ("RADDR",	"RADDR"),
 		new Property ("RPORT",	"RPORT"),

@@ -169,7 +169,6 @@
           "GFX": "true",
           "MODE": "shared",
           "PASSIVE": "false",
-          "TOPOL": "conf/maps/dulzem.topol",
           "WORLD": "conf/maps/dulzem3d.world"
         },
         "events": [

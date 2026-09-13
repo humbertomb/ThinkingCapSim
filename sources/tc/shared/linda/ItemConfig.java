@@ -13,30 +13,18 @@ public class ItemConfig extends Item implements Serializable
 {
 	// Robot and environment properties
 	public Properties			props_robot;
-	public String				world;				// JSON text of the world (tc.shared.world.World), or null
-	public Properties 			props_topol;
+	public String				world;				// JSON text of the world (tc.shared.world.World, topology included), or null
 	
 	// Constructors
 	public ItemConfig () 
 	{
 		this.props_robot	= null;
 		this.world			= null;
-		this.props_topol	= null;
 		
 		set (0);
 	}	
 	
 	public ItemConfig (String name_robot, String name_world, long tstamp) 
-	{
-		this (name_robot, name_world, null, tstamp);
-	}
-	
-	public ItemConfig (Properties props_robot, String world, long tstamp) 
-	{
-		this (props_robot, world, null, tstamp);
-	}	
-	
-	public ItemConfig (String name_robot, String name_world, String name_topol, long tstamp) 
 	{
 		File				file;
 		FileInputStream		stream;
@@ -59,26 +47,14 @@ public class ItemConfig extends Item implements Serializable
 			catch (Exception e) { e.printStackTrace (); }
 		}
 		
-		if (name_topol != null)
-		{
-			this.props_topol	= new Properties ();
-			try 
-			{
-				file 		= new File (name_topol);
-				stream 		= new FileInputStream (file);
-				props_topol.load (stream);
-				stream.close ();
-			} catch (Exception e) { e.printStackTrace (); }
-		}
 		set (tstamp);
 	}	
 	
 	/** @param world  JSON text of the world file (see {@link tc.shared.world.World#toJsonText}), or null */
-	public ItemConfig (Properties props_robot, String world, Properties props_topol, long tstamp) 
+	public ItemConfig (Properties props_robot, String world, long tstamp) 
 	{
 		this.props_robot	= props_robot;
 		this.world			= world;
-		this.props_topol 	= props_topol;
 		
 		set (tstamp);
 	}	

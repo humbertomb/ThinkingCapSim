@@ -25,6 +25,8 @@ import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point3;
 import wucore.utils.geom.Polygon2;
 
+import tclib.planning.htopol.HTopolMap;
+
 public class World extends Object
 {
 	static public final String		SUFFIX	= ".world";
@@ -60,6 +62,9 @@ public class World extends Object
 	
 	protected WMWaypoints		waypoints;
 	protected WMDocks				docks;
+
+	// Hierarchical topological map (persisted with the world)
+	protected HTopolMap			topol;
 	
 	
 	/* Constructors */
@@ -108,6 +113,10 @@ public class World extends Object
 	public final WMCBeacons		cbeacons ()			{ return cbeacons; }
 	public final WMWaypoints	wps ()				{ return waypoints; }
 	public final WMDocks			docks ()				{ return docks; }
+
+	/** The hierarchical topological map of the world (never null; may be empty). */
+	public final HTopolMap		topology ()				{ if (topol == null) topol = new HTopolMap (this); return topol; }
+	public final void			setTopology (HTopolMap t)	{ topol = t; if (t != null) t.setWorld (this); }
 	
 	public final Line2[] getLines()	
 	{
@@ -253,6 +262,7 @@ public class World extends Object
 		docks		= new WMDocks (o.get ("docks"));
 		beacons		= new WMBeacons (o.get ("beacons"));
 		cbeacons	= new WMCBeacons (o.get ("cbeacons"));
+		topol		= new HTopolMap (this, WorldJson.getObject (o, "topology"));
 	}
 
 	public JsonObject toJson ()
@@ -272,6 +282,7 @@ public class World extends Object
 		o.add ("docks", docks.toJson ());
 		o.add ("beacons", beacons.toJson ());
 		o.add ("cbeacons", cbeacons.toJson ());
+		o.add ("topology", topology ().toJson ());
 		return o;
 	}
 

@@ -1281,10 +1281,10 @@ public class IForkPlanner extends SeqPlanner
 	{
 		super.notify_config (space, item);
 				
-		if (item.props_topol != null)
-			topol = new HTopolMap (world, item.props_topol);
+		if (world != null)
+			topol = world.topology ();
 		
-		if ((world == null) || (topol == null))
+		if ((world == null) || (topol == null) || (topol.numNodes () == 0))
 		{
 			System.err.println ("--[iFrkPla] World and topological maps MUST be specified. Aborting module.");
 			initialised	= false;		

@@ -100,7 +100,7 @@ public class PositioningProducer extends StdThread
 			cprops.load (stream);
 			stream.close ();
 		} catch (Exception e) { e.printStackTrace (); }
-		ctuple	= new Tuple (Tuple.CONFIG, new ItemConfig (cprops, null, null, 0));
+		ctuple	= new Tuple (Tuple.CONFIG, new ItemConfig (cprops, null, 0));
 		linda.write (ctuple);
 	}
 	

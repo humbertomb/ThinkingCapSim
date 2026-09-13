@@ -281,9 +281,10 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomIn (canvas)));
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomOut (canvas)));
 
-		// --- 3D view toggle, at the bottom of the toolbar
+		// --- topology editor and 3D view toggle, at the bottom of the toolbar
 		tb.add (Box.createVerticalGlue ());
 		tb.addSeparator ();
+		tb.add (ToolButtons.flatButton (ToolButtons.action ("Topology Editor", ToolIcon.TOPOLOGY, "Topology Editor  [Ctrl+T]", new Runnable () { public void run () { editTopology (); } })));
 		tb.add (view3d.button ());
 
 		toolButtons[WorldCanvas.T_SELECT].setSelected (true);
@@ -292,6 +293,15 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 
 	/** Shows or hides the Java 3D view window. */
 	public void show3D (boolean show)		{ view3d.show (show); }
+
+	/** Opens the editor of the hierarchical topological map of the world (edited in place; an accepted edition is undoable). */
+	public void editTopology ()
+	{
+		if (canvas.getWorld () == null)		return;
+		TopolEditorDialog	dlg = new TopolEditorDialog (this, canvas.getWorld ());
+		if (dlg.showDialog () && dlg.isModified ())
+			worldChanged ("Edit topology");
+	}
 
 	private void addTool (JToolBar tb, ButtonGroup group, final int tool, int icon, String tip, String key)
 	{
@@ -443,6 +453,10 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 		}));
 		mview.add (mlayers);
 		mview.addSeparator ();
+		JMenuItem	mtopol = new JMenuItem ("Topology Editor...");
+		mtopol.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_T, mask));
+		mtopol.addActionListener (new java.awt.event.ActionListener () { public void actionPerformed (ActionEvent e) { editTopology (); } });
+		mview.add (mtopol);
 		mview.add (view3d.menuItem (mask));
 		mb.add (mview);
 

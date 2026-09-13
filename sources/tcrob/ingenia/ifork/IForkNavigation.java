@@ -121,7 +121,7 @@ public class IForkNavigation extends IndoorNavigation
 
 		super.notify_config (space, item);
 
-		if ((world == null) || (item.props_topol  == null))
+		if ((world == null) || (world.topology ().numNodes () == 0))
 		{
 			System.err.println ("--[iFrkNav] World and topological maps MUST be specified. Aborting module.");
 			
@@ -135,7 +135,7 @@ public class IForkNavigation extends IndoorNavigation
 		iconMax = new Point2(limits[2], limits[3]);
 		
 		// Initialise hierarchical topological map
-		topol	= new HTopolMap (world, item.props_topol);
+		topol	= world.topology ();
 		topol.createMaps (fdesc, rdesc);
 		
 		// Initialise zone state

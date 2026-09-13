@@ -145,6 +145,55 @@ public class GNode extends Object
 	}
 	
 	
+	/** Position of a node index in the adjacency list, or -1 when there is no arc to it. */
+	public int arcIndex (int nodo)
+	{
+		for (int i = 0; i < nList; i++)
+			if (list.get (i).intValue () == nodo)		return i;
+		return -1;
+	}
+
+	/** True when there is an arc from this node to the given node index. */
+	public boolean hasArc (int nodo)					{ return arcIndex (nodo) != -1; }
+
+	/** Weight of the arc to a node index (-1 when there is no arc). */
+	public int getWeight (int nodo)
+	{
+		int	i = arcIndex (nodo);
+		return (i == -1) ? -1 : pesos.get (i).intValue ();
+	}
+
+	/** Changes the weight of an existing arc; false when there is no arc. */
+	public boolean setWeight (int nodo, int peso)
+	{
+		int	i = arcIndex (nodo);
+		if (i == -1)		return false;
+		pesos.set (i, Integer.valueOf (peso));
+		return true;
+	}
+
+	/** Removes the arc to a node index; false when there was none. */
+	public boolean removeArc (int nodo)
+	{
+		int	i = arcIndex (nodo);
+		if (i == -1)		return false;
+		list.remove (i);
+		pesos.remove (i);
+		nList--;
+		return true;
+	}
+
+	/** Renumbers the adjacency list after the removal of a node from the graph: arcs to it disappear, greater indices shift down. */
+	public void nodeRemoved (int removed)
+	{
+		removeArc (removed);
+		for (int i = 0; i < nList; i++)
+		{
+			int	v = list.get (i).intValue ();
+			if (v > removed)		list.set (i, Integer.valueOf (v - 1));
+		}
+	}
+
 	/** Devuelve el Indice de un nodo de la lista (-1 no hay Node)
 	 @param		index 	Indice de la lista de adyacencia
 	 @return		Indice del nodo contenido en la lista

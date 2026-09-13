@@ -411,5 +411,468 @@
     { "label": "D44", "x": 30.11, "y": 1.2015, "z": 2, "diameter": 0.036, "height": 0.5 },
     { "label": "D45", "x": 46.8141, "y": 1.1945, "z": 2, "diameter": 0.036, "height": 0.5 },
     { "label": "D46", "x": 42.3484, "y": 1.2006, "z": 2, "diameter": 0.036, "height": 0.5 }
-  ]
+  ],
+  "topology": {
+    "nodes": [
+      {
+        "label": "ZoneA",
+        "cellSize": 0.55,
+        "dilation": 1.75,
+        "arcs": [
+          { "to": "ZoneB", "door": "CorrABin" },
+          { "to": "ZoneC", "door": "DoorAC" }
+        ],
+        "graph": {
+          "nodes": [
+            {
+              "label": "CorrABout",
+              "arcs": [
+                { "to": "CorrABin", "weight": 0 },
+                { "to": "DoorAC", "weight": 0 },
+                { "to": "bufA00", "weight": 0 },
+                { "to": "bufA01", "weight": 0 },
+                { "to": "outA1wp", "weight": 0 },
+                { "to": "inA1wp", "weight": 0 },
+                { "to": "outA2wp", "weight": 0 },
+                { "to": "inA2wp", "weight": 0 },
+                { "to": "Carga1wp", "weight": 0 },
+                { "to": "Carga2wp", "weight": 0 },
+                { "to": "Carga3wp", "weight": 0 },
+                { "to": "Carga4wp", "weight": 0 }
+              ]
+            },
+            {
+              "label": "CorrABin",
+              "arcs": []
+            },
+            {
+              "label": "DoorAC",
+              "arcs": [
+                { "to": "CorrABin", "weight": 0 },
+                { "to": "bufA00", "weight": 0 },
+                { "to": "bufA01", "weight": 0 },
+                { "to": "outA1wp", "weight": 0 },
+                { "to": "inA1wp", "weight": 0 },
+                { "to": "outA2wp", "weight": 0 },
+                { "to": "inA2wp", "weight": 0 }
+              ]
+            },
+            {
+              "label": "bufA00",
+              "arcs": []
+            },
+            {
+              "label": "bufA01",
+              "arcs": []
+            },
+            {
+              "label": "L1-Salida",
+              "arcs": []
+            },
+            {
+              "label": "outA1wp",
+              "arcs": [
+                { "to": "L1-Salida", "weight": 0 }
+              ]
+            },
+            {
+              "label": "L1-Entrada",
+              "arcs": []
+            },
+            {
+              "label": "inA1wp",
+              "arcs": [
+                { "to": "L1-Entrada", "weight": 0 }
+              ]
+            },
+            {
+              "label": "L2-Salida",
+              "arcs": []
+            },
+            {
+              "label": "outA2wp",
+              "arcs": [
+                { "to": "L2-Salida", "weight": 0 }
+              ]
+            },
+            {
+              "label": "L2-Entrada",
+              "arcs": []
+            },
+            {
+              "label": "inA2wp",
+              "arcs": [
+                { "to": "L2-Entrada", "weight": 0 }
+              ]
+            },
+            {
+              "label": "Carga1",
+              "arcs": []
+            },
+            {
+              "label": "Carga1wp",
+              "arcs": [
+                { "to": "Carga1", "weight": 0 }
+              ]
+            },
+            {
+              "label": "Carga2",
+              "arcs": []
+            },
+            {
+              "label": "Carga2wp",
+              "arcs": [
+                { "to": "Carga2", "weight": 0 }
+              ]
+            },
+            {
+              "label": "Carga3",
+              "arcs": []
+            },
+            {
+              "label": "Carga3wp",
+              "arcs": [
+                { "to": "Carga3", "weight": 0 }
+              ]
+            },
+            {
+              "label": "Carga4",
+              "arcs": []
+            },
+            {
+              "label": "Carga4wp",
+              "arcs": [
+                { "to": "Carga4", "weight": 0 }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "label": "ZoneB",
+        "cellSize": 0.55,
+        "dilation": 1.75,
+        "arcs": [
+          { "to": "ZoneA", "door": "CorrABout" },
+          { "to": "ZoneD", "door": "DoorBD" },
+          { "to": "RoomA", "door": "DoorA" }
+        ],
+        "graph": {
+          "nodes": [
+            {
+              "label": "CorrABin",
+              "arcs": [
+                { "to": "CorrABout", "weight": 0 },
+                { "to": "DoorA", "weight": 0 },
+                { "to": "DoorBD", "weight": 0 },
+                { "to": "bufB00", "weight": 0 },
+                { "to": "bufB01", "weight": 0 },
+                { "to": "bufB02", "weight": 0 },
+                { "to": "bufB03", "weight": 0 },
+                { "to": "wpCout0", "weight": 0 },
+                { "to": "wpCout1", "weight": 0 },
+                { "to": "wpCout2", "weight": 0 },
+                { "to": "wpCout3", "weight": 0 },
+                { "to": "wpDin0", "weight": 0 },
+                { "to": "wpDin1", "weight": 0 },
+                { "to": "wpDin2", "weight": 0 },
+                { "to": "wpDin3", "weight": 0 },
+                { "to": "outB1wp", "weight": 0 },
+                { "to": "inB1wp", "weight": 0 },
+                { "to": "outB2wp", "weight": 0 },
+                { "to": "inB2wp", "weight": 0 }
+              ]
+            },
+            {
+              "label": "CorrABout",
+              "arcs": []
+            },
+            {
+              "label": "DoorA",
+              "arcs": [
+                { "to": "CorrABout", "weight": 0 },
+                { "to": "DoorBD", "weight": 0 },
+                { "to": "bufB00", "weight": 0 },
+                { "to": "bufB01", "weight": 0 },
+                { "to": "bufB02", "weight": 0 },
+                { "to": "bufB03", "weight": 0 }
+              ]
+            },
+            {
+              "label": "DoorBD",
+              "arcs": [
+                { "to": "CorrABout", "weight": 0 },
+                { "to": "DoorA", "weight": 0 },
+                { "to": "bufB00", "weight": 0 },
+                { "to": "bufB01", "weight": 0 },
+                { "to": "bufB02", "weight": 0 },
+                { "to": "bufB03", "weight": 0 },
+                { "to": "wpCout0", "weight": 0 },
+                { "to": "wpCout1", "weight": 0 },
+                { "to": "wpCout2", "weight": 0 },
+                { "to": "wpCout3", "weight": 0 },
+                { "to": "wpDin0", "weight": 0 },
+                { "to": "wpDin1", "weight": 0 },
+                { "to": "wpDin2", "weight": 0 },
+                { "to": "wpDin3", "weight": 0 },
+                { "to": "outB1wp", "weight": 0 },
+                { "to": "inB1wp", "weight": 0 },
+                { "to": "outB2wp", "weight": 0 },
+                { "to": "inB2wp", "weight": 0 }
+              ]
+            },
+            {
+              "label": "bufB00",
+              "arcs": []
+            },
+            {
+              "label": "bufB01",
+              "arcs": []
+            },
+            {
+              "label": "bufB02",
+              "arcs": []
+            },
+            {
+              "label": "bufB03",
+              "arcs": []
+            },
+            {
+              "label": "Cout0",
+              "arcs": []
+            },
+            {
+              "label": "wpCout0",
+              "arcs": [
+                { "to": "Cout0", "weight": 0 }
+              ]
+            },
+            {
+              "label": "Cout1",
+              "arcs": []
+            },
+            {
+              "label": "wpCout1",
+              "arcs": [
+                { "to": "Cout1", "weight": 0 }
+              ]
+            },
+            {
+              "label": "Cout2",
+              "arcs": []
+            },
+            {
+              "label": "wpCout2",
+              "arcs": [
+                { "to": "Cout2", "weight": 0 }
+              ]
+            },
+            {
+              "label": "Cout3",
+              "arcs": []
+            },
+            {
+              "label": "wpCout3",
+              "arcs": [
+                { "to": "Cout3", "weight": 0 }
+              ]
+            },
+            {
+              "label": "Din0",
+              "arcs": []
+            },
+            {
+              "label": "wpDin0",
+              "arcs": [
+                { "to": "Din0", "weight": 0 }
+              ]
+            },
+            {
+              "label": "Din1",
+              "arcs": []
+            },
+            {
+              "label": "wpDin1",
+              "arcs": [
+                { "to": "Din1", "weight": 0 }
+              ]
+            },
+            {
+              "label": "Din2",
+              "arcs": []
+            },
+            {
+              "label": "wpDin2",
+              "arcs": [
+                { "to": "Din2", "weight": 0 }
+              ]
+            },
+            {
+              "label": "Din3",
+              "arcs": []
+            },
+            {
+              "label": "wpDin3",
+              "arcs": [
+                { "to": "Din3", "weight": 0 }
+              ]
+            },
+            {
+              "label": "L3-Salida",
+              "arcs": []
+            },
+            {
+              "label": "outB1wp",
+              "arcs": [
+                { "to": "L3-Salida", "weight": 0 }
+              ]
+            },
+            {
+              "label": "L3-Entrada",
+              "arcs": []
+            },
+            {
+              "label": "inB1wp",
+              "arcs": [
+                { "to": "L3-Entrada", "weight": 0 }
+              ]
+            },
+            {
+              "label": "L4-Salida",
+              "arcs": []
+            },
+            {
+              "label": "outB2wp",
+              "arcs": [
+                { "to": "L4-Salida", "weight": 0 }
+              ]
+            },
+            {
+              "label": "L4-Entrada",
+              "arcs": []
+            },
+            {
+              "label": "inB2wp",
+              "arcs": [
+                { "to": "L4-Entrada", "weight": 0 }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "label": "ZoneC",
+        "cellSize": 0.55,
+        "dilation": 1.75,
+        "arcs": [
+          { "to": "ZoneA", "door": "DoorAC" },
+          { "to": "ZoneE", "door": "DoorCE" }
+        ],
+        "graph": {
+          "nodes": [
+            {
+              "label": "DoorAC",
+              "arcs": [
+                { "to": "DoorCE", "weight": 0 }
+              ]
+            },
+            {
+              "label": "DoorCE",
+              "arcs": [
+                { "to": "DoorAC", "weight": 0 }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "label": "ZoneD",
+        "cellSize": 0.55,
+        "dilation": 1.75,
+        "arcs": [
+          { "to": "ZoneB", "door": "DoorBD" },
+          { "to": "ZoneE", "door": "DoorDE" }
+        ],
+        "graph": {
+          "nodes": [
+            {
+              "label": "DoorBD",
+              "arcs": [
+                { "to": "DoorDE", "weight": 0 },
+                { "to": "wpLA-Salida", "weight": 0 },
+                { "to": "wpLA-Entrada", "weight": 0 }
+              ]
+            },
+            {
+              "label": "DoorDE",
+              "arcs": [
+                { "to": "DoorBD", "weight": 0 }
+              ]
+            },
+            {
+              "label": "wpLA-Salida",
+              "arcs": [
+                { "to": "LA-Salida", "weight": 0 }
+              ]
+            },
+            {
+              "label": "LA-Salida",
+              "arcs": []
+            },
+            {
+              "label": "wpLA-Entrada",
+              "arcs": [
+                { "to": "LA-Entrada", "weight": 0 }
+              ]
+            },
+            {
+              "label": "LA-Entrada",
+              "arcs": []
+            }
+          ]
+        }
+      },
+      {
+        "label": "ZoneE",
+        "cellSize": 0.55,
+        "dilation": 1.75,
+        "arcs": [
+          { "to": "ZoneC", "door": "DoorCE" },
+          { "to": "ZoneD", "door": "DoorDE" }
+        ],
+        "graph": {
+          "nodes": [
+            {
+              "label": "DoorCE",
+              "arcs": [
+                { "to": "DoorDE", "weight": 0 }
+              ]
+            },
+            {
+              "label": "DoorDE",
+              "arcs": [
+                { "to": "DoorCE", "weight": 0 }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "label": "RoomA",
+        "cellSize": 0.35,
+        "dilation": 1.75,
+        "arcs": [
+          { "to": "ZoneB", "door": "DoorA" }
+        ],
+        "graph": {
+          "nodes": [
+            {
+              "label": "DoorA",
+              "arcs": []
+            }
+          ]
+        }
+      }
+    ]
+  }
 }

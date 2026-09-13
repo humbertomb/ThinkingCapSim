@@ -54,6 +54,10 @@ public class ToolIcon implements Icon
 	static public final int		ROUTER		= 39;		// box with two vertical bars
 	static public final int		MODULE		= 40;		// plain box
 	static public final int		ROBOT		= 41;		// rounded box with wheels
+	static public final int		TOPOLOGY	= 42;		// three connected nodes (topological map)
+	static public final int		NODE		= 43;		// a single node
+	static public final int		ARC			= 44;		// arrow between two nodes
+	static public final int		SUBGRAPH	= 45;		// node with a small graph below (open its level)
 
 	protected int				type;
 	protected int				size;
@@ -312,6 +316,41 @@ public class ToolIcon implements Icon
 			g.drawRoundRect (4, 4, 14, 12, 6, 6);
 			g.fillRoundRect (5, 16, 5, 3, 2, 2);	g.fillRoundRect (12, 16, 5, 3, 2, 2);
 			g.drawLine (11, 7, 11, 4);	g.fillOval (9, 8, 4, 4);
+			break;
+		case TOPOLOGY:		// triangle of nodes joined by arcs
+			g.setStroke (new BasicStroke (1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawLine (6, 16, 11, 5);	g.drawLine (11, 5, 17, 16);	g.drawLine (6, 16, 17, 16);
+			g.setColor (new Color (215, 230, 250));
+			g.fillOval (8, 2, 6, 6);	g.fillOval (3, 13, 6, 6);	g.fillOval (14, 13, 6, 6);
+			g.setColor (fg);
+			g.drawOval (8, 2, 6, 6);	g.drawOval (3, 13, 6, 6);	g.drawOval (14, 13, 6, 6);
+			break;
+		case NODE:			// one node
+			g.setStroke (new BasicStroke (1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.setColor (new Color (215, 230, 250));
+			g.fillOval (6, 6, 10, 10);
+			g.setColor (fg);
+			g.drawOval (6, 6, 10, 10);
+			break;
+		case ARC:			// arrow from one node to another
+			g.setStroke (new BasicStroke (1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.setColor (new Color (215, 230, 250));
+			g.fillOval (2, 13, 6, 6);	g.fillOval (14, 3, 6, 6);
+			g.setColor (fg);
+			g.drawOval (2, 13, 6, 6);	g.drawOval (14, 3, 6, 6);
+			g.drawLine (7, 13, 14, 8);
+			g.drawLine (14, 8, 10, 9);	g.drawLine (14, 8, 13, 12);
+			break;
+		case SUBGRAPH:		// node with a small graph hanging below it
+			g.setStroke (new BasicStroke (1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.setColor (new Color (215, 230, 250));
+			g.fillOval (7, 2, 8, 8);
+			g.setColor (fg);
+			g.drawOval (7, 2, 8, 8);
+			g.drawLine (11, 10, 11, 13);	g.drawLine (5, 13, 17, 13);
+			g.drawLine (5, 13, 5, 16);		g.drawLine (17, 13, 17, 16);
+			g.fillOval (3, 16, 4, 4);		g.fillOval (15, 16, 4, 4);		g.fillOval (9, 16, 4, 4);
+			g.drawLine (11, 13, 11, 16);
 			break;
 		}
 		g.dispose ();

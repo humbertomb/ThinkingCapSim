@@ -242,7 +242,7 @@ public class Simulation //extends Perception
 			} catch (Exception e) { e.printStackTrace (); }
 
 			sim.initialise(cprops);
-			sim.notify_config(new ItemConfig (cprops, null, null, 0));
+			sim.notify_config(new ItemConfig (cprops, null, 0));
 			sim.position_correction();
 		}
 }
