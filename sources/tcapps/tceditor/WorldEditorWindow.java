@@ -124,7 +124,7 @@ public class WorldEditorWindow extends JFrame implements WorldCanvas.Listener
 			public void windowClosing (WindowEvent e)		{ quit (); }
 		});
 		pack ();
-		setSize (1200, 830);
+		setSize (1200, 900);
 		setLocationRelativeTo (null);
 	}
 
