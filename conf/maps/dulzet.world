@@ -48,10 +48,10 @@
   },
   "waypoints": [
     { "label": "wp00", "x": -7, "y": -4.25, "z": 0, "orientation": -130 },
-    { "label": "wp01", "x": -7.255, "y": 2.695, "z": 0, "orientation": 140 },
+    { "label": "wp01", "x": -7.5863, "y": 2.4591, "z": 0, "orientation": 140 },
     { "label": "wp02", "x": 3.1, "y": -6, "z": 0, "orientation": -30 },
     { "label": "wp03", "x": 4.57, "y": 2.4, "z": 0, "orientation": 40 },
-    { "label": "wp04", "x": -7.15, "y": 2.4, "z": 0, "orientation": 140 }
+    { "label": "wp04", "x": -6.7609, "y": 2.326, "z": 0, "orientation": 121.6075 }
   ],
   "docks": [
     { "label": "ra0", "x": -10.255, "y": -1.516, "z": 0, "orientation": 0, "flow": "INOUT" },
@@ -68,5 +68,98 @@
     { "label": "b4", "x": -2.21, "y": 4.935, "z": 0, "orientation": 180, "width": 0.2, "height": 0.5 },
     { "label": "b5", "x": 8.058, "y": 4.919, "z": 0, "orientation": 135, "width": 0.2, "height": 0.5 }
   ],
-  "cbeacons": []
+  "cbeacons": [],
+  "topology": {
+    "nodes": [
+      {
+        "label": "zonaB",
+        "cellSize": 0.55,
+        "dilation": 1.75,
+        "arcs": [
+          { "to": "zonaA", "door": "door1" }
+        ],
+        "graph": {
+          "nodes": [
+            {
+              "label": "door1",
+              "arcs": [
+                { "to": "wp00", "weight": 0 },
+                { "to": "wp04", "weight": 0 },
+                { "to": "wp01", "weight": 0 }
+              ]
+            },
+            {
+              "label": "wp04",
+              "arcs": [
+                { "to": "ra4", "weight": 0 }
+              ]
+            },
+            {
+              "label": "ra4",
+              "arcs": []
+            },
+            {
+              "label": "wp00",
+              "arcs": [
+                { "to": "ra0", "weight": 0 }
+              ]
+            },
+            {
+              "label": "wp01",
+              "arcs": [
+                { "to": "ra1", "weight": 0 }
+              ]
+            },
+            {
+              "label": "ra1",
+              "arcs": []
+            },
+            {
+              "label": "ra0",
+              "arcs": []
+            }
+          ]
+        }
+      },
+      {
+        "label": "zonaA",
+        "cellSize": 0.35,
+        "dilation": 1.75,
+        "arcs": [
+          { "to": "zonaB", "door": "door1" }
+        ],
+        "graph": {
+          "nodes": [
+            {
+              "label": "door1",
+              "arcs": [
+                { "to": "wp03", "weight": 0 },
+                { "to": "wp02", "weight": 0 }
+              ]
+            },
+            {
+              "label": "ra3",
+              "arcs": []
+            },
+            {
+              "label": "wp03",
+              "arcs": [
+                { "to": "ra3", "weight": 0 }
+              ]
+            },
+            {
+              "label": "wp02",
+              "arcs": [
+                { "to": "ra2", "weight": 0 }
+              ]
+            },
+            {
+              "label": "ra2",
+              "arcs": []
+            }
+          ]
+        }
+      }
+    ]
+  }
 }
