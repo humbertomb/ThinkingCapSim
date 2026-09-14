@@ -892,7 +892,8 @@ public class WorldCanvas extends JPanel
 		{
 			double	ax = px (o.pos.x () + 0.3 * Math.cos (o.a)), ay = py (o.pos.y () + 0.3 * Math.sin (o.a));
 			g.draw (new Line2D.Double (x, y, ax, ay));
-			if (sel)	label (g, o.shape, o.pos.x (), o.pos.y (), C_SEL);
+			// the 3D model name identifies a static object; an animated one has its own label
+			if (sel && !(o instanceof WMAObject))	label (g, o.shape, o.pos.x (), o.pos.y (), C_SEL);
 		}
 	}
 
