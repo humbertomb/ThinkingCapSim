@@ -66,7 +66,7 @@ public class DeployArch
 	 * A module of a robot (also the router and the virtual robot). The name is
 	 * the INFO of the ADF; <code>properties</code> holds the rest with the ADF
 	 * suffixes (CLASS, MODE, PASSIVE, QUEUED, POLLED, EXTIME, PRI, GFX, GMODE,
-	 * DESC, RADDR, RPORT, LPORT, ...); the events are
+	 * DESC, ...); the events are
 	 * the CONNECT entries. ADF prefixes are generated when an ADF is rebuilt.
 	 */
 	static public class Module
@@ -216,6 +216,9 @@ public class DeployArch
 				if ((world == null) || (world.trim ().length () == 0))		setWorldFile (r.virtualRobot.get ("WORLD"));
 				r.virtualRobot.properties.remove ("WORLD");
 				r.virtualRobot.properties.remove ("APW");
+				r.virtualRobot.properties.remove ("RADDR");		// connection of the virtual robot to a robot driver:
+				r.virtualRobot.properties.remove ("RPORT");		// never used, the drivers take their address
+				r.virtualRobot.properties.remove ("LPORT");		// from the robot description
 			}
 			List<Module>	all = new ArrayList<Module> (r.modules);
 			all.add (r.virtualRobot);

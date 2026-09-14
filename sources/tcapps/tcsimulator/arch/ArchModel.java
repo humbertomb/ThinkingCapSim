@@ -111,9 +111,6 @@ public class ArchModel
 		new Property ("EXTIME",	"Exec. time (ms)"),
 		new Property ("GFX",	"Graphics",	P_BOOLEAN),
 		new Property ("DESC",	"DESC",			"./conf/robots",	"Robot descriptions (*.robot)",	"robot"),
-		new Property ("RADDR",	"RADDR"),
-		new Property ("RPORT",	"RPORT"),
-		new Property ("LPORT",	"LPORT"),
 	};
 
 	/** Suffixes that exist in the ADF but are not shown in the editor, per kind. */

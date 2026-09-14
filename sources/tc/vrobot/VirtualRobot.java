@@ -36,9 +36,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected PlotWindow			plot;				// Window to plot current motion command
 
 	// Parameters for robot connection and environment settings
-	protected String				raddress;			// Remote robot address (VR to robot driver)
-	protected int					rport;				// Remote robot port (VR to robot driver)
-	protected int					lport;				// Local robot port (VR to robot driver)
 	protected Properties			rprops;				// Contents of robot description file
 	protected String				wname;				// Description of robot environment
 	protected String				wtext;				// Contents (JSON text) of the world description file
@@ -80,9 +77,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 
 		// Load robot environment description and parameters
 		rname			= cfg.get ("DESC");
-		raddress		= cfg.get ("RADDR");
-		rport			= cfg.getInt ("RPORT", 0);
-		lport			= cfg.getInt ("LPORT", 0);
 		wname			= cfg.get ("WORLD");
 
 		// Load robot description and parameters
