@@ -1,0 +1,117 @@
+{
+  "world": "./conf/maps/feria.world",
+  "robots": [
+    {
+      "name": "QUAKY2-1",
+      "linda": {
+        "address": "localhost",
+        "port": 3000,
+        "instantiate": true
+      },
+      "modules": [
+        {
+          "name": "Controller",
+          "properties": {
+            "CLASS": "tcrob.umu.quaky2.SoccerController",
+            "GFX": "true",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "PRG": "conf/programs/quaky2.soccer.b",
+            "PRG_": "conf/programs/quaky2.indoor.b"
+          },
+          "events": [
+            {
+              "symbol": "LPS",
+              "itemClass": "tc.shared.linda.ItemLPS",
+              "method": "notify_lps"
+            },
+            {
+              "symbol": "GOAL",
+              "itemClass": "tc.shared.linda.ItemGoal",
+              "method": "notify_goal"
+            },
+            {
+              "symbol": "PATH",
+              "itemClass": "tc.shared.linda.ItemPath",
+              "method": "notify_path"
+            }
+          ]
+        },
+        {
+          "name": "Planner",
+          "properties": {
+            "CLASS": "tcrob.umu.quaky2.SoccerPlanner",
+            "EXTIME": "1000",
+            "GFX": "true;",
+            "MODE": "shared",
+            "PASSIVE": "false",
+            "POLLED": "true",
+            "QUEUED": "false"
+          },
+          "events": [
+            {
+              "symbol": "PLAN",
+              "itemClass": "tc.shared.linda.ItemPlan",
+              "method": "notify_plan"
+            },
+            {
+              "symbol": "BEHRESULT",
+              "itemClass": "tc.shared.linda.ItemBehResult",
+              "method": "notify_beh_result"
+            }
+          ]
+        },
+        {
+          "name": "Perception",
+          "properties": {
+            "CLASS": "tcrob.umu.quaky2.SoccerPerception",
+            "MODE": "shared",
+            "PASSIVE": "true"
+          },
+          "events": [
+            {
+              "symbol": "DATA",
+              "itemClass": "tc.shared.linda.ItemData",
+              "method": "notify_data"
+            },
+            {
+              "symbol": "OBJECT",
+              "itemClass": "tc.shared.linda.ItemObject",
+              "method": "notify_object"
+            },
+            {
+              "symbol": "NAVIGATION",
+              "itemClass": "tc.shared.linda.ItemNavigation",
+              "method": "notify_navigation"
+            }
+          ]
+        }
+      ],
+      "virtualRobot": {
+        "name": "Virtual Robot",
+        "properties": {
+          "CLASS": "tcrob.umu.quaky2.Quaky2",
+          "DESC": "conf/robots/quaky2.robot",
+          "EXTIME": "75",
+          "GFX": "true",
+          "MODE": "shared",
+          "PASSIVE": "false",
+          "WORLD": "conf/maps/feria.world"
+        },
+        "events": [
+          {
+            "symbol": "MOTION",
+            "itemClass": "tc.shared.linda.ItemMotion",
+            "method": "notify_motion"
+          },
+          {
+            "symbol": "DATACTRL",
+            "itemClass": "tc.shared.linda.ItemDataCtrl",
+            "method": "notify_data_ctrl"
+          }
+        ]
+      },
+      "properties": {}
+    }
+  ]
+}

@@ -6,7 +6,6 @@
 package tc;
 
 import java.io.*;
-import java.util.*;
 
 import tc.runtime.thread.*;
 import tc.shared.linda.*;
@@ -151,9 +150,10 @@ public class ExecArch extends Thread
 
 		// Linda spaces of the robot
 		lldesc		= new LindaDesc ("LLIN", LindaDesc.L_LOCAL, rob.linda.address, rob.linda.port, rob.linda.instantiate);
-		gldesc		= (glin != null)
+		gldesc		= ((glin != null)
 					? new LindaDesc ("GLIN", LindaDesc.L_GLOBAL, glin.address, glin.port, glin.instantiate && (robot == 0))
-					: new LindaDesc ("GLIN", LindaDesc.L_GLOBAL, null, 0, false);
+						: null);
+//					: new LindaDesc ("GLIN", LindaDesc.L_GLOBAL, null, 0, false);
 
 		// Modules of the robot
 		num			= Math.min (rob.modules.size (), MAX_THS);
@@ -206,8 +206,8 @@ public class ExecArch extends Thread
 		try
 		{
 			// Crate Linda Spaces if required
-			if (lldesc.create)			linda_loc	= lldesc.start_server ();
-			if (gldesc.create)			linda_glob	= gldesc.start_server ();
+			if (lldesc.create)							linda_loc	= lldesc.start_server ();
+			if ((gldesc != null) && gldesc.create)		linda_glob	= gldesc.start_server ();
 			
 			// Execute LindaRouter if needed
 			if (lrdesc != null)
@@ -340,7 +340,7 @@ public class ExecArch extends Thread
 		
 		str		= "Architecture Description\n";
 		
-		str += "\t" + gldesc + "\n";									// Global Linda Space
+		if (gldesc != null) 	str += "\t" + gldesc + "\n";			// Global Linda Space
 		str += "\t" + lldesc + "\n";									// Local Linda Space
 		if (lrdesc != null)		str += "\t" + lrdesc + "\n";			// Linda Router
 		

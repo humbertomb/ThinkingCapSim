@@ -1,0 +1,131 @@
+{
+  "world": "./conf/maps/aass_corr.world",
+  "robots": [
+    {
+      "name": "RASMUS-1",
+      "linda": {
+        "address": "localhost",
+        "port": 3000,
+        "instantiate": true
+      },
+      "modules": [
+        {
+          "name": "Navigation",
+          "properties": {
+            "CLASS": "tcrob.oru.rasmus.RasmusModel",
+            "GFX": "true",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "POLLED": "false",
+            "QUEUED": "false"
+          },
+          "events": [
+            {
+              "symbol": "LPS",
+              "itemClass": "tc.shared.linda.ItemLPS",
+              "method": "notify_lps"
+            },
+            {
+              "symbol": "GOAL",
+              "itemClass": "tc.shared.linda.ItemGoal",
+              "method": "notify_goal"
+            }
+          ]
+        },
+        {
+          "name": "Perception",
+          "properties": {
+            "CLASS": "tcrob.oru.rasmus.RasmusPerception",
+            "GFX": "true",
+            "MODE": "shared",
+            "PASSIVE": "true"
+          },
+          "events": [
+            {
+              "symbol": "DATA",
+              "itemClass": "tc.shared.linda.ItemData",
+              "method": "notify_data"
+            },
+            {
+              "symbol": "OBJECT",
+              "itemClass": "tc.shared.linda.ItemObject",
+              "method": "notify_object"
+            },
+            {
+              "symbol": "NAVIGATION",
+              "itemClass": "tc.shared.linda.ItemNavigation",
+              "method": "notify_navigation"
+            }
+          ]
+        },
+        {
+          "name": "Controller",
+          "properties": {
+            "CLASS": "tcrob.oru.rasmus.RasmusControl",
+            "FACT": "tcrob.oru.rasmus.behs, ./sources/tcrob/oru/rasmus/behs, ../sources/tc/runtime",
+            "GFX": "true",
+            "MODE": "shared",
+            "PASSIVE": "true"
+          },
+          "events": [
+            {
+              "symbol": "LPS",
+              "itemClass": "tc.shared.linda.ItemLPS",
+              "method": "notify_lps"
+            },
+            {
+              "symbol": "GOAL",
+              "itemClass": "tc.shared.linda.ItemGoal",
+              "method": "notify_goal"
+            },
+            {
+              "symbol": "PATH",
+              "itemClass": "tc.shared.linda.ItemPath",
+              "method": "notify_path"
+            },
+            {
+              "symbol": "BEHNAME",
+              "itemClass": "tc.shared.linda.ItemBehName",
+              "method": "notify_beh_name"
+            },
+            {
+              "symbol": "BEHRULES",
+              "itemClass": "tc.shared.linda.ItemBehRules",
+              "method": "notify_beh_rules"
+            },
+            {
+              "symbol": "BEHDEBUG",
+              "itemClass": "tc.shared.linda.ItemBehDebug",
+              "method": "notify_beh_debug"
+            }
+          ]
+        }
+      ],
+      "virtualRobot": {
+        "name": "Virtual Robot",
+        "properties": {
+          "CLASS": "oru.rasmus.Rasmus",
+          "DESC": "conf/robots/rasmus.robot",
+          "GFX": "true",
+          "MODE": "shared",
+          "PASSIVE": "false",
+          "WORLD": "conf/maps/aass_corr.world"
+        },
+        "events": [
+          {
+            "symbol": "MOTION",
+            "itemClass": "tc.shared.linda.ItemMotion",
+            "method": "notify_motion"
+          }
+        ]
+      },
+      "properties": {
+        "MONCLASS": "oru.rasmus.gui.RasmusGUI",
+        "MONCONNECT": "LPS\t\t\ttc.shared.linda.ItemLPS \t\tnotify_lps, GUICTRL\t\ttc.shared.linda.ItemGUICtrl\tnotify_gui_ctrl, GRIDMAP \ttcrob.indoor.linda.ItemGridMap \tnotify_grid, FSEGMAP \ttcrob.indoor.linda.ItemFSegMap \tnotify_fmap",
+        "MONINFO": "Local GUI Server",
+        "MONMODE": "shared",
+        "MONPASSIVE": "true"
+      }
+    }
+  ]
+}

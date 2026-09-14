@@ -1,0 +1,113 @@
+{
+  "world": "conf/maps/campus.gis",
+  "globalLinda": {
+    "address": "localhost",
+    "port": 5500,
+    "instantiate": true
+  },
+  "robots": [
+    {
+      "name": "SATANT-1",
+      "linda": {
+        "address": "localhost",
+        "port": 3000,
+        "instantiate": true
+      },
+      "router": {
+        "name": "Linda Router",
+        "properties": {
+          "CLASS": "um.satant.SatantRouter",
+          "GMODE": "udp",
+          "GPORT": "20029",
+          "MODE": "shared"
+        },
+        "events": []
+      },
+      "modules": [
+        {
+          "name": "Perception",
+          "properties": {
+            "CLASS": "um.satant.SatantPerception",
+            "MODE": "shared",
+            "PASSIVE": "true"
+          },
+          "events": []
+        },
+        {
+          "name": "Controller",
+          "properties": {
+            "CLASS": "um.satant.SatantController",
+            "GFX": "true",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "PRG": "conf/programs/satant.b"
+          },
+          "events": []
+        },
+        {
+          "name": "Local GUI Server",
+          "properties": {
+            "CLASS": "um.satant.gui.SatantGUIServer",
+            "MODE": "shared",
+            "PASSIVE": "true"
+          },
+          "events": []
+        }
+      ],
+      "virtualRobot": {
+        "name": "Virtual Robot",
+        "properties": {
+          "CLASS": "um.satant.Satant",
+          "DESC": "conf/robots/satant.robot",
+          "GFX": "false",
+          "MODE": "shared",
+          "WORLD": "conf/maps/campus.gis"
+        },
+        "events": []
+      },
+      "properties": {}
+    },
+    {
+      "name": "SATANT-2",
+      "linda": {
+        "address": "localhost",
+        "port": 3000,
+        "instantiate": true
+      },
+      "router": {
+        "name": "Linda Router",
+        "properties": {
+          "CLASS": "tc.coord.LindaRouter",
+          "GMODE": "udp",
+          "GPORT": "20029",
+          "MODE": "shared"
+        },
+        "events": []
+      },
+      "modules": [
+        {
+          "name": "Perception",
+          "properties": {
+            "CLASS": "um.satant.SatantPerception",
+            "MODE": "shared",
+            "PASSIVE": "true"
+          },
+          "events": []
+        }
+      ],
+      "virtualRobot": {
+        "name": "Virtual Robot",
+        "properties": {
+          "CLASS": "um.satant.Satant",
+          "DESC": "conf/robots/satant2.robot",
+          "GFX": "false",
+          "LOG": "conf/logs/SATANT.campus.20021213.1.path",
+          "MODE": "shared",
+          "WORLD": "conf/maps/campus.gis"
+        },
+        "events": []
+      },
+      "properties": {}
+    }
+  ]
+}
