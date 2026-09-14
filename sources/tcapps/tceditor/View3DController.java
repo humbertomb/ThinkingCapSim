@@ -65,6 +65,8 @@ public class View3DController
 		return item;
 	}
 
+	protected boolean			animatedVisible	= true;
+
 	public boolean isVisible ()		{ return (view3d != null) && view3d.isVisible (); }
 
 	/** Shows or hides the 3D window, creating it on first use. */
@@ -80,6 +82,7 @@ public class View3DController
 					public void run ()		{ setToggles (false); }
 				});
 				view3d.setSize (900, 700);
+				view3d.setAnimatedVisible (animatedVisible);
 				// place it beside the owner when there is room
 				java.awt.Window	win = (owner instanceof java.awt.Window) ? (java.awt.Window) owner : SwingUtilities.getWindowAncestor (owner);
 				Rectangle	r = (win != null) ? win.getBounds () : new Rectangle (0, 0, 0, 0);
@@ -144,6 +147,30 @@ public class View3DController
 	public void clearRobots ()
 	{
 		if (view3d != null)		view3d.clearRobots ();
+	}
+
+	/* --- simulated animated objects --- */
+
+	public int addObject (tc.shared.world.WMObject o, double x, double y, double z, double a)
+	{
+		return (view3d != null) ? view3d.addObject (o, x, y, z, a) : -1;
+	}
+
+	public void updateObject (int index, double x, double y, double z, double a)
+	{
+		if (view3d != null)		view3d.updateObject (index, x, y, z, a);
+	}
+
+	public void clearObjects ()
+	{
+		if (view3d != null)		view3d.clearObjects ();
+	}
+
+	/** Whether the 3D view draws the world's animated objects at their initial pose (off while simulating). */
+	public void setAnimatedVisible (boolean b)
+	{
+		animatedVisible = b;
+		if (view3d != null)		view3d.setAnimatedVisible (b);
 	}
 
 	public void dispose ()

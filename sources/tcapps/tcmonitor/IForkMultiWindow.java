@@ -42,7 +42,6 @@ public class IForkMultiWindow
 		simul = new Simulator ();
 		new SimulatorWindow(simul,SimulatorWindow.ADMIN);
 		
-		new ExecArchMultiPallet("."+File.separator+"conf"+File.separator+"pallet"+File.separator+"pallet.arch","."+File.separator+"conf"+File.separator+"pallet"+File.separator+"typepallet.cfg",simul).start();
 		
 		for(int i=1;i<=NUMAGV;i++){
 			exec		= new ExecArch ("IFORK-"+i, "conf/archs/ifork.arch", null, simul);
@@ -51,9 +50,6 @@ public class IForkMultiWindow
 			
 			try { Thread.sleep (3000); } catch (Exception e) { }	
 		}
-		try { Thread.sleep (5000); } catch (Exception e) { }
-		simul.smc.startSimul();
-		
 	}
 
 	public static void main(String argv[]){

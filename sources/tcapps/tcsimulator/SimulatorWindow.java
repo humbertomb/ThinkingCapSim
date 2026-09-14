@@ -36,6 +36,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tc.ExecArch;
 import tc.shared.linda.ItemDebug;
+import tc.shared.world.WMAObject;
 import tc.shared.world.World;
 import tc.vrobot.RobotData;
 import tc.vrobot.RobotDesc;
@@ -46,6 +47,7 @@ import tcapps.tceditor.View3DController;
 import tcapps.tceditor.WorldCanvas;
 import tcapps.tceditor.WorldEditor;
 import tcapps.tceditor.WorldEditorDialog;
+import tcapps.tceditor.WorldItem;
 import tcapps.tceditor.WorldItem;
 import tcapps.tcsimulator.simulator.Simulator;
 import tcapps.tcsimulator.simulator.SimulatorDesc;
@@ -81,6 +83,8 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	protected List<ExecArch>		running;				// Robots being executed, one ExecArch each (null when none)
 	protected Simulator				simulator;				// Simulation engine of the running architecture
 	protected List<RobotView>		robots	= new ArrayList<RobotView> ();		// simulated robots being displayed
+	protected List<ObjectView>		objects	= new ArrayList<ObjectView> ();		// simulated animated objects being displayed (null entries: removed)
+	protected boolean				aobjectsLayer	= true;					// AOBJECT layer state before the execution hid it
 	protected Sequence				lastTasks;				// last task set edited (shown again when the dialog reopens)
 
 	/** A simulated robot as seen by the window: description, last data and its index in the 3D view. */
@@ -90,6 +94,15 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		SimulatorDesc	sdesc;
 		String			name;			// robot identifier (null when the simulator did not give one)
 		RobotData		data;			// last data received (null until the first update)
+		int				index3d	= -1;	// index in the 3D view (-1: not added yet)
+	}
+
+	/** A simulated animated object as seen by the window: the simulator object, its last pose and its index in the 3D view. */
+	protected static class ObjectView
+	{
+		SimObject		obj;
+		Point3			pos;			// last pose reported by the simulator
+		double			a;
 		int				index3d	= -1;	// index in the 3D view (-1: not added yet)
 	}
 
@@ -451,6 +464,10 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			execs.add (e);
 		}
 		running		= execs;
+		// while simulating, the animated objects are drawn live (overlay / 3D) instead of at their initial pose
+		aobjectsLayer	= canvas.isKindVisible (WorldItem.AOBJECT);
+		canvas.setKindVisible (WorldItem.AOBJECT, false);
+		view3d.setAnimatedVisible (false);
 		simulator.setVisualization (this);							// robots and objects are reported to this window
 		monitorPanel.clear ();
 		new Thread (new Runnable ()
@@ -485,10 +502,14 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			ExecArch	r = execs.get (i);
 			if (r.isRunning () || (r.getLocalLinda () != null))		r.terminate ();
 		}
-		if (simulator != null)		simulator.closeVisualization3D ();		// stops the refresh thread
+		if (simulator != null)		simulator.dispose ();		// stops the refresh and object threads
 		simulator	= null;
 		synchronized (robots) { robots.clear (); }
+		synchronized (objects) { objects.clear (); }
 		view3d.clearRobots ();
+		view3d.clearObjects ();
+		view3d.setAnimatedVisible (true);
+		canvas.setKindVisible (WorldItem.AOBJECT, aobjectsLayer);
 		canvas.repaint ();
 		statusBar.setStatus ("Execution terminated");
 		updateExecutionState ();
@@ -577,11 +598,48 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		}
 	}
 
-	public int addObject (SimObject object)					{ return -1; }		// scene objects: not displayed yet
-	public int addObject (SimObject object, Point3 pos, double a)	{ return -1; }
-	public void removeObject (int objindex)					{ }
-	public void removeAllObjects ()								{ }
-	public void updateObjectData (int objindex, Point3 pt, double a)	{ }
+	public int addObject (SimObject object)
+	{
+		return addObject (object, object.odesc.pos, object.odesc.a);
+	}
+
+	public int addObject (SimObject object, Point3 pos, double a)
+	{
+		ObjectView	ov = new ObjectView ();
+		ov.obj	= object;
+		ov.pos	= new Point3 (pos);
+		ov.a	= a;
+		synchronized (objects)
+		{
+			objects.add (ov);
+			return objects.size () - 1;
+		}
+	}
+
+	public void removeObject (int objindex)
+	{
+		synchronized (objects)
+		{
+			if ((objindex >= 0) && (objindex < objects.size ()))		objects.set (objindex, null);
+		}
+	}
+
+	public void removeAllObjects ()
+	{
+		synchronized (objects) { objects.clear (); }
+		SwingUtilities.invokeLater (new Runnable () { public void run () { view3d.clearObjects (); } });
+	}
+
+	public void updateObjectData (int objindex, Point3 pt, double a)
+	{
+		synchronized (objects)
+		{
+			if ((objindex < 0) || (objindex >= objects.size ()) || (objects.get (objindex) == null))		return;
+			ObjectView	ov = objects.get (objindex);
+			ov.pos	= new Point3 (pt);
+			ov.a	= a;
+		}
+	}
 
 	/** End of a simulator refresh cycle: redraw the 2D view and move the 3D robots (on the event thread). */
 	public void repaint ()
@@ -592,8 +650,23 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			{
 				canvas.repaint ();
 				update3DRobots ();
+				update3DObjects ();
 			}
 		});
+	}
+
+	private void update3DObjects ()
+	{
+		if (!view3d.isVisible ())		return;
+		synchronized (objects)
+		{
+			for (ObjectView ov : objects)
+			{
+				if (ov == null)			continue;
+				if (ov.index3d < 0)		ov.index3d = view3d.addObject (ov.obj.odesc, ov.pos.x (), ov.pos.y (), ov.pos.z (), ov.a);
+				view3d.updateObject (ov.index3d, ov.pos.x (), ov.pos.y (), ov.pos.z (), ov.a);
+			}
+		}
 	}
 
 	private void update3DRobots ()
@@ -619,10 +692,48 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	public void paint (Graphics2D g, WorldCanvas c)
 	{
+		synchronized (objects)
+		{
+			for (ObjectView ov : objects)
+				if (ov != null)				drawObject (g, c, ov);
+		}
 		synchronized (robots)
 		{
 			for (RobotView rv : robots)
 				if (rv.data != null)		drawRobot (g, c, rv);
+		}
+	}
+
+	/** A live animated object: its icon at the simulated pose, its virtual radius and its name (as the robots). */
+	private void drawObject (Graphics2D g, WorldCanvas c, ObjectView ov)
+	{
+		WMAObject	o = ov.obj.odesc;
+		Color		col = wucore.utils.color.ColorTool.fromWColorToColor (o.color);
+		double		x = ov.pos.x (), y = ov.pos.y ();
+
+		g.setStroke (new BasicStroke (1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		g.setColor (col);
+		if (o.icon != null)
+			for (Line2 l : o.icon.toAbsolute (ov.pos, ov.a))
+				g.draw (new Line2D.Double (c.toPixelX (l.orig ().x ()), c.toPixelY (l.orig ().y ()), c.toPixelX (l.dest ().x ()), c.toPixelY (l.dest ().y ())));
+		if (ov.obj.radius > 0.0)
+		{
+			double	r = ov.obj.radius * c.getScale ();
+			g.setColor (new Color (col.getRed (), col.getGreen (), col.getBlue (), 90));
+			g.setStroke (new BasicStroke (1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1f, new float[] { 5f, 4f }, 0f));
+			g.draw (new java.awt.geom.Ellipse2D.Double (c.toPixelX (x) - r, c.toPixelY (y) - r, 2 * r, 2 * r));
+		}
+		g.setColor (col);
+		g.fillOval (c.toPixelX (x) - 3, c.toPixelY (y) - 3, 6, 6);
+		if (o.label != null)
+		{
+			double	r = Math.max (ov.obj.radius, 0.15);
+			int		tx = (int) Math.round (c.toPixelX (x + r * 0.7)) + 4, ty = (int) Math.round (c.toPixelY (y + r * 0.7)) - 4;
+			g.setFont (g.getFont ().deriveFont (java.awt.Font.BOLD, 12f));
+			g.setColor (new Color (255, 255, 255, 200));
+			for (int dx = -1; dx <= 1; dx++)	for (int dy = -1; dy <= 1; dy++)	if ((dx != 0) || (dy != 0))	g.drawString (o.label, tx + dx, ty + dy);
+			g.setColor (col);
+			g.drawString (o.label, tx, ty);
 		}
 	}
 

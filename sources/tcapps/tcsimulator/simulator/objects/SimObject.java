@@ -1,78 +1,70 @@
 /*
- * (c) 2004 Humberto Martinez Barbera
+ * (c) 2004-2026 Humberto Martinez Barbera
  */
  
 package tcapps.tcsimulator.simulator.objects;
 
-import java.io.*;
-import java.util.*;
+import java.lang.reflect.Constructor;
 
-import tc.shared.world.*;
+import tc.shared.world.WMAObject;
 
-import wucore.utils.geom.*;
+import wucore.utils.geom.Line2;
 
+/**
+ * An object handled by the simulator: an animated object of the world
+ * ({@link WMAObject}) plus its simulation state. The plain SimObject does not
+ * move by itself; the subclasses implement the dynamic behaviours
+ * ({@link SimMobileObject}, {@link SimCargo}), and the world object names the
+ * one to use in its <code>dynamics</code> attribute.
+ */
 public class SimObject
 {
-	public WMObject			odesc;
-	public double			radius;
-	public int 				idsimul;
+	public WMAObject			odesc;			// The world object (its pose is updated by the simulation)
+	public double				radius;			// Bounding radius used for collisions and picking (m)
+	public int 					idsimul;		// Index in the visualisation
 
 	// Constructors
-	public SimObject (String descfile)
+	public SimObject (WMAObject odesc)
 	{
-		
-		Properties		props;
-		File				file;
-		FileInputStream	stream;
+		this.odesc	= odesc;
+		radius		= (odesc.radius > 0.0) ? odesc.radius : iconRadius (odesc);
+	}
 
-		props			= new Properties ();
+	/**
+	 * Creates the simulation object for a world object: an instance of the
+	 * class named in <code>odesc.dynamics</code> (a SimObject subclass with a
+	 * constructor taking a WMAObject), or a static SimObject when there is no
+	 * dynamics or the class cannot be used.
+	 */
+	static public SimObject create (WMAObject odesc)
+	{
+		if (odesc.dynamics == null)			return new SimObject (odesc);
 		try
 		{
-			file 		= new File (descfile);
-			stream 		= new FileInputStream (file);
-			props.load (stream);
-			stream.close ();
-		} catch (Exception e) { e.printStackTrace (); }
-
-		fromProperties (props);	
-	}
-	
-	public SimObject (Properties props)
-	{
-		fromProperties (props);
-	}
-
-	// Instance methods
-	protected void fromProperties (Properties props)
-	{
-		int				i;
-		String			prop;
-		double			min, max;
-		Line2[]			icon;
-		
-		prop		= props.getProperty ("OBJECT");
-		// The descriptor may carry its own icon library (ICONS / ICON_i); legacy inline icons are also accepted
-		odesc	= new WMObject (prop, WMIcon.fromProperties (props));
-		
-		// Compute bounding circle radius (icon in local coordinates)
-		min		= Double.MAX_VALUE;
-		max		= -Double.MAX_VALUE;
-		icon		= odesc.getLocalIcon ();
-		for (i = 0; i < icon.length; i++)
+			Class<?>		tclass = Class.forName (odesc.dynamics);
+			Constructor<?>	cons = tclass.getConstructor (WMAObject.class);
+			return (SimObject) cons.newInstance (odesc);
+		} catch (Exception e)
 		{
-			if (icon[i].orig().x() < min)		min = icon[i].orig().x();
-			if (icon[i].orig().y() < min)		min = icon[i].orig().y();
-			if (icon[i].dest().x() < min)		min = icon[i].dest().x();
-			if (icon[i].dest().y() < min)		min = icon[i].dest().y();
-
-			if (icon[i].orig().x() > max)		max = icon[i].orig().x();
-			if (icon[i].orig().y() > max)		max = icon[i].orig().y();
-			if (icon[i].dest().x() > max)		max = icon[i].dest().x();
-			if (icon[i].dest().y() > max)		max = icon[i].dest().y();
+			System.out.println ("--[SimObject] Cannot create dynamics <" + odesc.dynamics + "> for object <" + odesc.label + ">: " + e + ". Using a static object");
+			return new SimObject (odesc);
 		}
-		radius	= Math.max (-min, max);
 	}
-	public String toString(){
-		return "odesc="+odesc.toRawString()+" radius="+radius+" idsimul="+idsimul;
+
+	/** Bounding radius of the local icon (fallback when the object has no radius). */
+	static protected double iconRadius (WMAObject odesc)
+	{
+		double		r = 0.0;
+		for (Line2 l : odesc.getLocalIcon ())
+		{
+			r = Math.max (r, Math.hypot (l.orig ().x (), l.orig ().y ()));
+			r = Math.max (r, Math.hypot (l.dest ().x (), l.dest ().y ()));
+		}
+		return r;
+	}
+
+	public String toString ()
+	{
+		return "odesc=" + odesc.toRawString () + " radius=" + radius + " idsimul=" + idsimul;
 	}
 }

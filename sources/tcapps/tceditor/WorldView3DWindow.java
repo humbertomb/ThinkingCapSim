@@ -55,6 +55,7 @@ import tc.shared.world.WMBeacon;
 import tc.shared.world.WMCBeacon;
 import tc.shared.world.WMConnector;
 import tc.shared.world.WMFArea;
+import tc.shared.world.WMObject;
 import tc.shared.world.WMWall;
 import tc.shared.world.World;
 import tc.vrobot.RobotData;
@@ -109,6 +110,9 @@ public class WorldView3DWindow extends JFrame
 	protected BranchGroup			selBranch;			// detachable: selection highlight
 	protected BranchGroup			robotsBranch;		// live: simulated robots (Robot3D children)
 	protected java.util.List<Robot3D>	robots = new java.util.ArrayList<Robot3D> ();
+	protected BranchGroup			objectsBranch;		// live: simulated animated objects (one TransformGroup each)
+	protected java.util.List<TransformGroup>	objects = new java.util.ArrayList<TransformGroup> ();
+	protected boolean				showAnimated	= true;	// draw the world's animated objects at their initial pose (off while simulating)
 	protected int					vmode			= Scene3D.M_MOVE;
 
 	/* GUI */
@@ -343,7 +347,7 @@ public class WorldView3DWindow extends JFrame
 		{
 			BranchGroup		bg = new BranchGroup ();
 			bg.setCapability (BranchGroup.ALLOW_DETACH);
-			bg.addChild (new World3D (world, scene));
+			bg.addChild (new World3D (world, scene, showAnimated));
 			bg.addChild (createExtras ());
 			if (floorCB.isSelected ())
 			{
@@ -672,6 +676,87 @@ public class WorldView3DWindow extends JFrame
 		if (robotsBranch != null)		robotsBranch.detach ();
 		robotsBranch = null;
 		robots.clear ();
+	}
+
+	/* --- simulated animated objects: live copies moved by the simulator --- */
+
+	/**
+	 * Whether the animated objects of the world are drawn (at their initial
+	 * pose) as part of the world. The simulator turns it off and adds its own
+	 * live objects with {@link #addObject}.
+	 */
+	public void setAnimatedVisible (boolean b)
+	{
+		if (showAnimated == b)			return;
+		showAnimated = b;
+		scheduleRebuild ();
+	}
+
+	/**
+	 * Adds a live object (3DS shape, or its icon when it has none, plus its
+	 * name floating above) and returns its index for {@link #updateObject}.
+	 */
+	public int addObject (WMObject o, double x, double y, double z, double a)
+	{
+		if (objectsBranch == null)
+		{
+			objectsBranch = new BranchGroup ();
+			objectsBranch.setCapability (BranchGroup.ALLOW_DETACH);
+			objectsBranch.setCapability (BranchGroup.ALLOW_CHILDREN_EXTEND);
+			objectsBranch.setCapability (BranchGroup.ALLOW_CHILDREN_WRITE);
+			scene.addBranch (objectsBranch);
+		}
+		TransformGroup	tg = new TransformGroup ();
+		tg.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
+		TransformGroup	model = (o.shape != null) ? scene.getCachedObject (o.shape, o.usecolor ? wucore.utils.color.ColorTool.fromWColorToColor (o.color) : null) : null;
+		double			height;
+		if (model != null)
+		{
+			tg.addChild (model);
+			height = Robot3D.labelHeight (model);
+		}
+		else
+		{
+			// no 3D model: the icon segments at floor level
+			java.awt.Color	c = wucore.utils.color.ColorTool.fromWColorToColor (o.color);
+			Color3f			col = new Color3f (c.getRed () / 255f, c.getGreen () / 255f, c.getBlue () / 255f);
+			for (wucore.utils.geom.Line2 l : o.getLocalIcon ())
+				tg.addChild (segment (l.orig ().x (), l.orig ().y (), l.z1 () + 0.02, l.dest ().x (), l.dest ().y (), l.z2 () + 0.02, col, 2f));
+			height = Robot3D.LABEL_GAP;
+		}
+		if ((o.label != null) && (o.label.length () > 0))
+		{
+			com.sun.j3d.utils.geometry.Text2D	text = new com.sun.j3d.utils.geometry.Text2D (o.label, new Color3f (0.1f, 0.1f, 0.6f), "Application", 140, java.awt.Font.BOLD);
+			Transform3D		tl = new Transform3D ();
+			tl.setTranslation (new Vector3d (0.0, 0.0, height));
+			TransformGroup	lg = new TransformGroup (tl);
+			lg.addChild (text);
+			tg.addChild (lg);
+		}
+		BranchGroup		bg = new BranchGroup ();
+		bg.setCapability (BranchGroup.ALLOW_DETACH);
+		bg.addChild (tg);
+		objects.add (tg);
+		objectsBranch.addChild (bg);
+		updateObject (objects.size () - 1, x, y, z, a);
+		return objects.size () - 1;
+	}
+
+	/** Moves a live object to a pose. */
+	public void updateObject (int index, double x, double y, double z, double a)
+	{
+		if ((index < 0) || (index >= objects.size ()))		return;
+		Transform3D		t = new Transform3D ();
+		t.rotZ (a);
+		t.setTranslation (new Vector3d (x, y, z));
+		objects.get (index).setTransform (t);
+	}
+
+	public void clearObjects ()
+	{
+		if (objectsBranch != null)		objectsBranch.detach ();
+		objectsBranch = null;
+		objects.clear ();
 	}
 
 	/* ------------------------------------------------------------------ */

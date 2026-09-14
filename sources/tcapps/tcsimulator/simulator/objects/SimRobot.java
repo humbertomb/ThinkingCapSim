@@ -159,21 +159,12 @@ public class SimRobot extends VirtualRobot
 			{
 				// TODO this hsould be simulated better.
 				data.fork	= ifitem.frk_height;
-				if(simul.scene != null){
-					if (ifitem.frk_action == ItemIForkMotion.FRK_LOAD){
-						simul.scene.pick_object (r_index, data.fork);
-						
-					}else if (ifitem.frk_action == ItemIForkMotion.FRK_UNLOAD){
-						simul.scene.drop_object (r_index, data.fork);
-					}
-				}
-				if(simul.smc != null){ 
-					if (ifitem.frk_action == ItemIForkMotion.FRK_LOAD){
-//						System.out.println("SimRobot:notify_motion space="+space+" itemmotion="+item.toString());
-						simul.smc.pick_object (r_index, data.fork);
-					}else if (ifitem.frk_action == ItemIForkMotion.FRK_UNLOAD){
-						simul.smc.drop_object (r_index, data.fork);
-					}
+				if (simul.objects != null)
+				{
+					if (ifitem.frk_action == ItemIForkMotion.FRK_LOAD)
+						simul.objects.pick_object (r_index, data.fork);
+					else if (ifitem.frk_action == ItemIForkMotion.FRK_UNLOAD)
+						simul.objects.drop_object (r_index, data.fork);
 				}
 			}
 		}

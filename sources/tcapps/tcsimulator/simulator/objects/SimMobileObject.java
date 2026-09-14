@@ -6,7 +6,7 @@
  
 package tcapps.tcsimulator.simulator.objects;
 
-import java.util.*;
+import tc.shared.world.WMAObject;
 
 import wucore.utils.geom.*;
 import wucore.utils.math.*;
@@ -29,25 +29,17 @@ public class SimMobileObject extends SimObject
 
 	public double FRIC_COEF = 0.001; // Friction coeficient
 
-	public SimMobileObject (String descfile)
+	/** The movement parameters come from the world object (movement, speed, acceleration, mass, coef_res, coef_fric). */
+	public SimMobileObject (WMAObject odesc)
 	{
-		super (descfile);	
-	}
-	
-	protected void fromProperties (Properties props)
-	{
-		String			oneproperty;
-		
-		super.fromProperties (props);
-						
-		oneproperty = props.getProperty ("M_TYPE","static");
-		if (oneproperty.equalsIgnoreCase("constant")) m_type = CONSTANT_MOVE;
-		else if (oneproperty.equalsIgnoreCase("accelerated")) m_type = ACCELERATED_MOVE;		
-		
-		SPEED = Double.valueOf (props.getProperty ("SPEED","0.0")).doubleValue ();
-		ACC = Double.valueOf (props.getProperty ("ACC","0.0")).doubleValue ();
-		RES_COEF = Double.valueOf (props.getProperty("RES_COEF",String.valueOf(RES_COEF))).doubleValue();
-		FRIC_COEF = Double.valueOf (props.getProperty("FRIC_COEF",String.valueOf(FRIC_COEF))).doubleValue();
+		super (odesc);
+
+		m_type		= (odesc.movement == WMAObject.Movement.ACCELERATED) ? ACCELERATED_MOVE : 0;
+		SPEED		= odesc.speed;
+		ACC			= odesc.acceleration;
+		MASS		= odesc.mass;
+		RES_COEF	= odesc.coef_res;
+		FRIC_COEF	= odesc.coef_fric;
 	}
 	
 	/** Moves the object. Returns false if the object hasn't been moved */

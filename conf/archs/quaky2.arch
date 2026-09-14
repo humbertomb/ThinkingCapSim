@@ -96,7 +96,6 @@ ROBPASSIVE	= false
 ROBGFX		= false
 ROBDESC		= conf/robots/quaky2.robot
 ROBWORLD	= conf/maps/feria.world
-ROBSCN		= conf/scenes/soccer.scn
 ROBAPW		= true
 ROBGFX		= true
 ROBCONNECT	= 	MOTION		tc.shared.linda.ItemMotion 		notify_motion, \

@@ -1,3 +1,0 @@
-ICONS = 1
-ICON_0 = pallet.fulltext, 4, -0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.5, 0.5, 0.0, 0.5, 0.5, 0.0, -0.5, 0.5, 0.0, -0.5, 0.5, 0.0, -0.5, -0.5, 0.0
-OBJECT = pallet.fulltext, 0.0, 0.0, 0.0, 0.0, 100:150:0, ./conf/3dmodels/pallet.fulltext.3ds, false

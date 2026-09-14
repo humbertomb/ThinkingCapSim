@@ -315,7 +315,6 @@ public class LaunchWindow extends JFrame
 		
 		if(SimulatorWindow.isJ3DInstalled())
 			new SimulatorWindow(simul,SimulatorWindow.ADMIN);
-		new ExecArchMultiPallet("."+File.separator+"conf"+File.separator+"pallet"+File.separator+"pallet.arch","."+File.separator+"conf"+File.separator+"pallet"+File.separator+"typepallet.cfg",simul).start();
 		
 		exec		= new ExecArch ("IFORK-1", "conf/archs/ifork.arch", null, simul);
 		exec.start ();		
@@ -337,7 +336,6 @@ public class LaunchWindow extends JFrame
 		
 		if(SimulatorWindow.isJ3DInstalled())
 			new SimulatorWindow(simul,SimulatorWindow.ADMIN);
-		new ExecArchMultiPallet("."+File.separator+"conf"+File.separator+"pallet"+File.separator+"pallet.arch","."+File.separator+"conf"+File.separator+"pallet"+File.separator+"typepallet.cfg",simul).start();
 				
 		exec		= new ExecArch ("IFORK-1", "conf/archs/ifork.arch", null, simul);
 		exec.start ();		

@@ -37,6 +37,12 @@ public class World3D extends BranchGroup
 	// Constructors
 	public World3D (World map, Scene3D scene)
 	{
+		this (map, scene, true);
+	}
+
+	/** @param showAnimated false to leave out the animated objects (the simulator shows its own, live). */
+	public World3D (World map, Scene3D scene, boolean showAnimated)
+	{
 		int				i;
 		
 		this.scene	= scene;
@@ -50,7 +56,7 @@ public class World3D extends BranchGroup
 			addChild (createWall (map.walls ().at (i)));
 		
 		// Add External Objects
-		for (WMObject object : map.allObjects ())		// static and animated (initial pose)
+		for (WMObject object : (showAnimated ? map.allObjects () : map.objects ()))		// static and animated (initial pose)
 		{
 			Object3D		obj;
 

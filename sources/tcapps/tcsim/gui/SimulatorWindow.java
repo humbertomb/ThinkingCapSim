@@ -47,7 +47,6 @@ import javax.swing.plaf.BorderUIResource;
 import tc.shared.world.World;
 import tc.vrobot.RobotData;
 import tc.vrobot.RobotDesc;
-import tcapps.tcsim.ExecArchMultiPallet;
 import tc.ExecArch;
 import tcapps.tcsim.ExecArchReplay;
 import tcapps.tcsim.gui.visualization.Model3D;
@@ -118,14 +117,11 @@ public class SimulatorWindow extends JFrame implements SimulatorListener
 
 	protected JTextField 				robotTF			= new JTextField();
 	protected JTextField 				worldTF			= new JTextField();
-	protected JTextField 				sceneTF			= new JTextField();
 	protected JComboBox 				robotCombo		= new JComboBox();
 	protected JComboBox 				worldCombo		= new JComboBox();
-	protected JComboBox 				sceneCombo		= new JComboBox();
 	protected JButton 				playBU			= new JButton();
 	protected JButton 				replayBU			= new JButton();
 	protected JButton 				worldBU			= new JButton();
-	protected JButton 				sceneBU			= new JButton();
 
 	// ***************************
 	// SIMULATION STUFF
@@ -134,7 +130,6 @@ public class SimulatorWindow extends JFrame implements SimulatorListener
 	protected Properties				pdefs;
 	protected Simulator				simulator;
 	protected World 					map;
-	protected boolean				man_pallet;
 
 	public SimulatorWindow ()
 	{
@@ -358,7 +353,6 @@ public class SimulatorWindow extends JFrame implements SimulatorListener
   	protected JPanel createExecutionOpts ()
   	{
  		JPanel		panel = new JPanel ();
-		JPanel 		scenarioPA = new JPanel();	
 		JPanel 		robotPA = new JPanel();
 		JPanel 		worldPA = new JPanel();	
 		
@@ -400,26 +394,10 @@ public class SimulatorWindow extends JFrame implements SimulatorListener
 		worldPA.add(worldCombo);
 		worldPA.add(worldBU);
 		
-		// Scenario panel		
-		sceneTF.setVisible(true);
-		sceneTF.setEditable(false);
-		
-		sceneCombo.setVisible(true);
-		
-		sceneBU.setVisible(true);
-		sceneBU.setText("Load Scene");
-		
-		scenarioPA.setLayout(new GridLayout(3,1));
-		scenarioPA.setBorder(new BorderUIResource.TitledBorderUIResource(new LineBorder(new Color(153, 153, 153), 1, false), "Scenario Simulation", 4, 2, new Font("Application", 1, 12), new Color(102, 102, 153)));
-		scenarioPA.add(sceneTF);
-		scenarioPA.add(sceneCombo);
-		scenarioPA.add(sceneBU);
-						
 		// Main panel
-		panel.setLayout(new GridLayout(1,3));
+		panel.setLayout(new GridLayout(1,2));
 		panel.add(robotPA);
 		panel.add(worldPA);
-		panel.add(scenarioPA);
 		
 		// event handling
 		playBU.addActionListener(new java.awt.event.ActionListener() {
@@ -435,11 +413,6 @@ public class SimulatorWindow extends JFrame implements SimulatorListener
 		worldBU.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e) {
 				worldBUActionPerformed(e);
-			}
-		});
-		sceneBU.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent e) {
-				sceneBUActionPerformed(e);
 			}
 		});
 		
@@ -635,22 +608,6 @@ public class SimulatorWindow extends JFrame implements SimulatorListener
 		
 		
 		
-		filter = new FilenameFilter ()
-		{
-			public boolean accept (File dir, String name)
-			{
-				if (name.endsWith (".scn")) return true;
-				return false;
-			}
-		};
-		
-		dir = new File ("./conf/scenes/");
-		files = dir.list (filter);
-		
-		sceneCombo.addItem ("none");
-		sceneCombo.setSelectedItem ("none");
-		for (i=0; i < files.length; i++)
-			sceneCombo.addItem (files[i]);
 	}
 
   	private boolean mShown = false;
@@ -704,11 +661,6 @@ public class SimulatorWindow extends JFrame implements SimulatorListener
 		{
 			new ExecArch (robotTF.getText(), filename, pdefs, simulator).start ();
 			worldTF.setText (simulator.getWorldName());
-		}
-		if(!man_pallet){
-			System.out.println("SimulatorWindow: lanza ExecArchMultiPallet");
-			new ExecArchMultiPallet("."+File.separator+"conf"+File.separator+"pallet"+File.separator+"pallet.arch","."+File.separator+"conf"+File.separator+"pallet"+File.separator+"typepallet.cfg",simulator).start();
-			man_pallet=true;
 		}
 	}
 	
@@ -768,47 +720,9 @@ public class SimulatorWindow extends JFrame implements SimulatorListener
 		{
 			simulator.setWorld (filename);
 			worldTF.setText (mapname);
-			
-			sceneTF.setText ("");
-			sceneCombo.setSelectedItem ("none");
 		}
 	}
 	
-	protected void sceneBUActionPerformed(ActionEvent e) 
-	{
-		String			filename = null;
-		String			scenename = null;
-		JFileChooser	chooser;
-		int				code;
-		
-		if (sceneCombo.getSelectedItem ().equals ("none"))
-		{
-			chooser	= new JFileChooser ();
-			chooser.setCurrentDirectory (new File ("./conf/scenes/"));
-			chooser.setDialogTitle ("Load scene file");
-			code	= chooser.showOpenDialog (this);
-			
-			if (code == JFileChooser.APPROVE_OPTION) 
-			{
-				filename = chooser.getCurrentDirectory().getPath() + File.separator + chooser.getSelectedFile().getName();
-				scenename = chooser.getSelectedFile().getName();
-			}
-		}
-		else
-		{
-			filename = "." + File.separator + "conf" + File.separator + "scenes" + File.separator + (String)sceneCombo.getSelectedItem();
-			scenename = (String)sceneCombo.getSelectedItem();
-		}
-		
-		if (simulator != null && filename != null)
-		{
-			try
-			{
-				simulator.setScene (filename);
-				sceneTF.setText (scenename);
-			} catch (Exception exc) { exc.printStackTrace (); }
-		}
-	}
 
 	protected void moveBUActionPerformed(ActionEvent e) 
 	{

@@ -19,9 +19,8 @@ import tc.vrobot.SensorPos;
 import tc.vrobot.TrackerData;
 import tc.vrobot.models.TricycleDrive;
 import tcapps.tcsimulator.simulator.objects.SimCargo;
-import tcapps.tcsimulator.simulator.objects.SimMultiCargo;
 import tcapps.tcsimulator.simulator.objects.SimObject;
-import tcapps.tcsimulator.simulator.objects.SimScene;
+import tcapps.tcsimulator.simulator.objects.SimObjects;
 import devices.pos.Position;
 import devices.pos.UTMPos;
 import wucore.utils.geom.Line2;
@@ -65,7 +64,7 @@ public class Simulator
 	protected RandomNumberGenerator rndg; 				// Generator of Random Number for LRF
 	
 	// Simulated world components
-	public SimScene					scene;
+	public SimObjects				objects;				// Animated objects of the world (null until a world is set)
 	protected World					map;
 	protected String				mapfile;
 	protected int					roboindex	= -1;
@@ -74,7 +73,6 @@ public class Simulator
 	private int						iconcount;
 	private boolean[]				objects3D;
 	public Line2[][]				icons;
-	public SimMultiCargo			smc;
 	
 	// Robots internal data
 	public SimulatorDesc[]			SDESC;
@@ -94,7 +92,6 @@ public class Simulator
 	protected SimulatorListener 		win;
 	
 	public int[] 					objectPicked; // Indexed by robot id, this array contains the id of the object that the robot has picked. -1 if no object has been picked 
-	public String[]					palletPicked; // Indexed by robot id, this array contains the id of the pallet that the robot has picked. -1 if no object has been picked
 	
 	private Runnable refreshThread = new Runnable ()
 	{
@@ -111,17 +108,10 @@ public class Simulator
 						win.updateData(i,lastRobotData[i]);
 				}
 
-				if (scene != null)
-					for (i=0;i< scene.numobjects;i++)
-						win.updateObjectData(i,scene.OBJS[i].odesc.pos,scene.OBJS[i].odesc.a);
-					
-				SimObject so;
-				if(smc != null){
-					for (Enumeration<SimObject> enu=smc.pallets.elements();enu.hasMoreElements();){
-						so=enu.nextElement();
-						win.updateObjectData(so.idsimul,so.odesc.pos,so.odesc.a);
-					}
-				}
+				SimObjects	objs = objects;
+				if (objs != null)
+					for (i = 0; i < objs.numobjects; i++)
+						win.updateObjectData (objs.OBJS[i].idsimul, objs.OBJS[i].odesc.pos, objs.OBJS[i].odesc.a);
 				
 				win.repaint ();
 				
@@ -156,17 +146,15 @@ public class Simulator
 		VISPOS		= new Position[MAX_ROBOTS];
 		numrobots	= 0;
 		iconcount 	= 0;	
-		objects3D	= new boolean[MAX_ROBOTS+SimScene.MAX_OBJECTS];
-		icons 		= new Line2[MAX_ROBOTS+SimScene.MAX_OBJECTS][];
+		objects3D	= new boolean[MAX_ROBOTS];
+		icons 		= new Line2[MAX_ROBOTS][];
 		bpos		= new Position ();		
 		lastRobotData = new RobotData[MAX_ROBOTS];
 		objectPicked = new int[MAX_ROBOTS];		
-		palletPicked = new String[MAX_ROBOTS];
 		for (i = 0; i < MAX_ROBOTS; i++)
 		{
 			VISPOS[i]	= new Position ();
 			objectPicked[i] = -1;
-			palletPicked[i] = null;
 		}
 
 		map = null;
@@ -193,6 +181,9 @@ public class Simulator
 //	}
 	public void				set_data_ctrl (int robotind, RobotDataCtrl datactrl)	{ DATA_CTRL[robotind] = datactrl; }
 	public void				closeVisualization3D ()									{ this.win = null; }	
+
+	/** Stops the simulation of the animated objects (the simulator is being discarded). */
+	public void				dispose ()												{ if (objects != null) objects.stop (); objects = null; win = null; }
 	
 	// Instance methods
 //	public int allocIcon ()
@@ -212,6 +203,15 @@ public class Simulator
 		if (index == -1){
 			index	= iconcount;
 			iconcount ++;
+		}
+		if (index >= icons.length)			// grow: robots plus as many objects as the world has
+		{
+			Line2[][]	ni = new Line2[index + MAX_ROBOTS][];
+			boolean[]	no = new boolean[index + MAX_ROBOTS];
+			System.arraycopy (icons, 0, ni, 0, icons.length);
+			System.arraycopy (objects3D, 0, no, 0, objects3D.length);
+			icons		= ni;
+			objects3D	= no;
 		}
 		objects3D[index]=true;
 		return index;
@@ -271,27 +271,6 @@ public class Simulator
 		return -1;
 	}
 	
-	public void setScene (String fname)
-	{		
-		int			i;
-
-		System.out.println("Simulator: crear SimScene");
-		scene	= new SimScene (fname, this);
-
-		if (win != null)
-		{
-			win.removeAllObjects ();
-			for (i = 0; i < scene.numobjects; i++)
-				win.addObject (scene.OBJS[i]);
-//			SimObject so;
-//			for (Enumeration enum=scene.OBJS.elements();enum.hasMoreElements();){
-//				so=(SimObject)enum.nextElement();
-//				id=win.addObject (so);
-//				so.idsimul=id;
-//			}
-		}
-	}
-	
 	public void setVisualization (SimulatorListener win) 
 	{ 
 		int			i;
@@ -302,20 +281,19 @@ public class Simulator
 			win.setWorldmap(map);
 		for (i=0;i<numrobots;i++)
 			win.addRobot(RDESC[i],SDESC[i]);
-		if (scene != null){
-			 for (i=0;i<scene.numobjects;i++)
-			 	win.addObject(scene.OBJS[i]);
-//			SimObject so;
-//			for (Enumeration enum=scene.OBJS.elements();enum.hasMoreElements();){
-//				so=(SimObject)enum.nextElement();
-//				win.addObject (so);
-//			}
-		}
+		reportObjects ();
 		win.repaint();	
 		new Thread (refreshThread).start ();
 	}
-	public void setSimMultiCargo(SimMultiCargo smc){
-		this.smc=smc;
+
+	/** Gives the animated objects to the visualisation (all of them, replacing the previous ones). */
+	protected void reportObjects ()
+	{
+		if (win == null)			return;
+		win.removeAllObjects ();
+		if (objects == null)		return;
+		for (int i = 0; i < objects.numobjects; i++)
+			objects.OBJS[i].idsimul = win.addObject (objects.OBJS[i]);
 	}
 	
 	synchronized public int add_robot (RobotDesc rdesc, SimulatorDesc sdesc, RobotModel model, RobotDataCtrl datactrl)
@@ -360,9 +338,16 @@ public class Simulator
 			}
 		}
 		mapfile = wname;
+
+		// the animated objects of the world are simulated from now on
+		if (objects != null)		objects.stop ();
+		objects	= new SimObjects (map, this);
 						
 		if (this.win != null)
+		{
 			win.setWorldmap(map);		
+			reportObjects ();
+		}
 	}
 	
 	protected double sonar (SensorPos a1)
@@ -1104,52 +1089,6 @@ public class Simulator
 	}
 	
 	
-	/*OPERACIONES SOBRE PALLETS*/
-	
-//	public int addPallet(String idpallet,Position pos,int typepallet){
-//		SimObject so=null;
-//		int id=-1;
-//		
-//		
-//		if(smc!=null){
-//			so=smc.addPallet(idpallet,pos,typepallet);
-//			System.out.println("Simulator: addPallet() so="+so.toString());
-//			if(win!=null){
-//				id=win.addObject(so,new Point3(pos.x(),pos.y(),0.0),pos.alpha());
-//				so.idsimul=id;
-//			}
-//		}
-//		System.out.println("Simulator: addPallet() so="+so.toString());
-//		
-//		
-//		return id;
-//	}
-	public int addPallet(SimObject so,Position pos){
-		int id=-1;
-		
-		if(win != null){
-			id=win.addObject(so,new Point3(pos.x(),pos.y(),0.0),pos.alpha());
-			
-		}
-		return id;
-	}
-	public void delPallet(Position pos){
-		
-	}
-	public void delPallet(int id){
-		win.removeObject(id);
-		objects3D[id]=false;
-	}
-	public void movePallet(String idpallet,Position pos){
-		
-	}
-	public void changeStatusPallet(String idpallet,int typepallet){
-		
-	}
-	
-//	simul.delPallet(item.idpallet);
-//	simul.movePallet(item.idpallet,item.position,item.status);
-	
 	synchronized public void simulate (int robotind, RobotData data, double speed, double turn, 
 			int cycson, int cycir, int cyclrf, int cyclsb, int cycvis, double dt)
 	{
@@ -1191,13 +1130,8 @@ public class Simulator
 		lastRobotData[robotind] = data;
 		
 		// Simulates picked objects by the robot
-		if (objectPicked[robotind]!=-1)
-//			((SimCargo)scene.OBJS.get(Integer.valueOf (objectPicked[robotind]))).move (data.real_x,data.real_y, data.fork, data.real_a);
-			((SimCargo) scene.OBJS[objectPicked[robotind]]).move (data.real_x,data.real_y, data.fork, data.real_a);
-//		 Simulates picked pallets by the robot
-		if (palletPicked[robotind]!=null){
-			((SimCargo) smc.pallets.get(palletPicked[robotind])).move (data.real_x, data.real_y, data.fork, data.real_a);
-		}
+		if ((objectPicked[robotind] != -1) && (objects != null))
+			((SimCargo) objects.OBJS[objectPicked[robotind]]).move (data.real_x,data.real_y, data.fork, data.real_a);
 	
 	}
 	
@@ -1233,14 +1167,8 @@ public class Simulator
 		lastRobotData[robotind] = data;		
 		
 		// Simulates picked objects by the robot
-		if (objectPicked[robotind]!=-1)
-		{
-			((SimCargo) scene.OBJS[objectPicked[robotind]]).move (data.real_x, data.real_y, data.fork, data.real_a);
-		}
-//		 Simulates picked pallets by the robot
-		if (palletPicked[robotind]!=null){
-			((SimCargo) smc.pallets.get(palletPicked[robotind])).move (data.real_x, data.real_y, data.fork, data.real_a);
-		}
+		if ((objectPicked[robotind] != -1) && (objects != null))
+			((SimCargo) objects.OBJS[objectPicked[robotind]]).move (data.real_x, data.real_y, data.fork, data.real_a);
 	}
 	
 	synchronized public void simulate (int robotind, RobotData data, int cycson, int cycir, int cyclrf, 
@@ -1354,9 +1282,10 @@ public class Simulator
 		}     
 		
 		// Compute simulated VISION data
-		if (VISDATA != null)
+		SimObjects	objs = objects;
+		if ((VISDATA != null) && (objs != null) && (VISDATA.length == objs.numobjects))
 		{
-			for (j = 0; j < scene.numobjects; j++)
+			for (j = 0; j < objs.numobjects; j++)
 				VISDATA[j].valid = false;
 //			VisionData vd;
 //			Object obj;
@@ -1380,14 +1309,10 @@ public class Simulator
 					aa1		= data.real_a + RDESC[robotind].visfeat[i].alpha ();
 					
 					// Iterate through all available objects
-					for (j = 0; j < scene.numobjects; j++)
-//					for(Enumeration enum=scene.OBJS.keys();enum.hasMoreElements();)
+					for (j = 0; j < objs.numobjects; j++)
 					{
 						SimObject 	so;
-//						Integer 	key;
-//						Position	p;
-//						key=(Integer)enum.nextElement();
-						so=(SimObject)scene.OBJS[j];
+						so=objs.OBJS[j];
 						
 						
 						// Get the robot relative position of perceived object (previous image)

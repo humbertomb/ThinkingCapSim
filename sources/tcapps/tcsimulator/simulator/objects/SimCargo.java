@@ -6,6 +6,8 @@
  */
 package tcapps.tcsimulator.simulator.objects;
 
+import tc.shared.world.WMAObject;
+
 /**
  * @author Humberto Martinez Barbera
  *
@@ -16,11 +18,10 @@ public class SimCargo extends SimObject
 {
 	protected double 		distance;			// Distance from robot center to cargo
 	protected boolean		picked = false;
-	protected String 		namepallet;
 
-	public SimCargo (String fname)
+	public SimCargo (WMAObject odesc)
 	{
-		super (fname);	
+		super (odesc);
 	}
 	
 	/** Returns true if the object has been picked by a robot */
@@ -62,8 +63,5 @@ public class SimCargo extends SimObject
 		odesc.pos.y (y-dy);
 		odesc.pos.z (z);
 		odesc.a = a;
-	}
-	public void setNamePallet(String namepallet){
-		this.namepallet=namepallet;
 	}
 }
