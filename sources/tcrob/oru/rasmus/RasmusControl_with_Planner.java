@@ -168,7 +168,7 @@ public class RasmusControl_with_Planner extends Controller
 		fmt = new DecimalFormat();
 		fmt.setMaximumFractionDigits(2);
 
-		BehaviourFactory.loadConfiguration (props.getProperty ("CONFACT"));
+		BehaviourFactory.loadConfiguration (getModuleProperty (props, "FACT"));
 	}
 	
 	/*

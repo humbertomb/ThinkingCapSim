@@ -137,8 +137,8 @@ public class FHBController extends Controller
 		behSendInfo = false;
 		
 		// Read factory and behaviours configuration
-		BehaviourFactory.loadConfiguration (props.getProperty ("CONFACT"));
-		behMain		= props.getProperty ("CONBEH");
+		BehaviourFactory.loadConfiguration (getModuleProperty (props, "FACT"));
+		behMain		= getModuleProperty (props, "BEH");
 		beh			= BehaviourFactory.createBehaviour (behMain);
 	}
 	

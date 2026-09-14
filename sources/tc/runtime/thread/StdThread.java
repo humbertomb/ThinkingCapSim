@@ -313,5 +313,17 @@ public abstract class StdThread implements Runnable, LindaListener
 	// Abstract instance methods. Subclasses MUST implement
 	public abstract void step (long ctime);
 	protected abstract void initialise (Properties props);
+
+	/**
+	 * A property of this module: <code>&lt;prefix&gt;key</code>, where the
+	 * prefix is the one the module runs under (MOD1, CON, ... as given by its
+	 * ThreadDesc), so that the modules do not depend on the prefix used in a
+	 * particular architecture file. Falls back to the bare key.
+	 */
+	protected String getModuleProperty (Properties props, String key)
+	{
+		String		value = ((tdesc != null) && (tdesc.preffix != null)) ? props.getProperty (tdesc.preffix + key) : null;
+		return (value != null) ? value : props.getProperty (key);
+	}
 }
 

@@ -154,7 +154,7 @@ public class RasmusControl extends Controller
 			logging = false;
 		
 		/* loads the main behaviour */
-		BehaviourFactory.loadConfiguration (props.getProperty ("CONFACT"));
+		BehaviourFactory.loadConfiguration (getModuleProperty (props, "FACT"));
 		beh = BehaviourFactory.createBehaviour("MainBehaviour",false);
 		fmt = new DecimalFormat();
 		fmt.setMaximumFractionDigits(2);

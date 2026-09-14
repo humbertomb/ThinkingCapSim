@@ -107,7 +107,7 @@ public class BGController extends Controller
 		c_dump.close ();
 
 		// Load and parse a BG program
-		name = props.getProperty ("CONPRG");
+		name = getModuleProperty (props, "PRG");
 		if (name != null)
 		{
 			BGParser.parse (name, false);

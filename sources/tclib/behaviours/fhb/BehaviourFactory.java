@@ -164,6 +164,8 @@ public abstract class BehaviourFactory {
 	{
 		StringTokenizer			st;
 
+		if (prop == null)
+			throw new IllegalArgumentException ("BehaviourFactory: missing FACT property (package, source path, output path) of the behaviour controller module");
 		st		= new StringTokenizer (prop, ", \t");
 		BehaviourFactory.behPackage = st.nextToken ();
 		BehaviourFactory.sourcePath = st.nextToken ();
