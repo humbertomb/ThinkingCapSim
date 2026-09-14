@@ -29,7 +29,9 @@ public class GridPathA extends GridPath
 		
 		int			i, j;
 		
-		size_list 	= size_x * size_y * 10;
+		// The node pool grows on demand (see get_node): preallocating size_x * size_y * 10 nodes
+		// exhausted the heap on large worlds (a 250 x 250 m map at 7.5 cm gives 11 M cells)
+		size_list 	= Math.max (1024, (size_x * size_y) / 8);
 
 		closed 		= new boolean[size_x][size_y];
 		open 		= new boolean[size_x][size_y];
@@ -37,9 +39,6 @@ public class GridPathA extends GridPath
 		h	 		= new double[size_x][size_y];
 		open_list 	= new PathNode[size_list];
 		back_ptr	= new PathNode[size_x][size_y];
-		
-		for (i = 0; i < size_list; i++)
-			open_list[i] = new PathNode ();
 		
 		for (i = 0; i < size_x; i++)
 			for (j = 0; j < size_y; j++)
@@ -103,10 +102,14 @@ public class GridPathA extends GridPath
 		int 	i;
 
 		if (free_head >= open_list.length)
-        	System.out.println ("--[PathA*] get_node: out of free nodes.");
-        		
+		{
+			// grow the pool (a cell may enter the open list several times, so it can exceed the cell count)
+			size_list	= open_list.length * 2;
+			open_list	= java.util.Arrays.copyOf (open_list, size_list);
+		}
 		i = free_head;
 		free_head ++;
+		if (open_list[i] == null)		open_list[i] = new PathNode ();
 
 		return i;
 	}

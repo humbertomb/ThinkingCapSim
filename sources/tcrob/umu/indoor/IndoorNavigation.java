@@ -23,6 +23,7 @@ public class IndoorNavigation extends Navigation
 {
 	static public final int			MAX_PATH		= 15000;				
 	static public final double		DEF_CELL		= 0.075;	// Default cell size (m)			
+	static public final int			MAX_CELLS		= 2000000;	// Largest grid built from a world (cells); the cell grows beyond DEF_CELL to keep it
 	static public final double		DEF_DIL			= 0.75;		// Default dilation constant				
 
 	// Navigation structures
@@ -88,6 +89,9 @@ public class IndoorNavigation extends Navigation
 		dpos		= new Position ();
 		
 		cell_size	= DEF_CELL;
+		String		cprop = getModuleProperty (props, "CELL");			// module property CELL (m) overrides the default
+		if (cprop != null)
+			try { cell_size = Double.parseDouble (cprop.trim ()); } catch (Exception e) { System.out.println ("--[Nav] Invalid CELL <" + cprop + ">, using " + cell_size); }
 		dilation	= DEF_DIL / cell_size;
 	}
 	
@@ -240,6 +244,15 @@ public class IndoorNavigation extends Navigation
 		if (world != null)
 		{
 			double[]	b = world.bounds ();
+			// the cell is enlarged for worlds too big to fit MAX_CELLS at the configured size (a
+			// 250 x 250 m map at 7.5 cm would need 11 M cells and exhausts the heap)
+			double		area = (b[2] - b[0]) * (b[3] - b[1]);
+			if (area / (cell_size * cell_size) > MAX_CELLS)
+			{
+				cell_size = Math.sqrt (area / MAX_CELLS);
+				System.out.println ("  [Nav] World too large for the default grid cell: using " + String.format (java.util.Locale.US, "%.3f", cell_size) + " m cells");
+			}
+			dilation	= DEF_DIL / cell_size;
 			w = (int) Math.ceil ((b[2] - b[0]) / cell_size);
 			h = (int) Math.ceil ((b[3] - b[1]) / cell_size);
 		}
