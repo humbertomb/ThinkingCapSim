@@ -785,7 +785,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	/* Worlds                                                              */
 	/* ------------------------------------------------------------------ */
 
-	/** Changes the world of the architecture's virtual robot (VROBOT+"WORLD" property). */
+	/** Changes the world of the deployment (the one every robot of it simulates). */
 	public void loadWorld ()
 	{
 		JFileChooser	fc = chooser (worldFile, MAPS_DIR, "world", "World maps (*.world)");

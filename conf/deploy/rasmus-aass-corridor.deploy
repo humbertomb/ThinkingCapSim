@@ -108,8 +108,7 @@
           "DESC": "conf/robots/rasmus.robot",
           "GFX": "true",
           "MODE": "shared",
-          "PASSIVE": "false",
-          "WORLD": "conf/maps/aass_corr.world"
+          "PASSIVE": "false"
         },
         "events": [
           {

@@ -95,8 +95,7 @@
           "EXTIME": "75",
           "GFX": "true",
           "MODE": "shared",
-          "PASSIVE": "false",
-          "WORLD": "conf/maps/feria.world"
+          "PASSIVE": "false"
         },
         "events": [
           {

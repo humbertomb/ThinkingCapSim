@@ -60,8 +60,7 @@
           "CLASS": "um.satant.Satant",
           "DESC": "conf/robots/satant.robot",
           "GFX": "false",
-          "MODE": "shared",
-          "WORLD": "conf/maps/campus.gis"
+          "MODE": "shared"
         },
         "events": []
       },
@@ -102,8 +101,7 @@
           "DESC": "conf/robots/satant2.robot",
           "GFX": "false",
           "LOG": "conf/logs/SATANT.campus.20021213.1.path",
-          "MODE": "shared",
-          "WORLD": "conf/maps/campus.gis"
+          "MODE": "shared"
         },
         "events": []
       },

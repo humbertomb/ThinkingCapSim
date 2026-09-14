@@ -150,8 +150,7 @@
           "EXTIME": "175",
           "GFX": "true",
           "MODE": "shared",
-          "PASSIVE": "false",
-          "WORLD": "conf/maps/um_diic_small.world"
+          "PASSIVE": "false"
         },
         "events": [
           {

@@ -152,8 +152,7 @@
           "EXTIME": "115",
           "GFX": "true",
           "MODE": "shared",
-          "PASSIVE": "false",
-          "WORLD": "conf/maps/dulzem.world"
+          "PASSIVE": "false"
         },
         "events": [
           {

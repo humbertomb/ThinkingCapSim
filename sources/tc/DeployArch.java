@@ -66,7 +66,7 @@ public class DeployArch
 	 * A module of a robot (also the router and the virtual robot). The name is
 	 * the INFO of the ADF; <code>properties</code> holds the rest with the ADF
 	 * suffixes (CLASS, MODE, PASSIVE, QUEUED, POLLED, EXTIME, PRI, GFX, GMODE,
-	 * DESC, WORLD, RADDR, RPORT, LPORT, ...); the events are
+	 * DESC, RADDR, RPORT, LPORT, ...); the events are
 	 * the CONNECT entries. ADF prefixes are generated when an ADF is rebuilt.
 	 */
 	static public class Module
@@ -210,7 +210,13 @@ public class DeployArch
 			if (r.virtualRobot == null)	r.virtualRobot = newVirtualRobot ();
 			if (r.properties == null)	r.properties = new LinkedHashMap<String, String> ();
 			if ((r.start != null) && (r.start.trim ().length () == 0))	r.start = null;
-			if (r.virtualRobot.properties != null)		r.virtualRobot.properties.remove ("APW");		// now a property of the world itself
+			if (r.virtualRobot.properties != null)
+			{
+				// the world is one for the whole deployment, and the a priori knowledge a property of the world itself
+				if ((world == null) || (world.trim ().length () == 0))		setWorldFile (r.virtualRobot.get ("WORLD"));
+				r.virtualRobot.properties.remove ("WORLD");
+				r.virtualRobot.properties.remove ("APW");
+			}
 			List<Module>	all = new ArrayList<Module> (r.modules);
 			all.add (r.virtualRobot);
 			if (r.router != null)		all.add (r.router);
@@ -221,28 +227,20 @@ public class DeployArch
 				if (m.events == null)		m.events = new ArrayList<Event> ();
 			}
 		}
-		getWorldFile ();														// adopt the first robot's world when the file has none
+		getWorldFile ();														// leaves it null when it is empty
 	}
 
 	public File		getFile ()						{ return file; }
 	public boolean	isModified ()					{ return (original == null) || !original.equals (toJson ()); }
 
 	/**
-	 * World map of the deployment (attribute <code>world</code>), or null.
-	 * When unset, the WORLD of the first robot's virtual robot is adopted and
-	 * copied into the attribute.
+	 * World map of the deployment (attribute <code>world</code>), or null. It is
+	 * one for every robot: the virtual robots do not carry one of their own,
+	 * they are given this one when they are executed.
 	 */
 	public String getWorldFile ()
 	{
-		if ((world == null) || (world.trim ().length () == 0))
-		{
-			world = null;
-			if (!robots.isEmpty ())
-			{
-				String	w = robots.get (0).virtualRobot.get ("WORLD");
-				if ((w != null) && (w.trim ().length () > 0))		world = w.trim ();
-			}
-		}
+		if ((world != null) && (world.trim ().length () == 0))		world = null;
 		return world;
 	}
 
