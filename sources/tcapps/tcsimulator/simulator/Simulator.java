@@ -7,7 +7,6 @@
 
 package tcapps.tcsimulator.simulator;
 
-import java.util.Enumeration;
 import java.util.Random;
 
 import tc.shared.world.World;
@@ -25,7 +24,6 @@ import devices.pos.Position;
 import devices.pos.UTMPos;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
-import wucore.utils.geom.Point3;
 import wucore.utils.math.Angles;
 import wucore.utils.math.stat.RandomNumberGenerator;
 import devices.data.CompassData;

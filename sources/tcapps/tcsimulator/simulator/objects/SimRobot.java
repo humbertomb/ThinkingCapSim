@@ -6,7 +6,6 @@
 package tcapps.tcsimulator.simulator.objects;
 
 import tc.runtime.thread.ModuleConfig;
-import java.util.*;
 
 import tcapps.tcsimulator.simulator.*;
 import tcrob.ingenia.ifork.linda.*;

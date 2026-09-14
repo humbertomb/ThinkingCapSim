@@ -42,6 +42,7 @@ import tc.shared.world.World;
 import tc.vrobot.RobotData;
 import tc.vrobot.RobotDesc;
 import tcapps.tceditor.StatusBar;
+import tcapps.tceditor.DeploymentDialog;
 import tcapps.tceditor.ToolButtons;
 import tcapps.tceditor.ToolIcon;
 import tcapps.tceditor.View3DController;

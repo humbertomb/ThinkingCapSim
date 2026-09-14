@@ -2,13 +2,13 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tcapps.tcsimulator;
+package tcapps.tceditor;
 
 import tc.DeployArch;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Frame;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -22,8 +22,10 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -34,6 +36,7 @@ import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.DefaultCellEditor;
@@ -47,26 +50,38 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import tcapps.tceditor.FileCellEditor;
-import tcapps.tceditor.ToolButtons;
-import tcapps.tceditor.ToolIcon;
 import tcapps.tcsimulator.arch.ArchCanvas;
 import tcapps.tcsimulator.arch.ArchModel;
 import tcapps.tcsimulator.arch.ArchModel.Block;
 import tcapps.tcsimulator.arch.ArchModel.Property;
 
 /**
- * Block editor of a deployment architecture ({@link DeployArch}): a toolbar on the left adds Linda
- * spaces, routers, modules and the robot; the centre shows the block diagram
+ * Block editor of a deployment architecture ({@link DeployArch}), as a panel
+ * that a window ({@link DeploymentWindow}) or a dialog
+ * ({@link DeploymentDialog}) hosts: a toolbar on the left adds Linda spaces,
+ * routers, modules and robots; the centre shows the block diagram
  * ({@link ArchCanvas}); on the right, like in the world editor, a tree with
  * the "Global" category (the global Linda space) and one category per robot
  * with its modules, and below it the property editor of the selected block.
- * The dialog edits a copy of the properties; {@link #showDialog()} returns
- * them when accepted, or null when cancelled.
+ *
+ * The panel edits the deployment it is given (the dialog hands it a copy).
  */
-public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
+public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 {
 	private static final long		serialVersionUID = 1L;
+
+	static public final String		TITLE		= "Deployment Architecture Editor";
+	static public final String		DEPLOY_DIR	= "./conf/deploy";		// deployment architectures (.deploy)
+	static public final String		ARCHS_DIR	= "./conf/archs";		// legacy .arch files (import)
+
+	/** What the window or dialog hosting the editor needs to know. */
+	public interface Host
+	{
+		/** The file or the modified state changed (title). */
+		void deploymentStateChanged (DeploymentPanel panel);
+	}
+
+	protected Host					host;
 
 	protected ArchModel				model;
 	protected ArchCanvas			canvas;
@@ -86,8 +101,6 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 	static public final int			RIGHT_WIDTH		= 320;		// tree + properties column (as WorldEditorWindow)
 	static public final double		TREE_FRACTION	= 0.55;		// share of the tree in that column (as WorldEditorWindow)
 	protected Action				lindaAC, routerAC, moduleAC, robotAC, deleteAC;
-	protected JButton				okBT, cancelBT;
-	protected DeployArch			result;
 	protected boolean				syncing;				// tree <-> canvas selection in progress
 
 	/** Rows of the property editor: the visible properties of the block ({@link ArchModel#propertiesOf}). */
@@ -244,19 +257,39 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 		rightSP.setDividerLocation (TREE_FRACTION);
 	}
 
-	/** @param deploy  deployment architecture to edit (a copy is edited; {@link #showDialog()} returns it when accepted) */
-	public DeploymentDialog (Frame owner, DeployArch deploy)
+	/**
+	 * @param deploy  deployment architecture to edit (edited in place: hand over a copy to keep the original)
+	 * @param host    window or dialog to notify of title changes (may be null)
+	 */
+	public DeploymentPanel (DeployArch deploy, Host host)
 	{
-		super (owner, "Deployment Architecture Editor", true);
-		model	= new ArchModel (deploy.copy ());
+		super (new BorderLayout ());
+		this.host	= host;
+		model	= new ArchModel (deploy);
 		model.setStartNames (startNamesOf (model.getDeploy ()));
 		buildGUI ();
 		rebuild (null);
 		updateTitle ();
-		pack ();
-		setMinimumSize (new Dimension (760, 520));
-		setSize (1040, 780);
-		setLocationRelativeTo (owner);
+	}
+
+	/** A new deployment with one robot, to start from scratch. */
+	static public DeployArch newDeploy ()			{ return DeployArch.create (); }
+
+	public ArchCanvas	getCanvas ()				{ return canvas; }
+	public DeployArch	getDeploy ()				{ return model.getDeploy (); }
+
+	/** Title of the hosting window: file name (or untitled) and the modified mark. */
+	public String getTitle ()
+	{
+		File	f = model.getDeploy ().getFile ();
+		return ((f != null) ? f.getName () : "untitled." + DeployArch.EXTENSION) + (model.getDeploy ().isModified () ? " *" : "");
+	}
+
+	/** Commits whatever the user is typing in the tables (before saving or accepting). */
+	public void stopEditing ()
+	{
+		if (propsTB.isEditing ())		propsTB.getCellEditor ().stopCellEditing ();
+		if (eventsTB.isEditing ())		eventsTB.getCellEditor ().stopCellEditing ();
 	}
 
 	private void buildGUI ()
@@ -379,34 +412,13 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 		mainSP.setBorder (BorderFactory.createEmptyBorder ());
 		canvasSP.setMinimumSize (new Dimension (300, 200));
 		rightSP.setMinimumSize (new Dimension (240, 200));
-		// the divider positions are only meaningful once the dialog has its real size
+		// the divider positions are only meaningful once the panel has its real size
 		addComponentListener (new java.awt.event.ComponentAdapter ()
 		{
 			public void componentShown (java.awt.event.ComponentEvent e)		{ resetDividers (); }
 			public void componentResized (java.awt.event.ComponentEvent e)	{ if (!dividersSet && (getWidth () > 0)) resetDividers (); }
 		});
 
-		// --- bottom: cancel / ok
-		cancelBT	= new JButton ("Cancel");
-		okBT		= new JButton ("OK");
-		cancelBT.addActionListener (new ActionListener ()
-		{
-			public void actionPerformed (ActionEvent e)		{ result = null; dispose (); }
-		});
-		okBT.addActionListener (new ActionListener ()
-		{
-			public void actionPerformed (ActionEvent e)		{ accept (); }
-		});
-		JPanel		bottom = new JPanel (new FlowLayout (FlowLayout.RIGHT, 6, 6));
-		bottom.add (cancelBT);
-		bottom.add (okBT);
-		getRootPane ().setDefaultButton (okBT);
-		getRootPane ().getInputMap (JComponent.WHEN_IN_FOCUSED_WINDOW).put (KeyStroke.getKeyStroke (KeyEvent.VK_ESCAPE, 0), "cancel");
-		getRootPane ().getActionMap ().put ("cancel", new javax.swing.AbstractAction ()
-		{
-			private static final long	serialVersionUID = 1L;
-			public void actionPerformed (ActionEvent e)		{ result = null; dispose (); }
-		});
 		for (JComponent c : new JComponent[] { canvas, tree })
 		{
 			c.getInputMap (JComponent.WHEN_FOCUSED).put (KeyStroke.getKeyStroke (KeyEvent.VK_DELETE, 0), "delete");
@@ -414,33 +426,51 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 			c.getActionMap ().put ("delete", deleteAC);
 		}
 
-		// --- menu: File (as in the simulator window) + Import Execution...
-		int						mask = java.awt.Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ();
-		javax.swing.JMenuBar	mb = new javax.swing.JMenuBar ();
-		javax.swing.JMenu		mfile = new javax.swing.JMenu ("File");
+		add (tb, BorderLayout.WEST);
+		add (mainSP, BorderLayout.CENTER);
+	}
+
+	/**
+	 * Menu bar of the editor: File (new, load, save, import of a legacy
+	 * execution architecture) and, when <code>withQuit</code>, the Quit entry
+	 * of a stand-alone window.
+	 */
+	public JMenuBar buildMenuBar (boolean withQuit)
+	{
+		int			mask = java.awt.Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ();
+		JMenuBar	mb = new JMenuBar ();
+		JMenu		mfile = new JMenu ("File");
+
 		mfile.add (menuItem ("New Deployment", KeyEvent.VK_N, mask, new Runnable () { public void run () { newDeployment (); } }));
 		mfile.add (menuItem ("Load Deployment...", KeyEvent.VK_O, mask, new Runnable () { public void run () { loadDeployment (); } }));
 		mfile.add (menuItem ("Save Deployment", KeyEvent.VK_S, mask, new Runnable () { public void run () { saveDeployment (false); } }));
 		mfile.add (menuItem ("Save Deployment As...", KeyEvent.VK_S, mask | KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { saveDeployment (true); } }));
 		mfile.addSeparator ();
 		mfile.add (menuItem ("Import Execution...", KeyEvent.VK_I, mask, new Runnable () { public void run () { importExecutionArchitecture (); } }));
+		if (withQuit)
+		{
+			mfile.addSeparator ();
+			mfile.add (menuItem ("Quit", KeyEvent.VK_Q, mask, new Runnable () { public void run () { quit (); } }));
+		}
 		mb.add (mfile);
-		setJMenuBar (mb);
+		return mb;
+	}
 
-		JPanel		content = new JPanel (new BorderLayout ());
-		content.add (tb, BorderLayout.WEST);
-		content.add (mainSP, BorderLayout.CENTER);
-		content.add (bottom, BorderLayout.SOUTH);
-		setContentPane (content);
+	/** Closes the window hosting the editor (the Quit entry of the menu). */
+	protected void quit ()
+	{
+		Window	win = SwingUtilities.getWindowAncestor (this);
+		if (win instanceof DeploymentWindow)		((DeploymentWindow) win).quit ();
+		else if (win != null)						win.dispose ();
 	}
 
 	/* ------------------------------------------------------------------ */
 	/* Edition                                                             */
 	/* ------------------------------------------------------------------ */
 
-	private javax.swing.JMenuItem menuItem (String name, int key, int mask, final Runnable body)
+	private JMenuItem menuItem (String name, int key, int mask, final Runnable body)
 	{
-		javax.swing.JMenuItem	mi = new javax.swing.JMenuItem (name);
+		JMenuItem	mi = new JMenuItem (name);
 		mi.setAccelerator (KeyStroke.getKeyStroke (key, mask));
 		mi.addActionListener (new ActionListener ()
 		{
@@ -464,7 +494,7 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 	}
 
 	/** Installs another deployment in the editor (New / Load). */
-	private void setDeployment (DeployArch d)
+	public void setDeployment (DeployArch d)
 	{
 		model	= new ArchModel (d);
 		model.setStartNames (startNamesOf (d));
@@ -475,15 +505,14 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 
 	private void updateTitle ()
 	{
-		File	f = model.getDeploy ().getFile ();
-		setTitle ("Deployment Architecture Editor - " + ((f != null) ? f.getName () : "untitled." + DeployArch.EXTENSION) + (model.getDeploy ().isModified () ? " *" : ""));
+		if (host != null)		host.deploymentStateChanged (this);
 	}
 
 	/** Asks what to do with unsaved changes; false when the user cancels. */
-	private boolean confirmDiscard ()
+	public boolean confirmDiscard ()
 	{
 		if (!model.getDeploy ().isModified ())		return true;
-		int		r = JOptionPane.showConfirmDialog (this, "The deployment has unsaved changes. Save them first?", getTitle (),
+		int		r = JOptionPane.showConfirmDialog (this, "The deployment has unsaved changes. Save them first?", TITLE,
 					JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 		if (r == JOptionPane.CANCEL_OPTION)	return false;
 		if (r == JOptionPane.YES_OPTION)		return saveDeployment (false);
@@ -493,7 +522,7 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 	private JFileChooser deployChooser (String title)
 	{
 		File			cur = model.getDeploy ().getFile ();
-		File			dir = (cur != null) ? cur.getParentFile () : new File (SimulatorWindow.DEPLOY_DIR);
+		File			dir = (cur != null) ? cur.getParentFile () : new File (DEPLOY_DIR);
 		if ((dir == null) || !dir.isDirectory ())		dir = new File (".");
 		JFileChooser	fc = new JFileChooser (dir);
 		fc.setDialogTitle (title);
@@ -518,11 +547,11 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 		} catch (Exception e)
 		{
 			e.printStackTrace ();
-			JOptionPane.showMessageDialog (this, "Cannot load " + fc.getSelectedFile ().getName () + ":\n" + e, getTitle (), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog (this, "Cannot load " + fc.getSelectedFile ().getName () + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
-	private boolean saveDeployment (boolean saveAs)
+	public boolean saveDeployment (boolean saveAs)
 	{
 		DeployArch	d = model.getDeploy ();
 		File		f = d.getFile ();
@@ -533,20 +562,19 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 			if (fc.showSaveDialog (this) != JFileChooser.APPROVE_OPTION)		return false;
 			f = fc.getSelectedFile ();
 			if (!f.getName ().toLowerCase ().endsWith ("." + DeployArch.EXTENSION))		f = new File (f.getPath () + "." + DeployArch.EXTENSION);
-			if (f.exists () && (JOptionPane.showConfirmDialog (this, f.getName () + " already exists. Overwrite?", getTitle (),
+			if (f.exists () && (JOptionPane.showConfirmDialog (this, f.getName () + " already exists. Overwrite?", TITLE,
 					JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION))		return false;
 		}
 		try
 		{
-			if (propsTB.isEditing ())		propsTB.getCellEditor ().stopCellEditing ();
-			if (eventsTB.isEditing ())		eventsTB.getCellEditor ().stopCellEditing ();
+			stopEditing ();
 			d.save (f);
 			updateTitle ();
 			return true;
 		} catch (Exception e)
 		{
 			e.printStackTrace ();
-			JOptionPane.showMessageDialog (this, "Cannot save " + f.getName () + ":\n" + e, getTitle (), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog (this, "Cannot save " + f.getName () + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 	}
@@ -559,7 +587,7 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 	 */
 	private void importExecutionArchitecture ()
 	{
-		File		dir = new File (SimulatorWindow.ARCHS_DIR);
+		File		dir = new File (ARCHS_DIR);
 		JFileChooser	fc = new JFileChooser (dir.isDirectory () ? dir : new File ("."));
 		fc.setDialogTitle ("Import Execution");
 		fc.setFileFilter (new FileNameExtensionFilter ("Architecture definition files (*.arch)", "arch"));
@@ -572,7 +600,7 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 		} catch (Exception e)
 		{
 			e.printStackTrace ();
-			JOptionPane.showMessageDialog (this, "Cannot import " + fc.getSelectedFile ().getName () + ":\n" + e, getTitle (), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog (this, "Cannot import " + fc.getSelectedFile ().getName () + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -592,7 +620,7 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 		if ((b == null) || !model.isRemovable (b))		return;
 		if (b.kind == ArchModel.ROBOT)
 		{
-			if (JOptionPane.showConfirmDialog (this, "Delete the robot " + model.getRobotId (b.robot) + " with all its modules?", getTitle (),
+			if (JOptionPane.showConfirmDialog (this, "Delete the robot " + model.getRobotId (b.robot) + " with all its modules?", TITLE,
 					JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION)		return;
 		}
 		model.remove (b);
@@ -742,25 +770,5 @@ public class DeploymentDialog extends JDialog implements ArchCanvas.Listener
 		else									setPropsTitle (model.labelOf (b));
 	}
 
-	/* ------------------------------------------------------------------ */
-	/* Result                                                              */
-	/* ------------------------------------------------------------------ */
-
-	private void accept ()
-	{
-		if (propsTB.isEditing ())		propsTB.getCellEditor ().stopCellEditing ();
-		if (eventsTB.isEditing ())		eventsTB.getCellEditor ().stopCellEditing ();
-		result	= model.getDeploy ();
-		dispose ();
-	}
-
 	public ArchModel getModel ()	{ return model; }
-
-	/** Shows the dialog; returns the edited deployment, or null when cancelled. */
-	public DeployArch showDialog ()
-	{
-		result = null;
-		setVisible (true);
-		return result;
-	}
 }
