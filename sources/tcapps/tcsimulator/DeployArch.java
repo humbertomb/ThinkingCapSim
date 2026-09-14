@@ -108,8 +108,8 @@ public class DeployArch
 		public String				start;											// start point of the world ("START_2"); null: the i-th one, by order
 
 		public Robot ()										{ }
-		/** A new robot of the editor: with a Linda router (a robot without router receives its own COORD/SYNC tuples). */
-		public Robot (String name)							{ this.name = name; this.router = newRouter (); }
+		/** A new robot: local Linda space and virtual robot, without router (one is added when the deployment has a global Linda space). */
+		public Robot (String name)							{ this.name = name; }
 
 		public Robot copy ()
 		{

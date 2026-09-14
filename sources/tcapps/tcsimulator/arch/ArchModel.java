@@ -409,12 +409,14 @@ public class ArchModel
 		return new Block (GLOBAL_LINDA, -1);
 	}
 
-	/** Adds a robot named "Unnamed" (or "Unnamed2", ...) with its local Linda space and virtual robot. */
+	/** Adds a robot named "Unnamed" (or "Unnamed2", ...) with its local Linda space and virtual robot, plus a Linda router when the deployment has a global Linda space. */
 	public Block addRobot ()
 	{
 		String	name = DeployArch.DEFAULT_ROBOT;
 		for (int i = 2; robotNames ().contains (name); i++)		name = DeployArch.DEFAULT_ROBOT + i;
-		deploy.robots.add (new Robot (name));
+		Robot	r = new Robot (name);
+		if (deploy.globalLinda != null)		r.router = DeployArch.newRouter ();		// only with a global space to route to
+		deploy.robots.add (r);
 		return new Block (ROBOT, deploy.robots.size () - 1);
 	}
 
