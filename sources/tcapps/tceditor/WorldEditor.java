@@ -115,6 +115,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	protected JToggleButton[]		toolButtons	= new JToggleButton[WorldCanvas.NTOOLS];
 	protected Action				undoAction, redoAction, deleteAction, duplicateAction;
 	protected JCheckBoxMenuItem[]	layerItems	= new JCheckBoxMenuItem[WorldItem.NKINDS];
+	protected boolean				collapseTree	= true;		// the tree starts closed (and closes again with every world loaded)
 	protected JCheckBoxMenuItem		gridItem, snapItem, labelsItem;
 	protected boolean				syncing		= false;	// avoids selection feedback loops
 
@@ -780,6 +781,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 
 	private void setWorld (World w, File f)
 	{
+		collapseTree = true;			// a world just loaded shows its categories closed
 		world	= w;
 		file	= f;
 		dirty	= false;
@@ -902,7 +904,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			int						kind = ((Integer) n.getUserObject ()).intValue ();
 			expanded[kind] = tree.isExpanded (new TreePath (n.getPath ()));
 		}
-		boolean		first = (treeRoot.getChildCount () == 0);
+		boolean		collapse = collapseTree || (treeRoot.getChildCount () == 0);
+		collapseTree = false;
 
 		syncing = true;
 		treeRoot.removeAllChildren ();
@@ -942,8 +945,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		{
 			DefaultMutableTreeNode	n = (DefaultMutableTreeNode) treeRoot.getChildAt (i);
 			int						kind = ((Integer) n.getUserObject ()).intValue ();
-			boolean					exp = first ? (n.getChildCount () <= 40) : expanded[kind];
-			if (exp)		tree.expandPath (new TreePath (n.getPath ()));
+			if (!collapse && expanded[kind])		tree.expandPath (new TreePath (n.getPath ()));
 		}
 		selectInTree (canvas.getSelection ());
 		syncing = false;
