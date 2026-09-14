@@ -4,6 +4,7 @@
  
 package tc.modules;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.shared.linda.*;
@@ -46,22 +47,22 @@ public class Monitor extends Controller
 	protected String					robotid		= LindaEntryFilter.ANY;
 
 	// Constructors
-	public Monitor (Properties props, Linda linda) 
+	public Monitor (ModuleConfig cfg, Linda linda) 
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 	
-	public Monitor (Properties props, GUIMonitor listener, Linda linda) 
+	public Monitor (ModuleConfig cfg, GUIMonitor listener, Linda linda) 
 	{
-		this (props, linda);
+		this (cfg, linda);
 		
 		this.listener		= listener;
 	}	
 	
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
-		super.initialise (props);
+		super.initialise (cfg);
 		
 		gitem	= new ItemGoal ();
 		gtuple	= new Tuple (Tuple.GOAL, gitem);

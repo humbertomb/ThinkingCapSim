@@ -24,9 +24,9 @@ public abstract class Navigation extends StdThread
 	protected long				time_upd;
 
 	// Constructors
-	public Navigation (Properties props, Linda linda)
+	public Navigation (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 
 	// Instance methods

@@ -38,7 +38,7 @@ public class ExecArch extends Thread
 	// Additional execution variables
 	protected boolean			initialised	= false;
 	protected volatile boolean	running		= false;
-	protected Properties			props;
+	protected DeployArch			deploy;				// Deployment this robot belongs to
 	protected String				robotid;
 
 	// Simulation: when a Simulator is given the virtual robot module is replaced by a SimRobot bound to it
@@ -47,14 +47,14 @@ public class ExecArch extends Thread
 
 	/* Constructors */
 	/**
-	 * Executes one robot of a deployment: the modules, the Linda spaces and the
-	 * virtual robot described by {@link DeployArch#toProperties(int)}. The first
-	 * robot of the deployment is the one that instantiates the global Linda
-	 * space, so the robots must be started in order.
+	 * Executes one robot of a deployment: its modules, its Linda spaces and its
+	 * virtual robot, taken from the deployment itself. The first robot is the
+	 * one that instantiates the global Linda space, so the robots must be
+	 * started in order.
 	 */
 	public ExecArch (DeployArch deploy, int robot)
 	{
-		initialise (deploy.robots.get (robot).name, deploy.toProperties (robot));
+		initialise (deploy, robot);
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class ExecArch extends Thread
 		// Load a world description if none available
 		if (sim.getWorld () == null)
 		{
-			try  { sim.setWorld (props.getProperty (vrdesc.preffix + "WORLD")); }
+			try  { sim.setWorld (vrdesc.config.get ("WORLD")); }
 			catch (Exception e)
 			{
 				System.out.println ("[ExecArch]: Exception loading world: " + e);
@@ -98,7 +98,7 @@ public class ExecArch extends Thread
 			}
 		}
 		if (sim.getWorldName () != null)
-			props.setProperty (vrdesc.preffix + "WORLD", sim.getWorldName ());
+			vrdesc.config.set ("WORLD", sim.getWorldName ());
 
 		// The simulated robot replaces the real one
 		vrdesc.classn = SimRobot.class.getName ();
@@ -128,47 +128,69 @@ public class ExecArch extends Thread
 
     
 	/* Instance methods */
-	protected void initialise (String robotid, Properties props)
+
+	/**
+	 * Builds the descriptors of the robot straight from the deployment: its two
+	 * Linda spaces, its modules (each one with its own configuration), its
+	 * router and its virtual robot. Only the first robot creates the global
+	 * space; the others connect to it.
+	 */
+	protected void initialise (DeployArch deploy, int robot)
 	{
-		String			modules, vrmodule, lrmodule;
-		String			preffix;
-		StringTokenizer	st;
-		
-		// Setup private local variables
-		this.props		= props;
-		this.robotid	= robotid;
-				
-		if (robotid != null)		props.setProperty ("ROBNAME", robotid);
-		
+		DeployArch.Robot	rob = deploy.robots.get (robot);
+		DeployArch.Linda	glin = deploy.globalLinda;
+		String				world = deploy.getWorldFile ();
+		int					i;
+
+		this.robotid	= rob.name;
+		this.deploy		= deploy;
+
 		// Prepare data structures
 		num				= 0;
 		thdesc			= new ThreadDesc[MAX_THS];
 
-		// Load and parse Linda servers properties
-		lldesc		= new LindaDesc ("LLIN", LindaDesc.L_LOCAL, props);			
-		gldesc		= new LindaDesc ("GLIN", LindaDesc.L_GLOBAL, props);			
+		// Linda spaces of the robot
+		lldesc		= new LindaDesc ("LLIN", LindaDesc.L_LOCAL, rob.linda.address, rob.linda.port, rob.linda.instantiate);
+		gldesc		= (glin != null)
+					? new LindaDesc ("GLIN", LindaDesc.L_GLOBAL, glin.address, glin.port, glin.instantiate && (robot == 0))
+					: new LindaDesc ("GLIN", LindaDesc.L_GLOBAL, null, 0, false);
 
-		// Load and parse architecture global properties
-		modules		= props.getProperty ("MODULES");
-		vrmodule		= props.getProperty ("VROBOT");
-		lrmodule		= props.getProperty ("ROUTER");
-		if (modules != null)
+		// Modules of the robot
+		num			= Math.min (rob.modules.size (), MAX_THS);
+		for (i = 0; i < num; i++)
+			thdesc[i]	= new ThreadDesc ("MOD" + (i + 1), config (rob, rob.modules.get (i)));
+
+		// The router only makes sense when there is a global space to route to
+		if ((rob.router != null) && (glin != null))
+			lrdesc		= new RouterDesc ("COO", config (rob, rob.router));
+
+		// Virtual robot (the world of the deployment applies to every robot)
+		if (rob.virtualRobot != null)
 		{
-			st			= new StringTokenizer (modules, ", \t");
-			for (num = 0; st.hasMoreTokens (); num++)
-			{
-				preffix		= st.nextToken ();
-				thdesc[num]	= new ThreadDesc (preffix, props);
-			}
+			vrdesc		= new ThreadDesc ("ROB", config (rob, rob.virtualRobot));
+			if (world != null)		vrdesc.config.set ("WORLD", world);
 		}
-		if (lrmodule != null)
-			lrdesc		= new RouterDesc (lrmodule, props);			
-		if (vrmodule != null)
-			vrdesc		= new ThreadDesc (vrmodule, props);			
-			
+
 		initialised		= true;	
 	}
-	
+
+	/** Configuration a module is given: its own values, the properties of its robot and the robot name. */
+	protected ModuleConfig config (DeployArch.Robot rob, DeployArch.Module m)
+	{
+		ModuleConfig	cfg = new ModuleConfig (rob.name, m.name, m.properties, rob.properties);
+		StringBuilder	sb = new StringBuilder ();
+
+		// the events the module registers, in the form StdThread reads them
+		for (DeployArch.Event ev : m.events)
+		{
+			if (sb.length () > 0)		sb.append (", ");
+			sb.append (ev.symbol).append ('\t').append (ev.itemClass).append ('\t').append (ev.method);
+		}
+		if (sb.length () > 0)		cfg.set ("CONNECT", sb.toString ());
+
+		return cfg;
+	}
+
 	public void run ()
 	{
 		int				i;
@@ -189,11 +211,11 @@ public class ExecArch extends Thread
 			
 			// Execute LindaRouter if needed
 			if (lrdesc != null)
-				lrdesc.start_thread (robotid, props, lldesc, linda_loc, gldesc, linda_glob);
+				lrdesc.start_thread (robotid, lldesc, linda_loc, gldesc, linda_glob);
 
 			// Execute required standard modules
 			for (i = 0; i < num; i++)
-				thdesc[i].start_thread (robotid, props, lldesc, linda_loc);
+				thdesc[i].start_thread (robotid, lldesc, linda_loc);
 			
 			// Execute VirtualRobot if needed
 			virtual_robot ();
@@ -269,7 +291,7 @@ public class ExecArch extends Thread
 		return true;
 	}
 	
-	public Properties getProperties ()		{ return props; }
+	public DeployArch getDeployment ()		{ return deploy; }
 	public String getRobotId ()				{ return robotid; }
 
 	protected void virtual_robot ()
@@ -277,7 +299,7 @@ public class ExecArch extends Thread
 		if (vrdesc == null)				return;
 		if (sim == null)
 		{
-			vrdesc.start_thread (robotid, props, lldesc, linda_loc);
+			vrdesc.start_thread (robotid, lldesc, linda_loc);
 			return;
 		}
 
@@ -303,7 +325,7 @@ public class ExecArch extends Thread
 			return;
 		}
 
-		SimRobot	thread = new SimRobot (robotid, props, linda, sim);
+		SimRobot	thread = new SimRobot (robotid, vrdesc.config, linda, sim);
 		vrdesc.robotid	= robotid;
 		thread.setTDesc (vrdesc);
 		if (start != null)		thread.reset (start);

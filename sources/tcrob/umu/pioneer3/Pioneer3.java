@@ -4,6 +4,7 @@
 
 package tcrob.umu.pioneer3;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import devices.drivers.laser.*;
@@ -102,21 +103,21 @@ public class Pioneer3 extends VirtualRobot
 	protected boolean					debug		= false;
 	
 	// Constructors
-	public Pioneer3 (Properties props, Linda linda)
+	public Pioneer3 (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 	
 	// Accessors
 	protected boolean				debug ()			{ return debug; }
 	
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
 		int			i;
 		String		port;
 		
-		super.initialise (props);
+		super.initialise (cfg);
 		
 		// Initialise the real robot
 		model		= (DifferentialDrive) rdesc.model;

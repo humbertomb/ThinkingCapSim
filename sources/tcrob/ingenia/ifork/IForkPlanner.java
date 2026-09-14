@@ -7,6 +7,7 @@
  
 package tcrob.ingenia.ifork;
 
+import tc.runtime.thread.ModuleConfig;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -113,9 +114,9 @@ public class IForkPlanner extends SeqPlanner
 	boolean fdebug;
 	
 	// Constructors
-	public IForkPlanner (Properties props, Linda linda)
+	public IForkPlanner (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 
 		int			i;
 		
@@ -131,7 +132,7 @@ public class IForkPlanner extends SeqPlanner
 		coordtuple 	= new Tuple (IForkTuple.COORD, coorditem); 
 		givenway 	= false;
 		stopped		= true;
-		robotid 	= props.getProperty ("ROBNAME");
+		robotid 	= cfg.robot ();
 		
 		asoclocks	= new Hashtable<String,String> ();
 		locks 		= new LinkedList<String> ();
@@ -152,9 +153,9 @@ public class IForkPlanner extends SeqPlanner
 	}
 	
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{
-		super.initialise(props);
+		super.initialise (cfg);
 		
 		// Calcule ifork limits min=[-1.45,-0.5025] max[1.035,0.5025]
 		limits = new Line2[4];
@@ -171,7 +172,7 @@ public class IForkPlanner extends SeqPlanner
 		gitem.task	= new IForkPlan ();
 		
 		// Set-up security coordination stuff
-		try { doSecCoord = Boolean.valueOf (props.getProperty ("WHCOORD")).booleanValue (); } 	
+		try { doSecCoord = Boolean.valueOf (cfg.get ("WHCOORD")).booleanValue (); } 	
 		catch (Exception e) 	{ doSecCoord = false; }	
 		
 		if (doSecCoord)

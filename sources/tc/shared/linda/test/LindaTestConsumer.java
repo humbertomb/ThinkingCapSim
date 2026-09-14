@@ -25,13 +25,13 @@ public class LindaTestConsumer extends StdThread
 	public double						tavg;
 	public int							count	= 0;
 	
-	public LindaTestConsumer (Properties props, Linda linda)
+	public LindaTestConsumer (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{
 		ltime	= System.currentTimeMillis ();
 	}

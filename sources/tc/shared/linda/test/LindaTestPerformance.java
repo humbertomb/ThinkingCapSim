@@ -6,6 +6,8 @@
  */
 package tc.shared.linda.test;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.*;
 
 import tc.runtime.thread.*;
@@ -41,46 +43,36 @@ public class LindaTestPerformance
 	// Constructors
 	public LindaTestPerformance (int consumers, int producers, int readers, String mode)
 	{
-		int				i;
-		Properties		sprops;
-		Properties		cprops;
-		Properties		pprops;
-		Properties		rprops;
+		int							i;
+		Map<String, String>			cvals = new LinkedHashMap<String, String> ();
+		Map<String, String>			pvals = new LinkedHashMap<String, String> ();
+		Map<String, String>			rvals = new LinkedHashMap<String, String> ();
 		
-		// Linda Space properties
-		sprops	= new Properties ();
-		sprops.setProperty ("LINADDR", "localhost");
-		sprops.setProperty ("LINPORT", "5500");
+		// Consumer process configuration
+		cvals.put ("CLASS", "tc.shared.linda.test.LindaTestConsumer");
+		cvals.put ("MODE", mode);
+		cvals.put ("CONNECT", "DATA tc.shared.linda.ItemData notify_data");			
 
-		// Consumer process properties
-		cprops	= new Properties ();
-		cprops.setProperty (PREFFIX + "CLASS", "tc.shared.linda.test.LindaTestConsumer");
-		cprops.setProperty (PREFFIX + "MODE", mode);
-		cprops.setProperty (PREFFIX + "CONNECT", "DATA tc.shared.linda.ItemData notify_data");			
-
-		// Producer process properties
-		pprops	= new Properties ();
-		pprops.setProperty (PREFFIX + "CLASS", "tc.shared.linda.test.LindaTestProducer");
-		pprops.setProperty (PREFFIX + "MODE", mode);
-//		pprops.setProperty (PREFFIX + "CONNECT", "DATA tc.shared.linda.ItemData notify_data");			
+		// Producer process configuration
+		pvals.put ("CLASS", "tc.shared.linda.test.LindaTestProducer");
+		pvals.put ("MODE", mode);
 		
-		// Reader process properties
-		rprops	= new Properties ();
-		rprops.setProperty (PREFFIX + "CLASS", "tc.shared.linda.test.LindaTestReader");
-		rprops.setProperty (PREFFIX + "MODE", mode);
+		// Reader process configuration
+		rvals.put ("CLASS", "tc.shared.linda.test.LindaTestReader");
+		rvals.put ("MODE", mode);
 		
 		try
 		{
 			// Create service threads
-			ldesc		= new LindaDesc ("LIN", LindaDesc.L_GLOBAL, sprops);			
+			ldesc		= new LindaDesc ("LIN", LindaDesc.L_GLOBAL, "localhost", 5500, false);
 			linda		= ldesc.start_server ();
 			
 			cthdesc		= new ThreadDesc[consumers];
 			cthread		= new LindaTestConsumer[consumers];
 			for (i = 0; i < consumers; i++)
 			{
-				cthdesc[i]	= new ThreadDesc (PREFFIX, cprops);
-				cthdesc[i].start_thread ("Consumer-" + i, cprops, ldesc, linda);
+				cthdesc[i]	= new ThreadDesc (PREFFIX, new ModuleConfig ("Consumer-" + i, "Consumer", cvals));
+				cthdesc[i].start_thread ("Consumer-" + i, ldesc, linda);
 				cthread[i]	= (LindaTestConsumer) cthdesc[i].thread;
 			}
 
@@ -88,8 +80,8 @@ public class LindaTestPerformance
 			pthread		= new LindaTestProducer[producers];
 			for (i = 0; i < producers; i++)
 			{
-				pthdesc[i]	= new ThreadDesc (PREFFIX, pprops);
-				pthdesc[i].start_thread ("Producer-" + i, pprops, ldesc, linda);
+				pthdesc[i]	= new ThreadDesc (PREFFIX, new ModuleConfig ("Producer-" + i, "Producer", pvals));
+				pthdesc[i].start_thread ("Producer-" + i, ldesc, linda);
 				pthread[i]	= (LindaTestProducer) pthdesc[i].thread;
 			}
 			
@@ -97,8 +89,8 @@ public class LindaTestPerformance
 			rthread		= new LindaTestReader[readers];
 			for (i = 0; i < readers; i++)
 			{
-				rthdesc[i]	= new ThreadDesc (PREFFIX, rprops);
-				rthdesc[i].start_thread ("Reader-" + i, rprops, ldesc, linda);
+				rthdesc[i]	= new ThreadDesc (PREFFIX, new ModuleConfig ("Reader-" + i, "Reader", rvals));
+				rthdesc[i].start_thread ("Reader-" + i, ldesc, linda);
 				rthread[i]	= (LindaTestReader) rthdesc[i].thread;
 			}
 			

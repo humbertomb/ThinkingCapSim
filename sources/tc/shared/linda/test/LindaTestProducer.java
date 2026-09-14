@@ -29,13 +29,13 @@ public class LindaTestProducer extends StdThread
 	protected long						ltime;
 	public int							count	= 0;
 	
-	public LindaTestProducer (Properties props, Linda linda)
+	public LindaTestProducer (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{
 		// Prepare Linda data structures
 		sdata	= new ItemData ();

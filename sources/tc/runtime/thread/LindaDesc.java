@@ -5,7 +5,6 @@
 package tc.runtime.thread;
 
 import java.net.*;
-import java.util.*;
 
 import tc.shared.linda.*;
 
@@ -25,28 +24,20 @@ public class LindaDesc extends Object
 	public int						port;						// Local server port
 
 	// Constructors
-	public LindaDesc (String preffix, int mode, Properties props)
-	{
-		initialise (preffix, mode, props);
-	}
-	
-	// Instance methods
-	protected void initialise (String preffix, int mode, Properties props)
+	public LindaDesc (String preffix, int mode, String addr, int port, boolean create)
 	{
 		this.preffix	= preffix;
 		this.mode		= mode;
-		
-		// Parse properties to set instance variables
-		classn			= props.getProperty (preffix + "CLASS");										if (classn == null)		{ classn	= "tc.shared.linda.LindaServer"; }
-		addr			= props.getProperty (preffix + "ADDR");											if (addr == null)		{ addr		= "localhost"; }
-		try { port	 	= Integer.valueOf (props.getProperty (preffix + "PORT")).intValue (); } 			catch (Exception e) 	{ port		= 7000; }
-		try { create	=  Boolean.valueOf (props.getProperty (preffix + "CREATE")).booleanValue (); } 		catch (Exception e) 	{ create	= false; }
+		this.classn		= "tc.shared.linda.LindaServer";
+		this.addr		= (addr != null) ? addr : "localhost";
+		this.port		= port;
+		this.create		= create;
 
 		// If creating the Linda space, override the IP address
 		if (create)
-			try { addr	= InetAddress.getLocalHost ().getHostAddress (); } 								catch (Exception e)		{ addr		= "localhost"; }
+			try { this.addr	= InetAddress.getLocalHost ().getHostAddress (); } 						catch (Exception e)		{ this.addr	= "localhost"; }
 	}
-		
+
 	public LindaServer start_server () throws Exception
 	{
 		LindaServer			server;

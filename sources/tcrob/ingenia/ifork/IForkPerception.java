@@ -4,6 +4,7 @@
  
 package tcrob.ingenia.ifork;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 
@@ -36,9 +37,9 @@ public class IForkPerception extends IndoorPerception
 	protected Hashtable<String,Long>		agv_runtime;
 
 	// Constructors
-	public IForkPerception (Properties props, Linda linda)
+	public IForkPerception (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 
 		agv_runtime  = new Hashtable<String,Long> ();
 	}

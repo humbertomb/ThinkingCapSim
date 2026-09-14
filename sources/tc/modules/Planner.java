@@ -33,13 +33,13 @@ public abstract class Planner extends StdThread
 	protected String					robotid;					// Current robot identification
 
 	// Constructors
-	protected Planner (Properties props, Linda linda)
+	protected Planner (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 	
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
 		// Setup local stuff
 		litem	= new ItemLPS ();

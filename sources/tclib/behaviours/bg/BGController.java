@@ -4,6 +4,7 @@
  
 package tclib.behaviours.bg;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.modules.*;
@@ -54,15 +55,15 @@ public class BGController extends Controller
 	protected boolean				dump;
 	
 	// Constructors
-	public BGController (Properties props, Linda linda) 
+	public BGController (ModuleConfig cfg, Linda linda) 
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 	
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
-		super.initialise (props);
+		super.initialise (cfg);
 		
 		// Initialize local structures
 		looka		= new Position ();
@@ -96,10 +97,10 @@ public class BGController extends Controller
 		dump		= false;
 
 		// Parse BG file
-		parse (props);		
+		parse (cfg);		
 	}
 	
-	protected void parse (Properties props)
+	protected void parse (ModuleConfig cfg)
 	{		
 		String			name = null;
 	
@@ -107,7 +108,7 @@ public class BGController extends Controller
 		c_dump.close ();
 
 		// Load and parse a BG program
-		name = getModuleProperty (props, "PRG");
+		name = cfg.get ("PRG");
 		if (name != null)
 		{
 			BGParser.parse (name, false);

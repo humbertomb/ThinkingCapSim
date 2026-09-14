@@ -4,6 +4,7 @@
  
 package tcrob.umu.indoor;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 import tc.shared.linda.*;
 import tc.shared.lps.lpo.*;
@@ -63,13 +64,13 @@ public class IndoorNavigation extends Navigation
 	protected FSegWindow			fwin;
 
 	// Constructors
-	public IndoorNavigation (Properties props, Linda linda)
+	public IndoorNavigation (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 		
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
 		// Initialise Linda related structures
 		nitem		= new ItemNavigation ();
@@ -89,7 +90,7 @@ public class IndoorNavigation extends Navigation
 		dpos		= new Position ();
 		
 		cell_size	= DEF_CELL;
-		String		cprop = getModuleProperty (props, "CELL");			// module property CELL (m) overrides the default
+		String		cprop = cfg.get ("CELL");			// module property CELL (m) overrides the default
 		if (cprop != null)
 			try { cell_size = Double.parseDouble (cprop.trim ()); } catch (Exception e) { System.out.println ("--[Nav] Invalid CELL <" + cprop + ">, using " + cell_size); }
 		dilation	= DEF_DIL / cell_size;

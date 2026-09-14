@@ -1,5 +1,6 @@
 package tcrob.oru.rasmus;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.shared.linda.*;
@@ -8,13 +9,13 @@ import tclib.planning.sequence.*;
 public class RasmusDeliberation extends SeqPlanner
 {
 	// Constructors
-	public RasmusDeliberation (Properties props, Linda linda)
+	public RasmusDeliberation (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 		
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{
 		//System.out.println ("RamsusDelibaration() /initialise  (Jesper)");		
 	}

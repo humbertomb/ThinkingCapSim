@@ -4,6 +4,7 @@
  
 package tcrob.umu.quaky2;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.vrobot.*;
@@ -91,22 +92,22 @@ public class Quaky2 extends VirtualRobot
 	protected boolean						debug			= false;
 	
 	// Constructors
-	public Quaky2 (Properties props, Linda linda)
+	public Quaky2 (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 	
 	// Accessors
 	protected boolean				debug ()			{ return debug; }
 
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
 		int				i;
 		String			sprop;
 		String			params;
 		
-		super.initialise (props);
+		super.initialise (cfg);
 		
 		// Load system parameters
 		sprop = System.getProperty (PROP_DEBUG);

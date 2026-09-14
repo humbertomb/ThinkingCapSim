@@ -1,5 +1,6 @@
 package tcrob.oru.rasmus;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 //import java.io.*;
 
@@ -34,20 +35,20 @@ public class Rasmus extends VirtualRobot
 	
 	
 	// Constructors
-	public Rasmus (Properties props, Linda linda)
+	public Rasmus (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
-		this.initialise(props);
+		super (cfg, linda);
+		this.initialise (cfg);
 	}
 
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{
 		// Configure whatever your system needs to be configurated
 		String			prop;
 		this.lasers		= new double[181];//rdesc.RAYLRF]; 
 		
-		super.initialise (props);
+		super.initialise (cfg);
 		
 		// Check if robot is to be connected
 		prop = System.getProperty (PROP_CONNECT);

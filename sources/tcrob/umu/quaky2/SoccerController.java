@@ -4,6 +4,7 @@
  
 package tcrob.umu.quaky2;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.shared.lps.lpo.*;
@@ -59,9 +60,9 @@ public class SoccerController extends BGController
 	protected double					lnet2Phi		= 0.0;
 	
 	// Constructors
-	public SoccerController (Properties props, Linda linda) 
+	public SoccerController (ModuleConfig cfg, Linda linda) 
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 	
 	// Class methods
@@ -74,9 +75,9 @@ public class SoccerController extends BGController
 	}
 	
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
-		super.initialise (props);
+		super.initialise (cfg);
 
 		// Initialise Linda related structures
 		gmitem		= new ItemGridMap ();

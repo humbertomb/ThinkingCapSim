@@ -1,5 +1,6 @@
 package tclib.navigation.localisation.outdoor;
 
+import tc.runtime.thread.ModuleConfig;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -48,17 +49,17 @@ public class Simulation //extends Perception
 		protected File				file;
 		
 		// Constructors
-		public Simulation () // (Properties props, Linda linda)
+		public Simulation () // (ModuleConfig cfg, Linda linda)
 		{
-			//super (props, linda);
+			//super (cfg, linda);
 		}
 		
 		// Instance methods
-		protected void initialise (Properties props)
+		protected void initialise (ModuleConfig cfg)
 		{
 			String		fclass;
 			
-			fclass		= props.getProperty ("FILTER");
+			fclass		= cfg.get ("FILTER");
 			if (fclass == null)	
 				fclass = "tclib.navigation.localisation.outdoor.TripleKalmanFilter";
 			
@@ -241,7 +242,7 @@ public class Simulation //extends Perception
 				stream.close ();
 			} catch (Exception e) { e.printStackTrace (); }
 
-			sim.initialise(cprops);
+			sim.initialise (ModuleConfig.fromProperties (null, "Simulation", null, cprops));
 			sim.notify_config(new ItemConfig (cprops, null, 0));
 			sim.position_correction();
 		}

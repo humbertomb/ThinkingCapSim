@@ -4,7 +4,6 @@
  
 package tc.runtime.thread;
 
-import java.util.*;
 import java.lang.reflect.*;
 
 import tc.shared.linda.*;
@@ -16,21 +15,20 @@ public class RouterDesc extends ThreadDesc
 	protected int				gport		= 0;		// Global current local port (for UDP/TCP mode only)
 
 	// Constructors
-	public RouterDesc (String preffix, Properties props)
+	public RouterDesc (String preffix, ModuleConfig config)
 	{
-		super (preffix, props);
+		super (preffix, config);
 	}
 	
 	// Instance methods
-	protected void initialise (String preffix, Properties props)
+	protected void initialise (String preffix, ModuleConfig config)
 	{
-		super.initialise (preffix, props);
+		super.initialise (preffix, config);
 		
-		// Parse properties to set instance variables
-		gmode		= parse_mode (props.getProperty (preffix + "GMODE"));
+		gmode		= parse_mode (config.get ("GMODE"));
 	}
 
-	public void start_thread (String robotid, Properties props, LindaDesc ldesc_loc, LindaServer server_loc, LindaDesc ldesc_glob, LindaServer server_glob)
+	public void start_thread (String robotid, LindaDesc ldesc_loc, LindaServer server_loc, LindaDesc ldesc_glob, LindaServer server_glob)
 	{
 		Linda	 			client_loc;
 		Linda				client_glob;

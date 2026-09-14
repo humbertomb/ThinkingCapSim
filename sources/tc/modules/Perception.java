@@ -32,15 +32,15 @@ public abstract class Perception extends StdThread
 	protected RobotData			data			= null;
 
 	// Constructors
-	protected Perception (Properties props, Linda linda)
+	protected Perception (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 		
-		robotid 		= props.getProperty ("ROBNAME");
+		robotid 		= cfg.robot ();
 	}
 
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{
 		// Initialise local structures
 		stime			= System.currentTimeMillis ();

@@ -5,6 +5,7 @@
  
 package tcrob.ingenia.ifork;
 
+import tc.runtime.thread.ModuleConfig;
 import java.io.*;
 import java.util.Properties;
 
@@ -130,17 +131,17 @@ public class IForkController extends Controller
 	PrintWriter pout = null;
 	
 	// Constructors
-	public IForkController (Properties props, Linda linda) 
+	public IForkController (ModuleConfig cfg, Linda linda) 
 	{
-		super (props, linda);
+		super (cfg, linda);
 		
-		robotid 		= props.getProperty ("ROBNAME");
+		robotid 		= cfg.robot ();
 	}
 	
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
-		super.initialise (props);
+		super.initialise (cfg);
 
 		// Local variables
 		robot_ctrl		= new RobotDataCtrl ();

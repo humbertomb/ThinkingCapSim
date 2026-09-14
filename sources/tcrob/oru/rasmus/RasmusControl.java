@@ -6,6 +6,7 @@
  */
 package tcrob.oru.rasmus;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 import java.io.*;
 import java.text.DecimalFormat;
@@ -109,10 +110,10 @@ public class RasmusControl extends Controller
 	/**
 	 * Creates and initializes a new controller
 	 */
-	public RasmusControl(Properties props, Linda linda)
+	public RasmusControl(ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
-		super.initialise(props); 
+		super (cfg, linda);
+		super.initialise (cfg); 
 	}
 	
 	/*
@@ -120,7 +121,7 @@ public class RasmusControl extends Controller
 	 * 
 	 * @see tc.runtime.thread.StdThread#initialise(java.util.Properties)
 	 */
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
 		// Setup local stuff
 		mitem	= new ItemMotion ();
@@ -154,7 +155,7 @@ public class RasmusControl extends Controller
 			logging = false;
 		
 		/* loads the main behaviour */
-		BehaviourFactory.loadConfiguration (getModuleProperty (props, "FACT"));
+		BehaviourFactory.loadConfiguration (cfg.get ("FACT"));
 		beh = BehaviourFactory.createBehaviour("MainBehaviour",false);
 		fmt = new DecimalFormat();
 		fmt.setMaximumFractionDigits(2);

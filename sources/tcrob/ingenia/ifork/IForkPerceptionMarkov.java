@@ -4,6 +4,7 @@
 
 package tcrob.ingenia.ifork;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.shared.linda.*;
@@ -20,9 +21,9 @@ public class IForkPerceptionMarkov extends IForkPerception
 	protected MK2_5FGrid			mkgrid;
 	
 	// Constructors
-	public IForkPerceptionMarkov (Properties props, Linda linda)
+	public IForkPerceptionMarkov (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);		
+		super (cfg, linda);		
 	}
 	
 	// Instance methods

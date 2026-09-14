@@ -4,6 +4,7 @@
  
 package tcrob.umu.quaky2;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.shared.linda.*;
@@ -34,9 +35,9 @@ public class SoccerPlanner extends SeqPlanner
 		
 	
 	// Constructors
-	public SoccerPlanner (Properties props, Linda linda)
+	public SoccerPlanner (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 
 		int				i;
 

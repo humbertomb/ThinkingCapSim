@@ -4,6 +4,7 @@
  
 package tcrob.ingenia.ifork;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 
@@ -39,11 +40,11 @@ public class IForkNavigation extends IndoorNavigation
 	protected Hashtable<String,Long>		agv_runtime;
 
 	// Constructors
-	public IForkNavigation (Properties props, Linda linda)
+	public IForkNavigation (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 		
-		my_id 		= props.getProperty ("ROBNAME");
+		my_id 		= cfg.robot ();
 		agvinfo		= new Hashtable<String,Position> ();
 		g_pos		= new Position ();
 		

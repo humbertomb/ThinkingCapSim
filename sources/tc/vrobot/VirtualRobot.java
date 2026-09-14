@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
 
+import tc.runtime.thread.ModuleConfig;
 import tc.runtime.thread.StdThread;
 import tc.shared.linda.ItemConfig;
 import tc.shared.linda.ItemData;
@@ -64,13 +65,13 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	private double[]				buffer;				// Buffer to store curve points
 
 	// Constructors
-	public VirtualRobot (Properties props, Linda linda)
+	public VirtualRobot (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
 		String			rname;
 		File				file;
@@ -78,11 +79,11 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		String			wdesc;
 
 		// Load robot environment description and parameters
-		rname			= props.getProperty ("ROBDESC");
-		raddress		= props.getProperty ("ROBRADDR");
-		try { rport 	= Integer.valueOf (props.getProperty ("ROBRPORT")).intValue (); } 	catch (Exception e) 		{ rport		= 0; }
-		try { lport 	= Integer.valueOf (props.getProperty ("ROBLPORT")).intValue (); } 	catch (Exception e) 		{ lport		= 0; }
-		wname			= props.getProperty ("ROBWORLD");
+		rname			= cfg.get ("DESC");
+		raddress		= cfg.get ("RADDR");
+		rport			= cfg.getInt ("RPORT", 0);
+		lport			= cfg.getInt ("LPORT", 0);
+		wname			= cfg.get ("WORLD");
 
 		// Load robot description and parameters
 		rprops			= new Properties ();

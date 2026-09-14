@@ -7,6 +7,7 @@
  */
 package tclib.behaviours.fhb;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.modules.*;
@@ -86,10 +87,10 @@ public class FHBController extends Controller
 	/**
 	 * Creates and initializes a new controller
 	 */
-	public FHBController (Properties props, Linda linda)
+	public FHBController (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
-		super.initialise(props); 
+		super (cfg, linda);
+		super.initialise (cfg); 
 	}
 	
 	/*
@@ -97,7 +98,7 @@ public class FHBController extends Controller
 	 * 
 	 * @see tc.runtime.thread.StdThread#initialise(java.util.Properties)
 	 */
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
 		// Initialise local structures
 		looka		= new Position ();
@@ -137,8 +138,8 @@ public class FHBController extends Controller
 		behSendInfo = false;
 		
 		// Read factory and behaviours configuration
-		BehaviourFactory.loadConfiguration (getModuleProperty (props, "FACT"));
-		behMain		= getModuleProperty (props, "BEH");
+		BehaviourFactory.loadConfiguration (cfg.get ("FACT"));
+		behMain		= cfg.get ("BEH");
 		beh			= BehaviourFactory.createBehaviour (behMain);
 	}
 	

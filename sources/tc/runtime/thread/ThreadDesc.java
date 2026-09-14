@@ -4,7 +4,6 @@
  
 package tc.runtime.thread;
 
-import java.util.*;
 import java.lang.reflect.*;
 
 import tc.shared.linda.*;
@@ -37,11 +36,12 @@ public class ThreadDesc extends Object
 	protected int				port		= 0;	// Current local port (for UDP/TCP mode only)
 	public String				robotid;			// Current robot name
 	public StdThread			thread;				// Current execution thread
+	public ModuleConfig			config;				// Configuration of the module (what it reads, and what it is given when started)
 	
 	// Constructors
-	public ThreadDesc (String preffix, Properties props)
+	public ThreadDesc (String preffix, ModuleConfig config)
 	{
-		initialise (preffix, props);
+		initialise (preffix, config);
 	}
 	
 	// Class methods
@@ -62,21 +62,22 @@ public class ThreadDesc extends Object
 	}
 	
 	// Instance methods
-	protected void initialise (String preffix, Properties props)
+	protected void initialise (String preffix, ModuleConfig config)
 	{
 		this.preffix	= preffix;
+		this.config		= config;
 		
-		// Parse properties to set instance variables
-		classn			= props.getProperty (preffix + "CLASS");									if (classn == null)	{ classn	= "tc.runtime.thread.StdThread"; }
-		info			= props.getProperty (preffix + "INFO");										if (info == null)	{ info		= "No info"; }
-		connects		= props.getProperty (preffix + "CONNECT");		
-		mode			= parse_mode (props.getProperty (preffix + "MODE"));
-		try { passive	= Boolean.valueOf (props.getProperty (preffix + "PASSIVE")).booleanValue (); } 	catch (Exception e) 	{ passive	= false; }
-		try { queued	= Boolean.valueOf (props.getProperty (preffix + "QUEUED")).booleanValue (); } 	catch (Exception e) 	{ queued	= false; }
-		try { polled	= Boolean.valueOf (props.getProperty (preffix + "POLLED")).booleanValue (); } 	catch (Exception e) 	{ polled	= false; }
-		try { exectime 	= Integer.valueOf (props.getProperty (preffix + "EXTIME")).longValue (); } 		catch (Exception e) 	{ exectime	= 100; }
-		try { priority 	= Integer.valueOf (props.getProperty (preffix + "PRI")).intValue (); } 			catch (Exception e) 	{ priority	= -1; } // Thread.NORM_PRIORITY; }
-		try { cangfx	= Boolean.valueOf (props.getProperty (preffix + "GFX")).booleanValue (); } 		catch (Exception e) 	{ cangfx	= false; }
+		// Take the execution parameters from the configuration of the module
+		classn			= config.get ("CLASS", "tc.runtime.thread.StdThread");
+		info			= config.get ("INFO", (config.name () != null) ? config.name () : "No info");
+		connects		= config.get ("CONNECT");
+		mode			= parse_mode (config.get ("MODE"));
+		passive			= config.getBoolean ("PASSIVE", false);
+		queued			= config.getBoolean ("QUEUED", false);
+		polled			= config.getBoolean ("POLLED", false);
+		exectime		= config.getLong ("EXTIME", 100);
+		priority		= config.getInt ("PRI", -1);
+		cangfx			= config.getBoolean ("GFX", false);
 
 		if (polled)		passive = false;
 	}
@@ -115,7 +116,7 @@ public class ThreadDesc extends Object
 		return client;
 	}
 		
-	public void start_thread (String robotid, Properties props, LindaDesc ldesc_loc, LindaServer server_loc)
+	public void start_thread (String robotid, LindaDesc ldesc_loc, LindaServer server_loc)
 	{
 		Linda	 			client;
 		Class<?>				tclass;
@@ -138,11 +139,11 @@ public class ThreadDesc extends Object
 
 			tclass		= Class.forName (classn);
 			types		= new Class<?>[2];
-			types[0]		= Class.forName ("java.util.Properties");        
+			types[0]		= ModuleConfig.class;
 			types[1]		= Class.forName ("tc.shared.linda.Linda");        
 			cons			= tclass.getConstructor (types);
 			params		= new Object[2];
-			params[0]	= props;        
+			params[0]	= config;        
 			params[1]	= client;        
 			
 			thread		= (StdThread) cons.newInstance (params);		

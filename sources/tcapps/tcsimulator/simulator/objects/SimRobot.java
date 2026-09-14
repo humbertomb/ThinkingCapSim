@@ -5,6 +5,7 @@
 
 package tcapps.tcsimulator.simulator.objects;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tcapps.tcsimulator.simulator.*;
@@ -35,9 +36,9 @@ public class SimRobot extends VirtualRobot
 	protected SimulatorDesc			sdesc;
 	
 	// Constructors
-	public SimRobot (String robotid, Properties props, Linda linda, Simulator simul)
+	public SimRobot (String robotid, ModuleConfig cfg, Linda linda, Simulator simul)
 	{
-		super (props, linda);
+		super (cfg, linda);
 		
 		this.r_id		= robotid;
 		this.simul		= simul;
@@ -52,9 +53,9 @@ public class SimRobot extends VirtualRobot
 	public final void 			lsb_mode (int mod)		{ sdesc.MODELSB = mod; }
 	
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
-		super.initialise (props);
+		super.initialise (cfg);
 		
 		// Load robot and world description
 		sdesc	= new SimulatorDesc (rprops);

@@ -28,9 +28,9 @@ import com.google.gson.GsonBuilder;
  * global Linda space and a list of robots, each one with its local Linda
  * space, an optional Linda router, its modules and its virtual robot. Module
  * properties keep the names the runtime reads (CLASS, MODE, PASSIVE, ...,
- * see tc.runtime.thread.ThreadDesc), so a robot can be turned into the
- * Properties of an ADF ({@link #toProperties(int)}) to be executed by
- * {@link ExecArch}; a legacy <code>.arch</code> file can be imported with
+ * see tc.runtime.thread.ThreadDesc), so {@link ExecArch} executes a robot
+ * straight from this model. A legacy
+ * <code>.arch</code> file can still be imported with
  * {@link #fromProperties(Properties, String)}.
  */
 public class DeployArch
@@ -103,7 +103,7 @@ public class DeployArch
 	{
 		public String				name			= DEFAULT_ROBOT;
 		public Linda				linda			= new Linda ();
-		public Module				router;											// null when the robot has no router (see the note in toProperties)
+		public Module				router;											// null when the robot has no router (see validate)
 		public List<Module>			modules			= new ArrayList<Module> ();
 		public Module				virtualRobot	= newVirtualRobot ();
 		public Map<String, String>	properties		= new LinkedHashMap<String, String> ();
@@ -325,61 +325,6 @@ public class DeployArch
 	/* ADF (Properties) conversion                                         */
 	/* ------------------------------------------------------------------ */
 
-	/** Properties of an architecture definition (ADF) that runs one robot of this deployment with {@link ExecArch}. */
-	public Properties toProperties (int robot)
-	{
-		Properties	p = new Properties ();
-		Robot		r = robots.get (robot);
-		// Global Linda space: only the one of the deployment. A single robot needs none (the
-		// simulator and the modules talk through its local space); several robots need it and
-		// the routers (see validate). When it is hosted here only the first robot creates the
-		// server; the others connect to it, so the robots must be started in order.
-		Linda	g = globalLinda;
-		if (g != null)
-		{
-			p.setProperty ("GLINADDR", g.address);
-			p.setProperty ("GLINPORT", String.valueOf (g.port));
-			p.setProperty ("GLINCREATE", String.valueOf (g.instantiate && (robot == 0)));
-		}
-		p.setProperty ("LLINADDR", r.linda.address);
-		p.setProperty ("LLINPORT", String.valueOf (r.linda.port));
-		p.setProperty ("LLINCREATE", String.valueOf (r.linda.instantiate));
-		p.setProperty ("NAME", r.name);
-		for (Map.Entry<String, String> e : r.properties.entrySet ())		p.setProperty (e.getKey (), e.getValue ());
-
-		// ADF prefixes: MOD1, MOD2, ... for the modules, COO for the router, ROB for the virtual robot
-		List<String>	prefixes = new ArrayList<String> ();
-		for (int i = 0; i < r.modules.size (); i++)		prefixes.add ("MOD" + (i + 1));
-		p.setProperty ("MODULES", String.join (", ", prefixes));
-		for (int i = 0; i < r.modules.size (); i++)		writeModule (p, r.modules.get (i), prefixes.get (i));
-		if ((r.router != null) && (g != null))				// a router only makes sense with a global space to route to
-		{
-			p.setProperty ("ROUTER", "COO");
-			writeModule (p, r.router, "COO");
-		}
-		p.setProperty ("VROBOT", "ROB");
-		writeModule (p, r.virtualRobot, "ROB");
-		String	w = getWorldFile ();											// the deployment world applies to every robot
-		if (w != null)		p.setProperty ("ROBWORLD", w);
-		return p;
-	}
-
-	static private void writeModule (Properties p, Module m, String pre)
-	{
-		p.setProperty (pre + "INFO", m.name);
-		for (Map.Entry<String, String> e : m.properties.entrySet ())		p.setProperty (pre + e.getKey (), e.getValue ());
-		if (m.events.size () > 0)
-		{
-			StringBuilder	sb = new StringBuilder ();
-			for (Event ev : m.events)
-			{
-				if (sb.length () > 0)		sb.append (", ");
-				sb.append (ev.symbol).append ('\t').append (ev.itemClass).append ('\t').append (ev.method);
-			}
-			p.setProperty (pre + "CONNECT", sb.toString ());
-		}
-	}
-
 	/**
 	 * Imports a legacy architecture definition file (.arch) as a deployment
 	 * with one robot, named after the file (IFORK-1) unless the ADF has a NAME.
@@ -392,7 +337,9 @@ public class DeployArch
 		Properties	props = new Properties ();
 		InputStream	in = new FileInputStream (f);
 		try { props.load (in); } finally { in.close (); }
-		return fromProperties (props, n.toUpperCase () + "-1");
+		DeployArch	d = fromProperties (props, n.toUpperCase () + "-1");
+		d.normalise ();								// drops the keys the runtime no longer reads (APW, ...)
+		return d;
 	}
 
 	/**

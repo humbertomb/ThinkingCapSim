@@ -4,6 +4,7 @@
  
 package tcrob.oru.rasmus;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.shared.linda.*;
@@ -22,9 +23,9 @@ public class RasmusModel extends IndoorNavigation
 	static public final double		SON_BUF_DIST	= 1.5;				// Maximum sonar distance for grid maps
 	
 	// Constructors
-	public RasmusModel (Properties props, Linda linda)
+	public RasmusModel (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 		
 	// Instance methods

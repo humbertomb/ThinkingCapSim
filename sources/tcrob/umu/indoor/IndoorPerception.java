@@ -4,6 +4,7 @@
 
 package tcrob.umu.indoor;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.shared.linda.*;
@@ -66,13 +67,13 @@ public class IndoorPerception extends Perception
 	protected IndoorLPSWindow			win;
 	
 	// Constructors
-	public IndoorPerception (Properties props, Linda linda)
+	public IndoorPerception (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 	
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
 		Matrix		uncert;
 		
@@ -88,7 +89,7 @@ public class IndoorPerception extends Perception
 		uncert.set (2, 2, INIT_VAR_R);
 		pos.set (uncert);
 		
-		super.initialise (props);
+		super.initialise (cfg);
 	}
 	
 	protected void position_correction ()

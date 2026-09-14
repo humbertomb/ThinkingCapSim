@@ -38,10 +38,10 @@ public abstract class StdThread implements Runnable, LindaListener
 	protected boolean			auto		= true;
 	protected boolean			localgfx	= false;
 	
-	private Properties props;
+	protected ModuleConfig		config;					// Configuration of this module in the deployment
 	
 	// Constructors
-	public StdThread (Properties props, Linda linda)
+	public StdThread (ModuleConfig config, Linda linda)
 	{
 		this.linda	= linda;
 		this.queue	= new LindaQueue ();
@@ -49,8 +49,7 @@ public abstract class StdThread implements Runnable, LindaListener
 		
 		this.recvs	= new Hashtable<String,EventDesc> (MAX_EVTS);
 		
-		this.props	= props;
-//		initialise (props);
+		this.config	= config;
 	}
 	
 	// Instance methods
@@ -88,7 +87,7 @@ public abstract class StdThread implements Runnable, LindaListener
 		localgfx	= tdesc.cangfx;
 		state 		= CONFIG; 
 
-		initialise (props);
+		initialise (config);
 	}
 	
 	public void start ()
@@ -312,18 +311,9 @@ public abstract class StdThread implements Runnable, LindaListener
 
 	// Abstract instance methods. Subclasses MUST implement
 	public abstract void step (long ctime);
-	protected abstract void initialise (Properties props);
+	protected abstract void initialise (ModuleConfig config);
 
-	/**
-	 * A property of this module: <code>&lt;prefix&gt;key</code>, where the
-	 * prefix is the one the module runs under (MOD1, CON, ... as given by its
-	 * ThreadDesc), so that the modules do not depend on the prefix used in a
-	 * particular architecture file. Falls back to the bare key.
-	 */
-	protected String getModuleProperty (Properties props, String key)
-	{
-		String		value = ((tdesc != null) && (tdesc.preffix != null)) ? props.getProperty (tdesc.preffix + key) : null;
-		return (value != null) ? value : props.getProperty (key);
-	}
+	/** Configuration of this module in the deployment. */
+	public ModuleConfig getConfig ()		{ return config; }
 }
 

@@ -29,13 +29,13 @@ public abstract class Controller extends StdThread
 	protected ItemBehResult			bitem;
 
 	// Constructors
-	protected Controller (Properties props, Linda linda)
+	protected Controller (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{		
 		// Setup local stuff
 		mitem	= new ItemMotion ();

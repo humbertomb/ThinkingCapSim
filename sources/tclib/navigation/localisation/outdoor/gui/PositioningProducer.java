@@ -5,6 +5,8 @@
  */
 package tclib.navigation.localisation.outdoor.gui;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.io.*;
 import java.util.*;
 
@@ -30,9 +32,9 @@ public class PositioningProducer extends StdThread
 	protected ItemVehData			vitem;
 	protected boolean			newdata = false;
 	
-	public PositioningProducer (Properties props, Linda linda)
+	public PositioningProducer (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 	
 	// Class methods
@@ -42,32 +44,29 @@ public class PositioningProducer extends StdThread
 		
 		// Set up Linda server
 		LindaDesc			gldesc;
-		Properties			sprops;
-		
-		sprops	= new Properties ();
-		sprops.setProperty ("LINADDR", addr);
-		sprops.setProperty ("LINPORT", port);
-		gldesc	= new LindaDesc ("LIN", LindaDesc.L_GLOBAL, sprops);			
+		int					lport;
+
+		try { lport = Integer.parseInt (port.trim ()); } catch (Exception e) { lport = 7000; }
+		gldesc	= new LindaDesc ("LIN", LindaDesc.L_GLOBAL, addr, lport, false);
 		try
 		{
 			linda	= gldesc.start_server ();
 		} catch (Exception e) { e.printStackTrace(); }
 		
 		// Set up Linda producer
-		ThreadDesc			ptdesc;
-		Properties			pprops;
+		ThreadDesc					ptdesc;
+		Map<String, String>			pvals = new LinkedHashMap<String, String> ();
 		
-		pprops	= new Properties ();
-		pprops.setProperty ("POSCLASS", "tclib.positioning.gui.PositioningProducer");
-		pprops.setProperty ("POSMODE", "tcp");
-		ptdesc	= new ThreadDesc ("POS", pprops);
-		ptdesc.start_thread ("GPSINS Logger", pprops, gldesc, linda);
+		pvals.put ("CLASS", "tclib.positioning.gui.PositioningProducer");
+		pvals.put ("MODE", "tcp");
+		ptdesc	= new ThreadDesc ("POS", new ModuleConfig ("GPSINS Logger", "Positioning producer", pvals));
+		ptdesc.start_thread ("GPSINS Logger", gldesc, linda);
 		
 		return (PositioningProducer) ptdesc.thread;
 	}
 	
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{
 		Tuple				ctuple;
 		Properties			cprops;

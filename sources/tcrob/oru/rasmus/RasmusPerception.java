@@ -4,6 +4,7 @@
  
 package tcrob.oru.rasmus;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.shared.linda.*;
@@ -17,9 +18,9 @@ public class RasmusPerception extends IndoorPerception
 	public static final int			RBUF_HIST		= 10;			// History depth for range buffer
 	
 	// Constructors
-	public RasmusPerception (Properties props, Linda linda)
+	public RasmusPerception (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 	
 	// Instance methods

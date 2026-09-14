@@ -4,6 +4,7 @@
  
 package tclib.planning.sequence;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.modules.*;
@@ -26,9 +27,9 @@ public class SeqPlanner extends Planner
 	protected SeqPlannerWindow		swin;
 	
 	// Constructors
-	public SeqPlanner (Properties props, Linda linda)
+	public SeqPlanner (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 		newtask	= false;
 	}
 	

@@ -4,6 +4,7 @@
  
 package tcrob.umu.quaky2;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 //import java.awt.*;
 
@@ -28,9 +29,9 @@ public class SoccerPerception extends IndoorPerception
 	protected LPOPoint				align;
 	
 	// Constructors
-	public SoccerPerception (Properties props, Linda linda)
+	public SoccerPerception (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 	
 	// Instance methods

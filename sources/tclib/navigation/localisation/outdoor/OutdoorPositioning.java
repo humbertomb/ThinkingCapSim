@@ -4,6 +4,7 @@
  
 package tclib.navigation.localisation.outdoor;
 
+import tc.runtime.thread.ModuleConfig;
 import java.util.*;
 
 import tc.shared.linda.*;
@@ -32,19 +33,19 @@ public class OutdoorPositioning extends Perception
 	protected boolean			kfilter	= false;		// Activate Kalman filter?
 
 	// Constructors
-	public OutdoorPositioning (Properties props, Linda linda)
+	public OutdoorPositioning (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 	
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{
 		String		fclass;
 		
-		super.initialise (props);
+		super.initialise (cfg);
 		
-		fclass		= props.getProperty ("FILTER");
+		fclass		= cfg.get ("FILTER");
 		if (fclass == null)		fclass = "tclib.navigation.localisation.outdoor.KalmanSimple";
 		
 		// Initialise positioning filter

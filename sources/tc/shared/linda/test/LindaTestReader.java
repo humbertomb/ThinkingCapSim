@@ -24,13 +24,13 @@ public class LindaTestReader extends StdThread
 	protected Tuple						tdata;
 	public int							count	= 0;
 	
-	public LindaTestReader (Properties props, Linda linda)
+	public LindaTestReader (ModuleConfig cfg, Linda linda)
 	{
-		super (props, linda);
+		super (cfg, linda);
 	}
 
 	// Instance methods
-	protected void initialise (Properties props)
+	protected void initialise (ModuleConfig cfg)
 	{
 		// Prepare Linda data structures
 		tdata		= new Tuple (Tuple.DATA, null);
