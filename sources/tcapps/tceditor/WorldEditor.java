@@ -909,6 +909,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		for (int kind = 0; kind < WorldItem.NKINDS; kind++)
 		{
 			if (kind == WorldItem.CBEACON)			continue;			// listed under the strip beacons category
+			if (kind == WorldItem.BEHAVIOUR)		continue;			// listed under the default values category
 			int						n = count (world, kind);
 			DefaultMutableTreeNode	cat;
 			if (kind == WorldItem.BEACON)
@@ -920,6 +921,13 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 					cat.add (new ItemNode (new WorldItem (WorldItem.BEACON, i)));
 				for (int i = 0; i < nc; i++)
 					cat.add (new ItemNode (new WorldItem (WorldItem.CBEACON, i)));
+			}
+			else if (kind == WorldItem.GEOMETRY)
+			{
+				// the default values hold one group of properties per settings kind
+				cat = new KindNode (kind, n);
+				cat.add (new ItemNode (new WorldItem (WorldItem.GEOMETRY, 0)));
+				cat.add (new ItemNode (new WorldItem (WorldItem.BEHAVIOUR, 0)));
 			}
 			else
 			{
@@ -1136,8 +1144,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			int		users = iconUsers (w, ic.label);
 			return ic.label + "  (" + ic.n () + " seg, " + users + " obj)";
 		}
-		case WorldItem.GEOMETRY:	return "Default values";
-		case WorldItem.BEHAVIOUR:	return "World behaviour";
+		case WorldItem.GEOMETRY:	return "Geometries";
+		case WorldItem.BEHAVIOUR:	return "Behaviours";
 		}
 		return "?";
 	}

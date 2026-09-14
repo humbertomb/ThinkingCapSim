@@ -36,13 +36,13 @@ public class WorldItem
 	static public final String[]	NAMES	= {
 		"Zone", "Forbidden area", "Path point", "Wall", "Object", "Animated object", "Connector",
 		"Strip beacon", "Cylindrical beacon", "Waypoint", "Dock", "Start point", "Icon",
-		"Geometry defaults", "Behaviour defaults"
+		"Default values", "Default values"
 	};
 
 	static public final String[]	PLURALS	= {
 		"Zones", "Forbidden areas", "Path points", "Walls", "Objects", "Animated objects", "Connectors",
 		"Strip beacons", "Cylindrical beacons", "Waypoints", "Docks", "Start points", "Icons",
-		"Geometries", "Behaviours"
+		"Default values", "Behaviours"
 	};
 
 	/** True for the kinds that hold settings of the world, not drawable elements. */
