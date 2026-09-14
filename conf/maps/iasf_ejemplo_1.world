@@ -1,4 +1,5 @@
 {
+  "apw": true,
   "starts": [
     { "x": 0, "y": 0, "z": 0, "orientation": 90 }
   ],
@@ -18,7 +19,7 @@
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
     "items": [
-      { "label": "Ficticio", "x": 15, "y": 0, "z": 0, "width": 2, "height": 2, "texture": "./conf/3dmodels/textures/floor2.jpg" }
+      { "label": "Habitación", "x": -10, "y": -10, "z": 0, "width": 20, "height": 20, "texture": "./conf/3dmodels/textures/floor2.jpg" }
     ]
   },
   "fareas": {
@@ -29,7 +30,9 @@
     "defaults": { "width": 0.005, "height": 1.9, "texture": "./conf/3dmodels/textures/wall.jpg" },
     "items": []
   },
-  "waypoints": [],
+  "waypoints": [
+    { "label": "ficticio", "x": 6.7356, "y": 12.1002, "z": 0, "orientation": 0 }
+  ],
   "docks": [],
   "beacons": [],
   "cbeacons": []

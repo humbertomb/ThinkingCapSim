@@ -1,4 +1,5 @@
 {
+  "apw": true,
   "starts": [
     { "x": 72.4768, "y": 67.4941, "z": 0, "orientation": 180 },
     { "x": 72.4964, "y": 68.7387, "z": 0, "orientation": 180 },
@@ -178,7 +179,11 @@
   },
   "icons": [
     {
-      "label": "linea.prod",
+      "label": "lineaprod_descarga",
+      "x": 46.614,
+      "y": 60.962,
+      "z": 0,
+      "orientation": 0,
       "lines": [
         { "x1": -0.88, "y1": -4.34, "z1": 0, "x2": -2.13, "y2": -4.34, "z2": 0 },
         { "x1": -2.13, "y1": -4.34, "z1": 0, "x2": -2.13, "y2": -3.04, "z2": 0 },
@@ -210,7 +215,11 @@
       ]
     },
     {
-      "label": "linea.prod1",
+      "label": "lineaprod_corte",
+      "x": 47.0012,
+      "y": 54.3966,
+      "z": 0,
+      "orientation": 180,
       "lines": [
         { "x1": -4.5, "y1": 0, "z1": 0, "x2": 5, "y2": 0, "z2": 0 },
         { "x1": 5, "y1": 0, "z1": 0, "x2": 5, "y2": 20, "z2": 0 },
@@ -224,54 +233,66 @@
     },
     {
       "label": "pallet",
+      "x": 84.9984,
+      "y": 81.5002,
+      "z": 0,
+      "orientation": 180,
       "lines": [
-        { "x1": -0.5, "y1": -0.5, "z1": 0, "x2": 0.5, "y2": -0.5, "z2": 0 },
-        { "x1": 0.5, "y1": -0.5, "z1": 0, "x2": 0.5, "y2": 0.5, "z2": 0 },
-        { "x1": 0.5, "y1": 0.5, "z1": 0, "x2": -0.5, "y2": 0.5, "z2": 0 },
-        { "x1": -0.5, "y1": 0.5, "z1": 0, "x2": -0.5, "y2": -0.5, "z2": 0 }
+        { "x1": -0.4016, "y1": -0.5998, "z1": 0, "x2": 0.3984, "y2": -0.5998, "z2": 0 },
+        { "x1": 0.3984, "y1": -0.5998, "z1": 0, "x2": 0.3984, "y2": 0.6002, "z2": 0 },
+        { "x1": 0.3984, "y1": 0.6002, "z1": 0, "x2": -0.4016, "y2": 0.6002, "z2": 0 },
+        { "x1": -0.4016, "y1": 0.6002, "z1": 0, "x2": -0.4016, "y2": -0.5998, "z2": 0 },
+        { "x1": -0.4016, "y1": -0.5998, "z1": 0, "x2": -0.4016, "y2": -0.5998, "z2": 0 },
+        { "x1": -0.4016, "y1": -0.5998, "z1": 0, "x2": -0.4016, "y2": -0.5998, "z2": 0 }
       ]
     }
   ],
   "objects": [
-    { "icon": "linea.prod", "x": 46.614, "y": 60.962, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod.3ds", "usecolor": false },
+    { "icon": "lineaprod_descarga", "x": 46.614, "y": 60.962, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod.3ds", "usecolor": false },
     { "icon": "barrera", "x": 52.2, "y": 59.026, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 52.2, "y": 55.676, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 47.695, "y": 59.026, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 45.395, "y": 59.026, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
-    { "icon": "linea.prod1", "x": 47.0012, "y": 54.3966, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
-    { "icon": "linea.prod1", "x": 46.9889, "y": 34.3251, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
-    { "icon": "linea.prod", "x": 59.5836, "y": 60.9477, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod.3ds", "usecolor": false },
+    { "icon": "lineaprod_corte", "x": 47.0012, "y": 54.3966, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
+    { "icon": "lineaprod_corte", "x": 46.9889, "y": 34.3251, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
+    { "icon": "lineaprod_descarga", "x": 59.5836, "y": 60.9477, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod.3ds", "usecolor": false },
     { "icon": "barrera", "x": 54.4, "y": 59.226, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 54.4, "y": 55.876, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 58.35, "y": 59.226, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 61, "y": 59.226, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
-    { "icon": "linea.prod1", "x": 59.973, "y": 54.3686, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
-    { "icon": "linea.prod1", "x": 59.9851, "y": 34.303, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
-    { "icon": "linea.prod", "x": 69.4398, "y": 60.9477, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod.3ds", "usecolor": false },
+    { "icon": "lineaprod_corte", "x": 59.973, "y": 54.3686, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
+    { "icon": "lineaprod_corte", "x": 59.9851, "y": 34.303, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
+    { "icon": "lineaprod_descarga", "x": 69.4398, "y": 60.9477, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod.3ds", "usecolor": false },
     { "icon": "barrera", "x": 74.6, "y": 59.226, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 74.6, "y": 55.876, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 70.35, "y": 59.226, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 67.7, "y": 59.226, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 64.34, "y": 59.226, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
-    { "icon": "linea.prod1", "x": 69.8172, "y": 54.3318, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
-    { "icon": "linea.prod1", "x": 69.7985, "y": 34.2588, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
-    { "icon": "linea.prod", "x": 36.945, "y": 60.966, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod.3ds", "usecolor": false },
+    { "icon": "lineaprod_corte", "x": 69.8172, "y": 54.3318, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
+    { "icon": "lineaprod_corte", "x": 69.7985, "y": 34.2588, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false },
+    { "icon": "lineaprod_descarga", "x": 36.945, "y": 60.966, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod.3ds", "usecolor": false },
     { "icon": "barrera", "x": 31.135, "y": 59.026, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 31.135, "y": 55.676, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 36, "y": 59.026, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 38.4, "y": 59.026, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "barrera", "x": 42, "y": 59.026, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
-    { "icon": "linea.prod1", "x": 37.3308, "y": 54.4173, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false }
+    { "icon": "lineaprod_corte", "x": 37.3308, "y": 54.4173, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false }
   ],
   "aobjects": [
-    { "label": "Palet1", "icon": "pallet", "x": 79.721, "y": 72.227, "z": 0, "orientation": 180, "radius": 1, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
-    { "label": "Palet2", "icon": "pallet", "x": 79.721, "y": 70.627, "z": 0, "orientation": 180, "radius": 1, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
-    { "label": "Palet3", "icon": "pallet", "x": 79.721, "y": 68.427, "z": 0, "orientation": 180, "radius": 1, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 }
+    { "label": "Palet1", "icon": "pallet", "x": 31.9688, "y": 82.067, "z": 0, "orientation": 0, "radius": 0.8743, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "Palet2", "icon": "pallet", "x": 69.144, "y": 60.3513, "z": 0.8, "orientation": 90, "radius": 0.9257, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "Palet3", "icon": "pallet", "x": 28.2421, "y": 14.0658, "z": 0, "orientation": -0.3448, "radius": 1.4928, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "Palet4", "icon": "pallet", "x": 31.9762, "y": 80.3856, "z": 0, "orientation": 0, "radius": 0.8743, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "Palet5", "icon": "pallet", "x": 31.9992, "y": 78.7058, "z": 0, "orientation": 0, "radius": 0.8743, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "Palet6", "icon": "pallet", "x": 32.0222, "y": 77.141, "z": 0, "orientation": 0, "radius": 0.8743, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "Palet7", "icon": "pallet", "x": 59.7865, "y": 60.2839, "z": 0.8, "orientation": 90, "radius": 0.9257, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "Palet8", "icon": "pallet", "x": 46.5961, "y": 60.2557, "z": 0.8, "orientation": 90, "radius": 0.9257, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "Palet9", "icon": "pallet", "x": 37.2152, "y": 60.286, "z": 0.8, "orientation": 90, "radius": 0.9257, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 }
   ],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/036metal.jpg" },
     "items": [
-      { "label": "ZoneA", "x": 52.02, "y": 45.0069, "z": 0, "width": 30.0337, "height": 39.9976, "texture": "./conf/3dmodels/textures/floor2.jpg" },
+      { "label": "ZoneA", "x": 51.6244, "y": 44.9765, "z": 0, "width": 30.0337, "height": 39.9976, "texture": "./conf/3dmodels/textures/floor2.jpg" },
       { "label": "ZoneB", "x": 22, "y": 44.9802, "z": 0, "width": 30, "height": 40, "texture": "./conf/3dmodels/textures/floor2.jpg" },
       { "label": "ZoneC", "x": 52, "y": 8.931, "z": 0, "width": 30, "height": 36.069, "texture": "./conf/3dmodels/textures/floor2.jpg" },
       { "label": "ZoneD", "x": 22, "y": 0, "z": 0, "width": 30, "height": 45, "texture": "./conf/3dmodels/textures/floor2.jpg" },
@@ -308,7 +329,7 @@
       },
       {
         "label": "DoorBD",
-        "edge": { "x1": 21.5135, "y1": 45, "z1": 0, "x2": 30.6617, "y2": 45, "z2": 0 },
+        "edge": { "x1": 25.2539, "y1": 45.0017, "z1": 0, "x2": 30.6617, "y2": 45, "z2": 0 },
         "path": { "x1": 27.842, "y1": 49.5, "z1": 0, "x2": 27.842, "y2": 40.5, "z2": 0 }
       },
       {

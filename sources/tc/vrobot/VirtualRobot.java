@@ -18,6 +18,7 @@ import tc.shared.linda.ItemObject;
 import tc.shared.linda.ItemStatus;
 import tc.shared.linda.Linda;
 import tc.shared.linda.Tuple;
+import tc.shared.world.World;
 
 import tcrob.ingenia.ifork.*;
 
@@ -74,16 +75,15 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		String			rname;
 		File				file;
 		FileInputStream	stream;
-		boolean			wapriori;
-		
+		String			wdesc;
+
 		// Load robot environment description and parameters
 		rname			= props.getProperty ("ROBDESC");
 		raddress		= props.getProperty ("ROBRADDR");
 		try { rport 	= Integer.valueOf (props.getProperty ("ROBRPORT")).intValue (); } 	catch (Exception e) 		{ rport		= 0; }
 		try { lport 	= Integer.valueOf (props.getProperty ("ROBLPORT")).intValue (); } 	catch (Exception e) 		{ lport		= 0; }
 		wname			= props.getProperty ("ROBWORLD");
-		try { wapriori	= Boolean.valueOf (props.getProperty ("ROBAPW")).booleanValue (); } catch (Exception e) 		{ wapriori	= false; }
-		
+
 		// Load robot description and parameters
 		rprops			= new Properties ();
 		try
@@ -94,17 +94,18 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 			stream.close ();
 		} catch (Exception e) { e.printStackTrace (); }
 
-		// Load world description and parameters (in case "a priori" world is selected)
+		// Load world description and parameters (only when the world grants "a priori" knowledge to the robots)
 		wtext			= null;
-		if (wapriori)
+		if (wname != null)
 		{
-			if (wname != null)
+			try
 			{
-				try { wtext = new String (java.nio.file.Files.readAllBytes (java.nio.file.Paths.get (wname)), java.nio.charset.StandardCharsets.UTF_8); }
-				catch (Exception e) { e.printStackTrace (); }
+				wdesc	= new String (java.nio.file.Files.readAllBytes (java.nio.file.Paths.get (wname)), java.nio.charset.StandardCharsets.UTF_8);
+				if (World.fromJsonText (wdesc).apw)		wtext = wdesc;
 			}
+			catch (Exception e) { e.printStackTrace (); }
 		}
-		
+
 		// Prepare Linda data structures
 		sdata		= new ItemData ();
 		tdata		= new Tuple (Tuple.DATA, sdata);

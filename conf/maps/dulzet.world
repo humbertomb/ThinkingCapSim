@@ -1,4 +1,5 @@
 {
+  "apw": true,
   "starts": [
     { "x": 6.9437, "y": -4.7623, "z": 0, "orientation": -180 }
   ],
@@ -23,9 +24,36 @@
       { "x1": 5, "y1": -6.5, "z1": 0, "x2": 5, "y2": -11.636, "z2": 0 }
     ]
   },
-  "icons": [],
+  "icons": [
+    {
+      "label": "box",
+      "lines": [
+        { "x1": -0.2, "y1": -0.2, "z1": 0, "x2": 0.2, "y2": -0.2, "z2": 0 },
+        { "x1": 0.2, "y1": -0.2, "z1": 0, "x2": 0.2, "y2": 0.2, "z2": 0 },
+        { "x1": 0.2, "y1": 0.2, "z1": 0, "x2": -0.2, "y2": 0.2, "z2": 0 },
+        { "x1": -0.2, "y1": 0.2, "z1": 0, "x2": -0.2, "y2": -0.2, "z2": 0 }
+      ]
+    },
+    {
+      "label": "palet",
+      "x": 3.5103,
+      "y": 6.5459,
+      "z": 0,
+      "orientation": 0,
+      "lines": [
+        { "x1": -0.3103, "y1": 0.2541, "z1": 0, "x2": -0.3103, "y2": -0.1859, "z2": 0 },
+        { "x1": -0.3103, "y1": -0.1859, "z1": 0, "x2": 0.0497, "y2": -0.1859, "z2": 0 },
+        { "x1": 0.0497, "y1": -0.1859, "z1": 0, "x2": 0.0497, "y2": 0.2541, "z2": 0 },
+        { "x1": 0.0497, "y1": 0.2541, "z1": 0, "x2": -0.3103, "y2": 0.2541, "z2": 0 }
+      ]
+    }
+  ],
   "objects": [],
-  "aobjects": [],
+  "aobjects": [
+    { "label": "Palet-1", "icon": "palet", "x": -10.7068, "y": -1.5474, "z": 0, "orientation": 0.0307, "radius": 0.5615, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "palet-2", "icon": "palet", "x": 2.5715, "y": 4.4507, "z": 0, "orientation": -90, "radius": 0.5574, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "palet-3", "icon": "box", "x": 0.6033, "y": -9.0335, "z": 0, "orientation": 60, "radius": 0.6613, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 }
+  ],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
     "items": [
@@ -50,14 +78,14 @@
   "waypoints": [
     { "label": "wp00", "x": -7, "y": -4.25, "z": 0, "orientation": -90.7038 },
     { "label": "wp01", "x": -6.6811, "y": 2.4059, "z": 0, "orientation": 87.028 },
-    { "label": "wp02", "x": 3.1219, "y": -5.4055, "z": 0, "orientation": -1.6105 },
+    { "label": "wp02", "x": 3.6514, "y": -5.4746, "z": 0, "orientation": -1.6105 },
     { "label": "wp03", "x": 4.315, "y": 1.0746, "z": 0, "orientation": 0.4628 },
     { "label": "wp04", "x": -6.7875, "y": 0.7818, "z": 0, "orientation": -177.7767 }
   ],
   "docks": [
     { "label": "ra0", "x": -9.8824, "y": -1.5473, "z": 0, "orientation": 0, "flow": "INOUT" },
     { "label": "ra1", "x": -9.9281, "y": 0.6905, "z": 0, "orientation": 0, "flow": "INOUT" },
-    { "label": "ra2", "x": 1.1, "y": -8.244, "z": 0, "orientation": 90, "flow": "INOUT" },
+    { "label": "ra2", "x": 1.1, "y": -8.244, "z": 0, "orientation": 60, "flow": "INOUT" },
     { "label": "ra3", "x": 2.5546, "y": 3.6894, "z": 0, "orientation": -90, "flow": "INOUT" },
     { "label": "ra4", "x": -5.1938, "y": 3.6742, "z": 0, "orientation": -90, "flow": "INOUT" }
   ],

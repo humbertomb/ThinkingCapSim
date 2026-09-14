@@ -1,4 +1,5 @@
 {
+  "apw": true,
   "starts": [
     { "x": 5, "y": 3, "z": 0, "orientation": 90 }
   ],
@@ -107,8 +108,16 @@
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
     "items": [
       { "label": "Zone", "x": 0, "y": 0, "z": 0, "width": 10.8, "height": 14.25, "texture": "./conf/3dmodels/textures/floor2.jpg" },
-      { "label": "Room-1", "x": 6.2, "y": 11.5, "z": 0, "width": 4.4, "height": 3, "texture": "./conf/3dmodels/textures/floor2.jpg" },
-      { "label": "Room-2", "x": 0.2, "y": 11.5, "z": 0, "width": 4.4, "height": 3, "texture": "./conf/3dmodels/textures/floor2.jpg" }
+      { "label": "Room-1", "x": 6.2, "y": 11.5, "z": 0, "width": 4.3077, "height": 2.5977, "texture": "./conf/3dmodels/textures/floor2.jpg" },
+      { "label": "Room-6", "x": 0.2923, "y": 11.5, "z": 0, "width": 4.3077, "height": 2.5977, "texture": "./conf/3dmodels/textures/floor2.jpg" },
+      { "label": "Room-2", "x": 6.2739, "y": 8.6806, "z": 0, "width": 4.2104, "height": 2.616 },
+      { "label": "Room-7", "x": 0.2833, "y": 8.6961, "z": 0, "width": 4.1949, "height": 2.616 },
+      { "label": "Room-3", "x": 6.3048, "y": 5.8788, "z": 0, "width": 4.1794, "height": 2.6315 },
+      { "label": "Room-8", "x": 0.2988, "y": 5.9253, "z": 0, "width": 4.1949, "height": 2.5696 },
+      { "label": "Room-9", "x": 0.2988, "y": 3.1235, "z": 0, "width": 4.2259, "height": 2.5851 },
+      { "label": "Room-4", "x": 6.2274, "y": 3.0925, "z": 0, "width": 4.2568, "height": 2.616 },
+      { "label": "Room-10", "x": 0.2905, "y": 0.296, "z": 0, "width": 4.2535, "height": 2.5979 },
+      { "label": "Room-5", "x": 6.2534, "y": 0.296, "z": 0, "width": 4.2535, "height": 2.6113 }
     ]
   },
   "fareas": {
@@ -120,7 +129,9 @@
     "items": []
   },
   "waypoints": [
-    { "label": "wp0", "x": 6, "y": 9, "z": 0, "orientation": 0 }
+    { "label": "wp_test_1", "x": 0.8041, "y": 6.3185, "z": 0, "orientation": 36.8699 },
+    { "label": "wp_test_2", "x": 9.914, "y": 8.12, "z": 0, "orientation": -150.2551 },
+    { "label": "wp_test_3", "x": 6.8023, "y": 6.3595, "z": 0, "orientation": 0 }
   ],
   "docks": [],
   "beacons": [],

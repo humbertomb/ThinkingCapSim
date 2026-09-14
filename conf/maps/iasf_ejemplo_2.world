@@ -1,18 +1,19 @@
 {
+  "apw": true,
   "starts": [
-    { "x": 1, "y": 249, "z": 0, "orientation": 0 }
+    { "x": 1, "y": 25, "z": 0, "orientation": 0 }
   ],
   "path": [],
   "walls": {
     "defaults": { "width": 0.01, "height": 0.75, "texture": "./conf/3dmodels/textures/wall.jpg" },
     "items": [
-      { "x1": 0, "y1": 0, "z1": 0, "x2": 250, "y2": 0, "z2": 0 },
-      { "x1": 250, "y1": 0, "z1": 0, "x2": 250, "y2": 250, "z2": 0 },
-      { "x1": 250, "y1": 250, "z1": 0, "x2": 0, "y2": 250, "z2": 0 },
-      { "x1": 0, "y1": 250, "z1": 0, "x2": 0, "y2": 0, "z2": 0 },
-      { "x1": 120, "y1": 250, "z1": 0, "x2": 120, "y2": 100, "z2": 0 },
-      { "x1": 120, "y1": 100, "z1": 0, "x2": 160, "y2": 100, "z2": 0 },
-      { "x1": 160, "y1": 100, "z1": 0, "x2": 160, "y2": 250, "z2": 0 }
+      { "x1": 0, "y1": 0, "z1": 0, "x2": 25, "y2": 0, "z2": 0 },
+      { "x1": 25, "y1": 0, "z1": 0, "x2": 25, "y2": 26, "z2": 0 },
+      { "x1": 25, "y1": 26, "z1": 0, "x2": 0, "y2": 26, "z2": 0 },
+      { "x1": 0, "y1": 26, "z1": 0, "x2": 0, "y2": 0, "z2": 0 },
+      { "x1": 13, "y1": 26, "z1": 0, "x2": 13, "y2": 11.5, "z2": 0 },
+      { "x1": 13, "y1": 11.5, "z1": 0, "x2": 15, "y2": 11.5, "z2": 0 },
+      { "x1": 15, "y1": 11.5, "z1": 0, "x2": 15, "y2": 26, "z2": 0 }
     ]
   },
   "icons": [],
@@ -21,7 +22,7 @@
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
     "items": [
-      { "label": "Zone", "x": 160, "y": 160, "z": 0, "width": 80, "height": 80, "texture": "./conf/3dmodels/textures/floor2.jpg" }
+      { "label": "Habitación", "x": 0, "y": 0, "z": 0, "width": 25, "height": 26, "texture": "./conf/3dmodels/textures/floor2.jpg" }
     ]
   },
   "fareas": {
@@ -33,7 +34,7 @@
     "items": []
   },
   "waypoints": [
-    { "label": "wp0", "x": 6, "y": 9, "z": 0, "orientation": 0 }
+    { "label": "Destino", "x": 20, "y": 22.5, "z": 0, "orientation": 43.115 }
   ],
   "docks": [],
   "beacons": [],

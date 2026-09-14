@@ -162,7 +162,6 @@
       "virtualRobot": {
         "name": "Virtual Robot",
         "properties": {
-          "APW": "true",
           "CLASS": "tcrob.ingenia.ifork.IFork",
           "DESC": "conf/robots/ifork.robot",
           "EXTIME": "115",
@@ -365,7 +364,6 @@
       "virtualRobot": {
         "name": "Virtual Robot",
         "properties": {
-          "APW": "true",
           "CLASS": "tcrob.ingenia.ifork.IFork",
           "DESC": "conf/robots/ifork.robot",
           "EXTIME": "115",
