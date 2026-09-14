@@ -174,7 +174,8 @@ public class World2D extends Object2D
 			model.addRawLine (x1, y1, x2, y2, Color.BLACK);
 		}
 		
-		boundary (map.walls ().minx (), map.walls ().miny (), map.walls ().maxx (), map.walls ().maxy ());
+		double[]	b = map.bounds ();
+		boundary (b[0], b[1], b[2], b[3]);
 	}
 	
 	public void drawObjects () 

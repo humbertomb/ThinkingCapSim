@@ -141,15 +141,16 @@ public class World3D extends BranchGroup
 		TransformGroup 		floortg;
 		Transform3D 			floort;
 		
-		xo	= (map.walls ().maxx () - map.walls ().minx ()) / 2.0;
-		yo	= (map.walls ().maxy () - map.walls ().miny ()) / 2.0;
+		double[]	b = map.bounds ();
+		xo	= (b[2] - b[0]) / 2.0;
+		yo	= (b[3] - b[1]) / 2.0;
 		
 		floort 	= new Transform3D ();
-		floort.setTranslation (new Vector3d(map.walls ().minx()+xo,map.walls ().miny()+yo,-0.10f));		// below the zones (z = 0 +/- 0.01): no z-fighting
+		floort.setTranslation (new Vector3d(b[0]+xo,b[1]+yo,-0.10f));		// below the zones (z = 0 +/- 0.01): no z-fighting
 		floortg	= new TransformGroup (floort);
 		
 		app		= scene.getCachedTexture (map.zones ().defaultTexture(), true);		
-		surf = new Box((float)Math.abs(map.walls ().maxx()-map.walls ().minx())/2.0f,(float)Math.abs(map.walls ().maxy()-map.walls ().miny())/2.0f,0.01f,Box.GENERATE_NORMALS | Box.GENERATE_TEXTURE_COORDS, app);
+		surf = new Box((float)xo,(float)yo,0.01f,Box.GENERATE_NORMALS | Box.GENERATE_TEXTURE_COORDS, app);
 		
 		floortg.addChild (surf);
 		return floortg;

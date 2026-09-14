@@ -239,8 +239,9 @@ public class IndoorNavigation extends Navigation
 		// Initialize size-dependent variables
 		if (world != null)
 		{
-			w = (int) Math.ceil ((world.walls ().maxx () - world.walls ().minx ()) / cell_size);
-			h = (int) Math.ceil ((world.walls ().maxy () - world.walls ().miny ()) / cell_size);
+			double[]	b = world.bounds ();
+			w = (int) Math.ceil ((b[2] - b[0]) / cell_size);
+			h = (int) Math.ceil ((b[3] - b[1]) / cell_size);
 		}
 		dil = (int) (Math.round (rdesc.RADIUS * dilation));
 				
@@ -251,7 +252,8 @@ public class IndoorNavigation extends Navigation
 		if (world != null)
 		{
 			System.out.println ("  [Nav] Loading world into grid map");
-			grid.setOffsets (world.walls ().minx (), world.walls ().miny ());	
+			double[]	b = world.bounds ();
+			grid.setOffsets (b[0], b[1]);	
 //			grid.fromWorld (world);
 		}
 		

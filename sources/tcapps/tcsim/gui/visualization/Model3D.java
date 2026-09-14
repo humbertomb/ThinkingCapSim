@@ -202,8 +202,9 @@ public class Model3D extends Scene3D
 		this.map = map;
 
 		// Set focus point
-		xo	= map.walls ().minx () + (map.walls ().maxx () - map.walls ().minx ()) * 0.5;
-		yo	= map.walls ().miny () + (map.walls ().maxy () - map.walls ().miny ()) * 0.5;
+		double[]	b = map.bounds ();
+		xo	= (b[0] + b[2]) * 0.5;
+		yo	= (b[1] + b[3]) * 0.5;
 		focus.set (xo, yo, 0.0);
 		
 		scene.addChild (new World3D (map, this));

@@ -478,6 +478,82 @@ public class World extends Object
 		return line2;
 	}
 	
+	/* Extent of the world */
+
+	static public final double		EMPTY_HALF_SIZE	= 5.0;		// half size (m) of the extent of a world without geometry
+
+	/**
+	 * Bounding box {minx, miny, maxx, maxy} of every element of the world
+	 * (walls, zones, forbidden areas, connectors, objects, beacons, waypoints,
+	 * docks, path and start points). A world without any of them extends
+	 * {@link #EMPTY_HALF_SIZE} metres around its first start point, so that
+	 * the maps built from it (grids, floors) are never empty or negative.
+	 */
+	public double[] bounds ()
+	{
+		double[]	b = { Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE };
+
+		if (walls.n () > 0)
+			for (int i = 0; i < walls.n (); i++)		extend (b, walls.at (i).edge);
+		for (int i = 0; i < zones.n (); i++)
+		{
+			java.awt.geom.Rectangle2D	r = zones.at (i).area;
+			extend (b, r.getMinX (), r.getMinY ());	extend (b, r.getMaxX (), r.getMaxY ());
+		}
+		for (int i = 0; i < fareas.n (); i++)
+		{
+			Polygon2	p = fareas.at (i).polygon;
+			for (int k = 0; k < p.npoints; k++)			extend (b, p.xpoints[k], p.ypoints[k]);
+		}
+		for (int i = 0; i < connectors.n (); i++)
+		{
+			extend (b, connectors.at (i).edge);
+			extend (b, connectors.at (i).path);
+		}
+		for (WMObject o : objects)
+		{
+			extend (b, o.pos.x (), o.pos.y ());
+			for (Line2 l : o.absIcon ())			extend (b, l);
+		}
+		for (WMAObject o : aobjects)
+		{
+			extend (b, o.pos.x () - o.radius, o.pos.y () - o.radius);	extend (b, o.pos.x () + o.radius, o.pos.y () + o.radius);
+			for (Line2 l : o.absIcon ())			extend (b, l);
+		}
+		for (WMBeacon x : beacons)				extend (b, x.getLine ());
+		for (WMCBeacon x : cbeacons)			{ extend (b, x.x () - x.radius (), x.y () - x.radius ());	extend (b, x.x () + x.radius (), x.y () + x.radius ()); }
+		for (WMWaypoint x : waypoints)			extend (b, x.pos.x (), x.pos.y ());
+		for (WMDock x : docks)					extend (b, x.pos.x (), x.pos.y ());
+		for (Point2 p : path)					extend (b, p.x (), p.y ());
+
+		if (b[0] > b[2])		// nothing at all: a square around the first start point
+		{
+			WMStart	st = starts.get (0);
+			return new double[] { st.x () - EMPTY_HALF_SIZE, st.y () - EMPTY_HALF_SIZE, st.x () + EMPTY_HALF_SIZE, st.y () + EMPTY_HALF_SIZE };
+		}
+		for (WMStart st : starts)				extend (b, st.x (), st.y ());
+		return b;
+	}
+
+	static private void extend (double[] b, double x, double y)
+	{
+		if (x < b[0])		b[0] = x;
+		if (y < b[1])		b[1] = y;
+		if (x > b[2])		b[2] = x;
+		if (y > b[3])		b[3] = y;
+	}
+
+	static private void extend (double[] b, Line2 l)
+	{
+		extend (b, l.orig ().x (), l.orig ().y ());
+		extend (b, l.dest ().x (), l.dest ().y ());
+	}
+
+	public final double		minx ()				{ return bounds ()[0]; }
+	public final double		miny ()				{ return bounds ()[1]; }
+	public final double		maxx ()				{ return bounds ()[2]; }
+	public final double		maxy ()				{ return bounds ()[3]; }
+
 	/* Geometry of the (visible) objects: the segments of their icons in world coordinates */
 
 	/** Segments of all the visible objects. */
