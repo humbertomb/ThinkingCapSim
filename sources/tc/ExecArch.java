@@ -46,10 +46,6 @@ public class ExecArch extends Thread
 	protected Point3			start;				// Optional initial pose of the simulated robot
 
 	/* Constructors */
-	protected ExecArch ()
-	{
-	}
-
 	/**
 	 * Executes one robot of a deployment: the modules, the Linda spaces and the
 	 * virtual robot described by {@link DeployArch#toProperties(int)}. The first
@@ -58,7 +54,7 @@ public class ExecArch extends Thread
 	 */
 	public ExecArch (DeployArch deploy, int robot)
 	{
-		initialise (deploy.robots.get (robot).name, deploy.toProperties (robot), null);
+		initialise (deploy.robots.get (robot).name, deploy.toProperties (robot));
 	}
 
 	/**
@@ -73,12 +69,6 @@ public class ExecArch extends Thread
 		this (deploy, robot);
 		simulate (sim);
 		startPoint (deploy.robots.get (robot), (sim != null) ? sim.getWorld () : null);
-	}
-
-	/** Executes an architecture given directly as the properties of an ADF. */
-	public ExecArch (String robotid, Properties props)
-	{
-		initialise (robotid, props, null);
 	}
 
 	/** Places the simulated robot at the start point the deployment chose for it. */
@@ -138,13 +128,11 @@ public class ExecArch extends Thread
 
     
 	/* Instance methods */
-	protected void initialise (String robotid, Properties props, Properties pdefs)
+	protected void initialise (String robotid, Properties props)
 	{
 		String			modules, vrmodule, lrmodule;
 		String			preffix;
 		StringTokenizer	st;
-		Enumeration<?>	enu;
-		String			pname;
 		
 		// Setup private local variables
 		this.props		= props;
@@ -155,18 +143,6 @@ public class ExecArch extends Thread
 		// Prepare data structures
 		num				= 0;
 		thdesc			= new ThreadDesc[MAX_THS];
-
-		// Overwrite default properties
-		if (pdefs != null)
-		{
-			enu	= pdefs.propertyNames ();
-			while (enu.hasMoreElements ())
-			{
-				pname	= (String) enu.nextElement ();
-				
-				props.setProperty (pname, pdefs.getProperty (pname));
-			}
-		}
 
 		// Load and parse Linda servers properties
 		lldesc		= new LindaDesc ("LLIN", LindaDesc.L_LOCAL, props);			
