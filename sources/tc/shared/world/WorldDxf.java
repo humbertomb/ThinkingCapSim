@@ -33,12 +33,10 @@ import wucore.utils.geom.Point3;
  * elements themselves are persisted in JSON (see {@link World}).
  *
  * Layers: "0" walls (lines and polylines), ZONES (closed polylines), DOORS
- * (lines), OBJECTS and AOBJECTS (block inserts; animated objects carry the
- * dynamics class, label and movement as extended texts 3-5 and radius, speed,
- * acceleration, mass and coefficients as extended doubles), PATH (one
- * polyline), WAYPOINTS and
+ * (lines), OBJECTS (block inserts), PATH (one polyline), WAYPOINTS and
  * DOCKINGS (texts), BEACONS (texts or lines), CBEACONS (circles or texts) and
- * OTHERS (start points). Defaults travel as "NAME = value" texts.
+ * OTHERS (start points). Defaults travel as "NAME = value" texts. Animated
+ * objects (and any newer element) have no DXF representation.
  */
 public class WorldDxf
 {
@@ -178,32 +176,16 @@ public class WorldDxf
 	{
 		for (Entity entity : dxf.getEntities ())
 		{
-			if (!(entity instanceof InsertDxf))		continue;
+			if (!entity.getLayer ().equalsIgnoreCase ("OBJECTS") || !(entity instanceof InsertDxf))		continue;
 			InsertDxf	insert = (InsertDxf) entity;
-			if (entity.getLayer ().equalsIgnoreCase ("OBJECTS"))
-				w.objects ().add (toObject (new WMObject (), insert, dxf.getBlocks (insert.getBlockname ()), w));
-			else if (entity.getLayer ().equalsIgnoreCase ("AOBJECTS"))
-			{
-				WMAObject	o = new WMAObject ();
-				toObject (o, insert, dxf.getBlocks (insert.getBlockname ()), w);
-				o.dynamics	= (insert.ExtTextSize () > 3) ? insert.getExtText (3) : null;
-				if ((o.dynamics != null) && (o.dynamics.trim ().length () == 0 || o.dynamics.equalsIgnoreCase ("none")))		o.dynamics = null;
-				o.label		= (insert.ExtTextSize () > 4) ? insert.getExtText (4) : "aobj" + w.aobjects ().size ();
-				o.movement	= (insert.ExtTextSize () > 5) ? WMAObject.parseMovement (insert.getExtText (5)) : WMAObject.DEFAULT_MOVEMENT;
-				if (insert.ExtDoubleSize () > 0)		o.radius = insert.getExtDouble (0);
-				if (insert.ExtDoubleSize () > 1)		o.speed = insert.getExtDouble (1);
-				if (insert.ExtDoubleSize () > 2)		o.acceleration = insert.getExtDouble (2);
-				if (insert.ExtDoubleSize () > 3)		o.mass = insert.getExtDouble (3);
-				if (insert.ExtDoubleSize () > 4)		o.coef_res = insert.getExtDouble (4);
-				if (insert.ExtDoubleSize () > 5)		o.coef_fric = insert.getExtDouble (5);
-				w.aobjects ().add (o);
-			}
+			w.objects ().add (toObject (insert, dxf.getBlocks (insert.getBlockname ()), w));
 		}
 	}
 
-	/** Fills an object from a DXF insert: the block lines become its (shared) icon. */
-	static private WMObject toObject (WMObject o, InsertDxf insert, BlockDxf block, World w)
+	/** An object from a DXF insert: the block lines become its (shared) icon. */
+	static private WMObject toObject (InsertDxf insert, BlockDxf block, World w)
 	{
+		WMObject	o = new WMObject ();
 		o.pos		= insert.getPos ();
 		o.a			= insert.getRot ();
 		o.color		= (insert.ExtTextSize () > 0) ? ColorTool.getColorFromName (insert.getExtText (0)) : WColor.BLACK;
@@ -221,7 +203,7 @@ public class WorldDxf
 		if ((icon == null) || !icon.sameGeometry (new WMIcon (name, arr)))
 			icon = w.registerIcon (arr, name);
 		o.setIcon (icon);
-		o.label		= (o instanceof WMAObject) ? "AOBJECT" : "OBJECT";
+		o.label		= "OBJECT";
 		return o;
 	}
 
@@ -392,18 +374,13 @@ public class WorldDxf
 	static private void writeObjects (DXFWorldFile dxf, World w)
 	{
 		dxf.addLayer (new Layer ("OBJECTS", ACADColor.GREEN));
-		for (WMObject o : w.objects ())		writeObject (dxf, o, "OBJECTS");
-		if (w.aobjects ().size () > 0)
-		{
-			dxf.addLayer (new Layer ("AOBJECTS", ACADColor.GREEN));
-			for (WMAObject o : w.aobjects ())	writeObject (dxf, o, "AOBJECTS");
-		}
+		for (WMObject o : w.objects ())		writeObject (dxf, o);
 	}
 
-	static private void writeObject (DXFWorldFile dxf, WMObject o, String layer)
+	static private void writeObject (DXFWorldFile dxf, WMObject o)
 	{
 		String		name = (o.iconId != null) ? o.iconId : "icon";
-		InsertDxf	insert = new InsertDxf (o.pos, (o.shape != null) ? o.shape : name, layer);
+		InsertDxf	insert = new InsertDxf (o.pos, (o.shape != null) ? o.shape : name, "OBJECTS");
 		insert.setRot (o.a);
 		insert.setBlockname (name);
 		BlockDxf	block = new BlockDxf (name);
@@ -412,19 +389,6 @@ public class WorldDxf
 		insert.addExtText (0, ColorTool.getNameFromColor (o.color));
 		insert.addExtText (1, (o.shape != null) ? o.shape : "none");
 		insert.addExtText (2, Boolean.toString (o.usecolor));
-		if (o instanceof WMAObject)
-		{
-			WMAObject	ao = (WMAObject) o;
-			insert.addExtText (3, (ao.dynamics != null) ? ao.dynamics : "none");
-			insert.addExtText (4, ao.label);
-			insert.addExtText (5, ao.movement.name ());
-			insert.addExtDouble (0, ao.radius);
-			insert.addExtDouble (1, ao.speed);
-			insert.addExtDouble (2, ao.acceleration);
-			insert.addExtDouble (3, ao.mass);
-			insert.addExtDouble (4, ao.coef_res);
-			insert.addExtDouble (5, ao.coef_fric);
-		}
 		dxf.addBlock (block);
 		dxf.insertBlock (insert);
 	}
