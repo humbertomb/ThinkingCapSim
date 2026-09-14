@@ -58,7 +58,7 @@ public class World3D extends BranchGroup
 			if (obj != null)
 				addChild (obj);
 			if (object instanceof WMAObject)
-				addChild (createLabel (object.label, object.pos));
+				addChild (createLabel (object.label, object.pos, (obj != null) ? Robot3D.labelHeight (obj) : Robot3D.LABEL_GAP));
 		}
 		
 		// Add floor
@@ -312,12 +312,12 @@ public class World3D extends BranchGroup
 	}	
 	
 	/** Adds a new 3D object to the universe */
-	/** Floating name of an animated object: flat text above it, as the robot names ({@link Robot3D#LABEL_HEIGHT}). */
-	protected TransformGroup createLabel (String name, Point3 pos)
+	/** Floating name of an animated object: flat text just above its 3D shape, as the robot names. */
+	protected TransformGroup createLabel (String name, Point3 pos, double height)
 	{
 		Text2D			text = new Text2D (name, new Color3f (0.1f, 0.1f, 0.6f), "Application", 140, Font.BOLD);
 		Transform3D		t = new Transform3D ();
-		t.setTranslation (new Vector3d (pos.x (), pos.y (), pos.z () + Robot3D.LABEL_HEIGHT));
+		t.setTranslation (new Vector3d (pos.x (), pos.y (), pos.z () + height));
 		TransformGroup	tg = new TransformGroup (t);
 		tg.addChild (text);
 		return tg;

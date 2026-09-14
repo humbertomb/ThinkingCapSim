@@ -739,7 +739,7 @@ public class WorldCanvas extends JPanel
 
 		drawRubber (g);
 		if (tool == T_ICON)					drawIconHandles (g, true);
-		else if ((selection != null) && (selection.kind == WorldItem.ICON))		drawIconHandles (g, false);
+		else if ((selection != null) && (selection.kind == WorldItem.ICON))		{ drawIconHandles (g, false); drawHandles (g); }
 		else if (selection != null)			drawHandles (g);
 		drawScaleBar (g);
 	}
@@ -1120,8 +1120,6 @@ public class WorldCanvas extends JPanel
 	/* the tree / just created (its first click sets the anchor).            */
 	/* ------------------------------------------------------------------ */
 
-	/** Anchors (x, y, angle) where icons selected on their own are displayed, by icon label. */
-	protected java.util.Map<String, double[]>	iconAnchors = new java.util.HashMap<String, double[]> ();
 	protected boolean				awaitingAnchor	= false;
 
 	private WMObject selectedObject ()
@@ -1139,27 +1137,23 @@ public class WorldCanvas extends JPanel
 		return null;
 	}
 
-	/** Reference pose {x, y, angle} for the icon being edited, or null when the anchor is still to be clicked. */
+	/**
+	 * Reference pose {x, y, angle} for the icon being edited: the pose of the
+	 * selected object, or the icon's own pose (where it was defined) when the
+	 * icon is selected on its own. Null when the anchor is still to be clicked.
+	 */
 	public double[] refPose ()
 	{
 		WMObject	o = selectedObject ();
 		if (o != null)				return new double[] { o.pos.x (), o.pos.y (), o.a };
 		WMIcon		ic = editIcon ();
 		if (ic == null)				return null;
-		double[]	anchor = iconAnchors.get (ic.label);
-		if (anchor != null)			return anchor;
-		if (awaitingAnchor)			return null;
-		// default anchor: the pose of the first object using the icon, else the view centre
-		java.util.List<WorldItem>	users = WorldEditor.iconUserItems (world, ic.label);
-		if (users.size () > 0)
+		if (!ic.hasPose ())
 		{
-			WMObject	u = WorldEditor.object (world, users.get (0));
-			anchor = new double[] { u.pos.x (), u.pos.y (), u.a };
+			if (awaitingAnchor)		return null;
+			WorldEditor.defaultIconPose (world, ic, snap (cx), snap (cy));		// legacy icons: first user's pose, else the view centre
 		}
-		else
-			anchor = new double[] { snap (cx), snap (cy), 0.0 };
-		iconAnchors.put (ic.label, anchor);
-		return anchor;
+		return new double[] { ic.pos.x (), ic.pos.y (), ic.a };
 	}
 
 	/** Creates a new empty icon, selects it and starts the icon tool waiting for its reference point. */
@@ -1194,9 +1188,9 @@ public class WorldCanvas extends JPanel
 		if (awaitingAnchor)
 		{
 			// first click of a new icon: sets the reference point (local origin)
-			iconAnchors.put (ic.label, new double[] { anchorX, anchorY, 0.0 });
+			ic.setPose (anchorX, anchorY, 0.0, 0.0);
 			awaitingAnchor = false;
-			repaint ();
+			changed ("Place icon");
 			showUsage ();
 			return;
 		}
@@ -1337,7 +1331,7 @@ public class WorldCanvas extends JPanel
 		{
 			int		x = toPixelX (hs[i].x ()), y = toPixelY (hs[i].y ());
 			boolean	rot = (i == hs.length - 1) && ((selection.kind == WorldItem.WAYPOINT) || (selection.kind == WorldItem.DOCK)
-						|| (selection.kind == WorldItem.START) || WorldItem.isObject (selection.kind));
+						|| (selection.kind == WorldItem.START) || WorldItem.isObject (selection.kind) || (selection.kind == WorldItem.ICON));
 			if (rot)
 			{
 				g.setColor (C_SEL);

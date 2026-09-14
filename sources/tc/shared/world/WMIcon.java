@@ -30,6 +30,11 @@ public class WMIcon extends WMElement
 {
 	public Line2[]				lines;			// Segments in local coordinates (m)
 
+	// Reference pose where the icon was defined (world editor): shown there when the icon is selected on its own.
+	// null until the icon is placed (legacy icons without one take the pose of their first user).
+	public Point3				pos;
+	public double				a;
+
 	/* Constructors */
 
 	public WMIcon ()
@@ -148,11 +153,22 @@ public class WMIcon extends WMElement
 		return new WMIcon (newLabel, l);
 	}
 
-	/* JSON: {label, lines: [{x1, y1, z1, x2, y2, z2}, ...]} */
+	/** True when the icon has a reference pose (where it was defined). */
+	public boolean hasPose ()				{ return pos != null; }
+
+	public void setPose (double x, double y, double z, double a)
+	{
+		pos		= new Point3 (x, y, z);
+		this.a	= a;
+	}
+
+	/* JSON: {label [, x, y, z, orientation (deg)], lines: [{x1, y1, z1, x2, y2, z2}, ...]} */
 
 	public WMIcon (JsonObject o)
 	{
 		label	= World.getString (o, "label", "icon");
+		if (o.has ("x") && o.has ("y"))
+			setPose (World.getDouble (o, "x"), World.getDouble (o, "y"), World.getDouble (o, "z", 0.0), Math.toRadians (World.getDouble (o, "orientation", 0.0)));
 		JsonArray	arr = World.getArray (o, "lines");
 		lines	= new Line2[arr.size ()];
 		for (int i = 0; i < lines.length; i++)		lines[i] = World.toLine (arr.get (i).getAsJsonObject ());
@@ -163,6 +179,11 @@ public class WMIcon extends WMElement
 		JsonObject	o = new JsonObject ();
 		JsonArray	arr = new JsonArray ();
 		o.addProperty ("label", label);
+		if (pos != null)
+		{
+			World.putPoint (o, pos.x (), pos.y (), pos.z ());
+			o.addProperty ("orientation", World.num (Math.toDegrees (a)));
+		}
 		for (Line2 l : lines)		arr.add (World.line (l));
 		o.add ("lines", arr);
 		return o;

@@ -1039,6 +1039,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	/* ================================================================== */
 
 	static public final double		ARROW		= 0.5;		// Length of orientation handles (m)
+	static public final double		MIN_RADIUS	= 0.15;		// Smallest virtual radius reachable with the handle (m)
 
 	/* ------------------------------------------------------------------ */
 	/* World creation and snapshots                                        */
@@ -1225,6 +1226,23 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		WMIcon	ic = new WMIcon (w.uniqueIconLabel (prefix), new Line2[0]);
 		w.icons ().add (ic);
 		return new WorldItem (WorldItem.ICON, w.icons ().size () - 1);
+	}
+
+	/**
+	 * Gives a reference pose to an icon that has none (legacy files): the pose
+	 * of its first user object, or (x, y, 0) when no object uses it.
+	 */
+	static public void defaultIconPose (World w, WMIcon ic, double x, double y)
+	{
+		if (ic.hasPose ())				return;
+		List<WorldItem>	users = iconUserItems (w, ic.label);
+		if (users.size () > 0)
+		{
+			WMObject	u = object (w, users.get (0));
+			ic.setPose (u.pos.x (), u.pos.y (), u.pos.z (), u.a);
+		}
+		else
+			ic.setPose (x, y, 0.0, 0.0);
 	}
 
 	/** The default icon for new objects: a 0.4 m square, created on demand. */
@@ -1495,6 +1513,12 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 
 		switch (it.kind)
 		{
+		case WorldItem.ICON:
+		{
+			WMIcon	ic = w.icons ().get (it.index);
+			if (ic.hasPose ())		ic.pos = new Point3 (ic.pos.x () + dx, ic.pos.y () + dy, ic.pos.z ());
+			break;
+		}
 		case WorldItem.ZONE:
 		{
 			WMZone	z = w.zones ().at (it.index);
@@ -1582,10 +1606,22 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			return new Point2[] { new Point2 (l.orig ()), new Point2 (l.dest ()) };
 		}
 		case WorldItem.OBJECT:
-		case WorldItem.AOBJECT:
 		{
 			WMObject	o = object (w, it);
 			return new Point2[] { new Point2 (o.pos.x (), o.pos.y ()), arrow (o.pos.x (), o.pos.y (), o.a) };
+		}
+		case WorldItem.AOBJECT:
+		{
+			// the heading handle sits on the virtual radius: dragging it rotates the object and resizes the radius
+			WMAObject	o = w.aobjects ().get (it.index);
+			double		r = Math.max (o.radius, MIN_RADIUS);
+			return new Point2[] { new Point2 (o.pos.x (), o.pos.y ()), new Point2 (o.pos.x () + r * Math.cos (o.a), o.pos.y () + r * Math.sin (o.a)) };
+		}
+		case WorldItem.ICON:
+		{
+			WMIcon	ic = w.icons ().get (it.index);
+			if (!ic.hasPose ())		return new Point2[0];
+			return new Point2[] { new Point2 (ic.pos.x (), ic.pos.y ()), arrow (ic.pos.x (), ic.pos.y (), ic.a) };
 		}
 		case WorldItem.CONNECTOR:
 		{
@@ -1654,11 +1690,29 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			break;
 		}
 		case WorldItem.OBJECT:
-		case WorldItem.AOBJECT:
 		{
 			WMObject	o = object (w, it);
 			if (h == 0)		translate (w, it, x - o.pos.x (), y - o.pos.y ());
 			else			setObjectPose (o, o.pos.x (), o.pos.y (), o.pos.z (), Math.atan2 (y - o.pos.y (), x - o.pos.x ()));
+			break;
+		}
+		case WorldItem.AOBJECT:
+		{
+			WMAObject	o = w.aobjects ().get (it.index);
+			if (h == 0)		translate (w, it, x - o.pos.x (), y - o.pos.y ());
+			else
+			{
+				setObjectPose (o, o.pos.x (), o.pos.y (), o.pos.z (), Math.atan2 (y - o.pos.y (), x - o.pos.x ()));
+				o.radius = Math.max (MIN_RADIUS, Math.hypot (x - o.pos.x (), y - o.pos.y ()));
+			}
+			break;
+		}
+		case WorldItem.ICON:
+		{
+			WMIcon	ic = w.icons ().get (it.index);
+			if (!ic.hasPose ())		break;
+			if (h == 0)		translate (w, it, x - ic.pos.x (), y - ic.pos.y ());
+			else			ic.a = Math.atan2 (y - ic.pos.y (), x - ic.pos.x ());
 			break;
 		}
 		case WorldItem.CONNECTOR:
@@ -1796,7 +1850,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.OBJECT:		return new String[] { "x", "y", "z", "orientation", "icon", "shape", "color", "usecolor" };
 		case WorldItem.AOBJECT:		return new String[] { "label", "x", "y", "z", "orientation", "radius", "icon", "shape", "color", "usecolor", "dynamics",
 														  "movement", "speed", "acceleration", "mass", "coef_res", "coef_fric" };
-		case WorldItem.ICON:		return new String[] { "label", "segments" };
+		case WorldItem.ICON:		return new String[] { "label", "x", "y", "z", "orientation", "segments" };
 		case WorldItem.CONNECTOR:		return new String[] { "label", "x1", "y1", "z1", "x2", "y2", "z2", "path x1", "path y1", "path z1", "path x2", "path y2", "path z2", "width", "height", "texture" };
 		case WorldItem.BEACON:		return new String[] { "label", "x", "y", "z", "orientation", "width", "height" };
 		case WorldItem.CBEACON:		return new String[] { "label", "x", "y", "z", "diameter", "height" };
@@ -1893,6 +1947,10 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		{
 			WMIcon	ic = w.icons ().get (it.index);
 			if (name.equals ("label"))		return ic.label;
+			if (name.equals ("x"))			return ic.hasPose () ? fmt (ic.pos.x ()) : "";
+			if (name.equals ("y"))			return ic.hasPose () ? fmt (ic.pos.y ()) : "";
+			if (name.equals ("z"))			return ic.hasPose () ? fmt (ic.pos.z ()) : "";
+			if (name.equals ("orientation"))	return ic.hasPose () ? fmt (Math.toDegrees (ic.a)) : "";
 			if (name.equals ("segments"))	return segmentsText (ic.lines);
 			break;
 		}
@@ -2092,6 +2150,10 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 				for (WMObject o : w.allObjects ())			// keep the references
 					if (old.equals (o.iconId))		o.setIcon (ic);
 			}
+			else if (name.equals ("x"))			{ if (!ic.hasPose ()) ic.setPose (0, 0, 0, 0);	ic.pos = new Point3 (num (value), ic.pos.y (), ic.pos.z ()); }
+			else if (name.equals ("y"))			{ if (!ic.hasPose ()) ic.setPose (0, 0, 0, 0);	ic.pos = new Point3 (ic.pos.x (), num (value), ic.pos.z ()); }
+			else if (name.equals ("z"))			{ if (!ic.hasPose ()) ic.setPose (0, 0, 0, 0);	ic.pos = new Point3 (ic.pos.x (), ic.pos.y (), num (value)); }
+			else if (name.equals ("orientation"))	{ if (!ic.hasPose ()) ic.setPose (0, 0, 0, 0);	ic.a = Math.toRadians (num (value)); }
 			else if (name.equals ("segments"))
 				ic.lines = parseSegments (value);
 			return;

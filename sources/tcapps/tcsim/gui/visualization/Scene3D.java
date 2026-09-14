@@ -223,6 +223,59 @@ public class Scene3D extends Object
 		return tgroup;
 	}
 	
+	/**
+	 * Height (m) of a 3D object as returned by {@link #getCachedObject}: the
+	 * top of its geometry over its own origin, i.e. the maximum Y of the 3DS
+	 * model (Y-up), which becomes Z once placed in the scene. 0 when unknown.
+	 */
+	static public double height (Node node)
+	{
+		double[]	top = { Double.NEGATIVE_INFINITY };
+		maxY (node, top);
+		return Double.isInfinite (top[0]) ? 0.0 : Math.max (0.0, top[0]);
+	}
+
+	static private void maxY (Node node, double[] top)
+	{
+		if (node instanceof Shape3D)
+		{
+			Shape3D		shape = (Shape3D) node;
+			for (int i = 0; i < shape.numGeometries (); i++)
+			{
+				Geometry	geo = shape.getGeometry (i);
+				if (!(geo instanceof GeometryArray))		continue;
+				try
+				{
+					GeometryArray	ga = (GeometryArray) geo;
+					Point3d			p = new Point3d ();
+					int				n = ga.getValidVertexCount ();
+					int				first = ((ga.getVertexFormat () & GeometryArray.BY_REFERENCE) != 0) ? ga.getInitialVertexIndex () : 0;
+					for (int k = first; k < first + n; k++)
+					{
+						ga.getCoordinate (k, p);
+						if (p.y > top[0])		top[0] = p.y;
+					}
+				} catch (Exception e)
+				{
+					// geometry not readable this way: use its bounds
+					Bounds	b = shape.getBounds ();
+					if (b != null)
+					{
+						BoundingBox	box = new BoundingBox (b);
+						Point3d		up = new Point3d ();
+						box.getUpper (up);
+						if (up.y > top[0])		top[0] = up.y;
+					}
+				}
+			}
+		}
+		else if (node instanceof Group)
+		{
+			Enumeration<Node>	e = ((Group) node).getAllChildren ();
+			while (e.hasMoreElements ())	maxY (e.nextElement (), top);
+		}
+	}
+
 	/** Visit all the Shape3D objects in a Group node and 
 	 *	applies them a material with the specified color
 	 */
