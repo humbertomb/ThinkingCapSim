@@ -39,23 +39,46 @@ public class LogPlot implements ChildWindowListener
 	public final void		setYRange (double ymin, double ymax)	{ this.ymin = ymin; this.ymax = ymax; }
 	
 	// Instance methods
-	public void open (String[] labels)
+
+	/**
+	 * Opens the plot window. Swing components must be created on the event
+	 * thread: doing it from a module thread deadlocks against the AWT tree
+	 * lock while another window is laying out (the GUI freezes, no exception).
+	 */
+	public void open (final String[] labels)
 	{
-		// Create manouvering behaviour debug window
-		if (plot == null)				plot	= new PlotWindow (this, tittle);
-		
-		plot.setLegend (labels);
-		plot.setLabels (xlabel, ylabel);
-		plot.setYRange (ymin, ymax);
-		plot.setImpulses (impulses);
-		plot.open ();
+		onEventThread (new Runnable ()
+		{
+			public void run ()
+			{
+				if (plot == null)				plot	= new PlotWindow (LogPlot.this, tittle);
+				
+				plot.setLegend (labels);
+				plot.setLabels (xlabel, ylabel);
+				plot.setYRange (ymin, ymax);
+				plot.setImpulses (impulses);
+				plot.open ();
+			}
+		});
 	}
 	
 	public void close ()
 	{
 		if (plot == null)				return;
 		
-		plot.close ();
+		final PlotWindow	p = plot;
+		onEventThread (new Runnable ()
+		{
+			public void run ()				{ p.close (); }
+		});
+	}
+
+	static private void onEventThread (Runnable r)
+	{
+		if (javax.swing.SwingUtilities.isEventDispatchThread ())
+			r.run ();
+		else
+			try { javax.swing.SwingUtilities.invokeAndWait (r); } catch (Exception e) { e.printStackTrace (); }
 	}
 	
 	public void draw (double[] buffer)

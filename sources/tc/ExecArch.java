@@ -367,12 +367,12 @@ public class ExecArch extends Thread
 		
 		str += "\t" + gldesc + "\n";									// Global Linda Space
 		str += "\t" + lldesc + "\n";									// Local Linda Space
-		if (gldesc != null)		str += "\t" + lrdesc + "\n";			// Linda Router
+		if (lrdesc != null)		str += "\t" + lrdesc + "\n";			// Linda Router
 		
 		for (i = 0; i < num; i++)
 			str += "\t" + thdesc[i] + "\n";								// Architecture modules
 			
-		if (gldesc != null)		str += "\t" + vrdesc + "\n";			// Virtual Robot
+		if (vrdesc != null)		str += "\t" + vrdesc + "\n";			// Virtual Robot
 
 		return str;
 	}
