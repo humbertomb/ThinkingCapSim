@@ -1122,7 +1122,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		{
 		case WorldItem.ZONE:		return w.zones ().at (it.index).label;
 		case WorldItem.FAREA:		return w.fareas ().at (it.index).label;
-		case WorldItem.PATH:		return "P" + it.index + " (" + fmt (w.path ().get (it.index).x ()) + ", " + fmt (w.path ().get (it.index).y ()) + ")";
+		case WorldItem.PATH:		return "P" + it.index;		// the coordinates are shown in the property table
 		case WorldItem.WALL:		return "LINE_" + it.index;
 		case WorldItem.OBJECT:
 		{
