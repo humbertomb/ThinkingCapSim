@@ -1139,7 +1139,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.CBEACON:		return w.cbeacons ().get (it.index).label;
 		case WorldItem.WAYPOINT:	return w.wps ().get (it.index).label;
 		case WorldItem.DOCK:		return w.docks ().get (it.index).label;
-		case WorldItem.START:		{ WMStart st = w.start (it.index); return "START_" + (it.index + 1) + " (" + fmt (st.x ()) + ", " + fmt (st.y ()) + ", " + fmt (Math.toDegrees (st.orientation)) + "º)"; }
+		case WorldItem.START:		return "START_" + (it.index + 1);		// the pose is shown in the property table
 		case WorldItem.ICON:
 		{
 			WMIcon	ic = w.icons ().get (it.index);
