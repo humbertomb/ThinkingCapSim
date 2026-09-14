@@ -76,6 +76,20 @@ public class SimObjects
 
 	public SimObject at (int i)					{ return ((i >= 0) && (i < numobjects)) ? OBJS[i] : null; }
 
+	/** Puts the collision outline of an object at its current pose (sensors and other objects see it there). */
+	public void updateIcon (int i)
+	{
+		if ((i < 0) || (i >= numobjects))		return;
+		simul.moveIcon (OBJICONS[i], OBJS[i].odesc.getLocalIcon (), OBJS[i].odesc.pos.x (), OBJS[i].odesc.pos.y (), OBJS[i].odesc.a);
+	}
+
+	/** Removes the collision outline of an object (a load carried by a robot is not an obstacle). */
+	public void clearIcon (int i)
+	{
+		if ((i < 0) || (i >= numobjects))		return;
+		simul.moveIcon (OBJICONS[i], new Line2[0], 0.0, 0.0, 0.0);
+	}
+
 	class Updater implements Runnable
 	{
 		volatile boolean			running;
@@ -140,21 +154,35 @@ public class SimObjects
 	public void pick_object (int robotid, double z)
 	{
 		double		dx, dy;
+		double		rx = simul.MODEL[robotid].real_x, ry = simul.MODEL[robotid].real_y, ra = simul.MODEL[robotid].real_a;
+		if (simul.lastRobotData[robotid] != null)		// pose the robot last reported (the model may be a step ahead)
+		{
+			rx = simul.lastRobotData[robotid].real_x;
+			ry = simul.lastRobotData[robotid].real_y;
+			ra = simul.lastRobotData[robotid].real_a;
+		}
+		if (simul.objectPicked[robotid] != -1)			// already carrying one
+		{
+			System.out.println ("  [SIM-Objs] " + OBJS[simul.objectPicked[robotid]].odesc.label + " is already loaded on robot " + robotid);
+			return;
+		}
 		for (int i = 0; i < numobjects; i++)
 		{
-			if (OBJS[i] instanceof SimCargo)
-			{
-				dx = simul.MODEL[robotid].real_x - OBJS[i].odesc.pos.x ();
-				dy = simul.MODEL[robotid].real_y - OBJS[i].odesc.pos.y ();
+			if (!(OBJS[i] instanceof SimCargo) || ((SimCargo) OBJS[i]).isPicked ())		continue;
 
-				if (Math.sqrt (dx * dx + dy * dy) <= (OBJS[i].radius + simul.RDESC[robotid].RADIUS))
-				{
-					((SimCargo) OBJS[i]).pick (simul.lastRobotData[robotid].real_x, simul.lastRobotData[robotid].real_y, z, simul.lastRobotData[robotid].real_a);
-					simul.objectPicked[robotid] = i;
-					break;
-				}
+			dx = rx - OBJS[i].odesc.pos.x ();
+			dy = ry - OBJS[i].odesc.pos.y ();
+
+			if (Math.sqrt (dx * dx + dy * dy) <= (OBJS[i].radius + simul.RDESC[robotid].RADIUS))
+			{
+				((SimCargo) OBJS[i]).pick (rx, ry, z, ra);
+				simul.objectPicked[robotid] = i;
+				clearIcon (i);						// carried: no longer an obstacle where it was
+				System.out.println ("  [SIM-Objs] Robot " + robotid + " loads " + OBJS[i].odesc.label);
+				return;
 			}
 		}
+		System.out.println ("  [SIM-Objs] Robot " + robotid + " found no load to pick up");
 	}
 
 	/** Indicates that the robot with id "robotid" has executed a drop operation.
@@ -162,10 +190,12 @@ public class SimObjects
 	 will be its current position */
 	public void drop_object (int robotid, double z)
 	{
-		if (simul.objectPicked[robotid] != -1)
-		{
-			((SimCargo) OBJS[simul.objectPicked[robotid]]).drop (z);
-			simul.objectPicked[robotid] = -1;
-		}
+		int		i = simul.objectPicked[robotid];
+		if ((i < 0) || (i >= numobjects))		return;
+
+		((SimCargo) OBJS[i]).drop (z);
+		simul.objectPicked[robotid] = -1;
+		updateIcon (i);								// an obstacle again, at the place where it was left
+		System.out.println ("  [SIM-Objs] Robot " + robotid + " unloads " + OBJS[i].odesc.label);
 	}
 }

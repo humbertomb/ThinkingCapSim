@@ -221,6 +221,15 @@
         { "x1": -0.7, "y1": 20, "z1": 0, "x2": -4.5, "y2": 20, "z2": 0 },
         { "x1": -4.5, "y1": 20, "z1": 0, "x2": -4.5, "y2": 0, "z2": 0 }
       ]
+    },
+    {
+      "label": "pallet",
+      "lines": [
+        { "x1": -0.5, "y1": -0.5, "z1": 0, "x2": 0.5, "y2": -0.5, "z2": 0 },
+        { "x1": 0.5, "y1": -0.5, "z1": 0, "x2": 0.5, "y2": 0.5, "z2": 0 },
+        { "x1": 0.5, "y1": 0.5, "z1": 0, "x2": -0.5, "y2": 0.5, "z2": 0 },
+        { "x1": -0.5, "y1": 0.5, "z1": 0, "x2": -0.5, "y2": -0.5, "z2": 0 }
+      ]
     }
   ],
   "objects": [
@@ -254,7 +263,11 @@
     { "icon": "barrera", "x": 42, "y": 59.026, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
     { "icon": "linea.prod1", "x": 37.3308, "y": 54.4173, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/linea.prod1.3ds", "usecolor": false }
   ],
-  "aobjects": [],
+  "aobjects": [
+    { "label": "Palet1", "icon": "pallet", "x": 79.721, "y": 72.227, "z": 0, "orientation": 180, "radius": 1, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "Palet2", "icon": "pallet", "x": 79.721, "y": 70.627, "z": 0, "orientation": 180, "radius": 1, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "Palet3", "icon": "pallet", "x": 79.721, "y": 68.427, "z": 0, "orientation": 180, "radius": 1, "color": "150:100:0", "shape": "./conf/3dmodels/pallet.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 }
+  ],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/036metal.jpg" },
     "items": [

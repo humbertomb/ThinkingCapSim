@@ -345,6 +345,7 @@ public class Simulator
 		// the animated objects of the world are simulated from now on
 		if (objects != null)		objects.stop ();
 		objects	= new SimObjects (map, this);
+		for (int i = 0; i < MAX_ROBOTS; i++)		objectPicked[i] = -1;		// loads of the previous world
 						
 		if (this.win != null)
 		{
