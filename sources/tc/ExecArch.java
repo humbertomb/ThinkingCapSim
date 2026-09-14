@@ -13,6 +13,8 @@ import tc.shared.linda.*;
 import tc.shared.linda.net.*;
 import tcapps.tcsimulator.simulator.Simulator;
 import tcapps.tcsimulator.simulator.objects.SimRobot;
+import tc.shared.world.WMStart;
+import tc.shared.world.World;
 import wucore.utils.geom.Point3;
 
 public class ExecArch extends Thread
@@ -43,72 +45,51 @@ public class ExecArch extends Thread
 	protected Simulator			sim;
 	protected Point3			start;				// Optional initial pose of the simulated robot
 
-	// Source file (when loaded from / saved to an ADF), kept to preserve comments and layout on save
-
 	/* Constructors */
 	protected ExecArch ()
 	{
 	}
 
-	public ExecArch (String robotid, String name)
+	/**
+	 * Executes one robot of a deployment: the modules, the Linda spaces and the
+	 * virtual robot described by {@link DeployArch#toProperties(int)}. The first
+	 * robot of the deployment is the one that instantiates the global Linda
+	 * space, so the robots must be started in order.
+	 */
+	public ExecArch (DeployArch deploy, int robot)
 	{
-		this (robotid, name, (Properties) null);
-	}
-
-	public ExecArch (String robotid, String name, Properties pdefs)
-	{
-		Properties		props;
-
-		// Read properties from file
-		props			= new Properties ();
-		try { props.load (new FileInputStream (name)); } catch (Exception e) { e.printStackTrace (); }
-		
-		initialise (robotid, props, pdefs);
+		initialise (deploy.robots.get (robot).name, deploy.toProperties (robot), null);
 	}
 
 	/**
-	 * Loads a legacy ADF (.arch) for inspection (no robot identifier is injected
-	 * into the properties); used to import it into a deployment. Throws if the
-	 * file cannot be read.
+	 * Simulated execution of one robot of a deployment: its virtual robot runs
+	 * as a {@link SimRobot} inside <code>sim</code>, placed at the start point
+	 * chosen for it in the deployment. If the simulator has no world yet, the
+	 * world of the deployment is loaded into it; otherwise the simulator's
+	 * world is imposed.
 	 */
-	public static ExecArch load (File f) throws IOException
+	public ExecArch (DeployArch deploy, int robot, Simulator sim)
 	{
-		ExecArch	arch = new ExecArch ();
-		Properties	props = new Properties ();
-		InputStream	in = new FileInputStream (f);
-		try { props.load (in); } finally { in.close (); }
-		arch.initialise (null, props, null);
-		return arch;
+		this (deploy, robot);
+		simulate (sim);
+		startPoint (deploy.robots.get (robot), (sim != null) ? sim.getWorld () : null);
 	}
 
+	/** Executes an architecture given directly as the properties of an ADF. */
 	public ExecArch (String robotid, Properties props)
 	{
-		
 		initialise (robotid, props, null);
 	}
 
-	public ExecArch (String robotid, Properties props, Properties pdefs)
+	/** Places the simulated robot at the start point the deployment chose for it. */
+	protected void startPoint (DeployArch.Robot rob, World world)
 	{
-		initialise (robotid, props, pdefs);
-	}
+		int		si = DeployArch.startIndex (rob.start);
 
-	/**
-	 * Simulated execution (former ExecArchSim): the architecture is read from
-	 * <code>name</code> and its virtual robot runs as a {@link SimRobot} inside
-	 * <code>sim</code>. If the simulator has no world yet, the architecture's
-	 * world is loaded into it; otherwise the simulator's world is imposed.
-	 */
-	public ExecArch (String robotid, String name, Properties pdefs, Simulator sim)
-	{
-		this (robotid, name, pdefs);
-		simulate (sim);
-	}
+		if ((world == null) || (si < 0) || (si >= world.n_starts ()))		return;
 
-	/** Simulated execution of an architecture given as properties (see the file-based constructor). */
-	public ExecArch (String robotid, Properties props, Properties pdefs, Simulator sim)
-	{
-		this (robotid, props, pdefs);
-		simulate (sim);
+		WMStart	st = world.start (si);
+		setStart (new Point3 (st.x (), st.y (), st.orientation));
 	}
 
 	protected void simulate (Simulator sim)
@@ -139,14 +120,22 @@ public class ExecArch extends Thread
 	// Class methods
 	public static void main (String[] argv)
 	{
-		if (argv.length == 2)
-				new ExecArch (argv[0], argv[1]).start ();
+		if (argv.length >= 1)
+		{
+			try
+			{
+				DeployArch	deploy = DeployArch.load (new File (argv[0]));
+				int			robot = (argv.length > 1) ? Integer.parseInt (argv[1]) : 0;
+				new ExecArch (deploy, robot).start ();
+			} catch (Exception e) { e.printStackTrace (); }
+		}
 		else
 		{
 			System.out.println ("ERROR: wrong number of arguments.");
-			System.out.println ("\tUsage: ExecArch <robot_id> <arch> to execute an ADF");
+			System.out.println ("\tUsage: ExecArch <deployment.deploy> [robot] to execute one robot of a deployment");
 		}
 	}
+
     
 	/* Instance methods */
 	protected void initialise (String robotid, Properties props, Properties pdefs)
@@ -248,18 +237,6 @@ public class ExecArch extends Thread
 
 	/** True between the start of the modules and {@link #terminate}. */
 	public boolean isRunning ()			{ return running; }
-
-	/** Executable copy of this description (a Thread can only be started once). */
-	public ExecArch runner (String robotid)
-	{
-		return new ExecArch (robotid, (Properties) props.clone ());
-	}
-
-	/** Executable copy of this description whose virtual robot is simulated in <code>sim</code>. */
-	public ExecArch runner (String robotid, Simulator sim)
-	{
-		return new ExecArch (robotid, (Properties) props.clone (), null, sim);
-	}
 
 	/**
 	 * Stops every module thread and the Linda servers created by this

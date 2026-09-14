@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import tcapps.tcsimulator.DeployArch;
-import tcapps.tcsimulator.DeployArch.Event;
-import tcapps.tcsimulator.DeployArch.Linda;
-import tcapps.tcsimulator.DeployArch.Module;
-import tcapps.tcsimulator.DeployArch.Robot;
+import tc.DeployArch;
+import tc.DeployArch.Event;
+import tc.DeployArch.Linda;
+import tc.DeployArch.Module;
+import tc.DeployArch.Robot;
 
 /**
  * Editor view of a {@link DeployArch} as blocks: the global Linda space and,

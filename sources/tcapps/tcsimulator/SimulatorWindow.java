@@ -4,6 +4,7 @@
 
 package tcapps.tcsimulator;
 
+import tc.DeployArch;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -455,15 +456,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		final List<ExecArch>	execs = new ArrayList<ExecArch> ();
 		for (int i = 0; i < deploy.robots.size (); i++)
 		{
-			DeployArch.Robot	rob = deploy.robots.get (i);
-			ExecArch			e = new ExecArch (rob.name, deploy.toProperties (i), null, simulator);		// loads the world into the simulator
-			int	si = DeployArch.startIndex (rob.start);								// start point chosen in the deployment
-			if ((si >= 0) && (si < world.n_starts ()))
-			{
-				tc.shared.world.WMStart	st = world.start (si);
-				e.setStart (new Point3 (st.x (), st.y (), st.orientation));
-			}
-			execs.add (e);
+			execs.add (new ExecArch (deploy, i, simulator));		// loads the world into the simulator and takes the start point of the robot
 		}
 		running		= execs;
 		// while simulating, the animated objects are drawn live (overlay / 3D) instead of at their initial pose

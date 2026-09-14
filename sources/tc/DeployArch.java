@@ -2,12 +2,14 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tcapps.tcsimulator;
+package tc;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -28,7 +30,7 @@ import com.google.gson.GsonBuilder;
  * properties keep the names the runtime reads (CLASS, MODE, PASSIVE, ...,
  * see tc.runtime.thread.ThreadDesc), so a robot can be turned into the
  * Properties of an ADF ({@link #toProperties(int)}) to be executed by
- * {@link tc.ExecArch}; a legacy <code>.arch</code> file can be imported with
+ * {@link ExecArch}; a legacy <code>.arch</code> file can be imported with
  * {@link #fromProperties(Properties, String)}.
  */
 public class DeployArch
@@ -323,7 +325,7 @@ public class DeployArch
 	/* ADF (Properties) conversion                                         */
 	/* ------------------------------------------------------------------ */
 
-	/** Properties of an architecture definition (ADF) that runs one robot of this deployment with {@link tc.ExecArch}. */
+	/** Properties of an architecture definition (ADF) that runs one robot of this deployment with {@link ExecArch}. */
 	public Properties toProperties (int robot)
 	{
 		Properties	p = new Properties ();
@@ -387,7 +389,10 @@ public class DeployArch
 		String	n = f.getName ();
 		int		dot = n.lastIndexOf ('.');
 		if (dot > 0)		n = n.substring (0, dot);
-		return fromProperties (tc.ExecArch.load (f).getProperties (), n.toUpperCase () + "-1");
+		Properties	props = new Properties ();
+		InputStream	in = new FileInputStream (f);
+		try { props.load (in); } finally { in.close (); }
+		return fromProperties (props, n.toUpperCase () + "-1");
 	}
 
 	/**
