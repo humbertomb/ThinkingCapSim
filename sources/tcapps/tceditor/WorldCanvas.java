@@ -321,6 +321,20 @@ public class WorldCanvas extends JPanel
 		}
 	}
 
+	/** Duplicates the selected element and selects the copy. */
+	public void duplicateSelection ()
+	{
+		WorldItem	copy;
+
+		if ((selection == null) || !editable)		return;
+
+		copy	= WorldEditor.duplicate (world, selection);
+		if (copy == null)				return;
+
+		changed ("Duplicate " + WorldItem.NAMES[copy.kind].toLowerCase ());
+		setSelection (copy);
+	}
+
 	/** Moves the selection by (dx, dy) grid steps (keyboard nudging). */
 	public void nudgeSelection (int dx, int dy)
 	{

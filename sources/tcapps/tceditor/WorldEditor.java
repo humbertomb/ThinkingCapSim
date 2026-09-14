@@ -113,7 +113,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	protected StatusBar				statusBar;
 	protected JLabel				selLabel;
 	protected JToggleButton[]		toolButtons	= new JToggleButton[WorldCanvas.NTOOLS];
-	protected Action				undoAction, redoAction, deleteAction;
+	protected Action				undoAction, redoAction, deleteAction, duplicateAction;
 	protected JCheckBoxMenuItem[]	layerItems	= new JCheckBoxMenuItem[WorldItem.NKINDS];
 	protected JCheckBoxMenuItem		gridItem, snapItem, labelsItem;
 	protected boolean				syncing		= false;	// avoids selection feedback loops
@@ -462,6 +462,13 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		medit.add (item (undoAction, KeyStroke.getKeyStroke (KeyEvent.VK_Z, mask)));
 		medit.add (item (redoAction, KeyStroke.getKeyStroke (KeyEvent.VK_Z, mask | InputEvent.SHIFT_DOWN_MASK)));
 		medit.addSeparator ();
+		duplicateAction = new AbstractAction ("Duplicate")
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.duplicateSelection (); }
+		};
+		duplicateAction.setEnabled (false);
+		medit.add (item (duplicateAction, KeyStroke.getKeyStroke (KeyEvent.VK_D, mask)));
+		medit.addSeparator ();
 		medit.add (item (deleteAction, KeyStroke.getKeyStroke (KeyEvent.VK_DELETE, 0)));
 		// (Esc itself is handled by the canvas: it first cancels drawings / leaves the current tool, then deselects)
 		medit.add (item ("Deselect", null, new AbstractAction ()
@@ -608,6 +615,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		propModel.setItem (item);
 		selLabel.setText ((item == null) ? " " : WorldItem.NAMES[item.kind] + ":  " + describe (world, item));
 		deleteAction.setEnabled ((item != null) && (item.kind != WorldItem.DEFAULTS) && ((item.kind != WorldItem.START) || (world.n_starts () > 1)));
+		if (duplicateAction != null)		duplicateAction.setEnabled ((item != null) && (item.kind != WorldItem.DEFAULTS));
 		// the icon tool only applies to elements that have an icon (objects) or to icons themselves
 		boolean	hasIcon = (item != null) && (WorldItem.isObject (item.kind) || (item.kind == WorldItem.ICON));
 		toolButtons[WorldCanvas.T_ICON].setEnabled (hasIcon);
@@ -1366,6 +1374,158 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	{
 		w.path ().add (new Point3 (x, y, 0.0));
 		return new WorldItem (WorldItem.PATH, w.path ().size () - 1);
+	}
+
+	/** Offset (m) applied to a duplicated element so that it does not hide the original. */
+	static public final double		DUP_OFFSET	= 0.25;
+
+	/**
+	 * Duplicates an element (deep copy): the copy is appended to its own
+	 * group, displaced {@link #DUP_OFFSET} m in x and y, and given a label
+	 * that no other element of the same group uses. Returns the item of the
+	 * copy, or null when the element cannot be duplicated.
+	 */
+	static public WorldItem duplicate (World w, WorldItem it)
+	{
+		WorldItem	n = null;
+
+		if (!valid (w, it))				return null;
+
+		switch (it.kind)
+		{
+		case WorldItem.ZONE:
+		{
+			String	dt = w.zones ().defaultTexture ();
+			w.zones ().add (new WMZone (w.zones ().at (it.index).toJson (dt), dt));
+			n = new WorldItem (WorldItem.ZONE, w.zones ().n () - 1);
+			break;
+		}
+		case WorldItem.FAREA:
+		{
+			String	dt = w.fareas ().defaultTexture ();
+			w.fareas ().add (new WMFArea (w.fareas ().at (it.index).toJson (dt), dt));
+			n = new WorldItem (WorldItem.FAREA, w.fareas ().n () - 1);
+			break;
+		}
+		case WorldItem.WALL:
+		{
+			double	dw = w.walls ().defaultWidth (), dh = w.walls ().defaultHeight ();
+			String	dt = w.walls ().defaultTexture ();
+			w.walls ().add (new WMWall (w.walls ().at (it.index).toJson (dw, dh, dt), dw, dh, dt));
+			n = new WorldItem (WorldItem.WALL, w.walls ().n () - 1);
+			break;
+		}
+		case WorldItem.CONNECTOR:
+		{
+			double	dw = w.connectors ().defaultWidth (), dh = w.connectors ().defaultHeight ();
+			String	dt = w.connectors ().defaultTexture ();
+			w.connectors ().add (new WMConnector (w.connectors ().at (it.index).toJson (dw, dh, dt), dw, dh, dt));
+			n = new WorldItem (WorldItem.CONNECTOR, w.connectors ().n () - 1);
+			break;
+		}
+		case WorldItem.OBJECT:
+			w.objects ().add (new WMObject (w.objects ().get (it.index).toJson (), w.icons ()));
+			n = new WorldItem (WorldItem.OBJECT, w.objects ().size () - 1);
+			break;
+		case WorldItem.AOBJECT:
+			w.aobjects ().add (new WMAObject (w.aobjects ().get (it.index).toJson (), w.icons ()));
+			n = new WorldItem (WorldItem.AOBJECT, w.aobjects ().size () - 1);
+			break;
+		case WorldItem.BEACON:
+			w.beacons ().add (new WMBeacon (w.beacons ().get (it.index).toJson ()));
+			n = new WorldItem (WorldItem.BEACON, w.beacons ().size () - 1);
+			break;
+		case WorldItem.CBEACON:
+			w.cbeacons ().add (new WMCBeacon (w.cbeacons ().get (it.index).toJson ()));
+			n = new WorldItem (WorldItem.CBEACON, w.cbeacons ().size () - 1);
+			break;
+		case WorldItem.WAYPOINT:
+			w.wps ().add (new WMWaypoint (w.wps ().get (it.index).toJson ()));
+			n = new WorldItem (WorldItem.WAYPOINT, w.wps ().size () - 1);
+			break;
+		case WorldItem.DOCK:
+			w.docks ().add (new WMDock (w.docks ().get (it.index).toJson ()));
+			n = new WorldItem (WorldItem.DOCK, w.docks ().size () - 1);
+			break;
+		case WorldItem.ICON:
+			w.icons ().add (new WMIcon (w.icons ().get (it.index).toJson ()));
+			n = new WorldItem (WorldItem.ICON, w.icons ().size () - 1);
+			break;
+		case WorldItem.PATH:
+		{
+			Point2	p = w.path ().get (it.index);
+			w.path ().add (new Point3 (p.x (), p.y (), World.z (p)));
+			n = new WorldItem (WorldItem.PATH, w.path ().size () - 1);
+			break;
+		}
+		case WorldItem.START:
+		{
+			WMStart	st = w.start (it.index);
+			w.addStart (st.x (), st.y (), st.z (), st.orientation);
+			n = new WorldItem (WorldItem.START, w.n_starts () - 1);
+			break;
+		}
+		}
+		if (n == null)					return null;		// DEFAULTS and unknown kinds
+
+		translate (w, n, DUP_OFFSET, DUP_OFFSET);
+		renameCopy (w, n);
+		return n;
+	}
+
+	/** Gives the copy a label of the form "base-n" not used by any element of its own group. */
+	static private void renameCopy (World w, WorldItem it)
+	{
+		String		label = (it.kind == WorldItem.ICON) ? w.icons ().get (it.index).label : label (w, it);
+		String		base;
+		int			dash;
+
+		if (label == null)				return;			// walls, objects, path points and starts are numbered, not named
+
+		base		= label;
+		dash		= base.lastIndexOf ('-');
+		if ((dash > 0) && (dash < base.length () - 1) && isNumber (base.substring (dash + 1)))
+			base	= base.substring (0, dash);			// "palet-1" and "palet" share the same base
+
+		for (int i = 1; ; i++)
+		{
+			String	name = base + "-" + i;
+			if (!usedLabel (w, it, name))		{ setLabel (w, it, name); return; }
+		}
+	}
+
+	static private boolean isNumber (String s)
+	{
+		for (int i = 0; i < s.length (); i++)
+			if (!Character.isDigit (s.charAt (i)))		return false;
+		return true;
+	}
+
+	/** True when another element of the same group (or of the shared namespace) already uses the label. */
+	static private boolean usedLabel (World w, WorldItem it, String name)
+	{
+		if (it.kind == WorldItem.ICON)		return w.icon (name) != null;
+		if (indexOfLabel (w, it.kind, name) >= 0)		return true;
+		// zones, connectors, waypoints and docks share a namespace with the other named elements
+		return (w.getType (name) != World.NONE) || (indexOfLabel (w, WorldItem.BEACON, name) >= 0)
+				|| (indexOfLabel (w, WorldItem.CBEACON, name) >= 0) || (indexOfLabel (w, WorldItem.FAREA, name) >= 0)
+				|| (indexOfLabel (w, WorldItem.AOBJECT, name) >= 0);
+	}
+
+	static private void setLabel (World w, WorldItem it, String name)
+	{
+		switch (it.kind)
+		{
+		case WorldItem.ZONE:		w.zones ().at (it.index).label = name;		break;
+		case WorldItem.FAREA:		w.fareas ().at (it.index).label = name;		break;
+		case WorldItem.CONNECTOR:	w.connectors ().at (it.index).label = name;	break;
+		case WorldItem.BEACON:		w.beacons ().get (it.index).label = name;	break;
+		case WorldItem.CBEACON:		w.cbeacons ().get (it.index).label = name;	break;
+		case WorldItem.WAYPOINT:	w.wps ().get (it.index).label = name;		break;
+		case WorldItem.DOCK:		w.docks ().get (it.index).label = name;		break;
+		case WorldItem.AOBJECT:		w.aobjects ().get (it.index).label = name;	break;
+		case WorldItem.ICON:		w.icons ().get (it.index).label = name;		break;
+		}
 	}
 
 	static public boolean remove (World w, WorldItem it)
