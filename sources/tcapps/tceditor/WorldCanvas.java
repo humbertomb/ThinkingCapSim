@@ -896,12 +896,22 @@ public class WorldCanvas extends JPanel
 		}
 	}
 
-	/** An animated object: drawn as an object plus a small motion mark (two chevrons) at its position. */
+	/**
+	 * An animated object: drawn as an object plus its virtual radius (dashed
+	 * circle), a small motion mark (two chevrons) at its position and its label.
+	 */
 	private void drawAObject (Graphics2D g, WMAObject o, boolean sel)
 	{
 		drawObject (g, o, sel);
 		Color	c = sel ? C_SEL : ColorTool.fromWColorToColor (o.color);
 		double	x = px (o.pos.x ()), y = py (o.pos.y ());
+		if (o.radius > 0.0)
+		{
+			double	r = o.radius * scale;
+			g.setColor (new Color (c.getRed (), c.getGreen (), c.getBlue (), 110));
+			g.setStroke (dashed (1f));
+			g.draw (new Ellipse2D.Double (x - r, y - r, 2 * r, 2 * r));
+		}
 		g.setColor (c);
 		g.setStroke (stroke (1.5f));
 		double	cs = Math.cos (o.a), sn = Math.sin (o.a);
@@ -913,7 +923,10 @@ public class WorldCanvas extends JPanel
 			g.draw (new Line2D.Double (bx, by, bx + tx + nx, by + ty + ny));
 			g.draw (new Line2D.Double (bx, by, bx + tx - nx, by + ty - ny));
 		}
-		if (sel && (o.dynamics != null))		label (g, o.dynamics.substring (o.dynamics.lastIndexOf ('.') + 1), o.pos.x (), o.pos.y () - 0.3, C_SEL);
+		// label as the robots: next to the object, at the top right of its radius
+		double	off = Math.max (o.radius, 0.15);
+		label (g, o.label, o.pos.x () + off, o.pos.y () + off, c);
+		if (sel && (o.dynamics != null))		label (g, o.dynamics.substring (o.dynamics.lastIndexOf ('.') + 1), o.pos.x () + off, o.pos.y () - off, C_SEL);
 	}
 
 	private void drawConnector (Graphics2D g, WMConnector d, boolean sel)

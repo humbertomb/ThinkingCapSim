@@ -57,6 +57,8 @@ public class World3D extends BranchGroup
 			obj	= createObject (object);
 			if (obj != null)
 				addChild (obj);
+			if (object instanceof WMAObject)
+				addChild (createLabel (object.label, object.pos));
 		}
 		
 		// Add floor
@@ -310,6 +312,17 @@ public class World3D extends BranchGroup
 	}	
 	
 	/** Adds a new 3D object to the universe */
+	/** Floating name of an animated object: flat text above it, as the robot names ({@link Robot3D#LABEL_HEIGHT}). */
+	protected TransformGroup createLabel (String name, Point3 pos)
+	{
+		Text2D			text = new Text2D (name, new Color3f (0.1f, 0.1f, 0.6f), "Application", 140, Font.BOLD);
+		Transform3D		t = new Transform3D ();
+		t.setTranslation (new Vector3d (pos.x (), pos.y (), pos.z () + Robot3D.LABEL_HEIGHT));
+		TransformGroup	tg = new TransformGroup (t);
+		tg.addChild (text);
+		return tg;
+	}
+
 	protected Object3D createObject (WMObject object)
 	{
 		Color		color = null;

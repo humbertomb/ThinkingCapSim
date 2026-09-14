@@ -189,6 +189,11 @@ public class World2D extends Object2D
 		{
 			object	= objects.get (i);
 			icon		= object.absIcon ();
+			if (object instanceof WMAObject)		// animated objects show their label, as the robots do
+			{
+				double	off = Math.max (((WMAObject) object).radius, 0.15);
+				model.addRawText (object.pos.x () + off, object.pos.y () - off, object.label, ColorTool.fromWColorToColor (object.color));
+			}
 			for (j = 0; j < icon.length; j++)
 			{
 				x1	= icon[j].orig ().x ();

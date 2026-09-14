@@ -34,7 +34,9 @@ import wucore.utils.geom.Point3;
  *
  * Layers: "0" walls (lines and polylines), ZONES (closed polylines), DOORS
  * (lines), OBJECTS and AOBJECTS (block inserts; animated objects carry the
- * dynamics class as extended text), PATH (one polyline), WAYPOINTS and
+ * dynamics class, label and movement as extended texts 3-5 and radius, speed,
+ * acceleration, mass and coefficients as extended doubles), PATH (one
+ * polyline), WAYPOINTS and
  * DOCKINGS (texts), BEACONS (texts or lines), CBEACONS (circles or texts) and
  * OTHERS (start points). Defaults travel as "NAME = value" texts.
  */
@@ -186,6 +188,14 @@ public class WorldDxf
 				toObject (o, insert, dxf.getBlocks (insert.getBlockname ()), w);
 				o.dynamics	= (insert.ExtTextSize () > 3) ? insert.getExtText (3) : null;
 				if ((o.dynamics != null) && (o.dynamics.trim ().length () == 0 || o.dynamics.equalsIgnoreCase ("none")))		o.dynamics = null;
+				o.label		= (insert.ExtTextSize () > 4) ? insert.getExtText (4) : "aobj" + w.aobjects ().size ();
+				o.movement	= (insert.ExtTextSize () > 5) ? WMAObject.parseMovement (insert.getExtText (5)) : WMAObject.DEFAULT_MOVEMENT;
+				if (insert.ExtDoubleSize () > 0)		o.radius = insert.getExtDouble (0);
+				if (insert.ExtDoubleSize () > 1)		o.speed = insert.getExtDouble (1);
+				if (insert.ExtDoubleSize () > 2)		o.acceleration = insert.getExtDouble (2);
+				if (insert.ExtDoubleSize () > 3)		o.mass = insert.getExtDouble (3);
+				if (insert.ExtDoubleSize () > 4)		o.coef_res = insert.getExtDouble (4);
+				if (insert.ExtDoubleSize () > 5)		o.coef_fric = insert.getExtDouble (5);
 				w.aobjects ().add (o);
 			}
 		}
@@ -402,7 +412,19 @@ public class WorldDxf
 		insert.addExtText (0, ColorTool.getNameFromColor (o.color));
 		insert.addExtText (1, (o.shape != null) ? o.shape : "none");
 		insert.addExtText (2, Boolean.toString (o.usecolor));
-		if (o instanceof WMAObject)		insert.addExtText (3, (((WMAObject) o).dynamics != null) ? ((WMAObject) o).dynamics : "none");
+		if (o instanceof WMAObject)
+		{
+			WMAObject	ao = (WMAObject) o;
+			insert.addExtText (3, (ao.dynamics != null) ? ao.dynamics : "none");
+			insert.addExtText (4, ao.label);
+			insert.addExtText (5, ao.movement.name ());
+			insert.addExtDouble (0, ao.radius);
+			insert.addExtDouble (1, ao.speed);
+			insert.addExtDouble (2, ao.acceleration);
+			insert.addExtDouble (3, ao.mass);
+			insert.addExtDouble (4, ao.coef_res);
+			insert.addExtDouble (5, ao.coef_fric);
+		}
 		dxf.addBlock (block);
 		dxf.insertBlock (insert);
 	}

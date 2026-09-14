@@ -216,6 +216,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 					if (isBooleanProperty (name))	return boolEditor;
 					if (name.equals ("flow") && (propModel.item != null) && (propModel.item.kind == WorldItem.DOCK))
 						return new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (flowNames ()));
+					if (name.equals ("movement") && (propModel.item != null) && (propModel.item.kind == WorldItem.AOBJECT))
+						return new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (movementNames ()));
 					if (name.equals ("icon") && (propModel.item != null) && WorldItem.isObject (propModel.item.kind))
 					{
 						// choose among the icons defined in the world
@@ -236,6 +238,17 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 					if (name.equals ("color"))									return colorRenderer;
 				}
 				return super.getCellRenderer (row, column);
+			}
+
+			// disabled properties (e.g. the dynamics of a static animated object) are shown greyed out
+			public java.awt.Component prepareRenderer (javax.swing.table.TableCellRenderer renderer, int row, int column)
+			{
+				java.awt.Component	c = super.prepareRenderer (renderer, row, column);
+				boolean				enabled = propModel.isEnabled (row);
+				c.setEnabled (enabled);
+				if (!isCellSelected (row, column))
+					c.setForeground (enabled ? getForeground () : java.awt.Color.GRAY);
+				return c;
 			}
 		};
 		propTable.setRowHeight (22);
@@ -995,7 +1008,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		public int getRowCount ()						{ return names.length; }
 		public int getColumnCount ()					{ return 2; }
 		public String getColumnName (int c)				{ return (c == 0) ? "Property" : "Value"; }
-		public boolean isCellEditable (int r, int c)	{ return c == 1; }
+		public boolean isCellEditable (int r, int c)	{ return (c == 1) && isEnabled (r); }
+		boolean isEnabled (int r)						{ return (item == null) || isEnabledProperty (world, item, nameAt (r)); }
 
 		public Object getValueAt (int r, int c)
 		{
@@ -1098,7 +1112,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.AOBJECT:
 		{
 			WMAObject	o = w.aobjects ().get (it.index);
-			return "AOBJECT_" + it.index + "  [" + o.iconId + "]" + ((o.dynamics != null) ? " " + o.dynamics.substring (o.dynamics.lastIndexOf ('.') + 1) : "");
+			return o.label + "  [" + o.iconId + "]" + ((o.dynamics != null) ? " " + o.dynamics.substring (o.dynamics.lastIndexOf ('.') + 1) : "");
 		}
 		case WorldItem.CONNECTOR:		return w.connectors ().at (it.index).label;
 		case WorldItem.BEACON:		return w.beacons ().get (it.index).label;
@@ -1144,7 +1158,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		{
 			String	name = prefix + i;
 			if ((w.getType (name) == World.NONE) && (indexOfLabel (w, WorldItem.BEACON, name) < 0)
-					&& (indexOfLabel (w, WorldItem.CBEACON, name) < 0) && (indexOfLabel (w, WorldItem.FAREA, name) < 0))
+					&& (indexOfLabel (w, WorldItem.CBEACON, name) < 0) && (indexOfLabel (w, WorldItem.FAREA, name) < 0)
+					&& (indexOfLabel (w, WorldItem.AOBJECT, name) < 0))
 				return name;
 			i++;
 		}
@@ -1172,6 +1187,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.CBEACON:		return w.cbeacons ().get (it.index).label;
 		case WorldItem.WAYPOINT:	return w.wps ().get (it.index).label;
 		case WorldItem.DOCK:		return w.docks ().get (it.index).label;
+		case WorldItem.AOBJECT:		return w.aobjects ().get (it.index).label;
 		case WorldItem.ICON:		return w.icons ().get (it.index).label;
 		}
 		return null;
@@ -1279,7 +1295,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	static public WorldItem addAObject (World w, double x, double y)
 	{
 		WMAObject	obj = new WMAObject ();
-		initObject (w, obj, x, y, "AOBJECT_" + w.aobjects ().size ());
+		initObject (w, obj, x, y, uniqueLabel (w, "aobj"));
 		w.aobjects ().add (obj);
 		return new WorldItem (WorldItem.AOBJECT, w.aobjects ().size () - 1);
 	}
@@ -1778,7 +1794,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.PATH:		return new String[] { "x", "y", "z" };
 		case WorldItem.WALL:		return new String[] { "x1", "y1", "z1", "x2", "y2", "z2", "width", "height", "texture" };
 		case WorldItem.OBJECT:		return new String[] { "x", "y", "z", "orientation", "icon", "shape", "color", "usecolor" };
-		case WorldItem.AOBJECT:		return new String[] { "x", "y", "z", "orientation", "icon", "shape", "color", "usecolor", "dynamics" };
+		case WorldItem.AOBJECT:		return new String[] { "label", "x", "y", "z", "orientation", "radius", "icon", "shape", "color", "usecolor", "dynamics",
+														  "movement", "speed", "acceleration", "mass", "coef_res", "coef_fric" };
 		case WorldItem.ICON:		return new String[] { "label", "segments" };
 		case WorldItem.CONNECTOR:		return new String[] { "label", "x1", "y1", "z1", "x2", "y2", "z2", "path x1", "path y1", "path z1", "path x2", "path y2", "path z2", "width", "height", "texture" };
 		case WorldItem.BEACON:		return new String[] { "label", "x", "y", "z", "orientation", "width", "height" };
@@ -1857,7 +1874,19 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (name.equals ("color"))		return toHex (o.color);
 			if (name.equals ("usecolor"))	return Boolean.toString (o.usecolor);
 			if (name.equals ("icon"))		return (o.iconId == null) ? "" : o.iconId;
-			if (name.equals ("dynamics"))	return ((o instanceof WMAObject) && (((WMAObject) o).dynamics != null)) ? ((WMAObject) o).dynamics : "";
+			if (o instanceof WMAObject)
+			{
+				WMAObject	ao = (WMAObject) o;
+				if (name.equals ("label"))			return ao.label;
+				if (name.equals ("radius"))			return fmt (ao.radius);
+				if (name.equals ("dynamics"))		return (ao.dynamics != null) ? ao.dynamics : "";
+				if (name.equals ("movement"))		return ao.movement.name ();
+				if (name.equals ("speed"))			return fmt (ao.speed);
+				if (name.equals ("acceleration"))	return fmt (ao.acceleration);
+				if (name.equals ("mass"))			return fmt (ao.mass);
+				if (name.equals ("coef_res"))		return fmt (ao.coef_res);
+				if (name.equals ("coef_fric"))		return fmt (ao.coef_fric);
+			}
 			break;
 		}
 		case WorldItem.ICON:
@@ -2035,8 +2064,19 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 				if (ic == null)		throw new IllegalArgumentException ("Unknown icon '" + value + "'");
 				o.setIcon (ic);
 			}
-			else if (name.equals ("dynamics") && (o instanceof WMAObject))
-				((WMAObject) o).dynamics = (value.trim ().length () == 0) ? null : token (value);
+			else if (o instanceof WMAObject)
+			{
+				WMAObject	ao = (WMAObject) o;
+				if (name.equals ("label"))				ao.label = checkLabel (w, it, value);
+				else if (name.equals ("radius"))		ao.radius = Math.max (0.0, num (value));
+				else if (name.equals ("dynamics"))		ao.dynamics = (value.trim ().length () == 0) ? null : token (value);
+				else if (name.equals ("movement"))		ao.movement = WMAObject.parseMovement (value);
+				else if (name.equals ("speed"))			ao.speed = num (value);
+				else if (name.equals ("acceleration"))	ao.acceleration = num (value);
+				else if (name.equals ("mass"))			ao.mass = num (value);
+				else if (name.equals ("coef_res"))		ao.coef_res = num (value);
+				else if (name.equals ("coef_fric"))		ao.coef_fric = num (value);
+			}
 			return;
 		}
 		case WorldItem.ICON:
@@ -2158,6 +2198,28 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	static public boolean isBooleanProperty (String name)
 	{
 		return name.equals ("usecolor");
+	}
+
+	/** Names of the movement types of an animated object, the choices of the "movement" property. */
+	static public String[] movementNames ()
+	{
+		WMAObject.Movement[]	types = WMAObject.Movement.values ();
+		String[]				names = new String[types.length];
+		for (int i = 0; i < types.length; i++)		names[i] = types[i].name ();
+		return names;
+	}
+
+	/**
+	 * False for the properties that do not apply in the current state of the
+	 * element: the motion parameters (speed, acceleration, mass, coef_res,
+	 * coef_fric) of an animated object with STATIC movement.
+	 */
+	static public boolean isEnabledProperty (World w, WorldItem it, String name)
+	{
+		if ((it == null) || (it.kind != WorldItem.AOBJECT) || !valid (w, it))		return true;
+		if (name.equals ("speed") || name.equals ("acceleration") || name.equals ("mass") || name.equals ("coef_res") || name.equals ("coef_fric"))
+			return w.aobjects ().get (it.index).isMoving ();
+		return true;
 	}
 
 	/** Names of the dock flow types, the choices of the "flow" property. */
