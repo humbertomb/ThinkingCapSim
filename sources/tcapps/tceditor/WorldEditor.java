@@ -1113,7 +1113,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.AOBJECT:
 		{
 			WMAObject	o = w.aobjects ().get (it.index);
-			return o.label + "  [" + o.iconId + "]" + ((o.dynamics != null) ? " " + o.dynamics.substring (o.dynamics.lastIndexOf ('.') + 1) : "");
+			return o.label + ((o.dynamics != null) ? "  " + o.dynamics.substring (o.dynamics.lastIndexOf ('.') + 1) : "");
 		}
 		case WorldItem.CONNECTOR:		return w.connectors ().at (it.index).label;
 		case WorldItem.BEACON:		return w.beacons ().get (it.index).label;
