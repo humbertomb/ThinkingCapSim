@@ -25,19 +25,28 @@ public class WorldItem
 	static public final int		DOCK		= 10;
 	static public final int		START		= 11;
 	static public final int		ICON		= 12;		// icon definitions (local coordinates, no position in the world)
-	static public final int		DEFAULTS	= 13;
+	static public final int		GEOMETRY	= 13;		// default sizes and textures of the geometric elements
+	static public final int		BEHAVIOUR	= 14;		// settings of the world as used by the simulation
 
-	static public final int		NKINDS		= 14;
+	static public final int		NKINDS		= 15;
+
+	/** First of the setting kinds: the kinds below this one are drawable elements. */
+	static public final int		DEFAULTS	= GEOMETRY;
 
 	static public final String[]	NAMES	= {
 		"Zone", "Forbidden area", "Path point", "Wall", "Object", "Animated object", "Connector",
-		"Strip beacon", "Cylindrical beacon", "Waypoint", "Dock", "Start point", "Icon", "Defaults"
+		"Strip beacon", "Cylindrical beacon", "Waypoint", "Dock", "Start point", "Icon",
+		"Geometry defaults", "Behaviour defaults"
 	};
 
 	static public final String[]	PLURALS	= {
 		"Zones", "Forbidden areas", "Path points", "Walls", "Objects", "Animated objects", "Connectors",
-		"Strip beacons", "Cylindrical beacons", "Waypoints", "Docks", "Start points", "Icons", "Defaults"
+		"Strip beacons", "Cylindrical beacons", "Waypoints", "Docks", "Start points", "Icons",
+		"Geometries", "Behaviours"
 	};
+
+	/** True for the kinds that hold settings of the world, not drawable elements. */
+	static public boolean isSettings (int kind)		{ return (kind == GEOMETRY) || (kind == BEHAVIOUR); }
 
 	/** True for the kinds that are objects (static or animated). */
 	static public boolean isObject (int kind)		{ return (kind == OBJECT) || (kind == AOBJECT); }

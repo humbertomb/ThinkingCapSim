@@ -464,7 +464,7 @@ public class WorldView3DWindow extends JFrame
 			selBranch.detach ();
 			selBranch = null;
 		}
-		if (!WorldEditor.valid (world, selection) || (selection.kind == WorldItem.DEFAULTS) || (selection.kind == WorldItem.ICON))		return;
+		if (!WorldEditor.valid (world, selection) || WorldItem.isSettings (selection.kind) || (selection.kind == WorldItem.ICON))		return;
 
 		BranchGroup		bg = new BranchGroup ();
 		bg.setCapability (BranchGroup.ALLOW_DETACH);

@@ -43,6 +43,10 @@ public class World extends Object
 	public double					G_LENGHT	= 0.35;		// Goal point arrow lenght (m)
 	public double					D_LENGHT	= 0.25;		// Dock icon lenght (m)
 	
+	// Behaviour properties (how the world is used by the simulation)
+	static public final boolean		DEF_APW		= false;
+	public boolean					apw			= DEF_APW;	// A priori world knowledge: the robots know the map beforehand
+
 	// Robot starting locations (at least one; the i-th robot of a simulation takes the i-th one)
 	protected ArrayList<WMStart>		starts		= new ArrayList<WMStart> ();
 	{ starts.add (new WMStart (0.0, 0.0, 0.0, 0.0)); }
@@ -338,6 +342,8 @@ public class World extends Object
 	{
 		if (o == null)			o = new JsonObject ();
 
+		apw			= getBoolean (o, "apw", DEF_APW);
+
 		starts.clear ();
 		for (JsonElement e : getArray (o, "starts"))		starts.add (new WMStart (e.getAsJsonObject ()));
 		if (starts.isEmpty ())		starts.add (new WMStart (0.0, 0.0, 0.0, 0.0));
@@ -368,6 +374,7 @@ public class World extends Object
 	public JsonObject toJson ()
 	{
 		JsonObject	o = new JsonObject ();
+		o.addProperty ("apw", apw);
 		JsonArray	st = new JsonArray ();
 		for (WMStart s : starts)		st.add (s.toJson ());
 		o.add ("starts", st);

@@ -614,8 +614,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	{
 		propModel.setItem (item);
 		selLabel.setText ((item == null) ? " " : WorldItem.NAMES[item.kind] + ":  " + describe (world, item));
-		deleteAction.setEnabled ((item != null) && (item.kind != WorldItem.DEFAULTS) && ((item.kind != WorldItem.START) || (world.n_starts () > 1)));
-		if (duplicateAction != null)		duplicateAction.setEnabled ((item != null) && (item.kind != WorldItem.DEFAULTS));
+		deleteAction.setEnabled ((item != null) && !WorldItem.isSettings (item.kind) && ((item.kind != WorldItem.START) || (world.n_starts () > 1)));
+		if (duplicateAction != null)		duplicateAction.setEnabled ((item != null) && !WorldItem.isSettings (item.kind));
 		// the icon tool only applies to elements that have an icon (objects) or to icons themselves
 		boolean	hasIcon = (item != null) && (WorldItem.isObject (item.kind) || (item.kind == WorldItem.ICON));
 		toolButtons[WorldCanvas.T_ICON].setEnabled (hasIcon);
@@ -974,7 +974,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		public String toString ()
 		{
 			int	kind = ((Integer) getUserObject ()).intValue ();
-			if (kind == WorldItem.DEFAULTS)		return WorldItem.PLURALS[kind];
+			if (WorldItem.isSettings (kind))		return WorldItem.PLURALS[kind];
 			if (kind == WorldItem.BEACON)											return "Beacons  (" + n + ")";
 			return WorldItem.PLURALS[kind] + "  (" + n + ")";
 		}
@@ -1092,7 +1092,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.DOCK:		return w.docks ().size ();
 		case WorldItem.ICON:		return w.icons ().size ();
 		case WorldItem.START:		return w.n_starts ();
-		case WorldItem.DEFAULTS:	return 1;
+		case WorldItem.GEOMETRY:
+		case WorldItem.BEHAVIOUR:	return 1;
 		}
 		return 0;
 	}
@@ -1135,7 +1136,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			int		users = iconUsers (w, ic.label);
 			return ic.label + "  (" + ic.n () + " seg, " + users + " obj)";
 		}
-		case WorldItem.DEFAULTS:	return "Default values";
+		case WorldItem.GEOMETRY:	return "Default values";
+		case WorldItem.BEHAVIOUR:	return "World behaviour";
 		}
 		return "?";
 	}
@@ -1466,7 +1468,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			break;
 		}
 		}
-		if (n == null)					return null;		// DEFAULTS and unknown kinds
+		if (n == null)					return null;		// settings and unknown kinds
 
 		translate (w, n, DUP_OFFSET, DUP_OFFSET);
 		renameCopy (w, n);
@@ -1551,7 +1553,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			return true;
 		case WorldItem.START:		return w.removeStart (it.index);		// the last one stays
 		}
-		return false;		// DEFAULTS cannot be removed
+		return false;		// the settings cannot be removed
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -2017,7 +2019,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.WAYPOINT:	return new String[] { "label", "x", "y", "z", "orientation" };
 		case WorldItem.DOCK:		return new String[] { "label", "x", "y", "z", "orientation", "flow" };
 		case WorldItem.START:		return new String[] { "x", "y", "z", "orientation" };
-		case WorldItem.DEFAULTS:	return new String[] { "wall width", "wall height", "wall texture", "connector width", "connector height", "connector texture", "zone texture", "farea texture" };
+		case WorldItem.GEOMETRY:	return new String[] { "wall width", "wall height", "wall texture", "connector width", "connector height", "connector texture", "zone texture", "farea texture" };
+		case WorldItem.BEHAVIOUR:	return new String[] { "robot knowledge" };
 		}
 		return new String[0];
 	}
@@ -2188,7 +2191,10 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (name.equals ("orientation"))		return fmt (Math.toDegrees (st.orientation));
 			break;
 		}
-		case WorldItem.DEFAULTS:
+		case WorldItem.BEHAVIOUR:
+			if (name.equals ("robot knowledge"))	return Boolean.toString (w.apw);
+			break;
+		case WorldItem.GEOMETRY:
 			if (name.equals ("wall width"))		return fmt (w.walls ().defaultWidth ());
 			if (name.equals ("wall height"))	return fmt (w.walls ().defaultHeight ());
 			if (name.equals ("wall texture"))	return w.walls ().defaultTexture ();
@@ -2393,7 +2399,10 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			else if (name.equals ("orientation"))		st.orientation = Math.toRadians (num (value));
 			return;
 		}
-		case WorldItem.DEFAULTS:
+		case WorldItem.BEHAVIOUR:
+			if (name.equals ("robot knowledge"))	w.apw = bool (value);
+			return;
+		case WorldItem.GEOMETRY:
 			if (name.equals ("wall width"))			w.walls ().setDefaults (num (value), w.walls ().defaultHeight (), w.walls ().defaultTexture ());
 			else if (name.equals ("wall height"))	w.walls ().setDefaults (w.walls ().defaultWidth (), num (value), w.walls ().defaultTexture ());
 			else if (name.equals ("wall texture"))	w.walls ().setDefaults (w.walls ().defaultWidth (), w.walls ().defaultHeight (), token (value));
@@ -2419,7 +2428,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 
 	static public boolean isBooleanProperty (String name)
 	{
-		return name.equals ("usecolor");
+		return name.equals ("usecolor") || name.equals ("robot knowledge");
 	}
 
 	/** Names of the movement types of an animated object, the choices of the "movement" property. */
