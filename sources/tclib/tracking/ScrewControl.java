@@ -100,11 +100,11 @@ public class ScrewControl {
 		double vmax, rmax, km;
 		
 		double vel;
-		double distinit;
+		//double distinit;
 		double distgoal;
 		
 		distgoal = pos.distance(goal.x(), goal.y());
-		distinit = pos.distance(init.x(), init.y());
+		//distinit = pos.distance(init.x(), init.y());
 		
 		/*
 		double b_aux = 0.01;

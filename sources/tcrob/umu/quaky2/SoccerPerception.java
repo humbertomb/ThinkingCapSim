@@ -5,8 +5,6 @@
 package tcrob.umu.quaky2;
 
 import tc.runtime.thread.ModuleConfig;
-import java.util.*;
-//import java.awt.*;
 
 import tc.shared.lps.lpo.*;
 import tc.shared.linda.*;

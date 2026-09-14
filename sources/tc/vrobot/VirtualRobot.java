@@ -5,7 +5,6 @@
 package tc.vrobot;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.Properties;
 
 import tc.runtime.thread.ModuleConfig;
@@ -71,22 +70,17 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected void initialise (ModuleConfig cfg)
 	{		
 		String			rname;
-		File				file;
-		FileInputStream	stream;
 		String			wdesc;
 
 		// Load robot environment description and parameters
 		rname			= cfg.get ("DESC");
 		wname			= cfg.get ("WORLD");
 
-		// Load robot description and parameters
+		// Load robot description and parameters (JSON or the legacy properties format)
 		rprops			= new Properties ();
 		try
 		{
-			file 		= new File (rname);
-			stream 		= new FileInputStream (file);
-			rprops.load (stream);
-			stream.close ();
+			rprops		= RobotDef.load (new File (rname)).toProperties ();
 		} catch (Exception e) { e.printStackTrace (); }
 
 		// Load world description and parameters (only when the world grants "a priori" knowledge to the robots)

@@ -1,9 +1,6 @@
 package tcrob.oru.rasmus;
 
 import tc.runtime.thread.ModuleConfig;
-import java.util.*;
-//import java.io.*;
-
 import tc.vrobot.*;
 import tc.shared.linda.*;
 

@@ -1223,10 +1223,11 @@ public class MK2_5FGrid {
 		double sumMu;		// possibility degree
 		double sumX;		// X index
 		double sumY;		// Y index
-		double sumTh;		// theta value (cell centers)
-		double sumDelta;	// theta variance (cell core)
+//		double sumTh;		// theta value (cell centers)
+//		double sumDelta;	// theta variance (cell core)
 		
-		sumMu = sumX = sumY = sumTh = sumDelta = 0.0;
+		sumMu = sumX = sumY = 0.0;
+//		sumTh = sumDelta = 0.0;
 		
 		double dwidth = (double)gwidth;
 		double dheight = (double)gheight;
@@ -1254,8 +1255,8 @@ public class MK2_5FGrid {
 					sumMu += h_cell;
 					sumX += h_cell * xd;
 					sumY += h_cell * yd;
-					sumTh += h_cell * cell.getCenter();
-					sumDelta += h_cell * cell.getCore();
+//					sumTh += h_cell * cell.getCenter();
+//					sumDelta += h_cell * cell.getCore();
 					
 					if (xd < minX) minX = xd;
 					if (xd > maxX) maxX = xd;

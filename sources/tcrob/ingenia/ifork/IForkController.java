@@ -7,7 +7,6 @@ package tcrob.ingenia.ifork;
 
 import tc.runtime.thread.ModuleConfig;
 import java.io.*;
-import java.util.Properties;
 
 import tc.modules.Controller;
 import tc.shared.linda.ItemBehResult;

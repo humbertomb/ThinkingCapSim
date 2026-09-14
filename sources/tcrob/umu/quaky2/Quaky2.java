@@ -5,7 +5,6 @@
 package tcrob.umu.quaky2;
 
 import tc.runtime.thread.ModuleConfig;
-import java.util.*;
 
 import tc.vrobot.*;
 import tc.vrobot.models.*;

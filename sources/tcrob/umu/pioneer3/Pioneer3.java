@@ -5,7 +5,6 @@
 package tcrob.umu.pioneer3;
 
 import tc.runtime.thread.ModuleConfig;
-import java.util.*;
 
 import devices.drivers.laser.*;
 

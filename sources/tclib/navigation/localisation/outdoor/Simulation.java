@@ -108,7 +108,7 @@ public class Simulation //extends Perception
 
 			if (reader == null)			return;
 			//data.compass[0] = new CompassData();
-			int index=0;
+			//int index=0;
 			try
 			{
 				while (reader.ready ())
@@ -132,7 +132,7 @@ public class Simulation //extends Perception
 					}
 					else if (sensor.equals ("GPS"))
 					{
-						index++; 
+						//index++; 
 							for (i = 0; i < GPSData.DATALOG; i++)
 							gpslog[i] = Double.parseDouble (st.nextToken ());
 						

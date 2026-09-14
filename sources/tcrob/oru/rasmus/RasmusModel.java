@@ -5,7 +5,6 @@
 package tcrob.oru.rasmus;
 
 import tc.runtime.thread.ModuleConfig;
-import java.util.*;
 
 import tc.shared.linda.*;
 

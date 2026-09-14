@@ -318,13 +318,13 @@ public class FuzzyControl {
 		
 		double	dx, dy;
 		double	delta;
-		double	dist, heading;	
+		double	heading;	
 		double	vmax, rmax;
 		
 		// Compute heading to look-ahead point
 		dx		= looka.x () - pos.x ();
 		dy		= looka.y () - pos.y ();
-		dist	= Math.sqrt (dx * dx + dy * dy);				// [m]
+		//dist	= Math.sqrt (dx * dx + dy * dy);				// [m]
 		heading	= Math.atan2 (dy, dx);							// [rad]
 		delta	= Angles.radnorm_180 (heading - pos.alpha ());	// [rad]
 		delta	= Angles.radnorm_180 (Math.PI + delta);

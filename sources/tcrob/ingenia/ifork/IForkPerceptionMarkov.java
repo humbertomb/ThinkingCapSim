@@ -5,7 +5,6 @@
 package tcrob.ingenia.ifork;
 
 import tc.runtime.thread.ModuleConfig;
-import java.util.*;
 
 import tc.shared.linda.*;
 

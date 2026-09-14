@@ -5,7 +5,6 @@
 package tcrob.umu.indoor;
 
 import tc.runtime.thread.ModuleConfig;
-import java.util.*;
 
 import tc.shared.linda.*;
 import tc.shared.lps.*;
