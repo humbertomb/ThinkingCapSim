@@ -295,6 +295,29 @@ public class DeployArch
 
 	static public Linda newGlobalLinda ()			{ return new Linda ("localhost", 5500, false); }
 
+	/**
+	 * Problems that prevent the deployment from being executed, as messages
+	 * for the user (empty when it can run). One robot runs on its local Linda
+	 * space alone; two or more need a global Linda space and a Linda router in
+	 * every robot, which is how their modules exchange coordination tuples.
+	 */
+	public List<String> validate ()
+	{
+		List<String>	problems = new ArrayList<String> ();
+		if (robots.isEmpty ())
+			problems.add ("The deployment has no robots to execute.");
+		if (robots.size () > 1)
+		{
+			if (globalLinda == null)
+				problems.add ("A deployment with several robots needs a global Linda space (the robots coordinate through it).");
+			List<String>	without = new ArrayList<String> ();
+			for (Robot r : robots)	if (r.router == null)	without.add (r.name);
+			if (!without.isEmpty ())
+				problems.add ("Every robot of a multi-robot deployment needs a Linda router; missing in: " + String.join (", ", without) + ".");
+		}
+		return problems;
+	}
+
 	/* ------------------------------------------------------------------ */
 	/* ADF (Properties) conversion                                         */
 	/* ------------------------------------------------------------------ */
@@ -304,19 +327,16 @@ public class DeployArch
 	{
 		Properties	p = new Properties ();
 		Robot		r = robots.get (robot);
-		// Global Linda space: the one of the deployment or, when it has none but some robot has a
-		// router, one hosted in-process (a robot without router would otherwise receive its own
-		// COORD/SYNC tuples back). When it is hosted here only the first robot creates the server;
-		// the others connect to it, so the robots must be started in order.
-		boolean	anyRouter = false;
-		for (Robot x : robots)		if (x.router != null)	anyRouter = true;
-		Linda	g = (globalLinda != null) ? globalLinda : (anyRouter ? newGlobalLinda () : null);
+		// Global Linda space: only the one of the deployment. A single robot needs none (the
+		// simulator and the modules talk through its local space); several robots need it and
+		// the routers (see validate). When it is hosted here only the first robot creates the
+		// server; the others connect to it, so the robots must be started in order.
+		Linda	g = globalLinda;
 		if (g != null)
 		{
-			boolean	create = (globalLinda != null) ? globalLinda.instantiate : true;
 			p.setProperty ("GLINADDR", g.address);
 			p.setProperty ("GLINPORT", String.valueOf (g.port));
-			p.setProperty ("GLINCREATE", String.valueOf (create && (robot == 0)));
+			p.setProperty ("GLINCREATE", String.valueOf (g.instantiate && (robot == 0)));
 		}
 		p.setProperty ("LLINADDR", r.linda.address);
 		p.setProperty ("LLINPORT", String.valueOf (r.linda.port));
@@ -329,7 +349,7 @@ public class DeployArch
 		for (int i = 0; i < r.modules.size (); i++)		prefixes.add ("MOD" + (i + 1));
 		p.setProperty ("MODULES", String.join (", ", prefixes));
 		for (int i = 0; i < r.modules.size (); i++)		writeModule (p, r.modules.get (i), prefixes.get (i));
-		if (r.router != null)
+		if ((r.router != null) && (g != null))				// a router only makes sense with a global space to route to
 		{
 			p.setProperty ("ROUTER", "COO");
 			writeModule (p, r.router, "COO");

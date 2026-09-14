@@ -444,9 +444,10 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	public void execute ()
 	{
 		terminate ();
-		if (deploy.robots.isEmpty ())
+		List<String>	problems = deploy.validate ();
+		if (!problems.isEmpty ())
 		{
-			JOptionPane.showMessageDialog (this, "The deployment has no robots to execute.", TITLE, JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog (this, String.join ("\n", problems) + "\n\nEdit the deployment architecture to fix it.", TITLE, JOptionPane.WARNING_MESSAGE);
 			return;
 		}
 		simulator	= new Simulator ();
