@@ -226,7 +226,9 @@ public class Simulator
 		double		l1, l2, r1, r2;
 		Line2		line;
 		
-		icons[index]	= new Line2[icon.length];
+		// the sensor threads of the robots read icons[index] concurrently: build the new segments
+		// apart and publish the complete array at the end (filling it in place left null entries)
+		Line2[]		moved = new Line2[icon.length];
 		for (i = 0; i < icon.length; i++)
 		{
 			line		= icon[i];
@@ -247,8 +249,9 @@ public class Simulator
 			x2	= rx + l2 * Math.cos (r2); 
 			y2	= ry + l2 * Math.sin (r2); 
 			
-			icons[index][i]	= new Line2 (x1,y1,x2,y2);
+			moved[i]	= new Line2 (x1,y1,x2,y2);
 		}
+		icons[index]	= moved;
 	}
 
 	public Line2 closerIcon (SimObject obj, int index)
