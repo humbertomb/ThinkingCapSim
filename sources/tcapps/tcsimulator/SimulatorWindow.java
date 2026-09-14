@@ -368,6 +368,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		deploy			= d;
 		worldModified	= false;
+		lastTasks		= null;					// the remembered task set names places and robots of the previous deployment
 		String	wname = deploy.getWorldFile ();
 		if (wname != null)		showWorld (new File (wname));
 		else					showWorld (null);
@@ -828,6 +829,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		}
 		world		= w;
 		worldFile	= f;
+		lastTasks	= null;					// the places of the remembered task set may not exist in this world
 		monitorPanel.setWorld (world);
 		canvas.setWorld (world);
 		canvas.zoomToFit ();
@@ -869,6 +871,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			return;
 		}
 		world		= edited;
+		lastTasks	= null;					// places may have been renamed or removed
 		worldFile	= f;
 		monitorPanel.setWorld (world);
 		canvas.setWorld (world);
