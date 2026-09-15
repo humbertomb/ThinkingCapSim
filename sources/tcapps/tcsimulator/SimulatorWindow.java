@@ -812,21 +812,27 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	}
 
 	/**
-	 * The image of the robot, centred on it, scaled to its bumpers and turned with
-	 * it. When there is one it stands for the body of the robot, so the drawing of
-	 * its outline is left out (the heading and the name are still drawn).
+	 * The image of the robot, drawn over the box its bumpers occupy and turned
+	 * with it. When there is one it stands for the body of the robot, so the
+	 * drawing of its outline is left out (the heading and the name are still
+	 * drawn).
 	 *
 	 * @return whether the image was drawn
 	 */
 	private boolean drawRobotImage (Graphics2D g, WorldCanvas c, RobotView rv, double x, double y, double a)
 	{
 		java.awt.Image	img = tc.vrobot.RobotImage.get (rv.rdesc.image);
-		double[]		size;
+		double[]		b;
+		double			bx, by, ox, oy;
 
 		if (img == null)				return false;
-		size	= tc.vrobot.RobotImage.size (rv.rdesc.bumfeat, rv.rdesc.icon, rv.rdesc.RADIUS);
-		if (size == null)				return false;
-		tc.vrobot.RobotImage.draw (g, img, c.toPixelX (x), c.toPixelY (y), size[0] * c.getScale (), size[1] * c.getScale (), a);
+		b	= tc.vrobot.RobotImage.box (rv.rdesc.bumfeat, rv.rdesc.icon, rv.rdesc.RADIUS);
+		if (b == null)					return false;
+		bx	= (b[0] + b[2]) / 2;		by = (b[1] + b[3]) / 2;			// centre of the box, in the frame of the robot
+		ox	= x + bx * Math.cos (a) - by * Math.sin (a);
+		oy	= y + bx * Math.sin (a) + by * Math.cos (a);
+		tc.vrobot.RobotImage.draw (g, img, c.toPixelX (ox), c.toPixelY (oy),
+									(b[2] - b[0]) * c.getScale (), (b[3] - b[1]) * c.getScale (), a);
 		return true;
 	}
 

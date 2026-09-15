@@ -28,19 +28,21 @@ public class RobotImage
 	static public void flush (String path)						{ PlanImage.flush (path); }
 
 	/**
-	 * Size the image is drawn at: the size of the box the bumpers occupy, or of
-	 * the drawing of the robot when it has no bumpers, or its diameter when it
-	 * has neither. The box is centred on the robot, so the image is too.
+	 * Box the image is drawn over, in the frame of the robot: the box the bumpers
+	 * occupy, or the one the drawing of the robot occupies when it has none, or
+	 * the one its radius gives when it has neither. It is not necessarily centred
+	 * on the robot (a fork lift is a long way in front of its axle), so the image
+	 * is placed on the centre of the box and not on the centre of the robot.
 	 *
-	 * @return {width, height} in metres, or null when there is nothing to size it with
+	 * @return {minx, miny, maxx, maxy} in metres, or null when there is nothing to measure
 	 */
-	static public double[] size (Line2[] bumpers, Line2[] icon, double radius)
+	static public double[] box (Line2[] bumpers, Line2[] icon, double radius)
 	{
 		double[]	b = PlanImage.bounds (bumpers);
 
 		if (b == null)		b = PlanImage.bounds (icon);
-		if (b == null)		return (radius > 0.0) ? new double[] { 2 * radius, 2 * radius } : null;
-		return new double[] { b[2] - b[0], b[3] - b[1] };
+		if (b == null)		return (radius > 0.0) ? new double[] { -radius, -radius, radius, radius } : null;
+		return b;
 	}
 
 	/**

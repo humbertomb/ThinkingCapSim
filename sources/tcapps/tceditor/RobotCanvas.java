@@ -530,16 +530,17 @@ public class RobotCanvas extends JPanel
 		g.draw (new Line2D.Double (px (0), 0, px (0), getHeight ()));
 	}
 
-	/** The bitmap of the robot: centred on it and scaled to the size of its bumpers. */
+	/** The bitmap of the robot: drawn over the box its bumpers occupy. */
 	private void drawImage (Graphics2D g)
 	{
 		java.awt.Image	img = RobotImage.get (robot.image);
-		double[]		size;
+		double[]		b;
 
 		if (img == null)				return;
-		size	= RobotImage.size (bumperLines (), iconLines (), robot.radius);
-		if (size == null)				return;
-		RobotImage.draw (g, img, px (0), py (0), size[0] * scale, size[1] * scale, 0.0);
+		b	= RobotImage.box (bumperLines (), iconLines (), robot.radius);
+		if (b == null)					return;
+		RobotImage.draw (g, img, px ((b[0] + b[2]) / 2), py ((b[1] + b[3]) / 2),
+							(b[2] - b[0]) * scale, (b[3] - b[1]) * scale, 0.0);
 	}
 
 	/** The bumpers as segments, for the geometry helpers of the runtime. */
