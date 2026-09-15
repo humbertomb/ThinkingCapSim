@@ -190,7 +190,7 @@
     }
   ],
   "image": "./conf/2dmodels/pioneer3.png",
-  "shapeRobot": "conf/3dmodels/pioneer3.3ds",
+  "shapeRobot": "./conf/3dmodels/pioneer3.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.DifferentialDrive",
     "vmax": 1.2,
@@ -216,11 +216,8 @@
       "rangemax": 10.0,
       "rangemin": 0.135,
       "cone": 20.0,
-      "cycle": 4,
       "rays": 11,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
+      "cycle": 4,
       "sensors": [
         {
           "rho": 0.161245154965971,
@@ -337,25 +334,10 @@
       ]
     },
     "ir": {
-      "rangemax": 0.0,
-      "rangemin": 0.0,
-      "cone": 0.0,
-      "cycle": 0,
-      "rays": 0,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
       "sensors": []
     },
     "lrf": {
-      "rangemax": 0.0,
-      "rangemin": 0.0,
-      "cone": 0.0,
       "cycle": 6,
-      "rays": 0,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
       "sensors": [
         {
           "rho": 0.2,
@@ -372,36 +354,12 @@
       ]
     },
     "lsb": {
-      "rangemax": 0.0,
-      "rangemin": 0.0,
-      "cone": 0.0,
-      "cycle": 0,
-      "rays": 0,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
       "sensors": []
     },
     "trk": {
-      "rangemax": 0.0,
-      "rangemin": 0.0,
-      "cone": 0.0,
-      "cycle": 0,
-      "rays": 0,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
       "sensors": []
     },
     "vis": {
-      "rangemax": 0.0,
-      "rangemin": 0.0,
-      "cone": 0.0,
-      "cycle": 0,
-      "rays": 0,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
       "sensors": []
     }
   },

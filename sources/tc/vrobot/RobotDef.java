@@ -5,11 +5,9 @@
 package tc.vrobot;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -29,9 +27,9 @@ import com.google.gson.GsonBuilder;
  * The runtime still reads a robot description as a flat set of properties
  * ({@link RobotDesc}, {@link RobotModel}, tclib.utils.fusion.FusionDesc, the
  * drivers), and a description travels to the modules that way, so
- * {@link #toProperties()} rebuilds them and {@link #fromProperties(Properties)}
- * reads a legacy file. Keys the model does not describe are kept in
- * {@link #extra}, so nothing of a converted file is lost.
+ * {@link #toProperties()} rebuilds them. Keys the model does not describe (the
+ * errors of the simulation, the fusion, the layers, ...) are kept in
+ * {@link #extra} and travel with them.
  */
 public class RobotDef
 {
@@ -102,6 +100,9 @@ public class RobotDef
 		public String		driver;					// driver every sensor of the family uses (LRF0, LSB0, ...)
 		public List<Sensor>	sensors	= new ArrayList<Sensor> ();
 
+		/** True when its sensors say what they detect: only the cycle is of the family. */
+		transient boolean	own;
+
 		public int n ()								{ return sensors.size (); }
 
 		public Family copy ()
@@ -109,7 +110,7 @@ public class RobotDef
 			Family	f = new Family ();
 			f.rangemax = rangemax;	f.rangemin = rangemin;	f.cone = cone;		f.cycle = cycle;
 			f.rays = rays;		f.reflect = reflect;	f.beacons = beacons;	f.objects = objects;
-			f.driver = driver;
+			f.driver = driver;	f.own = own;
 			for (Sensor s : sensors)		f.sensors.add (s.copy ());
 			return f;
 		}
@@ -225,7 +226,37 @@ public class RobotDef
 	static protected Gson gson ()
 	{
 		return new GsonBuilder ().setPrettyPrinting ().disableHtmlEscaping ()
+					.registerTypeAdapter (Family.class, new FamilyWriter ())
 					.registerTypeAdapter (Sensor.class, new SensorWriter ()).create ();
+	}
+
+	/**
+	 * Writes a family leaving out what it does not say: the detection properties
+	 * of a family whose sensors carry their own (the laser range finders, the
+	 * beacon scanners and the radar trackers keep only their firing cycle), and
+	 * anything left at its default in the others.
+	 */
+	static private class FamilyWriter implements com.google.gson.JsonSerializer<Family>
+	{
+		public com.google.gson.JsonElement serialize (Family f, java.lang.reflect.Type type, com.google.gson.JsonSerializationContext ctx)
+		{
+			com.google.gson.JsonObject	o = new com.google.gson.JsonObject ();
+
+			if (!f.own)
+			{
+				if (f.driver != null)		o.addProperty ("driver", f.driver);
+				if (f.rangemax != 0.0)		o.addProperty ("rangemax", f.rangemax);
+				if (f.rangemin != 0.0)		o.addProperty ("rangemin", f.rangemin);
+				if (f.cone != 0.0)			o.addProperty ("cone", f.cone);
+				if (f.rays != 0)			o.addProperty ("rays", f.rays);
+				if (f.reflect != 0.0)		o.addProperty ("reflect", f.reflect);
+				if (f.beacons != 0)			o.addProperty ("beacons", f.beacons);
+				if (f.objects != 0)			o.addProperty ("objects", f.objects);
+			}
+			if (f.cycle != 0)				o.addProperty ("cycle", f.cycle);
+			o.add ("sensors", ctx.serialize (f.sensors));
+			return o;
+		}
 	}
 
 	/**
@@ -267,53 +298,24 @@ public class RobotDef
 		return d;
 	}
 
-	/** Reads a robot description, in JSON or in the legacy properties format. */
+	/** Reads a robot description. */
 	static public RobotDef load (File f) throws IOException
 	{
 		RobotDef	d;
+		Reader		in = new FileReader (f, java.nio.charset.StandardCharsets.UTF_8);
 
-		if (isJson (f))
+		try
 		{
-			Reader	in = new FileReader (f, java.nio.charset.StandardCharsets.UTF_8);
-			try
-			{
-				d	= gson ().fromJson (in, RobotDef.class);
-				if (d == null)		throw new IOException ("Empty robot description");
-			}
-			finally { in.close (); }
+			d	= gson ().fromJson (in, RobotDef.class);
+			if (d == null)		throw new IOException ("Empty robot description");
 		}
-		else
-		{
-			Properties	props = new Properties ();
-			InputStream	in = new FileInputStream (f);
-			try { props.load (in); } finally { in.close (); }
-			d	= fromProperties (props);
-		}
+		finally { in.close (); }
 
 		d.normalise ();
 		if ((d.name == null) || (d.name.trim ().length () == 0))		d.name = baseName (f);
 		d.file		= f;
 		d.original	= d.toJson ();
 		return d;
-	}
-
-	/** True when the file holds a JSON description (the new format). */
-	static public boolean isJson (File f)
-	{
-		InputStream	in = null;
-		try
-		{
-			in	= new FileInputStream (f);
-			int		c;
-			while ((c = in.read ()) != -1)
-			{
-				if (Character.isWhitespace (c))		continue;
-				return (c == '{');
-			}
-		}
-		catch (Exception e) { }
-		finally { try { if (in != null)		in.close (); } catch (Exception e) { } }
-		return false;
 	}
 
 	static private String baseName (File f)
@@ -368,7 +370,8 @@ public class RobotDef
 			Family	f = sensors.get (fam);
 			if (f == null)			sensors.put (fam, f = new Family ());
 			if (f.sensors == null)	f.sensors = new ArrayList<Sensor> ();
-			if (hasOwnDetection (fam))		migrate (f);
+			f.own	= hasOwnDetection (fam);
+			if (f.own)				migrate (f);
 		}
 	}
 
@@ -403,110 +406,16 @@ public class RobotDef
 	}
 
 	/* ------------------------------------------------------------------ */
-	/* Legacy properties                                                   */
+	/* The properties the runtime still reads                              */
 	/* ------------------------------------------------------------------ */
 
-	/** Reads a description given as the properties of a legacy .robot file. */
-	static public RobotDef fromProperties (Properties props)
-	{
-		RobotDef	d = new RobotDef ();
-		List<String>	used = new ArrayList<String> ();
-
-		d.normalise ();
-		d.radius		= num (props, "RADIUS", 0.25, used);
-		d.image			= str (props, "IMAGE", used);
-		d.shapeRobot	= str (props, "V3DFILE", used);
-		d.shapeActuator	= str (props, "V3DLIFT", used);
-
-		// drawing
-		int		lines = (int) num (props, "LINES", 0, used);
-		for (int i = 0; i < lines; i++)
-			d.icon.add (new IconLine (num (props, "iconxi" + i, 0, used), num (props, "iconyi" + i, 0, used),
-									  num (props, "iconxf" + i, 0, used), num (props, "iconyf" + i, 0, used)));
-
-		// kinematics
-		Kinematics	k = d.kinematics;
-		k.drive			= str (props, "DRIVEMODEL", used);
-		if (k.drive == null)		k.drive = "tc.vrobot.models.DifferentialDrive";
-		k.vmax			= num (props, "VMAX", 0, used);
-		k.rmax			= num (props, "RMAX", 0, used);
-		k.maxmotor		= num (props, "MAXMOTOR", 0, used);
-		k.maxsteer		= num (props, "MAXSTEER", 0, used);
-		k.samax			= num (props, "SAMAX", 0, used);
-		k.lamax			= num (props, "LAMAX", 0, used);
-		k.ldmax			= num (props, "LDMAX", 0, used);
-		k.length		= num (props, "LENGHT", 0, used);
-		k.base			= num (props, "BASE", 0, used);
-		k.rwheel		= num (props, "RWHEEL", 0, used);
-		k.wheel			= num (props, "WHEEL", 0, used);
-		k.gear			= num (props, "GEAR", 0, used);
-		k.pulses		= num (props, "PULSES", 0, used);
-		k.dtime			= (long) num (props, "DTIME", 100, used);
-		k.odomET		= num (props, "ODOM_ET", 0, used);
-		k.odomER		= num (props, "ODOM_ER", 0, used);
-		k.odomBias		= num (props, "ODOM_BIAS", 0, used);
-
-		// bumpers
-		int		nbum = (int) num (props, "MAXBUMPER", 0, used);
-		for (int i = 0; i < nbum; i++)
-			d.bumpers.add (new Bumper (num (props, "bumxi" + i, 0, used), num (props, "bumyi" + i, 0, used),
-									   num (props, "bumxf" + i, 0, used), num (props, "bumyf" + i, 0, used)));
-
-		// range sensors, family by family
-		for (int fi = 0; fi < FAMILIES.length; fi++)
-		{
-			String	fam = FAMILIES[fi], key = FAMILY_KEYS[fi];
-			Family	f = d.family (fam);
-			int		n = (int) num (props, FAMILY_COUNTS[fi], 0, used);
-
-			f.rangemax	= num (props, "RANGE" + key, 0, used);
-			f.rangemin	= num (props, "MINIM" + key, 0, used);
-			f.cone		= num (props, "CONE" + key, 0, used);
-			f.cycle		= (int) num (props, "CYCLE" + key, 0, used);
-			f.rays		= (int) num (props, "RAY" + key, 0, used);
-			f.reflect	= num (props, "REF" + key, 0, used);
-			f.beacons	= (int) num (props, "BEAC" + key, 0, used);
-			if (fam.equals ("trk"))		f.objects = (int) num (props, "OBJTRK", 0, used);
-
-			for (int i = 0; i < n; i++)
-			{
-				Sensor	s = new Sensor ();
-				s.rho			= num (props, fam + "len" + i, 0, used);
-				s.theta			= num (props, fam + "rho" + i, 0, used);
-				s.height		= num (props, fam + "hgt" + i, 0, used);
-				s.orientation	= num (props, fam + "feat" + i, 0, used);
-				s.step			= (int) num (props, fam + "step" + i, 0, used);
-				if (FAMILY_OWN[fi])
-				{
-					// what this one detects, or what the family says when it does not say it
-					s.driver	= str (props, FAMILY_DRIVERS[fi] + i, used);
-					s.rangemax	= num (props, "RANGE" + key + i, f.rangemax, used);
-					s.rangemin	= num (props, "MINIM" + key + i, f.rangemin, used);
-					s.cone		= num (props, "CONE" + key + i, f.cone, used);
-					s.rays		= (int) num (props, "RAY" + key + i, f.rays, used);
-					s.reflect	= num (props, "REF" + key + i, f.reflect, used);
-					s.beacons	= (int) num (props, "BEAC" + key + i, f.beacons, used);
-					s.objects	= (int) num (props, "OBJ" + key + i, f.objects, used);
-				}
-				else if (FAMILY_DRIVERS[fi] != null)
-				{
-					// the driver is one for the whole family: the first one that names it wins
-					String	drv = str (props, FAMILY_DRIVERS[fi] + i, used);
-					if ((drv != null) && (f.driver == null))		f.driver = drv;
-				}
-				f.sensors.add (s);
-			}
-			if (FAMILY_OWN[fi])		migrate (f);				// what the family said is now of each sensor
-		}
-
-		// everything the model does not describe travels as it is
-		for (String p : props.stringPropertyNames ())
-			if (!used.contains (p))		d.extra.put (p, props.getProperty (p));
-
-		return d;
-	}
-
-	/** The description as the flat properties the runtime reads. */
+	/**
+	 * The description as the flat properties the runtime reads. It is the only
+	 * place properties are left: a description travels to the modules this way
+	 * (ItemConfig.props_robot) and {@link RobotDesc} and
+	 * tclib.utils.fusion.FusionDesc are built from them. Descriptions themselves
+	 * are read and written as JSON only.
+	 */
 	public Properties toProperties ()
 	{
 		Properties	p = new Properties ();
@@ -606,19 +515,6 @@ public class RobotDef
 	}
 
 	/* Helpers */
-
-	static private double num (Properties props, String key, double def, List<String> used)
-	{
-		used.add (key);
-		try { return Double.parseDouble (props.getProperty (key).trim ()); } catch (Exception e) { return def; }
-	}
-
-	static private String str (Properties props, String key, List<String> used)
-	{
-		used.add (key);
-		String	v = props.getProperty (key);
-		return ((v == null) || (v.trim ().length () == 0)) ? null : v.trim ();
-	}
 
 	static private void set (Properties p, String key, double value)
 	{

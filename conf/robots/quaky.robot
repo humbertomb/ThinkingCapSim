@@ -1,255 +1,338 @@
-#---------------------------------------------------------------------
-# Jun 2000		Humberto Martinez Barbera
-#
-# Quaky-Ant robot 
-#
-
-#---------------------------------------------------------------------
-# Sonar sensors definition
-#---------------------------------------------------------------------
-MAXSONAR = 10
-RANGESON = 5.0
-MINIMSON = 0.135
-CONESON = 20
-SENSIBSON = 0.0000001
-#SENSIBSON = 0.001
-RAYSON = 11
-ERRORSON = 0.05
-MODESON = 2
-#FILTERSON = lagarra2.sonar.filter
-
-sonfeat0 = 90.0
-sonlen0 = 0.253783
-sonrho0 = 55.8403
-sonfeat1 = 60.0
-sonlen1 = 0.272617
-sonrho1 =  44.1826
-sonfeat2 = 30.0
-sonlen2 = 0.280011
-sonrho2 = 29.9987
-sonfeat3 = 0.0
-sonlen3 = 0.268200
-sonrho3 = 11.8336
-sonfeat4 = 0.0
-sonlen4= 0.268200
-sonrho4 = -11.8336
-sonfeat5 = -30.0
-sonlen5 = 0.280011
-sonrho5 = -29.9987
-sonfeat6 = -60.0
-sonlen6 = 0.272617
-sonrho6 = -44.1826
-sonfeat7 = -90.0
-sonlen7 = 0.253783
-sonrho7 = -55.8403
-sonfeat8 = -90.0
-sonlen8 = 0.237828
-sonrho8 = -140.1173
-sonfeat9 = 90.0
-sonlen9 = 0.237828
-sonrho9 = 140.1173
-
-#---------------------------------------------------------------------
-# Infrared sensors definition
-#---------------------------------------------------------------------
-MAXIR = 7
-#RANGEIR = 0.45
-RANGEIR = 1.20
-MINIMIR = 0.1
-CONEIR= 10
-RAYIR = 5
-ERRORIR = 0.05
-MODEIR = 2
-#FILTERIR = lagarra2.ir.filter
-
-irfeat0 = 60.0
-irlen0 = 0.272617
-irrho0 =  44.1826
-irfeat1 = 30.0
-irlen1 = 0.280011
-irrho1 = 29.9987
-irfeat2 = 0.0
-irlen2 = 0.268200
-irrho2 = 11.8336
-irfeat3 = 0.0
-irlen3= 0.262500
-irrho3 = 0.0
-irfeat4 = 0.0
-irlen4= 0.268200
-irrho4 = -11.8336
-irfeat5 = -30.0
-irlen5 = 0.280011
-irrho5 = -29.9987
-irfeat6 = -60.0
-irlen6 = 0.272617
-irrho6 = -44.1826
-	
-#---------------------------------------------------------------------
-# Virtual sensors definition
-#---------------------------------------------------------------------
-MAXVIRTU = 10
-MODEVIRTU = 4
-RANGEVIRTU = 5.0
-CONEVIRTU = 17
-RAYVIRTU = 15
-#MODEVIRTU = 3
-FILTERVIRTU = anfis5.filter
-
-virtumode0 = 0
-virtufeat0 = 90.0
-virtulen0 = 0.253783
-virturho0 = 55.8403
-virtufeat1 = 60.0
-virtulen1 = 0.272617
-virturho1 =  44.1826
-virtufeat2 = 30.0
-virtulen2 = 0.280011
-virturho2 = 29.9987
-virtufeat3 = 0.0
-virtulen3 = 0.268200
-virturho3 = 11.8336
-virtufeat4 = 0.0
-virtulen4= 0.268200
-virturho4 = -11.8336
-virtufeat5 = -30.0
-virtulen5 = 0.280011
-virturho5 = -29.9987
-virtufeat6 = -60.0
-virtulen6 = 0.272617
-virturho6 = -44.1826
-virtumode7 = 0
-virtufeat7 = -90.0
-virtulen7 = 0.253783
-virturho7 = -55.8403
-virtumode8 = 0
-virtufeat8 = -90.0
-virtulen8 = 0.237828
-virturho8 = -140.1173
-virtumode9 = 0
-virtufeat9 = 90.0
-virtulen9 = 0.237828
-virturho9 = 140.1173
-
-#---------------------------------------------------------------------
-# Group sensors definition
-#---------------------------------------------------------------------
-MAXGROUP = 5
-RANGEGROUP = 0.75
-
-groupmode0 = 4
-groupfeat0 = 90.0
-grouplen0 = 0.2200
-grouprho0 = 120.0
-
-groupmode1 = 4
-groupfeat1 = 45.0
-grouplen1 = 0.2800
-grouprho1 =  45.0
-
-groupmode2 = 4
-groupfeat2 = 0.0
-grouplen2 = 0.2625
-grouprho2 = 0.0
-
-groupmode3 = 4
-groupfeat3 = -45.0
-grouplen3 = 0.2800
-grouprho3 = -45.0
-
-groupmode4 = 4
-groupfeat4 = -90.0
-grouplen4 = 0.2200
-grouprho4 = -120.0
-
-#---------------------------------------------------------------------
-# Bumper sensors definition
-#---------------------------------------------------------------------
-MAXBUMPER = 4
-
-bumxi0 = 0.2400
-bumyi0 = 0.1950
-bumxf0 = 0.2400
-bumyf0 = -0.1950
-bumxi1 = 0.2400
-bumyi1 = -0.1950
-bumxf1 = -0.2300
-bumyf1 = -0.1500
-bumxi2 = -0.2300
-bumyi2 = -0.1500
-bumxf2 = -0.2300
-bumyf2 = 0.1500
-bumxi3 = -0.2300
-bumyi3 = 0.1500
-bumxf3 = 0.2400
-bumyf3 = 0.1950
-
-#---------------------------------------------------------------------
-# Robot kinematics definition
-#---------------------------------------------------------------------
-MAXMOTOR = 100
-MAXSPEED = 1
-MAXTURN = 10
-DRIVEMODEL	= tc.vrobot.models.DifferentialDrive
-BASE = 0.3625
-GEAR = 60.0
-#VMAX = 0.4705
-VMAX = 0.2
-RMAX = 130.0
-WHEEL = 0.1487
-PULSES = 500
-#ODOM_ET = 0.0
-#ODOM_ER = 0.0
-ODOM_ET = 0.025
-ODOM_ER = 0.1
-ODOM_BIAS = 0.10
-
-#---------------------------------------------------------------------
-# Robot icon specification
-#---------------------------------------------------------------------
-RADIUS = 0.30
-LINES = 11
-
-iconxi0 = -0.2325
-iconyi0 = 0.1525
-iconxf0 = 0.0925
-iconyf0 = 0.1525
-iconxi1 = -0.2325
-iconyi1 = -0.1525
-iconxf1 = 0.0925
-iconyf1 = -0.1525
-iconxi2 = -0.2325
-iconyi2 = 0.1525
-iconxf2 = -0.2325
-iconyf2 = -0.1525
-iconxi3 = 0.0925
-iconyi3 = -0.2100
-iconxf3 = 0.0925
-iconyf3 = 0.2100
-iconxi4 = 0.2625
-iconyi4 = -0.1150
-iconxf4 = 0.2625
-iconyf4 = 0.1150
-iconxi5 = 0.0925
-iconyi5 = -0.2100
-iconxf5 = 0.1625
-iconyf5 = -0.2100
-iconxi6 = 0.0925
-iconyi6 = 0.2100
-iconxf6 = 0.1625
-iconyf6 = 0.2100
-iconxi7 = 0.1625
-iconyi7 = -0.2100
-iconxf7 = 0.2255
-iconyf7 = -0.1800
-iconxi8 = 0.1625
-iconyi8 = 0.2100
-iconxf8 = 0.2255
-iconyf8 = 0.1800
-iconxi9 = 0.2255
-iconyi9 = -0.1800
-iconxf9 = 0.2625
-iconyf9 = -0.1150
-iconxi10 = 0.2255
-iconyi10 = 0.1800
-iconxf10 = 0.2625
-iconyf10 = 0.1150 
+{
+  "name": "quaky",
+  "radius": 0.3,
+  "icon": [
+    {
+      "xi": -0.2325,
+      "yi": 0.1525,
+      "xf": 0.0925,
+      "yf": 0.1525
+    },
+    {
+      "xi": -0.2325,
+      "yi": -0.1525,
+      "xf": 0.0925,
+      "yf": -0.1525
+    },
+    {
+      "xi": -0.2325,
+      "yi": 0.1525,
+      "xf": -0.2325,
+      "yf": -0.1525
+    },
+    {
+      "xi": 0.0925,
+      "yi": -0.21,
+      "xf": 0.0925,
+      "yf": 0.21
+    },
+    {
+      "xi": 0.2625,
+      "yi": -0.115,
+      "xf": 0.2625,
+      "yf": 0.115
+    },
+    {
+      "xi": 0.0925,
+      "yi": -0.21,
+      "xf": 0.1625,
+      "yf": -0.21
+    },
+    {
+      "xi": 0.0925,
+      "yi": 0.21,
+      "xf": 0.1625,
+      "yf": 0.21
+    },
+    {
+      "xi": 0.1625,
+      "yi": -0.21,
+      "xf": 0.2255,
+      "yf": -0.18
+    },
+    {
+      "xi": 0.1625,
+      "yi": 0.21,
+      "xf": 0.2255,
+      "yf": 0.18
+    },
+    {
+      "xi": 0.2255,
+      "yi": -0.18,
+      "xf": 0.2625,
+      "yf": -0.115
+    },
+    {
+      "xi": 0.2255,
+      "yi": 0.18,
+      "xf": 0.2625,
+      "yf": 0.115
+    }
+  ],
+  "kinematics": {
+    "drive": "tc.vrobot.models.DifferentialDrive",
+    "vmax": 0.2,
+    "rmax": 130.0,
+    "maxmotor": 100.0,
+    "maxsteer": 0.0,
+    "samax": 0.0,
+    "lamax": 0.0,
+    "ldmax": 0.0,
+    "length": 0.0,
+    "base": 0.3625,
+    "rwheel": 0.0,
+    "wheel": 0.1487,
+    "gear": 60.0,
+    "pulses": 500.0,
+    "dtime": 100,
+    "odomET": 0.025,
+    "odomER": 0.1,
+    "odomBias": 0.1
+  },
+  "sensors": {
+    "son": {
+      "rangemax": 5.0,
+      "rangemin": 0.135,
+      "cone": 20.0,
+      "rays": 11,
+      "sensors": [
+        {
+          "rho": 0.253783,
+          "theta": 55.8403,
+          "height": 0.0,
+          "orientation": 90.0,
+          "step": 0
+        },
+        {
+          "rho": 0.272617,
+          "theta": 44.1826,
+          "height": 0.0,
+          "orientation": 60.0,
+          "step": 0
+        },
+        {
+          "rho": 0.280011,
+          "theta": 29.9987,
+          "height": 0.0,
+          "orientation": 30.0,
+          "step": 0
+        },
+        {
+          "rho": 0.2682,
+          "theta": 11.8336,
+          "height": 0.0,
+          "orientation": 0.0,
+          "step": 0
+        },
+        {
+          "rho": 0.2682,
+          "theta": -11.8336,
+          "height": 0.0,
+          "orientation": 0.0,
+          "step": 0
+        },
+        {
+          "rho": 0.280011,
+          "theta": -29.9987,
+          "height": 0.0,
+          "orientation": -30.0,
+          "step": 0
+        },
+        {
+          "rho": 0.272617,
+          "theta": -44.1826,
+          "height": 0.0,
+          "orientation": -60.0,
+          "step": 0
+        },
+        {
+          "rho": 0.253783,
+          "theta": -55.8403,
+          "height": 0.0,
+          "orientation": -90.0,
+          "step": 0
+        },
+        {
+          "rho": 0.237828,
+          "theta": -140.1173,
+          "height": 0.0,
+          "orientation": -90.0,
+          "step": 0
+        },
+        {
+          "rho": 0.237828,
+          "theta": 140.1173,
+          "height": 0.0,
+          "orientation": 90.0,
+          "step": 0
+        }
+      ]
+    },
+    "ir": {
+      "rangemax": 1.2,
+      "rangemin": 0.1,
+      "cone": 10.0,
+      "rays": 5,
+      "sensors": [
+        {
+          "rho": 0.272617,
+          "theta": 44.1826,
+          "height": 0.0,
+          "orientation": 60.0,
+          "step": 0
+        },
+        {
+          "rho": 0.280011,
+          "theta": 29.9987,
+          "height": 0.0,
+          "orientation": 30.0,
+          "step": 0
+        },
+        {
+          "rho": 0.2682,
+          "theta": 11.8336,
+          "height": 0.0,
+          "orientation": 0.0,
+          "step": 0
+        },
+        {
+          "rho": 0.2625,
+          "theta": 0.0,
+          "height": 0.0,
+          "orientation": 0.0,
+          "step": 0
+        },
+        {
+          "rho": 0.2682,
+          "theta": -11.8336,
+          "height": 0.0,
+          "orientation": 0.0,
+          "step": 0
+        },
+        {
+          "rho": 0.280011,
+          "theta": -29.9987,
+          "height": 0.0,
+          "orientation": -30.0,
+          "step": 0
+        },
+        {
+          "rho": 0.272617,
+          "theta": -44.1826,
+          "height": 0.0,
+          "orientation": -60.0,
+          "step": 0
+        }
+      ]
+    },
+    "lrf": {
+      "sensors": []
+    },
+    "lsb": {
+      "sensors": []
+    },
+    "trk": {
+      "sensors": []
+    },
+    "vis": {
+      "sensors": []
+    }
+  },
+  "bumpers": [
+    {
+      "xi": 0.24,
+      "yi": 0.195,
+      "xf": 0.24,
+      "yf": -0.195
+    },
+    {
+      "xi": 0.24,
+      "yi": -0.195,
+      "xf": -0.23,
+      "yf": -0.15
+    },
+    {
+      "xi": -0.23,
+      "yi": -0.15,
+      "xf": -0.23,
+      "yf": 0.15
+    },
+    {
+      "xi": -0.23,
+      "yi": 0.15,
+      "xf": 0.24,
+      "yf": 0.195
+    }
+  ],
+  "extra": {
+    "grouplen4": "0.2200",
+    "grouplen2": "0.2625",
+    "grouplen3": "0.2800",
+    "grouplen0": "0.2200",
+    "grouplen1": "0.2800",
+    "MODEVIRTU": "4",
+    "RANGEVIRTU": "5.0",
+    "virtumode9": "0",
+    "virtumode8": "0",
+    "virtumode7": "0",
+    "RANGEGROUP": "0.75",
+    "virtumode0": "0",
+    "CONEVIRTU": "17",
+    "FILTERVIRTU": "anfis5.filter",
+    "groupfeat0": "90.0",
+    "groupmode2": "4",
+    "groupmode3": "4",
+    "groupmode4": "4",
+    "MAXTURN": "10",
+    "groupfeat2": "0.0",
+    "groupfeat1": "45.0",
+    "groupfeat4": "-90.0",
+    "groupfeat3": "-45.0",
+    "grouprho3": "-45.0",
+    "grouprho2": "0.0",
+    "MAXGROUP": "5",
+    "grouprho4": "-120.0",
+    "groupmode0": "4",
+    "groupmode1": "4",
+    "grouprho1": "45.0",
+    "grouprho0": "120.0",
+    "MODESON": "2",
+    "virturho0": "55.8403",
+    "virturho6": "-44.1826",
+    "virturho5": "-29.9987",
+    "virturho8": "-140.1173",
+    "virturho7": "-55.8403",
+    "virturho2": "29.9987",
+    "virturho1": "44.1826",
+    "virturho4": "-11.8336",
+    "virturho3": "11.8336",
+    "virturho9": "140.1173",
+    "SENSIBSON": "0.0000001",
+    "ERRORSON": "0.05",
+    "MAXSPEED": "1",
+    "virtufeat2": "30.0",
+    "virtulen0": "0.253783",
+    "virtufeat3": "0.0",
+    "virtufeat4": "0.0",
+    "virtufeat5": "-30.0",
+    "virtulen3": "0.268200",
+    "virtufeat6": "-60.0",
+    "virtulen4": "0.268200",
+    "virtufeat7": "-90.0",
+    "virtulen1": "0.272617",
+    "virtufeat8": "-90.0",
+    "virtulen2": "0.280011",
+    "virtufeat9": "90.0",
+    "virtulen7": "0.253783",
+    "virtulen8": "0.237828",
+    "virtulen5": "0.280011",
+    "virtulen6": "0.272617",
+    "RAYVIRTU": "15",
+    "virtufeat0": "90.0",
+    "virtulen9": "0.237828",
+    "virtufeat1": "60.0",
+    "ERRORIR": "0.05",
+    "MAXVIRTU": "10",
+    "MODEIR": "2"
+  }
+}

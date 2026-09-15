@@ -208,36 +208,13 @@
   },
   "sensors": {
     "son": {
-      "rangemax": 0.0,
-      "rangemin": 0.0,
-      "cone": 0.0,
-      "cycle": 0,
-      "rays": 0,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
       "sensors": []
     },
     "ir": {
-      "rangemax": 0.0,
-      "rangemin": 0.0,
-      "cone": 0.0,
-      "cycle": 0,
-      "rays": 0,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
       "sensors": []
     },
     "lrf": {
-      "rangemax": 0.0,
-      "rangemin": 0.0,
-      "cone": 0.0,
       "cycle": 6,
-      "rays": 0,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
       "sensors": [
         {
           "rho": 1.314,
@@ -254,14 +231,7 @@
       ]
     },
     "lsb": {
-      "rangemax": 0.0,
-      "rangemin": 0.0,
-      "cone": 0.0,
       "cycle": 6,
-      "rays": 0,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
       "sensors": [
         {
           "rho": 0.63,
@@ -280,25 +250,9 @@
       ]
     },
     "trk": {
-      "rangemax": 0.0,
-      "rangemin": 0.0,
-      "cone": 0.0,
-      "cycle": 0,
-      "rays": 0,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
       "sensors": []
     },
     "vis": {
-      "rangemax": 0.0,
-      "rangemin": 0.0,
-      "cone": 0.0,
-      "cycle": 0,
-      "rays": 0,
-      "reflect": 0.0,
-      "beacons": 0,
-      "objects": 0,
       "sensors": []
     }
   },
