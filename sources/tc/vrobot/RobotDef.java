@@ -61,8 +61,8 @@ public class RobotDef
 	/** A family of range sensors: how many, what they reach, and where each one is. */
 	static public class Family
 	{
-		public double		range;					// maximum range (m)
-		public double		minim;					// minimum range (m)
+		public double		rangemax;				// maximum range (m)
+		public double		rangemin;				// minimum range (m)
 		public double		cone;					// aperture (deg)
 		public int			cycle;					// firing cycle
 		public int			rays;					// rays of a scan (lrf, lsb)
@@ -77,7 +77,7 @@ public class RobotDef
 		public Family copy ()
 		{
 			Family	f = new Family ();
-			f.range = range;	f.minim = minim;	f.cone = cone;		f.cycle = cycle;
+			f.rangemax = rangemax;	f.rangemin = rangemin;	f.cone = cone;		f.cycle = cycle;
 			f.rays = rays;		f.reflect = reflect;	f.beacons = beacons;	f.objects = objects;
 			f.driver = driver;
 			for (Sensor s : sensors)		f.sensors.add (s.copy ());
@@ -362,8 +362,8 @@ public class RobotDef
 			Family	f = d.family (fam);
 			int		n = (int) num (props, FAMILY_COUNTS[fi], 0, used);
 
-			f.range		= num (props, "RANGE" + key, 0, used);
-			f.minim		= num (props, "MINIM" + key, 0, used);
+			f.rangemax	= num (props, "RANGE" + key, 0, used);
+			f.rangemin	= num (props, "MINIM" + key, 0, used);
 			f.cone		= num (props, "CONE" + key, 0, used);
 			f.cycle		= (int) num (props, "CYCLE" + key, 0, used);
 			f.rays		= (int) num (props, "RAY" + key, 0, used);
@@ -443,11 +443,11 @@ public class RobotDef
 			Family	f = family (fam);
 
 			// a family with no sensors and no parameters is simply not there
-			if ((f.n () == 0) && (f.range == 0.0) && (f.minim == 0.0) && (f.cone == 0.0) && (f.cycle == 0)
+			if ((f.n () == 0) && (f.rangemax == 0.0) && (f.rangemin == 0.0) && (f.cone == 0.0) && (f.cycle == 0)
 					&& (f.rays == 0) && (f.reflect == 0.0) && (f.beacons == 0) && (f.objects == 0))		continue;
 			p.setProperty (FAMILY_COUNTS[fi], String.valueOf (f.n ()));
 
-			setNZ (p, "RANGE" + key, f.range);	setNZ (p, "MINIM" + key, f.minim);	setNZ (p, "CONE" + key, f.cone);
+			setNZ (p, "RANGE" + key, f.rangemax);	setNZ (p, "MINIM" + key, f.rangemin);	setNZ (p, "CONE" + key, f.cone);
 			if (f.cycle > 0)		p.setProperty ("CYCLE" + key, String.valueOf (f.cycle));
 			if (f.rays > 0)			p.setProperty ("RAY" + key, String.valueOf (f.rays));
 			if (f.reflect != 0.0)	set (p, "REF" + key, f.reflect);

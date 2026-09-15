@@ -561,7 +561,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
 		case RobotItem.SENSOR:		return new String[] { "rho", "theta", "height", "orientation", "step" };
-		case RobotItem.FAMILY:		return new String[] { "sensors", "driver", "range", "minim", "cone", "cycle", "rays", "reflect", "beacons", "objects" };
+		case RobotItem.FAMILY:		return new String[] { "driver", "range max", "range min", "cone", "cycle", "rays", "reflect", "beacons", "objects" };
 		case RobotItem.EXTRA:
 		{
 			List<String>	keys = new ArrayList<String> (robot.extra.keySet ());
@@ -635,10 +635,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.FAMILY:
 		{
 			RobotDef.Family		f = robot.family (it.family);
-			if (name.equals ("sensors"))	return String.valueOf (f.n ());
 			if (name.equals ("driver"))		return (f.driver != null) ? f.driver : "";
-			if (name.equals ("range"))		return RobotDef.fmt (f.range);
-			if (name.equals ("minim"))		return RobotDef.fmt (f.minim);
+			if (name.equals ("range max"))	return RobotDef.fmt (f.rangemax);
+			if (name.equals ("range min"))	return RobotDef.fmt (f.rangemin);
 			if (name.equals ("cone"))		return RobotDef.fmt (f.cone);
 			if (name.equals ("cycle"))		return String.valueOf (f.cycle);
 			if (name.equals ("rays"))		return String.valueOf (f.rays);
@@ -656,10 +655,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		return "";
 	}
 
-	/** True when a property can be edited (the number of sensors follows the family itself). */
+	/** True when a property can be edited. */
 	public boolean isEditable (RobotItem it, String name)
 	{
-		return !((it.kind == RobotItem.FAMILY) && name.equals ("sensors"));
+		return true;
 	}
 
 	public void setProperty (RobotItem it, String name, String value)
@@ -728,8 +727,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 			RobotDef.Family		f = robot.family (it.family);
 			if (name.equals ("driver"))			f.driver = token (value);
-			else if (name.equals ("range"))		f.range = num (value);
-			else if (name.equals ("minim"))		f.minim = num (value);
+			else if (name.equals ("range max"))	f.rangemax = num (value);
+			else if (name.equals ("range min"))	f.rangemin = num (value);
 			else if (name.equals ("cone"))		f.cone = num (value);
 			else if (name.equals ("cycle"))		f.cycle = (int) num (value);
 			else if (name.equals ("rays"))		f.rays = (int) num (value);
