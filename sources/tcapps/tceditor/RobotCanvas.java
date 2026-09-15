@@ -68,13 +68,15 @@ public class RobotCanvas extends JPanel
 
 	static private final int		D_NONE		= 0;
 	static private final int		D_PAN		= 1;
-	static private final int		D_MOVE		= 2;			// dragging a sensor (rho, theta)
-	static private final int		D_ROTATE	= 3;			// dragging its handle (orientation)
+	static private final int		D_MOVE		= 2;			// dragging the element itself
+	static private final int		D_HANDLE	= 3;			// dragging one of its handles
 
 	protected double				scale	= 200.0;			// pixels per metre
 	protected double				cx, cy;						// world point at the centre of the view
 	protected int					dragX, dragY;
 	protected int					drag	= D_NONE;
+	protected int					dragHandle;					// handle being dragged
+	protected double				grabX, grabY;				// where the element was grabbed (world coordinates)
 
 	public RobotCanvas (RobotDef robot)
 	{
@@ -88,6 +90,7 @@ public class RobotCanvas extends JPanel
 			public void mousePressed (MouseEvent e)
 			{
 				RobotItem	hit;
+				int			h;
 
 				requestFocusInWindow ();
 				if (e.isPopupTrigger () || javax.swing.SwingUtilities.isMiddleMouseButton (e) || e.isShiftDown ())
@@ -97,15 +100,25 @@ public class RobotCanvas extends JPanel
 					dragY	= e.getY ();
 					return;
 				}
-				// the handle of the selected sensor turns it; its body moves it
-				if (onHandle (e.getX (), e.getY ()))			{ drag = D_ROTATE; return; }
+				// a handle of the selection first: it sits over the element itself
+				h		= handleAt (e.getX (), e.getY ());
+				if (h >= 0)
+				{
+					drag		= D_HANDLE;
+					dragHandle	= h;
+					return;
+				}
 				hit		= pick (e.getX (), e.getY ());
 				setSelection (hit);
-				drag	= ((hit != null) && (hit.kind == RobotItem.SENSOR)) ? D_MOVE : D_NONE;
+				grabX	= wx (e.getX ());
+				grabY	= wy (e.getY ());
+				drag	= isMovable (hit) ? D_MOVE : D_NONE;
 			}
 
 			public void mouseDragged (MouseEvent e)
 			{
+				double		x = wx (e.getX ()), y = wy (e.getY ());
+
 				switch (drag)
 				{
 				case D_PAN:
@@ -116,10 +129,12 @@ public class RobotCanvas extends JPanel
 					repaint ();
 					break;
 				case D_MOVE:
-					moveSensor (wx (e.getX ()), wy (e.getY ()));
+					translate (x - grabX, y - grabY);
+					grabX	= x;
+					grabY	= y;
 					break;
-				case D_ROTATE:
-					turnSensor (wx (e.getX ()), wy (e.getY ()));
+				case D_HANDLE:
+					setHandle (dragHandle, x, y);
 					break;
 				}
 			}
@@ -276,21 +291,141 @@ public class RobotCanvas extends JPanel
 		return (selection.index < ss.size ()) ? ss.get (selection.index) : null;
 	}
 
-	/** Point of the rotation handle of the selected sensor: the tip of its direction arrow. */
-	private double[] handle ()
+	/** True for the elements the view lets the user drag. */
+	public boolean isMovable (RobotItem it)
 	{
-		RobotDef.Sensor		s = selectedSensor ();
-		double				a;
-
-		if (s == null)				return null;
-		a	= Math.toRadians (s.orientation);
-		return new double[] { px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a) };
+		return (it != null) && ((it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.LINE) || (it.kind == RobotItem.BUMPER));
 	}
 
-	private boolean onHandle (int mx, int my)
+	/**
+	 * Handles of the selection, in pixels: a sensor is dragged by its position
+	 * and turned by the tip of its arrow; a drawing line and a bumper are
+	 * dragged by each of their ends.
+	 *
+	 * @return {x0, y0, x1, y1, ...}, empty when the selection has no handles
+	 */
+	public double[] handles ()
 	{
-		double[]	h = handle ();
-		return (h != null) && (Math.abs (mx - h[0]) <= HANDLE_PX + 2) && (Math.abs (my - h[1]) <= HANDLE_PX + 2);
+		if (selection == null)				return new double[0];
+		switch (selection.kind)
+		{
+		case RobotItem.SENSOR:
+		{
+			RobotDef.Sensor		s = selectedSensor ();
+			double				a;
+
+			if (s == null)					return new double[0];
+			a	= Math.toRadians (s.orientation);
+			return new double[] { px (sx (s)), py (sy (s)),
+								  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a) };
+		}
+		case RobotItem.LINE:
+		{
+			if (selection.index >= robot.icon.size ())		return new double[0];
+			RobotDef.IconLine	l = robot.icon.get (selection.index);
+			return new double[] { px (l.xi), py (l.yi), px (l.xf), py (l.yf) };
+		}
+		case RobotItem.BUMPER:
+		{
+			if (selection.index >= robot.bumpers.size ())	return new double[0];
+			RobotDef.Bumper		b = robot.bumpers.get (selection.index);
+			return new double[] { px (b.xi), py (b.yi), px (b.xf), py (b.yf) };
+		}
+		}
+		return new double[0];
+	}
+
+	/** True when the handle is the one that turns the element (the last one of a sensor). */
+	public boolean isRotationHandle (int handle)
+	{
+		return (selection != null) && (selection.kind == RobotItem.SENSOR) && (handle == 1);
+	}
+
+	/** Index of the handle of the selection under a point of the view, or -1. */
+	public int handleAt (int mx, int my)
+	{
+		double[]	hs = handles ();
+
+		for (int i = 0; i < hs.length / 2; i++)
+			if ((Math.abs (mx - hs[2 * i]) <= HANDLE_PX + 2) && (Math.abs (my - hs[2 * i + 1]) <= HANDLE_PX + 2))
+				return i;
+		return -1;
+	}
+
+	/** Takes one handle of the selection to a point of the robot. */
+	public void setHandle (int handle, double x, double y)
+	{
+		if (selection == null)				return;
+		switch (selection.kind)
+		{
+		case RobotItem.SENSOR:
+		{
+			RobotDef.Sensor		s = selectedSensor ();
+
+			if (s == null)					return;
+			if (handle == 0)				// where it sits: its polar position
+			{
+				s.rho		= Math.hypot (x, y);
+				s.theta		= Math.toDegrees (Math.atan2 (y, x));
+			}
+			else							// where it looks at
+				s.orientation	= Math.toDegrees (Math.atan2 (y - sy (s), x - sx (s)));
+			break;
+		}
+		case RobotItem.LINE:
+		{
+			if (selection.index >= robot.icon.size ())		return;
+			RobotDef.IconLine	l = robot.icon.get (selection.index);
+			if (handle == 0)		{ l.xi = x; l.yi = y; }
+			else					{ l.xf = x; l.yf = y; }
+			break;
+		}
+		case RobotItem.BUMPER:
+		{
+			if (selection.index >= robot.bumpers.size ())	return;
+			RobotDef.Bumper		b = robot.bumpers.get (selection.index);
+			if (handle == 0)		{ b.xi = x; b.yi = y; }
+			else					{ b.xf = x; b.yf = y; }
+			break;
+		}
+		default:
+			return;
+		}
+		changed ();
+	}
+
+	/** Moves the selection by (dx, dy) metres. */
+	public void translate (double dx, double dy)
+	{
+		if (selection == null)				return;
+		switch (selection.kind)
+		{
+		case RobotItem.SENSOR:
+		{
+			RobotDef.Sensor		s = selectedSensor ();
+
+			if (s == null)					return;
+			moveSensor (sx (s) + dx, sy (s) + dy);
+			return;
+		}
+		case RobotItem.LINE:
+		{
+			if (selection.index >= robot.icon.size ())		return;
+			RobotDef.IconLine	l = robot.icon.get (selection.index);
+			l.xi += dx;		l.yi += dy;		l.xf += dx;		l.yf += dy;
+			break;
+		}
+		case RobotItem.BUMPER:
+		{
+			if (selection.index >= robot.bumpers.size ())	return;
+			RobotDef.Bumper		b = robot.bumpers.get (selection.index);
+			b.xi += dx;		b.yi += dy;		b.xf += dx;		b.yf += dy;
+			break;
+		}
+		default:
+			return;
+		}
+		changed ();
 	}
 
 	/** Moves the selected sensor to a point of the robot: its polar position follows. */
@@ -301,8 +436,7 @@ public class RobotCanvas extends JPanel
 		if (s == null)				return;
 		s.rho		= Math.hypot (x, y);
 		s.theta		= Math.toDegrees (Math.atan2 (y, x));
-		repaint ();
-		if (listener != null)		listener.elementChanged (selection);
+		changed ();
 	}
 
 	/** Turns the selected sensor towards a point of the robot. */
@@ -312,6 +446,12 @@ public class RobotCanvas extends JPanel
 
 		if (s == null)				return;
 		s.orientation	= Math.toDegrees (Math.atan2 (y - sy (s), x - sx (s)));
+		changed ();
+	}
+
+	/** The selection was edited on the view. */
+	private void changed ()
+	{
 		repaint ();
 		if (listener != null)		listener.elementChanged (selection);
 	}
@@ -334,6 +474,7 @@ public class RobotCanvas extends JPanel
 		drawIcon (g);
 		drawBumpers (g);
 		drawSensors (g);
+		drawHandles (g);
 		drawScaleBar (g);
 	}
 
@@ -445,16 +586,7 @@ public class RobotCanvas extends JPanel
 				g.setColor (sel ? C_SEL : C_SENSOR);
 				g.setStroke (stroke (sel ? 2.5f : 1.5f));
 				g.draw (new Line2D.Double (x, y, x + len * Math.cos (a), y - len * Math.sin (a)));
-				if (sel)
-				{
-					// as in the world editor: a square handle to drag it, a round one to turn it
-					g.setStroke (stroke (1.2f));
-					drawHandle (g, x, y, false);
-					drawHandle (g, x + len * Math.cos (a), y - len * Math.sin (a), true);
-					g.setColor (C_SEL);
-				}
-				else
-					g.fill (new Ellipse2D.Double (x - 3, y - 3, 6, 6));
+				if (!sel)		g.fill (new Ellipse2D.Double (x - 3, y - 3, 6, 6));
 				if (sel || (scale > 150))
 				{
 					g.setFont (getFont ().deriveFont (10f));
@@ -462,6 +594,16 @@ public class RobotCanvas extends JPanel
 				}
 			}
 		}
+	}
+
+	/** The handles of the selection: a square to drag each point, a round one to turn it. */
+	private void drawHandles (Graphics2D g)
+	{
+		double[]	hs = handles ();
+
+		g.setStroke (stroke (1.2f));
+		for (int i = 0; i < hs.length / 2; i++)
+			drawHandle (g, hs[2 * i], hs[2 * i + 1], isRotationHandle (i));
 	}
 
 	/** A handle of the selection: white filled and outlined in the selection colour (square to drag, round to turn). */
