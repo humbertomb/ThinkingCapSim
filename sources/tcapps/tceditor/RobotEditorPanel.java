@@ -81,6 +81,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected JSplitPane			mainSP, rightSP;
 	protected boolean				dividersSet, syncing, dirty;
 	protected Action				lineAC, bumperAC, sensorAC, deleteAC;
+	protected RobotView3DWindow		view3d;					// created the first time it is shown
+	protected javax.swing.JToggleButton			view3dBT;
+	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, imageMI;
 
 	/* ------------------------------------------------------------------ */
 
@@ -140,6 +143,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		tb.add (ToolButtons.flatButton (ToolButtons.action ("Zoom In", ToolIcon.ZOOM_IN, "Zoom in", new Runnable () { public void run () { canvas.zoomIn (); } })));
 		tb.add (ToolButtons.flatButton (ToolButtons.action ("Zoom Out", ToolIcon.ZOOM_OUT, "Zoom out", new Runnable () { public void run () { canvas.zoomOut (); } })));
 		tb.add (Box.createVerticalGlue ());
+		tb.addSeparator ();
+		tb.add (view3dButton ());
 
 		// --- right: tree of the description and properties of the selection
 		treeRoot	= new DefaultMutableTreeNode ("Robot");
@@ -248,7 +253,106 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			mfile.add (menuItem ("Quit", KeyEvent.VK_Q, mask, new Runnable () { public void run () { quit (); } }));
 		}
 		mb.add (mfile);
+
+		JMenu		mview = new JMenu ("View");
+		mview.add (menuItem ("Zoom to Fit", KeyEvent.VK_0, mask, new Runnable () { public void run () { canvas.zoomToFit (); } }));
+		mview.add (menuItem ("Zoom In", KeyEvent.VK_PLUS, mask, new Runnable () { public void run () { canvas.zoomIn (); } }));
+		mview.add (menuItem ("Zoom Out", KeyEvent.VK_MINUS, mask, new Runnable () { public void run () { canvas.zoomOut (); } }));
+		mview.addSeparator ();
+		gridMI	= checkItem ("Grid", KeyEvent.VK_G, mask, canvas.isGridVisible (), new Runnable ()
+		{
+			public void run ()		{ canvas.setGridVisible (gridMI.isSelected ()); }
+		});
+		mview.add (gridMI);
+		imageMI	= checkItem ("Robot Image", KeyEvent.VK_I, mask, canvas.isImageVisible (), new Runnable ()
+		{
+			public void run ()		{ canvas.setImageVisible (imageMI.isSelected ()); }
+		});
+		mview.add (imageMI);
+		mview.addSeparator ();
+		mview.add (view3dMenuItem (mask));
+		mb.add (mview);
+
 		return mb;
+	}
+
+	private javax.swing.JCheckBoxMenuItem checkItem (String name, int key, int mask, boolean on, final Runnable body)
+	{
+		javax.swing.JCheckBoxMenuItem	mi = new javax.swing.JCheckBoxMenuItem (name, on);
+
+		mi.setAccelerator (KeyStroke.getKeyStroke (key, mask));
+		mi.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ body.run (); }
+		});
+		return mi;
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* 3D view of the models of the robot                                  */
+	/* ------------------------------------------------------------------ */
+
+	/** Toolbar toggle of the 3D view (created once). */
+	public javax.swing.JToggleButton view3dButton ()
+	{
+		if (view3dBT == null)
+		{
+			view3dBT = ToolButtons.flatToggle (new ToolIcon (ToolIcon.VIEW3D), "3D view of the models of the robot  [Ctrl+3]");
+			view3dBT.addActionListener (new ActionListener ()
+			{
+				public void actionPerformed (ActionEvent e)		{ show3D (view3dBT.isSelected ()); }
+			});
+		}
+		return view3dBT;
+	}
+
+	/** View menu entry of the 3D view (created once). */
+	public javax.swing.JCheckBoxMenuItem view3dMenuItem (int mask)
+	{
+		if (view3dMI == null)
+			view3dMI = checkItem ("3D View", KeyEvent.VK_3, mask, false, new Runnable ()
+			{
+				public void run ()		{ show3D (view3dMI.isSelected ()); }
+			});
+		return view3dMI;
+	}
+
+	/** Shows or hides the 3D window, creating it on first use. */
+	public void show3D (boolean show)
+	{
+		if (show && (view3d == null))
+		{
+			try
+			{
+				view3d	= new RobotView3DWindow (robot, new Runnable ()
+				{
+					public void run ()		{ set3DSelected (false); }		// the user closed the window
+				});
+				java.awt.Window	win = SwingUtilities.getWindowAncestor (this);
+				if (win != null)
+					view3d.setLocation (win.getX () + win.getWidth () + 10, win.getY ());
+				view3d.fitView ();
+			} catch (Throwable e)
+			{
+				JOptionPane.showMessageDialog (this, "Cannot open the 3D view:\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
+				set3DSelected (false);
+				return;
+			}
+		}
+		if (view3d != null)		view3d.setVisible (show);
+		set3DSelected (show);
+	}
+
+	private void set3DSelected (boolean on)
+	{
+		if ((view3dBT != null) && (view3dBT.isSelected () != on))		view3dBT.setSelected (on);
+		if ((view3dMI != null) && (view3dMI.isSelected () != on))		view3dMI.setSelected (on);
+	}
+
+	/** Closes the 3D view (the editor is going away). */
+	public void dispose ()
+	{
+		if (view3d != null)		{ view3d.dispose (); view3d = null; }
 	}
 
 	private JMenuItem menuItem (String name, int key, int mask, final Runnable body)
@@ -280,6 +384,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		robot	= r;
 		dirty	= false;
 		canvas.setRobot (robot);
+		if (view3d != null)		view3d.setRobot (robot);
 		refreshTree ();
 		showProperties (null);
 		updateTitle ();
@@ -372,6 +477,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	{
 		dirty	= true;
 		canvas.robotChanged ();
+		if (view3d != null)		view3d.robotChanged ();
 		updateTitle ();
 	}
 
@@ -679,7 +785,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	}
 
 	/** Chooser of the 2D image of the robot. */
-	static public final FileCellEditor	IMAGE_CHOOSER = new FileCellEditor ("Select image", "./conf/3dmodels/textures",
+	static public final FileCellEditor	IMAGE_CHOOSER = new FileCellEditor ("Select image", "./conf/2dmodels",
 										new FileNameExtensionFilter ("Images (*.jpg, *.gif, *.png)", "jpg", "jpeg", "gif", "png"));
 
 	/** True for the properties naming a 3D model file. */

@@ -74,6 +74,7 @@ public class RobotEditorWindow extends JFrame implements RobotEditorPanel.Host
 	public void quit ()
 	{
 		if (!editor.confirmDiscard ())			return;
+		editor.dispose ();						// closes the 3D view
 		dispose ();
 		System.exit (0);
 	}

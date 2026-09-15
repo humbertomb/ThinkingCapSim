@@ -87,12 +87,14 @@ public class RobotEditorDialog extends JDialog implements RobotEditorPanel.Host
 	{
 		editor.stopEditing ();
 		result	= editor.getRobot ();
+		editor.dispose ();						// closes the 3D view
 		dispose ();
 	}
 
 	private void cancel ()
 	{
 		result	= null;
+		editor.dispose ();
 		dispose ();
 	}
 

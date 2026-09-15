@@ -76,6 +76,8 @@ public class RobotCanvas extends JPanel
 	protected int					dragX, dragY;
 	protected int					drag	= D_NONE;
 	protected int					dragHandle;					// handle being dragged
+	protected boolean				gridVisible		= true;
+	protected boolean				imageVisible	= true;
 	protected double				grabX, grabY;				// where the element was grabbed (world coordinates)
 
 	public RobotCanvas (RobotDef robot)
@@ -169,6 +171,11 @@ public class RobotCanvas extends JPanel
 
 	/** The model changed behind the view. */
 	public void robotChanged ()						{ repaint (); }
+
+	public boolean isGridVisible ()					{ return gridVisible; }
+	public void setGridVisible (boolean on)			{ gridVisible = on; repaint (); }
+	public boolean isImageVisible ()				{ return imageVisible; }
+	public void setImageVisible (boolean on)		{ imageVisible = on; repaint (); }
 
 	/* Coordinates */
 
@@ -468,8 +475,8 @@ public class RobotCanvas extends JPanel
 		g.setRenderingHint (RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		if (robot == null)			return;
 
-		drawGrid (g);
-		drawImage (g);
+		if (gridVisible)		drawGrid (g);
+		if (imageVisible)		drawImage (g);
 		drawRadius (g);
 		drawIcon (g);
 		drawBumpers (g);
