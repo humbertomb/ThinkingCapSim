@@ -128,17 +128,40 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		public Object getValueAt (int r, int c)
 		{
 			Property	p = rows.get (r);
-			return (c == 0) ? p.label : model.get (block, p.key);
+			return (c == 0) ? p.label : value (p, model.get (block, p.key));
 		}
 
 		public void setValueAt (Object v, int r, int c)
 		{
 			Property	p = rows.get (r);
-			model.set (block, p.key, (v == null) ? "" : v.toString ());
+			model.set (block, p.key, value (p, (v == null) ? "" : v.toString ()));
 			fireTableCellUpdated (r, c);
 			if (p.key.equals ("INFO"))		rebuild (block);				// the label of the block changed
 			else							canvas.repaint ();
 		}
+	}
+
+	/**
+	 * Writes every file a deployment names the same way ("./conf/..." for the ones
+	 * that live in the project), so that what the editor shows is what the file gets.
+	 */
+	static public void normalisePaths (ArchModel m)
+	{
+		List<Block>		blocks = new ArrayList<Block> ();
+
+		if (m == null)		return;
+		if (m.hasGlobalLinda ())		blocks.add (new Block (ArchModel.GLOBAL_LINDA, -1));
+		for (int r : m.robots ())		blocks.add (new Block (ArchModel.ROBOT, r));
+		blocks.addAll (m.allRobotBlocks ());
+		for (Block b : blocks)
+			for (Property p : m.propertiesOf (b))
+				if (p.type == ArchModel.P_FILE)		m.set (b, p.key, FileCellEditor.normalise (m.get (b, p.key)));
+	}
+
+	/** The value of a property as it is shown and stored: paths always as "./conf/...". */
+	static private String value (Property p, String v)
+	{
+		return (p.type == ArchModel.P_FILE) ? FileCellEditor.normalise (v) : v;
 	}
 
 	/** Rows of the events table (CONNECT of a module): symbol, class, method. Edits are written back to the model. */
@@ -371,7 +394,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 						if (ed == null)
 						{
 							if (p.type == ArchModel.P_CHOICE)	ed = new DefaultCellEditor (new JComboBox<String> (p.choices));
-							else								ed = new FileCellEditor ("Select " + p.label, p.fileDir, new FileNameExtensionFilter (p.fileDesc, p.fileExts), false);
+							else								ed = new FileCellEditor ("Select " + p.label, p.fileDir, new FileNameExtensionFilter (p.fileDesc, p.fileExts));
 							editors.put (id, ed);
 						}
 						return ed;
@@ -497,6 +520,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	public void setDeployment (DeployArch d)
 	{
 		model	= new ArchModel (d);
+		normalisePaths (model);			// old files may name their resources without the leading "./"
 		model.setStartNames (startNamesOf (d));
 		canvas.setModel (model);
 		rebuild (null);

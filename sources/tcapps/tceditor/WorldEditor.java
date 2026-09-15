@@ -212,7 +212,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 				{
 					String	name = propModel.nameAt (row);
 					if (name.equals ("shape"))			return FileCellEditor.SHAPE;
-					if (name.endsWith ("texture"))		return FileCellEditor.TEXTURE;
+					if (isTextureProperty (name))		return FileCellEditor.TEXTURE;
 					if (name.equals ("color"))			return ColorCellEditor.INSTANCE;
 					if (isBooleanProperty (name))	return boolEditor;
 					if (name.equals ("flow") && (propModel.item != null) && (propModel.item.kind == WorldItem.DOCK))
@@ -235,7 +235,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 				if (column == 1)
 				{
 					String	name = propModel.nameAt (row);
-					if (name.equals ("shape") || name.endsWith ("texture"))		return fileRenderer;
+					if (isFileProperty (name))									return fileRenderer;
 					if (name.equals ("color"))									return colorRenderer;
 				}
 				return super.getCellRenderer (row, column);
@@ -782,6 +782,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	private void setWorld (World w, File f)
 	{
 		collapseTree = true;			// a world just loaded shows its categories closed
+		normalisePaths (w);				// old files may name their resources without the leading "./"
 		world	= w;
 		file	= f;
 		dirty	= false;
@@ -1032,14 +1033,15 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		public Object getValueAt (int r, int c)
 		{
 			if (item == null)			return "";
-			return (c == 0) ? names[r] : getProperty (world, item, names[r]);
+			if (c == 0)					return names[r];
+			return value (names[r], getProperty (world, item, names[r]));
 		}
 
 		public void setValueAt (Object value, int r, int c)
 		{
 			if ((item == null) || (c != 1))		return;
-			String	v = (value == null) ? "" : value.toString ();
-			if (v.equals (getProperty (world, item, names[r])))		return;
+			String	v = value (names[r], (value == null) ? "" : value.toString ());
+			if (v.equals (value (names[r], getProperty (world, item, names[r]))))		return;
 			try
 			{
 				setProperty (world, item, names[r], v);
@@ -2745,6 +2747,34 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		if (s.equalsIgnoreCase ("true") || s.equals ("1"))		return true;
 		if (s.equalsIgnoreCase ("false") || s.equals ("0"))		return false;
 		throw new IllegalArgumentException ("Expected true or false");
+	}
+
+	/**
+	 * Writes every file a world names the same way ("./conf/..." for the ones that
+	 * live in the project), so that what the editor shows is what the file gets.
+	 */
+	static public void normalisePaths (World w)
+	{
+		if (w == null)		return;
+		for (tc.shared.world.WMWall l : w.walls ().edges ())			l.texture = FileCellEditor.normalise (l.texture);
+		for (tc.shared.world.WMConnector c : w.connectors ().edges ())	c.texture = FileCellEditor.normalise (c.texture);
+		for (tc.shared.world.WMZone z : w.zones ().areas ())			z.texture = FileCellEditor.normalise (z.texture);
+		for (tc.shared.world.WMFArea f : w.fareas ().areas ())			f.texture = FileCellEditor.normalise (f.texture);
+		for (tc.shared.world.WMObject o : w.allObjects ())				o.shape = FileCellEditor.normalise (o.shape);
+		w.walls ().setDefaults (w.walls ().defaultWidth (), w.walls ().defaultHeight (), FileCellEditor.normalise (w.walls ().defaultTexture ()));
+		w.connectors ().setDefaults (w.connectors ().defaultWidth (), w.connectors ().defaultHeight (), FileCellEditor.normalise (w.connectors ().defaultTexture ()));
+		w.zones ().setDefaultTexture (FileCellEditor.normalise (w.zones ().defaultTexture ()));
+		w.fareas ().setDefaultTexture (FileCellEditor.normalise (w.fareas ().defaultTexture ()));
+	}
+
+	/** Whether a property of an element names a file (and so is written as "./conf/..."). */
+	static public boolean isTextureProperty (String name)	{ return name.endsWith ("texture"); }
+	static public boolean isFileProperty (String name)		{ return name.equals ("shape") || isTextureProperty (name); }
+
+	/** The value of a property as it is shown and stored: paths always as "./conf/...". */
+	static private String value (String name, String v)
+	{
+		return isFileProperty (name) ? FileCellEditor.normalise (v) : v;
 	}
 
 	static private String token (String s)

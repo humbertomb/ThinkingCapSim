@@ -180,7 +180,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 			public javax.swing.table.TableCellRenderer getCellRenderer (int row, int column)
 			{
-				if ((column == 1) && (isShapeProperty (propsModel.nameAt (row)) || isImageProperty (propsModel.nameAt (row))))
+				if ((column == 1) && isFileProperty (propsModel.nameAt (row)))
 					return fileRenderer;
 				return super.getCellRenderer (row, column);
 			}
@@ -386,6 +386,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/** Installs another description in the editor (New / Load). */
 	public void setRobot (RobotDef r)
 	{
+		normalisePaths (r);				// old files may name their resources without the leading "./"
 		robot	= r;
 		dirty	= false;
 		canvas.setRobot (robot);
@@ -797,6 +798,26 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public boolean isShapeProperty (String name)		{ return name.endsWith ("shape"); }
 	/** True for the properties naming an image file. */
 	static public boolean isImageProperty (String name)		{ return name.equals ("image"); }
+	/** True for the properties naming a file. */
+	static public boolean isFileProperty (String name)		{ return isShapeProperty (name) || isImageProperty (name); }
+
+	/**
+	 * Writes every file a description names the same way ("./conf/..." for the ones
+	 * that live in the project), so that what the editor shows is what the file gets.
+	 */
+	static public void normalisePaths (RobotDef r)
+	{
+		if (r == null)		return;
+		r.image				= FileCellEditor.normalise (r.image);
+		r.shapeRobot		= FileCellEditor.normalise (r.shapeRobot);
+		r.shapeActuator		= FileCellEditor.normalise (r.shapeActuator);
+	}
+
+	/** The value of a property as it is shown and stored: paths always as "./conf/...". */
+	static private String value (String name, String v)
+	{
+		return isFileProperty (name) ? FileCellEditor.normalise (v) : v;
+	}
 
 	/** True when a property can be edited. */
 	public boolean isEditable (RobotItem it, String name)
@@ -919,13 +940,13 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		public int getColumnCount ()				{ return 2; }
 		public String getColumnName (int c)			{ return (c == 0) ? "Property" : "Value"; }
 		public boolean isCellEditable (int r, int c)	{ return (c == 1) && (item != null) && isEditable (item, names[r]); }
-		public Object getValueAt (int r, int c)		{ return (c == 0) ? names[r] : getProperty (item, names[r]); }
+		public Object getValueAt (int r, int c)		{ return (c == 0) ? names[r] : value (names[r], getProperty (item, names[r])); }
 
 		public void setValueAt (Object v, int r, int c)
 		{
 			try
 			{
-				setProperty (item, names[r], (v == null) ? "" : v.toString ());
+				setProperty (item, names[r], value (names[r], (v == null) ? "" : v.toString ()));
 				fireTableRowsUpdated (r, r);
 				if ((item.kind == RobotItem.PLATFORM) && names[r].equals ("name"))		refreshTree ();
 			} catch (IllegalArgumentException e)

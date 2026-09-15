@@ -68,23 +68,12 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 	protected String				title;
 	protected String				defaultDir;
 	protected FileNameExtensionFilter	filter;
-	protected boolean				dotSlash	= true;		// "./conf/x" (worlds) or "conf/x" (architectures)
 
 	public FileCellEditor (String title, String defaultDir, FileNameExtensionFilter filter)
-	{
-		this (title, defaultDir, filter, true);
-	}
-
-	/**
-	 * @param dotSlash  true: paths under the working directory are stored as "./conf/x" (the .world
-	 *                  convention); false: as "conf/x" (the .arch convention)
-	 */
-	public FileCellEditor (String title, String defaultDir, FileNameExtensionFilter filter, boolean dotSlash)
 	{
 		this.title		= title;
 		this.defaultDir	= defaultDir;
 		this.filter		= filter;
-		this.dotSlash	= dotSlash;
 
 		field	= new JTextField ();
 		field.setBorder (null);
@@ -121,7 +110,7 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 
 	public Object getCellEditorValue ()
 	{
-		return field.getText ();
+		return normalise (field.getText ());			// also what is typed by hand
 	}
 
 	/* --- file chooser */
@@ -137,9 +126,7 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 
 		if (fc.showOpenDialog (panel) == JFileChooser.APPROVE_OPTION)
 		{
-			String	path = relativize (fc.getSelectedFile ());
-			if (!dotSlash && path.startsWith ("./"))		path = path.substring (2);
-			field.setText (path);
+			field.setText (relativize (fc.getSelectedFile ()));
 			stopCellEditing ();
 		}
 	}
@@ -158,6 +145,26 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 		if ((text == null) || (text.trim ().length () == 0))		return null;
 		File	f = new File (text.trim ());
 		return f.isFile () ? f.getAbsoluteFile () : null;
+	}
+
+	/**
+	 * A path as it is written in the description files: one relative to the
+	 * project always begins with "./", so that "conf/3dmodels/x.3ds" and
+	 * "./conf/3dmodels/x.3ds" are not written two different ways. Absolute paths,
+	 * paths that walk out of the project ("../") and empty text are left alone.
+	 */
+	static public String normalise (String text)
+	{
+		String		path;
+
+		if (text == null)								return null;
+		path	= text.trim ().replace (File.separatorChar, '/');
+		if (path.length () == 0)						return path;
+		if (path.startsWith ("./"))						return path;
+		if (path.startsWith ("/") || path.startsWith ("~"))		return path;
+		if (path.startsWith ("../"))					return path;
+		if (path.matches ("^[A-Za-z]:[/\\\\].*"))			return path;		// Windows absolute path
+		return "./" + path;
 	}
 
 	/** "./rel/path" when the file lives under the working directory, absolute path otherwise. */
