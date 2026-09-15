@@ -66,9 +66,9 @@ public class LPOSensorGroup extends LPO implements Serializable
 		{
 			if (!valid[i])				continue;
 			
-			aa	= view.rotation + spos[i].phi ();
-			xx 	= spos[i].rho () * Math.cos (aa) + range[i] * Math.cos (view.rotation + spos[i].alpha ());
-			yy 	= spos[i].rho () * Math.sin (aa) + range[i] * Math.sin (view.rotation + spos[i].alpha ());
+			aa	= view.rotation + spos[i].theta ();
+			xx 	= spos[i].rho () * Math.cos (aa) + range[i] * Math.cos (view.rotation + spos[i].orientation ());
+			yy 	= spos[i].rho () * Math.sin (aa) + range[i] * Math.sin (view.rotation + spos[i].orientation ());
 			
 			model.addRawCircle (xx, yy, RADIUS, ColorTool.fromWColorToColor(color));
 		}

@@ -275,10 +275,10 @@ public class KFSegLoc extends Object
 			sr		= fdesc.virtufeat[i].rho ();
 			
 			// Get current sensor global position
-			sga		= Angles.radnorm_180 (fdesc.virtufeat[i].alpha () + posk.alpha ());
+			sga		= Angles.radnorm_180 (fdesc.virtufeat[i].orientation () + posk.alpha ());
 						
 			// Compute current sensor global position
-			sgr		= Angles.radnorm_180 (fdesc.virtufeat[i].phi () + posk.alpha ());
+			sgr		= Angles.radnorm_180 (fdesc.virtufeat[i].theta () + posk.alpha ());
 			xs		= posk.x () + sr * Math.cos (sgr);
 			ys		= posk.y () + sr * Math.sin (sgr);
 

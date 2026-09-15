@@ -193,9 +193,9 @@ public class RobotCanvas extends JPanel
 		return b;
 	}
 
-	/** Position of a sensor: polar (alpha, len) around the centre of the robot. */
-	static public double sx (RobotDef.Sensor s)		{ return s.len * Math.cos (Math.toRadians (s.alpha)); }
-	static public double sy (RobotDef.Sensor s)		{ return s.len * Math.sin (Math.toRadians (s.alpha)); }
+	/** Position of a sensor: polar (rho, theta) around the centre of the robot. */
+	static public double sx (RobotDef.Sensor s)		{ return s.rho * Math.cos (Math.toRadians (s.theta)); }
+	static public double sy (RobotDef.Sensor s)		{ return s.rho * Math.sin (Math.toRadians (s.theta)); }
 
 	/* Selection */
 
@@ -319,7 +319,7 @@ public class RobotCanvas extends JPanel
 				RobotDef.Sensor	s = ss.get (i);
 				boolean			sel = isSel (RobotItem.SENSOR, i, fam);
 				double			x = px (sx (s)), y = py (sy (s));
-				double			a = Math.toRadians (s.alpha + s.rho);		// where it looks at
+				double			a = Math.toRadians (s.orientation);			// where it looks at
 				double			len = 14;
 
 				g.setColor (sel ? C_SEL : C_SENSOR);

@@ -123,12 +123,12 @@ public class LPOArcBuffer extends LPO implements Serializable
 		double			phi, rho;
 		LPOArcPoint		s;
 
-		a1	= Angles.radnorm_180 (f.alpha () - cone);
-		a2	= Angles.radnorm_180 (f.alpha () + cone);
+		a1	= Angles.radnorm_180 (f.orientation () - cone);
+		a2	= Angles.radnorm_180 (f.orientation () + cone);
 
 		// Compute sensor detection cone
-		x1	= f.rho () * Math.cos (f.phi ());
-		y1	= f.rho () * Math.sin (f.phi ());
+		x1	= f.rho () * Math.cos (f.theta ());
+		y1	= f.rho () * Math.sin (f.theta ());
 		
 		// Find closest reading within bounding region
 		min = range;	
@@ -173,7 +173,7 @@ public class LPOArcBuffer extends LPO implements Serializable
 		
 		if (!active)	return;
 
-		aa		= view.rotation + pos.alpha ();
+		aa		= view.rotation + pos.orientation ();
 		dr0		= cone * 0.5;
 		
 		xx = pos.x () + range * Math.cos (aa);
@@ -203,8 +203,8 @@ public class LPOArcBuffer extends LPO implements Serializable
 				yi = yf;
 			}
 			
-			xx = pos.x () + kk * Math.cos (pos.alpha ());
-			yy = pos.y () + kk * Math.sin (pos.alpha ());									
+			xx = pos.x () + kk * Math.cos (pos.orientation ());
+			yy = pos.y () + kk * Math.sin (pos.orientation ());									
 			model.addRawText (xx, yy, Integer.valueOf ((int) Math.round (kk)).toString (), ColorTool.fromWColorToColor(WColor.CYAN));
 		}	
 

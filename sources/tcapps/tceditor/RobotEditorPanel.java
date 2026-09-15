@@ -12,6 +12,7 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -385,7 +386,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		String				fam = currentFamily ();
 		RobotDef.Sensor		s = new RobotDef.Sensor ();
 
-		s.len	= (robot.radius > 0.0) ? robot.radius : 0.25;
+		s.rho	= (robot.radius > 0.0) ? robot.radius : 0.25;
 		robot.family (fam).sensors.add (s);
 		changed ();
 		refreshTree ();
@@ -552,8 +553,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 														  "odom et", "odom er", "odom bias" };
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
-		case RobotItem.SENSOR:		return new String[] { "alpha", "len", "rho", "height", "step", "driver" };
-		case RobotItem.FAMILY:		return new String[] { "sensors", "range", "minim", "cone", "cycle", "rays", "reflect", "beacons", "objects" };
+		case RobotItem.SENSOR:		return new String[] { "rho", "theta", "height", "orientation", "step" };
+		case RobotItem.FAMILY:		return new String[] { "sensors", "driver", "range", "minim", "cone", "cycle", "rays", "reflect", "beacons", "objects" };
 		case RobotItem.EXTRA:
 		{
 			List<String>	keys = new ArrayList<String> (robot.extra.keySet ());
@@ -617,18 +618,18 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.SENSOR:
 		{
 			RobotDef.Sensor		s = robot.family (it.family).sensors.get (it.index);
-			if (name.equals ("alpha"))		return RobotDef.fmt (s.alpha);
-			if (name.equals ("len"))		return RobotDef.fmt (s.len);
-			if (name.equals ("rho"))		return RobotDef.fmt (s.rho);
-			if (name.equals ("height"))		return RobotDef.fmt (s.hgt);
-			if (name.equals ("step"))		return String.valueOf (s.step);
-			if (name.equals ("driver"))		return (s.driver != null) ? s.driver : "";
+			if (name.equals ("rho"))			return RobotDef.fmt (s.rho);
+			if (name.equals ("theta"))			return RobotDef.fmt (s.theta);
+			if (name.equals ("height"))			return RobotDef.fmt (s.height);
+			if (name.equals ("orientation"))	return RobotDef.fmt (s.orientation);
+			if (name.equals ("step"))			return String.valueOf (s.step);
 			break;
 		}
 		case RobotItem.FAMILY:
 		{
 			RobotDef.Family		f = robot.family (it.family);
 			if (name.equals ("sensors"))	return String.valueOf (f.n ());
+			if (name.equals ("driver"))		return (f.driver != null) ? f.driver : "";
 			if (name.equals ("range"))		return RobotDef.fmt (f.range);
 			if (name.equals ("minim"))		return RobotDef.fmt (f.minim);
 			if (name.equals ("cone"))		return RobotDef.fmt (f.cone);
@@ -709,18 +710,18 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.SENSOR:
 		{
 			RobotDef.Sensor		s = robot.family (it.family).sensors.get (it.index);
-			if (name.equals ("alpha"))			s.alpha = num (value);
-			else if (name.equals ("len"))		s.len = num (value);
-			else if (name.equals ("rho"))		s.rho = num (value);
-			else if (name.equals ("height"))	s.hgt = num (value);
-			else if (name.equals ("step"))		s.step = (int) num (value);
-			else if (name.equals ("driver"))	s.driver = token (value);
+			if (name.equals ("rho"))				s.rho = num (value);
+			else if (name.equals ("theta"))			s.theta = num (value);
+			else if (name.equals ("height"))		s.height = num (value);
+			else if (name.equals ("orientation"))	s.orientation = num (value);
+			else if (name.equals ("step"))			s.step = (int) num (value);
 			break;
 		}
 		case RobotItem.FAMILY:
 		{
 			RobotDef.Family		f = robot.family (it.family);
-			if (name.equals ("range"))			f.range = num (value);
+			if (name.equals ("driver"))			f.driver = token (value);
+			else if (name.equals ("range"))		f.range = num (value);
 			else if (name.equals ("minim"))		f.minim = num (value);
 			else if (name.equals ("cone"))		f.cone = num (value);
 			else if (name.equals ("cycle"))		f.cycle = (int) num (value);

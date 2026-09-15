@@ -467,10 +467,10 @@ public class World2D extends Object2D
 				
 				xi	= rdesc.sonfeat[i].x ();
 				yi 	= rdesc.sonfeat[i].y ();
-				x1 	= rdesc.sonfeat[i].x () + data.sonars[i] * Math.cos ((rdesc.sonfeat[i].alpha () - cone));
-				y1 	= rdesc.sonfeat[i].y () + data.sonars[i] * Math.sin ((rdesc.sonfeat[i].alpha () - cone)); 
-				x2 	= rdesc.sonfeat[i].x () + data.sonars[i] * Math.cos ((rdesc.sonfeat[i].alpha () + cone));
-				y2 	= rdesc.sonfeat[i].y () + data.sonars[i] * Math.sin ((rdesc.sonfeat[i].alpha () + cone)); 
+				x1 	= rdesc.sonfeat[i].x () + data.sonars[i] * Math.cos ((rdesc.sonfeat[i].orientation () - cone));
+				y1 	= rdesc.sonfeat[i].y () + data.sonars[i] * Math.sin ((rdesc.sonfeat[i].orientation () - cone)); 
+				x2 	= rdesc.sonfeat[i].x () + data.sonars[i] * Math.cos ((rdesc.sonfeat[i].orientation () + cone));
+				y2 	= rdesc.sonfeat[i].y () + data.sonars[i] * Math.sin ((rdesc.sonfeat[i].orientation () + cone)); 
 				
 				model.addRawTransRotLine (new Line2 (xi, yi, x1, y1), rx, ry, ra, Color.YELLOW);
 				model.addRawTransRotLine (new Line2 (xi, yi, x2, y2), rx, ry, ra, Color.YELLOW);
@@ -485,10 +485,10 @@ public class World2D extends Object2D
 				
 				xi	= rdesc.irfeat[i].x ();
 				yi 	= rdesc.irfeat[i].y ();
-				x1 	= rdesc.irfeat[i].x () + data.irs[i] * Math.cos ((rdesc.irfeat[i].alpha () - cone));
-				y1 	= rdesc.irfeat[i].y () + data.irs[i] * Math.sin ((rdesc.irfeat[i].alpha () - cone)); 
-				x2 	= rdesc.irfeat[i].x () + data.irs[i] * Math.cos ((rdesc.irfeat[i].alpha () + cone));
-				y2 	= rdesc.irfeat[i].y () + data.irs[i] * Math.sin ((rdesc.irfeat[i].alpha () + cone)); 
+				x1 	= rdesc.irfeat[i].x () + data.irs[i] * Math.cos ((rdesc.irfeat[i].orientation () - cone));
+				y1 	= rdesc.irfeat[i].y () + data.irs[i] * Math.sin ((rdesc.irfeat[i].orientation () - cone)); 
+				x2 	= rdesc.irfeat[i].x () + data.irs[i] * Math.cos ((rdesc.irfeat[i].orientation () + cone));
+				y2 	= rdesc.irfeat[i].y () + data.irs[i] * Math.sin ((rdesc.irfeat[i].orientation () + cone)); 
 				
 				model.addRawTransRotLine (new Line2 (xi, yi, x1, y1), rx, ry, ra, Color.MAGENTA);
 				model.addRawTransRotLine (new Line2 (xi, yi, x2, y2), rx, ry, ra, Color.MAGENTA);
@@ -507,8 +507,8 @@ public class World2D extends Object2D
 				k	= -cone;
 				for (j = 0; j < rdesc.RAYLRF; j++)
 				{
-					xf 	= rdesc.lrffeat[i].x () + data.lrfs[i][j] * Math.cos ((rdesc.lrffeat[i].alpha () + k));
-					yf 	= rdesc.lrffeat[i].y () + data.lrfs[i][j] * Math.sin ((rdesc.lrffeat[i].alpha () + k)); 
+					xf 	= rdesc.lrffeat[i].x () + data.lrfs[i][j] * Math.cos ((rdesc.lrffeat[i].orientation () + k));
+					yf 	= rdesc.lrffeat[i].y () + data.lrfs[i][j] * Math.sin ((rdesc.lrffeat[i].orientation () + k)); 
 					
 					model.addRawTransRotLine (new Line2 (xi, yi, xf, yf), rx, ry, ra, Color.BLUE);
 					
@@ -592,9 +592,9 @@ public class World2D extends Object2D
 			{ 
 				if (!data.virtuals_flg[i])						continue;
 				
-				xf 	= rx + fdesc.virtufeat[i].rho () * Math.cos (fdesc.virtufeat[i].phi () + ra);
-				yf 	= ry + fdesc.virtufeat[i].rho () * Math.sin (fdesc.virtufeat[i].phi () + ra); 
-				dr0	= fdesc.virtufeat[i].alpha ();
+				xf 	= rx + fdesc.virtufeat[i].rho () * Math.cos (fdesc.virtufeat[i].theta () + ra);
+				yf 	= ry + fdesc.virtufeat[i].rho () * Math.sin (fdesc.virtufeat[i].theta () + ra); 
+				dr0	= fdesc.virtufeat[i].orientation ();
 				
 				model.addRawArrow (xf, yf, data.virtuals[i], ra+dr0, Color.CYAN.brighter());
 			}
@@ -604,9 +604,9 @@ public class World2D extends Object2D
 			{ 
 				if (!data.groups_flg[i])						continue;
 				
-				xf 	= rx + fdesc.groupfeat[i].rho () * Math.cos (fdesc.groupfeat[i].phi () + ra);
-				yf 	= ry + fdesc.groupfeat[i].rho () * Math.sin (fdesc.groupfeat[i].phi () + ra); 
-				dr0	= fdesc.groupfeat[i].alpha ();
+				xf 	= rx + fdesc.groupfeat[i].rho () * Math.cos (fdesc.groupfeat[i].theta () + ra);
+				yf 	= ry + fdesc.groupfeat[i].rho () * Math.sin (fdesc.groupfeat[i].theta () + ra); 
+				dr0	= fdesc.groupfeat[i].orientation ();
 				
 				model.addRawArrow (xf, yf, data.groups[i], ra+dr0, Color.MAGENTA);
 			}
@@ -616,9 +616,9 @@ public class World2D extends Object2D
 			{ 
 				if (!data.dsignals_flg[i])						continue;
 				
-				xf 	= rx + fdesc.dsigfeat[i].rho () * Math.cos (fdesc.dsigfeat[i].phi () + ra);
-				yf 	= ry + fdesc.dsigfeat[i].rho () * Math.sin (fdesc.dsigfeat[i].phi () + ra); 
-				dr0	= fdesc.dsigfeat[i].alpha ();
+				xf 	= rx + fdesc.dsigfeat[i].rho () * Math.cos (fdesc.dsigfeat[i].theta () + ra);
+				yf 	= ry + fdesc.dsigfeat[i].rho () * Math.sin (fdesc.dsigfeat[i].theta () + ra); 
+				dr0	= fdesc.dsigfeat[i].orientation ();
 				
 				if (data.dsignals[i])
 				{
@@ -642,8 +642,8 @@ public class World2D extends Object2D
 				k	= -cone;
 				for (i = 0; i < fdesc.RAYSCAN; i++)
 				{
-					xf 	= fdesc.scanfeat.x () + data.scans[i] * Math.cos ((fdesc.scanfeat.alpha () + k));
-					yf 	= fdesc.scanfeat.y () + data.scans[i] * Math.sin ((fdesc.scanfeat.alpha () + k)); 
+					xf 	= fdesc.scanfeat.x () + data.scans[i] * Math.cos ((fdesc.scanfeat.orientation () + k));
+					yf 	= fdesc.scanfeat.y () + data.scans[i] * Math.sin ((fdesc.scanfeat.orientation () + k)); 
 					
 					model.addRawTransRotLine (new Line2 (xi, yi, xf, yf), rx, ry, ra, Color.BLUE);
 					

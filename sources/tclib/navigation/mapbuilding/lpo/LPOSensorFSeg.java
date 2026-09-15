@@ -107,8 +107,8 @@ public class LPOSensorFSeg  extends LPO implements Serializable
 		
 		for (i = 0, a = -scan.cone () * 0.5; i < dataLRF.n (); i++, a += da)
 		{																											
-			xx	= s.x () + scan.range[i] * Math.cos ((s.alpha () + a));
-			yy	= s.y () + scan.range[i] * Math.sin ((s.alpha () + a));
+			xx	= s.x () + scan.range[i] * Math.cos ((s.orientation () + a));
+			yy	= s.y () + scan.range[i] * Math.sin ((s.orientation () + a));
 		
 			dataLRF.d[i].locate (xx, yy, 0.0, scan.range[i]);
 		}

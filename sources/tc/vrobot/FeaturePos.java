@@ -66,7 +66,7 @@ public class FeaturePos extends SensorPos
 		String		tmp;
 		int			i;
 		
-		tmp = "sensor " + (phi*Angles.DTOR) + " := ";
+		tmp = "sensor " + (theta*Angles.DTOR) + " := ";
 		for (i = 0; i < n; i++)
 		{
 			tmp += wgt[i] + " * virtu[" + ndx[i] + "]";

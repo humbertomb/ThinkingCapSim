@@ -68,15 +68,15 @@ public class LPOSensorScanner extends LPO implements Serializable
 
 		delta	= cone / ((double) size - 1.0);
 
-		aa	= view.rotation + spos.phi ();
+		aa	= view.rotation + spos.theta ();
    		xx	= spos.rho () * Math.cos (aa);
        	yy 	= spos.rho () * Math.sin (aa);
        	xi	= xx;
        	yi	= yy;
 		for (i = 0, k = -cone * 0.5; i < size; i++, k += delta)
 		{
-			xf 	= spos.rho () * Math.cos (aa) + range[i] * Math.cos (view.rotation + spos.alpha () + k);
-			yf 	= spos.rho () * Math.sin (aa) + range[i] * Math.sin (view.rotation + spos.alpha () + k);
+			xf 	= spos.rho () * Math.cos (aa) + range[i] * Math.cos (view.rotation + spos.orientation () + k);
+			yf 	= spos.rho () * Math.sin (aa) + range[i] * Math.sin (view.rotation + spos.orientation () + k);
 
 			switch (dmode)
 			{

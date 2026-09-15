@@ -82,8 +82,8 @@ public class Range3D extends BranchGroup
 		
 		for (i = 0; i < num; i++)
 		{
-			as	= feat[i].alpha () + a;
-			ap	= feat[i].phi () + a;
+			as	= feat[i].orientation () + a;
+			ap	= feat[i].theta () + a;
 			rad	= data[i] * Math.sin (cone * 0.5);
 			
 			xo	= feat[i].rho () * Math.cos (ap) + (data[i] * 0.5) * Math.cos (as);

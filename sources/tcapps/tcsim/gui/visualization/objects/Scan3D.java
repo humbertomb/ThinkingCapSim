@@ -127,8 +127,8 @@ public class Scan3D extends BranchGroup
 				yi	= yf;
 			}
 			
-			alpha	= feat[i].alpha () + a;
-			phi		= feat[i].phi () + a;
+			alpha	= feat[i].orientation () + a;
+			phi		= feat[i].theta () + a;
 			
 			xo		= feat[i].rho () * Math.cos (phi);
 			yo		= feat[i].rho () * Math.sin (phi);

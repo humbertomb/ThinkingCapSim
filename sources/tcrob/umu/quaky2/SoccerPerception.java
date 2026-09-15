@@ -5,6 +5,8 @@
 package tcrob.umu.quaky2;
 
 import tc.runtime.thread.ModuleConfig;
+import java.util.*;
+//import java.awt.*;
 
 import tc.shared.lps.lpo.*;
 import tc.shared.linda.*;
@@ -67,7 +69,7 @@ public class SoccerPerception extends IndoorPerception
 //		len			= 0.45;
 		for (i = 0; i < fdesc.MAXVIRTU; i++)
 		{
-			alpha		= fdesc.virtufeat[i].alpha ();
+			alpha		= fdesc.virtufeat[i].orientation ();
 	    	if (fusion.virtuals_flg[i])
 	    	{
 	    		// Check sensors when the object is in direct view

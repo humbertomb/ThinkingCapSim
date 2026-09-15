@@ -111,8 +111,8 @@ public class LPORangeBuffer extends LPO implements Serializable
 	  
 		// Compute sensor detection point
 		len	= Math.max (Math.min (rho, range_son), 0.0);
-		x 	= feat.x () + len * Math.cos (feat.alpha ());
-		y 	= feat.y () + len * Math.sin (feat.alpha ());
+		x 	= feat.x () + len * Math.cos (feat.orientation ());
+		y 	= feat.y () + len * Math.sin (feat.orientation ());
 
 		tail.set (x, y, len, LPORangePoint.SONAR, i);
 	
@@ -145,8 +145,8 @@ public class LPORangeBuffer extends LPO implements Serializable
 	  
 		// Compute sensor detection point
 		len	= Math.max (Math.min (rho, range_lrf), 0.0);
-		x 	= feat.x () + len * Math.cos (feat.alpha () + alpha);
-		y 	= feat.y () + len * Math.sin (feat.alpha () + alpha);
+		x 	= feat.x () + len * Math.cos (feat.orientation () + alpha);
+		y 	= feat.y () + len * Math.sin (feat.orientation () + alpha);
 
 		tail.set (x, y, len, LPORangePoint.LRF, i);
 	
@@ -178,12 +178,12 @@ public class LPORangeBuffer extends LPO implements Serializable
 		double			phi, rho;
 		LPORangePoint	s;
 
-		a1	= Angles.radnorm_180 (f.alpha () - cone);
-		a2	= Angles.radnorm_180 (f.alpha () + cone);
+		a1	= Angles.radnorm_180 (f.orientation () - cone);
+		a2	= Angles.radnorm_180 (f.orientation () + cone);
 
 		// Compute sensor detection cone
-		x1	= f.rho () * Math.cos (f.phi ());
-		y1	= f.rho () * Math.sin (f.phi ());
+		x1	= f.rho () * Math.cos (f.theta ());
+		y1	= f.rho () * Math.sin (f.theta ());
 				
 		// Find closest reading within bounding region
 		min = range;	
@@ -226,8 +226,8 @@ public class LPORangeBuffer extends LPO implements Serializable
 		LPORangePoint	s;
 
 		// Compute sensor detection rectangle
-		x	= f.rho () * Math.cos (f.phi ());
-		y	= f.rho () * Math.sin (f.phi ());
+		x	= f.rho () * Math.cos (f.theta ());
+		y	= f.rho () * Math.sin (f.theta ());
 		
 		// Find closest reading within bounding region
 		min = range;	
@@ -238,7 +238,7 @@ public class LPORangeBuffer extends LPO implements Serializable
 			{
 				// Compute translated and rotated point
 				rho	= Math.sqrt ((s.x - x) * (s.x - x) + (s.y - y) * (s.y - y));
-				phi	= Math.atan2 (s.y - y, s.x - x) - f.alpha ();
+				phi	= Math.atan2 (s.y - y, s.x - x) - f.orientation ();
 				
 				xs	= rho * Math.cos (phi);
 				ys	= rho * Math.sin (phi);

@@ -155,8 +155,8 @@ public class FGrid extends Grid
 		
 		// Compute triangle vertex from sonar measure
 		len 		= fdesc.virtufeat[s].rho ();
-		phi 		= pos.alpha () + fdesc.virtufeat[s].phi ();
-		alpha 	= pos.alpha () + fdesc.virtufeat[s].alpha ();
+		phi 		= pos.alpha () + fdesc.virtufeat[s].theta ();
+		alpha 	= pos.alpha () + fdesc.virtufeat[s].orientation ();
 		
 		xs 		= pos.x () + len * Math.cos (phi);			// Calculate sensor starting location
 		ys 		= pos.y () + len * Math.sin (phi);
@@ -248,8 +248,8 @@ public class FGrid extends Grid
 			
 		// Set up sensor origin location
 		s		= fdesc.scanfeat;
-		xs 		= pos.x () + s.rho () * Math.cos (pos.alpha () + s.phi ());			
-		ys 		= pos.y () + s.rho () * Math.sin (pos.alpha () + s.phi ());	
+		xs 		= pos.x () + s.rho () * Math.cos (pos.alpha () + s.theta ());			
+		ys 		= pos.y () + s.rho () * Math.sin (pos.alpha () + s.theta ());	
 		start 	= new Point2 (xs, ys);	
 					
 		// Fill up structures with the laser data in Cartesian coordinates (global)
@@ -262,8 +262,8 @@ public class FGrid extends Grid
 			if (len < 0.0)				len = 0.0;
 			if (len > MAX_RANGE_LRF)		len = MAX_RANGE_LRF;
 			
-       		xm 	= xs + len * Math.cos (pos.alpha () + (s.alpha () + k));
-       		ym 	= ys + len * Math.sin (pos.alpha () + (s.alpha () + k)); 
+       		xm 	= xs + len * Math.cos (pos.alpha () + (s.orientation () + k));
+       		ym 	= ys + len * Math.sin (pos.alpha () + (s.orientation () + k)); 
         				
 			data[j]	= new Point2 (xm, ym);
 		}

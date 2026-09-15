@@ -66,18 +66,18 @@ public class BGrid extends Grid
 				
 			if(j < ((fdesc.RAYSCAN-1)/2)){
 																																	
-				xm	= xs + scan.range[j] * Math.cos ((s.alpha() - a + j*da )  + pos.alpha ());
-				ym	= ys + scan.range[j] * Math.sin ((s.alpha() - a + j*da )  + pos.alpha ());
+				xm	= xs + scan.range[j] * Math.cos ((s.orientation() - a + j*da )  + pos.alpha ());
+				ym	= ys + scan.range[j] * Math.sin ((s.orientation() - a + j*da )  + pos.alpha ());
 										
 			}else if (j==((fdesc.RAYSCAN-1)/2)){
 				
-				xm	= xs + scan.range[j] * Math.cos (s.alpha ()  + pos.alpha ());
-				ym	= ys + scan.range[j] * Math.sin (s.alpha ()  + pos.alpha ());	
+				xm	= xs + scan.range[j] * Math.cos (s.orientation ()  + pos.alpha ());
+				ym	= ys + scan.range[j] * Math.sin (s.orientation ()  + pos.alpha ());	
 								
 			}else{
 																										
-				xm	= xs + scan.range[j] * Math.cos ((s.alpha() + (j-((fdesc.RAYSCAN-1)/2))*da )  + pos.alpha ());
-				ym	= ys + scan.range[j] * Math.sin ((s.alpha() + (j-((fdesc.RAYSCAN-1)/2))*da )  + pos.alpha ());			
+				xm	= xs + scan.range[j] * Math.cos ((s.orientation() + (j-((fdesc.RAYSCAN-1)/2))*da )  + pos.alpha ());
+				ym	= ys + scan.range[j] * Math.sin ((s.orientation() + (j-((fdesc.RAYSCAN-1)/2))*da )  + pos.alpha ());			
 				
 			}	
 				

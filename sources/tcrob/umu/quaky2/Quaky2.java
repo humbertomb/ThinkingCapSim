@@ -5,6 +5,7 @@
 package tcrob.umu.quaky2;
 
 import tc.runtime.thread.ModuleConfig;
+import java.util.*;
 
 import tc.vrobot.*;
 import tc.vrobot.models.*;
@@ -459,7 +460,7 @@ public class Quaky2 extends VirtualRobot
 					if (vdata[j].valid && (k < MAX_OBJS))
 					{
 						obdata[k].set (vdata[j]);
-						obdata[k].sensor_pos (rdesc.visfeat[i].x (), rdesc.visfeat[i].y (), rdesc.visfeat[i].alpha ());
+						obdata[k].sensor_pos (rdesc.visfeat[i].x (), rdesc.visfeat[i].y (), rdesc.visfeat[i].orientation ());
 						obdata[k].capture_pos (vpos, cpos);
 						obdata[k].set_dev (i);
 						k ++;

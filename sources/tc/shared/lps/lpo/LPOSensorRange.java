@@ -56,11 +56,11 @@ public class LPOSensorRange extends LPO implements Serializable
 		{
 			if (!valid[i])				continue;
 			
-			aa	= view.rotation + spos[i].phi ();
+			aa	= view.rotation + spos[i].theta ();
 			xx 	= spos[i].rho () * Math.cos (aa);
 			yy 	= spos[i].rho () * Math.sin (aa);
 			
-			model.addRawArrow (xx, yy, range[i], view.rotation + spos[i].alpha (), ColorTool.fromWColorToColor(color));
+			model.addRawArrow (xx, yy, range[i], view.rotation + spos[i].orientation (), ColorTool.fromWColorToColor(color));
 		}
 	}
 }

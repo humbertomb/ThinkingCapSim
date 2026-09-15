@@ -35,8 +35,8 @@ public abstract class LPORange extends LPO implements Serializable
 	{
 		double		cx, cy;
 		
-		cx	= spos.x () + range * Math.cos (spos.alpha ());
-		cy	= spos.y () + range * Math.sin (spos.alpha ());
+		cx	= spos.x () + range * Math.cos (spos.orientation ());
+		cy	= spos.y () + range * Math.sin (spos.orientation ());
 		
 		locate (cx, cy, 0.0, range);
 		active (valid);

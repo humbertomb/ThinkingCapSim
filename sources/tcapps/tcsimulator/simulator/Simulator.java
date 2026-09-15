@@ -7,6 +7,7 @@
 
 package tcapps.tcsimulator.simulator;
 
+import java.util.Enumeration;
 import java.util.Random;
 
 import tc.shared.world.World;
@@ -24,6 +25,7 @@ import devices.pos.Position;
 import devices.pos.UTMPos;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
+import wucore.utils.geom.Point3;
 import wucore.utils.math.Angles;
 import wucore.utils.math.stat.RandomNumberGenerator;
 import devices.data.CompassData;
@@ -385,8 +387,8 @@ public class Simulator
 		Point2			p;
 		
 		
-		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.phi ());
-		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.phi ());
+		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.theta ());
+		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.theta ());
 		
 		a2		= RDESC[roboindex].CONESON / 2.0;
 		rlen	= RDESC[roboindex].RANGESON * 2.0;
@@ -395,8 +397,8 @@ public class Simulator
 		rout		= new Line2 ();
 		for (a = -a2; a <= a2; a += step)
 		{
-			xx2		= xx1 + rlen * Math.cos (MODEL[roboindex].real_a + a1.alpha () + a);
-			yy2		= yy1 + rlen * Math.sin (MODEL[roboindex].real_a + a1.alpha () + a);	
+			xx2		= xx1 + rlen * Math.cos (MODEL[roboindex].real_a + a1.orientation () + a);
+			yy2		= yy1 + rlen * Math.sin (MODEL[roboindex].real_a + a1.orientation () + a);	
 			tdist	= RDESC[roboindex].RANGESON;
 			
 			rout.set (xx1, yy1, xx2, yy2);
@@ -453,9 +455,9 @@ public class Simulator
 		delta	= rho0 / (double) (SDESC[roboindex].RAYSON - 1);
 		rlen	= RDESC[roboindex].RANGESON * 2.0;
 		
-		aa1		= a1.alpha ();
-		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.phi ());
-		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.phi ());
+		aa1		= a1.orientation ();
+		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.theta ());
+		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.theta ());
 		xx2		= xx1 + rlen * Math.cos (MODEL[roboindex].real_a + aa1);	
 		yy2		= yy1 + rlen * Math.sin (MODEL[roboindex].real_a + aa1);		
 		sensor.set (xx1, yy1, xx2, yy2);
@@ -560,8 +562,8 @@ public class Simulator
 		Line2			rout, wall;
 		Point2			p;
 		
-		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.phi ());
-		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.phi ());
+		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.theta ());
+		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.theta ());
 		
 		a2		= RDESC[roboindex].CONEIR / 2.0;
 		rlen	= RDESC[roboindex].RANGEIR * 2.0;
@@ -570,8 +572,8 @@ public class Simulator
 		rout	= new Line2 ();
 		for (a = -a2; a <= a2; a += step)
 		{
-			xx2		= xx1 + rlen * Math.cos (MODEL[roboindex].real_a + a1.alpha () + a);
-			yy2		= yy1 + rlen * Math.sin (MODEL[roboindex].real_a + a1.alpha () + a);	
+			xx2		= xx1 + rlen * Math.cos (MODEL[roboindex].real_a + a1.orientation () + a);
+			yy2		= yy1 + rlen * Math.sin (MODEL[roboindex].real_a + a1.orientation () + a);	
 			tdist	= RDESC[roboindex].RANGEIR;
 			
 			rout.set (xx1, yy1, xx2, yy2);
@@ -658,8 +660,8 @@ public class Simulator
 		Line2			rout, wall;
 		Point2			p;
 		
-		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.phi ());
-		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.phi ());
+		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.theta ());
+		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.theta ());
 		
 		lrf_measures = new double[RDESC[roboindex].RAYLRF];
 		a2		= RDESC[roboindex].CONELRF * 0.5;
@@ -669,8 +671,8 @@ public class Simulator
 		
 		for (i = 0, a = -a2; i < RDESC[roboindex].RAYLRF; i++, a += step)
 		{
-			xx2		= xx1 + rlen * Math.cos (MODEL[roboindex].real_a + a1.alpha () + a);
-			yy2		= yy1 + rlen * Math.sin (MODEL[roboindex].real_a + a1.alpha () + a);	
+			xx2		= xx1 + rlen * Math.cos (MODEL[roboindex].real_a + a1.orientation () + a);
+			yy2		= yy1 + rlen * Math.sin (MODEL[roboindex].real_a + a1.orientation () + a);	
 			tdist	= RDESC[roboindex].RANGELRF;
 			
 			rout.set (xx1, yy1, xx2, yy2);
@@ -750,8 +752,8 @@ public class Simulator
 		Point2			p;								// 	Punto de interseccion entre barrido y el muro o la baliza.
 		int				 index, first_index, last_index;//	Indices de la baliza intersectada (actual, primera y la ultima baliza detectada)
 		
-		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.phi ());  // Posicion absoluta del sensor laser
-		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.phi ());
+		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.theta ());  // Posicion absoluta del sensor laser
+		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.theta ());
 		
 		if(RDESC[roboindex].RANGE == true ||RDESC[roboindex].ANGLE == true)
 			longitud = RDESC[roboindex].BEACLSB*2;						// longitud del vector de las medidas
@@ -780,8 +782,8 @@ public class Simulator
 		for (a = -a2; a < a2; a += step)	// barrido entre -a2 y a2                 
 		{
 			
-			xx2		= xx1 + RDESC[roboindex].RANGELSB * Math.cos (MODEL[roboindex].real_a + a1.alpha () + a);	// punto final del barrido
-			yy2		= yy1 + RDESC[roboindex].RANGELSB * Math.sin (MODEL[roboindex].real_a + a1.alpha () + a);
+			xx2		= xx1 + RDESC[roboindex].RANGELSB * Math.cos (MODEL[roboindex].real_a + a1.orientation () + a);	// punto final del barrido
+			yy2		= yy1 + RDESC[roboindex].RANGELSB * Math.sin (MODEL[roboindex].real_a + a1.orientation () + a);
 			
 			distMuro	= Double.MAX_VALUE;									
 			distBeac	= Double.MAX_VALUE;										
@@ -818,7 +820,7 @@ public class Simulator
 								if(RDESC[roboindex].ANGLE == true) lsb_measures[i++]=bearingFinal;	// Guarda la medida (la mas perpendicular) cuando cambia de baliza					
 								if(RDESC[roboindex].RANGE == true) lsb_measures[i++]=rangeFinal;	// Guarda la medida (la mas perpendicular) cuando cambia de baliza					
 							}
-							bearingFinal=Angles.radnorm_180(bearing-a1.alpha()-MODEL[roboindex].real_a);					// Se almacena la medida relativa que se mediría con el sensor
+							bearingFinal=Angles.radnorm_180(bearing-a1.orientation()-MODEL[roboindex].real_a);					// Se almacena la medida relativa que se mediría con el sensor
 							rangeFinal = range;
 							if (last_index<0)	{dist1=distBeac; first_index=index;}				// Guarda la primera distancia (para el caso especial de que el primer rayo y el ultimo del barrido correspondan a la misma baliza)
 							last_index=index;			// Se almacena el indice de la ultima baliza
@@ -868,8 +870,8 @@ public class Simulator
 		Line2			rout, wall;
 		Point2			p;
 		
-		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.phi ());  // Posicion absoluta del sensor laser
-		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.phi ());
+		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.theta ());  // Posicion absoluta del sensor laser
+		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.theta ());
 		
 		lsb_measures = new double[RDESC[roboindex].BEACLSB];  			// BEACLSB es el numero maximo de balizas
 		a2		= (RDESC[roboindex].CONELSB / 2.0);				// CONELSB es el angulo de barrido (seguramente 360°)
@@ -900,7 +902,7 @@ public class Simulator
 					angle=Angles.radnorm_180(map.beacons().get(a).getAng()-bearing);									// Calcula el angulo entre balizas y barrido
 					
 					if ((angle>RDESC[roboindex].REFLSB) && (angle<(Math.PI-RDESC[roboindex].REFLSB)))
-					{lsb_measures[i++] = Angles.radnorm_180(bearing-a1.alpha()-MODEL[roboindex].real_a);		// Calculo del angulo relativo de la baliza (radianes)
+					{lsb_measures[i++] = Angles.radnorm_180(bearing-a1.orientation()-MODEL[roboindex].real_a);		// Calculo del angulo relativo de la baliza (radianes)
 					System.out.println("Medidas beacons = "+lsb_measures[i-1]);
 					}
 				}
@@ -962,8 +964,8 @@ public class Simulator
 		
 		if (map == null) 		return null;
 
-		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.phi ());
-		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.phi ());
+		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.theta ());
+		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.theta ());
 		
 		rdr_measures = new double[SDESC[roboindex].RAYRAD];
 		a2		= RDESC[roboindex].CONETRK * 0.5;
@@ -972,8 +974,8 @@ public class Simulator
 		
 		for (i = 0, a = -a2; i < SDESC[roboindex].RAYRAD; i++, a += step)
 		{
-			xx2		= xx1 + RDESC[roboindex].RANGETRK * Math.cos (MODEL[roboindex].real_a + a1.alpha () + a);
-			yy2		= yy1 + RDESC[roboindex].RANGETRK * Math.sin (MODEL[roboindex].real_a + a1.alpha () + a);	
+			xx2		= xx1 + RDESC[roboindex].RANGETRK * Math.cos (MODEL[roboindex].real_a + a1.orientation () + a);
+			yy2		= yy1 + RDESC[roboindex].RANGETRK * Math.sin (MODEL[roboindex].real_a + a1.orientation () + a);	
 			tdist	= RDESC[roboindex].RANGETRK;
 			
 			rout.set (xx1, yy1, xx2, yy2);
@@ -1306,9 +1308,9 @@ public class Simulator
 					bpos.set (data.odom_x, data.odom_y, data.odom_a);
 					
 					// Compute sensor absolute position (x, y, a)
-					xx1		= data.real_x + RDESC[robotind].visfeat[i].rho () * Math.cos (RDESC[robotind].visfeat[i].phi ());
-					yy1		= data.real_y + RDESC[robotind].visfeat[i].rho () * Math.sin (RDESC[robotind].visfeat[i].phi ());
-					aa1		= data.real_a + RDESC[robotind].visfeat[i].alpha ();
+					xx1		= data.real_x + RDESC[robotind].visfeat[i].rho () * Math.cos (RDESC[robotind].visfeat[i].theta ());
+					yy1		= data.real_y + RDESC[robotind].visfeat[i].rho () * Math.sin (RDESC[robotind].visfeat[i].theta ());
+					aa1		= data.real_a + RDESC[robotind].visfeat[i].orientation ();
 					
 					// Iterate through all available objects
 					for (j = 0; j < objs.numobjects; j++)
@@ -1347,7 +1349,7 @@ public class Simulator
 //							VISDATA[j].set_blob (so.odesc.label, 60, 80, 10, 10, so.odesc.color);
 							VISDATA[j].set_blob (so.odesc.label, 60, 80, 10, 10, wucore.utils.color.ColorTool.fromWColorToColor(so.odesc.color));
 							VISDATA[j].percept_pos (ly, 0.0, lx);
-							VISDATA[j].sensor_pos (RDESC[robotind].visfeat[i].x (), RDESC[robotind].visfeat[i].y (), RDESC[robotind].visfeat[i].alpha ());
+							VISDATA[j].sensor_pos (RDESC[robotind].visfeat[i].x (), RDESC[robotind].visfeat[i].y (), RDESC[robotind].visfeat[i].orientation ());
 							VISDATA[j].capture_pos (VISPOS[robotind], bpos);
 							VISDATA[j].valid = true;
 						}

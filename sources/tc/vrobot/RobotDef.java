@@ -37,21 +37,23 @@ public class RobotDef
 {
 	static public final String		EXTENSION	= "robot";
 
-	/** Pose of a sensor on the robot, as the description states it: polar (angle, distance, orientation) and height. */
+	/**
+	 * Pose of a sensor on the robot, in the polar coordinates {@link SensorPos}
+	 * uses: where it sits (rho, theta) and where it looks at (orientation).
+	 */
 	static public class Sensor
 	{
-		public double	alpha;						// direction of the sensor mount (deg, "<fam>feat")
-		public double	len;						// distance from the robot centre (m, "<fam>len")
-		public double	rho;						// orientation of the sensor itself (deg, "<fam>rho")
-		public double	hgt;						// height over the floor (m, "<fam>hgt")
+		public double	rho;						// distance from the centre of the robot (m, "<fam>len")
+		public double	theta;						// angle of that distance (deg, "<fam>rho")
+		public double	height;						// height over the floor (m, "<fam>hgt")
+		public double	orientation;				// direction the sensor looks at (deg, "<fam>feat")
 		public int		step;						// reading step ("<fam>step")
-		public String	driver;						// driver of the device, when it has one (LRF0, LSB0, ...)
 
 		public Sensor ()							{ }
 		public Sensor copy ()
 		{
 			Sensor	s = new Sensor ();
-			s.alpha = alpha;	s.len = len;	s.rho = rho;	s.hgt = hgt;	s.step = step;	s.driver = driver;
+			s.rho = rho;	s.theta = theta;	s.height = height;	s.orientation = orientation;	s.step = step;
 			return s;
 		}
 	}
@@ -67,6 +69,7 @@ public class RobotDef
 		public double		reflect;				// lsb: maximum reflection angle (deg)
 		public int			beacons;				// lsb: beacons it can see at once
 		public int			objects;				// tracker: tracked objects
+		public String		driver;					// driver every sensor of the family uses (LRF0, LSB0, ...)
 		public List<Sensor>	sensors	= new ArrayList<Sensor> ();
 
 		public int n ()								{ return sensors.size (); }
@@ -76,6 +79,7 @@ public class RobotDef
 			Family	f = new Family ();
 			f.range = range;	f.minim = minim;	f.cone = cone;		f.cycle = cycle;
 			f.rays = rays;		f.reflect = reflect;	f.beacons = beacons;	f.objects = objects;
+			f.driver = driver;
 			for (Sensor s : sensors)		f.sensors.add (s.copy ());
 			return f;
 		}
@@ -370,12 +374,17 @@ public class RobotDef
 			for (int i = 0; i < n; i++)
 			{
 				Sensor	s = new Sensor ();
-				s.alpha		= num (props, fam + "feat" + i, 0, used);
-				s.len		= num (props, fam + "len" + i, 0, used);
-				s.rho		= num (props, fam + "rho" + i, 0, used);
-				s.hgt		= num (props, fam + "hgt" + i, 0, used);
-				s.step		= (int) num (props, fam + "step" + i, 0, used);
-				if (FAMILY_DRIVERS[fi] != null)		s.driver = str (props, FAMILY_DRIVERS[fi] + i, used);
+				s.rho			= num (props, fam + "len" + i, 0, used);
+				s.theta			= num (props, fam + "rho" + i, 0, used);
+				s.height		= num (props, fam + "hgt" + i, 0, used);
+				s.orientation	= num (props, fam + "feat" + i, 0, used);
+				s.step			= (int) num (props, fam + "step" + i, 0, used);
+				// the driver is one for the whole family: the first one that names it wins
+				if (FAMILY_DRIVERS[fi] != null)
+				{
+					String	drv = str (props, FAMILY_DRIVERS[fi] + i, used);
+					if ((drv != null) && (f.driver == null))		f.driver = drv;
+				}
 				f.sensors.add (s);
 			}
 		}
@@ -448,11 +457,12 @@ public class RobotDef
 			for (int i = 0; i < f.n (); i++)
 			{
 				Sensor	s = f.sensors.get (i);
-				set (p, fam + "feat" + i, s.alpha);		set (p, fam + "len" + i, s.len);
-				set (p, fam + "rho" + i, s.rho);		setNZ (p, fam + "hgt" + i, s.hgt);
+				set (p, fam + "len" + i, s.rho);		set (p, fam + "rho" + i, s.theta);
+				setNZ (p, fam + "hgt" + i, s.height);	set (p, fam + "feat" + i, s.orientation);
 				if (s.step > 0)		p.setProperty (fam + "step" + i, String.valueOf (s.step));
-				if ((FAMILY_DRIVERS[fi] != null) && (s.driver != null) && (s.driver.trim ().length () > 0))
-					p.setProperty (FAMILY_DRIVERS[fi] + i, s.driver.trim ());
+				// every sensor of the family is read through the same driver
+				if ((FAMILY_DRIVERS[fi] != null) && (f.driver != null) && (f.driver.trim ().length () > 0))
+					p.setProperty (FAMILY_DRIVERS[fi] + i, f.driver.trim ());
 			}
 		}
 
