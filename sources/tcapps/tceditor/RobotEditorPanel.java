@@ -83,7 +83,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected Action				lineAC, bumperAC, sensorAC, deleteAC;
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
-	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, imageMI;
+	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, snapMI, imageMI;
 
 	/* ------------------------------------------------------------------ */
 
@@ -264,6 +264,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			public void run ()		{ canvas.setGridVisible (gridMI.isSelected ()); }
 		});
 		mview.add (gridMI);
+		snapMI	= checkItem ("Snap to Grid", KeyEvent.VK_G, mask | java.awt.event.InputEvent.SHIFT_DOWN_MASK, canvas.isSnapEnabled (), new Runnable ()
+		{
+			public void run ()		{ canvas.setSnapEnabled (snapMI.isSelected ()); }
+		});
+		mview.add (snapMI);
 		imageMI	= checkItem ("Robot Image", KeyEvent.VK_I, mask, canvas.isImageVisible (), new Runnable ()
 		{
 			public void run ()		{ canvas.setImageVisible (imageMI.isSelected ()); }

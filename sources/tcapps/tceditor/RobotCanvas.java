@@ -78,6 +78,8 @@ public class RobotCanvas extends JPanel
 	protected int					dragHandle;					// handle being dragged
 	protected boolean				gridVisible		= true;
 	protected boolean				imageVisible	= true;
+	protected boolean				snapGrid		= false;	// take the handles to the grid
+	protected double				gridStep		= 0.1;		// metres, recomputed from the scale
 	protected double				grabX, grabY;				// where the element was grabbed (world coordinates)
 
 	public RobotCanvas (RobotDef robot)
@@ -131,12 +133,17 @@ public class RobotCanvas extends JPanel
 					repaint ();
 					break;
 				case D_MOVE:
-					translate (x - grabX, y - grabY);
-					grabX	= x;
-					grabY	= y;
+					// with snapping on, the element moves in whole steps of the grid
+					translate (snap (x - grabX), snap (y - grabY));
+					if (snapGrid)
+					{
+						grabX	+= snap (x - grabX);
+						grabY	+= snap (y - grabY);
+					}
+					else		{ grabX = x;	grabY = y; }
 					break;
 				case D_HANDLE:
-					setHandle (dragHandle, x, y);
+					setHandle (dragHandle, snap (x), snap (y));
 					break;
 				}
 			}
@@ -174,6 +181,26 @@ public class RobotCanvas extends JPanel
 
 	public boolean isGridVisible ()					{ return gridVisible; }
 	public void setGridVisible (boolean on)			{ gridVisible = on; repaint (); }
+	public boolean isSnapEnabled ()					{ return snapGrid; }
+	public void setSnapEnabled (boolean on)			{ snapGrid = on; }
+	/** Step of the grid the view is drawing (m). */
+	public double getGridStep ()					{ return gridStep; }
+
+	/** A coordinate taken to the grid, when snapping is on. */
+	public double snap (double v)
+	{
+		return snapGrid ? Math.rint (v / gridStep) * gridStep : v;
+	}
+
+	/** Chooses a grid step so that the lines are at least ~25 px apart. */
+	private void updateGridStep ()
+	{
+		double[]	steps = { 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10 };
+
+		gridStep	= steps[steps.length - 1];
+		for (int i = 0; i < steps.length; i++)
+			if (steps[i] * scale >= 25.0)		{ gridStep = steps[i]; break; }
+	}
 	public boolean isImageVisible ()				{ return imageVisible; }
 	public void setImageVisible (boolean on)		{ imageVisible = on; repaint (); }
 
@@ -187,6 +214,7 @@ public class RobotCanvas extends JPanel
 	public void zoom (double factor)
 	{
 		scale	= Math.max (MIN_SCALE, Math.min (MAX_SCALE, scale * factor));
+		updateGridStep ();
 		repaint ();
 	}
 
@@ -198,13 +226,14 @@ public class RobotCanvas extends JPanel
 	{
 		double[]	b = robotBounds ();
 
-		if (b == null)			{ cx = cy = 0.0; scale = 200.0; repaint (); return; }
+		if (b == null)			{ cx = cy = 0.0; scale = 200.0; updateGridStep (); repaint (); return; }
 
 		double	w = Math.max (b[2] - b[0], 0.2), h = Math.max (b[3] - b[1], 0.2);
 		cx		= (b[0] + b[2]) / 2.0;
 		cy		= (b[1] + b[3]) / 2.0;
 		if ((getWidth () > 0) && (getHeight () > 0))
 			scale	= Math.max (MIN_SCALE, Math.min (MAX_SCALE, 0.85 * Math.min (getWidth () / w, getHeight () / h)));
+		updateGridStep ();
 		repaint ();
 	}
 
@@ -487,10 +516,7 @@ public class RobotCanvas extends JPanel
 
 	private void drawGrid (Graphics2D g)
 	{
-		double		step = 0.1;
-
-		while (step * scale < 20)		step *= 2;
-		while (step * scale > 80)		step /= 2;
+		double		step = gridStep;
 
 		g.setStroke (stroke (1f));
 		g.setColor (C_GRID);
