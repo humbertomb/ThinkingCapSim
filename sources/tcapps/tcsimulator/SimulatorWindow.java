@@ -738,10 +738,13 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		double		x = rv.data.real_x, y = rv.data.real_y, a = rv.data.real_a;
 		double		ca = Math.cos (a), sa = Math.sin (a);
 		Line2[]		icon = rv.rdesc.icon;
+		boolean		image;
 
 		g.setStroke (new BasicStroke (2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-		drawRobotImage (g, c, rv, x, y, a);				// the bitmap of the robot, under its outline
-		if ((icon != null) && (icon.length > 0))
+		image	= drawRobotImage (g, c, rv, x, y, a);	// the bitmap of the robot, instead of its outline
+		if (image)									// the bitmap already stands for the body of the robot
+			;
+		else if ((icon != null) && (icon.length > 0))
 		{
 			// icon segments (robot frame) placed at the robot pose; closed outlines get a light fill
 			Path2D	path = new Path2D.Double ();
@@ -783,16 +786,23 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		}
 	}
 
-	/** The image of the robot, centred on it, scaled to its bumpers and turned with it. */
-	private void drawRobotImage (Graphics2D g, WorldCanvas c, RobotView rv, double x, double y, double a)
+	/**
+	 * The image of the robot, centred on it, scaled to its bumpers and turned with
+	 * it. When there is one it stands for the body of the robot, so the drawing of
+	 * its outline is left out (the heading and the name are still drawn).
+	 *
+	 * @return whether the image was drawn
+	 */
+	private boolean drawRobotImage (Graphics2D g, WorldCanvas c, RobotView rv, double x, double y, double a)
 	{
 		java.awt.Image	img = tc.vrobot.RobotImage.get (rv.rdesc.image);
 		double[]		size;
 
-		if (img == null)				return;
+		if (img == null)				return false;
 		size	= tc.vrobot.RobotImage.size (rv.rdesc.bumfeat, rv.rdesc.icon, rv.rdesc.RADIUS);
-		if (size == null)				return;
+		if (size == null)				return false;
 		tc.vrobot.RobotImage.draw (g, img, c.toPixelX (x), c.toPixelY (y), size[0] * c.getScale (), size[1] * c.getScale (), a);
+		return true;
 	}
 
 	/* ------------------------------------------------------------------ */
