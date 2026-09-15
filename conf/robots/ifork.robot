@@ -1,358 +1,390 @@
-#---------------------------------------------------------------------
-#
-# i-Fork v1.0b
-# OMG 808 AGV robot specification
-#
-
-#---------------------------------------------------------------------
-# Laser Range Finder sensors definition
-#---------------------------------------------------------------------
-MAXLRF 			= 1
-LRF0				= devices.drivers.laser.PLS.PLS|/dev/ttyS0
-RANGELRF 		= 82.0
-MINIMLRF 		= 0.01
-CONELRF 			= 180
-RAYLRF 			= 361
-CYCLELRF			= 6
-
-ERRORLRF 		= 0.05
-ERRORLRFGAUSS 	= 0.0009
-MODELRF 			= 2
-
-lrffeat0 		= 0.0
-lrflen0 			= 1.314
-lrfrho0 			= 0.0
-lrfhgt0			= 0.15
-lrfstep0			= 4
-
-#---------------------------------------------------------------------
-# Laser Beacon Scanner sensors definition
-#---------------------------------------------------------------------
-MAXLSB 			= 1
-LSB0				= devices.drivers.beacon.nav200.NAV200|/dev/ttyS1
-LSB0_OFFSET		= 180.0
-RANGELSB 		= 30.0
-MINIMLSB 		= 0.01
-CONELSB 			= 360.0
-REFLSB			= 10.0
-BEACLSB			= 20
-RAYLSB 			= 361
-CYCLELSB			= 6
-
-ERRORLSB 		= 0.05
-ERRORLSBGAUSS 	= 0.5
-MODELSB 			= 2
-
-lsbfeat0 		= 2.8
-lsblen0 			= 0.63
-lsbrho0 			= -0.25
-lsbstep0			= 1
-
-MAXLAYER			= 5
-LAYER_0			= ZoneA
-LAYER_1			= ZoneB
-LAYER_2			= ZoneC
-LAYER_3			= ZoneD
-LAYER_4			= RoomA
-INITLAYER		= 0
-
-#---------------------------------------------------------------------
-# Virtual scanner definition
-#---------------------------------------------------------------------
-RAYSCAN 			= 90
-RANGESCAN 		= 10
-CONESCAN 		= 180
-
-scanmode			= 0
-scanfeat 		= 0.0
-scanlen 			= 1.135
-scanrho 			= 0.0
-
-#---------------------------------------------------------------------
-# Group sensors definition
-#---------------------------------------------------------------------
-MAXGROUP			= 5
-RANGEGROUP		= 4.00
-CONEGROUP		= 45.0
-
-groupmode0		= 6
-groupfeat0		= 90.0
-grouplen0		= 1.0
-grouprho0		= 0.0
-groupbase0		= 0.9
-grouprng0		= 2.0
-
-groupmode1		= 4
-groupfeat1		= 45.0
-grouplen1		= 1.2
-grouprho1		= 0.0
-
-groupmode2		= 6
-groupfeat2		= 0.0
-grouplen2		= 1.8
-grouprho2		= 0.0
-groupbase2		= 0.75
-
-groupmode3		= 4
-groupfeat3		= -45.0
-grouplen3		= 1.2
-grouprho3		= 0.0
-
-groupmode4		= 6
-groupfeat4		= -90.0
-grouplen4		= 1.0
-grouprho4		= 0.0
-groupbase4		= 0.9
-grouprng4		= 2.0
-
-#---------------------------------------------------------------------
-# Bumper sensors definition
-#---------------------------------------------------------------------
-MAXBUMPER		= 4
-
-bumxi0			= -0.24
-bumyi0			= 0.64
-bumxf0 			= -0.24
-bumyf0 			= -0.64
-bumxi1 			= -0.24
-bumyi1 			= -0.64
-bumxf1 			= 1.95
-bumyf1 			= -0.64
-bumxi2 			= 1.95
-bumyi2 			= -0.64
-bumxf2 			= 1.95
-bumyf2 			= 0.64
-bumxi3 			= 1.95
-bumyi3 			= 0.64
-bumxf3 			= -0.24
-bumyf3 			= 0.64
-
-#---------------------------------------------------------------------
-# Robot kinematics definition
-#---------------------------------------------------------------------
-# Maximum robot linear and angular velocities (m/s, deg/s)
-VMAX 			= 2.5
-RMAX 			= 72.0
-
-# Kynematics constraints. Maximum speed and angle of the driving wheel (m/s, deg)
-MAXMOTOR 		= 2.5
-MAXSTEER 		= 60.0
-
-# Dynamics constraints. Maximum turning speed of the driving wheel (deg/s)
-SAMAX			= 42.0
-
-# Acceleration/decceleration constraints (m/s2)
-LAMAX			= 0.5
-LDMAX			= 0.2
-
-# Robot control cycle (ms)
-DTIME 			= 115
-
-# Robot plant model
-DRIVEMODEL		= tc.vrobot.models.TricycleDrive
-LENGHT 			= 1.004
-BASE				= 0.0
-RWHEEL			= 0.0
-
-# Odometry errors for simulation [m/s, rad/s]
-ODOM_ET 			= 0.002
-ODOM_ER 			= 0.005
-ODOM_BIAS		= 0.001
-
-#---------------------------------------------------------------------
-# Robot CAN bus configuration
-#---------------------------------------------------------------------
-CAN_DEBUGID		= 111
-CAN_SECURITYID	= 200
-CAN_BRAKEID		= 300
-CAN_ACTIVEID		= 400
-CAN_MOTID		= 800
-CAN_ODOM_MOTID	= 1000
-CAN_ODOM_POSID	= 1200
-CAN_FORKID		= 1400
-CAN_HORNID		= 1600
-CAN_LIGHTSONID	= 1800
-CAN_LIGHTSOFFID	= 2000
-
-# CAN parameters (1000, 500, 250 and 125 kbps)
-# --------------
-CAN_DEV			= /dev/can1
-CAN_BRATE		= 500
-
-# Parameters for debugging
-# ------------------------
-DEBUG			= false
-DEBUG_CAN		= false
-
-# Addittional configuration
-# -------------------------
-CAN_SINGLE_FILTER = false
-CAN_OCR 			= 250
-CAN_CDR 			= 192
-
-#OCR = 0xFA y CDR = 0xC0
-
-#---------------------------------------------------------------------
-# Robot icon specification
-#---------------------------------------------------------------------
-RADIUS                  = 1.0
-LINES                   = 30
-
-# iFork drawing
-
-iconxi0 = -1.1199
-iconyi0 = 0.2718
-iconxf0 = -1.1199
-iconyf0 = 0.2182
- 
-iconxi1 = -1.1199
-iconyi1 = 0.2718
-iconxf1 = -0.9207
-iconyf1 = 0.295
- 
-iconxi2 = -0.9207
-iconyi2 = 0.195
-iconxf2 = -1.1199
-iconyf2 = 0.2182
- 
-iconxi3 = -0.9207
-iconyi3 = -0.295
-iconxf3 = -1.1199
-iconyf3 = -0.2718
- 
-iconxi4 = -1.1199
-iconyi4 = -0.2182
-iconxf4 = -0.9207
-iconyf4 = -0.195
- 
-iconxi5 = -1.1199
-iconyi5 = -0.2182
-iconxf5 = -1.1199
-iconyf5 = -0.2718
- 
-iconxi6 = 1.375
-iconyi6 = 0.0
-iconxf6 = 1.3643
-iconyf6 = -0.0775
- 
-iconxi7 = 1.3643
-iconyi7 = 0.0775
-iconxf7 = 1.375
-iconyf7 = 0.0
-                                                                                
-iconxi8 = -0.086
-iconyi8 = 0.295
-iconxf8 = -0.086
-iconyf8 = 0.49
- 
-iconxi9 = -0.0885
-iconyi9 = -0.195
-iconxf9 = -0.0885
-iconyf9 = 0.195
- 
-iconxi10 = 0.468
-iconyi10 = 0.5
-iconxf10 = 1.0932
-iconyf10 = 0.5
- 
-iconxi11 = 1.0932
-iconyi11 = 0.5
-iconxf11 = 1.219
-iconyf11 = 0.3742
- 
-iconxi12 = 1.219
-iconyi12 = 0.3742
-iconxf12 = 1.219
-iconyf12 = -0.3742
- 
-iconxi13 = 1.0932
-iconyi13 = -0.5
-iconxf13 = 0.468
-iconyf13 = -0.5
- 
-iconxi14 = 1.219
-iconyi14 = -0.3742
-iconxf14 = 1.0932
-iconyf14 = -0.5
- 
-iconxi15 = 0.143
-iconyi15 = 0.375
-iconxf15 = 0.143
-iconyf15 = 0.49
- 
-iconxi16 = 0.143
-iconyi16 = -0.49
-iconxf16 = 0.143
-iconyf16 = -0.375
- 
-iconxi17 = -0.086
-iconyi17 = 0.49
-iconxf17 = 0.143
-iconyf17 = 0.49
- 
-iconxi18 = 0.143
-iconyi18 = -0.49
-iconxf18 = -0.086
-iconyf18 = -0.49
- 
-iconxi19 = 0.468
-iconyi19 = 0.375
-iconxf19 = 0.143
-iconyf19 = 0.375
- 
-iconxi20 = 0.468
-iconyi20 = 0.375
-iconxf20 = 0.468
-iconyf20 = 0.5
- 
-iconxi21 = 0.468
-iconyi21 = -0.5
-iconxf21 = 0.468
-iconyf21 = -0.3752
- 
-iconxi22 = 0.468
-iconyi22 = -0.3752
-iconxf22 = 0.143
-iconyf22 = -0.375
- 
-iconxi23 = -0.086
-iconyi23 = -0.295
-iconxf23 = -0.086
-iconyf23 = -0.49
- 
-iconxi24 = -0.086
-iconyi24 = 0.295
-iconxf24 = -0.9207
-iconyf24 = 0.295
- 
-iconxi25 = -0.9207
-iconyi25 = 0.195
-iconxf25 = -0.0885
-iconyf25 = 0.195
- 
-iconxi26 = -0.0885
-iconyi26 = -0.195
-iconxf26 = -0.9207
-iconyf26 = -0.195
- 
-iconxi27 = -0.9207
-iconyi27 = -0.295
-iconxf27 = -0.086
-iconyf27 = -0.295
- 
-iconxi28 = 1.3643
-iconyi28 = 0.0775
-iconxf28 = 1.219
-iconyf28 = 0.0775
- 
-iconxi29 = 1.219
-iconyi29 = -0.0775
-iconxf29 = 1.3643
-iconyf29 = -0.0775
-
-#-----------------------------------------------------------------------------------------
-# Robot 3D specification
-#-----------------------------------------------------------------------------------------
-V3DFILE = conf/3dmodels/ifork.3ds
-V3DLIFT = conf/3dmodels/ifork.lift.3ds
-
+{
+  "name": "ifork",
+  "radius": 1.0,
+  "icon": [
+    {
+      "xi": -1.1199,
+      "yi": 0.2718,
+      "xf": -1.1199,
+      "yf": 0.2182
+    },
+    {
+      "xi": -1.1199,
+      "yi": 0.2718,
+      "xf": -0.9207,
+      "yf": 0.295
+    },
+    {
+      "xi": -0.9207,
+      "yi": 0.195,
+      "xf": -1.1199,
+      "yf": 0.2182
+    },
+    {
+      "xi": -0.9207,
+      "yi": -0.295,
+      "xf": -1.1199,
+      "yf": -0.2718
+    },
+    {
+      "xi": -1.1199,
+      "yi": -0.2182,
+      "xf": -0.9207,
+      "yf": -0.195
+    },
+    {
+      "xi": -1.1199,
+      "yi": -0.2182,
+      "xf": -1.1199,
+      "yf": -0.2718
+    },
+    {
+      "xi": 1.375,
+      "yi": 0.0,
+      "xf": 1.3643,
+      "yf": -0.0775
+    },
+    {
+      "xi": 1.3643,
+      "yi": 0.0775,
+      "xf": 1.375,
+      "yf": 0.0
+    },
+    {
+      "xi": -0.086,
+      "yi": 0.295,
+      "xf": -0.086,
+      "yf": 0.49
+    },
+    {
+      "xi": -0.0885,
+      "yi": -0.195,
+      "xf": -0.0885,
+      "yf": 0.195
+    },
+    {
+      "xi": 0.468,
+      "yi": 0.5,
+      "xf": 1.0932,
+      "yf": 0.5
+    },
+    {
+      "xi": 1.0932,
+      "yi": 0.5,
+      "xf": 1.219,
+      "yf": 0.3742
+    },
+    {
+      "xi": 1.219,
+      "yi": 0.3742,
+      "xf": 1.219,
+      "yf": -0.3742
+    },
+    {
+      "xi": 1.0932,
+      "yi": -0.5,
+      "xf": 0.468,
+      "yf": -0.5
+    },
+    {
+      "xi": 1.219,
+      "yi": -0.3742,
+      "xf": 1.0932,
+      "yf": -0.5
+    },
+    {
+      "xi": 0.143,
+      "yi": 0.375,
+      "xf": 0.143,
+      "yf": 0.49
+    },
+    {
+      "xi": 0.143,
+      "yi": -0.49,
+      "xf": 0.143,
+      "yf": -0.375
+    },
+    {
+      "xi": -0.086,
+      "yi": 0.49,
+      "xf": 0.143,
+      "yf": 0.49
+    },
+    {
+      "xi": 0.143,
+      "yi": -0.49,
+      "xf": -0.086,
+      "yf": -0.49
+    },
+    {
+      "xi": 0.468,
+      "yi": 0.375,
+      "xf": 0.143,
+      "yf": 0.375
+    },
+    {
+      "xi": 0.468,
+      "yi": 0.375,
+      "xf": 0.468,
+      "yf": 0.5
+    },
+    {
+      "xi": 0.468,
+      "yi": -0.5,
+      "xf": 0.468,
+      "yf": -0.3752
+    },
+    {
+      "xi": 0.468,
+      "yi": -0.3752,
+      "xf": 0.143,
+      "yf": -0.375
+    },
+    {
+      "xi": -0.086,
+      "yi": -0.295,
+      "xf": -0.086,
+      "yf": -0.49
+    },
+    {
+      "xi": -0.086,
+      "yi": 0.295,
+      "xf": -0.9207,
+      "yf": 0.295
+    },
+    {
+      "xi": -0.9207,
+      "yi": 0.195,
+      "xf": -0.0885,
+      "yf": 0.195
+    },
+    {
+      "xi": -0.0885,
+      "yi": -0.195,
+      "xf": -0.9207,
+      "yf": -0.195
+    },
+    {
+      "xi": -0.9207,
+      "yi": -0.295,
+      "xf": -0.086,
+      "yf": -0.295
+    },
+    {
+      "xi": 1.3643,
+      "yi": 0.0775,
+      "xf": 1.219,
+      "yf": 0.0775
+    },
+    {
+      "xi": 1.219,
+      "yi": -0.0775,
+      "xf": 1.3643,
+      "yf": -0.0775
+    }
+  ],
+  "image": "./conf/2dmodels/ifork.png",
+  "shapeRobot": "./conf/3dmodels/ifork.3ds",
+  "shapeActuator": "./conf/3dmodels/ifork.lift.3ds",
+  "kinematics": {
+    "drive": "tc.vrobot.models.TricycleDrive",
+    "vmax": 2.5,
+    "rmax": 72.0,
+    "maxmotor": 2.5,
+    "maxsteer": 60.0,
+    "samax": 42.0,
+    "lamax": 0.5,
+    "ldmax": 0.2,
+    "length": 1.004,
+    "base": 0.0,
+    "rwheel": 0.0,
+    "wheel": 0.0,
+    "gear": 0.0,
+    "pulses": 0.0,
+    "dtime": 115,
+    "odomET": 0.002,
+    "odomER": 0.005,
+    "odomBias": 0.001
+  },
+  "sensors": {
+    "son": {
+      "rangemax": 0.0,
+      "rangemin": 0.0,
+      "cone": 0.0,
+      "cycle": 0,
+      "rays": 0,
+      "reflect": 0.0,
+      "beacons": 0,
+      "objects": 0,
+      "sensors": []
+    },
+    "ir": {
+      "rangemax": 0.0,
+      "rangemin": 0.0,
+      "cone": 0.0,
+      "cycle": 0,
+      "rays": 0,
+      "reflect": 0.0,
+      "beacons": 0,
+      "objects": 0,
+      "sensors": []
+    },
+    "lrf": {
+      "rangemax": 82.0,
+      "rangemin": 0.01,
+      "cone": 180.0,
+      "cycle": 6,
+      "rays": 361,
+      "reflect": 0.0,
+      "beacons": 0,
+      "objects": 0,
+      "driver": "devices.drivers.laser.PLS.PLS|/dev/ttyS0",
+      "sensors": [
+        {
+          "rho": 1.314,
+          "theta": 0.0,
+          "height": 0.15,
+          "orientation": 0.0,
+          "step": 4
+        }
+      ]
+    },
+    "lsb": {
+      "rangemax": 30.0,
+      "rangemin": 0.01,
+      "cone": 360.0,
+      "cycle": 6,
+      "rays": 361,
+      "reflect": 10.0,
+      "beacons": 20,
+      "objects": 0,
+      "driver": "devices.drivers.beacon.nav200.NAV200|/dev/ttyS1",
+      "sensors": [
+        {
+          "rho": 0.63,
+          "theta": -0.25,
+          "height": 0.0,
+          "orientation": 2.8,
+          "step": 1
+        }
+      ]
+    },
+    "trk": {
+      "rangemax": 0.0,
+      "rangemin": 0.0,
+      "cone": 0.0,
+      "cycle": 0,
+      "rays": 0,
+      "reflect": 0.0,
+      "beacons": 0,
+      "objects": 0,
+      "sensors": []
+    },
+    "vis": {
+      "rangemax": 0.0,
+      "rangemin": 0.0,
+      "cone": 0.0,
+      "cycle": 0,
+      "rays": 0,
+      "reflect": 0.0,
+      "beacons": 0,
+      "objects": 0,
+      "sensors": []
+    }
+  },
+  "bumpers": [
+    {
+      "xi": -1.2000000000000002,
+      "yi": 0.6000000000000001,
+      "xf": -1.2000000000000002,
+      "yf": -0.6000000000000001
+    },
+    {
+      "xi": -1.2000000000000002,
+      "yi": -0.6000000000000001,
+      "xf": 1.5,
+      "yf": -0.6000000000000001
+    },
+    {
+      "xi": 1.5,
+      "yi": -0.6000000000000001,
+      "xf": 1.5,
+      "yf": 0.6000000000000001
+    },
+    {
+      "xi": 1.5,
+      "yi": 0.6000000000000001,
+      "xf": -1.2000000000000002,
+      "yf": 0.6000000000000001
+    }
+  ],
+  "extra": {
+    "grouplen4": "1.0",
+    "grouplen2": "1.8",
+    "grouplen3": "1.2",
+    "grouplen0": "1.0",
+    "grouplen1": "1.2",
+    "CAN_LIGHTSONID": "1800",
+    "CONESCAN": "180",
+    "RAYSCAN": "90",
+    "CAN_SECURITYID": "200",
+    "RANGESCAN": "10",
+    "RANGEGROUP": "4.00",
+    "CAN_OCR": "250",
+    "CAN_FORKID": "1400",
+    "CAN_DEBUGID": "111",
+    "CAN_MOTID": "800",
+    "CAN_CDR": "192",
+    "scanrho": "0.0",
+    "CAN_ODOM_MOTID": "1000",
+    "groupfeat0": "90.0",
+    "ERRORLRFGAUSS": "0.0009",
+    "CAN_SINGLE_FILTER": "false",
+    "groupmode2": "6",
+    "groupmode3": "4",
+    "groupmode4": "6",
+    "LAYER_1": "ZoneB",
+    "LAYER_0": "ZoneA",
+    "groupfeat2": "0.0",
+    "groupfeat1": "45.0",
+    "LAYER_4": "RoomA",
+    "LAYER_3": "ZoneD",
+    "groupfeat4": "-90.0",
+    "LAYER_2": "ZoneC",
+    "groupfeat3": "-45.0",
+    "grouprho3": "0.0",
+    "groupbase2": "0.75",
+    "grouprho2": "0.0",
+    "CAN_BRATE": "500",
+    "grouprho4": "0.0",
+    "groupbase0": "0.9",
+    "MAXGROUP": "5",
+    "MODELSB": "2",
+    "groupbase4": "0.9",
+    "groupmode0": "6",
+    "groupmode1": "4",
+    "grouprho1": "0.0",
+    "grouprho0": "0.0",
+    "MODELRF": "2",
+    "CAN_ACTIVEID": "400",
+    "CAN_BRAKEID": "300",
+    "grouprng4": "2.0",
+    "CAN_DEV": "/dev/can1",
+    "CONEGROUP": "45.0",
+    "ERRORLRF": "0.05",
+    "INITLAYER": "0",
+    "CAN_HORNID": "1600",
+    "grouprng0": "2.0",
+    "scanmode": "0",
+    "ERRORLSB": "0.05",
+    "scanlen": "1.135",
+    "ERRORLSBGAUSS": "0.5",
+    "MAXLAYER": "5",
+    "LSB0_OFFSET": "180.0",
+    "scanfeat": "0.0",
+    "DEBUG": "false",
+    "CAN_LIGHTSOFFID": "2000",
+    "CAN_ODOM_POSID": "1200",
+    "DEBUG_CAN": "false"
+  }
+}

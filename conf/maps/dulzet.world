@@ -50,9 +50,9 @@
   ],
   "objects": [],
   "aobjects": [
-    { "label": "Palet-1", "icon": "palet", "x": -10.7068, "y": -1.5474, "z": 0, "orientation": 0.0307, "radius": 0.5615, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
-    { "label": "palet-2", "icon": "palet", "x": 2.5715, "y": 4.4507, "z": 0, "orientation": -90, "radius": 0.5574, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
-    { "label": "palet-3", "icon": "box", "x": 0.6033, "y": -9.0335, "z": 0, "orientation": 60, "radius": 0.6613, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 }
+    { "label": "Palet-1", "icon": "palet", "image": "./conf/2dmodels/palet.png", "x": -10.7068, "y": -1.5474, "z": 0, "orientation": 0.0307, "radius": 0.5615, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "palet-2", "icon": "palet", "image": "./conf/2dmodels/palet.png", "x": 2.5715, "y": 4.4507, "z": 0, "orientation": -90, "radius": 0.5574, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 },
+    { "label": "palet-3", "icon": "palet", "image": "./conf/2dmodels/palet.png", "x": 0.6033, "y": -9.0335, "z": 0, "orientation": 60, "radius": 0.6613, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 }
   ],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
