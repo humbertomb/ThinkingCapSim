@@ -43,6 +43,7 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_BUMPER	= new Color (200, 60, 60);
 	static public final Color		C_SENSOR	= new Color (40, 120, 200);
 	static public final Color		C_SEL		= new Color (255, 140, 0);
+	static public final Color		C_HANDLE	= new Color (255, 255, 255);		// handles, as in the world editor
 
 	static public final double		MIN_SCALE	= 10.0;			// pixels per metre
 	static public final double		MAX_SCALE	= 2000.0;
@@ -61,7 +62,7 @@ public class RobotCanvas extends JPanel
 	protected Listener				listener;
 
 	static public final double		ARROW		= 22.0;			// length of the direction arrow of a sensor (pixels)
-	static public final double		HANDLE		= 4.0;			// half side of the rotation handle (pixels)
+	static public final int			HANDLE_PX	= 4;			// half size of the handles (pixels), as in the world editor
 
 	static private final int		D_NONE		= 0;
 	static private final int		D_PAN		= 1;
@@ -287,7 +288,7 @@ public class RobotCanvas extends JPanel
 	private boolean onHandle (int mx, int my)
 	{
 		double[]	h = handle ();
-		return (h != null) && (Math.abs (mx - h[0]) <= HANDLE + 2) && (Math.abs (my - h[1]) <= HANDLE + 2);
+		return (h != null) && (Math.abs (mx - h[0]) <= HANDLE_PX + 2) && (Math.abs (my - h[1]) <= HANDLE_PX + 2);
 	}
 
 	/** Moves the selected sensor to a point of the robot: its polar position follows. */
@@ -402,10 +403,17 @@ public class RobotCanvas extends JPanel
 
 				g.setColor (sel ? C_SEL : C_SENSOR);
 				g.setStroke (stroke (sel ? 2.5f : 1.5f));
-				g.fill (new Ellipse2D.Double (x - 3, y - 3, 6, 6));
 				g.draw (new Line2D.Double (x, y, x + len * Math.cos (a), y - len * Math.sin (a)));
-				if (sel)				// the tip of the arrow is the handle that turns it
-					g.fill (new java.awt.geom.Rectangle2D.Double (x + len * Math.cos (a) - HANDLE, y - len * Math.sin (a) - HANDLE, 2 * HANDLE, 2 * HANDLE));
+				if (sel)
+				{
+					// as in the world editor: a square handle to drag it, a round one to turn it
+					g.setStroke (stroke (1.2f));
+					drawHandle (g, x, y, false);
+					drawHandle (g, x + len * Math.cos (a), y - len * Math.sin (a), true);
+					g.setColor (C_SEL);
+				}
+				else
+					g.fill (new Ellipse2D.Double (x - 3, y - 3, 6, 6));
 				if (sel || (scale > 150))
 				{
 					g.setFont (getFont ().deriveFont (10f));
@@ -413,6 +421,19 @@ public class RobotCanvas extends JPanel
 				}
 			}
 		}
+	}
+
+	/** A handle of the selection: white filled and outlined in the selection colour (square to drag, round to turn). */
+	private void drawHandle (Graphics2D g, double x, double y, boolean round)
+	{
+		int		px = (int) Math.round (x), py = (int) Math.round (y);
+
+		g.setColor (C_HANDLE);
+		if (round)		g.fillOval (px - HANDLE_PX, py - HANDLE_PX, 2 * HANDLE_PX, 2 * HANDLE_PX);
+		else			g.fillRect (px - HANDLE_PX, py - HANDLE_PX, 2 * HANDLE_PX, 2 * HANDLE_PX);
+		g.setColor (C_SEL);
+		if (round)		g.drawOval (px - HANDLE_PX, py - HANDLE_PX, 2 * HANDLE_PX, 2 * HANDLE_PX);
+		else			g.drawRect (px - HANDLE_PX, py - HANDLE_PX, 2 * HANDLE_PX, 2 * HANDLE_PX);
 	}
 
 	private void drawScaleBar (Graphics2D g)
