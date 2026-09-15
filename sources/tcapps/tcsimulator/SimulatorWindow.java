@@ -50,6 +50,7 @@ import tcapps.tceditor.WorldCanvas;
 import tcapps.tceditor.WorldEditor;
 import tcapps.tceditor.WorldEditorDialog;
 import tcapps.tceditor.WorldItem;
+import tcapps.tceditor.WorldItem;
 import tcapps.tcsimulator.simulator.Simulator;
 import tcapps.tcsimulator.simulator.SimulatorDesc;
 import tcapps.tcsimulator.simulator.SimulatorListener;
@@ -739,6 +740,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		Line2[]		icon = rv.rdesc.icon;
 
 		g.setStroke (new BasicStroke (2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		drawRobotImage (g, c, rv, x, y, a);				// the bitmap of the robot, under its outline
 		if ((icon != null) && (icon.length > 0))
 		{
 			// icon segments (robot frame) placed at the robot pose; closed outlines get a light fill
@@ -779,6 +781,18 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			g.setColor (C_ROBOT);
 			g.drawString (rv.name, tx, ty);
 		}
+	}
+
+	/** The image of the robot, centred on it, scaled to its bumpers and turned with it. */
+	private void drawRobotImage (Graphics2D g, WorldCanvas c, RobotView rv, double x, double y, double a)
+	{
+		java.awt.Image	img = tc.vrobot.RobotImage.get (rv.rdesc.image);
+		double[]		size;
+
+		if (img == null)				return;
+		size	= tc.vrobot.RobotImage.size (rv.rdesc.bumfeat, rv.rdesc.icon, rv.rdesc.RADIUS);
+		if (size == null)				return;
+		tc.vrobot.RobotImage.draw (g, img, c.toPixelX (x), c.toPixelY (y), size[0] * c.getScale (), size[1] * c.getScale (), a);
 	}
 
 	/* ------------------------------------------------------------------ */

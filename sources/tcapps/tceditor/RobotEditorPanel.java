@@ -703,7 +703,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.PLATFORM:
 			if (name.equals ("name"))			robot.name = token (value);
 			else if (name.equals ("radius"))	robot.radius = num (value);
-			else if (name.equals ("image"))				robot.image = token (value);
+			else if (name.equals ("image"))
+			{
+				tc.vrobot.RobotImage.flush (robot.image);		// the view reads the new file
+				robot.image = token (value);
+			}
 			else if (name.equals ("robot shape"))		robot.shapeRobot = token (value);
 			else if (name.equals ("actuator shape"))	robot.shapeActuator = token (value);
 			break;

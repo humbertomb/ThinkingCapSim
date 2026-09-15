@@ -21,6 +21,8 @@ import java.awt.geom.Line2D;
 import javax.swing.JPanel;
 
 import tc.vrobot.RobotDef;
+import tc.vrobot.RobotImage;
+import wucore.utils.geom.Line2;
 
 /**
  * Plan view of a robot description, in robot coordinates: the drawing of the
@@ -327,6 +329,7 @@ public class RobotCanvas extends JPanel
 		if (robot == null)			return;
 
 		drawGrid (g);
+		drawImage (g);
 		drawRadius (g);
 		drawIcon (g);
 		drawBumpers (g);
@@ -351,6 +354,44 @@ public class RobotCanvas extends JPanel
 		g.setColor (C_AXIS);										// the axes of the robot
 		g.draw (new Line2D.Double (0, py (0), getWidth (), py (0)));
 		g.draw (new Line2D.Double (px (0), 0, px (0), getHeight ()));
+	}
+
+	/** The bitmap of the robot: centred on it and scaled to the size of its bumpers. */
+	private void drawImage (Graphics2D g)
+	{
+		java.awt.Image	img = RobotImage.get (robot.image);
+		double[]		size;
+
+		if (img == null)				return;
+		size	= RobotImage.size (bumperLines (), iconLines (), robot.radius);
+		if (size == null)				return;
+		RobotImage.draw (g, img, px (0), py (0), size[0] * scale, size[1] * scale, 0.0);
+	}
+
+	/** The bumpers as segments, for the geometry helpers of the runtime. */
+	private Line2[] bumperLines ()
+	{
+		Line2[]		ls = new Line2[robot.bumpers.size ()];
+
+		for (int i = 0; i < ls.length; i++)
+		{
+			RobotDef.Bumper	b = robot.bumpers.get (i);
+			ls[i]	= new Line2 (b.xi, b.yi, b.xf, b.yf);
+		}
+		return ls;
+	}
+
+	/** The drawing of the robot as segments. */
+	private Line2[] iconLines ()
+	{
+		Line2[]		ls = new Line2[robot.icon.size ()];
+
+		for (int i = 0; i < ls.length; i++)
+		{
+			RobotDef.IconLine	l = robot.icon.get (i);
+			ls[i]	= new Line2 (l.xi, l.yi, l.xf, l.yf);
+		}
+		return ls;
 	}
 
 	private void drawRadius (Graphics2D g)
