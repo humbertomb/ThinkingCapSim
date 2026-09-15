@@ -12,8 +12,8 @@ import wucore.utils.image.PlanImage;
 
 /**
  * The bitmap a robot description may carry (its <code>image</code>) drawn in a
- * plan view: centred on the centre of the robot, scaled to the size of its
- * bumpers and turned with it.
+ * plan view: over the box the drawing of the robot occupies, scaled to it on
+ * each axis and turned with the robot.
  *
  * The reading and the drawing are those of {@link PlanImage}; what belongs to a
  * robot is the size the image is given.
@@ -28,19 +28,18 @@ public class RobotImage
 	static public void flush (String path)						{ PlanImage.flush (path); }
 
 	/**
-	 * Box the image is drawn over, in the frame of the robot: the box the bumpers
-	 * occupy, or the one the drawing of the robot occupies when it has none, or
-	 * the one its radius gives when it has neither. It is not necessarily centred
-	 * on the robot (a fork lift is a long way in front of its axle), so the image
-	 * is placed on the centre of the box and not on the centre of the robot.
+	 * Box the image is drawn over, in the frame of the robot: the box the drawing
+	 * of the robot occupies, as for the objects of a world, or the one its radius
+	 * gives when it has no drawing. It is not necessarily centred on the robot (a
+	 * fork lift is a long way in front of its axle), so the image is placed on the
+	 * centre of the box and not on the centre of the robot.
 	 *
 	 * @return {minx, miny, maxx, maxy} in metres, or null when there is nothing to measure
 	 */
-	static public double[] box (Line2[] bumpers, Line2[] icon, double radius)
+	static public double[] box (Line2[] icon, double radius)
 	{
-		double[]	b = PlanImage.bounds (bumpers);
+		double[]	b = PlanImage.bounds (icon);
 
-		if (b == null)		b = PlanImage.bounds (icon);
 		if (b == null)		return (radius > 0.0) ? new double[] { -radius, -radius, radius, radius } : null;
 		return b;
 	}
