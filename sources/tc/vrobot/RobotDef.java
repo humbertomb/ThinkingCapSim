@@ -142,8 +142,8 @@ public class RobotDef
 	public double				radius;												// RADIUS (m)
 	public List<IconLine>		icon		= new ArrayList<IconLine> ();			// drawing of the robot
 	public String				image;												// IMAGE (2D bitmap, optional)
-	public String				shape;												// V3DFILE (3D model)
-	public String				lift;												// V3DLIFT (3D model of the fork)
+	public String				shapeRobot;											// V3DFILE (3D model of the platform)
+	public String				shapeActuator;										// V3DLIFT (3D model of its actuator: the fork, the arm, ...)
 	public Kinematics			kinematics	= new Kinematics ();
 	public Map<String, Family>	sensors		= new LinkedHashMap<String, Family> ();	// by family prefix: son, ir, lrf, lsb, trk, vis
 	public List<Bumper>			bumpers		= new ArrayList<Bumper> ();
@@ -271,8 +271,8 @@ public class RobotDef
 		d.radius		= radius;
 		for (IconLine l : icon)			d.icon.add (l.copy ());
 		d.image			= image;
-		d.shape			= shape;
-		d.lift			= lift;
+		d.shapeRobot	= shapeRobot;
+		d.shapeActuator	= shapeActuator;
 		d.kinematics	= kinematics.copy ();
 		for (Map.Entry<String, Family> e : sensors.entrySet ())		d.sensors.put (e.getKey (), e.getValue ().copy ());
 		for (Bumper b : bumpers)		d.bumpers.add (b.copy ());
@@ -318,8 +318,8 @@ public class RobotDef
 		d.normalise ();
 		d.radius		= num (props, "RADIUS", 0.25, used);
 		d.image			= str (props, "IMAGE", used);
-		d.shape			= str (props, "V3DFILE", used);
-		d.lift			= str (props, "V3DLIFT", used);
+		d.shapeRobot	= str (props, "V3DFILE", used);
+		d.shapeActuator	= str (props, "V3DLIFT", used);
 
 		// drawing
 		int		lines = (int) num (props, "LINES", 0, used);
@@ -405,9 +405,9 @@ public class RobotDef
 		for (Map.Entry<String, String> e : extra.entrySet ())		p.setProperty (e.getKey (), e.getValue ());
 
 		set (p, "RADIUS", radius);
-		if (image != null)		p.setProperty ("IMAGE", image);
-		if (shape != null)		p.setProperty ("V3DFILE", shape);
-		if (lift != null)		p.setProperty ("V3DLIFT", lift);
+		if (image != null)			p.setProperty ("IMAGE", image);
+		if (shapeRobot != null)		p.setProperty ("V3DFILE", shapeRobot);
+		if (shapeActuator != null)	p.setProperty ("V3DLIFT", shapeActuator);
 
 		p.setProperty ("LINES", String.valueOf (icon.size ()));
 		for (int i = 0; i < icon.size (); i++)

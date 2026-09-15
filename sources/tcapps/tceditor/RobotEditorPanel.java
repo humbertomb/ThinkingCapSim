@@ -156,7 +156,30 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		treeSP.setPreferredSize (new Dimension (300, 260));
 
 		propsModel	= new PropertyModel ();
-		propsTB		= new JTable (propsModel);
+		propsTB		= new JTable (propsModel)
+		{
+			private static final long	serialVersionUID = 1L;
+			private final FileCellEditor.Renderer	fileRenderer = new FileCellEditor.Renderer ();
+
+			// file-path properties get a text field with a "..." browse button, as in the world editor
+			public javax.swing.table.TableCellEditor getCellEditor (int row, int column)
+			{
+				if (column == 1)
+				{
+					String	name = propsModel.nameAt (row);
+					if (isShapeProperty (name))		return FileCellEditor.SHAPE;
+					if (isImageProperty (name))		return IMAGE_CHOOSER;
+				}
+				return super.getCellEditor (row, column);
+			}
+
+			public javax.swing.table.TableCellRenderer getCellRenderer (int row, int column)
+			{
+				if ((column == 1) && (isShapeProperty (propsModel.nameAt (row)) || isImageProperty (propsModel.nameAt (row))))
+					return fileRenderer;
+				return super.getCellRenderer (row, column);
+			}
+		};
 		propsTB.setSelectionMode (ListSelectionModel.SINGLE_SELECTION);
 		propsTB.setRowHeight (20);
 		propsTB.putClientProperty ("terminateEditOnFocusLost", Boolean.TRUE);
@@ -500,7 +523,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	}
 
 	/** Selects an element everywhere (view, tree, property table). */
-	private void select (RobotItem it)
+	public void select (RobotItem it)
 	{
 		canvas.setSelection (it);
 	}
@@ -554,7 +577,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		if (it == null)				return new String[0];
 		switch (it.kind)
 		{
-		case RobotItem.PLATFORM:	return new String[] { "name", "radius", "image", "shape", "lift" };
+		case RobotItem.PLATFORM:	return new String[] { "name", "radius", "image", "robot shape", "actuator shape" };
 		case RobotItem.KINEMATICS:	return new String[] { "drive", "vmax", "rmax", "maxmotor", "maxsteer", "samax", "lamax", "ldmax",
 														  "length", "base", "rwheel", "wheel", "gear", "pulses", "dtime",
 														  "odom et", "odom er", "odom bias" };
@@ -580,9 +603,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.PLATFORM:
 			if (name.equals ("name"))		return (robot.name != null) ? robot.name : "";
 			if (name.equals ("radius"))		return RobotDef.fmt (robot.radius);
-			if (name.equals ("image"))		return (robot.image != null) ? robot.image : "";
-			if (name.equals ("shape"))		return (robot.shape != null) ? robot.shape : "";
-			if (name.equals ("lift"))		return (robot.lift != null) ? robot.lift : "";
+			if (name.equals ("image"))			return (robot.image != null) ? robot.image : "";
+			if (name.equals ("robot shape"))	return (robot.shapeRobot != null) ? robot.shapeRobot : "";
+			if (name.equals ("actuator shape"))	return (robot.shapeActuator != null) ? robot.shapeActuator : "";
 			break;
 		case RobotItem.KINEMATICS:
 			if (name.equals ("drive"))		return (k.drive != null) ? k.drive : "";
@@ -655,6 +678,15 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		return "";
 	}
 
+	/** Chooser of the 2D image of the robot. */
+	static public final FileCellEditor	IMAGE_CHOOSER = new FileCellEditor ("Select image", "./conf/3dmodels/textures",
+										new FileNameExtensionFilter ("Images (*.jpg, *.gif, *.png)", "jpg", "jpeg", "gif", "png"));
+
+	/** True for the properties naming a 3D model file. */
+	static public boolean isShapeProperty (String name)		{ return name.endsWith ("shape"); }
+	/** True for the properties naming an image file. */
+	static public boolean isImageProperty (String name)		{ return name.equals ("image"); }
+
 	/** True when a property can be edited. */
 	public boolean isEditable (RobotItem it, String name)
 	{
@@ -671,9 +703,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.PLATFORM:
 			if (name.equals ("name"))			robot.name = token (value);
 			else if (name.equals ("radius"))	robot.radius = num (value);
-			else if (name.equals ("image"))		robot.image = token (value);
-			else if (name.equals ("shape"))		robot.shape = token (value);
-			else if (name.equals ("lift"))		robot.lift = token (value);
+			else if (name.equals ("image"))				robot.image = token (value);
+			else if (name.equals ("robot shape"))		robot.shapeRobot = token (value);
+			else if (name.equals ("actuator shape"))	robot.shapeActuator = token (value);
 			break;
 		case RobotItem.KINEMATICS:
 			if (name.equals ("drive"))			k.drive = token (value);
@@ -765,6 +797,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			names	= propertyNames (it);
 			fireTableDataChanged ();
 		}
+
+		String nameAt (int r)						{ return names[r]; }
 
 		public int getRowCount ()					{ return names.length; }
 		public int getColumnCount ()				{ return 2; }
