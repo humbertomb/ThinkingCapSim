@@ -212,6 +212,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 				{
 					String	name = propModel.nameAt (row);
 					if (name.equals ("shape"))			return FileCellEditor.SHAPE;
+					if (name.equals ("image"))			return FileCellEditor.IMAGE;
 					if (isTextureProperty (name))		return FileCellEditor.TEXTURE;
 					if (name.equals ("color"))			return ColorCellEditor.INSTANCE;
 					if (isBooleanProperty (name))	return boolEditor;
@@ -2021,8 +2022,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.FAREA:		return new String[] { "label", "texture", "points" };
 		case WorldItem.PATH:		return new String[] { "x", "y", "z" };
 		case WorldItem.WALL:		return new String[] { "x1", "y1", "z1", "x2", "y2", "z2", "width", "height", "texture" };
-		case WorldItem.OBJECT:		return new String[] { "x", "y", "z", "orientation", "icon", "shape", "color", "usecolor" };
-		case WorldItem.AOBJECT:		return new String[] { "label", "x", "y", "z", "orientation", "radius", "icon", "shape", "color", "usecolor", "dynamics",
+		case WorldItem.OBJECT:		return new String[] { "x", "y", "z", "orientation", "icon", "image", "shape", "color", "usecolor" };
+		case WorldItem.AOBJECT:		return new String[] { "label", "x", "y", "z", "orientation", "radius", "icon", "image", "shape", "color", "usecolor", "dynamics",
 														  "movement", "speed", "acceleration", "mass", "coef_res", "coef_fric" };
 		case WorldItem.ICON:		return new String[] { "label", "x", "y", "z", "orientation", "segments" };
 		case WorldItem.CONNECTOR:		return new String[] { "label", "x1", "y1", "z1", "x2", "y2", "z2", "path x1", "path y1", "path z1", "path x2", "path y2", "path z2", "width", "height", "texture" };
@@ -2103,6 +2104,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (name.equals ("color"))		return toHex (o.color);
 			if (name.equals ("usecolor"))	return Boolean.toString (o.usecolor);
 			if (name.equals ("icon"))		return (o.iconId == null) ? "" : o.iconId;
+			if (name.equals ("image"))		return (o.image == null) ? "" : o.image;
 			if (o instanceof WMAObject)
 			{
 				WMAObject	ao = (WMAObject) o;
@@ -2292,6 +2294,11 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			else if (name.equals ("z"))			setObjectPose (o, o.pos.x (), o.pos.y (), num (value), o.a);
 			else if (name.equals ("orientation"))		setObjectPose (o, o.pos.x (), o.pos.y (), o.pos.z (), Math.toRadians (num (value)));
 			else if (name.equals ("shape"))		o.shape = (value.length () == 0) ? null : token (value);
+			else if (name.equals ("image"))
+			{
+				o.image	= (value.length () == 0) ? null : token (value);
+				wucore.utils.image.PlanImage.flush (o.image);		// the view reads the new file
+			}
 			else if (name.equals ("color"))		o.color = parseColor (value);
 			else if (name.equals ("usecolor"))	o.usecolor = bool (value);
 			else if (name.equals ("icon"))
@@ -2760,7 +2767,11 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		for (tc.shared.world.WMConnector c : w.connectors ().edges ())	c.texture = FileCellEditor.normalise (c.texture);
 		for (tc.shared.world.WMZone z : w.zones ().areas ())			z.texture = FileCellEditor.normalise (z.texture);
 		for (tc.shared.world.WMFArea f : w.fareas ().areas ())			f.texture = FileCellEditor.normalise (f.texture);
-		for (tc.shared.world.WMObject o : w.allObjects ())				o.shape = FileCellEditor.normalise (o.shape);
+		for (tc.shared.world.WMObject o : w.allObjects ())
+		{
+			o.shape		= FileCellEditor.normalise (o.shape);
+			o.image		= FileCellEditor.normalise (o.image);
+		}
 		w.walls ().setDefaults (w.walls ().defaultWidth (), w.walls ().defaultHeight (), FileCellEditor.normalise (w.walls ().defaultTexture ()));
 		w.connectors ().setDefaults (w.connectors ().defaultWidth (), w.connectors ().defaultHeight (), FileCellEditor.normalise (w.connectors ().defaultTexture ()));
 		w.zones ().setDefaultTexture (FileCellEditor.normalise (w.zones ().defaultTexture ()));
@@ -2769,7 +2780,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 
 	/** Whether a property of an element names a file (and so is written as "./conf/..."). */
 	static public boolean isTextureProperty (String name)	{ return name.endsWith ("texture"); }
-	static public boolean isFileProperty (String name)		{ return name.equals ("shape") || isTextureProperty (name); }
+	static public boolean isFileProperty (String name)		{ return name.equals ("shape") || name.equals ("image") || isTextureProperty (name); }
 
 	/** The value of a property as it is shown and stored: paths always as "./conf/...". */
 	static private String value (String name, String v)

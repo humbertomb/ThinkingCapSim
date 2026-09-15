@@ -18,8 +18,9 @@ import wucore.utils.math.Angles;
 
 /**
  * An object of the world: a 2D icon (shared {@link WMIcon}, referenced by
- * name) placed at a position and heading, plus its colour and an optional 3D
- * shape.
+ * name) placed at a position and heading, plus its colour, an optional 2D
+ * bitmap ({@link #image}, drawn in place of the icon and scaled to the box the
+ * icon occupies) and an optional 3D shape.
  *
  * File format:
  * <pre>
@@ -33,6 +34,7 @@ public class WMObject extends WMElement
 	// 2D components
 	public String				iconId;		// Name of the icon in the world's icon library
 	public WMIcon				icon;		// Resolved icon (local coordinates)
+	public String				image;		// 2D bitmap drawn instead of the icon (may be null)
 	public WColor				color;		// Color of the object
 
 	// Placement and 3D components
@@ -164,6 +166,7 @@ public class WMObject extends WMElement
 	public WMObject (JsonObject o, List<WMIcon> icons)
 	{
 		iconId	= World.getString (o, "icon", "");
+		image	= World.getString (o, "image", null);
 		pos		= World.toPoint (o);
 		a		= Math.toRadians (World.getDouble (o, "orientation", 0.0));
 		String	cname = World.getString (o, "color", null);
@@ -183,6 +186,7 @@ public class WMObject extends WMElement
 	{
 		JsonObject	o = new JsonObject ();
 		o.addProperty ("icon", iconId);
+		if (image != null)		o.addProperty ("image", image);
 		World.putPoint (o, pos.x (), pos.y (), pos.z ());
 		o.addProperty ("orientation", World.num (a * Angles.RTOD));
 		o.addProperty ("color", ColorTool.getNameFromColor (color));

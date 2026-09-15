@@ -37,6 +37,9 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 	/** 3D shapes (3D Studio files) */
 	static public final FileCellEditor	SHAPE	= new FileCellEditor ("Select 3D shape", "./conf/3dmodels",
 																	new FileNameExtensionFilter ("3D Studio objects (*.3ds)", "3ds"));
+	/** 2D bitmaps of the robots and of the objects of a world */
+	static public final FileCellEditor	IMAGE	= new FileCellEditor ("Select image", "./conf/2dmodels",
+																	new FileNameExtensionFilter ("Images (*.jpg, *.gif, *.png)", "jpg", "jpeg", "gif", "png"));
 	/** Textures (images) */
 	static public final FileCellEditor	TEXTURE	= new FileCellEditor ("Select texture", "./conf/3dmodels/textures",
 																	new FileNameExtensionFilter ("Images (*.jpg, *.gif, *.png)", "jpg", "jpeg", "gif", "png"));

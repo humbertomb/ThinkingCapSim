@@ -12,6 +12,7 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -172,7 +173,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				{
 					String	name = propsModel.nameAt (row);
 					if (isShapeProperty (name))		return FileCellEditor.SHAPE;
-					if (isImageProperty (name))		return IMAGE_CHOOSER;
+					if (isImageProperty (name))		return FileCellEditor.IMAGE;
 				}
 				return super.getCellEditor (row, column);
 			}
@@ -788,10 +789,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		}
 		return "";
 	}
-
-	/** Chooser of the 2D image of the robot. */
-	static public final FileCellEditor	IMAGE_CHOOSER = new FileCellEditor ("Select image", "./conf/2dmodels",
-										new FileNameExtensionFilter ("Images (*.jpg, *.gif, *.png)", "jpg", "jpeg", "gif", "png"));
 
 	/** True for the properties naming a 3D model file. */
 	static public boolean isShapeProperty (String name)		{ return name.endsWith ("shape"); }

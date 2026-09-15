@@ -6,50 +6,26 @@ package tc.vrobot;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.geom.AffineTransform;
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.imageio.ImageIO;
 
 import wucore.utils.geom.Line2;
+import wucore.utils.image.PlanImage;
 
 /**
  * The bitmap a robot description may carry (its <code>image</code>) drawn in a
  * plan view: centred on the centre of the robot, scaled to the size of its
  * bumpers and turned with it.
  *
- * Images are read once and kept, and a file that cannot be read is remembered
- * as such, so a view that repaints continuously does not try again and again.
+ * The reading and the drawing are those of {@link PlanImage}; what belongs to a
+ * robot is the size the image is given.
  */
 public class RobotImage
 {
-	static private final Map<String, Image>		CACHE = new HashMap<String, Image> ();
-
 	/** The image of a description, or null when it has none or it cannot be read. */
-	static public synchronized Image get (String path)
-	{
-		Image		img;
-
-		if ((path == null) || (path.trim ().length () == 0))		return null;
-		path	= path.trim ();
-		if (CACHE.containsKey (path))		return CACHE.get (path);
-
-		img		= null;
-		try
-		{
-			File	f = new File (path);
-			if (f.isFile ())		img = ImageIO.read (f);
-		} catch (Exception e) { }
-		if (img == null)		System.out.println ("--[RobotImage] Cannot read the image of the robot <" + path + ">");
-		CACHE.put (path, img);
-		return img;
-	}
+	static public Image get (String path)						{ return PlanImage.get (path); }
 
 	/** Forgets what was read (the editor changing the image of a robot, for instance). */
-	static public synchronized void flush ()					{ CACHE.clear (); }
-	static public synchronized void flush (String path)			{ if (path != null)		CACHE.remove (path.trim ()); }
+	static public void flush ()									{ PlanImage.flush (); }
+	static public void flush (String path)						{ PlanImage.flush (path); }
 
 	/**
 	 * Size the image is drawn at: the size of the box the bumpers occupy, or of
@@ -60,29 +36,11 @@ public class RobotImage
 	 */
 	static public double[] size (Line2[] bumpers, Line2[] icon, double radius)
 	{
-		double[]	b = bounds (bumpers);
+		double[]	b = PlanImage.bounds (bumpers);
 
-		if (b == null)		b = bounds (icon);
+		if (b == null)		b = PlanImage.bounds (icon);
 		if (b == null)		return (radius > 0.0) ? new double[] { 2 * radius, 2 * radius } : null;
 		return new double[] { b[2] - b[0], b[3] - b[1] };
-	}
-
-	static private double[] bounds (Line2[] lines)
-	{
-		double[]	b = { Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE };
-		boolean		any = false;
-
-		if (lines == null)			return null;
-		for (Line2 l : lines)
-		{
-			if (l == null)			continue;
-			b[0] = Math.min (b[0], Math.min (l.orig ().x (), l.dest ().x ()));
-			b[1] = Math.min (b[1], Math.min (l.orig ().y (), l.dest ().y ()));
-			b[2] = Math.max (b[2], Math.max (l.orig ().x (), l.dest ().x ()));
-			b[3] = Math.max (b[3], Math.max (l.orig ().y (), l.dest ().y ()));
-			any	= true;
-		}
-		return any ? b : null;
 	}
 
 	/**
@@ -96,15 +54,6 @@ public class RobotImage
 	 */
 	static public void draw (Graphics2D g, Image img, double px, double py, double wpx, double hpx, double angle)
 	{
-		AffineTransform		old;
-
-		if ((img == null) || (wpx <= 0.0) || (hpx <= 0.0))		return;
-
-		old		= g.getTransform ();
-		g.translate (px, py);
-		g.rotate (-angle);												// the Y axis of the view points down
-		g.drawImage (img, (int) Math.round (-wpx / 2), (int) Math.round (-hpx / 2),
-						  (int) Math.round (wpx), (int) Math.round (hpx), null);
-		g.setTransform (old);
+		PlanImage.draw (g, img, px, py, wpx, hpx, angle);
 	}
 }

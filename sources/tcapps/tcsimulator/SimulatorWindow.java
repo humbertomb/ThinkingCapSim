@@ -50,6 +50,7 @@ import tcapps.tceditor.WorldCanvas;
 import tcapps.tceditor.WorldEditor;
 import tcapps.tceditor.WorldEditorDialog;
 import tcapps.tceditor.WorldItem;
+import tcapps.tceditor.WorldItem;
 import tcapps.tcsimulator.simulator.Simulator;
 import tcapps.tcsimulator.simulator.SimulatorDesc;
 import tcapps.tcsimulator.simulator.SimulatorListener;
@@ -708,7 +709,9 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 		g.setStroke (new BasicStroke (1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		g.setColor (col);
-		if (o.icon != null)
+		if (drawObjectImage (g, c, o, x, y, ov.a))		// the bitmap already stands for the drawing of the object
+			;
+		else if (o.icon != null)
 			for (Line2 l : o.icon.toAbsolute (ov.pos, ov.a))
 				g.draw (new Line2D.Double (c.toPixelX (l.orig ().x ()), c.toPixelY (l.orig ().y ()), c.toPixelX (l.dest ().x ()), c.toPixelY (l.dest ().y ())));
 		if (ov.obj.radius > 0.0)
@@ -730,6 +733,29 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			g.setColor (col);
 			g.drawString (o.label, tx, ty);
 		}
+	}
+
+	/**
+	 * The bitmap of an object, drawn over the box its icon occupies and turned
+	 * with it.
+	 *
+	 * @return whether the image was drawn
+	 */
+	private boolean drawObjectImage (Graphics2D g, WorldCanvas c, WMAObject o, double x, double y, double a)
+	{
+		java.awt.Image	img = wucore.utils.image.PlanImage.get (o.image);
+		double[]		b;
+		double			cx, cy, ox, oy;
+
+		if (img == null)				return false;
+		b	= wucore.utils.image.PlanImage.bounds (o.getLocalIcon ());
+		if (b == null)					return false;
+		cx	= (b[0] + b[2]) / 2;		cy = (b[1] + b[3]) / 2;			// centre of the box, in the frame of the object
+		ox	= x + cx * Math.cos (a) - cy * Math.sin (a);
+		oy	= y + cx * Math.sin (a) + cy * Math.cos (a);
+		wucore.utils.image.PlanImage.draw (g, img, c.toPixelX (ox), c.toPixelY (oy),
+											(b[2] - b[0]) * c.getScale (), (b[3] - b[1]) * c.getScale (), a);
+		return true;
 	}
 
 	private void drawRobot (Graphics2D g, WorldCanvas c, RobotView rv)

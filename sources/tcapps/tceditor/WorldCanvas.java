@@ -895,8 +895,9 @@ public class WorldCanvas extends JPanel
 		if (!o.visible && !sel)		c = new Color (c.getRed (), c.getGreen (), c.getBlue (), 90);
 		g.setColor (c);
 		g.setStroke (stroke (sel ? 2.5f : 1.5f));
-		for (Line2 l : o.absIcon ())
-			g.draw (new Line2D.Double (px (l.orig ().x ()), py (l.orig ().y ()), px (l.dest ().x ()), py (l.dest ().y ())));
+		if (!drawObjectImage (g, o))					// the bitmap already stands for the drawing of the object
+			for (Line2 l : o.absIcon ())
+				g.draw (new Line2D.Double (px (l.orig ().x ()), py (l.orig ().y ()), px (l.dest ().x ()), py (l.dest ().y ())));
 		// position and heading
 		double	x = px (o.pos.x ()), y = py (o.pos.y ());
 		g.setStroke (stroke (1f));
@@ -909,6 +910,29 @@ public class WorldCanvas extends JPanel
 			// the 3D model name identifies a static object; an animated one has its own label
 			if (sel && !(o instanceof WMAObject))	label (g, o.shape, o.pos.x (), o.pos.y (), C_SEL);
 		}
+	}
+
+	/**
+	 * The bitmap of an object, drawn over the box its icon occupies and turned
+	 * with it. When there is one it stands for the drawing of the object, so the
+	 * segments of the icon are left out.
+	 *
+	 * @return whether the image was drawn
+	 */
+	private boolean drawObjectImage (Graphics2D g, WMObject o)
+	{
+		java.awt.Image	img = wucore.utils.image.PlanImage.get (o.image);
+		double[]		b;
+		double			cx, cy, ox, oy;
+
+		if (img == null)				return false;
+		b	= wucore.utils.image.PlanImage.bounds (o.getLocalIcon ());
+		if (b == null)					return false;
+		cx	= (b[0] + b[2]) / 2;		cy = (b[1] + b[3]) / 2;			// centre of the box, in the frame of the object
+		ox	= o.pos.x () + cx * Math.cos (o.a) - cy * Math.sin (o.a);
+		oy	= o.pos.y () + cx * Math.sin (o.a) + cy * Math.cos (o.a);
+		wucore.utils.image.PlanImage.draw (g, img, px (ox), py (oy), (b[2] - b[0]) * scale, (b[3] - b[1]) * scale, o.a);
+		return true;
 	}
 
 	/**
