@@ -695,8 +695,22 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 														  "odom et", "odom er", "odom bias" };
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
-		case RobotItem.SENSOR:		return new String[] { "rho", "theta", "height", "orientation", "step" };
-		case RobotItem.FAMILY:		return new String[] { "driver", "range max", "range min", "cone", "cycle", "rays", "reflect", "beacons", "objects" };
+		case RobotItem.SENSOR:
+			// a sensor of a family of devices of their own says what it detects
+			if (!RobotDef.hasOwnDetection (it.family))
+				return new String[] { "rho", "theta", "height", "orientation", "step" };
+			if (it.family.equals ("lsb"))
+				return new String[] { "rho", "theta", "height", "orientation", "step",
+									  "driver", "range max", "range min", "cone", "rays", "reflect", "beacons" };
+			if (it.family.equals ("trk"))
+				return new String[] { "rho", "theta", "height", "orientation", "step",
+									  "driver", "range max", "range min", "cone", "rays", "objects" };
+			return new String[] { "rho", "theta", "height", "orientation", "step",
+								  "driver", "range max", "range min", "cone", "rays" };
+		case RobotItem.FAMILY:
+			// only the firing cycle is of the whole family when its sensors say the rest
+			if (RobotDef.hasOwnDetection (it.family))		return new String[] { "cycle" };
+			return new String[] { "driver", "range max", "range min", "cone", "cycle", "rays", "reflect", "beacons", "objects" };
 		case RobotItem.EXTRA:
 		{
 			List<String>	keys = new ArrayList<String> (robot.extra.keySet ());
@@ -765,6 +779,14 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("height"))			return RobotDef.fmt (s.height);
 			if (name.equals ("orientation"))	return RobotDef.fmt (s.orientation);
 			if (name.equals ("step"))			return String.valueOf (s.step);
+			if (name.equals ("driver"))			return (s.driver != null) ? s.driver : "";
+			if (name.equals ("range max"))		return RobotDef.fmt (s.rangemax);
+			if (name.equals ("range min"))		return RobotDef.fmt (s.rangemin);
+			if (name.equals ("cone"))			return RobotDef.fmt (s.cone);
+			if (name.equals ("rays"))			return String.valueOf (s.rays);
+			if (name.equals ("reflect"))		return RobotDef.fmt (s.reflect);
+			if (name.equals ("beacons"))		return String.valueOf (s.beacons);
+			if (name.equals ("objects"))		return String.valueOf (s.objects);
 			break;
 		}
 		case RobotItem.FAMILY:
@@ -885,6 +907,14 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("height"))		s.height = num (value);
 			else if (name.equals ("orientation"))	s.orientation = num (value);
 			else if (name.equals ("step"))			s.step = (int) num (value);
+			else if (name.equals ("driver"))		s.driver = token (value);
+			else if (name.equals ("range max"))		s.rangemax = num (value);
+			else if (name.equals ("range min"))		s.rangemin = num (value);
+			else if (name.equals ("cone"))			s.cone = num (value);
+			else if (name.equals ("rays"))			s.rays = (int) num (value);
+			else if (name.equals ("reflect"))		s.reflect = num (value);
+			else if (name.equals ("beacons"))		s.beacons = (int) num (value);
+			else if (name.equals ("objects"))		s.objects = (int) num (value);
 			break;
 		}
 		case RobotItem.FAMILY:

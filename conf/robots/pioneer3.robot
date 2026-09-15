@@ -348,22 +348,26 @@
       "sensors": []
     },
     "lrf": {
-      "rangemax": 82.0,
-      "rangemin": 0.01,
-      "cone": 180.0,
+      "rangemax": 0.0,
+      "rangemin": 0.0,
+      "cone": 0.0,
       "cycle": 6,
-      "rays": 361,
+      "rays": 0,
       "reflect": 0.0,
       "beacons": 0,
       "objects": 0,
-      "driver": "devices.drivers.laser.LMS200.LMS200|/dev/tty.usbserial",
       "sensors": [
         {
           "rho": 0.2,
           "theta": 0.0,
           "height": 0.35,
           "orientation": 0.0,
-          "step": 4
+          "step": 4,
+          "driver": "devices.drivers.laser.LMS200.LMS200|/dev/tty.usbserial",
+          "rangemax": 82.0,
+          "rangemin": 0.01,
+          "cone": 180.0,
+          "rays": 361
         }
       ]
     },

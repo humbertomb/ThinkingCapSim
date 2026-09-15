@@ -38,8 +38,14 @@ public class RobotDef
 	static public final String		EXTENSION	= "robot";
 
 	/**
-	 * Pose of a sensor on the robot, in the polar coordinates {@link SensorPos}
-	 * uses: where it sits (rho, theta) and where it looks at (orientation).
+	 * A sensor on the robot: where it sits, in the polar coordinates
+	 * {@link SensorPos} uses (rho, theta), where it looks at (orientation), and,
+	 * for the families whose sensors are devices of their own
+	 * ({@link RobotDef#hasOwnDetection(String)}: laser range finders, laser beacon
+	 * scanners and radar trackers), the device it is read through and what it
+	 * detects. A robot can then carry, say, two laser range finders of different
+	 * makes and reaches; for the other families these are zero and what the
+	 * {@link Family} says applies to all of them.
 	 */
 	static public class Sensor
 	{
@@ -49,16 +55,40 @@ public class RobotDef
 		public double	orientation;				// direction the sensor looks at (deg, "<fam>feat")
 		public int		step;						// reading step ("<fam>step")
 
+		// what it detects (families with sensors of their own only)
+		public String	driver;						// device it is read through (LRF0, LSB0, ...)
+		public double	rangemax;					// maximum range (m)
+		public double	rangemin;					// minimum range (m)
+		public double	cone;						// aperture (deg)
+		public int		rays;						// rays of a scan
+		public double	reflect;					// lsb: maximum reflection angle (deg)
+		public int		beacons;					// lsb: beacons it can see at once
+		public int		objects;					// trk: objects it can track at once
+
 		public Sensor ()							{ }
 		public Sensor copy ()
 		{
 			Sensor	s = new Sensor ();
 			s.rho = rho;	s.theta = theta;	s.height = height;	s.orientation = orientation;	s.step = step;
+			s.driver = driver;	s.rangemax = rangemax;	s.rangemin = rangemin;	s.cone = cone;	s.rays = rays;
+			s.reflect = reflect;	s.beacons = beacons;	s.objects = objects;
 			return s;
+		}
+
+		/** True when nothing of what it detects is set (so none of it is written to the file). */
+		public boolean plain ()
+		{
+			return (driver == null) && (rangemax == 0.0) && (rangemin == 0.0) && (cone == 0.0)
+				&& (rays == 0) && (reflect == 0.0) && (beacons == 0) && (objects == 0);
 		}
 	}
 
-	/** A family of range sensors: how many, what they reach, and where each one is. */
+	/**
+	 * A family of range sensors: where each one is and, for the families whose
+	 * sensors are all alike (sonars, infrared, vision), what they reach. For the
+	 * others every sensor says that for itself and only the firing cycle, which is
+	 * always of the whole family, is kept here.
+	 */
 	static public class Family
 	{
 		public double		rangemax;				// maximum range (m)
@@ -154,13 +184,27 @@ public class RobotDef
 
 	/** Families of range sensors, by the prefix their properties use. */
 	static public final String[]	FAMILIES		= { "son", "ir", "lrf", "lsb", "trk", "vis" };
-	static public final String[]	FAMILY_NAMES	= { "Sonars", "Infrared", "Laser range finders", "Laser beacon scanners", "Trackers", "Vision" };
+	static public final String[]	FAMILY_NAMES	= { "Sonars", "Infrared", "Laser range finders", "Laser beacon scanners", "Radar trackers", "Vision" };
 	/** Property suffix of the count of each family (MAXSONAR, MAXIR, ...). */
 	static public final String[]	FAMILY_COUNTS	= { "MAXSONAR", "MAXIR", "MAXLRF", "MAXLSB", "MAXTRACKER", "MAXVISION" };
 	/** Suffix the range properties of each family use (RANGESON, RANGEIR, ...). */
 	static public final String[]	FAMILY_KEYS		= { "SON", "IR", "LRF", "LSB", "TRK", "VIS" };
 	/** Prefix of the driver property of each family (LRF0, LSB0, ...); null when the family has none. */
-	static public final String[]	FAMILY_DRIVERS	= { "SONAR", "IR", "LRF", "LSB", null, "VISION" };
+	static public final String[]	FAMILY_DRIVERS	= { "SONAR", "IR", "LRF", "LSB", "TRK", "VISION" };
+
+	/**
+	 * Families whose sensors are devices of their own: each one says what it
+	 * detects (driver, range, cone, rays, ...) instead of taking it from the
+	 * family. Only the firing cycle stays with the family.
+	 */
+	static public final boolean[]	FAMILY_OWN		= { false, false, true, true, true, false };
+
+	/** True for a family whose sensors carry their own detection properties. */
+	static public boolean hasOwnDetection (String fam)
+	{
+		int		i = familyIndex (fam);
+		return (i >= 0) && FAMILY_OWN[i];
+	}
 
 	static public String familyName (String fam)
 	{
@@ -180,7 +224,36 @@ public class RobotDef
 
 	static protected Gson gson ()
 	{
-		return new GsonBuilder ().setPrettyPrinting ().disableHtmlEscaping ().create ();
+		return new GsonBuilder ().setPrettyPrinting ().disableHtmlEscaping ()
+					.registerTypeAdapter (Sensor.class, new SensorWriter ()).create ();
+	}
+
+	/**
+	 * Writes a sensor leaving out what it does not detect, so that the sensors of
+	 * the families that take their detection from the family (the sonars, say)
+	 * read as they always did. What is missing is zero when it is read back.
+	 */
+	static private class SensorWriter implements com.google.gson.JsonSerializer<Sensor>
+	{
+		public com.google.gson.JsonElement serialize (Sensor s, java.lang.reflect.Type type, com.google.gson.JsonSerializationContext ctx)
+		{
+			com.google.gson.JsonObject	o = new com.google.gson.JsonObject ();
+
+			o.addProperty ("rho", s.rho);
+			o.addProperty ("theta", s.theta);
+			o.addProperty ("height", s.height);
+			o.addProperty ("orientation", s.orientation);
+			o.addProperty ("step", s.step);
+			if (s.driver != null)		o.addProperty ("driver", s.driver);
+			if (s.rangemax != 0.0)		o.addProperty ("rangemax", s.rangemax);
+			if (s.rangemin != 0.0)		o.addProperty ("rangemin", s.rangemin);
+			if (s.cone != 0.0)			o.addProperty ("cone", s.cone);
+			if (s.rays != 0)			o.addProperty ("rays", s.rays);
+			if (s.reflect != 0.0)		o.addProperty ("reflect", s.reflect);
+			if (s.beacons != 0)			o.addProperty ("beacons", s.beacons);
+			if (s.objects != 0)			o.addProperty ("objects", s.objects);
+			return o;
+		}
 	}
 
 	/** An empty description with every family created (and empty). */
@@ -295,7 +368,31 @@ public class RobotDef
 			Family	f = sensors.get (fam);
 			if (f == null)			sensors.put (fam, f = new Family ());
 			if (f.sensors == null)	f.sensors = new ArrayList<Sensor> ();
+			if (hasOwnDetection (fam))		migrate (f);
 		}
+	}
+
+	/**
+	 * A family whose sensors now say what they detect, read from a description
+	 * written when the family said it: what the family had goes to every sensor
+	 * that does not say it yet, and the family keeps only its firing cycle.
+	 */
+	static private void migrate (Family f)
+	{
+		for (Sensor s : f.sensors)
+		{
+			if (s.driver == null)			s.driver = f.driver;
+			if (s.rangemax == 0.0)			s.rangemax = f.rangemax;
+			if (s.rangemin == 0.0)			s.rangemin = f.rangemin;
+			if (s.cone == 0.0)				s.cone = f.cone;
+			if (s.rays == 0)				s.rays = f.rays;
+			if (s.reflect == 0.0)			s.reflect = f.reflect;
+			if (s.beacons == 0)				s.beacons = f.beacons;
+			if (s.objects == 0)				s.objects = f.objects;
+		}
+		f.driver	= null;
+		f.rangemax	= 0.0;	f.rangemin = 0.0;	f.cone = 0.0;	f.rays = 0;
+		f.reflect	= 0.0;	f.beacons = 0;		f.objects = 0;
 	}
 
 	public Family family (String fam)
@@ -379,14 +476,27 @@ public class RobotDef
 				s.height		= num (props, fam + "hgt" + i, 0, used);
 				s.orientation	= num (props, fam + "feat" + i, 0, used);
 				s.step			= (int) num (props, fam + "step" + i, 0, used);
-				// the driver is one for the whole family: the first one that names it wins
-				if (FAMILY_DRIVERS[fi] != null)
+				if (FAMILY_OWN[fi])
 				{
+					// what this one detects, or what the family says when it does not say it
+					s.driver	= str (props, FAMILY_DRIVERS[fi] + i, used);
+					s.rangemax	= num (props, "RANGE" + key + i, f.rangemax, used);
+					s.rangemin	= num (props, "MINIM" + key + i, f.rangemin, used);
+					s.cone		= num (props, "CONE" + key + i, f.cone, used);
+					s.rays		= (int) num (props, "RAY" + key + i, f.rays, used);
+					s.reflect	= num (props, "REF" + key + i, f.reflect, used);
+					s.beacons	= (int) num (props, "BEAC" + key + i, f.beacons, used);
+					s.objects	= (int) num (props, "OBJ" + key + i, f.objects, used);
+				}
+				else if (FAMILY_DRIVERS[fi] != null)
+				{
+					// the driver is one for the whole family: the first one that names it wins
 					String	drv = str (props, FAMILY_DRIVERS[fi] + i, used);
 					if ((drv != null) && (f.driver == null))		f.driver = drv;
 				}
 				f.sensors.add (s);
 			}
+			if (FAMILY_OWN[fi])		migrate (f);				// what the family said is now of each sensor
 		}
 
 		// everything the model does not describe travels as it is
@@ -447,12 +557,26 @@ public class RobotDef
 					&& (f.rays == 0) && (f.reflect == 0.0) && (f.beacons == 0) && (f.objects == 0))		continue;
 			p.setProperty (FAMILY_COUNTS[fi], String.valueOf (f.n ()));
 
-			setNZ (p, "RANGE" + key, f.rangemax);	setNZ (p, "MINIM" + key, f.rangemin);	setNZ (p, "CONE" + key, f.cone);
 			if (f.cycle > 0)		p.setProperty ("CYCLE" + key, String.valueOf (f.cycle));
-			if (f.rays > 0)			p.setProperty ("RAY" + key, String.valueOf (f.rays));
-			if (f.reflect != 0.0)	set (p, "REF" + key, f.reflect);
-			if (f.beacons > 0)		p.setProperty ("BEAC" + key, String.valueOf (f.beacons));
-			if (fam.equals ("trk") && (f.objects > 0))		p.setProperty ("OBJTRK", String.valueOf (f.objects));
+			if (FAMILY_OWN[fi])
+			{
+				// the runtime still reads one set of values for the whole family: the
+				// first sensor stands for it, and each one writes its own as well
+				Sensor	s0 = (f.n () > 0) ? f.sensors.get (0) : new Sensor ();
+				setNZ (p, "RANGE" + key, s0.rangemax);	setNZ (p, "MINIM" + key, s0.rangemin);	setNZ (p, "CONE" + key, s0.cone);
+				if (s0.rays > 0)		p.setProperty ("RAY" + key, String.valueOf (s0.rays));
+				if (s0.reflect != 0.0)	set (p, "REF" + key, s0.reflect);
+				if (s0.beacons > 0)		p.setProperty ("BEAC" + key, String.valueOf (s0.beacons));
+				if (fam.equals ("trk") && (s0.objects > 0))		p.setProperty ("OBJTRK", String.valueOf (s0.objects));
+			}
+			else
+			{
+				setNZ (p, "RANGE" + key, f.rangemax);	setNZ (p, "MINIM" + key, f.rangemin);	setNZ (p, "CONE" + key, f.cone);
+				if (f.rays > 0)			p.setProperty ("RAY" + key, String.valueOf (f.rays));
+				if (f.reflect != 0.0)	set (p, "REF" + key, f.reflect);
+				if (f.beacons > 0)		p.setProperty ("BEAC" + key, String.valueOf (f.beacons));
+				if (fam.equals ("trk") && (f.objects > 0))		p.setProperty ("OBJTRK", String.valueOf (f.objects));
+			}
 
 			for (int i = 0; i < f.n (); i++)
 			{
@@ -460,8 +584,20 @@ public class RobotDef
 				set (p, fam + "len" + i, s.rho);		set (p, fam + "rho" + i, s.theta);
 				setNZ (p, fam + "hgt" + i, s.height);	set (p, fam + "feat" + i, s.orientation);
 				if (s.step > 0)		p.setProperty (fam + "step" + i, String.valueOf (s.step));
+				if (FAMILY_OWN[fi])
+				{
+					// this sensor is a device of its own: its driver and what it detects
+					if ((s.driver != null) && (s.driver.trim ().length () > 0))
+						p.setProperty (FAMILY_DRIVERS[fi] + i, s.driver.trim ());
+					setNZ (p, "RANGE" + key + i, s.rangemax);	setNZ (p, "MINIM" + key + i, s.rangemin);
+					setNZ (p, "CONE" + key + i, s.cone);
+					if (s.rays > 0)			p.setProperty ("RAY" + key + i, String.valueOf (s.rays));
+					if (s.reflect != 0.0)	set (p, "REF" + key + i, s.reflect);
+					if (s.beacons > 0)		p.setProperty ("BEAC" + key + i, String.valueOf (s.beacons));
+					if (s.objects > 0)		p.setProperty ("OBJ" + key + i, String.valueOf (s.objects));
+				}
 				// every sensor of the family is read through the same driver
-				if ((FAMILY_DRIVERS[fi] != null) && (f.driver != null) && (f.driver.trim ().length () > 0))
+				else if ((FAMILY_DRIVERS[fi] != null) && (f.driver != null) && (f.driver.trim ().length () > 0))
 					p.setProperty (FAMILY_DRIVERS[fi] + i, f.driver.trim ());
 			}
 		}
