@@ -505,6 +505,13 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		canvas.setSelection (it);
 	}
 
+	/** The view moved or turned an element: the model changed and the table follows. */
+	public void elementChanged (RobotItem item)
+	{
+		changed ();
+		propsModel.refresh ();
+	}
+
 	/** The view changed the selection. */
 	public void selectionChanged (RobotItem item)
 	{
