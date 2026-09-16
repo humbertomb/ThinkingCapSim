@@ -254,10 +254,10 @@ public class RobotCanvas extends JPanel
 	public void zoomIn ()							{ zoom (1.25); }
 	public void zoomOut ()							{ zoom (0.8); }
 
-	/** Frames the whole robot (drawing, bumpers, sensors and radius). */
+	/** Frames the whole robot (drawing, bumpers, sensors and radius) and what the selection covers. */
 	public void zoomToFit ()
 	{
-		double[]	b = robotBounds ();
+		double[]	b = contentBounds ();
 
 		if (b == null)			{ cx = cy = 0.0; scale = 200.0; updateGridStep (); repaint (); return; }
 

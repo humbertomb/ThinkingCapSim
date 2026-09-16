@@ -369,7 +369,7 @@ public class RobotView3DWindow extends JFrame
 		}
 
 		Appearance	app = new Appearance ();
-		app.setColoringAttributes (new ColoringAttributes (1f, 0.55f, 0f, ColoringAttributes.SHADE_FLAT));
+		app.setColoringAttributes (new ColoringAttributes (familyColor (fam), ColoringAttributes.SHADE_FLAT));
 		app.setTransparencyAttributes (new TransparencyAttributes (TransparencyAttributes.BLENDED, 0.65f));
 		app.setPolygonAttributes (new PolygonAttributes (PolygonAttributes.POLYGON_FILL, PolygonAttributes.CULL_NONE, 0f));
 		app.setRenderingAttributes (new RenderingAttributes ());
@@ -377,6 +377,17 @@ public class RobotView3DWindow extends JFrame
 
 		return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax)
 								+ " m, " + RobotDef.fmt (d[2]) + " deg.   " : " ";
+	}
+
+	/** The colour each family of sensors is drawn in, so that several of them are told apart. */
+	static public Color3f familyColor (String fam)
+	{
+		if ("son".equals (fam))		return new Color3f (1f, 0.55f, 0f);			// orange
+		if ("ir".equals (fam))		return new Color3f (1f, 0.45f, 0.75f);		// pink
+		if ("lrf".equals (fam))		return new Color3f (0f, 0.85f, 0.9f);		// cyan
+		if ("lsb".equals (fam))		return new Color3f (0f, 0.85f, 0.9f);		// cyan (a laser as well)
+		if ("trk".equals (fam))		return new Color3f (0.4f, 0.9f, 0.4f);		// green
+		return new Color3f (0.95f, 0.9f, 0.3f);									// vision: yellow
 	}
 
 	/** The axes of the robot: X (forward) in red, Y in green. */
