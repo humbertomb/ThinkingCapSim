@@ -44,6 +44,10 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_BG		= Color.WHITE;
 	static public final Color		C_GRID		= new Color (235, 235, 235);
 	static public final Color		C_AXIS		= new Color (200, 200, 200);
+	/** The axes of the robot, the same colours the 3D view uses: X red, Y green, Z blue. */
+	static public final Color		C_AXIS_X	= new Color (230, 51, 51);
+	static public final Color		C_AXIS_Y	= new Color (51, 204, 51);
+	static public final Color		C_AXIS_Z	= new Color (89, 128, 242);
 	static public final Color		C_ICON		= new Color (60, 60, 60);
 	static public final Color		C_RADIUS	= new Color (120, 120, 200);
 	static public final Color		C_BUMPER	= new Color (200, 60, 60);
@@ -808,9 +812,27 @@ public class RobotCanvas extends JPanel
 		for (double y = Math.floor (wy (getHeight ()) / step) * step; y < wy (0); y += step)
 			g.draw (new Line2D.Double (0, py (y), getWidth (), py (y)));
 
-		g.setColor (C_AXIS);										// the axes of the robot
-		g.draw (new Line2D.Double (0, py (0), getWidth (), py (0)));
-		g.draw (new Line2D.Double (px (0), 0, px (0), getHeight ()));
+		drawAxes (g);
+	}
+
+	/**
+	 * The two axes of the robot the projection shows, in the colours of the 3D
+	 * view, from the origin and on their positive side alone.
+	 */
+	private void drawAxes (Graphics2D g)
+	{
+		g.setStroke (stroke (1.5f));
+		g.setColor (axisColor (true));
+		g.draw (new Line2D.Double (px (0), py (0), getWidth (), py (0)));
+		g.setColor (axisColor (false));
+		g.draw (new Line2D.Double (px (0), py (0), px (0), 0));
+	}
+
+	/** The colour of the horizontal or the vertical axis of the view. */
+	public Color axisColor (boolean horizontal)
+	{
+		if (horizontal)		return (view == V_FRONT) ? C_AXIS_Y : C_AXIS_X;
+		return (view == V_TOP) ? C_AXIS_Y : C_AXIS_Z;
 	}
 
 	/** The bitmap of the robot: drawn over the box its drawing occupies. */

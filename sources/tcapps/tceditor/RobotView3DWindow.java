@@ -484,22 +484,28 @@ public class RobotView3DWindow extends JFrame
 		return new Color3f (0.95f, 0.9f, 0.3f);									// vision: yellow
 	}
 
-	/** The axes of the robot: X (forward) in red, Y in green. */
+	/** The axes of the robot: X (forward) in red, Y in green and Z (up) in blue. */
 	private Shape3D axes ()
 	{
-		LineArray	la = new LineArray (4, LineArray.COORDINATES | LineArray.COLOR_3);
+		LineArray	la = new LineArray (6, LineArray.COORDINATES | LineArray.COLOR_3);
 		Appearance	app = new Appearance ();
+		Color3f[]	c = { color (RobotCanvas.C_AXIS_X), color (RobotCanvas.C_AXIS_Y), color (RobotCanvas.C_AXIS_Z) };
+		Point3d[]	e = { new Point3d (AXIS_LEN, 0.0, 0.0), new Point3d (0.0, AXIS_LEN, 0.0), new Point3d (0.0, 0.0, AXIS_LEN) };
 
-		la.setCoordinate (0, new Point3d (0.0, 0.0, 0.0));
-		la.setCoordinate (1, new Point3d (AXIS_LEN, 0.0, 0.0));
-		la.setCoordinate (2, new Point3d (0.0, 0.0, 0.0));
-		la.setCoordinate (3, new Point3d (0.0, AXIS_LEN, 0.0));
-		la.setColor (0, new Color3f (0.9f, 0.2f, 0.2f));		la.setColor (1, new Color3f (0.9f, 0.2f, 0.2f));
-		la.setColor (2, new Color3f (0.2f, 0.8f, 0.2f));		la.setColor (3, new Color3f (0.2f, 0.8f, 0.2f));
+		for (int i = 0; i < 3; i++)
+		{
+			la.setCoordinate (2 * i, new Point3d (0.0, 0.0, 0.0));		la.setColor (2 * i, c[i]);
+			la.setCoordinate (2 * i + 1, e[i]);							la.setColor (2 * i + 1, c[i]);
+		}
 
 		app.setLineAttributes (new LineAttributes (2f, LineAttributes.PATTERN_SOLID, true));
 		app.setColoringAttributes (new ColoringAttributes (1f, 1f, 1f, ColoringAttributes.SHADE_FLAT));
 		return new Shape3D (la, app);
+	}
+
+	static private Color3f color (java.awt.Color c)
+	{
+		return new Color3f (c.getRed () / 255f, c.getGreen () / 255f, c.getBlue () / 255f);
 	}
 
 	/** Centres the view on the robot and on what the selection covers. */
