@@ -55,7 +55,8 @@ public class RobotDef
 		public int		step;						// reading step ("<fam>step")
 
 		// what it detects (families with sensors of their own only)
-		public String	driver;						// device it is read through (LRF0, LSB0, ...)
+		public String	driver;						// class of the device it is read through
+		public String	driverParams;				// what that driver is opened with (a port, an address, ...)
 		public double	rangemax;					// maximum range (m)
 		public double	rangemin;					// minimum range (m)
 		public double	cone;						// aperture (deg)
@@ -72,7 +73,8 @@ public class RobotDef
 			Sensor	s = new Sensor ();
 			s.rho = rho;	s.theta = theta;	s.height = height;	s.orientation = orientation;	s.step = step;
 			s.elevation = elevation;
-			s.driver = driver;	s.rangemax = rangemax;	s.rangemin = rangemin;	s.cone = cone;	s.rays = rays;
+			s.driver = driver;	s.driverParams = driverParams;
+			s.rangemax = rangemax;	s.rangemin = rangemin;	s.cone = cone;	s.rays = rays;
 			s.reflect = reflect;	s.beacons = beacons;	s.objects = objects;
 			s.hfov = hfov;			s.vfov = vfov;
 			return s;
@@ -81,7 +83,7 @@ public class RobotDef
 		/** True when nothing of what it detects is set (so none of it is written to the file). */
 		public boolean plain ()
 		{
-			return (driver == null) && (rangemax == 0.0) && (rangemin == 0.0) && (cone == 0.0)
+			return (driver == null) && (driverParams == null) && (rangemax == 0.0) && (rangemin == 0.0) && (cone == 0.0)
 				&& (rays == 0) && (reflect == 0.0) && (beacons == 0) && (objects == 0)
 				&& (hfov == 0.0) && (vfov == 0.0);
 		}
@@ -200,6 +202,25 @@ public class RobotDef
 	static public final String[]	FAMILY_DRIVERS	= { "SONAR", "IR", "LRF", "LSB", "TRK", "VISION" };
 
 	/**
+	 * The class every driver of a family derives from; null when the family has
+	 * none. A driver is named by a class that extends one of these, so what a
+	 * robot can be given is what the development holds, and the editor offers it
+	 * instead of asking for a name.
+	 */
+	static public final String[]	FAMILY_BASES	= { null, null,
+														"devices.drivers.laser.Laser",
+														"devices.drivers.beacon.LaserBeacon",
+														"devices.drivers.radar.Radar",
+														"devices.drivers.vision.Vision" };
+
+	/** The class the drivers of a family derive from, or null when there is none. */
+	static public String driverBase (String fam)
+	{
+		int		i = familyIndex (fam);
+		return (i < 0) ? null : FAMILY_BASES[i];
+	}
+
+	/**
 	 * Families whose sensors are devices of their own: each one says what it
 	 * detects (driver, range, cone, rays, ...) instead of taking it from the
 	 * family. Only the firing cycle stays with the family.
@@ -290,6 +311,7 @@ public class RobotDef
 			if (s.elevation != 0.0)		o.addProperty ("elevation", s.elevation);
 			o.addProperty ("step", s.step);
 			if (s.driver != null)		o.addProperty ("driver", s.driver);
+			if (s.driverParams != null)	o.addProperty ("driverParams", s.driverParams);
 			if (s.rangemax != 0.0)		o.addProperty ("rangemax", s.rangemax);
 			if (s.rangemin != 0.0)		o.addProperty ("rangemin", s.rangemin);
 			if (s.cone != 0.0)			o.addProperty ("cone", s.cone);
@@ -388,7 +410,36 @@ public class RobotDef
 			if (f.sensors == null)	f.sensors = new ArrayList<Sensor> ();
 			f.own	= hasOwnDetection (fam);
 			if (f.own)				migrate (fam, f);
+			for (Sensor s : f.sensors)		split (s);
 		}
+	}
+
+	/**
+	 * A driver read from a description that named it as the class and what it is
+	 * opened with in one string, separated by a bar: the class stays in the driver
+	 * and the rest goes to its parameters.
+	 */
+	static private void split (Sensor s)
+	{
+		int		bar;
+
+		if (s.driver == null)					return;
+		bar		= s.driver.indexOf ('|');
+		if (bar < 0)							return;
+		if (s.driverParams == null)				s.driverParams = s.driver.substring (bar + 1).trim ();
+		s.driver	= s.driver.substring (0, bar).trim ();
+		if (s.driver.length () == 0)			s.driver = null;
+		if ((s.driverParams != null) && (s.driverParams.length () == 0))		s.driverParams = null;
+	}
+
+	/**
+	 * The driver of a sensor as the device layer asks for it: the class and what
+	 * it is opened with, separated by a bar. Null when it has no driver.
+	 */
+	static public String driverProperty (Sensor s)
+	{
+		if ((s.driver == null) || (s.driver.trim ().length () == 0))		return null;
+		return s.driver.trim () + "|" + ((s.driverParams != null) ? s.driverParams.trim () : "");
 	}
 
 	/**
@@ -536,8 +587,8 @@ public class RobotDef
 				if (FAMILY_OWN[fi])
 				{
 					// this sensor is a device of its own: its driver and what it detects
-					if ((s.driver != null) && (s.driver.trim ().length () > 0))
-						p.setProperty (FAMILY_DRIVERS[fi] + i, s.driver.trim ());
+					String	dp = driverProperty (s);
+					if (dp != null)		p.setProperty (FAMILY_DRIVERS[fi] + i, dp);
 					setNZ (p, "RANGE" + key + i, s.rangemax);	setNZ (p, "MINIM" + key + i, s.rangemin);
 					setNZ (p, "CONE" + key + i, hasFov (fam) ? s.hfov : s.cone);
 					if (hasFov (fam))	{ setNZ (p, "HFOV" + key + i, s.hfov);		setNZ (p, "VFOV" + key + i, s.vfov); }

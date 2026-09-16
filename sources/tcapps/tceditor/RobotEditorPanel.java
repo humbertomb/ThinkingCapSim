@@ -18,6 +18,8 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
@@ -196,6 +198,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 					String	name = propsModel.nameAt (row);
 					if (isShapeProperty (name))		return FileCellEditor.SHAPE;
 					if (isImageProperty (name))		return FileCellEditor.IMAGE;
+					if (name.equals ("driver"))
+					{
+						javax.swing.table.TableCellEditor	ed = driverEditor (propsModel.item);
+						if (ed != null)		return ed;
+					}
 				}
 				return super.getCellEditor (row, column);
 			}
@@ -797,16 +804,16 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step" };
 			if (it.family.equals ("lsb"))
 				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
-									  "driver", "range max", "range min", "cone", "rays", "reflect", "beacons" };
+									  "driver", DRIVER_PARAMS, "range max", "range min", "cone", "rays", "reflect", "beacons" };
 			if (it.family.equals ("trk"))
 				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
-									  "driver", "range max", "range min", "cone", "rays", "objects" };
+									  "driver", DRIVER_PARAMS, "range max", "range min", "cone", "rays", "objects" };
 			// a camera sees a rectangle: two fields of view, no cone and no near limit
 			if (RobotDef.hasFov (it.family))
 				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
-									  "driver", "range max", "hfov", "vfov" };
+									  "driver", DRIVER_PARAMS, "range max", "hfov", "vfov" };
 			return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
-								  "driver", "range max", "range min", "cone", "rays" };
+								  "driver", DRIVER_PARAMS, "range max", "range min", "cone", "rays" };
 		case RobotItem.FAMILY:
 			// only the firing cycle is of the whole family when its sensors say the rest
 			if (RobotDef.hasOwnDetection (it.family))		return new String[] { "cycle" };
@@ -881,6 +888,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("elevation"))		return RobotDef.fmt (s.elevation);
 			if (name.equals ("step"))			return String.valueOf (s.step);
 			if (name.equals ("driver"))			return (s.driver != null) ? s.driver : "";
+			if (name.equals (DRIVER_PARAMS))	return (s.driverParams != null) ? s.driverParams : "";
 			if (name.equals ("range max"))		return RobotDef.fmt (s.rangemax);
 			if (name.equals ("range min"))		return RobotDef.fmt (s.rangemin);
 			if (name.equals ("cone"))			return RobotDef.fmt (s.cone);
@@ -917,6 +925,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 	/** True for the properties naming a 3D model file. */
 	static public boolean isShapeProperty (String name)		{ return name.endsWith ("shape"); }
+	/** The name the editor gives to what a driver is opened with. */
+	static public final String		DRIVER_PARAMS			= "driver parameters";
 	/** True for the properties naming an image file. */
 	static public boolean isImageProperty (String name)		{ return name.equals ("image"); }
 	/** True for the properties naming a file. */
@@ -938,6 +948,32 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static private String value (String name, String v)
 	{
 		return isFileProperty (name) ? FileCellEditor.normalise (v) : v;
+	}
+
+	/**
+	 * The chooser of drivers of an element: the classes of the development that
+	 * derive from the one its device layer asks for. Null when the element is not
+	 * a sensor of a family with drivers, so that the plain field is used.
+	 */
+	private javax.swing.table.TableCellEditor driverEditor (RobotItem it)
+	{
+		JComboBox<String>	cb;
+		List<String>		names;
+		String				base, current;
+
+		if ((it == null) || (it.kind != RobotItem.SENSOR))		return null;
+		base	= RobotDef.driverBase (it.family);
+		if (base == null)										return null;
+
+		names	= new ArrayList<String> (DriverClasses.of (base));
+		current	= getProperty (it, "driver");
+		if ((current.length () > 0) && !names.contains (current))	names.add (0, current);
+		names.add (0, "");										// a sensor may have no driver of its own
+
+		cb		= new JComboBox<String> (names.toArray (new String[0]));
+		cb.setSelectedItem (current);
+		cb.setToolTipText ("Classes deriving from " + base);
+		return new DefaultCellEditor (cb);
 	}
 
 	/** True when a property can be edited. */
@@ -1022,6 +1058,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("elevation"))		s.elevation = num (value);
 			else if (name.equals ("step"))			s.step = (int) num (value);
 			else if (name.equals ("driver"))		s.driver = token (value);
+			else if (name.equals (DRIVER_PARAMS))	s.driverParams = token (value);
 			else if (name.equals ("range max"))		s.rangemax = num (value);
 			else if (name.equals ("range min"))		s.rangemin = num (value);
 			else if (name.equals ("cone"))			s.cone = num (value);
