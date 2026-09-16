@@ -28,6 +28,7 @@ import javax.media.j3d.QuadArray;
 import javax.media.j3d.RenderingAttributes;
 import javax.media.j3d.Shape3D;
 import javax.media.j3d.TransparencyAttributes;
+import javax.media.j3d.TriangleArray;
 import javax.media.j3d.TransformGroup;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -348,6 +349,8 @@ public class RobotView3DWindow extends JFrame
 		rmax	= d[0];		rmin = Math.max (0.0, d[1]);
 		if (rmax <= 0.0)		return (what != null) ? what + "no range.   " : "";
 		if (rmin > rmax)		rmin = 0.0;
+		// a camera sees a rectangle: a pyramid says it better than a flat sector
+		if (RobotDef.hasFov (fam) && (s.hfov > 0.0) && (s.vfov > 0.0))		return pyramid (bg, fam, s, what);
 
 		x		= s.rho * Math.cos (Math.toRadians (s.theta));
 		y		= s.rho * Math.sin (Math.toRadians (s.theta));
@@ -368,15 +371,67 @@ public class RobotView3DWindow extends JFrame
 			qa.setCoordinate (4 * i + 3, new Point3d (x + rmin * Math.cos (a2), y + rmin * Math.sin (a2), z));
 		}
 
+		bg.addChild (new Shape3D (qa, coverAppearance (fam)));
+
+		return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax)
+								+ " m, " + RobotDef.fmt (d[2]) + " deg.   " : " ";
+	}
+
+	/**
+	 * What a camera sees: the pyramid from where it sits out to its range max,
+	 * <code>hfov</code> wide and <code>vfov</code> tall, with its apex on the
+	 * camera. The four faces and the base are drawn.
+	 *
+	 * @return what to say about it
+	 */
+	private String pyramid (BranchGroup bg, String fam, RobotDef.Sensor s, String what)
+	{
+		double		a = Math.toRadians (s.orientation);
+		double		x = s.rho * Math.cos (Math.toRadians (s.theta));
+		double		y = s.rho * Math.sin (Math.toRadians (s.theta));
+		double		z = s.height, r = s.rangemax;
+		double		hw = r * Math.tan (Math.toRadians (s.hfov) / 2), hh = r * Math.tan (Math.toRadians (s.vfov) / 2);
+		// where it looks at, and the two directions across it
+		double[]	f = { Math.cos (a), Math.sin (a), 0.0 };
+		double[]	w = { Math.sin (a), -Math.cos (a), 0.0 };
+		Point3d		ap = new Point3d (x, y, z);
+		Point3d[]	c = new Point3d[4];
+
+		for (int i = 0; i < 4; i++)
+		{
+			double	sw = ((i == 0) || (i == 3)) ? -hw : hw;			// left, right
+			double	sh = (i < 2) ? hh : -hh;						// top, bottom
+			c[i]	= new Point3d (x + r * f[0] + sw * w[0], y + r * f[1] + sw * w[1], z + sh);
+		}
+
+		TriangleArray	ta = new TriangleArray (12, TriangleArray.COORDINATES);
+		for (int i = 0; i < 4; i++)										// the four faces, from the camera
+		{
+			ta.setCoordinate (3 * i,     ap);
+			ta.setCoordinate (3 * i + 1, c[i]);
+			ta.setCoordinate (3 * i + 2, c[(i + 1) % 4]);
+		}
+		QuadArray	qa = new QuadArray (4, QuadArray.COORDINATES);		// what it sees at its range max
+		for (int i = 0; i < 4; i++)		qa.setCoordinate (i, c[i]);
+
+		Appearance	app = coverAppearance (fam);
+		bg.addChild (new Shape3D (ta, app));
+		bg.addChild (new Shape3D (qa, app));
+
+		return (what != null) ? what + RobotDef.fmt (r) + " m, " + RobotDef.fmt (s.hfov) + " x "
+								+ RobotDef.fmt (s.vfov) + " deg.   " : " ";
+	}
+
+	/** How what a sensor covers is painted: its family colour, seen through. */
+	private Appearance coverAppearance (String fam)
+	{
 		Appearance	app = new Appearance ();
+
 		app.setColoringAttributes (new ColoringAttributes (familyColor (fam), ColoringAttributes.SHADE_FLAT));
 		app.setTransparencyAttributes (new TransparencyAttributes (TransparencyAttributes.BLENDED, 0.65f));
 		app.setPolygonAttributes (new PolygonAttributes (PolygonAttributes.POLYGON_FILL, PolygonAttributes.CULL_NONE, 0f));
 		app.setRenderingAttributes (new RenderingAttributes ());
-		bg.addChild (new Shape3D (qa, app));
-
-		return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax)
-								+ " m, " + RobotDef.fmt (d[2]) + " deg.   " : " ";
+		return app;
 	}
 
 	/** The colour each family of sensors is drawn in, so that several of them are told apart. */
