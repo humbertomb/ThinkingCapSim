@@ -241,12 +241,14 @@ public class RobotCanvas extends JPanel
 	public double[] contentBounds ()
 	{
 		double[]	b = robotBounds ();
-		double[]	c = coverage ();
 
-		if (c == null)			return b;
-		if (b == null)			b = new double[] { c[0], c[1], c[0], c[1] };
-		b	= grow (b, c[0] - c[2], c[1] - c[2]);
-		return grow (b, c[0] + c[2], c[1] + c[2]);
+		for (double[] c : coverages ())
+		{
+			if (b == null)		b = new double[] { c[0], c[1], c[0], c[1] };
+			b	= grow (b, c[0] - c[2], c[1] - c[2]);
+			b	= grow (b, c[0] + c[2], c[1] + c[2]);
+		}
+		return b;
 	}
 
 	public void zoomIn ()							{ zoom (1.25); }
@@ -319,14 +321,38 @@ public class RobotCanvas extends JPanel
 	 */
 	public double[] coverage ()
 	{
-		RobotDef.Sensor		s;
-		double[]			d;
-		double				rmax, rmin, cone;
-
 		if ((selection == null) || (selection.kind != RobotItem.SENSOR))		return null;
-		s	= selectedSensor ();
+		return coverageOf (selection.family, selectedSensor ());
+	}
+
+	/**
+	 * What is drawn as covered: what one sensor covers when one is selected, and
+	 * what every sensor of a family covers when the family is.
+	 */
+	public java.util.List<double[]> coverages ()
+	{
+		java.util.List<double[]>	l = new java.util.ArrayList<double[]> ();
+		double[]					c;
+
+		if (selection == null)			return l;
+		if (selection.kind == RobotItem.SENSOR)
+		{
+			if ((c = coverage ()) != null)		l.add (c);
+		}
+		else if (selection.kind == RobotItem.FAMILY)
+			for (RobotDef.Sensor s : robot.family (selection.family).sensors)
+				if ((c = coverageOf (selection.family, s)) != null)		l.add (c);
+		return l;
+	}
+
+	/** {x, y, rangemax, rangemin, cone, orientation} of a sensor, or null when it says no range. */
+	private double[] coverageOf (String fam, RobotDef.Sensor s)
+	{
+		double[]	d;
+		double		rmax, rmin, cone;
+
 		if (s == null)				return null;
-		d	= robot.detection (selection.family, s);
+		d	= robot.detection (fam, s);
 		rmax	= d[0];		rmin = Math.max (0.0, d[1]);		cone = d[2];
 		if (rmax <= 0.0)			return null;
 		if (rmin > rmax)			rmin = 0.0;
@@ -721,14 +747,17 @@ public class RobotCanvas extends JPanel
 	 */
 	private void drawCoverage (Graphics2D g)
 	{
-		double[]	c = coverage ();
-		double		x, y, rmax, rmin, a0, ext;
+		boolean		bar = (selection != null) && (selection.kind == RobotItem.SENSOR);
 
-		if (c == null)			return;
-		x		= px (c[0]);		y = py (c[1]);
-		rmax	= c[2] * scale;		rmin = c[3] * scale;
-		ext		= c[4];
-		a0		= c[5] - ext / 2;
+		for (double[] c : coverages ())		drawSector (g, c, bar);
+	}
+
+	/** One sector: filled, outlined and, for a single sensor, with the segment its handles sit on. */
+	private void drawSector (Graphics2D g, double[] c, boolean bar)
+	{
+		double		x = px (c[0]), y = py (c[1]);
+		double		rmax = c[2] * scale, rmin = c[3] * scale;
+		double		ext = c[4], a0 = c[5] - ext / 2;
 
 		g.setStroke (stroke (1.2f));
 		if (ext <= 0.0)														// no aperture: just how far it reaches
@@ -762,6 +791,7 @@ public class RobotCanvas extends JPanel
 		g.setColor (C_COVER_LINE);
 		g.draw (path);
 
+		if (!bar)			return;
 		// the segment the handles sit on: from range min to range max on one edge
 		double		e = coverEdge (c), ce = Math.cos (e), se = Math.sin (e);
 		g.setColor (C_SEL);

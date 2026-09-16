@@ -304,26 +304,49 @@ public class RobotView3DWindow extends JFrame
 	}
 
 	/**
-	 * What the selected sensor covers: the circular sector centred on the
-	 * direction it looks at, <code>cone</code> wide (half of it to each side),
-	 * from <code>range min</code> to <code>range max</code>, drawn flat at the
-	 * height of the sensor.
+	 * What the selection covers: the circular sector of the selected sensor, or
+	 * of every sensor of the selected family, centred on the direction each one
+	 * looks at, <code>cone</code> wide (half of it to each side), from
+	 * <code>range min</code> to <code>range max</code>, drawn flat at the height
+	 * of the sensor.
 	 *
 	 * @return what to say about it
 	 */
 	private String coverage (BranchGroup bg)
 	{
-		RobotDef.Sensor		s;
-		double[]			d;
-		double				x, y, z, rmax, rmin, a0, ext;
-		int					steps;
+		RobotDef.Family		f;
+		int					n = 0;
 
-		if ((selection == null) || (selection.kind != RobotItem.SENSOR))		return "";
-		if (selection.index >= robot.family (selection.family).n ())			return "";
-		s		= robot.family (selection.family).sensors.get (selection.index);
-		d		= robot.detection (selection.family, s);
+		if (selection == null)					return "";
+		if (selection.kind == RobotItem.SENSOR)
+		{
+			f	= robot.family (selection.family);
+			if (selection.index >= f.n ())		return "";
+			return sector (bg, selection.family, f.sensors.get (selection.index),
+							selection.family + selection.index + ": ");
+		}
+		if (selection.kind != RobotItem.FAMILY)	return "";
+
+		f	= robot.family (selection.family);
+		for (RobotDef.Sensor s : f.sensors)
+			if (sector (bg, selection.family, s, null).length () > 0)		n++;
+		return (n > 0) ? RobotDef.familyName (selection.family) + ": " + n + " sensors.   " : "";
+	}
+
+	/**
+	 * Adds the sector one sensor covers.
+	 *
+	 * @param what  what to call it in the status bar, or null to say nothing
+	 * @return what to say about it
+	 */
+	private String sector (BranchGroup bg, String fam, RobotDef.Sensor s, String what)
+	{
+		double[]	d = robot.detection (fam, s);
+		double		x, y, z, rmax, rmin, a0, ext;
+		int			steps;
+
 		rmax	= d[0];		rmin = Math.max (0.0, d[1]);
-		if (rmax <= 0.0)		return selection.family + selection.index + ": no range.   ";
+		if (rmax <= 0.0)		return (what != null) ? what + "no range.   " : "";
 		if (rmin > rmax)		rmin = 0.0;
 
 		x		= s.rho * Math.cos (Math.toRadians (s.theta));
@@ -331,7 +354,8 @@ public class RobotView3DWindow extends JFrame
 		z		= s.height;
 		ext		= Math.toRadians ((d[2] > 0.0) ? Math.min (d[2], 360.0) : 0.0);
 		a0		= Math.toRadians (s.orientation) - ext / 2;
-		if (ext <= 0.0)			return selection.family + selection.index + ": " + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax) + " m, no aperture.   ";
+		if (ext <= 0.0)
+			return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax) + " m, no aperture.   " : "";
 
 		steps	= Math.max (8, (int) Math.round (Math.toDegrees (ext) / 3.0));
 		QuadArray	qa = new QuadArray (4 * steps, QuadArray.COORDINATES);
@@ -351,8 +375,8 @@ public class RobotView3DWindow extends JFrame
 		app.setRenderingAttributes (new RenderingAttributes ());
 		bg.addChild (new Shape3D (qa, app));
 
-		return selection.family + selection.index + ": " + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax)
-				+ " m, " + RobotDef.fmt (d[2]) + " deg.   ";
+		return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax)
+								+ " m, " + RobotDef.fmt (d[2]) + " deg.   " : " ";
 	}
 
 	/** The axes of the robot: X (forward) in red, Y in green. */
