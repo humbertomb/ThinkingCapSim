@@ -392,8 +392,8 @@ public class RobotCanvas extends JPanel
 
 	/**
 	 * What the selected sensor covers, in the frame of the robot:
-	 * {x, y, rangemax, rangemin, cone, orientation, z, elevation}, or null when
-	 * there is no sensor selected.
+	 * {x, y, rangemax, rangemin, cone, orientation, z, elevation, vfov}, or null
+	 * when there is no sensor selected.
 	 */
 	public double[] coverage ()
 	{
@@ -421,7 +421,7 @@ public class RobotCanvas extends JPanel
 		return l;
 	}
 
-	/** {x, y, rangemax, rangemin, cone, orientation, z, elevation} of a sensor, or null when there is none. */
+	/** {x, y, rangemax, rangemin, cone, orientation, z, elevation, vfov} of a sensor, or null when there is none. */
 	private double[] coverageOf (String fam, RobotDef.Sensor s)
 	{
 		double[]	d;
@@ -433,7 +433,8 @@ public class RobotCanvas extends JPanel
 		if (rmin > rmax)			rmin = 0.0;
 		if (cone < 0.0)				cone = 0.0;
 		if (cone > 360.0)			cone = 360.0;
-		return new double[] { sx (s), sy (s), rmax, rmin, cone, s.orientation, sz (s), s.elevation };
+		return new double[] { sx (s), sy (s), rmax, rmin, cone, s.orientation, sz (s), s.elevation,
+							  RobotDef.hasFov (fam) ? s.vfov : 0.0 };
 	}
 
 	/**
@@ -952,6 +953,7 @@ public class RobotCanvas extends JPanel
 	/** One sector: filled, outlined and, for a single sensor, with the segment its handles sit on. */
 	private void drawSector (Graphics2D g, double[] c, boolean bar)
 	{
+		if (c[8] > 0.0)			{ drawPyramid (g, c, bar); return; }		// a camera sees a rectangle, not a cone
 		if (!isTop ())			{ drawSectorSide (g, c); return; }
 
 		double		x = px (c[0]), y = py (c[1]);
@@ -998,6 +1000,87 @@ public class RobotCanvas extends JPanel
 
 		// the segment the handles sit on: from range min to range max on one edge
 		if (bar)		drawCoverBar (g, x, y, coverEdge (c), rmin, rmax);
+	}
+
+	/**
+	 * What a camera sees: the pyramid its two fields of view make, as it shows in
+	 * the view. It is drawn as the outline of its five corners projected, so every
+	 * projection gets the shape it should: the horizontal aperture from above, the
+	 * vertical one from the side, and the rectangle it sees from the front.
+	 */
+	private void drawPyramid (Graphics2D g, double[] c, boolean bar)
+	{
+		double		o = Math.toRadians (c[5]), e = Math.toRadians (c[7]), r = c[2];
+		double		hw = r * Math.tan (Math.toRadians (c[4]) / 2), hh = r * Math.tan (Math.toRadians (c[8]) / 2);
+		double[]	f = { Math.cos (o) * Math.cos (e), Math.sin (o) * Math.cos (e), Math.sin (e) };
+		double[]	w = { Math.sin (o), -Math.cos (o), 0.0 };
+		double[]	u = { w[1] * f[2] - w[2] * f[1], w[2] * f[0] - w[0] * f[2], w[0] * f[1] - w[1] * f[0] };
+		double[][]	pts = new double[5][];
+
+		if (r <= 0.0)			return;
+		pts[0]	= new double[] { ph (c[0], c[1], c[6]), pv (c[0], c[1], c[6]) };		// where the camera is
+		for (int i = 0; i < 4; i++)												// what it sees at its range
+		{
+			double	sw = ((i == 0) || (i == 3)) ? -hw : hw;
+			double	sh = (i < 2) ? hh : -hh;
+			double	x = c[0] + r * f[0] + sw * w[0] + sh * u[0];
+			double	y = c[1] + r * f[1] + sw * w[1] + sh * u[1];
+			double	z = c[6] + r * f[2] + sw * w[2] + sh * u[2];
+			pts[i + 1]	= new double[] { ph (x, y, z), pv (x, y, z) };
+		}
+
+		java.awt.geom.Path2D.Double		path = outline (pts);
+		g.setStroke (stroke (1.2f));
+		g.setColor (C_COVER_FILL);		g.fill (path);
+		g.setColor (C_COVER_LINE);		g.draw (path);
+		if (bar)		drawCoverBar (g, pts[0][0], pts[0][1], coverEdge (c), 0.0,
+									  (c[2] > 0.0) ? c[2] * scale : PENDING_PX);
+	}
+
+	/** The outline of a handful of points: their convex hull, as a closed path. */
+	static private java.awt.geom.Path2D.Double outline (double[][] pts)
+	{
+		java.util.List<double[]>	p = new java.util.ArrayList<double[]> ();
+		java.util.List<double[]>	hull = new java.util.ArrayList<double[]> ();
+		int							lower;
+
+		for (double[] q : pts)		p.add (q);
+		java.util.Collections.sort (p, new java.util.Comparator<double[]> ()
+		{
+			public int compare (double[] a, double[] b)
+			{
+				return (a[0] != b[0]) ? Double.compare (a[0], b[0]) : Double.compare (a[1], b[1]);
+			}
+		});
+		for (double[] q : p)										// the lower side, then the upper one
+		{
+			while ((hull.size () >= 2) && (cross (hull.get (hull.size () - 2), hull.get (hull.size () - 1), q) <= 0))
+				hull.remove (hull.size () - 1);
+			hull.add (q);
+		}
+		lower	= hull.size () + 1;
+		for (int i = p.size () - 2; i >= 0; i--)
+		{
+			double[]	q = p.get (i);
+			while ((hull.size () >= lower) && (cross (hull.get (hull.size () - 2), hull.get (hull.size () - 1), q) <= 0))
+				hull.remove (hull.size () - 1);
+			hull.add (q);
+		}
+		hull.remove (hull.size () - 1);
+
+		java.awt.geom.Path2D.Double		path = new java.awt.geom.Path2D.Double ();
+		for (int i = 0; i < hull.size (); i++)
+		{
+			if (i == 0)		path.moveTo (hull.get (i)[0], hull.get (i)[1]);
+			else			path.lineTo (hull.get (i)[0], hull.get (i)[1]);
+		}
+		path.closePath ();
+		return path;
+	}
+
+	static private double cross (double[] o, double[] a, double[] b)
+	{
+		return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
 	}
 
 	/**
