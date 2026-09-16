@@ -707,6 +707,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (it.family.equals ("trk"))
 				return new String[] { "rho", "theta", "height", "orientation", "step",
 									  "driver", "range max", "range min", "cone", "rays", "objects" };
+			// a camera sees a rectangle: two fields of view, no cone and no near limit
+			if (RobotDef.hasFov (it.family))
+				return new String[] { "rho", "theta", "height", "orientation", "step",
+									  "driver", "range max", "hfov", "vfov" };
 			return new String[] { "rho", "theta", "height", "orientation", "step",
 								  "driver", "range max", "range min", "cone", "rays" };
 		case RobotItem.FAMILY:
@@ -789,6 +793,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("reflect"))		return RobotDef.fmt (s.reflect);
 			if (name.equals ("beacons"))		return String.valueOf (s.beacons);
 			if (name.equals ("objects"))		return String.valueOf (s.objects);
+			if (name.equals ("hfov"))			return RobotDef.fmt (s.hfov);
+			if (name.equals ("vfov"))			return RobotDef.fmt (s.vfov);
 			break;
 		}
 		case RobotItem.FAMILY:
@@ -917,6 +923,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("reflect"))		s.reflect = num (value);
 			else if (name.equals ("beacons"))		s.beacons = (int) num (value);
 			else if (name.equals ("objects"))		s.objects = (int) num (value);
+			else if (name.equals ("hfov"))			s.hfov = num (value);
+			else if (name.equals ("vfov"))			s.vfov = num (value);
 			break;
 		}
 		case RobotItem.FAMILY:

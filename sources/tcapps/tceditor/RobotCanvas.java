@@ -373,7 +373,11 @@ public class RobotCanvas extends JPanel
 		if (s == null)				return;
 		rmax	= Math.max (0.0, rmax);		rmin = Math.max (0.0, Math.min (rmin, rmax));
 		cone	= Math.max (0.0, Math.min (cone, 360.0));
-		if (RobotDef.hasOwnDetection (selection.family))
+		if (RobotDef.hasFov (selection.family))				// a camera: the aperture is its horizontal field of view
+		{
+			s.rangemax = rmax;		s.hfov = cone;
+		}
+		else if (RobotDef.hasOwnDetection (selection.family))
 		{
 			s.rangemax = rmax;		s.rangemin = rmin;		s.cone = cone;
 		}
@@ -382,6 +386,12 @@ public class RobotCanvas extends JPanel
 			RobotDef.Family		f = robot.family (selection.family);
 			f.rangemax = rmax;		f.rangemin = rmin;		f.cone = cone;
 		}
+	}
+
+	/** True when the selected sensor has a near limit to drag (a camera has not). */
+	private boolean hasMinHandle ()
+	{
+		return (selection != null) && (selection.kind == RobotItem.SENSOR) && !RobotDef.hasFov (selection.family);
 	}
 
 	/** The edge of the sector the handles sit on: half the aperture from the direction it looks at. */
@@ -471,8 +481,12 @@ public class RobotCanvas extends JPanel
 				return new double[] { px (sx (s)), py (sy (s)),
 									  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a) };
 
-			// the two ends of the segment that sets range min, range max and the cone
+			// the ends of the segment that sets how far it reaches and how wide
 			double		e = coverEdge (c), ce = Math.cos (e), se = Math.sin (e);
+			if (!hasMinHandle ())							// a camera has no near limit to drag
+				return new double[] { px (sx (s)), py (sy (s)),
+									  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a),
+									  px (c[0] + c[2] * ce), py (c[1] + c[2] * se) };
 			return new double[] { px (sx (s)), py (sy (s)),
 								  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a),
 								  px (c[0] + c[3] * ce), py (c[1] + c[3] * se),
@@ -537,8 +551,8 @@ public class RobotCanvas extends JPanel
 				if (c == null)				return;
 				r		= Math.hypot (x - c[0], y - c[1]);
 				cone	= 2 * Math.abs (norm180 (Math.toDegrees (Math.atan2 (y - c[1], x - c[0])) - c[5]));
-				if (handle == 2)			setCoverage (c[2], r, cone);		// the near end: range min
-				else						setCoverage (r, c[3], cone);		// the far end: range max
+				if ((handle == 2) && hasMinHandle ())	setCoverage (c[2], r, cone);	// the near end: range min
+				else									setCoverage (r, c[3], cone);	// the far end: range max
 			}
 			break;
 		}

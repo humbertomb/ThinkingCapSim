@@ -62,6 +62,8 @@ public class RobotDef
 		public double	reflect;					// lsb: maximum reflection angle (deg)
 		public int		beacons;					// lsb: beacons it can see at once
 		public int		objects;					// trk: objects it can track at once
+		public double	hfov;						// vis: horizontal field of view (deg; it is not a cone)
+		public double	vfov;						// vis: vertical field of view (deg)
 
 		public Sensor ()							{ }
 		public Sensor copy ()
@@ -70,6 +72,7 @@ public class RobotDef
 			s.rho = rho;	s.theta = theta;	s.height = height;	s.orientation = orientation;	s.step = step;
 			s.driver = driver;	s.rangemax = rangemax;	s.rangemin = rangemin;	s.cone = cone;	s.rays = rays;
 			s.reflect = reflect;	s.beacons = beacons;	s.objects = objects;
+			s.hfov = hfov;			s.vfov = vfov;
 			return s;
 		}
 
@@ -77,7 +80,8 @@ public class RobotDef
 		public boolean plain ()
 		{
 			return (driver == null) && (rangemax == 0.0) && (rangemin == 0.0) && (cone == 0.0)
-				&& (rays == 0) && (reflect == 0.0) && (beacons == 0) && (objects == 0);
+				&& (rays == 0) && (reflect == 0.0) && (beacons == 0) && (objects == 0)
+				&& (hfov == 0.0) && (vfov == 0.0);
 		}
 	}
 
@@ -198,7 +202,14 @@ public class RobotDef
 	 * detects (driver, range, cone, rays, ...) instead of taking it from the
 	 * family. Only the firing cycle stays with the family.
 	 */
-	static public final boolean[]	FAMILY_OWN		= { false, false, true, true, true, false };
+	static public final boolean[]	FAMILY_OWN		= { false, false, true, true, true, true };
+
+	/**
+	 * True for a family that sees a rectangle and not a cone: a camera says a
+	 * horizontal and a vertical field of view instead of an aperture, and its near
+	 * limit is always zero.
+	 */
+	static public boolean hasFov (String fam)			{ return "vis".equals (fam); }
 
 	/** True for a family whose sensors carry their own detection properties. */
 	static public boolean hasOwnDetection (String fam)
@@ -283,6 +294,8 @@ public class RobotDef
 			if (s.reflect != 0.0)		o.addProperty ("reflect", s.reflect);
 			if (s.beacons != 0)			o.addProperty ("beacons", s.beacons);
 			if (s.objects != 0)			o.addProperty ("objects", s.objects);
+			if (s.hfov != 0.0)			o.addProperty ("hfov", s.hfov);
+			if (s.vfov != 0.0)			o.addProperty ("vfov", s.vfov);
 			return o;
 		}
 	}
@@ -371,7 +384,7 @@ public class RobotDef
 			if (f == null)			sensors.put (fam, f = new Family ());
 			if (f.sensors == null)	f.sensors = new ArrayList<Sensor> ();
 			f.own	= hasOwnDetection (fam);
-			if (f.own)				migrate (f);
+			if (f.own)				migrate (fam, f);
 		}
 	}
 
@@ -380,7 +393,7 @@ public class RobotDef
 	 * written when the family said it: what the family had goes to every sensor
 	 * that does not say it yet, and the family keeps only its firing cycle.
 	 */
-	static private void migrate (Family f)
+	static private void migrate (String fam, Family f)
 	{
 		for (Sensor s : f.sensors)
 		{
@@ -392,6 +405,12 @@ public class RobotDef
 			if (s.reflect == 0.0)			s.reflect = f.reflect;
 			if (s.beacons == 0)				s.beacons = f.beacons;
 			if (s.objects == 0)				s.objects = f.objects;
+			if (hasFov (fam))						// what a camera said as a cone is its horizontal field of view
+			{
+				if (s.hfov == 0.0)		s.hfov = s.cone;
+				s.cone		= 0.0;
+				s.rangemin	= 0.0;
+			}
 		}
 		f.driver	= null;
 		f.rangemax	= 0.0;	f.rangemin = 0.0;	f.cone = 0.0;	f.rays = 0;
@@ -407,6 +426,7 @@ public class RobotDef
 	{
 		Family	f = family (fam);
 
+		if (hasFov (fam))				return new double[] { s.rangemax, 0.0, s.hfov };
 		if (hasOwnDetection (fam))		return new double[] { s.rangemax, s.rangemin, s.cone };
 		return new double[] { f.rangemax, f.rangemin, f.cone };
 	}
@@ -485,7 +505,10 @@ public class RobotDef
 				// the runtime still reads one set of values for the whole family: the
 				// first sensor stands for it, and each one writes its own as well
 				Sensor	s0 = (f.n () > 0) ? f.sensors.get (0) : new Sensor ();
-				setNZ (p, "RANGE" + key, s0.rangemax);	setNZ (p, "MINIM" + key, s0.rangemin);	setNZ (p, "CONE" + key, s0.cone);
+				// a camera has no cone: what it sees wide is its horizontal field of view
+				setNZ (p, "RANGE" + key, s0.rangemax);	setNZ (p, "MINIM" + key, s0.rangemin);
+				setNZ (p, "CONE" + key, hasFov (fam) ? s0.hfov : s0.cone);
+				if (hasFov (fam))		{ setNZ (p, "HFOV" + key, s0.hfov);		setNZ (p, "VFOV" + key, s0.vfov); }
 				if (s0.rays > 0)		p.setProperty ("RAY" + key, String.valueOf (s0.rays));
 				if (s0.reflect != 0.0)	set (p, "REF" + key, s0.reflect);
 				if (s0.beacons > 0)		p.setProperty ("BEAC" + key, String.valueOf (s0.beacons));
@@ -512,7 +535,8 @@ public class RobotDef
 					if ((s.driver != null) && (s.driver.trim ().length () > 0))
 						p.setProperty (FAMILY_DRIVERS[fi] + i, s.driver.trim ());
 					setNZ (p, "RANGE" + key + i, s.rangemax);	setNZ (p, "MINIM" + key + i, s.rangemin);
-					setNZ (p, "CONE" + key + i, s.cone);
+					setNZ (p, "CONE" + key + i, hasFov (fam) ? s.hfov : s.cone);
+					if (hasFov (fam))	{ setNZ (p, "HFOV" + key + i, s.hfov);		setNZ (p, "VFOV" + key + i, s.vfov); }
 					if (s.rays > 0)			p.setProperty ("RAY" + key + i, String.valueOf (s.rays));
 					if (s.reflect != 0.0)	set (p, "REF" + key + i, s.reflect);
 					if (s.beacons > 0)		p.setProperty ("BEAC" + key + i, String.valueOf (s.beacons));

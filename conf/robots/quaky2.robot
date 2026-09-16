@@ -421,8 +421,6 @@
       "sensors": []
     },
     "vis": {
-      "driver": "devices.drivers.vision.quaky2.Quaky2Vis|5,7000,10.0.0.1:8000",
-      "cone": 60.0,
       "cycle": 1,
       "sensors": [
         {
@@ -430,7 +428,9 @@
           "theta": 0.0,
           "height": 0.35,
           "orientation": 0.0,
-          "step": 1
+          "step": 1,
+          "driver": "devices.drivers.vision.quaky2.Quaky2Vis|5,7000,10.0.0.1:8000",
+          "hfov": 60.0
         }
       ]
     }
