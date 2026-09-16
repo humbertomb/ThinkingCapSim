@@ -463,12 +463,39 @@ public class RobotView3DWindow extends JFrame
 		return new Shape3D (la, app);
 	}
 
-	/** Centres the view on the robot. */
+	/** Centres the view on the robot and on what the selection covers. */
 	public void fitView ()
 	{
 		double	size = Math.max (2 * Math.max (robot.radius, 0.25), 1.0);
 
+		size	= Math.max (size, 2 * coverExtent ());
 		scene.lookAt (0.0, 0.0, 0.0, 2.5 * size);
+	}
+
+	/** How far from the robot what the selection covers reaches (m); zero when nothing is shown. */
+	private double coverExtent ()
+	{
+		RobotDef.Family		f;
+		double				e = 0.0;
+
+		if (selection == null)			return 0.0;
+		if (selection.kind == RobotItem.SENSOR)
+		{
+			f	= robot.family (selection.family);
+			return (selection.index < f.n ()) ? reach (selection.family, f.sensors.get (selection.index)) : 0.0;
+		}
+		if (selection.kind != RobotItem.FAMILY)		return 0.0;
+		for (RobotDef.Sensor s : robot.family (selection.family).sensors)
+			e	= Math.max (e, reach (selection.family, s));
+		return e;
+	}
+
+	/** How far from the centre of the robot one sensor reaches (m). */
+	private double reach (String fam, RobotDef.Sensor s)
+	{
+		double[]	d = robot.detection (fam, s);
+
+		return (d[0] > 0.0) ? s.rho + d[0] : 0.0;
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -479,12 +506,22 @@ public class RobotView3DWindow extends JFrame
 		public RobotScene (Canvas3D canvas)
 		{
 			super (canvas);
-			universe.getViewer ().getView ().setFrontClipDistance (0.05);
-			universe.getViewer ().getView ().setBackClipDistance (100.0);
 			rho		= 0.6;
 			theta	= -Math.PI / 2.0;
 			len		= 5.0;
+			updateClips ();
 			setViewpoint ();
+		}
+
+		/**
+		 * The clipping planes follow how far the view is: a radar reaching 140 m is
+		 * as much a part of the scene as a robot half a metre wide, and a fixed pair
+		 * of planes cannot hold both.
+		 */
+		private void updateClips ()
+		{
+			universe.getViewer ().getView ().setFrontClipDistance (Math.max (0.05, len / 1000.0));
+			universe.getViewer ().getView ().setBackClipDistance (Math.max (100.0, 10.0 * len));
 		}
 
 		public void addBranch (BranchGroup bg)		{ scene.addChild (bg); }
@@ -494,6 +531,7 @@ public class RobotView3DWindow extends JFrame
 		{
 			focus.set (x, y, z);
 			len		= Math.max (0.5, distance);
+			updateClips ();
 			setViewpoint ();
 		}
 
@@ -506,7 +544,8 @@ public class RobotView3DWindow extends JFrame
 
 		public void zoom (double factor)
 		{
-			len		= Math.max (0.2, Math.min (200.0, len * factor));
+			len		= Math.max (0.2, Math.min (5000.0, len * factor));
+			updateClips ();
 			setViewpoint ();
 		}
 	}

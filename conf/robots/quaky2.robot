@@ -430,7 +430,8 @@
           "orientation": 0.0,
           "step": 1,
           "driver": "devices.drivers.vision.quaky2.Quaky2Vis|5,7000,10.0.0.1:8000",
-          "hfov": 60.0
+          "hfov": 60.0,
+          "vfov": 40.0
         }
       ]
     }
