@@ -62,6 +62,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		ROBOTS_DIR	= "./conf/robots";
 	static public final int			RIGHT_WIDTH		= 320;		// tree + properties column (as the world editor)
 	static public final double		TREE_FRACTION	= 0.55;		// share of the tree in that column
+	static public final int			OVERLAY_GAP		= 6;		// margin of what floats over the view (px)
 
 	/** What the window or dialog hosting the editor needs to know. */
 	public interface Host
@@ -128,10 +129,24 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		JScrollPane	canvasSP = new JScrollPane (canvas);
 		canvasSP.setBorder (BorderFactory.createEmptyBorder ());
 
-		// the three flat projections, at the top left of the view
-		JPanel		viewPN = new JPanel (new BorderLayout ());
-		viewPN.add (buildViewBar (), BorderLayout.NORTH);
-		viewPN.add (canvasSP, BorderLayout.CENTER);
+		// the three flat projections, floating over the top right corner of the view
+		final JScrollPane	csp = canvasSP;
+		final JComponent	bar = buildViewBar ();
+		javax.swing.JLayeredPane	viewPN = new javax.swing.JLayeredPane ()
+		{
+			private static final long	serialVersionUID = 1L;
+
+			public void doLayout ()
+			{
+				Dimension	d = bar.getPreferredSize ();
+				csp.setBounds (0, 0, getWidth (), getHeight ());
+				bar.setBounds (getWidth () - d.width - OVERLAY_GAP, OVERLAY_GAP, d.width, d.height);
+			}
+
+			public Dimension getPreferredSize ()		{ return csp.getPreferredSize (); }
+		};
+		viewPN.add (canvasSP, javax.swing.JLayeredPane.DEFAULT_LAYER);
+		viewPN.add (bar, javax.swing.JLayeredPane.PALETTE_LAYER);
 
 		// --- left: toolbar
 		JToolBar	tb = new JToolBar (JToolBar.VERTICAL);
@@ -305,41 +320,46 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/* ------------------------------------------------------------------ */
 
 	/** Toolbar toggle of the 3D view (created once). */
-	/** The bar of the three projections: only the one from above when the robot has no 3D model. */
-	private JToolBar buildViewBar ()
+	/**
+	 * The three projections, as a small panel that floats over the view: a box
+	 * drawn in isometry with the face each one looks at. Only the one from above
+	 * when the robot has no 3D model.
+	 */
+	private JComponent buildViewBar ()
 	{
-		JToolBar	tb = new JToolBar (JToolBar.HORIZONTAL);
+		JPanel		bar = new JPanel (new java.awt.FlowLayout (java.awt.FlowLayout.CENTER, 2, 2));
 		ButtonGroup	group = new ButtonGroup ();
 
-		tb.setFloatable (false);
-		tb.setBorder (BorderFactory.createEmptyBorder (2, 2, 2, 2));
+		bar.setOpaque (true);
+		bar.setBackground (new java.awt.Color (255, 255, 255, 215));
+		bar.setBorder (BorderFactory.createLineBorder (new java.awt.Color (190, 195, 205)));
 		viewBT	= new javax.swing.JToggleButton[RobotCanvas.V_NAMES.length];
 		for (int i = 0; i < viewBT.length; i++)
 		{
 			final int	v = i;
-			viewBT[i]	= new javax.swing.JToggleButton (RobotCanvas.V_NAMES[i]);
+			viewBT[i]	= new javax.swing.JToggleButton (new ViewIcon (i));
 			viewBT[i].setToolTipText (viewTip (i));
 			viewBT[i].setFocusable (false);
-			viewBT[i].setMargin (new java.awt.Insets (1, 8, 1, 8));
+			viewBT[i].setMargin (new java.awt.Insets (2, 2, 2, 2));
+			viewBT[i].putClientProperty ("JButton.buttonType", "square");
 			viewBT[i].addActionListener (new ActionListener ()
 			{
 				public void actionPerformed (ActionEvent e)		{ setView (v); }
 			});
 			group.add (viewBT[i]);
-			tb.add (viewBT[i]);
+			bar.add (viewBT[i]);
 		}
 		viewBT[RobotCanvas.V_TOP].setSelected (true);
-		tb.add (Box.createHorizontalGlue ());
 		updateViewBar ();
-		return tb;
+		return bar;
 	}
 
 	static private String viewTip (int v)
 	{
 		switch (v)
 		{
-		case RobotCanvas.V_FRONT:	return "From the front: X to the right, Z up";
-		case RobotCanvas.V_SIDE:	return "From the side: Y to the right, Z up";
+		case RobotCanvas.V_FRONT:	return "From the front: Y to the right, Z up";
+		case RobotCanvas.V_SIDE:	return "From the side: X to the right, Z up";
 		default:					return "From above: X to the right, Y up";
 		}
 	}

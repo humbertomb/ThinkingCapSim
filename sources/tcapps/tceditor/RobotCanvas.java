@@ -25,9 +25,13 @@ import tc.vrobot.RobotImage;
 import wucore.utils.geom.Line2;
 
 /**
- * Plan view of a robot description, in robot coordinates: the drawing of the
+ * Flat view of a robot description, in robot coordinates: the drawing of the
  * platform, its virtual radius, the bumpers and where each sensor sits, with
- * the direction it looks at. The X axis points forward.
+ * the direction it looks at, over the lines of its 3D models. The X axis points
+ * forward.
+ *
+ * It draws one of three projections: from above (x right, y up), from the front
+ * (y right, z up) and from the side (x right, z up).
  *
  * The view pans with the mouse and zooms with the wheel; clicking selects the
  * element under the pointer, which the editor shows in its tree and property
@@ -72,8 +76,8 @@ public class RobotCanvas extends JPanel
 
 	/** Flat projections the view can draw. */
 	static public final int			V_TOP		= 0;			// from above: x to the right, y up
-	static public final int			V_FRONT		= 1;			// from the front: x to the right, z up
-	static public final int			V_SIDE		= 2;			// from the side: y to the right, z up
+	static public final int			V_FRONT		= 1;			// from the front: y to the right, z up
+	static public final int			V_SIDE		= 2;			// from the side: x to the right, z up
 	static public final String[]	V_NAMES		= { "Top", "Front", "Side" };
 
 	static private final int		D_NONE		= 0;
@@ -206,7 +210,7 @@ public class RobotCanvas extends JPanel
 	/** Horizontal coordinate of a point of the robot in the view (m). */
 	public double h (double x, double y, double z)
 	{
-		return (view == V_SIDE) ? y : x;
+		return (view == V_FRONT) ? y : x;			// from the front the robot comes at you: what shows is its width
 	}
 
 	/** Vertical coordinate of a point of the robot in the view (m). */
@@ -486,8 +490,8 @@ public class RobotCanvas extends JPanel
 		x	= sx (s);	y = sy (s);
 		switch (view)
 		{
-		case V_FRONT:	x = hw;		s.height = vw;		break;
-		case V_SIDE:	y = hw;		s.height = vw;		break;
+		case V_FRONT:	y = hw;		s.height = vw;		break;
+		case V_SIDE:	x = hw;		s.height = vw;		break;
 		default:		x = hw;		y = vw;				break;
 		}
 		s.rho		= Math.hypot (x, y);
@@ -756,7 +760,7 @@ public class RobotCanvas extends JPanel
 		}
 		// how much of the direction the view shows: forward is +h when it is positive
 		o		= Math.toRadians (s.orientation);
-		axis	= (view == V_SIDE) ? Math.sin (o) : Math.cos (o);
+		axis	= (view == V_FRONT) ? Math.sin (o) : Math.cos (o);
 		if (Math.abs (axis) < 1e-6)		axis = 1.0;			// it looks across the view: take its front as the right
 		s.elevation		= Math.toDegrees (Math.atan2 (dv, dh * Math.signum (axis)));
 		changed ();
