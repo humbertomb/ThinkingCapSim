@@ -23,7 +23,11 @@ import javax.media.j3d.Canvas3D;
 import javax.media.j3d.ColoringAttributes;
 import javax.media.j3d.LineAttributes;
 import javax.media.j3d.LineArray;
+import javax.media.j3d.PolygonAttributes;
+import javax.media.j3d.QuadArray;
+import javax.media.j3d.RenderingAttributes;
 import javax.media.j3d.Shape3D;
+import javax.media.j3d.TransparencyAttributes;
 import javax.media.j3d.TransformGroup;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -66,6 +70,7 @@ public class RobotView3DWindow extends JFrame
 
 	protected JLabel				statusLabel;
 	protected JCheckBox				robotCB, actuatorCB, axesCB;
+	protected RobotItem				selection;				// what the editor has selected (a sensor draws what it covers)
 	protected Timer					rebuildTimer;
 	protected Runnable				onHide;
 
@@ -245,6 +250,16 @@ public class RobotView3DWindow extends JFrame
 		fitView ();
 	}
 
+	/**
+	 * What the editor has selected: a sensor draws what it covers. The view is
+	 * left where it is, so a sensor that reaches far does not pull the zoom out.
+	 */
+	public void setSelection (RobotItem it)
+	{
+		selection	= it;
+		scheduleRebuild ();
+	}
+
 	/** The description changed: the models are drawn again (rapid changes are coalesced). */
 	public void robotChanged ()
 	{
@@ -265,6 +280,7 @@ public class RobotView3DWindow extends JFrame
 		if (axesCB.isSelected ())		bg.addChild (axes ());
 		st.append (model (bg, robot.shapeRobot, robotCB.isSelected (), "Robot"));
 		st.append (model (bg, robot.shapeActuator, actuatorCB.isSelected (), "Actuator"));
+		st.append (coverage (bg));
 
 		if (branch != null)		branch.detach ();
 		branch	= bg;
@@ -285,6 +301,58 @@ public class RobotView3DWindow extends JFrame
 		if (tg == null)						return what + ": <" + path + "> cannot be read.   ";
 		bg.addChild (tg);
 		return what + ": " + new File (path).getName () + ".   ";
+	}
+
+	/**
+	 * What the selected sensor covers: the circular sector centred on the
+	 * direction it looks at, <code>cone</code> wide (half of it to each side),
+	 * from <code>range min</code> to <code>range max</code>, drawn flat at the
+	 * height of the sensor.
+	 *
+	 * @return what to say about it
+	 */
+	private String coverage (BranchGroup bg)
+	{
+		RobotDef.Sensor		s;
+		double[]			d;
+		double				x, y, z, rmax, rmin, a0, ext;
+		int					steps;
+
+		if ((selection == null) || (selection.kind != RobotItem.SENSOR))		return "";
+		if (selection.index >= robot.family (selection.family).n ())			return "";
+		s		= robot.family (selection.family).sensors.get (selection.index);
+		d		= robot.detection (selection.family, s);
+		rmax	= d[0];		rmin = Math.max (0.0, d[1]);
+		if (rmax <= 0.0)		return selection.family + selection.index + ": no range.   ";
+		if (rmin > rmax)		rmin = 0.0;
+
+		x		= s.rho * Math.cos (Math.toRadians (s.theta));
+		y		= s.rho * Math.sin (Math.toRadians (s.theta));
+		z		= s.height;
+		ext		= Math.toRadians ((d[2] > 0.0) ? Math.min (d[2], 360.0) : 0.0);
+		a0		= Math.toRadians (s.orientation) - ext / 2;
+		if (ext <= 0.0)			return selection.family + selection.index + ": " + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax) + " m, no aperture.   ";
+
+		steps	= Math.max (8, (int) Math.round (Math.toDegrees (ext) / 3.0));
+		QuadArray	qa = new QuadArray (4 * steps, QuadArray.COORDINATES);
+		for (int i = 0; i < steps; i++)
+		{
+			double	a1 = a0 + ext * i / steps, a2 = a0 + ext * (i + 1) / steps;
+			qa.setCoordinate (4 * i,     new Point3d (x + rmin * Math.cos (a1), y + rmin * Math.sin (a1), z));
+			qa.setCoordinate (4 * i + 1, new Point3d (x + rmax * Math.cos (a1), y + rmax * Math.sin (a1), z));
+			qa.setCoordinate (4 * i + 2, new Point3d (x + rmax * Math.cos (a2), y + rmax * Math.sin (a2), z));
+			qa.setCoordinate (4 * i + 3, new Point3d (x + rmin * Math.cos (a2), y + rmin * Math.sin (a2), z));
+		}
+
+		Appearance	app = new Appearance ();
+		app.setColoringAttributes (new ColoringAttributes (1f, 0.55f, 0f, ColoringAttributes.SHADE_FLAT));
+		app.setTransparencyAttributes (new TransparencyAttributes (TransparencyAttributes.BLENDED, 0.65f));
+		app.setPolygonAttributes (new PolygonAttributes (PolygonAttributes.POLYGON_FILL, PolygonAttributes.CULL_NONE, 0f));
+		app.setRenderingAttributes (new RenderingAttributes ());
+		bg.addChild (new Shape3D (qa, app));
+
+		return selection.family + selection.index + ": " + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax)
+				+ " m, " + RobotDef.fmt (d[2]) + " deg.   ";
 	}
 
 	/** The axes of the robot: X (forward) in red, Y in green. */

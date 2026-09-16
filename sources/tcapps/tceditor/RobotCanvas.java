@@ -46,6 +46,8 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_SENSOR	= new Color (40, 120, 200);
 	static public final Color		C_SEL		= new Color (255, 140, 0);
 	static public final Color		C_HANDLE	= new Color (255, 255, 255);		// handles, as in the world editor
+	static public final Color		C_COVER_FILL	= new Color (255, 140, 0, 40);	// what the selected sensor covers
+	static public final Color		C_COVER_LINE	= new Color (255, 140, 0, 140);
 
 	static public final double		MIN_SCALE	= 10.0;			// pixels per metre
 	static public final double		MAX_SCALE	= 2000.0;
@@ -509,6 +511,7 @@ public class RobotCanvas extends JPanel
 		drawRadius (g);
 		drawIcon (g);
 		drawBumpers (g);
+		drawCoverage (g);
 		drawSensors (g);
 		drawHandles (g);
 		drawScaleBar (g);
@@ -602,6 +605,62 @@ public class RobotCanvas extends JPanel
 			g.setStroke (stroke (sel ? 4f : 2.5f));
 			g.draw (new Line2D.Double (px (s.xi), py (s.yi), px (s.xf), py (s.yf)));
 		}
+	}
+
+	/**
+	 * What the selected sensor covers: the circular sector centred on the
+	 * direction it looks at, <code>cone</code> wide (half of it to each side),
+	 * from <code>range min</code> to <code>range max</code>. The view is left
+	 * where it is: a sensor that reaches far would otherwise pull the zoom out.
+	 */
+	private void drawCoverage (Graphics2D g)
+	{
+		RobotDef.Sensor		s;
+		double[]			d;
+		double				x, y, rmax, rmin, a0, ext;
+
+		if ((selection == null) || (selection.kind != RobotItem.SENSOR))		return;
+		s	= robot.family (selection.family).sensors.get (selection.index);
+		d	= robot.detection (selection.family, s);
+		rmax	= d[0] * scale;		rmin = Math.max (0.0, d[1]) * scale;
+		if (rmax <= 0.0)			return;								// it says nothing about its range
+		if (rmin > rmax)			rmin = 0.0;
+
+		x	= px (sx (s));		y = py (sy (s));
+		ext	= (d[2] > 0.0) ? Math.min (d[2], 360.0) : 0.0;
+		a0	= s.orientation - ext / 2;
+
+		g.setStroke (stroke (1.2f));
+		if (ext <= 0.0)														// no aperture: just how far it reaches
+		{
+			g.setColor (C_COVER_LINE);
+			double	a = Math.toRadians (s.orientation);
+			g.draw (new Line2D.Double (x + rmin * Math.cos (a), y - rmin * Math.sin (a),
+									   x + rmax * Math.cos (a), y - rmax * Math.sin (a)));
+			return;
+		}
+
+		java.awt.geom.Path2D.Double		path = new java.awt.geom.Path2D.Double ();
+		if (ext >= 360.0)													// all around: a ring, with no seam
+		{
+			path.setWindingRule (java.awt.geom.Path2D.WIND_EVEN_ODD);
+			path.append (new Ellipse2D.Double (x - rmax, y - rmax, 2 * rmax, 2 * rmax), false);
+			if (rmin > 0.0)		path.append (new Ellipse2D.Double (x - rmin, y - rmin, 2 * rmin, 2 * rmin), false);
+		}
+		else
+		{
+			path.append (new java.awt.geom.Arc2D.Double (x - rmax, y - rmax, 2 * rmax, 2 * rmax, a0, ext, java.awt.geom.Arc2D.OPEN), false);
+			if (rmin > 0.0)
+				path.append (new java.awt.geom.Arc2D.Double (x - rmin, y - rmin, 2 * rmin, 2 * rmin, a0 + ext, -ext, java.awt.geom.Arc2D.OPEN), true);
+			else
+				path.lineTo (x, y);
+			path.closePath ();
+		}
+
+		g.setColor (C_COVER_FILL);
+		g.fill (path);
+		g.setColor (C_COVER_LINE);
+		g.draw (path);
 	}
 
 	private void drawSensors (Graphics2D g)

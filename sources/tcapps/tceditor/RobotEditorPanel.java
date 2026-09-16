@@ -337,6 +337,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				if (win != null)
 					view3d.setLocation (win.getX () + win.getWidth () + 10, win.getY ());
 				view3d.fitView ();
+				view3d.setSelection (canvas.getSelection ());
 			} catch (Throwable e)
 			{
 				JOptionPane.showMessageDialog (this, "Cannot open the 3D view:\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
@@ -656,6 +657,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			try { selectInTree (item); } finally { syncing = false; }
 		}
 		showProperties (item);
+		if (view3d != null)		view3d.setSelection (item);		// a sensor draws what it covers
 		deleteAC.setEnabled ((item != null) && ((item.kind == RobotItem.LINE) || (item.kind == RobotItem.BUMPER) || (item.kind == RobotItem.SENSOR)));
 	}
 

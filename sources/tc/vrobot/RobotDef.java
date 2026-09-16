@@ -398,6 +398,19 @@ public class RobotDef
 		f.reflect	= 0.0;	f.beacons = 0;		f.objects = 0;
 	}
 
+	/**
+	 * What a sensor detects: {rangemax, rangemin, cone}, taken from the sensor
+	 * itself in the families whose sensors are devices of their own, and from the
+	 * family in the others.
+	 */
+	public double[] detection (String fam, Sensor s)
+	{
+		Family	f = family (fam);
+
+		if (hasOwnDetection (fam))		return new double[] { s.rangemax, s.rangemin, s.cone };
+		return new double[] { f.rangemax, f.rangemin, f.cone };
+	}
+
 	public Family family (String fam)
 	{
 		Family	f = sensors.get (fam);
