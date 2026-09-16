@@ -44,6 +44,7 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_RADIUS	= new Color (120, 120, 200);
 	static public final Color		C_BUMPER	= new Color (200, 60, 60);
 	static public final Color		C_SENSOR	= new Color (40, 120, 200);
+	static public final Color		C_SHAPE		= new Color (170, 175, 185);		// lines of the 3D model
 	static public final Color		C_SEL		= new Color (255, 140, 0);
 	static public final Color		C_HANDLE	= new Color (255, 255, 255);		// handles, as in the world editor
 	static public final Color		C_COVER_FILL	= new Color (255, 140, 0, 40);	// what the selected sensor covers
@@ -69,11 +70,18 @@ public class RobotCanvas extends JPanel
 	static public final double		ARROW		= 22.0;			// length of the direction arrow of a sensor (pixels)
 	static public final int			HANDLE_PX	= 4;			// half size of the handles (pixels), as in the world editor
 
+	/** Flat projections the view can draw. */
+	static public final int			V_TOP		= 0;			// from above: x to the right, y up
+	static public final int			V_FRONT		= 1;			// from the front: x to the right, z up
+	static public final int			V_SIDE		= 2;			// from the side: y to the right, z up
+	static public final String[]	V_NAMES		= { "Top", "Front", "Side" };
+
 	static private final int		D_NONE		= 0;
 	static private final int		D_PAN		= 1;
 	static private final int		D_MOVE		= 2;			// dragging the element itself
 	static private final int		D_HANDLE	= 3;			// dragging one of its handles
 
+	protected int					view	= V_TOP;			// projection being drawn
 	protected double				scale	= 200.0;			// pixels per metre
 	protected double				cx, cy;						// world point at the centre of the view
 	protected int					dragX, dragY;
@@ -81,6 +89,7 @@ public class RobotCanvas extends JPanel
 	protected int					dragHandle;					// handle being dragged
 	protected boolean				gridVisible		= true;
 	protected boolean				imageVisible	= true;
+	protected boolean				shapeVisible	= true;		// the lines of the 3D model, over the projection
 	protected boolean				snapGrid		= false;	// take the handles to the grid
 	protected double				gridStep		= 0.1;		// metres, recomputed from the scale
 	protected double				grabX, grabY;				// where the element was grabbed (world coordinates)
@@ -182,6 +191,37 @@ public class RobotCanvas extends JPanel
 	/** The model changed behind the view. */
 	public void robotChanged ()						{ repaint (); }
 
+	/** The projection being drawn ({@link #V_TOP}, {@link #V_FRONT}, {@link #V_SIDE}). */
+	public int getView ()							{ return view; }
+
+	public void setView (int v)
+	{
+		if ((v < V_TOP) || (v > V_SIDE) || (v == view))		return;
+		view	= v;
+		repaint ();
+	}
+
+	/* --- the projection: a point of the robot on the two axes of the view */
+
+	/** Horizontal coordinate of a point of the robot in the view (m). */
+	public double h (double x, double y, double z)
+	{
+		return (view == V_SIDE) ? y : x;
+	}
+
+	/** Vertical coordinate of a point of the robot in the view (m). */
+	public double v (double x, double y, double z)
+	{
+		return (view == V_TOP) ? y : z;
+	}
+
+	/** A point of the robot in pixels. */
+	public double ph (double x, double y, double z)		{ return px (h (x, y, z)); }
+	public double pv (double x, double y, double z)		{ return py (v (x, y, z)); }
+
+	/** True when the view is the one from above, the only one the flat drawing of the robot belongs to. */
+	public boolean isTop ()							{ return view == V_TOP; }
+
 	public boolean isGridVisible ()					{ return gridVisible; }
 	public void setGridVisible (boolean on)			{ gridVisible = on; repaint (); }
 	public boolean isSnapEnabled ()					{ return snapGrid; }
@@ -245,12 +285,17 @@ public class RobotCanvas extends JPanel
 
 		for (double[] c : coverages ())
 		{
-			if (b == null)		b = new double[] { c[0], c[1], c[0], c[1] };
-			b	= grow (b, c[0] - c[2], c[1] - c[2]);
-			b	= grow (b, c[0] + c[2], c[1] + c[2]);
+			double	hh = h (c[0], c[1], c[6]), vv = v (c[0], c[1], c[6]);
+			if (b == null)		b = new double[] { hh, vv, hh, vv };
+			b	= grow (b, hh - c[2], vv - c[2]);
+			b	= grow (b, hh + c[2], vv + c[2]);
 		}
 		return b;
 	}
+
+	/** Whether the lines of the 3D models are drawn over the projection. */
+	public boolean isShapeVisible ()				{ return shapeVisible; }
+	public void setShapeVisible (boolean on)		{ shapeVisible = on; repaint (); }
 
 	public void zoomIn ()							{ zoom (1.25); }
 	public void zoomOut ()							{ zoom (0.8); }
@@ -271,7 +316,7 @@ public class RobotCanvas extends JPanel
 		repaint ();
 	}
 
-	/** {minx, miny, maxx, maxy} of everything drawn, or null when there is nothing. */
+	/** {minh, minv, maxh, maxv} of everything drawn, in the coordinates of the view, or null. */
 	public double[] robotBounds ()
 	{
 		double[]	b = { Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE };
@@ -280,24 +325,36 @@ public class RobotCanvas extends JPanel
 		if (robot == null)			return null;
 		if (robot.radius > 0.0)
 		{
-			b[0] = -robot.radius;	b[1] = -robot.radius;
-			b[2] = robot.radius;	b[3] = robot.radius;
+			b	= grow3 (b, -robot.radius, -robot.radius, 0.0);
+			b	= grow3 (b, robot.radius, robot.radius, 0.0);
 			any	= true;
 		}
 		for (RobotDef.IconLine l : robot.icon)
 		{
-			b	= grow (b, l.xi, l.yi);		b = grow (b, l.xf, l.yf);		any = true;
+			b	= grow3 (b, l.xi, l.yi, 0.0);		b = grow3 (b, l.xf, l.yf, 0.0);		any = true;
 		}
 		for (RobotDef.Bumper s : robot.bumpers)
 		{
-			b	= grow (b, s.xi, s.yi);		b = grow (b, s.xf, s.yf);		any = true;
+			b	= grow3 (b, s.xi, s.yi, 0.0);		b = grow3 (b, s.xf, s.yf, 0.0);		any = true;
 		}
 		for (String fam : RobotDef.FAMILIES)
 			for (RobotDef.Sensor s : robot.family (fam).sensors)
 			{
-				b	= grow (b, sx (s), sy (s));		any = true;
+				b	= grow3 (b, sx (s), sy (s), sz (s));		any = true;
 			}
+		if (shapeVisible)
+			for (String path : new String[] { robot.shapeRobot, robot.shapeActuator })
+				for (double[] l : ShapeLines.get (path))
+				{
+					b	= grow3 (b, l[0], l[1], l[2]);		b = grow3 (b, l[3], l[4], l[5]);	any = true;
+				}
 		return any ? b : null;
+	}
+
+	/** Grows a box of the view with a point of the robot. */
+	private double[] grow3 (double[] b, double x, double y, double z)
+	{
+		return grow (b, h (x, y, z), v (x, y, z));
 	}
 
 	/** An angle in degrees brought to (-180, 180]. */
@@ -317,8 +374,8 @@ public class RobotCanvas extends JPanel
 
 	/**
 	 * What the selected sensor covers, in the frame of the robot:
-	 * {x, y, rangemax, rangemin, cone, orientation}, or null when there is no
-	 * sensor selected or it says nothing about its range.
+	 * {x, y, rangemax, rangemin, cone, orientation, z, elevation}, or null when
+	 * there is no sensor selected.
 	 */
 	public double[] coverage ()
 	{
@@ -346,7 +403,7 @@ public class RobotCanvas extends JPanel
 		return l;
 	}
 
-	/** {x, y, rangemax, rangemin, cone, orientation} of a sensor, or null when it says no range. */
+	/** {x, y, rangemax, rangemin, cone, orientation, z, elevation} of a sensor, or null when there is none. */
 	private double[] coverageOf (String fam, RobotDef.Sensor s)
 	{
 		double[]	d;
@@ -358,7 +415,7 @@ public class RobotCanvas extends JPanel
 		if (rmin > rmax)			rmin = 0.0;
 		if (cone < 0.0)				cone = 0.0;
 		if (cone > 360.0)			cone = 360.0;
-		return new double[] { sx (s), sy (s), rmax, rmin, cone, s.orientation };
+		return new double[] { sx (s), sy (s), rmax, rmin, cone, s.orientation, sz (s), s.elevation };
 	}
 
 	/**
@@ -397,9 +454,46 @@ public class RobotCanvas extends JPanel
 	/** The edge of the sector the handles sit on: half the aperture from the direction it looks at. */
 	static private double coverEdge (double[] c)		{ return Math.toRadians (c[5] + c[4] / 2); }
 
-	/** Position of a sensor: polar (rho, theta) around the centre of the robot. */
+	/** Position of a sensor: polar (rho, theta) around the centre of the robot, at its height. */
 	static public double sx (RobotDef.Sensor s)		{ return s.rho * Math.cos (Math.toRadians (s.theta)); }
 	static public double sy (RobotDef.Sensor s)		{ return s.rho * Math.sin (Math.toRadians (s.theta)); }
+	static public double sz (RobotDef.Sensor s)		{ return s.height; }
+
+	/**
+	 * The direction a sensor looks at as it shows in the view: {dh, dv}, of unit
+	 * length, or the azimuth alone when the direction is perpendicular to the view
+	 * (a sensor looking straight up, seen from above).
+	 */
+	public double[] look (RobotDef.Sensor s)
+	{
+		double		o = Math.toRadians (s.orientation), e = Math.toRadians (s.elevation);
+		double		fx = Math.cos (o) * Math.cos (e), fy = Math.sin (o) * Math.cos (e), fz = Math.sin (e);
+		double		dh = h (fx, fy, fz), dv = v (fx, fy, fz), n = Math.hypot (dh, dv);
+
+		if (n > 1e-9)		return new double[] { dh / n, dv / n };
+		dh	= h (Math.cos (o), Math.sin (o), 0.0);		dv = v (Math.cos (o), Math.sin (o), 0.0);
+		n	= Math.hypot (dh, dv);
+		return (n > 1e-9) ? new double[] { dh / n, dv / n } : new double[] { 1.0, 0.0 };
+	}
+
+	/** Takes the selected sensor to a point of the view, leaving what the view does not show. */
+	public void moveSensorTo (double hw, double vw)
+	{
+		RobotDef.Sensor		s = selectedSensor ();
+		double				x, y;
+
+		if (s == null)				return;
+		x	= sx (s);	y = sy (s);
+		switch (view)
+		{
+		case V_FRONT:	x = hw;		s.height = vw;		break;
+		case V_SIDE:	y = hw;		s.height = vw;		break;
+		default:		x = hw;		y = vw;				break;
+		}
+		s.rho		= Math.hypot (x, y);
+		s.theta		= Math.toDegrees (Math.atan2 (y, x));
+		changed ();
+	}
 
 	/* Selection */
 
@@ -413,9 +507,13 @@ public class RobotCanvas extends JPanel
 		{
 			java.util.List<RobotDef.Sensor>		ss = robot.family (fam).sensors;
 			for (int i = 0; i < ss.size (); i++)
-				if (Math.hypot (x - sx (ss.get (i)), y - sy (ss.get (i))) <= Math.max (tol, 5.0 / scale))
+			{
+				RobotDef.Sensor		s = ss.get (i);
+				if (Math.hypot (x - h (sx (s), sy (s), sz (s)), y - v (sx (s), sy (s), sz (s))) <= Math.max (tol, 5.0 / scale))
 					return new RobotItem (RobotItem.SENSOR, i, fam);
+			}
 		}
+		if (!isTop ())			return null;			// the drawing and the bumpers are flat: only from above
 		for (int i = 0; i < robot.bumpers.size (); i++)
 		{
 			RobotDef.Bumper	s = robot.bumpers.get (i);
@@ -472,25 +570,24 @@ public class RobotCanvas extends JPanel
 		case RobotItem.SENSOR:
 		{
 			RobotDef.Sensor		s = selectedSensor ();
-			double				a;
+			double				hx, hy;
+			double[]			d;
 
 			if (s == null)					return new double[0];
-			a	= Math.toRadians (s.orientation);
-			double[]	c = coverage ();
+			hx	= ph (sx (s), sy (s), sz (s));		hy = pv (sx (s), sy (s), sz (s));
+			d	= look (s);
+			double[]	c = isTop () ? coverage () : null;		// what it covers is edited from above
 			if (c == null)
-				return new double[] { px (sx (s)), py (sy (s)),
-									  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a) };
+				return new double[] { hx, hy, hx + ARROW * d[0], hy - ARROW * d[1] };
 
 			// the ends of the segment that sets how far it reaches and how wide; a
 			// sensor that says no range yet gets the far one at hand, to pull it out by
 			double		e = coverEdge (c), ce = Math.cos (e), se = Math.sin (e);
 			double		far = (c[2] > 0.0) ? c[2] * scale : PENDING_PX;
 			if (!hasMinHandle ())							// a camera has no near limit to drag
-				return new double[] { px (sx (s)), py (sy (s)),
-									  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a),
+				return new double[] { hx, hy, hx + ARROW * d[0], hy - ARROW * d[1],
 									  px (c[0]) + far * ce, py (c[1]) - far * se };
-			return new double[] { px (sx (s)), py (sy (s)),
-								  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a),
+			return new double[] { hx, hy, hx + ARROW * d[0], hy - ARROW * d[1],
 								  px (c[0] + c[3] * ce), py (c[1] + c[3] * se),
 								  px (c[0]) + far * ce, py (c[1]) - far * se };
 		}
@@ -498,13 +595,13 @@ public class RobotCanvas extends JPanel
 		{
 			if (selection.index >= robot.icon.size ())		return new double[0];
 			RobotDef.IconLine	l = robot.icon.get (selection.index);
-			return new double[] { px (l.xi), py (l.yi), px (l.xf), py (l.yf) };
+			return new double[] { ph (l.xi, l.yi, 0), pv (l.xi, l.yi, 0), ph (l.xf, l.yf, 0), pv (l.xf, l.yf, 0) };
 		}
 		case RobotItem.BUMPER:
 		{
 			if (selection.index >= robot.bumpers.size ())	return new double[0];
 			RobotDef.Bumper		b = robot.bumpers.get (selection.index);
-			return new double[] { px (b.xi), py (b.yi), px (b.xf), py (b.yf) };
+			return new double[] { ph (b.xi, b.yi, 0), pv (b.xi, b.yi, 0), ph (b.xf, b.yf, 0), pv (b.xf, b.yf, 0) };
 		}
 		}
 		return new double[0];
@@ -538,13 +635,16 @@ public class RobotCanvas extends JPanel
 			RobotDef.Sensor		s = selectedSensor ();
 
 			if (s == null)					return;
-			if (handle == 0)				// where it sits: its polar position
+			if (handle == 0)				// where it sits, as far as the view shows it
 			{
-				s.rho		= Math.hypot (x, y);
-				s.theta		= Math.toDegrees (Math.atan2 (y, x));
+				moveSensorTo (x, y);
+				return;
 			}
-			else if (handle == 1)			// where it looks at
-				s.orientation	= Math.toDegrees (Math.atan2 (y - sy (s), x - sx (s)));
+			else if (handle == 1)			// where it looks at: its orientation, or its elevation
+			{
+				turnSensorTo (x, y);
+				return;
+			}
 			else							// what it covers: how far it reaches and how wide
 			{
 				double[]	c = coverage ();
@@ -560,7 +660,7 @@ public class RobotCanvas extends JPanel
 		}
 		case RobotItem.LINE:
 		{
-			if (selection.index >= robot.icon.size ())		return;
+			if (!isTop () || (selection.index >= robot.icon.size ()))		return;
 			RobotDef.IconLine	l = robot.icon.get (selection.index);
 			if (handle == 0)		{ l.xi = x; l.yi = y; }
 			else					{ l.xf = x; l.yf = y; }
@@ -568,7 +668,7 @@ public class RobotCanvas extends JPanel
 		}
 		case RobotItem.BUMPER:
 		{
-			if (selection.index >= robot.bumpers.size ())	return;
+			if (!isTop () || (selection.index >= robot.bumpers.size ()))		return;
 			RobotDef.Bumper		b = robot.bumpers.get (selection.index);
 			if (handle == 0)		{ b.xi = x; b.yi = y; }
 			else					{ b.xf = x; b.yf = y; }
@@ -591,19 +691,19 @@ public class RobotCanvas extends JPanel
 			RobotDef.Sensor		s = selectedSensor ();
 
 			if (s == null)					return;
-			moveSensor (sx (s) + dx, sy (s) + dy);
+			moveSensorTo (h (sx (s), sy (s), sz (s)) + dx, v (sx (s), sy (s), sz (s)) + dy);
 			return;
 		}
 		case RobotItem.LINE:
 		{
-			if (selection.index >= robot.icon.size ())		return;
+			if (!isTop () || (selection.index >= robot.icon.size ()))		return;
 			RobotDef.IconLine	l = robot.icon.get (selection.index);
 			l.xi += dx;		l.yi += dy;		l.xf += dx;		l.yf += dy;
 			break;
 		}
 		case RobotItem.BUMPER:
 		{
-			if (selection.index >= robot.bumpers.size ())	return;
+			if (!isTop () || (selection.index >= robot.bumpers.size ()))		return;
 			RobotDef.Bumper		b = robot.bumpers.get (selection.index);
 			b.xi += dx;		b.yi += dy;		b.xf += dx;		b.yf += dy;
 			break;
@@ -625,13 +725,40 @@ public class RobotCanvas extends JPanel
 		changed ();
 	}
 
-	/** Turns the selected sensor towards a point of the robot. */
+	/** Turns the selected sensor towards a point of the robot (seen from above). */
 	public void turnSensor (double x, double y)
 	{
 		RobotDef.Sensor		s = selectedSensor ();
 
 		if (s == null)				return;
 		s.orientation	= Math.toDegrees (Math.atan2 (y - sy (s), x - sx (s)));
+		changed ();
+	}
+
+	/**
+	 * Turns the selected sensor towards a point of the view: from above that is
+	 * its orientation, and from the front or the side its elevation, measured
+	 * along the axis the view shows of the direction it looks at.
+	 */
+	public void turnSensorTo (double hw, double vw)
+	{
+		RobotDef.Sensor		s = selectedSensor ();
+		double				dh, dv, o, axis;
+
+		if (s == null)				return;
+		dh	= hw - h (sx (s), sy (s), sz (s));
+		dv	= vw - v (sx (s), sy (s), sz (s));
+		if (isTop ())
+		{
+			s.orientation	= Math.toDegrees (Math.atan2 (dv, dh));
+			changed ();
+			return;
+		}
+		// how much of the direction the view shows: forward is +h when it is positive
+		o		= Math.toRadians (s.orientation);
+		axis	= (view == V_SIDE) ? Math.sin (o) : Math.cos (o);
+		if (Math.abs (axis) < 1e-6)		axis = 1.0;			// it looks across the view: take its front as the right
+		s.elevation		= Math.toDegrees (Math.atan2 (dv, dh * Math.signum (axis)));
 		changed ();
 	}
 
@@ -655,7 +782,8 @@ public class RobotCanvas extends JPanel
 		if (robot == null)			return;
 
 		if (gridVisible)		drawGrid (g);
-		if (imageVisible)		drawImage (g);
+		if (imageVisible && isTop ())		drawImage (g);
+		if (shapeVisible)		drawShape (g);
 		drawRadius (g);
 		drawIcon (g);
 		drawBumpers (g);
@@ -728,7 +856,24 @@ public class RobotCanvas extends JPanel
 		r	= robot.radius * scale;
 		g.setColor (C_RADIUS);
 		g.setStroke (new BasicStroke (1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1f, new float[] { 5f, 4f }, 0f));
-		g.draw (new Ellipse2D.Double (px (0) - r, py (0) - r, 2 * r, 2 * r));
+		if (isTop ())
+			g.draw (new Ellipse2D.Double (px (0) - r, py (0) - r, 2 * r, 2 * r));
+		else								// seen from the front or the side it is the width it takes on the floor
+			g.draw (new Line2D.Double (px (0) - r, py (0), px (0) + r, py (0)));
+	}
+
+	/**
+	 * The 3D model of the robot, drawn as the lines of its faces over the
+	 * projection of the view. Nothing is hidden: every line is drawn.
+	 */
+	private void drawShape (Graphics2D g)
+	{
+		g.setStroke (stroke (1f));
+		g.setColor (C_SHAPE);
+		for (String path : new String[] { robot.shapeRobot, robot.shapeActuator })
+			for (double[] l : ShapeLines.get (path))
+				g.draw (new Line2D.Double (ph (l[0], l[1], l[2]), pv (l[0], l[1], l[2]),
+										   ph (l[3], l[4], l[5]), pv (l[3], l[4], l[5])));
 	}
 
 	private void drawIcon (Graphics2D g)
@@ -739,7 +884,7 @@ public class RobotCanvas extends JPanel
 			boolean				sel = isSel (RobotItem.LINE, i, null);
 			g.setColor (sel ? C_SEL : C_ICON);
 			g.setStroke (stroke (sel ? 3f : 1.5f));
-			g.draw (new Line2D.Double (px (l.xi), py (l.yi), px (l.xf), py (l.yf)));
+			g.draw (new Line2D.Double (ph (l.xi, l.yi, 0), pv (l.xi, l.yi, 0), ph (l.xf, l.yf, 0), pv (l.xf, l.yf, 0)));
 		}
 	}
 
@@ -751,7 +896,7 @@ public class RobotCanvas extends JPanel
 			boolean			sel = isSel (RobotItem.BUMPER, i, null);
 			g.setColor (sel ? C_SEL : C_BUMPER);
 			g.setStroke (stroke (sel ? 4f : 2.5f));
-			g.draw (new Line2D.Double (px (s.xi), py (s.yi), px (s.xf), py (s.yf)));
+			g.draw (new Line2D.Double (ph (s.xi, s.yi, 0), pv (s.xi, s.yi, 0), ph (s.xf, s.yf, 0), pv (s.xf, s.yf, 0)));
 		}
 	}
 
@@ -771,6 +916,8 @@ public class RobotCanvas extends JPanel
 	/** One sector: filled, outlined and, for a single sensor, with the segment its handles sit on. */
 	private void drawSector (Graphics2D g, double[] c, boolean bar)
 	{
+		if (!isTop ())			{ drawSectorSide (g, c); return; }
+
 		double		x = px (c[0]), y = py (c[1]);
 		double		rmax = c[2] * scale, rmin = c[3] * scale;
 		double		ext = c[4], a0 = c[5] - ext / 2;
@@ -817,6 +964,55 @@ public class RobotCanvas extends JPanel
 		if (bar)		drawCoverBar (g, x, y, coverEdge (c), rmin, rmax);
 	}
 
+	/**
+	 * The sector as it shows on a view that is not from above: the shape it makes
+	 * there, which its elevation tilts, drawn as the polygon of its own points.
+	 */
+	private void drawSectorSide (Graphics2D g, double[] c)
+	{
+		double		o = Math.toRadians (c[5]), e = Math.toRadians (c[7]);
+		double		rmax = c[2], rmin = Math.min (c[3], c[2]), ext = Math.toRadians (c[4]);
+		int			steps;
+
+		if (rmax <= 0.0)		return;
+		// the sector lies in the plane the sensor looks along: forward, and across it
+		double[]	f = { Math.cos (o) * Math.cos (e), Math.sin (o) * Math.cos (e), Math.sin (e) };
+		double[]	w = { Math.sin (o), -Math.cos (o), 0.0 };
+		steps	= Math.max (8, (int) Math.round (c[4] / 3.0));
+
+		java.awt.geom.Path2D.Double		path = new java.awt.geom.Path2D.Double ();
+		for (int i = 0; i <= steps; i++)						// the far arc
+		{
+			double	a = -ext / 2 + ext * i / steps;
+			point (path, c, f, w, a, rmax, i == 0);
+		}
+		if (rmin > 0.0)
+			for (int i = steps; i >= 0; i--)					// and back along the near one
+			{
+				double	a = -ext / 2 + ext * i / steps;
+				point (path, c, f, w, a, rmin, false);
+			}
+		else
+			path.lineTo (ph (c[0], c[1], c[6]), pv (c[0], c[1], c[6]));
+		path.closePath ();
+
+		g.setStroke (stroke (1.2f));
+		g.setColor (C_COVER_FILL);		g.fill (path);
+		g.setColor (C_COVER_LINE);		g.draw (path);
+	}
+
+	/** One point of a sector, turned <code>a</code> from where the sensor looks at, added to the path. */
+	private void point (java.awt.geom.Path2D.Double path, double[] c, double[] f, double[] w, double a, double r, boolean start)
+	{
+		double		ca = Math.cos (a) * r, sa = Math.sin (a) * r;
+		double		x = c[0] + ca * f[0] + sa * w[0];
+		double		y = c[1] + ca * f[1] + sa * w[1];
+		double		z = c[6] + ca * f[2] + sa * w[2];
+
+		if (start)		path.moveTo (ph (x, y, z), pv (x, y, z));
+		else			path.lineTo (ph (x, y, z), pv (x, y, z));
+	}
+
 	/** The segment the coverage handles sit on, in pixels from the sensor. */
 	private void drawCoverBar (Graphics2D g, double x, double y, double edge, double rmin, double rmax)
 	{
@@ -836,13 +1032,12 @@ public class RobotCanvas extends JPanel
 			{
 				RobotDef.Sensor	s = ss.get (i);
 				boolean			sel = isSel (RobotItem.SENSOR, i, fam);
-				double			x = px (sx (s)), y = py (sy (s));
-				double			a = Math.toRadians (s.orientation);			// where it looks at
-				double			len = ARROW;
+				double			x = ph (sx (s), sy (s), sz (s)), y = pv (sx (s), sy (s), sz (s));
+				double[]		d = look (s);								// where it looks at, in the view
 
 				g.setColor (sel ? C_SEL : C_SENSOR);
 				g.setStroke (stroke (sel ? 2.5f : 1.5f));
-				g.draw (new Line2D.Double (x, y, x + len * Math.cos (a), y - len * Math.sin (a)));
+				g.draw (new Line2D.Double (x, y, x + ARROW * d[0], y - ARROW * d[1]));
 				if (!sel)		g.fill (new Ellipse2D.Double (x - 3, y - 3, 6, 6));
 				if (sel || (scale > 150))
 				{

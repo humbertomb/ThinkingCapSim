@@ -17,6 +17,7 @@ import java.util.Map;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.ButtonGroup;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
@@ -83,6 +84,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected Action				lineAC, bumperAC, sensorAC, deleteAC;
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
+	protected javax.swing.JToggleButton[]		viewBT;					// the three flat projections
 	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, snapMI, imageMI;
 
 	/* ------------------------------------------------------------------ */
@@ -125,6 +127,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		canvas.setListener (this);
 		JScrollPane	canvasSP = new JScrollPane (canvas);
 		canvasSP.setBorder (BorderFactory.createEmptyBorder ());
+
+		// the three flat projections, at the top left of the view
+		JPanel		viewPN = new JPanel (new BorderLayout ());
+		viewPN.add (buildViewBar (), BorderLayout.NORTH);
+		viewPN.add (canvasSP, BorderLayout.CENTER);
 
 		// --- left: toolbar
 		JToolBar	tb = new JToolBar (JToolBar.VERTICAL);
@@ -201,7 +208,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		rightSP.setPreferredSize (new Dimension (RIGHT_WIDTH, 600));
 		rightSP.setBorder (BorderFactory.createEmptyBorder ());
 
-		mainSP		= new JSplitPane (JSplitPane.HORIZONTAL_SPLIT, canvasSP, rightSP);
+		mainSP		= new JSplitPane (JSplitPane.HORIZONTAL_SPLIT, viewPN, rightSP);
 		mainSP.setResizeWeight (1.0);
 		mainSP.setBorder (BorderFactory.createEmptyBorder ());
 		canvasSP.setMinimumSize (new Dimension (300, 200));
@@ -298,6 +305,72 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/* ------------------------------------------------------------------ */
 
 	/** Toolbar toggle of the 3D view (created once). */
+	/** The bar of the three projections: only the one from above when the robot has no 3D model. */
+	private JToolBar buildViewBar ()
+	{
+		JToolBar	tb = new JToolBar (JToolBar.HORIZONTAL);
+		ButtonGroup	group = new ButtonGroup ();
+
+		tb.setFloatable (false);
+		tb.setBorder (BorderFactory.createEmptyBorder (2, 2, 2, 2));
+		viewBT	= new javax.swing.JToggleButton[RobotCanvas.V_NAMES.length];
+		for (int i = 0; i < viewBT.length; i++)
+		{
+			final int	v = i;
+			viewBT[i]	= new javax.swing.JToggleButton (RobotCanvas.V_NAMES[i]);
+			viewBT[i].setToolTipText (viewTip (i));
+			viewBT[i].setFocusable (false);
+			viewBT[i].setMargin (new java.awt.Insets (1, 8, 1, 8));
+			viewBT[i].addActionListener (new ActionListener ()
+			{
+				public void actionPerformed (ActionEvent e)		{ setView (v); }
+			});
+			group.add (viewBT[i]);
+			tb.add (viewBT[i]);
+		}
+		viewBT[RobotCanvas.V_TOP].setSelected (true);
+		tb.add (Box.createHorizontalGlue ());
+		updateViewBar ();
+		return tb;
+	}
+
+	static private String viewTip (int v)
+	{
+		switch (v)
+		{
+		case RobotCanvas.V_FRONT:	return "From the front: X to the right, Z up";
+		case RobotCanvas.V_SIDE:	return "From the side: Y to the right, Z up";
+		default:					return "From above: X to the right, Y up";
+		}
+	}
+
+	/** Shows a projection of the robot, framing it again. */
+	public void setView (int v)
+	{
+		if (!hasShape () && (v != RobotCanvas.V_TOP))		v = RobotCanvas.V_TOP;
+		canvas.setView (v);
+		canvas.zoomToFit ();
+		if ((viewBT != null) && !viewBT[v].isSelected ())	viewBT[v].setSelected (true);
+	}
+
+	/** True when the description names a 3D model: without one there is nothing to see from the front or the side. */
+	public boolean hasShape ()
+	{
+		return ((robot.shapeRobot != null) && (robot.shapeRobot.trim ().length () > 0))
+			|| ((robot.shapeActuator != null) && (robot.shapeActuator.trim ().length () > 0));
+	}
+
+	/** Enables the projections the description allows, and comes back to the one from above when it has to. */
+	protected void updateViewBar ()
+	{
+		boolean		on = hasShape ();
+
+		if (viewBT == null)			return;
+		for (int i = 0; i < viewBT.length; i++)
+			viewBT[i].setEnabled ((i == RobotCanvas.V_TOP) || on);
+		if (!on && (canvas.getView () != RobotCanvas.V_TOP))		setView (RobotCanvas.V_TOP);
+	}
+
 	public javax.swing.JToggleButton view3dButton ()
 	{
 		if (view3dBT == null)
@@ -391,6 +464,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		robot	= r;
 		dirty	= false;
 		canvas.setRobot (robot);
+		updateViewBar ();
 		if (view3d != null)		view3d.setRobot (robot);
 		refreshTree ();
 		showProperties (null);
@@ -867,8 +941,18 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				tc.vrobot.RobotImage.flush (robot.image);		// the view reads the new file
 				robot.image = token (value);
 			}
-			else if (name.equals ("robot shape"))		robot.shapeRobot = token (value);
-			else if (name.equals ("actuator shape"))	robot.shapeActuator = token (value);
+			else if (name.equals ("robot shape"))
+			{
+				ShapeLines.flush (robot.shapeRobot);			// the views read the new model
+				robot.shapeRobot = token (value);
+				updateViewBar ();
+			}
+			else if (name.equals ("actuator shape"))
+			{
+				ShapeLines.flush (robot.shapeActuator);
+				robot.shapeActuator = token (value);
+				updateViewBar ();
+			}
 			break;
 		case RobotItem.KINEMATICS:
 			if (name.equals ("drive"))			k.drive = token (value);
