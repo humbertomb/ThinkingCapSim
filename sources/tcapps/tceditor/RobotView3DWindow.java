@@ -62,6 +62,7 @@ public class RobotView3DWindow extends JFrame
 	static public final String		TITLE		= "Robot 3D View";
 	static private final int		REBUILD_MS	= 120;		// coalescing delay for scene rebuilds
 	static private final double		AXIS_LEN	= 1.0;		// length of the axes drawn under the robot (m)
+	static private final float		BASE_SHADE	= 0.6f;		// how much darker the base of a pyramid is than its faces
 
 	protected RobotDef				robot;
 	protected Canvas3D				canvas;
@@ -371,7 +372,7 @@ public class RobotView3DWindow extends JFrame
 			qa.setCoordinate (4 * i + 3, new Point3d (x + rmin * Math.cos (a2), y + rmin * Math.sin (a2), z));
 		}
 
-		bg.addChild (new Shape3D (qa, coverAppearance (fam)));
+		bg.addChild (new Shape3D (qa, coverAppearance (fam, 1.0f)));
 
 		return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax)
 								+ " m, " + RobotDef.fmt (d[2]) + " deg.   " : " ";
@@ -414,20 +415,25 @@ public class RobotView3DWindow extends JFrame
 		QuadArray	qa = new QuadArray (4, QuadArray.COORDINATES);		// what it sees at its range max
 		for (int i = 0; i < 4; i++)		qa.setCoordinate (i, c[i]);
 
-		Appearance	app = coverAppearance (fam);
-		bg.addChild (new Shape3D (ta, app));
-		bg.addChild (new Shape3D (qa, app));
+		bg.addChild (new Shape3D (ta, coverAppearance (fam, 1.0f)));
+		bg.addChild (new Shape3D (qa, coverAppearance (fam, BASE_SHADE)));		// the base, a shade darker than the faces
 
 		return (what != null) ? what + RobotDef.fmt (r) + " m, " + RobotDef.fmt (s.hfov) + " x "
 								+ RobotDef.fmt (s.vfov) + " deg.   " : " ";
 	}
 
-	/** How what a sensor covers is painted: its family colour, seen through. */
-	private Appearance coverAppearance (String fam)
+	/**
+	 * How what a sensor covers is painted: its family colour, seen through.
+	 *
+	 * @param shade  1 for the colour of the family, less for a darker tone of it
+	 */
+	private Appearance coverAppearance (String fam, float shade)
 	{
 		Appearance	app = new Appearance ();
+		Color3f		c = familyColor (fam);
 
-		app.setColoringAttributes (new ColoringAttributes (familyColor (fam), ColoringAttributes.SHADE_FLAT));
+		if (shade != 1.0f)		c = new Color3f (c.x * shade, c.y * shade, c.z * shade);
+		app.setColoringAttributes (new ColoringAttributes (c, ColoringAttributes.SHADE_FLAT));
 		app.setTransparencyAttributes (new TransparencyAttributes (TransparencyAttributes.BLENDED, 0.65f));
 		app.setPolygonAttributes (new PolygonAttributes (PolygonAttributes.POLYGON_FILL, PolygonAttributes.CULL_NONE, 0f));
 		app.setRenderingAttributes (new RenderingAttributes ());
