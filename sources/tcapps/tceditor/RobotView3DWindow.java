@@ -362,14 +362,17 @@ public class RobotView3DWindow extends JFrame
 			return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax) + " m, no aperture.   " : "";
 
 		steps	= Math.max (8, (int) Math.round (Math.toDegrees (ext) / 3.0));
+		// the sector lies in the plane the sensor looks along, tilted by its elevation
+		double[]	f = forward (s), w = across (s);
 		QuadArray	qa = new QuadArray (4 * steps, QuadArray.COORDINATES);
 		for (int i = 0; i < steps; i++)
 		{
-			double	a1 = a0 + ext * i / steps, a2 = a0 + ext * (i + 1) / steps;
-			qa.setCoordinate (4 * i,     new Point3d (x + rmin * Math.cos (a1), y + rmin * Math.sin (a1), z));
-			qa.setCoordinate (4 * i + 1, new Point3d (x + rmax * Math.cos (a1), y + rmax * Math.sin (a1), z));
-			qa.setCoordinate (4 * i + 2, new Point3d (x + rmax * Math.cos (a2), y + rmax * Math.sin (a2), z));
-			qa.setCoordinate (4 * i + 3, new Point3d (x + rmin * Math.cos (a2), y + rmin * Math.sin (a2), z));
+			double	a1 = a0 - Math.toRadians (s.orientation) + ext * i / steps;
+			double	a2 = a1 + ext / steps;
+			qa.setCoordinate (4 * i,     at (x, y, z, f, w, a1, rmin));
+			qa.setCoordinate (4 * i + 1, at (x, y, z, f, w, a1, rmax));
+			qa.setCoordinate (4 * i + 2, at (x, y, z, f, w, a2, rmax));
+			qa.setCoordinate (4 * i + 3, at (x, y, z, f, w, a2, rmin));
 		}
 
 		bg.addChild (new Shape3D (qa, coverAppearance (fam, 1.0f)));
@@ -387,14 +390,12 @@ public class RobotView3DWindow extends JFrame
 	 */
 	private String pyramid (BranchGroup bg, String fam, RobotDef.Sensor s, String what)
 	{
-		double		a = Math.toRadians (s.orientation);
 		double		x = s.rho * Math.cos (Math.toRadians (s.theta));
 		double		y = s.rho * Math.sin (Math.toRadians (s.theta));
 		double		z = s.height, r = s.rangemax;
 		double		hw = r * Math.tan (Math.toRadians (s.hfov) / 2), hh = r * Math.tan (Math.toRadians (s.vfov) / 2);
-		// where it looks at, and the two directions across it
-		double[]	f = { Math.cos (a), Math.sin (a), 0.0 };
-		double[]	w = { Math.sin (a), -Math.cos (a), 0.0 };
+		// where it looks at, and the two directions across it (its elevation tilts them)
+		double[]	f = forward (s), w = across (s), u = up (f, w);
 		Point3d		ap = new Point3d (x, y, z);
 		Point3d[]	c = new Point3d[4];
 
@@ -402,7 +403,9 @@ public class RobotView3DWindow extends JFrame
 		{
 			double	sw = ((i == 0) || (i == 3)) ? -hw : hw;			// left, right
 			double	sh = (i < 2) ? hh : -hh;						// top, bottom
-			c[i]	= new Point3d (x + r * f[0] + sw * w[0], y + r * f[1] + sw * w[1], z + sh);
+			c[i]	= new Point3d (x + r * f[0] + sw * w[0] + sh * u[0],
+								   y + r * f[1] + sw * w[1] + sh * u[1],
+								   z + r * f[2] + sw * w[2] + sh * u[2]);
 		}
 
 		TriangleArray	ta = new TriangleArray (12, TriangleArray.COORDINATES);
@@ -420,6 +423,36 @@ public class RobotView3DWindow extends JFrame
 
 		return (what != null) ? what + RobotDef.fmt (r) + " m, " + RobotDef.fmt (s.hfov) + " x "
 								+ RobotDef.fmt (s.vfov) + " deg.   " : " ";
+	}
+
+	/** Where a sensor looks at: its orientation over the ground, raised by its elevation. */
+	static private double[] forward (RobotDef.Sensor s)
+	{
+		double	a = Math.toRadians (s.orientation), e = Math.toRadians (s.elevation);
+
+		return new double[] { Math.cos (a) * Math.cos (e), Math.sin (a) * Math.cos (e), Math.sin (e) };
+	}
+
+	/** Across what a sensor looks at, on the ground: the axis its elevation turns about. */
+	static private double[] across (RobotDef.Sensor s)
+	{
+		double	a = Math.toRadians (s.orientation);
+
+		return new double[] { Math.sin (a), -Math.cos (a), 0.0 };
+	}
+
+	/** The remaining axis of the sensor: up from where it looks at. */
+	static private double[] up (double[] f, double[] w)
+	{
+		return new double[] { w[1] * f[2] - w[2] * f[1], w[2] * f[0] - w[0] * f[2], w[0] * f[1] - w[1] * f[0] };
+	}
+
+	/** A point of a sector: turned <code>a</code> from where the sensor looks at, at distance <code>r</code>. */
+	static private Point3d at (double x, double y, double z, double[] f, double[] w, double a, double r)
+	{
+		double	ca = Math.cos (a) * r, sa = Math.sin (a) * r;
+
+		return new Point3d (x + ca * f[0] + sa * w[0], y + ca * f[1] + sa * w[1], z + ca * f[2] + sa * w[2]);
 	}
 
 	/**

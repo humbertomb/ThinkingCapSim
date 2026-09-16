@@ -97,7 +97,7 @@ public class RobotDesc extends VehicleDesc implements Serializable
 	protected void update (Properties props)
 	{
 		int				i, stp = 0;
-		double			len = 0.0, rho = 0.0, alpha = 0.0, hgt = 0.0;
+		double			len = 0.0, rho = 0.0, alpha = 0.0, hgt = 0.0, elev = 0.0;
 		double			xi = 0.0, yi = 0.0;
 		double			xf = 0.0, yf = 0.0;
 		boolean			son_modified = true, lrf_modified = true, ir_modified = true;
@@ -191,9 +191,11 @@ public class RobotDesc extends VehicleDesc implements Serializable
 				try { len		= Double.valueOf (props.getProperty ("trklen" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 				try { rho		= Double.valueOf (props.getProperty ("trkrho" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 				try { hgt		= Double.valueOf (props.getProperty ("trkhgt" + i)).doubleValue (); } 			catch (Exception e) 	{ }
+				try { elev		= Double.valueOf (props.getProperty ("trkelev" + i)).doubleValue (); } 			catch (Exception e) 	{ elev = 0.0; }
 				trkfeat[i]		= new SensorPos ();
 				trkfeat[i].set_polar (len, rho * Angles.DTOR, alpha * Angles.DTOR);
 				trkfeat[i].set_height (hgt);
+				trkfeat[i].elevation (elev * Angles.DTOR);
 			}
 
 		if (son_modified)
@@ -203,10 +205,12 @@ public class RobotDesc extends VehicleDesc implements Serializable
 				try { len		= Double.valueOf (props.getProperty ("sonlen" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 				try { rho		= Double.valueOf (props.getProperty ("sonrho" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 				try { hgt		= Double.valueOf (props.getProperty ("sonhgt" + i)).doubleValue (); } 			catch (Exception e) 	{ }
+				try { elev		= Double.valueOf (props.getProperty ("sonelev" + i)).doubleValue (); } 			catch (Exception e) 	{ elev = 0.0; }
 				try { stp		= Integer.valueOf (props.getProperty ("sonstep" + i)).intValue (); } 			catch (Exception e) 	{ }
 				sonfeat[i]		= new SensorPos ();
 				sonfeat[i].set_polar (len, rho * Angles.DTOR, alpha * Angles.DTOR);
 				sonfeat[i].set_height (hgt);
+				sonfeat[i].elevation (elev * Angles.DTOR);
 				sonfeat[i].step (stp);
 			}
 
@@ -217,10 +221,12 @@ public class RobotDesc extends VehicleDesc implements Serializable
 				try { len		= Double.valueOf (props.getProperty ("irlen" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 				try { rho		= Double.valueOf (props.getProperty ("irrho" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 				try { hgt		= Double.valueOf (props.getProperty ("irhgt" + i)).doubleValue (); } 			catch (Exception e) 	{ }
+				try { elev		= Double.valueOf (props.getProperty ("irelev" + i)).doubleValue (); } 			catch (Exception e) 	{ elev = 0.0; }
 				try { stp		= Integer.valueOf (props.getProperty ("irstep" + i)).intValue (); } 			catch (Exception e) 	{ }
 				irfeat[i]		= new SensorPos ();
 				irfeat[i].set_polar (len, rho * Angles.DTOR, alpha * Angles.DTOR);
 				irfeat[i].set_height (hgt);
+				irfeat[i].elevation (elev * Angles.DTOR);
 				irfeat[i].step (stp);
 			}
 
@@ -231,10 +237,12 @@ public class RobotDesc extends VehicleDesc implements Serializable
 				try { len		= Double.valueOf (props.getProperty ("lrflen" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 				try { rho		= Double.valueOf (props.getProperty ("lrfrho" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 				try { hgt		= Double.valueOf (props.getProperty ("lrfhgt" + i)).doubleValue (); } 			catch (Exception e) 	{ }
+				try { elev		= Double.valueOf (props.getProperty ("lrfelev" + i)).doubleValue (); } 			catch (Exception e) 	{ elev = 0.0; }
 				try { stp		= Integer.valueOf (props.getProperty ("lrfstep" + i)).intValue (); } 			catch (Exception e) 	{ }
 				lrffeat[i]		= new SensorPos ();
 				lrffeat[i].set_polar (len, rho * Angles.DTOR, alpha * Angles.DTOR);
 				lrffeat[i].set_height (hgt);
+				lrffeat[i].elevation (elev * Angles.DTOR);
 				lrffeat[i].step (stp);
 			}
 
@@ -245,10 +253,12 @@ public class RobotDesc extends VehicleDesc implements Serializable
 				try { len		= Double.valueOf (props.getProperty ("lsblen" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 				try { rho		= Double.valueOf (props.getProperty ("lsbrho" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 				try { hgt		= Double.valueOf (props.getProperty ("lsbhgt" + i)).doubleValue (); } 			catch (Exception e) 	{ }
+				try { elev		= Double.valueOf (props.getProperty ("lsbelev" + i)).doubleValue (); } 			catch (Exception e) 	{ elev = 0.0; }
 				try { stp		= Integer.valueOf (props.getProperty ("lsbstep" + i)).intValue (); } 			catch (Exception e) 	{ }
 				lsbfeat[i]		= new SensorPos ();
 				lsbfeat[i].set_polar (len, rho * Angles.DTOR, alpha * Angles.DTOR);
 				lsbfeat[i].set_height (hgt);
+				lsbfeat[i].elevation (elev * Angles.DTOR);
 				lsbfeat[i].step (stp);
 			}
 		
@@ -258,10 +268,12 @@ public class RobotDesc extends VehicleDesc implements Serializable
 			try { len		= Double.valueOf (props.getProperty ("vislen" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 			try { rho		= Double.valueOf (props.getProperty ("visrho" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 			try { hgt		= Double.valueOf (props.getProperty ("vishgt" + i)).doubleValue (); } 			catch (Exception e) 	{ }
+			try { elev		= Double.valueOf (props.getProperty ("viselev" + i)).doubleValue (); } 			catch (Exception e) 	{ elev = 0.0; }
 			try { stp		= Integer.valueOf (props.getProperty ("visstep" + i)).intValue (); } 			catch (Exception e) 	{ }
 			visfeat[i]		= new SensorPos ();
 			visfeat[i].set_polar (len, rho * Angles.DTOR, alpha * Angles.DTOR);
 			visfeat[i].set_height (hgt);
+			visfeat[i].elevation (elev * Angles.DTOR);
 			visfeat[i].step (stp);
 		}
 		

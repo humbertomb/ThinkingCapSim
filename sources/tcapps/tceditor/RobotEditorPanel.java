@@ -700,18 +700,18 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.SENSOR:
 			// a sensor of a family of devices of their own says what it detects
 			if (!RobotDef.hasOwnDetection (it.family))
-				return new String[] { "rho", "theta", "height", "orientation", "step" };
+				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step" };
 			if (it.family.equals ("lsb"))
-				return new String[] { "rho", "theta", "height", "orientation", "step",
+				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
 									  "driver", "range max", "range min", "cone", "rays", "reflect", "beacons" };
 			if (it.family.equals ("trk"))
-				return new String[] { "rho", "theta", "height", "orientation", "step",
+				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
 									  "driver", "range max", "range min", "cone", "rays", "objects" };
 			// a camera sees a rectangle: two fields of view, no cone and no near limit
 			if (RobotDef.hasFov (it.family))
-				return new String[] { "rho", "theta", "height", "orientation", "step",
+				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
 									  "driver", "range max", "hfov", "vfov" };
-			return new String[] { "rho", "theta", "height", "orientation", "step",
+			return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
 								  "driver", "range max", "range min", "cone", "rays" };
 		case RobotItem.FAMILY:
 			// only the firing cycle is of the whole family when its sensors say the rest
@@ -784,6 +784,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("theta"))			return RobotDef.fmt (s.theta);
 			if (name.equals ("height"))			return RobotDef.fmt (s.height);
 			if (name.equals ("orientation"))	return RobotDef.fmt (s.orientation);
+			if (name.equals ("elevation"))		return RobotDef.fmt (s.elevation);
 			if (name.equals ("step"))			return String.valueOf (s.step);
 			if (name.equals ("driver"))			return (s.driver != null) ? s.driver : "";
 			if (name.equals ("range max"))		return RobotDef.fmt (s.rangemax);
@@ -914,6 +915,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("theta"))			s.theta = num (value);
 			else if (name.equals ("height"))		s.height = num (value);
 			else if (name.equals ("orientation"))	s.orientation = num (value);
+			else if (name.equals ("elevation"))		s.elevation = num (value);
 			else if (name.equals ("step"))			s.step = (int) num (value);
 			else if (name.equals ("driver"))		s.driver = token (value);
 			else if (name.equals ("range max"))		s.rangemax = num (value);

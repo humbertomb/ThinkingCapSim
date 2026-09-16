@@ -50,7 +50,8 @@ public class RobotDef
 		public double	rho;						// distance from the centre of the robot (m, "<fam>len")
 		public double	theta;						// angle of that distance (deg, "<fam>rho")
 		public double	height;						// height over the floor (m, "<fam>hgt")
-		public double	orientation;				// direction the sensor looks at (deg, "<fam>feat")
+		public double	orientation;				// direction the sensor looks at over the horizontal plane (deg, "<fam>feat")
+		public double	elevation;					// direction it looks at over the vertical plane (deg, "<fam>elev")
 		public int		step;						// reading step ("<fam>step")
 
 		// what it detects (families with sensors of their own only)
@@ -70,6 +71,7 @@ public class RobotDef
 		{
 			Sensor	s = new Sensor ();
 			s.rho = rho;	s.theta = theta;	s.height = height;	s.orientation = orientation;	s.step = step;
+			s.elevation = elevation;
 			s.driver = driver;	s.rangemax = rangemax;	s.rangemin = rangemin;	s.cone = cone;	s.rays = rays;
 			s.reflect = reflect;	s.beacons = beacons;	s.objects = objects;
 			s.hfov = hfov;			s.vfov = vfov;
@@ -285,6 +287,7 @@ public class RobotDef
 			o.addProperty ("theta", s.theta);
 			o.addProperty ("height", s.height);
 			o.addProperty ("orientation", s.orientation);
+			if (s.elevation != 0.0)		o.addProperty ("elevation", s.elevation);
 			o.addProperty ("step", s.step);
 			if (s.driver != null)		o.addProperty ("driver", s.driver);
 			if (s.rangemax != 0.0)		o.addProperty ("rangemax", s.rangemax);
@@ -528,6 +531,7 @@ public class RobotDef
 				Sensor	s = f.sensors.get (i);
 				set (p, fam + "len" + i, s.rho);		set (p, fam + "rho" + i, s.theta);
 				setNZ (p, fam + "hgt" + i, s.height);	set (p, fam + "feat" + i, s.orientation);
+				setNZ (p, fam + "elev" + i, s.elevation);
 				if (s.step > 0)		p.setProperty (fam + "step" + i, String.valueOf (s.step));
 				if (FAMILY_OWN[fi])
 				{
