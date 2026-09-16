@@ -217,9 +217,9 @@
       "cycle": 6,
       "sensors": [
         {
-          "rho": 1.314,
+          "rho": 1.3063429017276762,
           "theta": 0.0,
-          "height": 0.15,
+          "height": 0.2652819949202241,
           "orientation": 0.0,
           "step": 4,
           "driver": "devices.drivers.laser.PLS.PLS|/dev/ttyS0",
@@ -234,9 +234,9 @@
       "cycle": 6,
       "sensors": [
         {
-          "rho": 0.63,
-          "theta": -0.25,
-          "height": 0.0,
+          "rho": 0.6113382381516156,
+          "theta": -0.2576315714419668,
+          "height": 2.681921007325325,
           "orientation": 2.8,
           "step": 1,
           "driver": "devices.drivers.beacon.nav200.NAV200|/dev/ttyS1",
