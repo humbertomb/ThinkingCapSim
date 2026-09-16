@@ -117,7 +117,7 @@ class PNCanvas extends JComponent
 	protected void cmousePressed(MouseEvent evt)
 	{
         // right mouse button down
-	   if ((mode == MODE_DRAG) || (evt.isControlDown () || ((evt.getModifiers () & MouseEvent.BUTTON2_MASK) != 0)))
+	   if ((mode == MODE_DRAG) || (evt.isControlDown () || ((evt.getModifiersEx () & MouseEvent.BUTTON2_DOWN_MASK) != 0)))
             mouseMetaDown(evt);
         else 
         {
@@ -170,7 +170,7 @@ class PNCanvas extends JComponent
 	
 	protected void cmouseDragged(java.awt.event.MouseEvent evt)
 	{
-        if ((mode == MODE_DRAG) || (evt.isControlDown () || ((evt.getModifiers () & MouseEvent.BUTTON2_MASK) != 0)))
+        if ((mode == MODE_DRAG) || (evt.isControlDown () || ((evt.getModifiersEx () & MouseEvent.BUTTON2_DOWN_MASK) != 0)))
             mouseMetaDrag(evt);
         else 
         {

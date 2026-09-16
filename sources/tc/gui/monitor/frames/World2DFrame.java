@@ -94,7 +94,7 @@ public class World2DFrame extends MonitorFrame
 
 	public void map2DMousePressed(java.awt.event.MouseEvent e) 
 	{
-		if (e.isControlDown () || ((e.getModifiers () & MouseEvent.BUTTON2_MASK) != 0))
+		if (e.isControlDown () || ((e.getModifiersEx () & MouseEvent.BUTTON2_DOWN_MASK) != 0))
 			map2D.setCursor (Cursor.getPredefinedCursor (Cursor.N_RESIZE_CURSOR));
 		else
 			map2D.setCursor (Cursor.getPredefinedCursor (Cursor.MOVE_CURSOR));			
@@ -103,7 +103,7 @@ public class World2DFrame extends MonitorFrame
 
 	public void map2DMouseDragged(java.awt.event.MouseEvent e) 
 	{
-		if (e.isControlDown () || ((e.getModifiers () & MouseEvent.BUTTON2_MASK) != 0))
+		if (e.isControlDown () || ((e.getModifiersEx () & MouseEvent.BUTTON2_DOWN_MASK) != 0))
 		{
 			map2D.setCursor (Cursor.getPredefinedCursor (Cursor.N_RESIZE_CURSOR));
 			map2D.mouseZoom (e.getX (), e.getY ());

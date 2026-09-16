@@ -30,7 +30,7 @@ public class MKCanvas extends JComponent {
 	{
 		public void mouseClicked(MouseEvent evt)
 		{
-			if ((evt.getModifiers() & InputEvent.BUTTON1_MASK) != 0) 
+			if (evt.getButton () == MouseEvent.BUTTON1) 
 			{
 				int gpos[] = getGridPosition(evt.getPoint());
 //				double rpos[] = getRealPosition(evt.getPoint());
@@ -50,13 +50,13 @@ public class MKCanvas extends JComponent {
 				repaint();
 			}
 			
-			if ((evt.getModifiers() & InputEvent.BUTTON2_MASK) != 0)
+			if (evt.getButton () == MouseEvent.BUTTON2)
 			{
 				//cleargrid();
 				//repaint();
 			}
 			
-			if ((evt.getModifiers() & InputEvent.BUTTON3_MASK) != 0)
+			if (evt.getButton () == MouseEvent.BUTTON3)
 			{
 				int gpos[] = getGridPosition(evt.getPoint());
 //				double rpos[] = getRealPosition(evt.getPoint());

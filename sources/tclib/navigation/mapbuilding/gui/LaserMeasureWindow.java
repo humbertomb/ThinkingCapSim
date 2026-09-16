@@ -410,7 +410,7 @@ public class LaserMeasureWindow extends Object implements Runnable
 	
 	protected void laserCOMousePressed(java.awt.event.MouseEvent e) 
 	{
-		if (e.isControlDown () || ((e.getModifiers () & MouseEvent.BUTTON2_MASK) != 0))
+		if (e.isControlDown () || ((e.getModifiersEx () & MouseEvent.BUTTON2_DOWN_MASK) != 0))
 			laserCO.setCursor (Cursor.getPredefinedCursor (Cursor.N_RESIZE_CURSOR));
 		else
 			laserCO.setCursor (Cursor.getPredefinedCursor (Cursor.MOVE_CURSOR));			
@@ -419,7 +419,7 @@ public class LaserMeasureWindow extends Object implements Runnable
 
 	protected void laserCOMouseDragged(java.awt.event.MouseEvent e) 
 	{
-		if (e.isControlDown () || ((e.getModifiers () & MouseEvent.BUTTON2_MASK) != 0))
+		if (e.isControlDown () || ((e.getModifiersEx () & MouseEvent.BUTTON2_DOWN_MASK) != 0))
 		{
 			laserCO.setCursor (Cursor.getPredefinedCursor (Cursor.N_RESIZE_CURSOR));
 			laserCO.mouseZoom (e.getX (), e.getY ());
