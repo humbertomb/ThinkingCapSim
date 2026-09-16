@@ -59,7 +59,7 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_COVER_LINE	= new Color (255, 140, 0, 140);
 
 	static public final double		MIN_SCALE	= 10.0;			// pixels per metre
-	static public final double		MAX_SCALE	= 2000.0;
+	static public final double		MAX_SCALE	= 20000.0;		// 1 px = 0.05 mm: enough for the sensors of a quaky
 	static public final double		HIT			= 6.0;			// selection tolerance (pixels)
 	static public final double		PENDING_PX	= 40.0;			// where the range handle of a sensor that has none sits
 
@@ -246,7 +246,7 @@ public class RobotCanvas extends JPanel
 	/** Chooses a grid step so that the lines are at least ~25 px apart. */
 	private void updateGridStep ()
 	{
-		double[]	steps = { 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10 };
+		double[]	steps = { 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10 };
 
 		gridStep	= steps[steps.length - 1];
 		for (int i = 0; i < steps.length; i++)
@@ -1103,6 +1103,7 @@ public class RobotCanvas extends JPanel
 		int			y = getHeight () - 14, x = 14;
 
 		while (step * scale < 60)		step *= 2;
+		while ((step * scale > 240) && (step > 1e-5))		step /= 2;
 		g.setColor (Color.GRAY);
 		g.setStroke (stroke (1f));
 		g.draw (new Line2D.Double (x, y, x + step * scale, y));
