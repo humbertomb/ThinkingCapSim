@@ -52,7 +52,7 @@ public class AvoidFront extends Behaviour
 		catch (Exception e) { e.printStackTrace (); }
 	}
 	
-	protected void update (HashMap params)
+	protected void update (HashMap<String, Object> params)
 	{
 		double			left, front, right;
 		

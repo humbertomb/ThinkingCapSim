@@ -57,7 +57,7 @@ public class AvoidRight extends Behaviour
 		catch (Exception e) { e.printStackTrace (); }
 	}
 	
-	protected void update (HashMap params)
+	protected void update (HashMap<String, Object> params)
 	{
 		double			right1, right2;
 		double			right, front;

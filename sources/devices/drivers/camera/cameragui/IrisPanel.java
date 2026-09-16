@@ -36,7 +36,7 @@ public class IrisPanel extends javax.swing.JPanel {
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
 javax.swing.JPanel jPanel1 = new javax.swing.JPanel();
-        jComboBox1 = new javax.swing.JComboBox();
+        jComboBox1 = new javax.swing.JComboBox<Comando>();
 //        setLayout(null);
 jPanel1.setLayout(new java.awt.FlowLayout());
 //		setLayout(new java.awt.FlowLayout());
@@ -141,7 +141,7 @@ jPanel1.setLayout(new java.awt.FlowLayout());
   private javax.swing.JSlider jSlider1;
   private javax.swing.JButton jButton1;
   private javax.swing.JButton jButton2;
-  private javax.swing.JComboBox jComboBox1;
+  private javax.swing.JComboBox<Comando> jComboBox1;
   // End of variables declaration//GEN-END:variables
     
     

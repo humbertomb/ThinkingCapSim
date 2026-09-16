@@ -11,7 +11,7 @@ import devices.drivers.camera.*;
 public class VModePanel extends javax.swing.JPanel {
 
     private Camera port;
-    private javax.swing.JComboBox modeCombo;
+    private javax.swing.JComboBox<Comando> modeCombo;
     
     /** Creates new form VModePanel */
     public VModePanel(Camera port) {
@@ -22,7 +22,7 @@ public class VModePanel extends javax.swing.JPanel {
 
     private void initComponents() 
     {
-		modeCombo = new javax.swing.JComboBox();
+		modeCombo = new javax.swing.JComboBox<Comando>();
         setLayout(new java.awt.FlowLayout());
         setBorder(new javax.swing.border.TitledBorder("Control Visual Mode"));
         

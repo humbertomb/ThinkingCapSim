@@ -34,13 +34,13 @@ public class ImageTools
 	 * A hashmap of the loaded image instances. Weak so that we can discard
 	 * them if if needed because we're running out of memory.
 	 */
-	private static HashMap loadedImages;
+	private static HashMap<String, WeakReference<Image>> loadedImages;
 
 	/**
 	 * A hashmap of the loaded icon instances. Weak so that we can discard
 	 * them if if needed because we're running out of memory.
 	 */
-	private static HashMap loadedIcons;
+	private static HashMap<String, WeakReference<Icon>> loadedIcons;
 
 	/**
 	 * Static initialiser to get all the bits set up as needed.
@@ -48,8 +48,8 @@ public class ImageTools
 	static
 	{
 		toolkit = Toolkit.getDefaultToolkit();
-		loadedImages = new HashMap (DEFAULT_SIZE);
-		loadedIcons = new HashMap (DEFAULT_SIZE);
+		loadedImages = new HashMap<String, WeakReference<Image>> (DEFAULT_SIZE);
+		loadedIcons = new HashMap<String, WeakReference<Icon>> (DEFAULT_SIZE);
 	}
 
 	/**
@@ -66,10 +66,10 @@ public class ImageTools
 		// Check the map for an instance first
 		Icon ret_val = null;
 
-		WeakReference ref = (WeakReference)loadedIcons.get(name);
+		WeakReference<Icon> ref = loadedIcons.get(name);
 		if(ref != null)
 		{
-			ret_val = (Icon)ref.get();
+			ret_val = ref.get();
 			if(ret_val == null)
 				loadedIcons.remove(name);
 		}
@@ -81,7 +81,7 @@ public class ImageTools
 			if(img != null)
 			{
 				ret_val = new ImageIcon(img, name);
-				loadedIcons.put(name, new WeakReference(ret_val));
+				loadedIcons.put(name, new WeakReference<Icon>(ret_val));
 			}
 		}
 
@@ -102,10 +102,10 @@ public class ImageTools
 		// Check the map for an instance first
 		Image ret_val = null;
 
-		WeakReference ref = (WeakReference) loadedImages.get(name);
+		WeakReference<Image> ref = loadedImages.get(name);
 		if(ref != null)
 		{
-			ret_val = (Image)ref.get();
+			ret_val = ref.get();
 			if(ret_val == null)
 				loadedImages.remove (name);
 		}
@@ -117,7 +117,7 @@ public class ImageTools
 			if(url != null)
 			{
 				ret_val = toolkit.createImage(url);
-				loadedImages.put(name, new WeakReference(ret_val));
+				loadedImages.put(name, new WeakReference<Image>(ret_val));
 			}
 		}
 

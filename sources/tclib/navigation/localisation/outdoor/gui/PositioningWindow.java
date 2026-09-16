@@ -66,12 +66,12 @@ public class PositioningWindow extends Object implements Runnable
 	protected JButton	 			clearBU;
 	protected JToggleButton 		modeBU;
 	protected JToggleButton 		startBU;
-	protected JComboBox 			insportsCB;
-	protected JComboBox 			insmodelsCB;
+	protected JComboBox<String> 			insportsCB;
+	protected JComboBox<String> 			insmodelsCB;
 	protected JTextField 			insdtTF;
-	protected JComboBox 			gpsportsCB;
-	protected JComboBox 			gpsmodelsCB;
-	protected JComboBox			filtermodelsCB;
+	protected JComboBox<String> 			gpsportsCB;
+	protected JComboBox<String> 			gpsmodelsCB;
+	protected JComboBox<String>			filtermodelsCB;
 	protected JTextField			filterlogTF;
 	protected JButton				filterlogBU;
 	protected JTextField 			gpsdtTF;
@@ -529,11 +529,11 @@ public class PositioningWindow extends Object implements Runnable
 		JButton flogBU;
 
 		// Create INS commands panel
-		insportsCB = new JComboBox ();
+		insportsCB = new JComboBox<String> ();
 		insportsCB.addItem (NO_PORT);
 		insportsCB.addItem ("/dev/ttyS0");
 
-		insmodelsCB = new JComboBox ();
+		insmodelsCB = new JComboBox<String> ();
 		insmodelsCB.addItem ("devices.drivers.ins.xsens.XSens");
 		insmodelsCB.addItem ("devices.drivers.ins.crossbow.Crossbow");
 		insdtTF = new JTextField ("100");
@@ -552,10 +552,10 @@ public class PositioningWindow extends Object implements Runnable
 		insdevPA.add (insdtTF);
 		
 		// Create GPS commands panel
-		gpsportsCB = new JComboBox ();
+		gpsportsCB = new JComboBox<String> ();
 		gpsportsCB.addItem (NO_PORT);
 		gpsportsCB.addItem ("/dev/ttyS0");
-		gpsmodelsCB = new JComboBox ();
+		gpsmodelsCB = new JComboBox<String> ();
 		gpsmodelsCB.addItem ("devices.drivers.gps.Garmin.Garmin");
 		gpsmodelsCB.addItem ("devices.drivers.gps.NMEA0183.NMEA0183");
 		gpsmodelsCB.addItem ("devices.drivers.gps.Trimble.Trimble");
@@ -575,7 +575,7 @@ public class PositioningWindow extends Object implements Runnable
 		gpsdevPA.add (gpsdtTF);
 		
 		// Create filter commands panel
-		filtermodelsCB = new JComboBox ();
+		filtermodelsCB = new JComboBox<String> ();
 		filtermodelsCB.addItem ("tclib.navigation.localisation.outdoor.KalmanFusion");
 		filtermodelsCB.addItem ("tclib.navigation.localisation.outdoor.KalmanFilter");
 		filtermodelsCB.addItem ("tclib.navigation.localisation.outdoor.ExtKalmanFilter");

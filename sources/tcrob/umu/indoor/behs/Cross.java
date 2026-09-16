@@ -71,7 +71,7 @@ public class Cross extends Behaviour {
 	}
 
 	
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 		
 		final double CollisionSideMax 	= 3;
 		double angledRight, angledLeft, leftClear, rightClear;

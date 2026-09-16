@@ -7,7 +7,7 @@
 
 package devices.drivers.laser;
 
-public class Laser 
+public abstract class Laser 
 {
 	private String				clase;
 	private String				port;
@@ -45,14 +45,8 @@ public class Laser
 	public String		getType ()						{ return clase; }
 	
 	// Instance methods
-	public void initialise (String param) throws LaserException
-	{
-	}
-	
-	public double[] getLaserData () throws LaserException
-	{
-		return null;
-	}
+	public abstract void initialise (String param) throws LaserException;	
+	public abstract double[] getLaserData () throws LaserException;
 	
 	public void close(){}
 }

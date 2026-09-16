@@ -62,7 +62,7 @@ public class RasmusControl extends Controller
 	/* They contain the values to send to the robot motion engine */
 	private double vel, rot;
 	/* The list of parameters used by the behaviours */
-	private HashMap param;
+	private HashMap<String, Object> param;
 	/* The main behaviour */
 	private Behaviour beh;
 	/* The behaviour of which the debug window has requested information */
@@ -142,7 +142,7 @@ public class RasmusControl extends Controller
 		/* variables initialization */
 		vel = 0.0;
 		rot = 0.0;
-		param = new HashMap();
+		param = new HashMap<String, Object> ();
 		behRequested = null;
 		behRequestedPath = null;
 		reloadBehaviour = false;

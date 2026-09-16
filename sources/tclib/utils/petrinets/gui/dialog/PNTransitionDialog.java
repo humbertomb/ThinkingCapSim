@@ -10,7 +10,7 @@ public class PNTransitionDialog extends JDialog {
 	JPanel Input, Buttons;
 	PNTransition actual;
 	JTextField NameField, PriorityField;
-	JComboBox Orientation;
+	JComboBox<String> Orientation;
 	JCheckBox Stop;
 	
 	public PNTransitionDialog(JFrame parent, PNTransition t) {
@@ -22,7 +22,7 @@ public class PNTransitionDialog extends JDialog {
 		Input.setLayout(new GridLayout(0,2,2,2));
 		actual = t;
 		
-		Orientation = new JComboBox();
+		Orientation = new JComboBox<String>();
 		Orientation.addItem("Horizontal");
 		Orientation.addItem("Vertical");
 		Orientation.addItem("Square");

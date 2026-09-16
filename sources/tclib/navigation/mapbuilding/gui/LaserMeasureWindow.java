@@ -67,8 +67,8 @@ public class LaserMeasureWindow extends Object implements Runnable
 	JFrame frame;
 	JToggleButton logBU;
 	JToggleButton startBU;
-	JComboBox portsCB;
-	JComboBox modelsCB;
+	JComboBox<String> portsCB;
+	JComboBox<String> modelsCB;
 	JTextField logTF;
 	JSlider waitSL;
 	JFileChooser chooser;
@@ -155,7 +155,7 @@ public class LaserMeasureWindow extends Object implements Runnable
 
 		// Create commands panel
 		fportBU = new JButton ("Add File/Port");
-		portsCB = new JComboBox ();
+		portsCB = new JComboBox<String> ();
 		portsCB.addItem ("/dev/tty.USA1962P1.1");
 		portsCB.addItem ("/dev/tty.usbserial");
 		if(AUTOPORTDETECT){
@@ -173,7 +173,7 @@ public class LaserMeasureWindow extends Object implements Runnable
 			}catch(Exception e){
 			}
 		}
-		modelsCB = new JComboBox ();
+		modelsCB = new JComboBox<String> ();
 		modelsCB.addItem ("devices.drivers.laser.LMS200.LMS200");
 		modelsCB.addItem ("devices.drivers.laser.PLS.PLS");
 		modelsCB.addItem ("devices.drivers.laser.LaserFile");

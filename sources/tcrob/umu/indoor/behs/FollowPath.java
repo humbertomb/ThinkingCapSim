@@ -72,7 +72,7 @@ public class FollowPath extends Behaviour
 		catch (Exception e) { e.printStackTrace (); }
 	}	
 	
-	protected void update(HashMap params) 
+	protected void update(HashMap<String, Object> params) 
 	{
 		double			dx, dy;
 		double			delta;

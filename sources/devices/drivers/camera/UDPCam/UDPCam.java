@@ -195,7 +195,7 @@ public class UDPCam extends Camera
         return (Boolean.getBoolean(new String (dprec.getData())));
     }
     
-	public Collection getCommandGroups()
+	public Collection<String> getCommandGroups()
     {
 		return driver.getCommandGroups();
     }

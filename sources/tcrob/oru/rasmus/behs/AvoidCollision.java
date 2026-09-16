@@ -88,7 +88,7 @@ public class AvoidCollision extends Behaviour {
 	}
 	
 	
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 		
 		/* The biggest problem is how to choose good values for these variables */
 		final double CollisionSideMin 	= 0.5;			/* side minimum dist, m */

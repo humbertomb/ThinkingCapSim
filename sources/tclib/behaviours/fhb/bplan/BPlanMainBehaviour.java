@@ -85,7 +85,7 @@ public class BPlanMainBehaviour extends Behaviour {
 	/*
 	 * Updates the predicates used by the behaviour rules
 	 */
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 		
 		/* The biggest problem is how to choose good values for these variables */
 		final double CollisionSideMax 	= 0.8;

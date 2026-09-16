@@ -76,7 +76,7 @@ public class FollowPath extends Behaviour {
 	}
 	
 	
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 		
 		LPO target = (LPO) params.get("Goal");
 		LPO looka = (LPO) params.get("Looka");

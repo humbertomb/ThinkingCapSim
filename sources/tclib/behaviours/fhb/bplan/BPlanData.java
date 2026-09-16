@@ -26,7 +26,7 @@ public class BPlanData {
 	/* List of parameters relative to the goal of a behaviour */
 	private ArrayList<ArrayList<LPO>> goalParameters;
 	/* List of parameters that are not relative to the goal of a behaviour  */
-	private ArrayList<HashMap> otherParameters;
+	private ArrayList<HashMap<String, Object>> otherParameters;
 	/* List of information about metric predicates */
 	private ArrayList<MetricPredInfo> predicatesData;
 	
@@ -37,7 +37,7 @@ public class BPlanData {
 		behaviours = new ArrayList<String>();
 		antecedents = new ArrayList<String>();
 		goalParameters = new ArrayList<ArrayList<LPO>>();
-		otherParameters = new ArrayList<HashMap>();
+		otherParameters = new ArrayList<HashMap<String, Object>>();
 		predicatesData = new ArrayList<MetricPredInfo>();
 	}
 	
@@ -69,7 +69,7 @@ public class BPlanData {
 	 * Adds the parameters not relative to the goal of a behaviour
 	 * @param params list of parameters
 	 */
-	public void addOtherParameters(HashMap params) {
+	public void addOtherParameters(HashMap<String, Object> params) {
 		otherParameters.add (params);
 	}
 	
@@ -132,7 +132,7 @@ public class BPlanData {
 	 * @param n the number of the context rule
 	 * @return the map of parameters, or null if n is not correct.
 	 */
-	public HashMap getBehOtherParameters(int n) {
+	public HashMap<String, Object> getBehOtherParameters(int n) {
 		if ((n >= 0) && (n < otherParameters.size()))
 			return otherParameters.get(n);
 		

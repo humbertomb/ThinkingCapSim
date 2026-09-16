@@ -135,7 +135,7 @@ public class CCD400E extends Camera
         return(true);
     }
     
-    public Collection getCommandGroups()
+    public Collection<String> getCommandGroups()
     {
 		ArrayList<String> groups= new ArrayList<String>();
 	

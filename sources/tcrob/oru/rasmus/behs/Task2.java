@@ -46,7 +46,7 @@ public class Task2 extends Behaviour {
 			
 	}
 	
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 					
 		subBeh.setParam("RBuffer",params.get("RBuffer"));
 		subBeh.setParam("speed",Double.valueOf ("0.2"));

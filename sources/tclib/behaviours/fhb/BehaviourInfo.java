@@ -26,7 +26,7 @@ public class BehaviourInfo implements Serializable {
 	/* The map with the fuzzy predicates (used in the antecedents of the rules)and their values */
 	private DoubleMap antecedentPredicates;
 	/* The map of the behaviour's rules */
-	private HashMap rulesList;
+	private HashMap<String, RuleInformation> rulesList;
 	/* The list containing the names of the rules */
 	private ArrayList<String> rulesNames;
 	/* The map containing the parameters used by the rule sub-behaviour */
@@ -47,7 +47,7 @@ public class BehaviourInfo implements Serializable {
 		 */
 		maxAntecedentValue = -1; 
 		this.behName = behName;
-		rulesList = new HashMap();
+		rulesList = new HashMap<String, RuleInformation>();
 		rulesNames = new ArrayList<String>();
 		rulesParameters = new HashMap<String, ArrayList<String>>();
 	}

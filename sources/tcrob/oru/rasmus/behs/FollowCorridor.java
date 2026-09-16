@@ -105,7 +105,7 @@ public class FollowCorridor extends Behaviour {
 		}
 	}
 	
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 		double x0, x1, range,alpha;
 		double angledLeft, angledRight, aligned;
 		double offset, width;

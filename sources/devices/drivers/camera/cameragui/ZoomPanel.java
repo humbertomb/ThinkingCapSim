@@ -21,7 +21,7 @@ public class ZoomPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton zout;
     private javax.swing.JButton zin;
-    private javax.swing.JComboBox velCombo;
+    private javax.swing.JComboBox<Comando> velCombo;
     private javax.swing.JCheckBox digiZoom;
 	private javax.swing.JPanel upPanel;
 	private javax.swing.JPanel downPanel;
@@ -42,7 +42,7 @@ public class ZoomPanel extends javax.swing.JPanel {
     private void initComponents() {//GEN-BEGIN:initComponents
         zout = new javax.swing.JButton();
         zin = new javax.swing.JButton();
-        velCombo = new javax.swing.JComboBox();
+        velCombo = new javax.swing.JComboBox<Comando>();
 		digiZoom = new javax.swing.JCheckBox();
 		upPanel = new javax.swing.JPanel();
 		downPanel = new javax.swing.JPanel();

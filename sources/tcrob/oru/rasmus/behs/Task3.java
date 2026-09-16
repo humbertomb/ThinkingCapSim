@@ -43,7 +43,7 @@ public class Task3 extends Behaviour {
 			
 	}
 	
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 						
 		subBeh.setParam("speed",params.get("wanderSpeed"));
 		subBeh.setParam("RBuffer",params.get("RBuffer"));

@@ -47,7 +47,7 @@ public class BPlanParser {
 	/* It is the input to parse. It contains the B-Plan */
 	private BufferedReader inputBuffer;
 	/* This map is used to be sure that the predicates are stored only once */
-	private HashMap previousPredNames;
+	private HashMap<String, Object> previousPredNames;
 	/* Contains the antecedent formula of the context rule after per parsing process */
 	private String parsedFormula;  			
 	
@@ -60,7 +60,7 @@ public class BPlanParser {
 		this.lps = lps;
 		this.inputBuffer = inputBuffer;
 		bPlanData = new BPlanData();
-		previousPredNames = new HashMap();
+		previousPredNames = new HashMap<String, Object>();
 	}
 	
 	/**
@@ -91,7 +91,7 @@ public class BPlanParser {
 		String paramName;
 		double paramValue;
 		la = new LexicalAnalizer(bPlanRuleParams);
-		HashMap params = new HashMap();
+		HashMap<String, Object> params = new HashMap<String, Object> ();
 
 		GenericToken gt = la.nextToken();
 		if ((gt.getType() == GenericToken.SYMBOL) && (((SymbolToken)gt).getSymbol() == '(')) {

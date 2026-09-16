@@ -34,7 +34,7 @@ public class FocusPanel extends javax.swing.JPanel {
     private void initComponents() {//GEN-BEGIN:initComponents
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
-        jComboBox1 = new javax.swing.JComboBox();
+        jComboBox1 = new javax.swing.JComboBox<Comando>();
 //        setLayout(null);
         setLayout(new java.awt.FlowLayout());
         setBorder(new javax.swing.border.TitledBorder("Control Focus"));
@@ -126,7 +126,7 @@ public class FocusPanel extends javax.swing.JPanel {
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JButton jButton1;
   private javax.swing.JButton jButton2;
-  private javax.swing.JComboBox jComboBox1;
+  private javax.swing.JComboBox<Comando> jComboBox1;
   // End of variables declaration//GEN-END:variables
 
     private void AddItemsComboBoxs() {

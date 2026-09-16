@@ -50,7 +50,7 @@ public class KeepVelocity extends Behaviour {
 		}
 	}
 
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 
 		double speed = ((Double)params.get("speed")).doubleValue();
 		double tooSlow, tooFast;

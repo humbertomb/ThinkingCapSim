@@ -54,7 +54,7 @@ public class NMEA0183 extends GPS
 	private double Hdop;
 	private double Vdop;
 	private double Pdop;
-	private LinkedList sats;
+	private LinkedList<SatelliteData> sats;
 	private int numsats;
 	private int satsremain;
 	
@@ -446,7 +446,7 @@ public class NMEA0183 extends GPS
 				{
 					token = st.nextToken(); //# sats
 					numsats = satsremain = Integer.parseInt(token);
-					sats = new LinkedList();
+					sats = new LinkedList<SatelliteData>();
 				}
 				else
 				{

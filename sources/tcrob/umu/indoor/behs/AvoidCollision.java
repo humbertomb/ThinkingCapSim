@@ -46,7 +46,7 @@ public class AvoidCollision extends Behaviour
 		catch (Exception e) { e.printStackTrace (); }
 	}
 
-	protected void update (HashMap params) 
+	protected void update (HashMap<String, Object> params) 
 	{
 		int				i;
 		double			left1, left2;

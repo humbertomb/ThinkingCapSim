@@ -29,9 +29,9 @@ public class BPlanTaskBehaviour extends Behaviour {
 	/* list of sub-behaviour */
 	private Behaviour beh[];
 	/* list of parameter sets: the parameters are relative to the goal of the behaviours */
-	private ArrayList<LPO> behGoalParams[];
+	private java.util.List<ArrayList<LPO>> behGoalParams;
 	/* list of parameter sets: the parameters are not relative to the goal of the behaviours */
-	private HashMap behOtherParams[];
+	private java.util.List<HashMap<String, Object>> behOtherParams;
 	/* list of the information about the metric predicates */
 	private ArrayList<MetricPredInfo> predicatesData;
 	/* contains the information about a metric predicate */
@@ -76,16 +76,16 @@ public class BPlanTaskBehaviour extends Behaviour {
 		rulesNum = data.getRulesNumber();
 		predicatesData = data.getPredicatesData();
 		beh = new Behaviour[rulesNum];
-		behOtherParams = new HashMap[rulesNum];
-		behGoalParams = new ArrayList[rulesNum];
+		behOtherParams = new ArrayList<HashMap<String, Object>> ();
+		behGoalParams = new ArrayList<ArrayList<LPO>> ();
 		
 		try {
 			/* creates all the rules of the behaviour */
 			for (int i = 0; i < rulesNum; i++) {
 				beh[i] = BehaviourFactory.createBehaviour(data.getBehaviourName(i),false);
 				rules.addNewRule("Rule "+i,data.getAntecedent(i),beh[i]);
-				behGoalParams[i] = data.getBehGoalParameters(i);
-				behOtherParams[i] = data.getBehOtherParameters(i);
+				behGoalParams.add (data.getBehGoalParameters(i));
+				behOtherParams.add (data.getBehOtherParameters(i));
 			}
 			
 		} 
@@ -104,7 +104,7 @@ public class BPlanTaskBehaviour extends Behaviour {
 	/*
 	 * Updates the predicates used by the behaviour rules
 	 */
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 		double predValue;
 		ArrayList<LPO> behParam;
 		
@@ -118,9 +118,9 @@ public class BPlanTaskBehaviour extends Behaviour {
 		}
 		/* sets the parameters for each sub-behaviour used by the fuzzy meta-rules */
 		for (int i = 0; i < rulesNum; i++) {
-			behOtherParams[i].putAll(params);
-			beh[i].setParams(behOtherParams[i]);
-			behParam = behGoalParams[i];
+			behOtherParams.get(i).putAll(params);
+			beh[i].setParams(behOtherParams.get(i));
+			behParam = behGoalParams.get(i);
 			for (int j = 0; j < behParam.size(); j++) {
 				beh[i].setParam("LPO"+j,behParam.get(j));
 //				System.out.println("DEBUG: LPO"+j+" = "+((tc.shared.lps.lpo.LPO)(behParam.get(j))).label());

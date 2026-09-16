@@ -67,7 +67,7 @@ public class FHBController extends Controller
 	/* It stores the result of the main behaviour execution */
 	private ControlVariables 		output;
 	/* The list of parameters used by the behaviours */
-	private HashMap 				param;
+	private HashMap<String, Object> 				param;
 	/* The main behaviour */
 	private Behaviour 				beh;
 	/* The information about a behaviour */
@@ -131,7 +131,7 @@ public class FHBController extends Controller
 		bTuple 		= new Tuple (Tuple.BEHINFO, bItem);
 	
 		/* variables initialization */
-		param 		= new HashMap ();
+		param = new HashMap<String, Object> ();
 		behReq 		= null;
 		behReqPath	= null;
 		behReload	= false;

@@ -220,7 +220,7 @@ public class Minidome extends Camera
 		return false;
 	}
 
-	public Collection getCommandGroups()
+	public Collection<String> getCommandGroups()
 	{
 		ArrayList<String> groups = new ArrayList<String>();
 		Collection<MinidomeCommand> allComs;

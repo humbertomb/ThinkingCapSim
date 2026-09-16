@@ -53,7 +53,7 @@ public abstract class BehaviourFactory {
 	protected abstract Behaviour create();
 
 	/* Maps the name of the behaviour to its class definition */
-	private static Map factories = new HashMap();
+	private static Map<String, BehaviourFactory> factories = new HashMap<String, BehaviourFactory>();
 
 
 	/**

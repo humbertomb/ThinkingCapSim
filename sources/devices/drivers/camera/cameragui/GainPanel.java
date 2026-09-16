@@ -35,7 +35,7 @@ public class GainPanel extends javax.swing.JPanel {
         jSlider1 = new javax.swing.JSlider();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
-        jComboBox1 = new javax.swing.JComboBox();
+        jComboBox1 = new javax.swing.JComboBox<Comando>();
    javax.swing.JPanel jPanel1 = new javax.swing.JPanel();
         
 //        setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -129,7 +129,7 @@ jPanel1.setLayout(new java.awt.FlowLayout());
   private javax.swing.JSlider jSlider1;
   private javax.swing.JButton jButton1;
   private javax.swing.JButton jButton2;
-  private javax.swing.JComboBox jComboBox1;
+  private javax.swing.JComboBox<Comando> jComboBox1;
   // End of variables declaration//GEN-END:variables
     
     

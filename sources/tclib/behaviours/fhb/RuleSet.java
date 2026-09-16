@@ -22,7 +22,7 @@ import tclib.utils.fuzzy.Histogram;
 public class RuleSet {
 
 	/* A map with the rules */
-	private HashMap rules;
+	private HashMap<String, Rule> rules;
 	/* A list including the rules names*/
 	private ArrayList<String> rulesNames;
 	/* It's needed only to merge the results of the rules evaluations */
@@ -32,7 +32,7 @@ public class RuleSet {
 	 * Constructs an empty set of rules
 	 */
 	public RuleSet() {
-		rules = new HashMap();
+		rules = new HashMap<String, Rule>();
 		rulesNames = new ArrayList<String>();
 	    cv = new ControlVariables();
 	}

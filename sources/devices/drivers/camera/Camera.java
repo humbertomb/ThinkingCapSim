@@ -80,7 +80,7 @@ public class Camera
 
 /** This method must return a collection with all the groups of commands
   * that the camera implements */
-	public Collection getCommandGroups()
+	public Collection<String> getCommandGroups()
 	{
 		return null;
 	}

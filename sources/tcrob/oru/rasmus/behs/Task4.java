@@ -48,7 +48,7 @@ public class Task4 extends Behaviour {
 			
 	}
 	
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 		
 		double nearDoor;
 		

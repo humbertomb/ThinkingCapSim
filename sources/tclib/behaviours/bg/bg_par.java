@@ -701,7 +701,7 @@ public class bg_par extends tclib.behaviours.bg.runtime.lr_parser {
   public tclib.behaviours.bg.runtime.Symbol do_action(
     int                        act_num,
     tclib.behaviours.bg.runtime.lr_parser parser,
-    java.util.Stack            stack,
+    java.util.Stack<tclib.behaviours.bg.runtime.Symbol>            stack,
     int                        top)
     throws java.lang.Exception
   {
@@ -779,7 +779,7 @@ class CUP$bg_par$actions {
   public final tclib.behaviours.bg.runtime.Symbol CUP$bg_par$do_action(
     int                        CUP$bg_par$act_num,
     tclib.behaviours.bg.runtime.lr_parser CUP$bg_par$parser,
-    java.util.Stack            CUP$bg_par$stack,
+    java.util.Stack<tclib.behaviours.bg.runtime.Symbol>            CUP$bg_par$stack,
     int                        CUP$bg_par$top)
     throws java.lang.Exception
     {

@@ -52,7 +52,7 @@ public class MainBehaviour extends Behaviour {
 	}
 
 	
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 		
 		/* The biggest problem is how to choose good values for these variables */
 		final double CollisionSideMax 	= 1.0; //this is for a speed of 0.3; for speed=0.2 is enough 0.8

@@ -451,14 +451,14 @@ public abstract class Grid extends Object implements MapBuilding
 	// Restaura los valores del grid almacenados para cada robot
 	public void restartChanges(String robot){
 	    double[] change;
-	    LinkedList changes;
+	    LinkedList<double[]> changes;
 	    int i, j;
 	    
-	    changes = (LinkedList) tempChanges.get(robot);
+	    changes = tempChanges.get(robot);
 	    if(changes == null) return;
 	    
 	    while(!changes.isEmpty()){
-	        change = (double[]) changes.removeLast();
+	        change = changes.removeLast();
 	        i = (int)change[0];
 	        j = (int)change[1];
 	        empty[i][j] = change[2];
@@ -469,14 +469,14 @@ public abstract class Grid extends Object implements MapBuilding
 	
 	public void restartChangesPrint(String robot){
 	    double[] change;
-	    LinkedList changes;
+	    LinkedList<double[]> changes;
 	    int i, j;
 	    
-	    changes = (LinkedList) tempChanges.get(robot);
+	    changes = tempChanges.get(robot);
 	    if(changes == null) return;
 	    
 	    while(!changes.isEmpty()){
-	        change = (double[]) changes.removeLast();
+	        change = changes.removeLast();
 	        i = (int)change[0];
 	        j = (int)change[1];
 	        System.out.println("Restaurando "+i+","+j+" empty->"+empty[i][j]+" a "+change[2]+" occupied->"+occupied[i][j]+" a "+change[3]+" free->"+free[i][j]+" a "+change[4]);
@@ -489,10 +489,10 @@ public abstract class Grid extends Object implements MapBuilding
 	// Restaura los valores del grid almacenados para cada robot
 	private void restartChanges1(String robot){
 	    double[] change;
-	    LinkedList changes;
+	    LinkedList<double[]> changes;
 	    int i, j;
 	    
-	    changes = (LinkedList) tempChanges.get(robot);
+	    changes = tempChanges.get(robot);
 	    if(changes == null) return;
 	    	    
 	    for(int k = 0; k < changes.size(); k++){

@@ -46,7 +46,7 @@ public abstract class Behaviour {
 	 */
 	protected ControlVariables outputFSets;
 	/* Contains the parameters used by the behaviour */
-	protected HashMap params;
+	protected HashMap<String, Object> params;
 	/* Contains the names of the parameters used in the behaviour */
 	protected ArrayList<String> parameters;
 	
@@ -65,7 +65,7 @@ public abstract class Behaviour {
 	 * Updates the fuzzy predicates used in the behaviour
 	 * @param params map that contain the object the behaviour needs.
 	 */
-	protected	abstract void update(HashMap params);
+	protected	abstract void update(HashMap<String, Object> params);
 	
 	/**
 	 * Constructs a behaviour creating the fuzzy rules
@@ -76,7 +76,7 @@ public abstract class Behaviour {
 		cv = new ControlVariables();
 		outputFSets = null;
 		parameters = new ArrayList<String>();
-		params = new HashMap();
+		params = new HashMap<String, Object> ();
 		/* Creates the fuzzy rules */
 		createRules();
 	}
@@ -94,8 +94,8 @@ public abstract class Behaviour {
 	 * Sets the parameters for the behaviour
 	 * @param params a parameters map
 	 */
-	public void setParams(HashMap params) {
-		this.params = (HashMap) params.clone();
+	public void setParams(HashMap<String, Object> params) {
+		this.params = new HashMap<String, Object> (params);
 	}
 	
 	/**
@@ -103,7 +103,7 @@ public abstract class Behaviour {
 	 * @param key parameter's name
 	 * @param value parameter's value
 	 */
-	public void setParam(Object key, Object value) {
+	public void setParam(String key, Object value) {
 		params.put(key,value);
 	}
 	

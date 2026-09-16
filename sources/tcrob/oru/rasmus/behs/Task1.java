@@ -53,7 +53,7 @@ public class Task1 extends Behaviour {
 			
 	}
 	
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 		
 		double targetLeft, targetRight;
 		double x, y, phi;

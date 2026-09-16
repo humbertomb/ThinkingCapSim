@@ -72,7 +72,7 @@ public class GoTo extends Behaviour {
 	}
 	
 	
-	protected void update(HashMap params) {
+	protected void update(HashMap<String, Object> params) {
 		
 //		LPO target = (LPO) params.get("Goal");
 		

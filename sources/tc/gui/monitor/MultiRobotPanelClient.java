@@ -77,9 +77,9 @@ public class MultiRobotPanelClient extends MultiRobotPanelInterf //implements GU
 	protected JPanel 					textPA		= new JPanel();
 	
 	// Components
-	protected JComboBox					gotoCB		= new JComboBox ();	
-	protected JComboBox 					robotsCB 	= new JComboBox ();
-	protected JComboBox					actionCB		= new JComboBox ();
+	protected JComboBox<String>					gotoCB		= new JComboBox<String> ();	
+	protected JComboBox<String> 					robotsCB 	= new JComboBox<String> ();
+	protected JComboBox<String>					actionCB		= new JComboBox<String> ();
 	protected JTextArea					textplan		= new JTextArea ();
 	protected JButton 					sendBUT 		= new JButton();
 	protected JButton 					addgBUT	 	= new JButton();

@@ -9,6 +9,7 @@ package devices.drivers.beacon.nav200;
 import java.awt.geom.Point2D;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -129,7 +130,7 @@ public class Setup {
 	int layer = 0;
 	int maxlayer = 0;
 	int cont = 0;
-	ArrayList<Point2D.Double>[] position;
+	List<ArrayList<Point2D.Double>> position;
 	double[][] posit;
 	do{
 		comand = 0;
@@ -278,16 +279,16 @@ public class Setup {
 					if( l.getReflector(layer,0) == null) break;
 				maxlayer = layer;
 				System.out.println("Found "+maxlayer + " layer");
-				position = new ArrayList[maxlayer];
-				for(layer = 0; layer<position.length ; layer++){
+				position = new ArrayList<ArrayList<Point2D.Double>> ();
+				for(layer = 0; layer<maxlayer ; layer++){
 					System.out.println("\nLAYER "+layer);
-					position[layer] = new ArrayList<Point2D.Double>();
+					position.add (new ArrayList<Point2D.Double>());
 					for(int i=0;i<50;i++){
 						data=l.getReflector(layer,i);
 						if(data!=null)
 							System.out.println(" Reflector("+(int)data[2]+")  =    ["+data[0]+" , "+data[1]+"] meter");				
 						else break;
-						position[layer].add(new Point2D.Double(data[0],data[1]));
+						position.get(layer).add(new Point2D.Double(data[0],data[1]));
 					}
 					
 					radius = l.getRadius(layer);
@@ -307,11 +308,11 @@ public class Setup {
 						bw.write("#######################################\n");
 						bw.write("##     LAYER "+j+"\n");
 						bw.write("##\n");
-						bw.write("LAYER_"+j+"_MAXBEACON = "+position[j].size()+"\n");
+						bw.write("LAYER_"+j+"_MAXBEACON = "+position.get(j).size()+"\n");
 						bw.write("LAYER_"+j+"_RADIUS = "+radius+"\n");
 						Point2D.Double pos;
-						for(int i = 0; i<position[j].size(); i++){
-							pos = position[j].get(i);
+						for(int i = 0; i<position.get(j).size(); i++){
+							pos = position.get(j).get(i);
 							bw.write("LAYER_"+j+"_BEACON_"+i+" = "+pos.getX()+", "+pos.getY()+"\n");
 						}
 						bw.write("##\n");

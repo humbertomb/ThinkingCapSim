@@ -78,7 +78,7 @@ public class ComplexTask extends Behaviour {
 	}
 	
 	
-	protected void update(HashMap params) {	
+	protected void update(HashMap<String, Object> params) {	
 		double phi0, robotPos[];
 		double beforeDoor, inFrontOfDoor, aligned, throughTheDoor;
 		double door_width = 0.8;
