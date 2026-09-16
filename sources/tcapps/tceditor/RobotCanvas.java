@@ -215,9 +215,38 @@ public class RobotCanvas extends JPanel
 
 	public void zoom (double factor)
 	{
-		scale	= Math.max (MIN_SCALE, Math.min (MAX_SCALE, scale * factor));
+		scale	= Math.max (minScale (), Math.min (MAX_SCALE, scale * factor));
 		updateGridStep ();
 		repaint ();
+	}
+
+	/**
+	 * How far out the view may be taken: far enough for everything drawn to be
+	 * inside it, and then some. What a laser covers is drawn at its own size, so
+	 * a fixed limit would leave part of it out of reach.
+	 */
+	public double minScale ()
+	{
+		double[]	b = contentBounds ();
+		double		m = MIN_SCALE, w, h;
+
+		if ((b == null) || (getWidth () <= 0) || (getHeight () <= 0))		return m;
+		w	= Math.max (2 * Math.max (Math.abs (b[0] - cx), Math.abs (b[2] - cx)), 1e-6);
+		h	= Math.max (2 * Math.max (Math.abs (b[1] - cy), Math.abs (b[3] - cy)), 1e-6);
+		m	= Math.min (m, 0.5 * Math.min (getWidth () / w, getHeight () / h));
+		return Math.max (m, 1e-3);
+	}
+
+	/** {minx, miny, maxx, maxy} of the robot and of what the selected sensor covers. */
+	public double[] contentBounds ()
+	{
+		double[]	b = robotBounds ();
+		double[]	c = coverage ();
+
+		if (c == null)			return b;
+		if (b == null)			b = new double[] { c[0], c[1], c[0], c[1] };
+		b	= grow (b, c[0] - c[2], c[1] - c[2]);
+		return grow (b, c[0] + c[2], c[1] + c[2]);
 	}
 
 	public void zoomIn ()							{ zoom (1.25); }
@@ -234,7 +263,7 @@ public class RobotCanvas extends JPanel
 		cx		= (b[0] + b[2]) / 2.0;
 		cy		= (b[1] + b[3]) / 2.0;
 		if ((getWidth () > 0) && (getHeight () > 0))
-			scale	= Math.max (MIN_SCALE, Math.min (MAX_SCALE, 0.85 * Math.min (getWidth () / w, getHeight () / h)));
+			scale	= Math.max (minScale (), Math.min (MAX_SCALE, 0.85 * Math.min (getWidth () / w, getHeight () / h)));
 		updateGridStep ();
 		repaint ();
 	}
@@ -268,12 +297,69 @@ public class RobotCanvas extends JPanel
 		return any ? b : null;
 	}
 
+	/** An angle in degrees brought to (-180, 180]. */
+	static private double norm180 (double a)
+	{
+		while (a > 180.0)		a -= 360.0;
+		while (a <= -180.0)		a += 360.0;
+		return a;
+	}
+
 	static private double[] grow (double[] b, double x, double y)
 	{
 		b[0] = Math.min (b[0], x);		b[1] = Math.min (b[1], y);
 		b[2] = Math.max (b[2], x);		b[3] = Math.max (b[3], y);
 		return b;
 	}
+
+	/**
+	 * What the selected sensor covers, in the frame of the robot:
+	 * {x, y, rangemax, rangemin, cone, orientation}, or null when there is no
+	 * sensor selected or it says nothing about its range.
+	 */
+	public double[] coverage ()
+	{
+		RobotDef.Sensor		s;
+		double[]			d;
+		double				rmax, rmin, cone;
+
+		if ((selection == null) || (selection.kind != RobotItem.SENSOR))		return null;
+		s	= selectedSensor ();
+		if (s == null)				return null;
+		d	= robot.detection (selection.family, s);
+		rmax	= d[0];		rmin = Math.max (0.0, d[1]);		cone = d[2];
+		if (rmax <= 0.0)			return null;
+		if (rmin > rmax)			rmin = 0.0;
+		if (cone < 0.0)				cone = 0.0;
+		if (cone > 360.0)			cone = 360.0;
+		return new double[] { sx (s), sy (s), rmax, rmin, cone, s.orientation };
+	}
+
+	/**
+	 * Writes what the selected sensor covers, where the description keeps it: in
+	 * the sensor itself when its family is made of devices of their own, in the
+	 * family otherwise (and then it is what all of them cover).
+	 */
+	private void setCoverage (double rmax, double rmin, double cone)
+	{
+		RobotDef.Sensor		s = selectedSensor ();
+
+		if (s == null)				return;
+		rmax	= Math.max (0.0, rmax);		rmin = Math.max (0.0, Math.min (rmin, rmax));
+		cone	= Math.max (0.0, Math.min (cone, 360.0));
+		if (RobotDef.hasOwnDetection (selection.family))
+		{
+			s.rangemax = rmax;		s.rangemin = rmin;		s.cone = cone;
+		}
+		else
+		{
+			RobotDef.Family		f = robot.family (selection.family);
+			f.rangemax = rmax;		f.rangemin = rmin;		f.cone = cone;
+		}
+	}
+
+	/** The edge of the sector the handles sit on: half the aperture from the direction it looks at. */
+	static private double coverEdge (double[] c)		{ return Math.toRadians (c[5] + c[4] / 2); }
 
 	/** Position of a sensor: polar (rho, theta) around the centre of the robot. */
 	static public double sx (RobotDef.Sensor s)		{ return s.rho * Math.cos (Math.toRadians (s.theta)); }
@@ -354,8 +440,17 @@ public class RobotCanvas extends JPanel
 
 			if (s == null)					return new double[0];
 			a	= Math.toRadians (s.orientation);
+			double[]	c = coverage ();
+			if (c == null)
+				return new double[] { px (sx (s)), py (sy (s)),
+									  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a) };
+
+			// the two ends of the segment that sets range min, range max and the cone
+			double		e = coverEdge (c), ce = Math.cos (e), se = Math.sin (e);
 			return new double[] { px (sx (s)), py (sy (s)),
-								  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a) };
+								  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a),
+								  px (c[0] + c[3] * ce), py (c[1] + c[3] * se),
+								  px (c[0] + c[2] * ce), py (c[1] + c[2] * se) };
 		}
 		case RobotItem.LINE:
 		{
@@ -406,8 +501,19 @@ public class RobotCanvas extends JPanel
 				s.rho		= Math.hypot (x, y);
 				s.theta		= Math.toDegrees (Math.atan2 (y, x));
 			}
-			else							// where it looks at
+			else if (handle == 1)			// where it looks at
 				s.orientation	= Math.toDegrees (Math.atan2 (y - sy (s), x - sx (s)));
+			else							// what it covers: how far it reaches and how wide
+			{
+				double[]	c = coverage ();
+				double		r, cone;
+
+				if (c == null)				return;
+				r		= Math.hypot (x - c[0], y - c[1]);
+				cone	= 2 * Math.abs (norm180 (Math.toDegrees (Math.atan2 (y - c[1], x - c[0])) - c[5]));
+				if (handle == 2)			setCoverage (c[2], r, cone);		// the near end: range min
+				else						setCoverage (r, c[3], cone);		// the far end: range max
+			}
 			break;
 		}
 		case RobotItem.LINE:
@@ -615,26 +721,20 @@ public class RobotCanvas extends JPanel
 	 */
 	private void drawCoverage (Graphics2D g)
 	{
-		RobotDef.Sensor		s;
-		double[]			d;
-		double				x, y, rmax, rmin, a0, ext;
+		double[]	c = coverage ();
+		double		x, y, rmax, rmin, a0, ext;
 
-		if ((selection == null) || (selection.kind != RobotItem.SENSOR))		return;
-		s	= robot.family (selection.family).sensors.get (selection.index);
-		d	= robot.detection (selection.family, s);
-		rmax	= d[0] * scale;		rmin = Math.max (0.0, d[1]) * scale;
-		if (rmax <= 0.0)			return;								// it says nothing about its range
-		if (rmin > rmax)			rmin = 0.0;
-
-		x	= px (sx (s));		y = py (sy (s));
-		ext	= (d[2] > 0.0) ? Math.min (d[2], 360.0) : 0.0;
-		a0	= s.orientation - ext / 2;
+		if (c == null)			return;
+		x		= px (c[0]);		y = py (c[1]);
+		rmax	= c[2] * scale;		rmin = c[3] * scale;
+		ext		= c[4];
+		a0		= c[5] - ext / 2;
 
 		g.setStroke (stroke (1.2f));
 		if (ext <= 0.0)														// no aperture: just how far it reaches
 		{
 			g.setColor (C_COVER_LINE);
-			double	a = Math.toRadians (s.orientation);
+			double	a = Math.toRadians (c[5]);
 			g.draw (new Line2D.Double (x + rmin * Math.cos (a), y - rmin * Math.sin (a),
 									   x + rmax * Math.cos (a), y - rmax * Math.sin (a)));
 			return;
@@ -661,6 +761,12 @@ public class RobotCanvas extends JPanel
 		g.fill (path);
 		g.setColor (C_COVER_LINE);
 		g.draw (path);
+
+		// the segment the handles sit on: from range min to range max on one edge
+		double		e = coverEdge (c), ce = Math.cos (e), se = Math.sin (e);
+		g.setColor (C_SEL);
+		g.setStroke (stroke (1.5f));
+		g.draw (new Line2D.Double (x + rmin * ce, y - rmin * se, x + rmax * ce, y - rmax * se));
 	}
 
 	private void drawSensors (Graphics2D g)
