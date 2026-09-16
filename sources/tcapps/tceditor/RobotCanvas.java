@@ -237,10 +237,20 @@ public class RobotCanvas extends JPanel
 	/** Step of the grid the view is drawing (m). */
 	public double getGridStep ()					{ return gridStep; }
 
+	/**
+	 * Step snapping takes a coordinate to: half the one the grid is drawn with,
+	 * so that the middle of a cell is reachable too. The drawn grid keeps its
+	 * lines a good way apart to stay readable, which on its own leaves the
+	 * snapping coarse once the view is well zoomed in.
+	 */
+	public double getSnapStep ()					{ return gridStep / 2; }
+
 	/** A coordinate taken to the grid, when snapping is on. */
 	public double snap (double v)
 	{
-		return snapGrid ? Math.rint (v / gridStep) * gridStep : v;
+		double		step = getSnapStep ();
+
+		return snapGrid ? Math.rint (v / step) * step : v;
 	}
 
 	/** Chooses a grid step so that the lines are at least ~25 px apart. */
