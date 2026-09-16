@@ -197,7 +197,7 @@ public class NAV200Datagram {
 	
 	   // compare received command 
 
-	public boolean isEquals(NAV200Datagram datagram2){
+	private boolean isEquals(NAV200Datagram datagram2){
 		if(this==null || datagram2==null) return false;
 
 		if(length != datagram2.length) 	return false;
@@ -211,7 +211,7 @@ public class NAV200Datagram {
 		return (true);
 	}
 	
-	public boolean isEquals(NAV200Datagram datagram2, int n){
+	private boolean isEquals(NAV200Datagram datagram2, int n){
 		if(this==null || datagram2==null) return false;
 		if(mode != datagram2.mode) 		return false;
 		if(function != datagram2.function) 		return false;

@@ -31,7 +31,7 @@ public class Camera
         
 			System.out.println ("Camera: initialising "+cname+" with "+param+".");
         
-			cam		= (Camera) clase.newInstance ();
+			cam		= (Camera) clase.getDeclaredConstructor ().newInstance ();
 			cam.setType (cname);
 			cam.setConnection (param);
 			cam.initialise (param);

@@ -37,7 +37,7 @@ public abstract class GPS extends Object
 			cl		= prop.substring (0, prop.indexOf("|"));
 			prt		= prop.substring (prop.indexOf("|")+1, prop.length());
 			Class<?> gpsclass = Class.forName(cl);
-			tg		= (GPS) gpsclass.newInstance();
+			tg		= (GPS) gpsclass.getDeclaredConstructor().newInstance();
 			
  			System.out.println ("GPS: connecting "+cl+" to port <"+prt+">");
  			

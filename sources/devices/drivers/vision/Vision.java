@@ -36,7 +36,7 @@ public abstract class Vision extends Thread
         
 			System.out.println ("Vision: initialising "+cname+" with "+param+".");
         
-			vis		= (Vision) clase.newInstance ();
+			vis		= (Vision) clase.getDeclaredConstructor ().newInstance ();
 			vis.initialise (param);
         
 		} catch (Exception e) { throw new VisionException ("(getVision) "+e.toString ()); }

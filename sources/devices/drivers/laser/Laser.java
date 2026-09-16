@@ -28,7 +28,7 @@ public class Laser
         
 			System.out.println ("Laser: initialising "+cname+" with "+param+".");
         
-			laser		= (Laser) clase.newInstance ();
+			laser		= (Laser) clase.getDeclaredConstructor ().newInstance ();
 			laser.setType (cname);
 			laser.setConnection (param);
 			laser.initialise (param);

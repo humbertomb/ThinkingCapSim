@@ -71,7 +71,7 @@ public class FilterFactory extends Object
 //			xxx 		= Integer.parseInt (st.nextToken());
 
 			fltclass		= Class.forName (fltname);
-			filter		= (Filter) fltclass.newInstance();
+			filter		= (Filter) fltclass.getDeclaredConstructor().newInstance();
 			
  			System.out.println ("# Created instance of filter <"+fltname+"> "+toString ());
  		} catch (Exception e) { e.printStackTrace(); }

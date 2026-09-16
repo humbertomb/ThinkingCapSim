@@ -30,7 +30,7 @@ public abstract class Ins extends Object
 			cl		= prop.substring (0, prop.indexOf("|"));
 			prt		= prop.substring (prop.indexOf("|")+1, prop.length());
 			Class<?> insclass = Class.forName(cl);
-			tg		= (Ins) insclass.newInstance();
+			tg		= (Ins) insclass.getDeclaredConstructor().newInstance();
 			
  			System.out.println ("INS: connecting "+cl+" to port "+prt+".");
  			

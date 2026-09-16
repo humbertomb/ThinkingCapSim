@@ -56,7 +56,7 @@ public class UDPCam extends Camera
 			sock.receive(dp);
 			driverClass=new String(dp.getData(),0,dp.getLength());
 			if (DEBUG) System.out.println("Cam class received: \""+driverClass+"\"");
-			driver=(Camera)Class.forName(driverClass).newInstance();
+			driver=(Camera)Class.forName(driverClass).getDeclaredConstructor().newInstance();
 		} catch (java.io.IOException e) {
 			throw (new CameraException ("Error receiving camera class: "+e.getMessage()));
 		} catch (Exception e) {

@@ -43,7 +43,7 @@ public class Compass
         _port = compassprop.substring (compassprop.indexOf("|")+1, compassprop.length());
         Class<?> compassclass = Class.forName(_clase);
 
-        tc=(Compass)compassclass.newInstance();
+        tc=(Compass)compassclass.getDeclaredConstructor().newInstance();
         tc.init(_port);
         tc.setType (_clase);
         tc.setPort (_port);

@@ -40,7 +40,7 @@ public abstract class Radar extends Object implements Runnable
 			_port	= desc.substring (desc.indexOf ("|")+1, desc.length ());
 			aclass	= Class.forName (_class);
 
-			radar	= (Radar) aclass.newInstance ();
+			radar	= (Radar) aclass.getDeclaredConstructor ().newInstance ();
 			radar.initialise (_port);
 			radar.setPort (_port);
 			radar.setType (_class);

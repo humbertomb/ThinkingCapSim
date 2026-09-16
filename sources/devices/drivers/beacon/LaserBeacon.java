@@ -49,7 +49,7 @@ public class LaserBeacon
         
 			System.out.println ("Laser: initialising "+cname+" with "+param+".");
         
-			laser		= (LaserBeacon) clase.newInstance ();
+			laser		= (LaserBeacon) clase.getDeclaredConstructor ().newInstance ();
 			laser.setType (cname);
 			laser.setConnection (param);
 			laser.initialise (param);
