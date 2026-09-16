@@ -52,6 +52,7 @@ public class RobotCanvas extends JPanel
 	static public final double		MIN_SCALE	= 10.0;			// pixels per metre
 	static public final double		MAX_SCALE	= 2000.0;
 	static public final double		HIT			= 6.0;			// selection tolerance (pixels)
+	static public final double		PENDING_PX	= 40.0;			// where the range handle of a sensor that has none sits
 
 	/** What the editor needs to know about the view. */
 	public interface Listener
@@ -353,8 +354,7 @@ public class RobotCanvas extends JPanel
 
 		if (s == null)				return null;
 		d	= robot.detection (fam, s);
-		rmax	= d[0];		rmin = Math.max (0.0, d[1]);		cone = d[2];
-		if (rmax <= 0.0)			return null;
+		rmax	= Math.max (0.0, d[0]);		rmin = Math.max (0.0, d[1]);		cone = d[2];
 		if (rmin > rmax)			rmin = 0.0;
 		if (cone < 0.0)				cone = 0.0;
 		if (cone > 360.0)			cone = 360.0;
@@ -481,16 +481,18 @@ public class RobotCanvas extends JPanel
 				return new double[] { px (sx (s)), py (sy (s)),
 									  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a) };
 
-			// the ends of the segment that sets how far it reaches and how wide
+			// the ends of the segment that sets how far it reaches and how wide; a
+			// sensor that says no range yet gets the far one at hand, to pull it out by
 			double		e = coverEdge (c), ce = Math.cos (e), se = Math.sin (e);
+			double		far = (c[2] > 0.0) ? c[2] * scale : PENDING_PX;
 			if (!hasMinHandle ())							// a camera has no near limit to drag
 				return new double[] { px (sx (s)), py (sy (s)),
 									  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a),
-									  px (c[0] + c[2] * ce), py (c[1] + c[2] * se) };
+									  px (c[0]) + far * ce, py (c[1]) - far * se };
 			return new double[] { px (sx (s)), py (sy (s)),
 								  px (sx (s)) + ARROW * Math.cos (a), py (sy (s)) - ARROW * Math.sin (a),
 								  px (c[0] + c[3] * ce), py (c[1] + c[3] * se),
-								  px (c[0] + c[2] * ce), py (c[1] + c[2] * se) };
+								  px (c[0]) + far * ce, py (c[1]) - far * se };
 		}
 		case RobotItem.LINE:
 		{
@@ -773,6 +775,12 @@ public class RobotCanvas extends JPanel
 		double		rmax = c[2] * scale, rmin = c[3] * scale;
 		double		ext = c[4], a0 = c[5] - ext / 2;
 
+		if (rmax <= 0.0)						// it has no range yet: only the segment to pull it out by
+		{
+			if (bar)		drawCoverBar (g, x, y, coverEdge (c), 0.0, PENDING_PX);
+			return;
+		}
+
 		g.setStroke (stroke (1.2f));
 		if (ext <= 0.0)														// no aperture: just how far it reaches
 		{
@@ -805,9 +813,15 @@ public class RobotCanvas extends JPanel
 		g.setColor (C_COVER_LINE);
 		g.draw (path);
 
-		if (!bar)			return;
 		// the segment the handles sit on: from range min to range max on one edge
-		double		e = coverEdge (c), ce = Math.cos (e), se = Math.sin (e);
+		if (bar)		drawCoverBar (g, x, y, coverEdge (c), rmin, rmax);
+	}
+
+	/** The segment the coverage handles sit on, in pixels from the sensor. */
+	private void drawCoverBar (Graphics2D g, double x, double y, double edge, double rmin, double rmax)
+	{
+		double		ce = Math.cos (edge), se = Math.sin (edge);
+
 		g.setColor (C_SEL);
 		g.setStroke (stroke (1.5f));
 		g.draw (new Line2D.Double (x + rmin * ce, y - rmin * se, x + rmax * ce, y - rmax * se));
