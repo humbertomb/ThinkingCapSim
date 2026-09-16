@@ -464,10 +464,74 @@ public class RobotCanvas extends JPanel
 		}
 	}
 
+	/**
+	 * Takes the handle of a camera to a point of the view: how far it looks is
+	 * what the point gives along the direction it looks at, and the aperture the
+	 * angle it opens to it, the horizontal one from above and the vertical one
+	 * from the side.
+	 */
+	private void setFov (double[] c, double hw, double vw)
+	{
+		RobotDef.Sensor		s = selectedSensor ();
+		double[][]			fr = frame (c);
+		double				fh, fv, n, dh, dv, len, ang;
+
+		if (s == null)				return;
+		fh	= h (fr[0][0], fr[0][1], fr[0][2]);		fv = v (fr[0][0], fr[0][1], fr[0][2]);
+		n	= Math.hypot (fh, fv);
+		if (n < 1e-9)				return;					// it looks across this view: nothing to read here
+		fh	/= n;		fv /= n;
+		dh	= hw - h (c[0], c[1], c[6]);		dv = vw - v (c[0], c[1], c[6]);
+		len	= Math.hypot (dh, dv);
+		if (len < 1e-9)				return;
+		ang	= Math.abs (Math.toDegrees (Math.acos (Math.max (-1.0, Math.min (1.0, (dh * fh + dv * fv) / len)))));
+		ang	= Math.min (ang, 89.0);
+		s.rangemax	= Math.max (0.0, len * Math.cos (Math.toRadians (ang)));
+		if (isTop ())				s.hfov = 2 * ang;
+		else if (view == V_SIDE)	s.vfov = 2 * ang;
+		changed ();
+	}
+
 	/** True when the selected sensor has a near limit to drag (a camera has not). */
 	private boolean hasMinHandle ()
 	{
 		return (selection != null) && (selection.kind == RobotItem.SENSOR) && !RobotDef.hasFov (selection.family);
+	}
+
+	/** The three axes of a sensor: where it looks at, across it and up from it. */
+	static private double[][] frame (double[] c)
+	{
+		double		o = Math.toRadians (c[5]), e = Math.toRadians (c[7]);
+		double[]	f = { Math.cos (o) * Math.cos (e), Math.sin (o) * Math.cos (e), Math.sin (e) };
+		double[]	w = { Math.sin (o), -Math.cos (o), 0.0 };
+		double[]	u = { w[1] * f[2] - w[2] * f[1], w[2] * f[0] - w[0] * f[2], w[0] * f[1] - w[1] * f[0] };
+
+		return new double[][] { f, w, u };
+	}
+
+	/**
+	 * Where the handle of a camera sits in the view it is edited from: the corner
+	 * of the aperture that projection shows, the horizontal one from above and the
+	 * vertical one from the side. From the front the camera is seen end on, so
+	 * there is nothing to drag.
+	 *
+	 * @return {x, y} in metres, or null when this view edits nothing of it
+	 */
+	private double[] fovCorner (double[] c)
+	{
+		double[][]	fr = frame (c);
+		double		r = (c[2] > 0.0) ? c[2] : PENDING_PX / scale;
+		double		a, s;
+		double[]	across;
+
+		if (isTop ())			{ a = c[4]; across = fr[1]; s = -1.0; }			// the horizontal aperture
+		else if (view == V_SIDE)	{ a = c[8]; across = fr[2]; s = 1.0; }		// the vertical one
+		else					return null;
+		if (a <= 0.0)			a = 0.0;
+		double	d = r * Math.tan (Math.toRadians (Math.min (a, 179.0)) / 2) * s;
+		return new double[] { c[0] + r * fr[0][0] + d * across[0],
+							  c[1] + r * fr[0][1] + d * across[1],
+							  c[6] + r * fr[0][2] + d * across[2] };
 	}
 
 	/** The edge of the sector the handles sit on: half the aperture from the direction it looks at. */
@@ -595,7 +659,15 @@ public class RobotCanvas extends JPanel
 			if (s == null)					return new double[0];
 			hx	= ph (sx (s), sy (s), sz (s));		hy = pv (sx (s), sy (s), sz (s));
 			d	= look (s);
-			double[]	c = isTop () ? coverage () : null;		// what it covers is edited from above
+			double[]	c = coverage ();
+			if ((c != null) && (c[8] > 0.0))						// a camera: the corner of what this view shows
+			{
+				double[]	k = fovCorner (c);
+				if (k == null)		return new double[] { hx, hy, hx + ARROW * d[0], hy - ARROW * d[1] };
+				return new double[] { hx, hy, hx + ARROW * d[0], hy - ARROW * d[1],
+									  ph (k[0], k[1], k[2]), pv (k[0], k[1], k[2]) };
+			}
+			if (!isTop ())			c = null;						// a cone is edited from above
 			if (c == null)
 				return new double[] { hx, hy, hx + ARROW * d[0], hy - ARROW * d[1] };
 
@@ -670,6 +742,7 @@ public class RobotCanvas extends JPanel
 				double		r, cone;
 
 				if (c == null)				return;
+				if (c[8] > 0.0)				{ setFov (c, x, y); return; }		// a camera: the aperture of this view
 				r		= Math.hypot (x - c[0], y - c[1]);
 				cone	= 2 * Math.abs (norm180 (Math.toDegrees (Math.atan2 (y - c[1], x - c[0])) - c[5]));
 				if ((handle == 2) && hasMinHandle ())	setCoverage (c[2], r, cone);	// the near end: range min
@@ -1033,8 +1106,16 @@ public class RobotCanvas extends JPanel
 		g.setStroke (stroke (1.2f));
 		g.setColor (C_COVER_FILL);		g.fill (path);
 		g.setColor (C_COVER_LINE);		g.draw (path);
-		if (bar)		drawCoverBar (g, pts[0][0], pts[0][1], coverEdge (c), 0.0,
-									  (c[2] > 0.0) ? c[2] * scale : PENDING_PX);
+		if (bar)
+		{
+			double[]	k = fovCorner (c);						// the edge its handle sits on
+			if (k != null)
+			{
+				g.setColor (C_SEL);
+				g.setStroke (stroke (1.5f));
+				g.draw (new Line2D.Double (pts[0][0], pts[0][1], ph (k[0], k[1], k[2]), pv (k[0], k[1], k[2])));
+			}
+		}
 	}
 
 	/** The outline of a handful of points: their convex hull, as a closed path. */
