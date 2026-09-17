@@ -267,8 +267,8 @@ public class RobotDef
 		Map<String, String[]>	m = new LinkedHashMap<String, String[]> ();
 
 		m.put ("tc.vrobot.models.SynchroDrive",		new String[] { });
-		m.put ("tc.vrobot.models.DifferentialDrive",	new String[] { "base", "wheel", "gear", "pulses" });
-		m.put ("tc.vrobot.models.SkidSteerDrive",		new String[] { "base", "wheel", "gear", "pulses", "skid" });
+		m.put ("tc.vrobot.models.DifferentialDrive",	new String[] { "base", "wheeldiameter", "gear", "pulses" });
+		m.put ("tc.vrobot.models.SkidSteerDrive",		new String[] { "base", "wheeldiameter", "gear", "pulses", "skid" });
 		m.put ("tc.vrobot.models.AckermanDrive",		new String[] { "samax", "length" });
 		m.put ("tc.vrobot.models.TricycleDrive",		new String[] { "samax", "lamax", "ldmax",
 																	   "length", "base", "rwheel" });
@@ -282,7 +282,7 @@ public class RobotDef
 	 * speeds of the platform, the accelerations, the encoders -- is not the
 	 * wheels' to say and stays as it is given.
 	 */
-	static private final String[]	KIN_DERIVED		= { "length", "base", "wheel", "vmax", "rmax", "samax" };
+	static private final String[]	KIN_DERIVED		= { "length", "base", "wheeldiameter", "vmax", "rmax", "samax" };
 
 	/** True for a kinematics property the wheels of the platform work out. */
 	static public boolean isCalculated (String name)
@@ -305,7 +305,7 @@ public class RobotDef
 	 *   base   -- for a differential drive, how far apart the two driving wheels
 	 *             are across; for a tricycle, how far the fixed axle is from the
 	 *             origin along x, which is what its model measures
-	 *   wheel  -- the diameter of the driving wheel
+	 *   wheel diameter -- of the driving wheel, which is what its model asks for
 	 *
 	 * And what the wheels can do bounds what the platform can do, so the most
 	 * restrictive of them has the say:
@@ -327,7 +327,7 @@ public class RobotDef
 		driving	= driving ();
 
 		name	= name.replace (" ", "").toLowerCase ();
-		if (name.equals ("wheel"))
+		if (name.equals ("wheeldiameter"))
 		{
 			double	r = 0.0;
 			for (Wheel w : driving)		r += w.radius;
@@ -822,7 +822,7 @@ public class RobotDef
 		// what the drive train says is asked for, not stored
 		setNZ (p, "VMAX", value (derived ("vmax")));	setNZ (p, "RMAX", value (derived ("rmax")));
 		setNZ (p, "LENGHT", value (derived ("length")));	setNZ (p, "BASE", value (derived ("base")));
-		setNZ (p, "WHEEL", value (derived ("wheel")));	setNZ (p, "SAMAX", value (derived ("samax")));
+		setNZ (p, "WHEEL", value (derived ("wheel diameter")));	setNZ (p, "SAMAX", value (derived ("samax")));
 		setNZ (p, "LAMAX", kinematics.lamax);		setNZ (p, "LDMAX", kinematics.ldmax);
 		setNZ (p, "RWHEEL", kinematics.rwheel);		setNZ (p, "SKID", kinematics.skid);
 		setNZ (p, "GEAR", kinematics.gear);

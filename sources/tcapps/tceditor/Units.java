@@ -24,7 +24,7 @@ public class Units
 	static
 	{
 		// where something is and how big it is
-		metres ("radius", "diameter", "width", "height", "length", "base", "rwheel", "wheel",
+		metres ("radius", "diameter", "width", "height", "length", "base", "rwheel", "wheel diameter",
 				"x", "y", "z", "x1", "y1", "z1", "x2", "y2", "z2",
 				"xi", "yi", "xf", "yf",
 				"path x1", "path y1", "path z1", "path x2", "path y2", "path z2",

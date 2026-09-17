@@ -885,7 +885,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	private String[] kinematicsNames ()
 	{
 		String[]		all = { DRIVE, "vmax", "rmax", "samax", "lamax", "ldmax",
-								"length", "base", "rwheel", "skid", "wheel", "gear", "pulses", "dtime",
+								"length", "base", "rwheel", "skid", WHEEL_DIAM, "gear", "pulses", "dtime",
 								"odom et", "odom er", "odom bias" };
 		List<String>	out = new ArrayList<String> ();
 
@@ -1084,6 +1084,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/** The names the editor gives to what a wheel can do. */
 	static public final String		MAX_STEER				= "max steering";
 	static public final String		MAX_TURN				= "max turning";
+	/** The name the editor gives to the size of the driving wheel: it is a diameter, not a radius. */
+	static public final String		WHEEL_DIAM				= "wheel diameter";
 	static public final String		MAX_RPM					= "max rpm";
 	static public final String		DRIVER_PARAMS			= "driver parameters";
 	/** Width of the column of the units: enough for "deg/s" and no more. */
