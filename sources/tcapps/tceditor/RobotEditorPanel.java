@@ -799,21 +799,25 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
 		case RobotItem.SENSOR:
-			// a sensor of a family of devices of their own says what it detects
+			// the device it is read through comes first, then where it is and what it detects
 			if (!RobotDef.hasOwnDetection (it.family))
-				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step" };
+				return new String[] { "step", "rho", "theta", "height", "orientation", "elevation" };
 			if (it.family.equals ("lsb"))
-				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
-									  "driver", DRIVER_PARAMS, "range max", "range min", "cone", "rays", "reflect", "beacons" };
+				return new String[] { "driver", DRIVER_PARAMS, "step",
+									  "rho", "theta", "height", "orientation", "elevation",
+									  "range max", "range min", "cone", "rays", "reflect", "beacons" };
 			if (it.family.equals ("trk"))
-				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
-									  "driver", DRIVER_PARAMS, "range max", "range min", "cone", "rays", "objects" };
+				return new String[] { "driver", DRIVER_PARAMS, "step",
+									  "rho", "theta", "height", "orientation", "elevation",
+									  "range max", "range min", "cone", "rays", "objects" };
 			// a camera sees a rectangle: two fields of view, no cone and no near limit
 			if (RobotDef.hasFov (it.family))
-				return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
-									  "driver", DRIVER_PARAMS, "range max", "hfov", "vfov" };
-			return new String[] { "rho", "theta", "height", "orientation", "elevation", "step",
-								  "driver", DRIVER_PARAMS, "range max", "range min", "cone", "rays" };
+				return new String[] { "driver", DRIVER_PARAMS, "step",
+									  "rho", "theta", "height", "orientation", "elevation",
+									  "range max", "hfov", "vfov" };
+			return new String[] { "driver", DRIVER_PARAMS, "step",
+								  "rho", "theta", "height", "orientation", "elevation",
+								  "range max", "range min", "cone", "rays" };
 		case RobotItem.FAMILY:
 			// only the firing cycle is of the whole family when its sensors say the rest
 			if (RobotDef.hasOwnDetection (it.family))		return new String[] { "cycle" };
