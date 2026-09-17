@@ -190,13 +190,13 @@
     }
   ],
   "image": "./conf/2dmodels/pioneer3.png",
-  "shapeRobot": "./conf/3dmodels/pioneer3.3ds",
+  "shapeRobot": "./conf/3dmodels/pioneer3at.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.SkidSteerDrive",
-    "skid": 1.5,
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,
+    "skid": 1.5,
     "gear": 71.0,
     "pulses": 2000.0,
     "dtime": 175,
