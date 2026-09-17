@@ -60,6 +60,7 @@ public class ToolIcon implements Icon
 	static public final int		SUBGRAPH	= 45;		// node with a small graph below (open its level)
 	static public final int		AOBJECT		= 47;		// object box with motion chevrons (animated object)
 	static public final int		EDIT_WORLD	= 46;		// map with a pencil (edit the world)
+	static public final int		WHEEL		= 48;		// a tyre seen from the side (add a wheel)
 
 	protected int				type;
 	protected int				size;
@@ -325,6 +326,16 @@ public class ToolIcon implements Icon
 			g.drawRoundRect (4, 4, 14, 12, 6, 6);
 			g.fillRoundRect (5, 16, 5, 3, 2, 2);	g.fillRoundRect (12, 16, 5, 3, 2, 2);
 			g.drawLine (11, 7, 11, 4);	g.fillOval (9, 8, 4, 4);
+			break;
+		case WHEEL:			// a tyre: a thick ring with its hub and four spokes
+			g.setStroke (new BasicStroke (2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.setColor (new Color (225, 227, 232));
+			g.fillOval (3, 3, 16, 16);
+			g.setColor (fg);
+			g.drawOval (3, 3, 16, 16);
+			g.setStroke (new BasicStroke (1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawLine (11, 6, 11, 16);	g.drawLine (6, 11, 16, 11);
+			g.fillOval (9, 9, 4, 4);
 			break;
 		case TOPOLOGY:		// triangle of nodes joined by arcs
 			g.setStroke (new BasicStroke (1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));

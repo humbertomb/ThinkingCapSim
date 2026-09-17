@@ -52,6 +52,8 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_RADIUS	= new Color (120, 120, 200);
 	static public final Color		C_BUMPER	= new Color (200, 60, 60);
 	static public final Color		C_SENSOR	= new Color (40, 120, 200);
+	static public final Color		C_WHEEL		= new Color (70, 74, 82);			// the drive train
+	static public final Color		C_TREAD		= new Color (70, 74, 82, 60);		// a wheel that drives, filled
 	static public final Color		C_SHAPE		= new Color (170, 175, 185);		// lines of the 3D model
 	static public final Color		C_SEL		= new Color (255, 140, 0);
 	static public final Color		C_HANDLE	= new Color (255, 255, 255);		// handles, as in the world editor
@@ -355,6 +357,13 @@ public class RobotCanvas extends JPanel
 		{
 			b	= grow3 (b, s.xi, s.yi, 0.0);		b = grow3 (b, s.xf, s.yf, 0.0);		any = true;
 		}
+		for (RobotDef.Wheel w : robot.wheels)
+		{
+			double	r = w.radius + kwidth (w) / 2;
+			b	= grow3 (b, kx (w) - r, ky (w) - r, w.z - w.radius);
+			b	= grow3 (b, kx (w) + r, ky (w) + r, w.z + w.radius);
+			any	= true;
+		}
 		for (String fam : RobotDef.FAMILIES)
 			for (RobotDef.Sensor s : robot.family (fam).sensors)
 			{
@@ -542,6 +551,12 @@ public class RobotCanvas extends JPanel
 	static public double sy (RobotDef.Sensor s)		{ return s.rho * Math.sin (Math.toRadians (s.theta)); }
 	static public double sz (RobotDef.Sensor s)		{ return s.height; }
 
+	static public double kx (RobotDef.Wheel w)		{ return w.rho * Math.cos (Math.toRadians (w.theta)); }
+	static public double ky (RobotDef.Wheel w)		{ return w.rho * Math.sin (Math.toRadians (w.theta)); }
+
+	/** How wide a wheel is drawn, until its width is a property of its own (m). */
+	static public double kwidth (RobotDef.Wheel w)	{ return Math.max (0.3 * w.radius, 0.005); }
+
 	/**
 	 * The direction a sensor looks at as it shows in the view: {dh, dv}, of unit
 	 * length, or the azimuth alone when the direction is perpendicular to the view
@@ -596,6 +611,13 @@ public class RobotCanvas extends JPanel
 					return new RobotItem (RobotItem.SENSOR, i, fam);
 			}
 		}
+		for (int i = 0; i < robot.wheels.size (); i++)	// then the wheels, which are bigger
+		{
+			RobotDef.Wheel	w = robot.wheels.get (i);
+			double			r = Math.max (w.radius, tol);
+			if (Math.hypot (x - h (kx (w), ky (w), w.z), y - v (kx (w), ky (w), w.z)) <= r + tol)
+				return new RobotItem (RobotItem.WHEEL, i);
+		}
 		if (!isTop ())			return null;			// the drawing and the bumpers are flat: only from above
 		for (int i = 0; i < robot.bumpers.size (); i++)
 		{
@@ -632,10 +654,18 @@ public class RobotCanvas extends JPanel
 		return (selection.index < ss.size ()) ? ss.get (selection.index) : null;
 	}
 
+	/** The selected wheel, or null when the selection is something else. */
+	public RobotDef.Wheel selectedWheel ()
+	{
+		if ((selection == null) || (selection.kind != RobotItem.WHEEL))		return null;
+		return (selection.index < robot.wheels.size ()) ? robot.wheels.get (selection.index) : null;
+	}
+
 	/** True for the elements the view lets the user drag. */
 	public boolean isMovable (RobotItem it)
 	{
-		return (it != null) && ((it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.LINE) || (it.kind == RobotItem.BUMPER));
+		return (it != null) && ((it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.LINE)
+								|| (it.kind == RobotItem.BUMPER) || (it.kind == RobotItem.WHEEL));
 	}
 
 	/**
@@ -682,6 +712,17 @@ public class RobotCanvas extends JPanel
 								  px (c[0] + c[3] * ce), py (c[1] + c[3] * se),
 								  px (c[0]) + far * ce, py (c[1]) - far * se };
 		}
+		case RobotItem.WHEEL:
+		{
+			RobotDef.Wheel		w = selectedWheel ();
+			double				hx, hy;
+			double[]			d;
+
+			if (w == null)					return new double[0];
+			hx	= ph (kx (w), ky (w), w.z);		hy = pv (kx (w), ky (w), w.z);
+			d	= roll (w);
+			return new double[] { hx, hy, hx + ARROW * d[0], hy - ARROW * d[1] };
+		}
 		case RobotItem.LINE:
 		{
 			if (selection.index >= robot.icon.size ())		return new double[0];
@@ -701,7 +742,8 @@ public class RobotCanvas extends JPanel
 	/** True when the handle is the one that turns the element (the last one of a sensor). */
 	public boolean isRotationHandle (int handle)
 	{
-		return (selection != null) && (selection.kind == RobotItem.SENSOR) && (handle == 1);
+		return (selection != null) && (handle == 1)
+				&& ((selection.kind == RobotItem.SENSOR) || (selection.kind == RobotItem.WHEEL));
 	}
 
 	/** Index of the handle of the selection under a point of the view, or -1. */
@@ -750,6 +792,13 @@ public class RobotCanvas extends JPanel
 			}
 			break;
 		}
+		case RobotItem.WHEEL:
+		{
+			if (selectedWheel () == null)	return;
+			if (handle == 0)		moveWheelTo (x, y);
+			else					turnWheelTo (x, y);
+			return;
+		}
 		case RobotItem.LINE:
 		{
 			if (!isTop () || (selection.index >= robot.icon.size ()))		return;
@@ -784,6 +833,14 @@ public class RobotCanvas extends JPanel
 
 			if (s == null)					return;
 			moveSensorTo (h (sx (s), sy (s), sz (s)) + dx, v (sx (s), sy (s), sz (s)) + dy);
+			return;
+		}
+		case RobotItem.WHEEL:
+		{
+			RobotDef.Wheel		w = selectedWheel ();
+
+			if (w == null)					return;
+			moveWheelTo (h (kx (w), ky (w), w.z) + dx, v (kx (w), ky (w), w.z) + dy);
 			return;
 		}
 		case RobotItem.LINE:
@@ -854,6 +911,51 @@ public class RobotCanvas extends JPanel
 		changed ();
 	}
 
+	/**
+	 * The direction a wheel rolls towards as it shows in the view: {dh, dv}, of
+	 * unit length. A wheel does not lean, so from above it is its orientation and
+	 * from the front or the side what that direction has along the axis the view
+	 * shows.
+	 */
+	public double[] roll (RobotDef.Wheel w)
+	{
+		double		o = Math.toRadians (w.orientation);
+		double		dh = h (Math.cos (o), Math.sin (o), 0.0), dv = v (Math.cos (o), Math.sin (o), 0.0);
+		double		len = Math.hypot (dh, dv);
+
+		if (len > 1e-9)		return new double[] { dh / len, dv / len };
+		return new double[] { 1.0, 0.0 };						// it rolls across the view
+	}
+
+	/** Moves the selected wheel to a point of the view: its polar position and its height follow. */
+	public void moveWheelTo (double hw, double vw)
+	{
+		RobotDef.Wheel		w = selectedWheel ();
+		double				x, y;
+
+		if (w == null)				return;
+		x	= kx (w);	y = ky (w);
+		switch (view)
+		{
+		case V_FRONT:	y = hw;		w.z = vw;		break;
+		case V_SIDE:	x = hw;		w.z = vw;		break;
+		default:		x = hw;		y = vw;			break;
+		}
+		w.rho		= Math.hypot (x, y);
+		w.theta		= Math.toDegrees (Math.atan2 (y, x));
+		changed ();
+	}
+
+	/** Turns the selected wheel towards a point of the view (from above, where its plane shows). */
+	public void turnWheelTo (double hw, double vw)
+	{
+		RobotDef.Wheel		w = selectedWheel ();
+
+		if ((w == null) || !isTop ())		return;				// a wheel turns about the vertical: only from above
+		w.orientation	= Math.toDegrees (Math.atan2 (vw - ky (w), hw - kx (w)));
+		changed ();
+	}
+
 	/** The selection was edited on the view. */
 	private void changed ()
 	{
@@ -879,6 +981,7 @@ public class RobotCanvas extends JPanel
 		drawRadius (g);
 		drawIcon (g);
 		drawBumpers (g);
+		drawWheels (g);
 		drawCoverage (g);
 		drawSensors (g);
 		drawHandles (g);
@@ -1246,6 +1349,89 @@ public class RobotCanvas extends JPanel
 				}
 			}
 		}
+	}
+
+	/**
+	 * The wheels of the drive train: each one as the two rims of its tread, which
+	 * come out as a circle from the side, as a rectangle from above and as the
+	 * width of the tread from the front. A wheel that drives is filled in, and one
+	 * that can be steered gets the pivot it turns about.
+	 */
+	private void drawWheels (Graphics2D g)
+	{
+		for (int i = 0; i < robot.wheels.size (); i++)
+		{
+			RobotDef.Wheel	w = robot.wheels.get (i);
+			boolean			sel = isSel (RobotItem.WHEEL, i, null);
+			double			cx = kx (w), cy = ky (w), hw = kwidth (w) / 2;
+			double			o = Math.toRadians (w.orientation);
+			double			ax = -Math.sin (o), ay = Math.cos (o);		// its axle
+			double			x = ph (cx, cy, w.z), y = pv (cx, cy, w.z);
+
+			g.setColor (sel ? C_SEL : C_WHEEL);
+			g.setStroke (stroke (sel ? 2.2f : 1.4f));
+			if (w.radius <= 0.0)									// no size yet: a mark where it sits
+			{
+				g.draw (new Line2D.Double (x - 4, y, x + 4, y));
+				g.draw (new Line2D.Double (x, y - 4, x, y + 4));
+				continue;
+			}
+
+			java.awt.geom.Path2D.Double[]	rims = new java.awt.geom.Path2D.Double[2];
+			java.util.List<double[]>		all = new java.util.ArrayList<double[]> ();
+			for (int k = 0; k < 2; k++)
+			{
+				double	s = (k == 0) ? -hw : hw;
+				rims[k]	= rim (cx + s * ax, cy + s * ay, w.z, o, w.radius, all);
+			}
+			if (w.traction)													// it drives: filled in
+			{
+				g.setColor (C_TREAD);
+				g.fill (outline (all.toArray (new double[0][])));
+				g.setColor (sel ? C_SEL : C_WHEEL);
+			}
+			g.draw (rims[0]);
+			g.draw (rims[1]);
+			for (int q = 0; q < 4; q++)								// the tread, joining the two rims
+			{
+				double	a = q * Math.PI / 2;
+				double	fx = Math.cos (o) * Math.cos (a), fy = Math.sin (o) * Math.cos (a), fz = Math.sin (a);
+				double	px0 = cx - hw * ax + w.radius * fx, py0 = cy - hw * ay + w.radius * fy;
+				double	px1 = cx + hw * ax + w.radius * fx, py1 = cy + hw * ay + w.radius * fy;
+				double	pz = w.z + w.radius * fz;
+				g.draw (new Line2D.Double (ph (px0, py0, pz), pv (px0, py0, pz), ph (px1, py1, pz), pv (px1, py1, pz)));
+			}
+			if (w.turnable)											// the pivot it steers about
+			{
+				g.setStroke (stroke (1.2f));
+				g.draw (new Ellipse2D.Double (x - 3, y - 3, 6, 6));
+			}
+			if (sel || (scale > 150))
+			{
+				g.setFont (getFont ().deriveFont (10f));
+				g.drawString ("w" + i, (float) (x + 6), (float) (y - 6));
+			}
+		}
+	}
+
+	/** One rim of a wheel: the circle its plane holds, projected on the view. */
+	private java.awt.geom.Path2D.Double rim (double cx, double cy, double cz, double o, double r, java.util.List<double[]> pts)
+	{
+		java.awt.geom.Path2D.Double		path = new java.awt.geom.Path2D.Double ();
+		int								steps = 32;
+
+		for (int i = 0; i <= steps; i++)
+		{
+			double	a = 2 * Math.PI * i / steps;
+			double	x = cx + r * Math.cos (o) * Math.cos (a);
+			double	y = cy + r * Math.sin (o) * Math.cos (a);
+			double	z = cz + r * Math.sin (a);
+			if (i == 0)		path.moveTo (ph (x, y, z), pv (x, y, z));
+			else			path.lineTo (ph (x, y, z), pv (x, y, z));
+			if (pts != null)		pts.add (new double[] { ph (x, y, z), pv (x, y, z) });
+		}
+		path.closePath ();
+		return path;
 	}
 
 	/** The handles of the selection: a square to drag each point, a round one to turn it. */

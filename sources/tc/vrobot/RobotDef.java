@@ -125,6 +125,35 @@ public class RobotDef
 		}
 	}
 
+	/**
+	 * A wheel of the drive train: where it sits, in the polar coordinates a sensor
+	 * also uses (rho, theta) and at a height (z); which way its plane points
+	 * (orientation); how big it is; and what it does -- whether it can be steered
+	 * and whether it drives.
+	 *
+	 * The aim is that the wheels say most of what the kinematics needs, so that a
+	 * platform is described by drawing it rather than by filling in numbers.
+	 */
+	static public class Wheel
+	{
+		public double	rho;						// distance from the centre of the robot (m)
+		public double	theta;						// angle of that distance (deg)
+		public double	z;							// height of its centre over the floor (m)
+		public double	orientation;				// direction it rolls towards (deg)
+		public double	radius;						// radius of the wheel (m)
+		public boolean	turnable;					// it can be steered
+		public boolean	traction;					// it drives
+
+		public Wheel ()								{ }
+		public Wheel copy ()
+		{
+			Wheel	w = new Wheel ();
+			w.rho = rho;		w.theta = theta;		w.z = z;		w.orientation = orientation;
+			w.radius = radius;	w.turnable = turnable;	w.traction = traction;
+			return w;
+		}
+	}
+
 	/** A bumper: the segment of the platform it protects, in robot coordinates. */
 	static public class Bumper
 	{
@@ -187,6 +216,7 @@ public class RobotDef
 	public Kinematics			kinematics	= new Kinematics ();
 	public Map<String, Family>	sensors		= new LinkedHashMap<String, Family> ();	// by family prefix: son, ir, lrf, lsb, trk, vis
 	public List<Bumper>			bumpers		= new ArrayList<Bumper> ();
+	public List<Wheel>			wheels		= new ArrayList<Wheel> ();				// the drive train
 	public Map<String, String>	extra		= new LinkedHashMap<String, String> ();	// everything else of the description (CAN, layers, fusion, ...)
 
 	protected transient File	file;												// where it was loaded from / saved to
@@ -415,7 +445,15 @@ public class RobotDef
 		original	= json;
 	}
 
-	public String toJson ()					{ return gson ().toJson (this); }
+	/** The description as JSON, leaving out a drive train with nothing in it. */
+	public String toJson ()
+	{
+		List<Wheel>		w = wheels;
+
+		if ((w != null) && w.isEmpty ())		wheels = null;
+		try { return gson ().toJson (this); }
+		finally { wheels = w; }
+	}
 	public File getFile ()					{ return file; }
 	public boolean isModified ()			{ return (original == null) || !original.equals (toJson ()); }
 
@@ -431,6 +469,7 @@ public class RobotDef
 		d.kinematics	= kinematics.copy ();
 		for (Map.Entry<String, Family> e : sensors.entrySet ())		d.sensors.put (e.getKey (), e.getValue ().copy ());
 		for (Bumper b : bumpers)		d.bumpers.add (b.copy ());
+		for (Wheel w : wheels)			d.wheels.add (w.copy ());
 		d.extra.putAll (extra);
 		d.file			= file;
 		d.original		= original;
@@ -442,6 +481,7 @@ public class RobotDef
 	{
 		if (icon == null)			icon = new ArrayList<IconLine> ();
 		if (bumpers == null)		bumpers = new ArrayList<Bumper> ();
+		if (wheels == null)			wheels = new ArrayList<Wheel> ();
 		if (extra == null)			extra = new LinkedHashMap<String, String> ();
 		if (kinematics == null)		kinematics = new Kinematics ();
 		if (sensors == null)		sensors = new LinkedHashMap<String, Family> ();

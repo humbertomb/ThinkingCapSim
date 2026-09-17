@@ -84,7 +84,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected javax.swing.border.TitledBorder	propsBorder;
 	protected JSplitPane			mainSP, rightSP;
 	protected boolean				dividersSet, syncing, dirty;
-	protected Action				lineAC, bumperAC, sensorAC, deleteAC;
+	protected Action				wheelAC, lineAC, bumperAC, sensorAC, deleteAC;
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
 	protected javax.swing.JToggleButton[]		viewBT;					// the three flat projections
@@ -153,10 +153,13 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		// --- left: toolbar
 		JToolBar	tb = new JToolBar (JToolBar.VERTICAL);
 		tb.setFloatable (false);
+		wheelAC		= ToolButtons.action ("Wheel", ToolIcon.WHEEL, "Add a wheel to the drive train", new Runnable () { public void run () { addWheel (); } });
 		lineAC		= ToolButtons.action ("Line", ToolIcon.WALL, "Add a segment to the drawing of the robot", new Runnable () { public void run () { addLine (); } });
 		bumperAC	= ToolButtons.action ("Bumper", ToolIcon.CONNECTOR, "Add a bumper", new Runnable () { public void run () { addBumper (); } });
 		sensorAC	= ToolButtons.action ("Sensor", ToolIcon.BEACON, "Add a sensor to the selected family", new Runnable () { public void run () { addSensor (); } });
 		deleteAC	= ToolButtons.action ("Delete", ToolIcon.DELETE, "Delete the selected element  [Delete]", new Runnable () { public void run () { deleteSelection (); } });
+		tb.add (ToolButtons.flatButton (wheelAC));
+		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (lineAC));
 		tb.add (ToolButtons.flatButton (bumperAC));
 		tb.add (ToolButtons.flatButton (sensorAC));
@@ -189,6 +192,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 			private static final long	serialVersionUID = 1L;
 			private final FileCellEditor.Renderer	fileRenderer = new FileCellEditor.Renderer ();
+			private final DefaultCellEditor			boolEditor = new DefaultCellEditor (new JComboBox<String> (new String[] { "true", "false" }));
 
 			// file-path properties get a text field with a "..." browse button, as in the world editor
 			public javax.swing.table.TableCellEditor getCellEditor (int row, int column)
@@ -198,6 +202,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 					String	name = propsModel.nameAt (row);
 					if (isShapeProperty (name))		return FileCellEditor.SHAPE;
 					if (isImageProperty (name))		return FileCellEditor.IMAGE;
+					if (isBooleanProperty (name))	return boolEditor;
 					if (name.equals (DRIVER) || name.equals (DRIVE))
 					{
 						javax.swing.table.TableCellEditor	ed = classEditor (propsModel.item, name);
@@ -602,6 +607,21 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		return ((it != null) && (it.family != null)) ? it.family : "lrf";
 	}
 
+	private void addWheel ()
+	{
+		double				r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		RobotDef.Wheel		w = new RobotDef.Wheel ();
+
+		w.rho		= r / 2;
+		w.radius	= r / 4;
+		w.z			= w.radius;						// resting on the floor
+		w.traction	= true;
+		robot.wheels.add (w);
+		changed ();
+		refreshTree ();
+		select (new RobotItem (RobotItem.WHEEL, robot.wheels.size () - 1));
+	}
+
 	private void addLine ()
 	{
 		double	r = (robot.radius > 0.0) ? robot.radius : 0.25;
@@ -641,6 +661,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 		case RobotItem.LINE:		robot.icon.remove (it.index);							break;
 		case RobotItem.BUMPER:		robot.bumpers.remove (it.index);						break;
+		case RobotItem.WHEEL:		robot.wheels.remove (it.index);							break;
 		case RobotItem.SENSOR:		robot.family (it.family).sensors.remove (it.index);		break;
 		default:					return;								// the sections themselves are not removable
 		}
@@ -668,7 +689,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		syncing	= true;
 		treeRoot.removeAllChildren ();
 		treeRoot.add (new ItemNode (new RobotItem (RobotItem.PLATFORM, 0), "Platform"));
-		treeRoot.add (new ItemNode (new RobotItem (RobotItem.KINEMATICS, 0), "Kinematics"));
+
+		DefaultMutableTreeNode	drive = new DefaultMutableTreeNode ("Drive train  (" + robot.wheels.size () + ")");
+		drive.add (new ItemNode (new RobotItem (RobotItem.KINEMATICS, 0), "Kinematics"));
+		for (int i = 0; i < robot.wheels.size (); i++)	drive.add (new ItemNode (new RobotItem (RobotItem.WHEEL, i), "Wheel " + i));
+		treeRoot.add (drive);
 
 		DefaultMutableTreeNode	lines = new DefaultMutableTreeNode ("Drawing  (" + robot.icon.size () + ")");
 		for (int i = 0; i < robot.icon.size (); i++)		lines.add (new ItemNode (new RobotItem (RobotItem.LINE, i), "Line " + i));
@@ -782,6 +807,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 		case RobotItem.LINE:		return "Drawing line " + it.index;
 		case RobotItem.BUMPER:		return "Bumper " + it.index;
+		case RobotItem.WHEEL:		return "Wheel " + it.index;
 		case RobotItem.SENSOR:		return RobotDef.familyName (it.family) + ": " + it.family + it.index;
 		case RobotItem.FAMILY:		return RobotDef.familyName (it.family);
 		default:					return RobotItem.NAMES[it.kind];
@@ -851,6 +877,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.KINEMATICS:	return kinematicsNames ();
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
+		case RobotItem.WHEEL:		return new String[] { "rho", "theta", "z", "orientation",
+														  "radius", "turnable", "traction" };
 		case RobotItem.SENSOR:
 			// the device it is read through comes first, then where it is and what it detects
 			if (!RobotDef.hasOwnDetection (it.family))
@@ -934,6 +962,18 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("yi"))			return RobotDef.fmt (b.yi);
 			if (name.equals ("xf"))			return RobotDef.fmt (b.xf);
 			if (name.equals ("yf"))			return RobotDef.fmt (b.yf);
+			break;
+		}
+		case RobotItem.WHEEL:
+		{
+			RobotDef.Wheel		w = robot.wheels.get (it.index);
+			if (name.equals ("rho"))			return RobotDef.fmt (w.rho);
+			if (name.equals ("theta"))			return RobotDef.fmt (w.theta);
+			if (name.equals ("z"))				return RobotDef.fmt (w.z);
+			if (name.equals ("orientation"))	return RobotDef.fmt (w.orientation);
+			if (name.equals ("radius"))			return RobotDef.fmt (w.radius);
+			if (name.equals ("turnable"))		return String.valueOf (w.turnable);
+			if (name.equals ("traction"))		return String.valueOf (w.traction);
 			break;
 		}
 		case RobotItem.SENSOR:
@@ -1126,6 +1166,18 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("yf"))		b.yf = num (value);
 			break;
 		}
+		case RobotItem.WHEEL:
+		{
+			RobotDef.Wheel		w = robot.wheels.get (it.index);
+			if (name.equals ("rho"))				w.rho = num (value);
+			else if (name.equals ("theta"))			w.theta = num (value);
+			else if (name.equals ("z"))				w.z = num (value);
+			else if (name.equals ("orientation"))	w.orientation = num (value);
+			else if (name.equals ("radius"))		w.radius = num (value);
+			else if (name.equals ("turnable"))		w.turnable = flag (value);
+			else if (name.equals ("traction"))		w.traction = flag (value);
+			break;
+		}
 		case RobotItem.SENSOR:
 		{
 			RobotDef.Sensor		s = robot.family (it.family).sensors.get (it.index);
@@ -1171,6 +1223,13 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	}
 
 	static private String token (String v)			{ return (v.length () == 0) ? null : v; }
+	static private boolean flag (String v)			{ return Boolean.parseBoolean (v.trim ()); }
+
+	/** True for the properties that are either true or false. */
+	static public boolean isBooleanProperty (String name)
+	{
+		return name.equals ("turnable") || name.equals ("traction");
+	}
 
 	static private double num (String v)
 	{
