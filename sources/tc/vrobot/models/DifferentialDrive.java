@@ -31,8 +31,6 @@ public class DifferentialDrive extends RobotModel
 	public transient double		Cf;				// Conversion factor (motor)
 	public transient double		Va;				// Maximum angular speed (revolution/s)
 
-	private double		MOTmax; 			// Maximum traction speed (m/s)
-
 	// Constructors
 	public DifferentialDrive (RobotDesc rdesc)
 	{
@@ -54,12 +52,10 @@ public class DifferentialDrive extends RobotModel
 		try { b		= Double.valueOf (props.getProperty ("BASE")).doubleValue (); } 		catch (Exception e) 		{ }
 		try { Gn	 	= Double.valueOf (props.getProperty ("GEAR")).doubleValue (); } 		catch (Exception e) 		{ }
 
-		try { MOTmax = Double.valueOf (props.getProperty ("MAXMOTOR")).doubleValue (); } 	catch (Exception e) 		{ }
-
 		// Robot kinematics parameters
 		Cm		= (Math.PI * Dn) / (Ce * Gn);
 		Va		= Vmax / (Math.PI * Dn);
-		Cf		= Va *  (Ce * Gn) / MOTmax;
+		Cf		= Va *  (Ce * Gn) / Vmax;			// a wheel goes as fast as the platform does
 	}
 	
 	public void kynematics_direct (double dVl, double dVr)
@@ -82,8 +78,8 @@ public class DifferentialDrive extends RobotModel
 		dVl	= (vr - b * wr * 0.5);
 
 		// Check for kynematics constraints
-		dVr	= Math.min (Math.max (dVr, -MOTmax), MOTmax);
-		dVl	= Math.min (Math.max (dVl, -MOTmax), MOTmax);
+		dVr	= Math.min (Math.max (dVr, -Vmax), Vmax);
+		dVl	= Math.min (Math.max (dVl, -Vmax), Vmax);
 	}
 
 	public void kynematics_simulation (double speed, double turn)

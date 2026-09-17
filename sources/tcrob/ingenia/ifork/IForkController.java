@@ -622,7 +622,7 @@ public class IForkController extends Controller
 		}
 		
 		// Check for maximum planned velocities 
-		vmax	= model.MOTmax;
+		vmax	= model.Vmax;
 					
 		if (iplan.spd_vmax != IForkPlan.NA)
 			vmax	= iplan.spd_vmax;													// [m/s]
@@ -767,7 +767,7 @@ public class IForkController extends Controller
 		}
 		
 		// Check for maximum planned velocities 
-		vmax	= model.MOTmax;
+		vmax	= model.Vmax;
 		
 		if (iplan.spd_vmax != IForkPlan.NA)
 			vmax	= iplan.spd_vmax;													// [m/s]

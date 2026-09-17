@@ -373,8 +373,6 @@ public class FuzzyControl {
 		// Apply speed limits (vm, del)
 		vmax	= rmodel.Vmax;	// [m/s]
 		rmax	= rmodel.Rmax;	// [rad/s]
-		//vmax = rmodel.MOTmax;
-		//rmax = rmodel.STRmax;
 		
 		del = Math.max (Math.min (del, rmax), -rmax);	// [rad/s]
 		vm = Math.max (Math.min (vm, vmax), -vmax);		// [m/s]

@@ -34,8 +34,7 @@ public class TricycleDrive extends RobotModel
 	private double		SAmax;							// Maximum steering-wheel angular velocity (rad/s)
 	private double		LAmax	= Double.MAX_VALUE;		// Maximum linear acceleration (m/s2)
 	private double		LDmax	= Double.MAX_VALUE;		// Maximum linear decceleration (m/s2)
-	public double		MOTmax; 							// Maximum traction speed (m/s)
-	public double		STRmax; 							// Maximum steering angle (rad)
+	public transient double		STRmax; 					// Maximum steering angle (rad), from how fast it turns
 
 	// Constructors
 	public TricycleDrive (RobotDesc rdesc)
@@ -60,12 +59,15 @@ public class TricycleDrive extends RobotModel
 		try { SAmax	 = Double.valueOf (props.getProperty ("SAMAX")).doubleValue () * Angles.DTOR; } 	catch (Exception e) 		{ }
 		try { LAmax	 = Double.valueOf (props.getProperty ("LAMAX")).doubleValue (); } 				catch (Exception e) 		{ }
 		try { LDmax	 = Double.valueOf (props.getProperty ("LDMAX")).doubleValue (); } 				catch (Exception e) 		{ }
-		try { MOTmax	= Double.valueOf (props.getProperty ("MAXMOTOR")).doubleValue (); } 			catch (Exception e) 		{ }
-		try { STRmax	= Double.valueOf (props.getProperty ("MAXSTEER")).doubleValue () * Angles.DTOR; } catch (Exception e) 	{ }
-
 		try { r		= Double.valueOf (props.getProperty ("RWHEEL")).doubleValue (); }				catch (Exception e)		{ }
 		try { b		= Double.valueOf (props.getProperty ("BASE")).doubleValue (); } 				catch (Exception e) 		{ }
 		try { l		= Double.valueOf (props.getProperty ("LENGHT")).doubleValue (); } 				catch (Exception e) 		{ }
+
+		// How far the wheel goes over is what turning as fast as it can asks of it:
+		// Rmax = sin (STRmax) * Vmax / (l - r * sin (STRmax)).  Nothing to go on: it does not steer.
+		STRmax	= 0.0;
+		if ((Vmax > 0.0) && (l > 0.0))
+			STRmax	= Math.asin (Math.min (1.0, Rmax * l / (Vmax + Rmax * r)));
 	}
 	
 	public void kynematics_direct (double vm, double del)
@@ -145,7 +147,7 @@ public class TricycleDrive extends RobotModel
 		//System.out.println ("vr="+vr+", wr="+wr*Angles.RTOD+" => vm="+vm+"), del="+del*Angles.RTOD+")");		
 
 		// Check for kynematics constraints
-		vm	= Math.min (Math.max (vm, -MOTmax), MOTmax);
+		vm	= Math.min (Math.max (vm, -Vmax), Vmax);			// the motor takes it no faster than it goes
 		del	= Math.min (Math.max (del, -STRmax), STRmax);
 	}
 	

@@ -863,8 +863,6 @@ public class RobotDef
 
 		if (kinematics.drive != null)		p.setProperty ("DRIVEMODEL", kinematics.drive);
 		set (p, "VMAX", kinematics.vmax);			set (p, "RMAX", kinematics.rmax);
-		// the drive models clamp their commands with these; what a wheel can do is what they are
-		setNZ (p, "MAXMOTOR", wheelSpeed ());		setNZ (p, "MAXSTEER", wheelSteering ());
 		setNZ (p, "SAMAX", kinematics.samax);		setNZ (p, "LAMAX", kinematics.lamax);
 		setNZ (p, "LDMAX", kinematics.ldmax);		setNZ (p, "LENGHT", kinematics.length);
 		setNZ (p, "BASE", kinematics.base);			setNZ (p, "RWHEEL", kinematics.rwheel);
@@ -946,20 +944,6 @@ public class RobotDef
 		}
 
 		return p;
-	}
-
-	/** The speed of the driving wheels, as the drive models ask for it (m/s; zero when unknown). */
-	public double wheelSpeed ()
-	{
-		Double	v = (wheels == null) ? null : speed (driving ());
-		return (v != null) ? v.doubleValue () : 0.0;
-	}
-
-	/** How far the steering wheels turn, as the drive models ask for it (deg; zero when unknown). */
-	public double wheelSteering ()
-	{
-		Double	v = (wheels == null) ? null : steering (steerables ());
-		return (v != null) ? v.doubleValue () : 0.0;
 	}
 
 	/* Helpers */

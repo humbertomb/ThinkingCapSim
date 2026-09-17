@@ -30,8 +30,7 @@ public class AckermanDrive extends RobotModel
 
 	// Maximum values of kynematics parameters
 	private double				SAmax;			// Maximum steering-wheel angular velocity (rad/s)
-	private double				MOTmax; 			// Maximum traction speed (m/s)
-	private double				STRmax; 			// Maximum steering angle (rad)
+	private transient double	STRmax; 			// Maximum steering angle (rad), from how fast it turns
 
 	// Constructors
 	public AckermanDrive (RobotDesc rdesc)
@@ -54,10 +53,12 @@ public class AckermanDrive extends RobotModel
 		super.update (props);
 		
 		try { SAmax	 = Double.valueOf (props.getProperty ("SAMAX")).doubleValue () * Angles.DTOR; } 	catch (Exception e) 		{ SAmax			= 360.0 * Angles.DTOR; }
-		try { MOTmax = Double.valueOf (props.getProperty ("MAXMOTOR")).doubleValue (); } 			catch (Exception e) 		{ MOTmax		= 100.0; }
-		try { STRmax = Double.valueOf (props.getProperty ("MAXSTEER")).doubleValue () * Angles.DTOR; } catch (Exception e) 		{ STRmax		= 90.0 * Angles.DTOR; }
-
 		try { l		= Double.valueOf (props.getProperty ("LENGHT")).doubleValue (); } 				catch (Exception e) 		{ l				= 0.0; }
+
+		// How far the wheel goes over is what turning as fast as it can asks of it:
+		// Rmax = tan (STRmax) * Vmax / l.  Nothing to go on: hard over at a right angle.
+		if ((Vmax > 0.0) && (l > 0.0))		STRmax	= Math.atan (Rmax * l / Vmax);
+		else								STRmax	= 90.0 * Angles.DTOR;
 	}
 	
 	public void kynematics_direct (double vm, double del)
@@ -101,7 +102,7 @@ public class AckermanDrive extends RobotModel
 		}
 
 		// Check for kynematics constraints
-		vm	= Math.min (Math.max (vm, -MOTmax), MOTmax);
+		vm	= Math.min (Math.max (vm, -Vmax), Vmax);			// the motor takes it no faster than it goes
 		del	= Math.min (Math.max (del, -STRmax), STRmax);
 	}
 	
