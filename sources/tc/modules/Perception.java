@@ -4,8 +4,6 @@
  
 package tc.modules;
 
-import java.util.*;
-
 import tc.runtime.thread.*;
 import tc.shared.linda.*;
 import tc.shared.lps.*;

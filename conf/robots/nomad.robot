@@ -121,8 +121,6 @@
     "drive": "tc.vrobot.models.SynchroDrive",
     "vmax": 0.75,
     "rmax": 90.0,
-    "maxmotor": 130.0,
-    "maxsteer": 300.0,
     "samax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
@@ -425,6 +423,7 @@
       "width": 0.03,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 0.0
     },
@@ -437,6 +436,7 @@
       "width": 0.03,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 0.0
     }

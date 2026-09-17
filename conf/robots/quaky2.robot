@@ -150,9 +150,6 @@
   "shapeRobot": "./conf/3dmodels/quaky2.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.DifferentialDrive",
-    "vmax": 0.42,
-    "rmax": 110.0,
-    "maxsteer": 0.0,
     "samax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
@@ -472,6 +469,7 @@
       "width": 0.038,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 54.0
     },
@@ -484,6 +482,7 @@
       "width": 0.038,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 54.0
     }

@@ -4,8 +4,6 @@
  
 package tc.gui;
 
-import java.util.*;
-
 import tc.vrobot.*;
 import tclib.utils.fusion.*;
 import tc.modules.*;

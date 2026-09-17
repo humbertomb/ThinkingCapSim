@@ -193,9 +193,6 @@
   "shapeRobot": "./conf/3dmodels/pioneer3.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.DifferentialDrive",
-    "vmax": 1.2,
-    "rmax": 300.0,
-    "maxsteer": 0.0,
     "samax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
@@ -397,6 +394,7 @@
       "width": 0.087,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 111.0
     },
@@ -409,6 +407,7 @@
       "width": 0.087,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 111.0
     },
@@ -421,6 +420,7 @@
       "width": 0.087,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 111.0
     },
@@ -433,6 +433,7 @@
       "width": 0.087,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 111.0
     }

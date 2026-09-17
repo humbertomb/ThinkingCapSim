@@ -143,8 +143,6 @@
   ],
   "kinematics": {
     "drive": "tc.vrobot.models.AckermanDrive",
-    "vmax": 40.0,
-    "rmax": 30.0,
     "samax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,

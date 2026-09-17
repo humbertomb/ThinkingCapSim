@@ -123,7 +123,6 @@ public class Setup {
 	
 
 
-    @SuppressWarnings("unchecked")
     public void menuStandby(){
    	int comand;
 	int radius = 0;

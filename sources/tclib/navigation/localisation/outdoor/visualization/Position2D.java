@@ -6,7 +6,6 @@
 
 package tclib.navigation.localisation.outdoor.visualization;
 
-import java.io.*;
 import java.awt.*;
 
 import devices.pos.*;
@@ -63,23 +62,23 @@ public class Position2D extends Object2D implements Component2DListener
 	}
 	
 	// Find a suitable file name
-	protected String log_name (String base, String suffix)
-	{
-		String			name		= null;
-		boolean			notfound	= true;
-		int				logorder	= 0;
-		
-		while (notfound)
-			try
-		{
-				name	= base + "." + logorder + suffix;
-				new FileReader (name);
-				logorder ++;
-		}
-		catch (FileNotFoundException fnfe) { notfound = false; }
-		
-		return name;
-	}
+//	protected String log_name (String base, String suffix)
+//	{
+//		String			name		= null;
+//		boolean			notfound	= true;
+//		int				logorder	= 0;
+//		
+//		while (notfound)
+//			try
+//		{
+//				name	= base + "." + logorder + suffix;
+//				new FileReader (name);
+//				logorder ++;
+//		}
+//		catch (FileNotFoundException fnfe) { notfound = false; }
+//		
+//		return name;
+//	}
 	
 	public String getObjectText (String src)
 	{

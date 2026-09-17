@@ -179,9 +179,6 @@
   ],
   "kinematics": {
     "drive": "tc.vrobot.models.DifferentialDrive",
-    "vmax": 1.0,
-    "rmax": 60.0,
-    "maxsteer": 0.0,
     "samax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
@@ -388,6 +385,7 @@
       "width": 0.097,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 60.0
     },
@@ -400,6 +398,7 @@
       "width": 0.097,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 60.0
     },
@@ -412,6 +411,7 @@
       "width": 0.097,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 60.0
     },
@@ -424,6 +424,7 @@
       "width": 0.097,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 60.0
     }

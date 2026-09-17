@@ -18,8 +18,8 @@ public abstract class RobotModel extends Object
 	public double								odom_bias; 		// Coefficient for biased odometry drift ([0..1])
 
     // Maximum values of kynematics parameters
-	public double								Vmax;			// Maximum linear velocity (m/s)
-	public double								Rmax;			// Maximum angular velocity (rad/s)
+	public transient double						Vmax;			// Maximum linear velocity (m/s)
+	public transient double						Rmax;			// Maximum angular velocity (rad/s)
 
 	// Kynematics outputs
     public transient double						vr, wr;			// Desired de-normalised velocities (translation, rotation)		[INPUT]

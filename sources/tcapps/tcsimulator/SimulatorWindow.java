@@ -50,7 +50,6 @@ import tcapps.tceditor.WorldCanvas;
 import tcapps.tceditor.WorldEditor;
 import tcapps.tceditor.WorldEditorDialog;
 import tcapps.tceditor.WorldItem;
-import tcapps.tceditor.WorldItem;
 import tcapps.tcsimulator.simulator.Simulator;
 import tcapps.tcsimulator.simulator.SimulatorDesc;
 import tcapps.tcsimulator.simulator.SimulatorListener;

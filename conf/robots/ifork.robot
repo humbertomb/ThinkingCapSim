@@ -188,9 +188,6 @@
   "shapeActuator": "./conf/3dmodels/ifork.lift.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.TricycleDrive",
-    "vmax": 2.5,
-    "rmax": 72.0,
-    "samax": 42.0,
     "lamax": 0.5,
     "ldmax": 0.2,
     "rwheel": 0.0,
@@ -314,8 +311,8 @@
       "radius": 0.125,
       "width": 0.082,
       "steerable": true,
-      "maxsteer": 60.0,
-      "maxturning": 72.0,
+      "maxsteer": 30.0,
+      "maxturning": 42.0,
       "traction": true,
       "maxrpm": 191.0
     }
