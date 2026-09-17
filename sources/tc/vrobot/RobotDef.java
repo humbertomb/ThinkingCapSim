@@ -276,19 +276,20 @@ public class RobotDef
 	}
 
 	/**
-	 * The geometry of the kinematics: what the drive train says on its own, so
-	 * that it is read off the wheels instead of being typed in twice. The rest of
-	 * the kinematics -- the speeds, the accelerations, the encoders -- is not
-	 * geometry and stays as it is given.
+	 * What the drive train says on its own, so that it is read off the wheels
+	 * instead of being typed in twice: the geometry of the platform, how far it
+	 * steers and how fast its motors take it. The rest of the kinematics -- the
+	 * speeds of the platform, the accelerations, the encoders -- is not the
+	 * wheels' to say and stays as it is given.
 	 */
-	static private final String[]	KIN_GEOMETRY	= { "length", "base", "wheel" };
+	static private final String[]	KIN_DERIVED		= { "length", "base", "wheel", "maxsteer", "maxmotor" };
 
 	/** True for a kinematics property the wheels of the platform work out. */
-	static public boolean isGeometry (String name)
+	static public boolean isCalculated (String name)
 	{
 		if (name == null)						return false;
 		name	= name.replace (" ", "").toLowerCase ();
-		for (String k : KIN_GEOMETRY)			if (k.equals (name))	return true;
+		for (String k : KIN_DERIVED)			if (k.equals (name))	return true;
 		return false;
 	}
 
@@ -305,6 +306,13 @@ public class RobotDef
 	 *             are across; for a tricycle, how far the fixed axle is from the
 	 *             origin along x, which is what its model measures
 	 *   wheel  -- the diameter of the driving wheel
+	 *
+	 * And what the wheels can do bounds what the platform can do, so the most
+	 * restrictive of them has the say:
+	 *
+	 *   maxsteer  -- how far the steering wheels turn
+	 *   maxmotor  -- how fast a driving wheel takes the platform, from how fast it
+	 *                spins and how big it is
 	 */
 	public Double geometry (String name)
 	{
@@ -332,6 +340,20 @@ public class RobotDef
 		{
 			if (turning.isEmpty () || fixed.isEmpty ())		return null;
 			return Double.valueOf (Math.abs (meanX (turning) - meanX (fixed)));
+		}
+		if (name.equals ("maxsteer"))
+		{
+			double	lo = Double.MAX_VALUE;
+			for (Wheel w : turning)		if (w.maxsteer > 0.0)		lo = Math.min (lo, w.maxsteer);
+			return (lo < Double.MAX_VALUE) ? Double.valueOf (lo) : null;
+		}
+		if (name.equals ("maxmotor"))
+		{
+			double	lo = Double.MAX_VALUE;
+			for (Wheel w : driving)
+				if ((w.maxrpm > 0.0) && (w.radius > 0.0))
+					lo	= Math.min (lo, (w.maxrpm / 60.0) * 2 * Math.PI * w.radius);
+			return (lo < Double.MAX_VALUE) ? Double.valueOf (lo) : null;
 		}
 		if (name.equals ("base"))
 		{
@@ -363,20 +385,25 @@ public class RobotDef
 	/**
 	 * Writes into the kinematics whatever the wheels work out, and says whether
 	 * anything changed. It runs when a description is read and whenever a wheel is
-	 * moved or resized, so the geometry always tells what the drive train is.
+	 * moved, resized or told what it can do, so the kinematics always tells what
+	 * the drive train is.
 	 */
 	public boolean updateGeometry ()
 	{
 		boolean		any = false;
 
-		for (String name : KIN_GEOMETRY)
+		for (String name : KIN_DERIVED)
 		{
 			Double	v = geometry (name);
+			double	d;
 
 			if (v == null)							continue;
-			if (name.equals ("length"))		{ if (kinematics.length != v.doubleValue ())	{ kinematics.length = v.doubleValue (); any = true; } }
-			else if (name.equals ("base"))	{ if (kinematics.base != v.doubleValue ())		{ kinematics.base = v.doubleValue (); any = true; } }
-			else if (name.equals ("wheel"))	{ if (kinematics.wheel != v.doubleValue ())		{ kinematics.wheel = v.doubleValue (); any = true; } }
+			d	= v.doubleValue ();
+			if (name.equals ("length"))				{ if (kinematics.length != d)	{ kinematics.length = d;	any = true; } }
+			else if (name.equals ("base"))			{ if (kinematics.base != d)		{ kinematics.base = d;		any = true; } }
+			else if (name.equals ("wheel"))			{ if (kinematics.wheel != d)	{ kinematics.wheel = d;		any = true; } }
+			else if (name.equals ("maxsteer"))		{ if (kinematics.maxsteer != d)	{ kinematics.maxsteer = d;	any = true; } }
+			else if (name.equals ("maxmotor"))		{ if (kinematics.maxmotor != d)	{ kinematics.maxmotor = d;	any = true; } }
 		}
 		return any;
 	}

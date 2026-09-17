@@ -219,7 +219,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				{
 					String	name = propsModel.nameAt (row);
 					if (isFileProperty (name))								return fileRenderer;
-					if (isCalculated (propsModel.item, name))				return calcRenderer;
+					// what cannot be typed in is shown on a grey ground: it is not for anybody to edit
+					if ((propsModel.item != null) && !isEditable (propsModel.item, name))	return calcRenderer;
 				}
 				return super.getCellRenderer (row, column);
 			}
@@ -735,7 +736,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		selectInTree (canvas.getSelection ());
 	}
 
-	/** A value the description works out: shown on a grey ground, since it is not to be typed in. */
+	/** A value that is not typed in -- worked out, or of no meaning here: shown on a grey ground. */
 	static private class CalculatedRenderer extends javax.swing.table.DefaultTableCellRenderer
 	{
 		private static final long	serialVersionUID = 1L;
@@ -1167,14 +1168,14 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	}
 
 	/**
-	 * True for a property the description works out on its own -- the geometry of
-	 * the kinematics, which the drive train says. A platform whose wheels cannot
-	 * say it keeps the value it was given, and keeps it editable.
+	 * True for a property the description works out on its own -- what the drive
+	 * train says of the kinematics. A platform whose wheels cannot say it keeps
+	 * the value it was given, and keeps it editable.
 	 */
 	public boolean isCalculated (RobotItem it, String name)
 	{
 		if ((it == null) || (it.kind != RobotItem.KINEMATICS))		return false;
-		return RobotDef.isGeometry (name) && (robot.geometry (name) != null);
+		return RobotDef.isCalculated (name) && (robot.geometry (name) != null);
 	}
 
 	public void setProperty (RobotItem it, String name, String value)
