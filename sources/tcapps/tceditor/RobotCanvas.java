@@ -17,6 +17,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
+import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
@@ -52,6 +53,7 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_RADIUS	= new Color (120, 120, 200);
 	static public final Color		C_BUMPER	= new Color (200, 60, 60);
 	static public final Color		C_SENSOR	= new Color (40, 120, 200);
+	static public final Color		C_BAND_FILL	= new Color (255, 140, 0, 30);		// the rectangle that picks several
 	static public final Color		C_WHEEL		= new Color (70, 74, 82);			// the drive train
 	static public final Color		C_TREAD		= new Color (70, 74, 82, 60);		// a wheel that drives, filled
 	static public final Color		C_SHAPE		= new Color (170, 175, 185);		// lines of the 3D model
@@ -90,6 +92,10 @@ public class RobotCanvas extends JPanel
 	static private final int		D_PAN		= 1;
 	static private final int		D_MOVE		= 2;			// dragging the element itself
 	static private final int		D_HANDLE	= 3;			// dragging one of its handles
+	static private final int		D_BAND		= 4;			// drawing the rectangle that picks several
+
+	/** A band shorter than this is a click that picked nothing, not a selection (px). */
+	static public final double		BAND_MIN	= 3.0;
 
 	protected int					view	= V_TOP;			// projection being drawn
 	protected double				scale	= 200.0;			// pixels per metre
@@ -103,6 +109,8 @@ public class RobotCanvas extends JPanel
 	protected boolean				snapGrid		= false;	// take the handles to the grid
 	protected double				gridStep		= 0.1;		// metres, recomputed from the scale
 	protected double				grabX, grabY;				// where the element was grabbed (world coordinates)
+	protected int					bandX, bandY, bandX1, bandY1;	// the rectangle being drawn (px)
+	protected java.util.List<RobotItem>	group = new ArrayList<RobotItem> ();	// what a band picked, beyond one element
 
 	public RobotCanvas (RobotDef robot)
 	{
@@ -135,9 +143,21 @@ public class RobotCanvas extends JPanel
 					return;
 				}
 				hit		= pick (e.getX (), e.getY ());
-				setSelection (hit);
 				grabX	= wx (e.getX ());
 				grabY	= wy (e.getY ());
+				if (inGroup (hit))						// grabbing one of several moves them all
+				{
+					drag	= D_MOVE;
+					return;
+				}
+				setSelection (hit);
+				if (hit == null)						// nothing there: pick by drawing a rectangle
+				{
+					drag	= D_BAND;
+					bandX	= bandX1 = e.getX ();
+					bandY	= bandY1 = e.getY ();
+					return;
+				}
 				drag	= isMovable (hit) ? D_MOVE : D_NONE;
 			}
 
@@ -167,10 +187,19 @@ public class RobotCanvas extends JPanel
 				case D_HANDLE:
 					setHandle (dragHandle, snap (x), snap (y));
 					break;
+				case D_BAND:
+					bandX1	= e.getX ();
+					bandY1	= e.getY ();
+					repaint ();
+					break;
 				}
 			}
 
-			public void mouseReleased (MouseEvent e)		{ drag = D_NONE; }
+			public void mouseReleased (MouseEvent e)
+			{
+				if (drag == D_BAND)		selectBand ();
+				drag	= D_NONE;
+			}
 		};
 		addMouseListener (mouse);
 		addMouseMotionListener (mouse);
@@ -193,9 +222,96 @@ public class RobotCanvas extends JPanel
 
 	public void setSelection (RobotItem item)
 	{
+		group.clear ();
 		selection	= item;
 		repaint ();
 		if (listener != null)		listener.selectionChanged (item);
+	}
+
+	/** What a band picked, when it picked more than one element (empty otherwise). */
+	public java.util.List<RobotItem> getGroup ()	{ return group; }
+
+	/** True when an element is one of those a band picked. */
+	public boolean inGroup (RobotItem it)
+	{
+		if ((it == null) || group.isEmpty ())		return false;
+		for (RobotItem g : group)		if (g.equals (it))		return true;
+		return false;
+	}
+
+	/** Everything the selection holds: the several a band picked, or the one element. */
+	public java.util.List<RobotItem> selected ()
+	{
+		java.util.List<RobotItem>	all = new ArrayList<RobotItem> (group);
+
+		if (all.isEmpty () && (selection != null))		all.add (selection);
+		return all;
+	}
+
+	/**
+	 * Takes as the selection everything inside the rectangle just drawn: whatever
+	 * has a position, wherever that position is said in the description -- a
+	 * sensor, a wheel, and, seen from above, a drawing line or a bumper, which go
+	 * in when both of their ends do. A rectangle no bigger than a click picks
+	 * nothing.
+	 */
+	public void selectBand ()
+	{
+		java.util.List<RobotItem>	found = new ArrayList<RobotItem> ();
+		double						x0, y0, x1, y1;
+
+		if ((Math.abs (bandX1 - bandX) < BAND_MIN) && (Math.abs (bandY1 - bandY) < BAND_MIN))
+		{
+			repaint ();
+			return;
+		}
+		x0	= Math.min (wx (bandX), wx (bandX1));		x1 = Math.max (wx (bandX), wx (bandX1));
+		y0	= Math.min (wy (bandY), wy (bandY1));		y1 = Math.max (wy (bandY), wy (bandY1));
+
+		for (String fam : RobotDef.FAMILIES)
+		{
+			java.util.List<RobotDef.Sensor>		ss = robot.family (fam).sensors;
+			for (int i = 0; i < ss.size (); i++)
+			{
+				RobotDef.Sensor		s = ss.get (i);
+				if (in (x0, y0, x1, y1, sx (s), sy (s), sz (s)))		found.add (new RobotItem (RobotItem.SENSOR, i, fam));
+			}
+		}
+		for (int i = 0; i < robot.wheels.size (); i++)
+		{
+			RobotDef.Wheel	w = robot.wheels.get (i);
+			if (in (x0, y0, x1, y1, kx (w), ky (w), w.z))		found.add (new RobotItem (RobotItem.WHEEL, i));
+		}
+		if (isTop ())									// the drawing and the bumpers are flat
+		{
+			for (int i = 0; i < robot.bumpers.size (); i++)
+			{
+				RobotDef.Bumper	b = robot.bumpers.get (i);
+				if (in (x0, y0, x1, y1, b.xi, b.yi, 0.0) && in (x0, y0, x1, y1, b.xf, b.yf, 0.0))
+					found.add (new RobotItem (RobotItem.BUMPER, i));
+			}
+			for (int i = 0; i < robot.icon.size (); i++)
+			{
+				RobotDef.IconLine	l = robot.icon.get (i);
+				if (in (x0, y0, x1, y1, l.xi, l.yi, 0.0) && in (x0, y0, x1, y1, l.xf, l.yf, 0.0))
+					found.add (new RobotItem (RobotItem.LINE, i));
+			}
+		}
+
+		group.clear ();
+		if (found.size () == 1)			{ setSelection (found.get (0)); return; }
+		selection	= null;
+		group.addAll (found);
+		repaint ();
+		if (listener != null)			listener.selectionChanged (null);
+	}
+
+	/** True when a point of the robot falls inside a box of the view. */
+	private boolean in (double x0, double y0, double x1, double y1, double x, double y, double z)
+	{
+		double		hh = h (x, y, z), vv = v (x, y, z);
+
+		return (hh >= x0) && (hh <= x1) && (vv >= y0) && (vv <= y1);
 	}
 
 	/** The model changed behind the view. */
@@ -841,46 +957,74 @@ public class RobotCanvas extends JPanel
 		changed ();
 	}
 
-	/** Moves the selection by (dx, dy) metres. */
+	/**
+	 * Moves the selection by (dx, dy) metres: the several elements a band picked,
+	 * or the one that is selected.
+	 */
 	public void translate (double dx, double dy)
 	{
-		if (selection == null)				return;
-		switch (selection.kind)
+		for (RobotItem it : selected ())		move (it, dx, dy);
+		changed ();
+	}
+
+	/**
+	 * Moves one element by (dx, dy) metres, along the two axes the view shows and
+	 * without saying anything about it: whoever moves a whole selection says it
+	 * once, at the end.
+	 */
+	private void move (RobotItem it, double dx, double dy)
+	{
+		if (it == null)						return;
+		switch (it.kind)
 		{
 		case RobotItem.SENSOR:
 		{
-			RobotDef.Sensor		s = selectedSensor ();
+			java.util.List<RobotDef.Sensor>		ss = robot.family (it.family).sensors;
+			RobotDef.Sensor						s;
+			double								x, y;
 
-			if (s == null)					return;
-			moveSensorTo (h (sx (s), sy (s), sz (s)) + dx, v (sx (s), sy (s), sz (s)) + dy);
+			if (it.index >= ss.size ())		return;
+			s	= ss.get (it.index);
+			x	= sx (s);	y = sy (s);
+			switch (view)
+			{
+			case V_FRONT:	y += dx;	s.height += dy;		break;
+			case V_SIDE:	x += dx;	s.height += dy;		break;
+			default:		x += dx;	y += dy;			break;
+			}
+			s.rho		= Math.hypot (x, y);
+			s.theta		= Math.toDegrees (Math.atan2 (y, x));
 			return;
 		}
 		case RobotItem.WHEEL:
 		{
-			RobotDef.Wheel		w = selectedWheel ();
+			RobotDef.Wheel		w;
 
-			if (w == null)					return;
-			moveWheelTo (h (kx (w), ky (w), w.z) + dx, v (kx (w), ky (w), w.z) + dy);
+			if (it.index >= robot.wheels.size ())		return;
+			w	= robot.wheels.get (it.index);
+			switch (view)
+			{
+			case V_FRONT:	w.y += dx;	w.z += dy;		break;
+			case V_SIDE:	w.x += dx;	w.z += dy;		break;
+			default:		w.x += dx;	w.y += dy;		break;
+			}
 			return;
 		}
 		case RobotItem.LINE:
 		{
-			if (!isTop () || (selection.index >= robot.icon.size ()))		return;
-			RobotDef.IconLine	l = robot.icon.get (selection.index);
+			if (!isTop () || (it.index >= robot.icon.size ()))		return;
+			RobotDef.IconLine	l = robot.icon.get (it.index);
 			l.xi += dx;		l.yi += dy;		l.xf += dx;		l.yf += dy;
-			break;
+			return;
 		}
 		case RobotItem.BUMPER:
 		{
-			if (!isTop () || (selection.index >= robot.bumpers.size ()))		return;
-			RobotDef.Bumper		b = robot.bumpers.get (selection.index);
+			if (!isTop () || (it.index >= robot.bumpers.size ()))		return;
+			RobotDef.Bumper		b = robot.bumpers.get (it.index);
 			b.xi += dx;		b.yi += dy;		b.xf += dx;		b.yf += dy;
-			break;
-		}
-		default:
 			return;
 		}
-		changed ();
+		}
 	}
 
 	/** Moves the selected sensor to a point of the robot: its polar position follows. */
@@ -1050,6 +1194,7 @@ public class RobotCanvas extends JPanel
 		drawCoverage (g);
 		drawSensors (g);
 		drawHandles (g);
+		drawBand (g);
 		drawScaleBar (g);
 	}
 
@@ -1522,6 +1667,23 @@ public class RobotCanvas extends JPanel
 		else			g.drawRect (px - HANDLE_PX, py - HANDLE_PX, 2 * HANDLE_PX, 2 * HANDLE_PX);
 	}
 
+	/** The rectangle being drawn to pick several elements at once. */
+	private void drawBand (Graphics2D g)
+	{
+		int		x, y, w, h;
+
+		if (drag != D_BAND)				return;
+		x	= Math.min (bandX, bandX1);		y = Math.min (bandY, bandY1);
+		w	= Math.abs (bandX1 - bandX);	h = Math.abs (bandY1 - bandY);
+		if ((w < BAND_MIN) && (h < BAND_MIN))		return;
+
+		g.setColor (C_BAND_FILL);
+		g.fillRect (x, y, w, h);
+		g.setColor (C_SEL);
+		g.setStroke (new BasicStroke (1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f, new float[] { 4f, 3f }, 0f));
+		g.drawRect (x, y, w, h);
+	}
+
 	private void drawScaleBar (Graphics2D g)
 	{
 		double		step = 0.1;
@@ -1538,9 +1700,12 @@ public class RobotCanvas extends JPanel
 		g.drawString (RobotDef.fmt (step) + " m", (float) (x + step * scale + 6), (float) (y + 4));
 	}
 
+	/** True for an element that is selected, on its own or as one of several. */
 	private boolean isSel (int kind, int index, String fam)
 	{
-		return (selection != null) && (selection.kind == kind) && (selection.index == index)
-				&& ((fam == null) ? (selection.family == null) : fam.equals (selection.family));
+		if ((selection != null) && (selection.kind == kind) && (selection.index == index)
+				&& ((fam == null) ? (selection.family == null) : fam.equals (selection.family)))
+			return true;
+		return inGroup (new RobotItem (kind, index, fam));
 	}
 }

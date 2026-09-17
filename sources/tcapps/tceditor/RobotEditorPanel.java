@@ -655,17 +655,24 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 	private void deleteSelection ()
 	{
-		RobotItem	it = canvas.getSelection ();
+		List<RobotItem>		all = new ArrayList<RobotItem> (canvas.selected ());
+		boolean				any = false;
 
-		if (it == null)					return;
-		switch (it.kind)
+		// from the last index to the first, so that removing one does not shift the next
+		java.util.Collections.sort (all, new java.util.Comparator<RobotItem> ()
 		{
-		case RobotItem.LINE:		robot.icon.remove (it.index);							break;
-		case RobotItem.BUMPER:		robot.bumpers.remove (it.index);						break;
-		case RobotItem.WHEEL:		robot.wheels.remove (it.index);							break;
-		case RobotItem.SENSOR:		robot.family (it.family).sensors.remove (it.index);		break;
-		default:					return;								// the sections themselves are not removable
-		}
+			public int compare (RobotItem a, RobotItem b)		{ return b.index - a.index; }
+		});
+		for (RobotItem it : all)
+			switch (it.kind)
+			{
+			case RobotItem.LINE:		robot.icon.remove (it.index);						any = true;		break;
+			case RobotItem.BUMPER:		robot.bumpers.remove (it.index);					any = true;		break;
+			case RobotItem.WHEEL:		robot.wheels.remove (it.index);						any = true;		break;
+			case RobotItem.SENSOR:		robot.family (it.family).sensors.remove (it.index);	any = true;		break;
+			default:					break;								// the sections themselves are not removable
+			}
+		if (!any)						return;
 		changed ();
 		refreshTree ();
 		select (null);
@@ -787,7 +794,19 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		}
 		showProperties (item);
 		if (view3d != null)		view3d.setSelection (item);		// a sensor draws what it covers
-		deleteAC.setEnabled ((item != null) && ((item.kind == RobotItem.LINE) || (item.kind == RobotItem.BUMPER) || (item.kind == RobotItem.SENSOR)));
+		deleteAC.setEnabled (removable () > 0);
+	}
+
+	/** How many of the selected elements can be removed. */
+	private int removable ()
+	{
+		int		n = 0;
+
+		for (RobotItem it : canvas.selected ())
+			if ((it.kind == RobotItem.LINE) || (it.kind == RobotItem.BUMPER)
+					|| (it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.WHEEL))
+				n++;
+		return n;
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -798,8 +817,16 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	{
 		stopEditing ();
 		propsModel.setItem (it);
-		propsBorder.setTitle ((it == null) ? " " : title (it));
+		propsBorder.setTitle ((it != null) ? title (it) : groupTitle ());
 		((JComponent) propsTB.getParent ().getParent ().getParent ()).repaint ();
+	}
+
+	/** What the property table is headed with when a band picked several elements. */
+	private String groupTitle ()
+	{
+		int		n = canvas.getGroup ().size ();
+
+		return (n > 1) ? (n + " elements selected") : " ";
 	}
 
 	private String title (RobotItem it)
