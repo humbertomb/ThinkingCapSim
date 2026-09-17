@@ -266,7 +266,7 @@ public class RobotDef
 	{
 		Map<String, String[]>	m = new LinkedHashMap<String, String[]> ();
 
-		m.put ("tc.vrobot.models.SynchroDrive",		new String[] { });
+		m.put ("tc.vrobot.models.SynchroDrive",		new String[] { "samax", "lamax", "ldmax" });
 		m.put ("tc.vrobot.models.DifferentialDrive",	new String[] { "base", "wheeldiameter", "gear", "pulses" });
 		m.put ("tc.vrobot.models.SkidSteerDrive",		new String[] { "base", "wheeldiameter", "gear", "pulses", "skid" });
 		m.put ("tc.vrobot.models.AckermanDrive",		new String[] { "samax", "length" });
