@@ -470,11 +470,40 @@ public class RobotDef
 
 	/* Construction */
 
-	static protected Gson gson ()
+	static protected Gson gson ()					{ return gson (null); }
+
+	/**
+	 * @param skip	names of the kinematics fields to leave out, or null to write
+	 *				them all
+	 */
+	static protected Gson gson (java.util.Set<String> skip)
 	{
 		return new GsonBuilder ().setPrettyPrinting ().disableHtmlEscaping ()
 					.registerTypeAdapter (Family.class, new FamilyWriter ())
+					.registerTypeAdapter (Kinematics.class, new KinematicsWriter (skip))
 					.registerTypeAdapter (Sensor.class, new SensorWriter ()).create ();
+	}
+
+	/**
+	 * Writes the kinematics leaving out whatever the wheels work out: a value that
+	 * is not typed in is not kept either, or a file and its drive train could come
+	 * to disagree. It is worked out again every time the description is read.
+	 */
+	static private class KinematicsWriter implements com.google.gson.JsonSerializer<Kinematics>
+	{
+		private final java.util.Set<String>		skip;
+		private final Gson						plain = new Gson ();		// the fields as they are
+
+		KinematicsWriter (java.util.Set<String> skip)		{ this.skip = skip; }
+
+		public com.google.gson.JsonElement serialize (Kinematics k, java.lang.reflect.Type type, com.google.gson.JsonSerializationContext ctx)
+		{
+			com.google.gson.JsonObject	o = plain.toJsonTree (k).getAsJsonObject ();
+
+			if (skip != null)
+				for (String name : skip)		o.remove (name);
+			return o;
+		}
 	}
 
 	/**
@@ -587,13 +616,19 @@ public class RobotDef
 		original	= json;
 	}
 
-	/** The description as JSON, leaving out a drive train with nothing in it. */
+	/**
+	 * The description as JSON, leaving out a drive train with nothing in it and
+	 * whatever the wheels work out on their own.
+	 */
 	public String toJson ()
 	{
-		List<Wheel>		w = wheels;
+		List<Wheel>				w = wheels;
+		java.util.Set<String>	skip = new java.util.LinkedHashSet<String> ();
 
+		for (String name : KIN_DERIVED)
+			if (geometry (name) != null)		skip.add (name);
 		if ((w != null) && w.isEmpty ())		wheels = null;
-		try { return gson ().toJson (this); }
+		try { return gson (skip).toJson (this); }
 		finally { wheels = w; }
 	}
 	public File getFile ()					{ return file; }
