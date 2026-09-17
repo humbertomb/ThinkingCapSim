@@ -141,6 +141,7 @@ public class RobotDef
 		public double	z;							// height of its centre over the floor (m)
 		public double	orientation;				// direction it rolls towards (deg)
 		public double	radius;						// radius of the wheel (m)
+		public double	width;						// width of its tread (m)
 		public boolean	turnable;					// it can be steered
 		public boolean	traction;					// it drives
 
@@ -149,7 +150,8 @@ public class RobotDef
 		{
 			Wheel	w = new Wheel ();
 			w.rho = rho;		w.theta = theta;		w.z = z;		w.orientation = orientation;
-			w.radius = radius;	w.turnable = turnable;	w.traction = traction;
+			w.radius = radius;	w.width = width;
+			w.turnable = turnable;	w.traction = traction;
 			return w;
 		}
 	}

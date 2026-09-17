@@ -554,8 +554,12 @@ public class RobotCanvas extends JPanel
 	static public double kx (RobotDef.Wheel w)		{ return w.rho * Math.cos (Math.toRadians (w.theta)); }
 	static public double ky (RobotDef.Wheel w)		{ return w.rho * Math.sin (Math.toRadians (w.theta)); }
 
-	/** How wide a wheel is drawn, until its width is a property of its own (m). */
-	static public double kwidth (RobotDef.Wheel w)	{ return Math.max (0.3 * w.radius, 0.005); }
+	/** How wide the tread of a wheel is: what it says, or a share of its radius while it says nothing (m). */
+	static public double kwidth (RobotDef.Wheel w)
+	{
+		if (w.width > 0.0)		return w.width;
+		return Math.max (w.radius / 3, 0.005);
+	}
 
 	/**
 	 * The direction a sensor looks at as it shows in the view: {dh, dv}, of unit
@@ -715,13 +719,28 @@ public class RobotCanvas extends JPanel
 		case RobotItem.WHEEL:
 		{
 			RobotDef.Wheel		w = selectedWheel ();
-			double				hx, hy;
-			double[]			d;
+			double				hx, hy, len;
+			double[]			d, q;
 
 			if (w == null)					return new double[0];
 			hx	= ph (kx (w), ky (w), w.z);		hy = pv (kx (w), ky (w), w.z);
 			d	= roll (w);
-			return new double[] { hx, hy, hx + ARROW * d[0], hy - ARROW * d[1] };
+			q	= rollRaw (w);
+
+			// the rim handle sits at the radius of the wheel, along the way it rolls; a
+			// wheel that says no radius yet gets it at hand, to pull it out by
+			len	= (w.radius > 0.0) ? w.radius * Math.hypot (q[0], q[1]) * scale : ARROW;
+			if (len < 1.0)		len = ARROW;								// it rolls across this view
+			if (!isTop ())
+				return new double[] { hx, hy, hx + len * d[0], hy - len * d[1] };
+
+			// and, from above, the handle of the tread: half its width along the axle
+			double		o = Math.toRadians (w.orientation);
+			double		ax = -Math.sin (o), ay = Math.cos (o);
+			double		half = kwidth (w) / 2;
+			return new double[] { hx, hy, hx + len * d[0], hy - len * d[1],
+								  ph (kx (w) + half * ax, ky (w) + half * ay, w.z),
+								  pv (kx (w) + half * ax, ky (w) + half * ay, w.z) };
 		}
 		case RobotItem.LINE:
 		{
@@ -796,7 +815,8 @@ public class RobotCanvas extends JPanel
 		{
 			if (selectedWheel () == null)	return;
 			if (handle == 0)		moveWheelTo (x, y);
-			else					turnWheelTo (x, y);
+			else if (handle == 1)	{ turnWheelTo (x, y); sizeWheelTo (x, y); }
+			else					treadWheelTo (x, y);
 			return;
 		}
 		case RobotItem.LINE:
@@ -927,6 +947,19 @@ public class RobotCanvas extends JPanel
 		return new double[] { 1.0, 0.0 };						// it rolls across the view
 	}
 
+	/**
+	 * How the way a wheel rolls shows in the view, at its own length: a point of
+	 * its rim sits at the centre plus the radius times this. It goes to nothing
+	 * when the wheel rolls across the view, which is where its radius cannot be
+	 * read off the drawing.
+	 */
+	public double[] rollRaw (RobotDef.Wheel w)
+	{
+		double		o = Math.toRadians (w.orientation);
+
+		return new double[] { h (Math.cos (o), Math.sin (o), 0.0), v (Math.cos (o), Math.sin (o), 0.0) };
+	}
+
 	/** Moves the selected wheel to a point of the view: its polar position and its height follow. */
 	public void moveWheelTo (double hw, double vw)
 	{
@@ -953,6 +986,42 @@ public class RobotCanvas extends JPanel
 
 		if ((w == null) || !isTop ())		return;				// a wheel turns about the vertical: only from above
 		w.orientation	= Math.toDegrees (Math.atan2 (vw - ky (w), hw - kx (w)));
+		changed ();
+	}
+
+	/**
+	 * Takes the rim of the selected wheel to a point of the view: how far that
+	 * point is along the way the wheel rolls is its radius. Nothing happens in a
+	 * view the wheel rolls across, where the radius does not show.
+	 */
+	public void sizeWheelTo (double hw, double vw)
+	{
+		RobotDef.Wheel		w = selectedWheel ();
+		double[]			q;
+		double				len2, r;
+
+		if (w == null)				return;
+		q		= rollRaw (w);
+		len2	= q[0] * q[0] + q[1] * q[1];
+		if (len2 < 1e-9)			return;
+		r		= ((hw - h (kx (w), ky (w), w.z)) * q[0] + (vw - v (kx (w), ky (w), w.z)) * q[1]) / len2;
+		w.radius	= Math.max (r, 0.0);
+		changed ();
+	}
+
+	/**
+	 * Takes the tread handle of the selected wheel to a point of the view: how far
+	 * that point is across the way it rolls is half its width.
+	 */
+	public void treadWheelTo (double hw, double vw)
+	{
+		RobotDef.Wheel		w = selectedWheel ();
+		double				o, ax, ay;
+
+		if ((w == null) || !isTop ())		return;				// the tread shows across the wheel: only from above
+		o		= Math.toRadians (w.orientation);
+		ax		= -Math.sin (o);	ay = Math.cos (o);
+		w.width	= 2 * Math.abs ((hw - kx (w)) * ax + (vw - ky (w)) * ay);
 		changed ();
 	}
 

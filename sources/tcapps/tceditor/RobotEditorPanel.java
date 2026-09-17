@@ -614,6 +614,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 		w.rho		= r / 2;
 		w.radius	= r / 4;
+		w.width		= w.radius / 3;
 		w.z			= w.radius;						// resting on the floor
 		w.traction	= true;
 		robot.wheels.add (w);
@@ -878,7 +879,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
 		case RobotItem.WHEEL:		return new String[] { "rho", "theta", "z", "orientation",
-														  "radius", "turnable", "traction" };
+														  "radius", "width", "turnable", "traction" };
 		case RobotItem.SENSOR:
 			// the device it is read through comes first, then where it is and what it detects
 			if (!RobotDef.hasOwnDetection (it.family))
@@ -972,6 +973,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("z"))				return RobotDef.fmt (w.z);
 			if (name.equals ("orientation"))	return RobotDef.fmt (w.orientation);
 			if (name.equals ("radius"))			return RobotDef.fmt (w.radius);
+			if (name.equals ("width"))			return RobotDef.fmt (RobotCanvas.kwidth (w));
 			if (name.equals ("turnable"))		return String.valueOf (w.turnable);
 			if (name.equals ("traction"))		return String.valueOf (w.traction);
 			break;
@@ -1174,6 +1176,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("z"))				w.z = num (value);
 			else if (name.equals ("orientation"))	w.orientation = num (value);
 			else if (name.equals ("radius"))		w.radius = num (value);
+			else if (name.equals ("width"))			w.width = num (value);
 			else if (name.equals ("turnable"))		w.turnable = flag (value);
 			else if (name.equals ("traction"))		w.traction = flag (value);
 			break;
