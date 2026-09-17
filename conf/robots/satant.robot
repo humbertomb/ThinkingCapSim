@@ -201,6 +201,7 @@
       "width": 0.205,
       "steerable": true,
       "maxsteer": 45.0,
+      "maxturning": 30.0,
       "traction": false,
       "maxrpm": 0.0
     },
@@ -213,6 +214,7 @@
       "width": 0.205,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 1288.0
     },
@@ -225,6 +227,7 @@
       "width": 0.205,
       "steerable": true,
       "maxsteer": 45.0,
+      "maxturning": 30.0,
       "traction": false,
       "maxrpm": 0.0
     },
@@ -237,6 +240,7 @@
       "width": 0.205,
       "steerable": false,
       "maxsteer": 0.0,
+      "maxturning": 0.0,
       "traction": true,
       "maxrpm": 1288.0
     }
