@@ -222,7 +222,8 @@
           "height": 0.2652819949202241,
           "orientation": 0.0,
           "step": 4,
-          "driver": "devices.drivers.laser.PLS.PLS|/dev/ttyS0",
+          "driver": "devices.drivers.laser.PLS.PLS",
+          "driverParams": "/dev/ttyS0",
           "rangemax": 82.0,
           "rangemin": 0.01,
           "cone": 180.0,
@@ -239,7 +240,8 @@
           "height": 2.681921007325325,
           "orientation": 2.8,
           "step": 1,
-          "driver": "devices.drivers.beacon.nav200.NAV200|/dev/ttyS1",
+          "driver": "devices.drivers.beacon.nav200.NAV200",
+          "driverParams": "/dev/ttyS1",
           "rangemax": 30.0,
           "rangemin": 0.01,
           "cone": 360.0,
@@ -280,6 +282,38 @@
       "yi": 0.5,
       "xf": -0.1,
       "yf": 0.5
+    }
+  ],
+  "wheels": [
+    {
+      "x": 0.0,
+      "y": -0.425,
+      "z": 0.10084648477721295,
+      "orientation": 0.0,
+      "radius": 0.1,
+      "width": 0.082,
+      "turnable": false,
+      "traction": false
+    },
+    {
+      "x": 0.0,
+      "y": 0.425,
+      "z": 0.1,
+      "orientation": 0.0,
+      "radius": 0.1,
+      "width": 0.082,
+      "turnable": false,
+      "traction": false
+    },
+    {
+      "x": 1.004,
+      "y": 0.0,
+      "z": 0.125,
+      "orientation": -3.1532500071902073E-15,
+      "radius": 0.125,
+      "width": 0.082,
+      "turnable": true,
+      "traction": true
     }
   ],
   "extra": {

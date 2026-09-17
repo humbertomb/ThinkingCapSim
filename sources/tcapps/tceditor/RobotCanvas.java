@@ -551,8 +551,8 @@ public class RobotCanvas extends JPanel
 	static public double sy (RobotDef.Sensor s)		{ return s.rho * Math.sin (Math.toRadians (s.theta)); }
 	static public double sz (RobotDef.Sensor s)		{ return s.height; }
 
-	static public double kx (RobotDef.Wheel w)		{ return w.rho * Math.cos (Math.toRadians (w.theta)); }
-	static public double ky (RobotDef.Wheel w)		{ return w.rho * Math.sin (Math.toRadians (w.theta)); }
+	static public double kx (RobotDef.Wheel w)		{ return w.x; }
+	static public double ky (RobotDef.Wheel w)		{ return w.y; }
 
 	/** How wide the tread of a wheel is: what it says, or a share of its radius while it says nothing (m). */
 	static public double kwidth (RobotDef.Wheel w)
@@ -960,22 +960,18 @@ public class RobotCanvas extends JPanel
 		return new double[] { h (Math.cos (o), Math.sin (o), 0.0), v (Math.cos (o), Math.sin (o), 0.0) };
 	}
 
-	/** Moves the selected wheel to a point of the view: its polar position and its height follow. */
+	/** Moves the selected wheel to a point of the view: what that view shows of where it sits follows. */
 	public void moveWheelTo (double hw, double vw)
 	{
 		RobotDef.Wheel		w = selectedWheel ();
-		double				x, y;
 
 		if (w == null)				return;
-		x	= kx (w);	y = ky (w);
 		switch (view)
 		{
-		case V_FRONT:	y = hw;		w.z = vw;		break;
-		case V_SIDE:	x = hw;		w.z = vw;		break;
-		default:		x = hw;		y = vw;			break;
+		case V_FRONT:	w.y = hw;	w.z = vw;		break;
+		case V_SIDE:	w.x = hw;	w.z = vw;		break;
+		default:		w.x = hw;	w.y = vw;		break;
 		}
-		w.rho		= Math.hypot (x, y);
-		w.theta		= Math.toDegrees (Math.atan2 (y, x));
 		changed ();
 	}
 

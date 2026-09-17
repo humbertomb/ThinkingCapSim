@@ -430,7 +430,8 @@
           "orientation": 0.0,
           "elevation": -15.0,
           "step": 1,
-          "driver": "devices.drivers.vision.quaky2.Quaky2Vis|5,7000,10.0.0.1:8000",
+          "driver": "devices.drivers.vision.quaky2.Quaky2Vis",
+          "driverParams": "5,7000,10.0.0.1:8000",
           "rangemax": 11.668769833972743,
           "hfov": 60.0,
           "vfov": 50.0
@@ -462,6 +463,28 @@
       "yi": 0.21,
       "xf": 0.21,
       "yf": 0.21
+    }
+  ],
+  "wheels": [
+    {
+      "x": 0.0,
+      "y": -0.1825,
+      "z": 0.07435,
+      "orientation": -0.7073193685442569,
+      "radius": 0.07435,
+      "width": 0.038,
+      "turnable": false,
+      "traction": true
+    },
+    {
+      "x": 0.0,
+      "y": 0.1825,
+      "z": 0.07435,
+      "orientation": -2.2579142478972982E-14,
+      "radius": 0.07435,
+      "width": 0.038,
+      "turnable": false,
+      "traction": true
     }
   ],
   "extra": {

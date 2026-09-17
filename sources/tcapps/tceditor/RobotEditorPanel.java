@@ -612,7 +612,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		double				r = (robot.radius > 0.0) ? robot.radius : 0.25;
 		RobotDef.Wheel		w = new RobotDef.Wheel ();
 
-		w.rho		= r / 2;
+		w.x			= r / 2;
 		w.radius	= r / 4;
 		w.width		= w.radius / 3;
 		w.z			= w.radius;						// resting on the floor
@@ -878,7 +878,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.KINEMATICS:	return kinematicsNames ();
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
-		case RobotItem.WHEEL:		return new String[] { "rho", "theta", "z", "orientation",
+		case RobotItem.WHEEL:		return new String[] { "x", "y", "z", "orientation",
 														  "radius", "width", "turnable", "traction" };
 		case RobotItem.SENSOR:
 			// the device it is read through comes first, then where it is and what it detects
@@ -968,8 +968,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.WHEEL:
 		{
 			RobotDef.Wheel		w = robot.wheels.get (it.index);
-			if (name.equals ("rho"))			return RobotDef.fmt (w.rho);
-			if (name.equals ("theta"))			return RobotDef.fmt (w.theta);
+			if (name.equals ("x"))				return RobotDef.fmt (w.x);
+			if (name.equals ("y"))				return RobotDef.fmt (w.y);
 			if (name.equals ("z"))				return RobotDef.fmt (w.z);
 			if (name.equals ("orientation"))	return RobotDef.fmt (w.orientation);
 			if (name.equals ("radius"))			return RobotDef.fmt (w.radius);
@@ -1171,8 +1171,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.WHEEL:
 		{
 			RobotDef.Wheel		w = robot.wheels.get (it.index);
-			if (name.equals ("rho"))				w.rho = num (value);
-			else if (name.equals ("theta"))			w.theta = num (value);
+			if (name.equals ("x"))					w.x = num (value);
+			else if (name.equals ("y"))				w.y = num (value);
 			else if (name.equals ("z"))				w.z = num (value);
 			else if (name.equals ("orientation"))	w.orientation = num (value);
 			else if (name.equals ("radius"))		w.radius = num (value);

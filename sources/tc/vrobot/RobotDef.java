@@ -126,18 +126,22 @@ public class RobotDef
 	}
 
 	/**
-	 * A wheel of the drive train: where it sits, in the polar coordinates a sensor
-	 * also uses (rho, theta) and at a height (z); which way its plane points
-	 * (orientation); how big it is; and what it does -- whether it can be steered
-	 * and whether it drives.
+	 * A wheel of the drive train: where it sits, in the coordinates of the robot
+	 * (x, y, z); which way its plane points (orientation); how big it is; and what
+	 * it does -- whether it can be steered and whether it drives.
+	 *
+	 * A wheel is placed in x and y rather than in the polar coordinates a sensor
+	 * uses, because a wheel base is measured off the drawing of the platform, and
+	 * saying "0.2 m to the left of the axle" in a distance and an angle is neither
+	 * easy nor exact.
 	 *
 	 * The aim is that the wheels say most of what the kinematics needs, so that a
 	 * platform is described by drawing it rather than by filling in numbers.
 	 */
 	static public class Wheel
 	{
-		public double	rho;						// distance from the centre of the robot (m)
-		public double	theta;						// angle of that distance (deg)
+		public double	x;							// where it sits, in the coordinates of the robot (m)
+		public double	y;
 		public double	z;							// height of its centre over the floor (m)
 		public double	orientation;				// direction it rolls towards (deg)
 		public double	radius;						// radius of the wheel (m)
@@ -149,7 +153,7 @@ public class RobotDef
 		public Wheel copy ()
 		{
 			Wheel	w = new Wheel ();
-			w.rho = rho;		w.theta = theta;		w.z = z;		w.orientation = orientation;
+			w.x = x;			w.y = y;				w.z = z;		w.orientation = orientation;
 			w.radius = radius;	w.width = width;
 			w.turnable = turnable;	w.traction = traction;
 			return w;

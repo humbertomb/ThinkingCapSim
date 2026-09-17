@@ -390,6 +390,48 @@
       "yf": 0.26
     }
   ],
+  "wheels": [
+    {
+      "x": -0.150750274481,
+      "y": 0.233155987294,
+      "z": 0.103,
+      "orientation": -0.5115558665870633,
+      "radius": 0.103,
+      "width": 0.087,
+      "turnable": false,
+      "traction": true
+    },
+    {
+      "x": 0.120943892531,
+      "y": 0.229302169322,
+      "z": 0.103,
+      "orientation": 1.112399616297792,
+      "radius": 0.103,
+      "width": 0.087,
+      "turnable": false,
+      "traction": true
+    },
+    {
+      "x": 0.118053529052,
+      "y": -0.237009805266,
+      "z": 0.103,
+      "orientation": -0.5305013166737873,
+      "radius": 0.103,
+      "width": 0.087,
+      "turnable": false,
+      "traction": true
+    },
+    {
+      "x": -0.145933002017,
+      "y": -0.234119441787,
+      "z": 0.103,
+      "orientation": -1.0609116902642124,
+      "radius": 0.103,
+      "width": 0.087,
+      "turnable": false,
+      "traction": true
+    }
+  ],
   "extra": {
     "MAXDSIG": "1",
     "grouplen4": "0.10",
