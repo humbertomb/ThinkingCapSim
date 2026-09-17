@@ -217,6 +217,43 @@ public class RobotDef
 	/** The class every kinematics model of a platform derives from. */
 	static public final String		DRIVE_BASE		= "tc.vrobot.RobotModel";
 
+	/** What every model reads, whichever it is, and what the platform itself says. */
+	static private final String[]	KIN_COMMON		= { "drive", "drivetype", "vmax", "rmax", "dtime",
+														"odomet", "odomer", "odombias" };
+
+	/** What each model reads beyond that: a differential drive knows nothing of a steering wheel. */
+	static private final Map<String, String[]>	KIN_MODELS = kinModels ();
+
+	static private Map<String, String[]> kinModels ()
+	{
+		Map<String, String[]>	m = new LinkedHashMap<String, String[]> ();
+
+		m.put ("tc.vrobot.models.SynchroDrive",		new String[] { });
+		m.put ("tc.vrobot.models.DifferentialDrive",	new String[] { "maxmotor", "base", "wheel", "gear", "pulses" });
+		m.put ("tc.vrobot.models.AckermanDrive",		new String[] { "maxmotor", "maxsteer", "samax", "length" });
+		m.put ("tc.vrobot.models.TricycleDrive",		new String[] { "maxmotor", "maxsteer", "samax", "lamax", "ldmax",
+																	   "length", "base", "rwheel" });
+		return m;
+	}
+
+	/**
+	 * True when a kinematics property says something to a model. A model nobody
+	 * here knows about is taken to read everything, so that a model of one's own
+	 * is not left without its parameters.
+	 */
+	static public boolean usesKinematics (String drive, String name)
+	{
+		String[]	own;
+
+		if (name == null)						return false;
+		name	= name.replace (" ", "").toLowerCase ();
+		for (String k : KIN_COMMON)				if (k.equals (name))	return true;
+		own		= (drive == null) ? null : KIN_MODELS.get (drive.trim ());
+		if (own == null)						return true;
+		for (String k : own)					if (k.equals (name))	return true;
+		return false;
+	}
+
 	/** The class the drivers of a family derive from, or null when there is none. */
 	static public String driverBase (String fam)
 	{

@@ -802,6 +802,23 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		return out.toArray (new String[0]);
 	}
 
+	/**
+	 * The properties of the kinematics: the model of the platform and, of the
+	 * rest, only what that model reads. A differential drive says nothing of a
+	 * steering wheel, and showing it would invite editing a value nobody uses.
+	 */
+	private String[] kinematicsNames ()
+	{
+		String[]		all = { DRIVE, "vmax", "rmax", "maxmotor", "maxsteer", "samax", "lamax", "ldmax",
+								"length", "base", "rwheel", "wheel", "gear", "pulses", "dtime",
+								"odom et", "odom er", "odom bias" };
+		List<String>	out = new ArrayList<String> ();
+
+		for (String name : all)
+			if (RobotDef.usesKinematics (robot.kinematics.drive, name))		out.add (name);
+		return out.toArray (new String[0]);
+	}
+
 	/** True for a property held in a field the description does not keep. */
 	static public boolean isTransientProperty (String name)
 	{
@@ -831,9 +848,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		switch (it.kind)
 		{
 		case RobotItem.PLATFORM:	return new String[] { "name", "radius", "image", "robot shape", "actuator shape" };
-		case RobotItem.KINEMATICS:	return new String[] { DRIVE, "vmax", "rmax", "maxmotor", "maxsteer", "samax", "lamax", "ldmax",
-														  "length", "base", "rwheel", "wheel", "gear", "pulses", "dtime",
-														  "odom et", "odom er", "odom bias" };
+		case RobotItem.KINEMATICS:	return kinematicsNames ();
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
 		case RobotItem.SENSOR:
@@ -1030,7 +1045,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		names	= new ArrayList<String> (DriverClasses.of (base, plain));
 		current	= getProperty (it, what);
 		if ((current.length () > 0) && !names.contains (current))	names.add (0, current);
-		names.add (0, "");										// a sensor may have no driver of its own
+		if (plain)		names.add (0, "");						// a sensor may have no driver of its own,
+																// while a platform always has a kinematics model
 
 		cb		= new JComboBox<String> (names.toArray (new String[0]));
 		cb.setSelectedItem (current);
@@ -1194,8 +1210,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 			try
 			{
-				setProperty (item, names[r], value (names[r], (v == null) ? "" : v.toString ()));
-				fireTableRowsUpdated (r, r);
+				String	name = names[r];
+
+				setProperty (item, name, value (name, (v == null) ? "" : v.toString ()));
+				if (name.equals (DRIVE))		setItem (item);		// another model reads other properties
+				else							fireTableRowsUpdated (r, r);
 				if ((item.kind == RobotItem.PLATFORM) && names[r].equals ("name"))		refreshTree ();
 			} catch (IllegalArgumentException e)
 			{
