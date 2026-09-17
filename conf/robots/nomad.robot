@@ -421,11 +421,11 @@
       "orientation": 0.0,
       "radius": 0.07,
       "width": 0.03,
-      "steerable": false,
+      "steerable": true,
       "maxsteer": 0.0,
-      "maxturning": 0.0,
+      "maxturning": 90.0,
       "traction": true,
-      "maxrpm": 0.0
+      "maxrpm": 102.3
     },
     {
       "x": 0.0,
@@ -434,11 +434,11 @@
       "orientation": 0.0,
       "radius": 0.07,
       "width": 0.03,
-      "steerable": false,
+      "steerable": true,
       "maxsteer": 0.0,
-      "maxturning": 0.0,
+      "maxturning": 90.0,
       "traction": true,
-      "maxrpm": 0.0
+      "maxrpm": 102.3
     }
   ],
   "extra": {

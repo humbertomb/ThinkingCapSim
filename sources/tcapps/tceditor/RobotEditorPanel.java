@@ -596,7 +596,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	private void changed ()
 	{
 		dirty	= true;
-		robot.updateGeometry ();				// whatever changed, the wheels have the say on the kinematics
 		canvas.robotChanged ();
 		if (view3d != null)		view3d.robotChanged ();
 		updateTitle ();
@@ -979,15 +978,14 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			break;
 		case RobotItem.KINEMATICS:
 			if (name.equals (DRIVE))		return (k.drive != null) ? k.drive : "";
-			if (name.equals ("vmax"))		return RobotDef.fmt (k.vmax);
-			if (name.equals ("rmax"))		return RobotDef.fmt (k.rmax);
-			if (name.equals ("samax"))		return RobotDef.fmt (k.samax);
+			if (RobotDef.isCalculated (name))						// the drive train says these
+			{
+				Double	v = robot.derived (name);
+				return (v != null) ? RobotDef.fmt (v.doubleValue ()) : "";
+			}
 			if (name.equals ("lamax"))		return RobotDef.fmt (k.lamax);
 			if (name.equals ("ldmax"))		return RobotDef.fmt (k.ldmax);
-			if (name.equals ("length"))		return RobotDef.fmt (k.length);
-			if (name.equals ("base"))		return RobotDef.fmt (k.base);
 			if (name.equals ("rwheel"))		return RobotDef.fmt (k.rwheel);
-			if (name.equals ("wheel"))		return RobotDef.fmt (k.wheel);
 			if (name.equals ("gear"))		return RobotDef.fmt (k.gear);
 			if (name.equals ("pulses"))		return RobotDef.fmt (k.pulses);
 			if (name.equals ("dtime"))		return String.valueOf (k.dtime);
@@ -1168,13 +1166,13 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 	/**
 	 * True for a property the description works out on its own -- what the drive
-	 * train says of the kinematics. A platform whose wheels cannot say it keeps
-	 * the value it was given, and keeps it editable.
+	 * train says of the kinematics. It is never typed in and never kept: a
+	 * platform whose wheels cannot say it shows nothing.
 	 */
 	public boolean isCalculated (RobotItem it, String name)
 	{
 		if ((it == null) || (it.kind != RobotItem.KINEMATICS))		return false;
-		return RobotDef.isCalculated (name) && (robot.geometry (name) != null);
+		return RobotDef.isCalculated (name);
 	}
 
 	public void setProperty (RobotItem it, String name, String value)
@@ -1207,15 +1205,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			break;
 		case RobotItem.KINEMATICS:
 			if (name.equals (DRIVE))			k.drive = token (value);
-			else if (name.equals ("vmax"))		k.vmax = num (value);
-			else if (name.equals ("rmax"))		k.rmax = num (value);
-			else if (name.equals ("samax"))		k.samax = num (value);
 			else if (name.equals ("lamax"))		k.lamax = num (value);
 			else if (name.equals ("ldmax"))		k.ldmax = num (value);
-			else if (name.equals ("length"))	k.length = num (value);
-			else if (name.equals ("base"))		k.base = num (value);
 			else if (name.equals ("rwheel"))	k.rwheel = num (value);
-			else if (name.equals ("wheel"))		k.wheel = num (value);
 			else if (name.equals ("gear"))		k.gear = num (value);
 			else if (name.equals ("pulses"))	k.pulses = num (value);
 			else if (name.equals ("dtime"))		k.dtime = (long) num (value);

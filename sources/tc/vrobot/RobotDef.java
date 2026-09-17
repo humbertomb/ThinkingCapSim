@@ -184,19 +184,19 @@ public class RobotDef
 		public IconLine copy ()											{ return new IconLine (xi, yi, xf, yf); }
 	}
 
-	/** Kinematics and dynamics of the platform (what RobotModel reads). */
+	/**
+	 * Kinematics and dynamics of the platform: what has to be given, and nothing
+	 * else. Whatever the drive train can say -- how far apart the axles are, how
+	 * big the wheel is, how fast the platform goes and turns -- is not here and is
+	 * not kept: {@link RobotDef#derived(String)} works it out off the wheels
+	 * whenever it is asked for, so it cannot fall out of step with them.
+	 */
 	static public class Kinematics
 	{
 		public String	drive		= "tc.vrobot.models.DifferentialDrive";	// DRIVEMODEL
-		public double	vmax;						// maximum linear speed (m/s)
-		public double	rmax;						// maximum angular speed (deg/s)
-		public double	samax;						// maximum turning speed of the driving wheel (deg/s)
 		public double	lamax;						// maximum acceleration (m/s2)
 		public double	ldmax;						// maximum deceleration (m/s2)
-		public double	length;						// LENGHT (m)
-		public double	base;						// BASE (m)
-		public double	rwheel;						// RWHEEL (m)
-		public double	wheel;						// WHEEL (m)
+		public double	rwheel;						// RWHEEL (m): the trail of the steering wheel
 		public double	gear;						// GEAR
 		public double	pulses;						// PULSES
 		public long		dtime	= 100;				// control cycle (ms)
@@ -205,9 +205,8 @@ public class RobotDef
 		public Kinematics copy ()
 		{
 			Kinematics	k = new Kinematics ();
-			k.drive = drive;	k.vmax = vmax;		k.rmax = rmax;
-			k.samax = samax;	k.lamax = lamax;	k.ldmax = ldmax;	k.length = length;		k.base = base;
-			k.rwheel = rwheel;	k.wheel = wheel;	k.gear = gear;		k.pulses = pulses;		k.dtime = dtime;
+			k.drive = drive;	k.lamax = lamax;	k.ldmax = ldmax;
+			k.rwheel = rwheel;	k.gear = gear;		k.pulses = pulses;		k.dtime = dtime;
 			k.odomET = odomET;	k.odomER = odomER;	k.odomBias = odomBias;
 			return k;
 		}
@@ -316,7 +315,7 @@ public class RobotDef
 	 *             wheel hard over, each as its own model works it out
 	 *   samax  -- how fast the steering wheels are turned
 	 */
-	public Double geometry (String name)
+	public Double derived (String name)
 	{
 		List<Wheel>		turning, fixed, driving;
 
@@ -349,13 +348,15 @@ public class RobotDef
 			if (v == null)												return null;
 			if ("tc.vrobot.models.DifferentialDrive".equals (kinematics.drive))
 			{
-				Double	base = geometry ("base");						// both wheels at full speed the other way
+				Double	base = derived ("base");						// both wheels at full speed the other way
 				if (base != null)		b = base.doubleValue ();
 				if (b <= 0.0)											return null;
 				return Double.valueOf (Math.toDegrees (2 * v.doubleValue () / b));
 			}
+			if ("tc.vrobot.models.SynchroDrive".equals (kinematics.drive))
+				return steerRate (wheels);						// it turns the whole drive train at once
 			if (s == null)												return null;
-			Double	len = geometry ("length");
+			Double	len = derived ("length");
 			if (len != null)		l = len.doubleValue ();
 			if (l <= 0.0)												return null;
 			if ("tc.vrobot.models.AckermanDrive".equals (kinematics.drive))
@@ -450,32 +451,6 @@ public class RobotDef
 		return hi - lo;
 	}
 
-	/**
-	 * Writes into the kinematics whatever the wheels work out, and says whether
-	 * anything changed. It runs when a description is read and whenever a wheel is
-	 * moved, resized or told what it can do, so the kinematics always tells what
-	 * the drive train is.
-	 */
-	public boolean updateGeometry ()
-	{
-		boolean		any = false;
-
-		for (String name : KIN_DERIVED)
-		{
-			Double	v = geometry (name);
-			double	d;
-
-			if (v == null)							continue;
-			d	= v.doubleValue ();
-			if (name.equals ("length"))				{ if (kinematics.length != d)	{ kinematics.length = d;	any = true; } }
-			else if (name.equals ("base"))			{ if (kinematics.base != d)		{ kinematics.base = d;		any = true; } }
-			else if (name.equals ("wheel"))			{ if (kinematics.wheel != d)	{ kinematics.wheel = d;		any = true; } }
-			else if (name.equals ("vmax"))			{ if (kinematics.vmax != d)		{ kinematics.vmax = d;		any = true; } }
-			else if (name.equals ("rmax"))			{ if (kinematics.rmax != d)		{ kinematics.rmax = d;		any = true; } }
-			else if (name.equals ("samax"))			{ if (kinematics.samax != d)	{ kinematics.samax = d;		any = true; } }
-		}
-		return any;
-	}
 
 	/**
 	 * True when a kinematics property says something to a model. A model nobody
@@ -539,40 +514,11 @@ public class RobotDef
 
 	/* Construction */
 
-	static protected Gson gson ()					{ return gson (null); }
-
-	/**
-	 * @param skip	names of the kinematics fields to leave out, or null to write
-	 *				them all
-	 */
-	static protected Gson gson (java.util.Set<String> skip)
+	static protected Gson gson ()
 	{
 		return new GsonBuilder ().setPrettyPrinting ().disableHtmlEscaping ()
 					.registerTypeAdapter (Family.class, new FamilyWriter ())
-					.registerTypeAdapter (Kinematics.class, new KinematicsWriter (skip))
 					.registerTypeAdapter (Sensor.class, new SensorWriter ()).create ();
-	}
-
-	/**
-	 * Writes the kinematics leaving out whatever the wheels work out: a value that
-	 * is not typed in is not kept either, or a file and its drive train could come
-	 * to disagree. It is worked out again every time the description is read.
-	 */
-	static private class KinematicsWriter implements com.google.gson.JsonSerializer<Kinematics>
-	{
-		private final java.util.Set<String>		skip;
-		private final Gson						plain = new Gson ();		// the fields as they are
-
-		KinematicsWriter (java.util.Set<String> skip)		{ this.skip = skip; }
-
-		public com.google.gson.JsonElement serialize (Kinematics k, java.lang.reflect.Type type, com.google.gson.JsonSerializationContext ctx)
-		{
-			com.google.gson.JsonObject	o = plain.toJsonTree (k).getAsJsonObject ();
-
-			if (skip != null)
-				for (String name : skip)		o.remove (name);
-			return o;
-		}
 	}
 
 	/**
@@ -685,21 +631,16 @@ public class RobotDef
 		original	= json;
 	}
 
-	/**
-	 * The description as JSON, leaving out a drive train with nothing in it and
-	 * whatever the wheels work out on their own.
-	 */
+	/** The description as JSON, leaving out a drive train with nothing in it. */
 	public String toJson ()
 	{
-		List<Wheel>				w = wheels;
-		java.util.Set<String>	skip = new java.util.LinkedHashSet<String> ();
+		List<Wheel>		w = wheels;
 
-		for (String name : KIN_DERIVED)
-			if (geometry (name) != null)		skip.add (name);
 		if ((w != null) && w.isEmpty ())		wheels = null;
-		try { return gson (skip).toJson (this); }
+		try { return gson ().toJson (this); }
 		finally { wheels = w; }
 	}
+
 	public File getFile ()					{ return file; }
 	public boolean isModified ()			{ return (original == null) || !original.equals (toJson ()); }
 
@@ -746,7 +687,6 @@ public class RobotDef
 			}
 			for (Sensor s : f.sensors)		split (s);
 		}
-		updateGeometry ();						// the geometry of the kinematics is what the wheels say
 	}
 
 	/**
@@ -874,11 +814,12 @@ public class RobotDef
 		}
 
 		if (kinematics.drive != null)		p.setProperty ("DRIVEMODEL", kinematics.drive);
-		set (p, "VMAX", kinematics.vmax);			set (p, "RMAX", kinematics.rmax);
-		setNZ (p, "SAMAX", kinematics.samax);		setNZ (p, "LAMAX", kinematics.lamax);
-		setNZ (p, "LDMAX", kinematics.ldmax);		setNZ (p, "LENGHT", kinematics.length);
-		setNZ (p, "BASE", kinematics.base);			setNZ (p, "RWHEEL", kinematics.rwheel);
-		setNZ (p, "WHEEL", kinematics.wheel);		setNZ (p, "GEAR", kinematics.gear);
+		// what the drive train says is asked for, not stored
+		setNZ (p, "VMAX", value (derived ("vmax")));	setNZ (p, "RMAX", value (derived ("rmax")));
+		setNZ (p, "LENGHT", value (derived ("length")));	setNZ (p, "BASE", value (derived ("base")));
+		setNZ (p, "WHEEL", value (derived ("wheel")));	setNZ (p, "SAMAX", value (derived ("samax")));
+		setNZ (p, "LAMAX", kinematics.lamax);		setNZ (p, "LDMAX", kinematics.ldmax);
+		setNZ (p, "RWHEEL", kinematics.rwheel);		setNZ (p, "GEAR", kinematics.gear);
 		setNZ (p, "PULSES", kinematics.pulses);
 		p.setProperty ("DTIME", String.valueOf (kinematics.dtime));
 		setNZ (p, "ODOM_ET", kinematics.odomET);	setNZ (p, "ODOM_ER", kinematics.odomER);
@@ -959,6 +900,8 @@ public class RobotDef
 	}
 
 	/* Helpers */
+
+	static private double value (Double v)			{ return (v != null) ? v.doubleValue () : 0.0; }
 
 	static private void set (Properties p, String key, double value)
 	{
