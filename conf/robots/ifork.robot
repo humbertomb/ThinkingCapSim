@@ -191,6 +191,7 @@
     "lamax": 0.5,
     "ldmax": 0.2,
     "rwheel": 0.0,
+    "skid": 1.0,
     "gear": 0.0,
     "pulses": 0.0,
     "dtime": 115,
@@ -228,9 +229,9 @@
       "sensors": [
         {
           "rho": 0.6113382381516156,
-          "theta": -0.2576315714419668,
+          "theta": 0.0,
           "height": 2.681921007325325,
-          "orientation": 2.8,
+          "orientation": 0.0,
           "step": 1,
           "driver": "devices.drivers.beacon.nav200.NAV200",
           "driverParams": "/dev/ttyS1",
@@ -311,7 +312,7 @@
       "radius": 0.125,
       "width": 0.082,
       "steerable": true,
-      "maxsteer": 30.0,
+      "maxsteer": 60.0,
       "maxturning": 42.0,
       "traction": true,
       "maxrpm": 191.0
