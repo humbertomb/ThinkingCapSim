@@ -1,6 +1,6 @@
 {
   "name": "satant2",
-  "radius": 0.1,
+  "radius": 2.0,
   "icon": [
     {
       "xi": 1.5,

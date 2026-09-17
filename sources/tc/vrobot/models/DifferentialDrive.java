@@ -19,7 +19,7 @@ import tc.vrobot.*;
 public class DifferentialDrive extends RobotModel
 {
 	// Kynematics outputs
-	public double		dVr, dVl;		// Differential drive model (right and left wheel speed)
+	public transient double		dVr, dVl;		// Differential drive model (right and left wheel speed)
 
 	// Parameters
 	public double		Dn;				// Wheel diameter (m)
@@ -27,11 +27,11 @@ public class DifferentialDrive extends RobotModel
 	public double		Gn;				// Gear ratio (a:b)
 	public double		b;				// Wheel base (m)	Differential => Distance between wheels
 
-	public double		Cm;				// Conversion factor (odometry)
-	public double		Cf;				// Conversion factor (motor)
-	public double		Va;				// Maximum angular speed (revolution/s)
+	public transient double		Cm;				// Conversion factor (odometry)
+	public transient double		Cf;				// Conversion factor (motor)
+	public transient double		Va;				// Maximum angular speed (revolution/s)
 
-	public double		MOTmax; 			// Maximum traction speed (m/s)
+	private double		MOTmax; 			// Maximum traction speed (m/s)
 
 	// Constructors
 	public DifferentialDrive (RobotDesc rdesc)

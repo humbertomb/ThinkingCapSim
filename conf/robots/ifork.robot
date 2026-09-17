@@ -190,15 +190,10 @@
     "drive": "tc.vrobot.models.TricycleDrive",
     "vmax": 2.5,
     "rmax": 72.0,
-    "maxmotor": 2.5,
-    "maxsteer": 60.0,
     "samax": 42.0,
     "lamax": 0.5,
     "ldmax": 0.2,
-    "length": 1.004,
-    "base": 0.0,
     "rwheel": 0.0,
-    "wheel": 0.0,
     "gear": 0.0,
     "pulses": 0.0,
     "dtime": 115,
@@ -292,8 +287,10 @@
       "orientation": 0.0,
       "radius": 0.1,
       "width": 0.082,
-      "turnable": false,
-      "traction": false
+      "steerable": false,
+      "maxsteer": 0.0,
+      "traction": false,
+      "maxrpm": 0.0
     },
     {
       "x": 0.0,
@@ -302,8 +299,10 @@
       "orientation": 0.0,
       "radius": 0.1,
       "width": 0.082,
-      "turnable": false,
-      "traction": false
+      "steerable": false,
+      "maxsteer": 0.0,
+      "traction": false,
+      "maxrpm": 0.0
     },
     {
       "x": 1.004,
@@ -312,8 +311,10 @@
       "orientation": -3.1532500071902073E-15,
       "radius": 0.125,
       "width": 0.082,
-      "turnable": true,
-      "traction": true
+      "steerable": true,
+      "maxsteer": 60.0,
+      "traction": true,
+      "maxrpm": 191.0
     }
   ],
   "extra": {

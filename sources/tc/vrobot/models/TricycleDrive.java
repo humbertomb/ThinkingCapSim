@@ -20,10 +20,10 @@ import wucore.utils.math.Angles;
 public class TricycleDrive extends RobotModel
 {
 	// Kynematics outputs
- 	public double		vm, del;			// Tricycle model (forward speed and signus, wheel angle)
+ 	public transient double		vm, del;			// Tricycle model (forward speed and signus, wheel angle)
 
 	// Dymanics simulation
-	protected double		lvm, ldel;		// Tricycle model (previously issued control commands)
+	protected transient double		lvm, ldel;		// Tricycle model (previously issued control commands)
 
 	// Parameters
 	public double		l;				// Distance between wheel axles (m)
@@ -31,9 +31,9 @@ public class TricycleDrive extends RobotModel
 	public double		r;				// Front wheel displacement
 
 	// Maximum values of kynematics parameters
-	public double		SAmax;							// Maximum steering-wheel angular velocity (rad/s)
-	public double		LAmax	= Double.MAX_VALUE;		// Maximum linear acceleration (m/s2)
-	public double		LDmax	= Double.MAX_VALUE;		// Maximum linear decceleration (m/s2)
+	private double		SAmax;							// Maximum steering-wheel angular velocity (rad/s)
+	private double		LAmax	= Double.MAX_VALUE;		// Maximum linear acceleration (m/s2)
+	private double		LDmax	= Double.MAX_VALUE;		// Maximum linear decceleration (m/s2)
 	public double		MOTmax; 							// Maximum traction speed (m/s)
 	public double		STRmax; 							// Maximum steering angle (rad)
 

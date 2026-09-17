@@ -181,15 +181,12 @@
     "drive": "tc.vrobot.models.DifferentialDrive",
     "vmax": 1.0,
     "rmax": 60.0,
-    "maxmotor": 1.0,
     "maxsteer": 0.0,
     "samax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
     "length": 0.0,
-    "base": 0.6,
     "rwheel": 0.0,
-    "wheel": 0.0,
     "gear": 0.0,
     "pulses": 0.0,
     "dtime": 300,
@@ -379,6 +376,56 @@
       "yi": -0.35000000000000003,
       "xf": -0.4,
       "yf": -0.35000000000000003
+    }
+  ],
+  "wheels": [
+    {
+      "x": -0.19,
+      "y": 0.27,
+      "z": 0.16,
+      "orientation": 0.0,
+      "radius": 0.16,
+      "width": 0.097,
+      "steerable": false,
+      "maxsteer": 0.0,
+      "traction": true,
+      "maxrpm": 60.0
+    },
+    {
+      "x": 0.19,
+      "y": 0.27,
+      "z": 0.16,
+      "orientation": 0.0,
+      "radius": 0.16,
+      "width": 0.097,
+      "steerable": false,
+      "maxsteer": 0.0,
+      "traction": true,
+      "maxrpm": 60.0
+    },
+    {
+      "x": -0.19,
+      "y": -0.27,
+      "z": 0.16,
+      "orientation": 0.0,
+      "radius": 0.16,
+      "width": 0.097,
+      "steerable": false,
+      "maxsteer": 0.0,
+      "traction": true,
+      "maxrpm": 60.0
+    },
+    {
+      "x": 0.19,
+      "y": -0.27,
+      "z": 0.16,
+      "orientation": 0.0,
+      "radius": 0.16,
+      "width": 0.097,
+      "steerable": false,
+      "maxsteer": 0.0,
+      "traction": true,
+      "maxrpm": 60.0
     }
   ],
   "extra": {

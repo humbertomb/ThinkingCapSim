@@ -13,33 +13,33 @@ import wucore.utils.math.stat.*;
 public abstract class RobotModel extends Object
 {
 	// Odometry simulation parameters
-	public double					odom_et; 		// Translational odometry error - standard deviation (m/s)
-	public double					odom_er; 		// Rotational odometry error  - standard deviation (deg/s)
-	public double					odom_bias; 		// Coefficient for biased odometry drift ([0..1])
+	public double								odom_et; 		// Translational odometry error - standard deviation (m/s)
+	public double								odom_er; 		// Rotational odometry error  - standard deviation (deg/s)
+	public double								odom_bias; 		// Coefficient for biased odometry drift ([0..1])
 
     // Maximum values of kynematics parameters
-	public double					Vmax;			// Maximum linear velocity (m/s)
-	public double					Rmax;			// Maximum angular velocity (rad/s)
+	public double								Vmax;			// Maximum linear velocity (m/s)
+	public double								Rmax;			// Maximum angular velocity (rad/s)
 
 	// Kynematics outputs
-    public double					vr, wr;			// Desired de-normalised velocities (translation, rotation)		[INPUT]
+    public transient double						vr, wr;			// Desired de-normalised velocities (translation, rotation)		[INPUT]
 
 	// Robot position data (including simulated one)
-	public double					odom_x;			// Odometry-based position (m, m, rad)
-	public double					odom_y;
-	public double					odom_a;
-	public double					real_x;			// Real robot position (m, m, rad)
-	public double					real_y;
-	public double					real_a;
+	public transient double						odom_x;			// Odometry-based position (m, m, rad)
+	public transient double						odom_y;
+	public transient double						odom_a;
+	public transient double						real_x;			// Real robot position (m, m, rad)
+	public transient double						real_y;
+	public transient double						real_a;
 
 	// Robot backed-up position 
-	private double					orx, ory, ora;	// Real robot position (m, m, rad)
-	private double					oox, ooy, ooa;	// Odometry-corrected robot position (m, m, rad)
-	private double					ox, oy, oa;		// Odometry-based robot position (m, m, rad)
+	private transient double					orx, ory, ora;	// Real robot position (m, m, rad)
+	private transient double					oox, ooy, ooa;	// Odometry-corrected robot position (m, m, rad)
+	private transient double					ox, oy, oa;		// Odometry-based robot position (m, m, rad)
 
 	// Additional variables
-	protected RandomNumberGenerator	rnd;				// Gaussian pseudo-random number generator
-	protected RobotDesc				rdesc;
+	protected transient RandomNumberGenerator	rnd;			// Gaussian pseudo-random number generator
+	protected RobotDesc							rdesc;
 
 	// Constructors
 	protected RobotModel (RobotDesc rdesc, Properties props)

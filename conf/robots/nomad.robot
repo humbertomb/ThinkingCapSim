@@ -127,9 +127,7 @@
     "lamax": 0.0,
     "ldmax": 0.0,
     "length": 0.0,
-    "base": 0.2305,
     "rwheel": 0.0,
-    "wheel": 0.1487,
     "gear": 60.0,
     "pulses": 500.0,
     "dtime": 100,
@@ -415,6 +413,32 @@
       "yi": 0.15,
       "xf": 0.24,
       "yf": 0.195
+    }
+  ],
+  "wheels": [
+    {
+      "x": 0.0,
+      "y": 0.18,
+      "z": 0.07,
+      "orientation": 0.0,
+      "radius": 0.07,
+      "width": 0.03,
+      "steerable": false,
+      "maxsteer": 0.0,
+      "traction": true,
+      "maxrpm": 0.0
+    },
+    {
+      "x": 0.0,
+      "y": -0.18,
+      "z": 0.07,
+      "orientation": 0.0,
+      "radius": 0.07,
+      "width": 0.03,
+      "steerable": false,
+      "maxsteer": 0.0,
+      "traction": true,
+      "maxrpm": 0.0
     }
   ],
   "extra": {

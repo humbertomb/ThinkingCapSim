@@ -152,15 +152,12 @@
     "drive": "tc.vrobot.models.DifferentialDrive",
     "vmax": 0.42,
     "rmax": 110.0,
-    "maxmotor": 0.42,
     "maxsteer": 0.0,
     "samax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
     "length": 0.0,
-    "base": 0.365,
     "rwheel": 0.0,
-    "wheel": 0.1487,
     "gear": 71.0,
     "pulses": 2000.0,
     "dtime": 100,
@@ -179,112 +176,112 @@
         {
           "rho": 0.21998636321372286,
           "theta": 14.478429238377414,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": 0.0,
           "step": 1
         },
         {
           "rho": 0.2386566571457834,
           "theta": 35.621402690266684,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": 22.5,
           "step": 2
         },
         {
           "rho": 0.2407405242164269,
           "theta": 56.17791478250606,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": 67.5,
           "step": 1
         },
         {
           "rho": 0.22322186272854186,
           "theta": 77.58255420992374,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": 90.0,
           "step": 2
         },
         {
-          "rho": 0.22224535990656819,
+          "rho": 0.22224535990656824,
           "theta": 102.47288212465472,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": 90.0,
           "step": 1
         },
         {
           "rho": 0.24111564512024447,
           "theta": 125.21088960276339,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": 112.5,
           "step": 2
         },
         {
           "rho": 0.24194796287356213,
           "theta": 144.93511655600776,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": 157.5,
           "step": 1
         },
         {
           "rho": 0.22289235069871743,
           "theta": 165.7143749534052,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": 180.0,
           "step": 2
         },
         {
           "rho": 0.22192341021172146,
           "theta": -165.65066795705286,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": -180.0,
           "step": 1
         },
         {
           "rho": 0.24110163831878043,
           "theta": -144.79382735844757,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": -157.5,
           "step": 2
         },
         {
           "rho": 0.2421811423991448,
           "theta": -124.74476745383777,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": -112.5,
           "step": 1
         },
         {
           "rho": 0.22273358525377354,
           "theta": -102.44510319673192,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": -90.0,
           "step": 2
         },
         {
           "rho": 0.22224535990656813,
           "theta": -77.52711787534535,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": -90.0,
           "step": 1
         },
         {
           "rho": 0.23995416228938393,
           "theta": -55.1840331960241,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": -67.5,
           "step": 2
         },
         {
           "rho": 0.23947024867402633,
           "theta": -35.48205083905124,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": -22.5,
           "step": 1
         },
         {
           "rho": 0.2209547464980103,
           "theta": -14.413597701184932,
-          "height": 0.27,
+          "height": 0.2575,
           "orientation": 0.0,
           "step": 2
         }
@@ -300,112 +297,112 @@
         {
           "rho": 0.21998636321372286,
           "theta": 14.478429238377414,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": 0.0,
           "step": 1
         },
         {
           "rho": 0.2386566571457834,
-          "theta": 35.62140269026669,
-          "height": 0.225,
+          "theta": 35.621402690266684,
+          "height": 0.2125,
           "orientation": 22.5,
           "step": 2
         },
         {
-          "rho": 0.24074052421642686,
-          "theta": 56.17791478250605,
-          "height": 0.225,
+          "rho": 0.24074052421642675,
+          "theta": 56.17791478250606,
+          "height": 0.2125,
           "orientation": 67.5,
           "step": 1
         },
         {
           "rho": 0.2232218627285419,
           "theta": 77.5825542099237,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": 90.0,
           "step": 2
         },
         {
-          "rho": 0.22224535990656819,
+          "rho": 0.22224535990656824,
           "theta": 102.47288212465472,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": 90.0,
           "step": 1
         },
         {
           "rho": 0.24110163831878043,
           "theta": 125.20617264155243,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": 112.5,
           "step": 2
         },
         {
           "rho": 0.24191940806805892,
           "theta": 144.93036958204323,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": 157.5,
           "step": 1
         },
         {
           "rho": 0.22289235069871746,
           "theta": 165.7143749534052,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": 180.0,
           "step": 2
         },
         {
           "rho": 0.22192341021172146,
           "theta": -165.65066795705286,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": -180.0,
           "step": 1
         },
         {
           "rho": 0.24110163831878043,
           "theta": -144.79382735844757,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": -157.5,
           "step": 2
         },
         {
           "rho": 0.24216729754448682,
           "theta": -124.74004444357857,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": -112.5,
           "step": 1
         },
         {
           "rho": 0.22273358525377368,
           "theta": -102.44510319673206,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": -90.0,
           "step": 2
         },
         {
           "rho": 0.22224535990656813,
           "theta": -77.52711787534535,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": -90.0,
           "step": 1
         },
         {
           "rho": 0.23995416228938393,
           "theta": -55.1840331960241,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": -67.5,
           "step": 2
         },
         {
           "rho": 0.23947024867402633,
           "theta": -35.48205083905124,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": -22.5,
           "step": 1
         },
         {
           "rho": 0.2209547464980103,
           "theta": -14.413597701184939,
-          "height": 0.225,
+          "height": 0.2125,
           "orientation": 0.0,
           "step": 2
         }
@@ -470,11 +467,13 @@
       "x": 0.0,
       "y": -0.1825,
       "z": 0.07435,
-      "orientation": -0.7073193685442569,
+      "orientation": 0.0,
       "radius": 0.07435,
       "width": 0.038,
-      "turnable": false,
-      "traction": true
+      "steerable": false,
+      "maxsteer": 0.0,
+      "traction": true,
+      "maxrpm": 54.0
     },
     {
       "x": 0.0,
@@ -483,8 +482,10 @@
       "orientation": -2.2579142478972982E-14,
       "radius": 0.07435,
       "width": 0.038,
-      "turnable": false,
-      "traction": true
+      "steerable": false,
+      "maxsteer": 0.0,
+      "traction": true,
+      "maxrpm": 54.0
     }
   ],
   "extra": {

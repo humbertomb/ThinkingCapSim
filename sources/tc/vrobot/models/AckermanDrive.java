@@ -20,18 +20,18 @@ import wucore.utils.math.Angles;
 public class AckermanDrive extends RobotModel
 {
 	// Kynematics outputs
- 	public double				vm, del;			// Ackerman model (forward speed and signus, wheel angle)
+ 	public transient double		vm, del;			// Ackerman model (forward speed and signus, wheel angle)
 
 	// Dymanics simulation
-	protected double				lvm, ldel;		// Ackerman model (previously issued control commands)
+	protected transient double	lvm, ldel;		// Ackerman model (previously issued control commands)
 
 	// Parameters
 	public double				l;				// Distance between wheel axles (m)
 
 	// Maximum values of kynematics parameters
-	public double				SAmax;			// Maximum steering-wheel angular velocity (rad/s)
-	public double				MOTmax; 			// Maximum traction speed (m/s)
-	public double				STRmax; 			// Maximum steering angle (rad)
+	private double				SAmax;			// Maximum steering-wheel angular velocity (rad/s)
+	private double				MOTmax; 			// Maximum traction speed (m/s)
+	private double				STRmax; 			// Maximum steering angle (rad)
 
 	// Constructors
 	public AckermanDrive (RobotDesc rdesc)
