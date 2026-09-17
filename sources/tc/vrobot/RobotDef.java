@@ -273,6 +273,112 @@ public class RobotDef
 	}
 
 	/**
+	 * The geometry of the kinematics: what the drive train says on its own, so
+	 * that it is read off the wheels instead of being typed in twice. The rest of
+	 * the kinematics -- the speeds, the accelerations, the encoders -- is not
+	 * geometry and stays as it is given.
+	 */
+	static private final String[]	KIN_GEOMETRY	= { "length", "base", "wheel" };
+
+	/** True for a kinematics property the wheels of the platform work out. */
+	static public boolean isGeometry (String name)
+	{
+		if (name == null)						return false;
+		name	= name.replace (" ", "").toLowerCase ();
+		for (String k : KIN_GEOMETRY)			if (k.equals (name))	return true;
+		return false;
+	}
+
+	/**
+	 * What the wheels say a geometry parameter is, or null when they cannot say
+	 * it: a platform with no wheels, or none of the kind the parameter is measured
+	 * between, keeps the value it was given.
+	 *
+	 * The wheels that can be steered make up the steering axle and the rest the
+	 * fixed one, and the ones that drive give the size of the driving wheel:
+	 *
+	 *   length -- the wheel base: how far apart the two axles are along x
+	 *   base   -- for a differential drive, how far apart the two driving wheels
+	 *             are across; for a tricycle, how far the fixed axle is from the
+	 *             origin along x, which is what its model measures
+	 *   wheel  -- the diameter of the driving wheel
+	 */
+	public Double geometry (String name)
+	{
+		List<Wheel>		turning = new ArrayList<Wheel> (), fixed = new ArrayList<Wheel> ();
+		List<Wheel>		driving = new ArrayList<Wheel> ();
+
+		if ((wheels == null) || wheels.isEmpty ())		return null;
+		for (Wheel w : wheels)
+		{
+			if (w.turnable)		turning.add (w);
+			else				fixed.add (w);
+			if (w.traction)		driving.add (w);
+		}
+		if (driving.isEmpty ())		driving = wheels;			// none says it drives: take them all
+
+		name	= name.replace (" ", "").toLowerCase ();
+		if (name.equals ("wheel"))
+		{
+			double	r = 0.0;
+			for (Wheel w : driving)		r += w.radius;
+			r	/= driving.size ();
+			return (r > 0.0) ? Double.valueOf (2 * r) : null;
+		}
+		if (name.equals ("length"))
+		{
+			if (turning.isEmpty () || fixed.isEmpty ())		return null;
+			return Double.valueOf (Math.abs (meanX (turning) - meanX (fixed)));
+		}
+		if (name.equals ("base"))
+		{
+			if ("tc.vrobot.models.TricycleDrive".equals (kinematics.drive))
+			{
+				if (fixed.isEmpty ())						return null;
+				return Double.valueOf (0.0 - meanX (fixed) + 0.0);		// how far the axle is from the origin
+			}
+			if (driving.size () < 2)						return null;
+			return Double.valueOf (spreadY (driving));		// how far apart the driving wheels are
+		}
+		return null;
+	}
+
+	static private double meanX (List<Wheel> ws)
+	{
+		double		s = 0.0;
+		for (Wheel w : ws)		s += w.x;
+		return s / ws.size ();
+	}
+
+	static private double spreadY (List<Wheel> ws)
+	{
+		double		lo = Double.MAX_VALUE, hi = -Double.MAX_VALUE;
+		for (Wheel w : ws)		{ lo = Math.min (lo, w.y);	hi = Math.max (hi, w.y); }
+		return hi - lo;
+	}
+
+	/**
+	 * Writes into the kinematics whatever the wheels work out, and says whether
+	 * anything changed. It runs when a description is read and whenever a wheel is
+	 * moved or resized, so the geometry always tells what the drive train is.
+	 */
+	public boolean updateGeometry ()
+	{
+		boolean		any = false;
+
+		for (String name : KIN_GEOMETRY)
+		{
+			Double	v = geometry (name);
+
+			if (v == null)							continue;
+			if (name.equals ("length"))		{ if (kinematics.length != v.doubleValue ())	{ kinematics.length = v.doubleValue (); any = true; } }
+			else if (name.equals ("base"))	{ if (kinematics.base != v.doubleValue ())		{ kinematics.base = v.doubleValue (); any = true; } }
+			else if (name.equals ("wheel"))	{ if (kinematics.wheel != v.doubleValue ())		{ kinematics.wheel = v.doubleValue (); any = true; } }
+		}
+		return any;
+	}
+
+	/**
 	 * True when a kinematics property says something to a model. A model nobody
 	 * here knows about is taken to read everything, so that a model of one's own
 	 * is not left without its parameters.
@@ -506,6 +612,7 @@ public class RobotDef
 			}
 			for (Sensor s : f.sensors)		split (s);
 		}
+		updateGeometry ();						// the geometry of the kinematics is what the wheels say
 	}
 
 	/**

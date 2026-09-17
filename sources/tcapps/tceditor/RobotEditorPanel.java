@@ -193,6 +193,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			private static final long	serialVersionUID = 1L;
 			private final FileCellEditor.Renderer	fileRenderer = new FileCellEditor.Renderer ();
 			private final DefaultCellEditor			boolEditor = new DefaultCellEditor (new JComboBox<String> (new String[] { "true", "false" }));
+			private final javax.swing.table.TableCellRenderer	calcRenderer = new CalculatedRenderer ();
 
 			// file-path properties get a text field with a "..." browse button, as in the world editor
 			public javax.swing.table.TableCellEditor getCellEditor (int row, int column)
@@ -214,8 +215,12 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 			public javax.swing.table.TableCellRenderer getCellRenderer (int row, int column)
 			{
-				if ((column == 1) && isFileProperty (propsModel.nameAt (row)))
-					return fileRenderer;
+				if (column == 1)
+				{
+					String	name = propsModel.nameAt (row);
+					if (isFileProperty (name))								return fileRenderer;
+					if (isCalculated (propsModel.item, name))				return calcRenderer;
+				}
 				return super.getCellRenderer (row, column);
 			}
 		};
@@ -730,6 +735,22 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		selectInTree (canvas.getSelection ());
 	}
 
+	/** A value the description works out: shown on a grey ground, since it is not to be typed in. */
+	static private class CalculatedRenderer extends javax.swing.table.DefaultTableCellRenderer
+	{
+		private static final long	serialVersionUID = 1L;
+
+		static private final java.awt.Color		C_CALC = new java.awt.Color (238, 239, 242);
+
+		public java.awt.Component getTableCellRendererComponent (JTable t, Object v, boolean sel, boolean focus, int r, int c)
+		{
+			java.awt.Component	comp = super.getTableCellRendererComponent (t, v, sel, focus, r, c);
+
+			if (!sel)		comp.setBackground (C_CALC);
+			return comp;
+		}
+	}
+
 	/** A node standing for one element of the description. */
 	private class ItemNode extends DefaultMutableTreeNode
 	{
@@ -780,6 +801,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/** The view moved or turned an element: the model changed and the table follows. */
 	public void elementChanged (RobotItem item)
 	{
+		robot.updateGeometry ();				// a wheel that moves changes the geometry of the kinematics
 		changed ();
 		propsModel.refresh ();
 	}
@@ -1123,10 +1145,21 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		return new DefaultCellEditor (cb);
 	}
 
-	/** True when a property can be edited. */
+	/** True when a property can be edited: what the wheels work out is not typed in. */
 	public boolean isEditable (RobotItem it, String name)
 	{
-		return true;
+		return !isCalculated (it, name);
+	}
+
+	/**
+	 * True for a property the description works out on its own -- the geometry of
+	 * the kinematics, which the drive train says. A platform whose wheels cannot
+	 * say it keeps the value it was given, and keeps it editable.
+	 */
+	public boolean isCalculated (RobotItem it, String name)
+	{
+		if ((it == null) || (it.kind != RobotItem.KINEMATICS))		return false;
+		return RobotDef.isGeometry (name) && (robot.geometry (name) != null);
 	}
 
 	public void setProperty (RobotItem it, String name, String value)
@@ -1302,6 +1335,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				String	name = names[r];
 
 				setProperty (item, name, value (name, (v == null) ? "" : v.toString ()));
+				robot.updateGeometry ();		// a wheel typed in changes the geometry too
 				if (name.equals (DRIVE))		setItem (item);		// another model reads other properties
 				else							fireTableRowsUpdated (r, r);
 				if ((item.kind == RobotItem.PLATFORM) && names[r].equals ("name"))		refreshTree ();
