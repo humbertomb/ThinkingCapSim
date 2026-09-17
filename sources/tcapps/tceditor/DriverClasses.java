@@ -16,13 +16,15 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * The drivers a device can be read through: the classes of the development that
- * derive from the one the device layer asks for (<code>Laser</code>,
- * <code>Vision</code>, <code>LaserBeacon</code>, <code>Radar</code>, ...), so
- * that a driver is chosen from what there is instead of being typed in.
+ * The classes a description can name: the ones of the development that derive
+ * from the one that part of the program asks for -- the driver of a device
+ * (<code>Laser</code>, <code>Vision</code>, <code>LaserBeacon</code>,
+ * <code>Radar</code>) or the kinematics model of a platform
+ * (<code>RobotModel</code>) -- so that one is chosen from what there is instead
+ * of being typed in.
  *
  * What is looked at is the package of that class and everything under it, which
- * is where the drivers of a device live, over the class path of the running
+ * is where those classes live, over the class path of the running
  * program (its directories and its jars). A class that cannot be read, or that
  * is missing something it needs, is left out rather than stopping the search.
  */
@@ -31,19 +33,27 @@ public class DriverClasses
 	static private final Map<String, List<String>>	CACHE = new HashMap<String, List<String>> ();
 
 	/**
-	 * The drivers that derive from a class, by name and in order. An empty list
+	 * The classes that derive from a class, by name and in order. An empty list
 	 * when the class itself is not there or nothing derives from it.
+	 *
+	 * A driver is built with no arguments, which is asked for; something built
+	 * another way (a kinematics model takes the robot and its properties) is
+	 * looked for with <code>plain</code> false.
 	 */
-	static public synchronized List<String> of (String base)
+	static public synchronized List<String> of (String base)			{ return of (base, true); }
+
+	static public synchronized List<String> of (String base, boolean plain)
 	{
 		List<String>	found;
+		String			cached;
 
 		if ((base == null) || (base.trim ().length () == 0))		return new ArrayList<String> ();
 		base	= base.trim ();
-		if (CACHE.containsKey (base))		return CACHE.get (base);
+		cached	= base + (plain ? "|()" : "|*");
+		if (CACHE.containsKey (cached))		return CACHE.get (cached);
 
-		found	= search (base);
-		CACHE.put (base, found);
+		found	= search (base, plain);
+		CACHE.put (cached, found);
 		return found;
 	}
 
@@ -52,7 +62,7 @@ public class DriverClasses
 
 	/* ------------------------------------------------------------------ */
 
-	static private List<String> search (String base)
+	static private List<String> search (String base, boolean plain)
 	{
 		List<String>	names = new ArrayList<String> ();
 		List<String>	out = new ArrayList<String> ();
@@ -83,7 +93,8 @@ public class DriverClasses
 			if (!root.isAssignableFrom (c))							continue;
 			if (c.isInterface () || Modifier.isAbstract (c.getModifiers ()))	continue;
 			if (!Modifier.isPublic (c.getModifiers ()))				continue;
-			if (!buildable (c))										continue;
+			if (plain && !buildable (c))							continue;
+			if (!plain && (c.getDeclaredConstructors ().length == 0))	continue;
 			out.add (name);
 		}
 		Collections.sort (out);

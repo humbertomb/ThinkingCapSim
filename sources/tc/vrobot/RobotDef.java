@@ -214,6 +214,9 @@ public class RobotDef
 														"devices.drivers.radar.Radar",
 														"devices.drivers.vision.Vision" };
 
+	/** The class every kinematics model of a platform derives from. */
+	static public final String		DRIVE_BASE		= "tc.vrobot.RobotModel";
+
 	/** The class the drivers of a family derive from, or null when there is none. */
 	static public String driverBase (String fam)
 	{

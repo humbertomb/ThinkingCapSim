@@ -41,6 +41,8 @@ public class Units
 
 		// the rest
 		put ("ms", "dtime");
+		put ("m/s", "odom et");					// the odometry errors of the simulation, as standard deviations
+		put ("deg/s", "odom er");
 		put ("kg", "mass");
 	}
 

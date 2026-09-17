@@ -198,9 +198,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 					String	name = propsModel.nameAt (row);
 					if (isShapeProperty (name))		return FileCellEditor.SHAPE;
 					if (isImageProperty (name))		return FileCellEditor.IMAGE;
-					if (name.equals (DRIVER))
+					if (name.equals (DRIVER) || name.equals (DRIVE))
 					{
-						javax.swing.table.TableCellEditor	ed = driverEditor (propsModel.item);
+						javax.swing.table.TableCellEditor	ed = classEditor (propsModel.item, name);
 						if (ed != null)		return ed;
 					}
 				}
@@ -788,14 +788,50 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		}
 	}
 
-	/** Names of the properties of an element. */
+	/**
+	 * Names of the properties of an element: what it says of itself, less
+	 * anything the description does not keep (a transient field is of the running
+	 * editor, not of the robot, so it is not for anybody to edit).
+	 */
 	public String[] propertyNames (RobotItem it)
+	{
+		List<String>	out = new ArrayList<String> ();
+
+		for (String name : allPropertyNames (it))
+			if (!isTransientProperty (name))		out.add (name);
+		return out.toArray (new String[0]);
+	}
+
+	/** True for a property held in a field the description does not keep. */
+	static public boolean isTransientProperty (String name)
+	{
+		return (name != null) && TRANSIENT.contains (key (name));
+	}
+
+	static private String key (String name)					{ return name.replace (" ", "").toLowerCase (); }
+
+	/** The transient fields of everything a description is made of. */
+	static private final java.util.Set<String>	TRANSIENT = transientNames ();
+
+	static private java.util.Set<String> transientNames ()
+	{
+		java.util.Set<String>	out = new java.util.HashSet<String> ();
+		Class<?>[]				parts = { RobotDef.class, RobotDef.Sensor.class, RobotDef.Family.class,
+										  RobotDef.Kinematics.class, RobotDef.Bumper.class, RobotDef.IconLine.class };
+
+		for (Class<?> c : parts)
+			for (java.lang.reflect.Field f : c.getDeclaredFields ())
+				if (java.lang.reflect.Modifier.isTransient (f.getModifiers ()))		out.add (key (f.getName ()));
+		return out;
+	}
+
+	private String[] allPropertyNames (RobotItem it)
 	{
 		if (it == null)				return new String[0];
 		switch (it.kind)
 		{
 		case RobotItem.PLATFORM:	return new String[] { "name", "radius", "image", "robot shape", "actuator shape" };
-		case RobotItem.KINEMATICS:	return new String[] { "drive", "vmax", "rmax", "maxmotor", "maxsteer", "samax", "lamax", "ldmax",
+		case RobotItem.KINEMATICS:	return new String[] { DRIVE, "vmax", "rmax", "maxmotor", "maxsteer", "samax", "lamax", "ldmax",
 														  "length", "base", "rwheel", "wheel", "gear", "pulses", "dtime",
 														  "odom et", "odom er", "odom bias" };
 		case RobotItem.LINE:
@@ -848,7 +884,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("actuator shape"))	return (robot.shapeActuator != null) ? robot.shapeActuator : "";
 			break;
 		case RobotItem.KINEMATICS:
-			if (name.equals ("drive"))		return (k.drive != null) ? k.drive : "";
+			if (name.equals (DRIVE))		return (k.drive != null) ? k.drive : "";
 			if (name.equals ("vmax"))		return RobotDef.fmt (k.vmax);
 			if (name.equals ("rmax"))		return RobotDef.fmt (k.rmax);
 			if (name.equals ("maxmotor"))	return RobotDef.fmt (k.maxmotor);
@@ -935,6 +971,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public boolean isShapeProperty (String name)		{ return name.endsWith ("shape"); }
 	/** The names the editor gives to the device a sensor is read through. */
 	static public final String		DRIVER					= "driver class";
+	/** The name the editor gives to the kinematics model of the platform. */
+	static public final String		DRIVE					= "drive type";
 	static public final String		DRIVER_PARAMS			= "driver parameters";
 	/** Width of the column of the units: enough for "deg/s" and no more. */
 	static private final int		UNITS_WIDTH				= 44;
@@ -962,22 +1000,35 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	}
 
 	/**
-	 * The chooser of drivers of an element: the classes of the development that
-	 * derive from the one its device layer asks for. Null when the element is not
-	 * a sensor of a family with drivers, so that the plain field is used.
+	 * The chooser of a property whose value is a class: the classes of the
+	 * development that derive from the one that part of the program asks for --
+	 * the driver of a sensor, the kinematics model of the platform. Null when the
+	 * property is not one of those, so that the plain field is used.
 	 */
-	private javax.swing.table.TableCellEditor driverEditor (RobotItem it)
+	private javax.swing.table.TableCellEditor classEditor (RobotItem it, String what)
 	{
 		JComboBox<String>	cb;
 		List<String>		names;
 		String				base, current;
+		boolean				plain;								// built with no arguments, the way a driver is
 
-		if ((it == null) || ((it.kind != RobotItem.SENSOR) && (it.kind != RobotItem.FAMILY)))		return null;
-		base	= RobotDef.driverBase (it.family);
+		if (it == null)											return null;
+		if (what.equals (DRIVE))
+		{
+			if (it.kind != RobotItem.KINEMATICS)				return null;
+			base	= RobotDef.DRIVE_BASE;
+			plain	= false;									// a model is built with the robot and its properties
+		}
+		else
+		{
+			if ((it.kind != RobotItem.SENSOR) && (it.kind != RobotItem.FAMILY))		return null;
+			base	= RobotDef.driverBase (it.family);
+			plain	= true;
+		}
 		if (base == null)										return null;
 
-		names	= new ArrayList<String> (DriverClasses.of (base));
-		current	= getProperty (it, DRIVER);
+		names	= new ArrayList<String> (DriverClasses.of (base, plain));
+		current	= getProperty (it, what);
 		if ((current.length () > 0) && !names.contains (current))	names.add (0, current);
 		names.add (0, "");										// a sensor may have no driver of its own
 
@@ -1022,7 +1073,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			}
 			break;
 		case RobotItem.KINEMATICS:
-			if (name.equals ("drive"))			k.drive = token (value);
+			if (name.equals (DRIVE))			k.drive = token (value);
 			else if (name.equals ("vmax"))		k.vmax = num (value);
 			else if (name.equals ("rmax"))		k.rmax = num (value);
 			else if (name.equals ("maxmotor"))	k.maxmotor = num (value);
