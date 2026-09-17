@@ -146,8 +146,10 @@ public class RobotDef
 		public double	orientation;				// direction it rolls towards (deg)
 		public double	radius;						// radius of the wheel (m)
 		public double	width;						// width of its tread (m)
-		public boolean	turnable;					// it can be steered
+		public boolean	steerable;					// it can be steered
+		public double	maxsteer;					// how far it can be steered, to each side (deg; steerable only)
 		public boolean	traction;					// it drives
+		public double	maxrpm;						// how fast it can turn (rev/min; driving wheels only)
 
 		public Wheel ()								{ }
 		public Wheel copy ()
@@ -155,7 +157,8 @@ public class RobotDef
 			Wheel	w = new Wheel ();
 			w.x = x;			w.y = y;				w.z = z;		w.orientation = orientation;
 			w.radius = radius;	w.width = width;
-			w.turnable = turnable;	w.traction = traction;
+			w.steerable = steerable;	w.maxsteer = maxsteer;
+			w.traction = traction;		w.maxrpm = maxrpm;
 			return w;
 		}
 	}
@@ -311,7 +314,7 @@ public class RobotDef
 		if ((wheels == null) || wheels.isEmpty ())		return null;
 		for (Wheel w : wheels)
 		{
-			if (w.turnable)		turning.add (w);
+			if (w.steerable)	turning.add (w);
 			else				fixed.add (w);
 			if (w.traction)		driving.add (w);
 		}

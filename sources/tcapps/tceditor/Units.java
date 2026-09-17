@@ -44,6 +44,8 @@ public class Units
 		put ("m/s", "odom et");					// the odometry errors of the simulation, as standard deviations
 		put ("deg/s", "odom er");
 		put ("kg", "mass");
+		put ("rpm", "max rpm");
+		degrees ("max steering");
 	}
 
 	/** The unit of a property, or an empty string when it has none. */

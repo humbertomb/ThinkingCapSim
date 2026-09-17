@@ -928,7 +928,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
 		case RobotItem.WHEEL:		return new String[] { "x", "y", "z", "orientation",
-														  "radius", "width", "turnable", "traction" };
+														  "radius", "width",
+														  "steerable", MAX_STEER, "traction", MAX_RPM };
 		case RobotItem.SENSOR:
 			// the device it is read through comes first, then where it is and what it detects
 			if (!RobotDef.hasOwnDetection (it.family))
@@ -1023,8 +1024,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("orientation"))	return RobotDef.fmt (w.orientation);
 			if (name.equals ("radius"))			return RobotDef.fmt (w.radius);
 			if (name.equals ("width"))			return RobotDef.fmt (RobotCanvas.kwidth (w));
-			if (name.equals ("turnable"))		return String.valueOf (w.turnable);
+			if (name.equals ("steerable"))		return String.valueOf (w.steerable);
 			if (name.equals ("traction"))		return String.valueOf (w.traction);
+			// how far and how fast say nothing of a wheel that is not steered, or does not drive
+			if (name.equals (MAX_STEER))		return w.steerable ? RobotDef.fmt (w.maxsteer) : "";
+			if (name.equals (MAX_RPM))			return w.traction ? RobotDef.fmt (w.maxrpm) : "";
 			break;
 		}
 		case RobotItem.SENSOR:
@@ -1079,6 +1083,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		DRIVER					= "driver class";
 	/** The name the editor gives to the kinematics model of the platform. */
 	static public final String		DRIVE					= "drive type";
+	/** The names the editor gives to what a wheel can do. */
+	static public final String		MAX_STEER				= "max steering";
+	static public final String		MAX_RPM					= "max rpm";
 	static public final String		DRIVER_PARAMS			= "driver parameters";
 	/** Width of the column of the units: enough for "deg/s" and no more. */
 	static private final int		UNITS_WIDTH				= 44;
@@ -1148,7 +1155,15 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/** True when a property can be edited: what the wheels work out is not typed in. */
 	public boolean isEditable (RobotItem it, String name)
 	{
-		return !isCalculated (it, name);
+		if (isCalculated (it, name))		return false;
+		if ((it != null) && (it.kind == RobotItem.WHEEL) && (it.index < robot.wheels.size ()))
+		{
+			RobotDef.Wheel	w = robot.wheels.get (it.index);
+
+			if (name.equals (MAX_STEER))	return w.steerable;		// only a wheel that is steered
+			if (name.equals (MAX_RPM))		return w.traction;		// only a wheel that drives
+		}
+		return true;
 	}
 
 	/**
@@ -1237,8 +1252,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("orientation"))	w.orientation = num (value);
 			else if (name.equals ("radius"))		w.radius = num (value);
 			else if (name.equals ("width"))			w.width = num (value);
-			else if (name.equals ("turnable"))		w.turnable = flag (value);
+			else if (name.equals ("steerable"))		w.steerable = flag (value);
 			else if (name.equals ("traction"))		w.traction = flag (value);
+			else if (name.equals (MAX_STEER))		{ if (w.steerable)	w.maxsteer = num (value); }
+			else if (name.equals (MAX_RPM))			{ if (w.traction)	w.maxrpm = num (value); }
 			break;
 		}
 		case RobotItem.SENSOR:
@@ -1291,7 +1308,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/** True for the properties that are either true or false. */
 	static public boolean isBooleanProperty (String name)
 	{
-		return name.equals ("turnable") || name.equals ("traction");
+		return name.equals ("steerable") || name.equals ("traction");
 	}
 
 	static private double num (String v)

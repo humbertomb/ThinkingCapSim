@@ -1611,7 +1611,7 @@ public class RobotCanvas extends JPanel
 				double	pz = w.z + w.radius * fz;
 				g.draw (new Line2D.Double (ph (px0, py0, pz), pv (px0, py0, pz), ph (px1, py1, pz), pv (px1, py1, pz)));
 			}
-			if (w.turnable)											// the pivot it steers about
+			if (w.steerable)										// the pivot it steers about
 			{
 				g.setStroke (stroke (1.2f));
 				g.draw (new Ellipse2D.Double (x - 3, y - 3, 6, 6));
