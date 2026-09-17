@@ -192,7 +192,8 @@
   "image": "./conf/2dmodels/pioneer3.png",
   "shapeRobot": "./conf/3dmodels/pioneer3.3ds",
   "kinematics": {
-    "drive": "tc.vrobot.models.DifferentialDrive",
+    "drive": "tc.vrobot.models.SkidSteerDrive",
+    "skid": 1.5,
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,

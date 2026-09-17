@@ -178,7 +178,7 @@
     }
   ],
   "kinematics": {
-    "drive": "tc.vrobot.models.DifferentialDrive",
+    "drive": "tc.vrobot.models.SkidSteerDrive",
     "samax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,

@@ -885,7 +885,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	private String[] kinematicsNames ()
 	{
 		String[]		all = { DRIVE, "vmax", "rmax", "samax", "lamax", "ldmax",
-								"length", "base", "rwheel", "wheel", "gear", "pulses", "dtime",
+								"length", "base", "rwheel", "skid", "wheel", "gear", "pulses", "dtime",
 								"odom et", "odom er", "odom bias" };
 		List<String>	out = new ArrayList<String> ();
 
@@ -986,6 +986,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("lamax"))		return RobotDef.fmt (k.lamax);
 			if (name.equals ("ldmax"))		return RobotDef.fmt (k.ldmax);
 			if (name.equals ("rwheel"))		return RobotDef.fmt (k.rwheel);
+			if (name.equals ("skid"))		return RobotDef.fmt (k.skid);
 			if (name.equals ("gear"))		return RobotDef.fmt (k.gear);
 			if (name.equals ("pulses"))		return RobotDef.fmt (k.pulses);
 			if (name.equals ("dtime"))		return String.valueOf (k.dtime);
@@ -1208,6 +1209,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("lamax"))		k.lamax = num (value);
 			else if (name.equals ("ldmax"))		k.ldmax = num (value);
 			else if (name.equals ("rwheel"))	k.rwheel = num (value);
+			else if (name.equals ("skid"))		k.skid = num (value);
 			else if (name.equals ("gear"))		k.gear = num (value);
 			else if (name.equals ("pulses"))	k.pulses = num (value);
 			else if (name.equals ("dtime"))		k.dtime = (long) num (value);

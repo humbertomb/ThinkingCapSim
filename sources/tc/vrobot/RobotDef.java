@@ -197,6 +197,7 @@ public class RobotDef
 		public double	lamax;						// maximum acceleration (m/s2)
 		public double	ldmax;						// maximum deceleration (m/s2)
 		public double	rwheel;						// RWHEEL (m): the trail of the steering wheel
+		public double	skid		= 1.0;			// SKID: effective track over the geometric one (skid steer)
 		public double	gear;						// GEAR
 		public double	pulses;						// PULSES
 		public long		dtime	= 100;				// control cycle (ms)
@@ -206,7 +207,7 @@ public class RobotDef
 		{
 			Kinematics	k = new Kinematics ();
 			k.drive = drive;	k.lamax = lamax;	k.ldmax = ldmax;
-			k.rwheel = rwheel;	k.gear = gear;		k.pulses = pulses;		k.dtime = dtime;
+			k.rwheel = rwheel;	k.skid = skid;		k.gear = gear;		k.pulses = pulses;		k.dtime = dtime;
 			k.odomET = odomET;	k.odomER = odomER;	k.odomBias = odomBias;
 			return k;
 		}
@@ -267,6 +268,7 @@ public class RobotDef
 
 		m.put ("tc.vrobot.models.SynchroDrive",		new String[] { });
 		m.put ("tc.vrobot.models.DifferentialDrive",	new String[] { "base", "wheel", "gear", "pulses" });
+		m.put ("tc.vrobot.models.SkidSteerDrive",		new String[] { "base", "wheel", "gear", "pulses", "skid" });
 		m.put ("tc.vrobot.models.AckermanDrive",		new String[] { "samax", "length" });
 		m.put ("tc.vrobot.models.TricycleDrive",		new String[] { "samax", "lamax", "ldmax",
 																	   "length", "base", "rwheel" });
@@ -346,10 +348,13 @@ public class RobotDef
 			double	l = 0.0, b = 0.0;
 
 			if (v == null)												return null;
-			if ("tc.vrobot.models.DifferentialDrive".equals (kinematics.drive))
+			if ("tc.vrobot.models.DifferentialDrive".equals (kinematics.drive)
+					|| "tc.vrobot.models.SkidSteerDrive".equals (kinematics.drive))
 			{
-				Double	base = derived ("base");						// both wheels at full speed the other way
+				Double	base = derived ("base");						// both sides at full speed the other way
 				if (base != null)		b = base.doubleValue ();
+				if ("tc.vrobot.models.SkidSteerDrive".equals (kinematics.drive))
+					b	*= kinematics.skid;								// it drags its wheels: a wider track
 				if (b <= 0.0)											return null;
 				return Double.valueOf (Math.toDegrees (2 * v.doubleValue () / b));
 			}
@@ -819,7 +824,8 @@ public class RobotDef
 		setNZ (p, "LENGHT", value (derived ("length")));	setNZ (p, "BASE", value (derived ("base")));
 		setNZ (p, "WHEEL", value (derived ("wheel")));	setNZ (p, "SAMAX", value (derived ("samax")));
 		setNZ (p, "LAMAX", kinematics.lamax);		setNZ (p, "LDMAX", kinematics.ldmax);
-		setNZ (p, "RWHEEL", kinematics.rwheel);		setNZ (p, "GEAR", kinematics.gear);
+		setNZ (p, "RWHEEL", kinematics.rwheel);		setNZ (p, "SKID", kinematics.skid);
+		setNZ (p, "GEAR", kinematics.gear);
 		setNZ (p, "PULSES", kinematics.pulses);
 		p.setProperty ("DTIME", String.valueOf (kinematics.dtime));
 		setNZ (p, "ODOM_ET", kinematics.odomET);	setNZ (p, "ODOM_ER", kinematics.odomER);
