@@ -193,10 +193,8 @@
   "shapeRobot": "./conf/3dmodels/pioneer3.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.DifferentialDrive",
-    "samax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
-    "length": 0.0,
     "rwheel": 0.0,
     "gear": 71.0,
     "pulses": 2000.0,
@@ -386,56 +384,56 @@
   ],
   "wheels": [
     {
-      "x": -0.15,
-      "y": 0.2,
-      "z": 0.103,
+      "x": -0.134,
+      "y": 0.1905,
+      "z": 0.1105,
       "orientation": 0.0,
-      "radius": 0.103,
+      "radius": 0.1105,
       "width": 0.087,
       "steerable": false,
       "maxsteer": 0.0,
       "maxturning": 0.0,
       "traction": true,
-      "maxrpm": 111.0
+      "maxrpm": 61.0
     },
     {
-      "x": 0.15,
-      "y": 0.2,
-      "z": 0.103,
+      "x": 0.134,
+      "y": 0.1905,
+      "z": 0.1105,
       "orientation": 0.0,
-      "radius": 0.103,
+      "radius": 0.1105,
       "width": 0.087,
       "steerable": false,
       "maxsteer": 0.0,
       "maxturning": 0.0,
       "traction": true,
-      "maxrpm": 111.0
+      "maxrpm": 61.0
     },
     {
-      "x": 0.15,
-      "y": -0.2,
-      "z": 0.103,
+      "x": 0.134,
+      "y": -0.1905,
+      "z": 0.1105,
       "orientation": 0.0,
-      "radius": 0.103,
+      "radius": 0.1105,
       "width": 0.087,
       "steerable": false,
       "maxsteer": 0.0,
       "maxturning": 0.0,
       "traction": true,
-      "maxrpm": 111.0
+      "maxrpm": 61.0
     },
     {
-      "x": -0.15,
-      "y": -0.2,
-      "z": 0.103,
+      "x": -0.134,
+      "y": -0.1905,
+      "z": 0.1105,
       "orientation": 0.0,
-      "radius": 0.103,
+      "radius": 0.1105,
       "width": 0.087,
       "steerable": false,
       "maxsteer": 0.0,
       "maxturning": 0.0,
       "traction": true,
-      "maxrpm": 111.0
+      "maxrpm": 61.0
     }
   ],
   "extra": {
