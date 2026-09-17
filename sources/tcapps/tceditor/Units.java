@@ -46,6 +46,7 @@ public class Units
 		put ("kg", "mass");
 		put ("rpm", "max rpm");
 		degrees ("max steering");
+		put ("deg/s", "max turning");
 	}
 
 	/** The unit of a property, or an empty string when it has none. */

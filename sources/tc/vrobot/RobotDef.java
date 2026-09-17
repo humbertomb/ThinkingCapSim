@@ -148,6 +148,7 @@ public class RobotDef
 		public double	width;						// width of its tread (m)
 		public boolean	steerable;					// it can be steered
 		public double	maxsteer;					// how far it can be steered, to each side (deg; steerable only)
+		public double	maxturning;					// how fast it can be steered (deg/s; steerable only)
 		public boolean	traction;					// it drives
 		public double	maxrpm;						// how fast it can turn (rev/min; driving wheels only)
 
@@ -157,7 +158,7 @@ public class RobotDef
 			Wheel	w = new Wheel ();
 			w.x = x;			w.y = y;				w.z = z;		w.orientation = orientation;
 			w.radius = radius;	w.width = width;
-			w.steerable = steerable;	w.maxsteer = maxsteer;
+			w.steerable = steerable;	w.maxsteer = maxsteer;	w.maxturning = maxturning;
 			w.traction = traction;		w.maxrpm = maxrpm;
 			return w;
 		}
