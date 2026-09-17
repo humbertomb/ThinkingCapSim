@@ -190,8 +190,6 @@ public class RobotDef
 		public String	drive		= "tc.vrobot.models.DifferentialDrive";	// DRIVEMODEL
 		public double	vmax;						// maximum linear speed (m/s)
 		public double	rmax;						// maximum angular speed (deg/s)
-		public double	maxmotor;					// maximum speed of the driving wheel (m/s)
-		public double	maxsteer;					// maximum angle of the driving wheel (deg)
 		public double	samax;						// maximum turning speed of the driving wheel (deg/s)
 		public double	lamax;						// maximum acceleration (m/s2)
 		public double	ldmax;						// maximum deceleration (m/s2)
@@ -207,7 +205,7 @@ public class RobotDef
 		public Kinematics copy ()
 		{
 			Kinematics	k = new Kinematics ();
-			k.drive = drive;	k.vmax = vmax;		k.rmax = rmax;		k.maxmotor = maxmotor;	k.maxsteer = maxsteer;
+			k.drive = drive;	k.vmax = vmax;		k.rmax = rmax;
 			k.samax = samax;	k.lamax = lamax;	k.ldmax = ldmax;	k.length = length;		k.base = base;
 			k.rwheel = rwheel;	k.wheel = wheel;	k.gear = gear;		k.pulses = pulses;		k.dtime = dtime;
 			k.odomET = odomET;	k.odomER = odomER;	k.odomBias = odomBias;
@@ -269,9 +267,9 @@ public class RobotDef
 		Map<String, String[]>	m = new LinkedHashMap<String, String[]> ();
 
 		m.put ("tc.vrobot.models.SynchroDrive",		new String[] { });
-		m.put ("tc.vrobot.models.DifferentialDrive",	new String[] { "maxmotor", "base", "wheel", "gear", "pulses" });
-		m.put ("tc.vrobot.models.AckermanDrive",		new String[] { "maxmotor", "maxsteer", "samax", "length" });
-		m.put ("tc.vrobot.models.TricycleDrive",		new String[] { "maxmotor", "maxsteer", "samax", "lamax", "ldmax",
+		m.put ("tc.vrobot.models.DifferentialDrive",	new String[] { "base", "wheel", "gear", "pulses" });
+		m.put ("tc.vrobot.models.AckermanDrive",		new String[] { "samax", "length" });
+		m.put ("tc.vrobot.models.TricycleDrive",		new String[] { "samax", "lamax", "ldmax",
 																	   "length", "base", "rwheel" });
 		return m;
 	}
@@ -283,7 +281,7 @@ public class RobotDef
 	 * speeds of the platform, the accelerations, the encoders -- is not the
 	 * wheels' to say and stays as it is given.
 	 */
-	static private final String[]	KIN_DERIVED		= { "length", "base", "wheel", "maxsteer", "maxmotor" };
+	static private final String[]	KIN_DERIVED		= { "length", "base", "wheel", "vmax", "rmax" };
 
 	/** True for a kinematics property the wheels of the platform work out. */
 	static public boolean isCalculated (String name)
@@ -311,23 +309,20 @@ public class RobotDef
 	 * And what the wheels can do bounds what the platform can do, so the most
 	 * restrictive of them has the say:
 	 *
-	 *   maxsteer  -- how far the steering wheels turn
-	 *   maxmotor  -- how fast a driving wheel takes the platform, from how fast it
-	 *                spins and how big it is
+	 *   vmax   -- how fast the platform goes: what a driving wheel gives, from how
+	 *             fast it spins and how big it is
+	 *   rmax   -- how fast it turns: for a differential drive, both wheels at full
+	 *             speed the other way; for a steered one, going flat out with the
+	 *             wheel hard over, each as its own model works it out
 	 */
 	public Double geometry (String name)
 	{
-		List<Wheel>		turning = new ArrayList<Wheel> (), fixed = new ArrayList<Wheel> ();
-		List<Wheel>		driving = new ArrayList<Wheel> ();
+		List<Wheel>		turning, fixed, driving;
 
 		if ((wheels == null) || wheels.isEmpty ())		return null;
-		for (Wheel w : wheels)
-		{
-			if (w.steerable)	turning.add (w);
-			else				fixed.add (w);
-			if (w.traction)		driving.add (w);
-		}
-		if (driving.isEmpty ())		driving = wheels;			// none says it drives: take them all
+		turning	= steerables ();
+		fixed	= fixedWheels ();
+		driving	= driving ();
 
 		name	= name.replace (" ", "").toLowerCase ();
 		if (name.equals ("wheel"))
@@ -342,19 +337,30 @@ public class RobotDef
 			if (turning.isEmpty () || fixed.isEmpty ())		return null;
 			return Double.valueOf (Math.abs (meanX (turning) - meanX (fixed)));
 		}
-		if (name.equals ("maxsteer"))
+		if (name.equals ("vmax"))		return speed (driving);
+		if (name.equals ("rmax"))
 		{
-			double	lo = Double.MAX_VALUE;
-			for (Wheel w : turning)		if (w.maxsteer > 0.0)		lo = Math.min (lo, w.maxsteer);
-			return (lo < Double.MAX_VALUE) ? Double.valueOf (lo) : null;
-		}
-		if (name.equals ("maxmotor"))
-		{
-			double	lo = Double.MAX_VALUE;
-			for (Wheel w : driving)
-				if ((w.maxrpm > 0.0) && (w.radius > 0.0))
-					lo	= Math.min (lo, (w.maxrpm / 60.0) * 2 * Math.PI * w.radius);
-			return (lo < Double.MAX_VALUE) ? Double.valueOf (lo) : null;
+			Double	v = speed (driving);
+			Double	s = steering (turning);
+			double	l = 0.0, b = 0.0;
+
+			if (v == null)												return null;
+			if ("tc.vrobot.models.DifferentialDrive".equals (kinematics.drive))
+			{
+				Double	base = geometry ("base");						// both wheels at full speed the other way
+				if (base != null)		b = base.doubleValue ();
+				if (b <= 0.0)											return null;
+				return Double.valueOf (Math.toDegrees (2 * v.doubleValue () / b));
+			}
+			if (s == null)												return null;
+			Double	len = geometry ("length");
+			if (len != null)		l = len.doubleValue ();
+			if (l <= 0.0)												return null;
+			if ("tc.vrobot.models.AckermanDrive".equals (kinematics.drive))
+				return Double.valueOf (Math.toDegrees (v.doubleValue () * Math.tan (Math.toRadians (s.doubleValue ())) / l));
+			if ("tc.vrobot.models.TricycleDrive".equals (kinematics.drive))
+				return Double.valueOf (Math.toDegrees (v.doubleValue () * Math.sin (Math.toRadians (s.doubleValue ())) / l));
+			return null;											// a model nobody here knows about
 		}
 		if (name.equals ("base"))
 		{
@@ -367,6 +373,56 @@ public class RobotDef
 			return Double.valueOf (spreadY (driving));		// how far apart the driving wheels are
 		}
 		return null;
+	}
+
+	/** The wheels that can be steered: the steering axle. */
+	public List<Wheel> steerables ()
+	{
+		List<Wheel>		out = new ArrayList<Wheel> ();
+
+		if (wheels != null)
+			for (Wheel w : wheels)		if (w.steerable)		out.add (w);
+		return out;
+	}
+
+	/** The wheels that cannot: the fixed axle. */
+	public List<Wheel> fixedWheels ()
+	{
+		List<Wheel>		out = new ArrayList<Wheel> ();
+
+		if (wheels != null)
+			for (Wheel w : wheels)		if (!w.steerable)		out.add (w);
+		return out;
+	}
+
+	/** The wheels that drive, or all of them when none says it does. */
+	public List<Wheel> driving ()
+	{
+		List<Wheel>		out = new ArrayList<Wheel> ();
+
+		if (wheels == null)				return out;
+		for (Wheel w : wheels)			if (w.traction)			out.add (w);
+		return out.isEmpty () ? new ArrayList<Wheel> (wheels) : out;
+	}
+
+	/** How fast the driving wheels take the platform, at the slowest of them (m/s), or null. */
+	static private Double speed (List<Wheel> ws)
+	{
+		double		lo = Double.MAX_VALUE;
+
+		for (Wheel w : ws)
+			if ((w.maxrpm > 0.0) && (w.radius > 0.0))
+				lo	= Math.min (lo, (w.maxrpm / 60.0) * 2 * Math.PI * w.radius);
+		return (lo < Double.MAX_VALUE) ? Double.valueOf (lo) : null;
+	}
+
+	/** How far the steering wheels turn, at the most restrictive of them (deg), or null. */
+	static private Double steering (List<Wheel> ws)
+	{
+		double		lo = Double.MAX_VALUE;
+
+		for (Wheel w : ws)		if (w.maxsteer > 0.0)		lo = Math.min (lo, w.maxsteer);
+		return (lo < Double.MAX_VALUE) ? Double.valueOf (lo) : null;
 	}
 
 	static private double meanX (List<Wheel> ws)
@@ -403,8 +459,8 @@ public class RobotDef
 			if (name.equals ("length"))				{ if (kinematics.length != d)	{ kinematics.length = d;	any = true; } }
 			else if (name.equals ("base"))			{ if (kinematics.base != d)		{ kinematics.base = d;		any = true; } }
 			else if (name.equals ("wheel"))			{ if (kinematics.wheel != d)	{ kinematics.wheel = d;		any = true; } }
-			else if (name.equals ("maxsteer"))		{ if (kinematics.maxsteer != d)	{ kinematics.maxsteer = d;	any = true; } }
-			else if (name.equals ("maxmotor"))		{ if (kinematics.maxmotor != d)	{ kinematics.maxmotor = d;	any = true; } }
+			else if (name.equals ("vmax"))			{ if (kinematics.vmax != d)		{ kinematics.vmax = d;		any = true; } }
+			else if (name.equals ("rmax"))			{ if (kinematics.rmax != d)		{ kinematics.rmax = d;		any = true; } }
 		}
 		return any;
 	}
@@ -807,7 +863,8 @@ public class RobotDef
 
 		if (kinematics.drive != null)		p.setProperty ("DRIVEMODEL", kinematics.drive);
 		set (p, "VMAX", kinematics.vmax);			set (p, "RMAX", kinematics.rmax);
-		setNZ (p, "MAXMOTOR", kinematics.maxmotor);	setNZ (p, "MAXSTEER", kinematics.maxsteer);
+		// the drive models clamp their commands with these; what a wheel can do is what they are
+		setNZ (p, "MAXMOTOR", wheelSpeed ());		setNZ (p, "MAXSTEER", wheelSteering ());
 		setNZ (p, "SAMAX", kinematics.samax);		setNZ (p, "LAMAX", kinematics.lamax);
 		setNZ (p, "LDMAX", kinematics.ldmax);		setNZ (p, "LENGHT", kinematics.length);
 		setNZ (p, "BASE", kinematics.base);			setNZ (p, "RWHEEL", kinematics.rwheel);
@@ -889,6 +946,20 @@ public class RobotDef
 		}
 
 		return p;
+	}
+
+	/** The speed of the driving wheels, as the drive models ask for it (m/s; zero when unknown). */
+	public double wheelSpeed ()
+	{
+		Double	v = (wheels == null) ? null : speed (driving ());
+		return (v != null) ? v.doubleValue () : 0.0;
+	}
+
+	/** How far the steering wheels turn, as the drive models ask for it (deg; zero when unknown). */
+	public double wheelSteering ()
+	{
+		Double	v = (wheels == null) ? null : steering (steerables ());
+		return (v != null) ? v.doubleValue () : 0.0;
 	}
 
 	/* Helpers */
