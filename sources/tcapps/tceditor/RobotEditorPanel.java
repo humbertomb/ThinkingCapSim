@@ -198,7 +198,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 					String	name = propsModel.nameAt (row);
 					if (isShapeProperty (name))		return FileCellEditor.SHAPE;
 					if (isImageProperty (name))		return FileCellEditor.IMAGE;
-					if (name.equals ("driver"))
+					if (name.equals (DRIVER))
 					{
 						javax.swing.table.TableCellEditor	ed = driverEditor (propsModel.item);
 						if (ed != null)		return ed;
@@ -805,25 +805,26 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (!RobotDef.hasOwnDetection (it.family))
 				return new String[] { "step", "rho", "theta", "height", "orientation", "elevation" };
 			if (it.family.equals ("lsb"))
-				return new String[] { "driver", DRIVER_PARAMS, "step",
+				return new String[] { DRIVER, DRIVER_PARAMS, "step",
 									  "rho", "theta", "height", "orientation", "elevation",
 									  "range max", "range min", "cone", "rays", "reflect", "beacons" };
 			if (it.family.equals ("trk"))
-				return new String[] { "driver", DRIVER_PARAMS, "step",
+				return new String[] { DRIVER, DRIVER_PARAMS, "step",
 									  "rho", "theta", "height", "orientation", "elevation",
 									  "range max", "range min", "cone", "rays", "objects" };
 			// a camera sees a rectangle: two fields of view, no cone and no near limit
 			if (RobotDef.hasFov (it.family))
-				return new String[] { "driver", DRIVER_PARAMS, "step",
+				return new String[] { DRIVER, DRIVER_PARAMS, "step",
 									  "rho", "theta", "height", "orientation", "elevation",
 									  "range max", "hfov", "vfov" };
-			return new String[] { "driver", DRIVER_PARAMS, "step",
+			return new String[] { DRIVER, DRIVER_PARAMS, "step",
 								  "rho", "theta", "height", "orientation", "elevation",
 								  "range max", "range min", "cone", "rays" };
 		case RobotItem.FAMILY:
 			// only the firing cycle is of the whole family when its sensors say the rest
 			if (RobotDef.hasOwnDetection (it.family))		return new String[] { "cycle" };
-			return new String[] { "driver", "range max", "range min", "cone", "cycle", "rays", "reflect", "beacons", "objects" };
+			// the sonars and the infrared: what they all reach, and nothing of what only a scanner or a tracker says
+			return new String[] { DRIVER, DRIVER_PARAMS, "range max", "range min", "cone", "cycle", "rays" };
 		case RobotItem.EXTRA:
 		{
 			List<String>	keys = new ArrayList<String> (robot.extra.keySet ());
@@ -893,7 +894,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("orientation"))	return RobotDef.fmt (s.orientation);
 			if (name.equals ("elevation"))		return RobotDef.fmt (s.elevation);
 			if (name.equals ("step"))			return String.valueOf (s.step);
-			if (name.equals ("driver"))			return (s.driver != null) ? s.driver : "";
+			if (name.equals (DRIVER))			return (s.driver != null) ? s.driver : "";
 			if (name.equals (DRIVER_PARAMS))	return (s.driverParams != null) ? s.driverParams : "";
 			if (name.equals ("range max"))		return RobotDef.fmt (s.rangemax);
 			if (name.equals ("range min"))		return RobotDef.fmt (s.rangemin);
@@ -909,7 +910,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.FAMILY:
 		{
 			RobotDef.Family		f = robot.family (it.family);
-			if (name.equals ("driver"))		return (f.driver != null) ? f.driver : "";
+			if (name.equals (DRIVER))		return (f.driver != null) ? f.driver : "";
+			if (name.equals (DRIVER_PARAMS))	return (f.driverParams != null) ? f.driverParams : "";
 			if (name.equals ("range max"))	return RobotDef.fmt (f.rangemax);
 			if (name.equals ("range min"))	return RobotDef.fmt (f.rangemin);
 			if (name.equals ("cone"))		return RobotDef.fmt (f.cone);
@@ -931,7 +933,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 	/** True for the properties naming a 3D model file. */
 	static public boolean isShapeProperty (String name)		{ return name.endsWith ("shape"); }
-	/** The name the editor gives to what a driver is opened with. */
+	/** The names the editor gives to the device a sensor is read through. */
+	static public final String		DRIVER					= "driver class";
 	static public final String		DRIVER_PARAMS			= "driver parameters";
 	/** Width of the column of the units: enough for "deg/s" and no more. */
 	static private final int		UNITS_WIDTH				= 44;
@@ -969,12 +972,12 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		List<String>		names;
 		String				base, current;
 
-		if ((it == null) || (it.kind != RobotItem.SENSOR))		return null;
+		if ((it == null) || ((it.kind != RobotItem.SENSOR) && (it.kind != RobotItem.FAMILY)))		return null;
 		base	= RobotDef.driverBase (it.family);
 		if (base == null)										return null;
 
 		names	= new ArrayList<String> (DriverClasses.of (base));
-		current	= getProperty (it, "driver");
+		current	= getProperty (it, DRIVER);
 		if ((current.length () > 0) && !names.contains (current))	names.add (0, current);
 		names.add (0, "");										// a sensor may have no driver of its own
 
@@ -1065,7 +1068,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("orientation"))	s.orientation = num (value);
 			else if (name.equals ("elevation"))		s.elevation = num (value);
 			else if (name.equals ("step"))			s.step = (int) num (value);
-			else if (name.equals ("driver"))		s.driver = token (value);
+			else if (name.equals (DRIVER))			s.driver = token (value);
 			else if (name.equals (DRIVER_PARAMS))	s.driverParams = token (value);
 			else if (name.equals ("range max"))		s.rangemax = num (value);
 			else if (name.equals ("range min"))		s.rangemin = num (value);
@@ -1081,7 +1084,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.FAMILY:
 		{
 			RobotDef.Family		f = robot.family (it.family);
-			if (name.equals ("driver"))			f.driver = token (value);
+			if (name.equals (DRIVER))			f.driver = token (value);
+			else if (name.equals (DRIVER_PARAMS))	f.driverParams = token (value);
 			else if (name.equals ("range max"))	f.rangemax = num (value);
 			else if (name.equals ("range min"))	f.rangemin = num (value);
 			else if (name.equals ("cone"))		f.cone = num (value);

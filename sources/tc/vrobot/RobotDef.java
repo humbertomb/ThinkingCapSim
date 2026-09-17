@@ -105,7 +105,8 @@ public class RobotDef
 		public double		reflect;				// lsb: maximum reflection angle (deg)
 		public int			beacons;				// lsb: beacons it can see at once
 		public int			objects;				// tracker: tracked objects
-		public String		driver;					// driver every sensor of the family uses (LRF0, LSB0, ...)
+		public String		driver;					// class of the device every sensor of the family is read through
+		public String		driverParams;			// what that driver is opened with (a port, an address, ...)
 		public List<Sensor>	sensors	= new ArrayList<Sensor> ();
 
 		/** True when its sensors say what they detect: only the cycle is of the family. */
@@ -118,7 +119,7 @@ public class RobotDef
 			Family	f = new Family ();
 			f.rangemax = rangemax;	f.rangemin = rangemin;	f.cone = cone;		f.cycle = cycle;
 			f.rays = rays;		f.reflect = reflect;	f.beacons = beacons;	f.objects = objects;
-			f.driver = driver;	f.own = own;
+			f.driver = driver;	f.driverParams = driverParams;	f.own = own;
 			for (Sensor s : sensors)		f.sensors.add (s.copy ());
 			return f;
 		}
@@ -279,6 +280,7 @@ public class RobotDef
 			if (!f.own)
 			{
 				if (f.driver != null)		o.addProperty ("driver", f.driver);
+				if (f.driverParams != null)	o.addProperty ("driverParams", f.driverParams);
 				if (f.rangemax != 0.0)		o.addProperty ("rangemax", f.rangemax);
 				if (f.rangemin != 0.0)		o.addProperty ("rangemin", f.rangemin);
 				if (f.cone != 0.0)			o.addProperty ("cone", f.cone);
@@ -410,6 +412,12 @@ public class RobotDef
 			if (f.sensors == null)	f.sensors = new ArrayList<Sensor> ();
 			f.own	= hasOwnDetection (fam);
 			if (f.own)				migrate (fam, f);
+			else
+			{
+				String[]	d = split (f.driver, f.driverParams);
+				f.driver		= d[0];
+				f.driverParams	= d[1];
+			}
 			for (Sensor s : f.sensors)		split (s);
 		}
 	}
@@ -421,25 +429,39 @@ public class RobotDef
 	 */
 	static private void split (Sensor s)
 	{
+		String[]	d = split (s.driver, s.driverParams);
+
+		s.driver		= d[0];
+		s.driverParams	= d[1];
+	}
+
+	/** The class and the parameters of a driver named the old way: {class, parameters}. */
+	static private String[] split (String driver, String params)
+	{
 		int		bar;
 
-		if (s.driver == null)					return;
-		bar		= s.driver.indexOf ('|');
-		if (bar < 0)							return;
-		if (s.driverParams == null)				s.driverParams = s.driver.substring (bar + 1).trim ();
-		s.driver	= s.driver.substring (0, bar).trim ();
-		if (s.driver.length () == 0)			s.driver = null;
-		if ((s.driverParams != null) && (s.driverParams.length () == 0))		s.driverParams = null;
+		if (driver == null)						return new String[] { null, params };
+		bar		= driver.indexOf ('|');
+		if (bar < 0)							return new String[] { driver, params };
+		if (params == null)						params = driver.substring (bar + 1).trim ();
+		driver	= driver.substring (0, bar).trim ();
+		if (driver.length () == 0)				driver = null;
+		if ((params != null) && (params.length () == 0))		params = null;
+		return new String[] { driver, params };
 	}
 
 	/**
 	 * The driver of a sensor as the device layer asks for it: the class and what
 	 * it is opened with, separated by a bar. Null when it has no driver.
 	 */
-	static public String driverProperty (Sensor s)
+	static public String driverProperty (Sensor s)			{ return driverProperty (s.driver, s.driverParams); }
+	/** The same for a family whose sensors are all read through the one driver. */
+	static public String driverProperty (Family f)			{ return driverProperty (f.driver, f.driverParams); }
+
+	static private String driverProperty (String driver, String params)
 	{
-		if ((s.driver == null) || (s.driver.trim ().length () == 0))		return null;
-		return s.driver.trim () + "|" + ((s.driverParams != null) ? s.driverParams.trim () : "");
+		if ((driver == null) || (driver.trim ().length () == 0))		return null;
+		return driver.trim () + "|" + ((params != null) ? params.trim () : "");
 	}
 
 	/**
@@ -452,6 +474,7 @@ public class RobotDef
 		for (Sensor s : f.sensors)
 		{
 			if (s.driver == null)			s.driver = f.driver;
+			if (s.driverParams == null)		s.driverParams = f.driverParams;
 			if (s.rangemax == 0.0)			s.rangemax = f.rangemax;
 			if (s.rangemin == 0.0)			s.rangemin = f.rangemin;
 			if (s.cone == 0.0)				s.cone = f.cone;
@@ -466,7 +489,7 @@ public class RobotDef
 				s.rangemin	= 0.0;
 			}
 		}
-		f.driver	= null;
+		f.driver	= null;	f.driverParams = null;
 		f.rangemax	= 0.0;	f.rangemin = 0.0;	f.cone = 0.0;	f.rays = 0;
 		f.reflect	= 0.0;	f.beacons = 0;		f.objects = 0;
 	}
@@ -598,8 +621,11 @@ public class RobotDef
 					if (s.objects > 0)		p.setProperty ("OBJ" + key + i, String.valueOf (s.objects));
 				}
 				// every sensor of the family is read through the same driver
-				else if ((FAMILY_DRIVERS[fi] != null) && (f.driver != null) && (f.driver.trim ().length () > 0))
-					p.setProperty (FAMILY_DRIVERS[fi] + i, f.driver.trim ());
+				else if (FAMILY_DRIVERS[fi] != null)
+				{
+					String	fdp = driverProperty (f);
+					if (fdp != null)		p.setProperty (FAMILY_DRIVERS[fi] + i, fdp);
+				}
 			}
 		}
 
