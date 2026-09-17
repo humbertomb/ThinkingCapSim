@@ -660,8 +660,13 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 	private void deleteSelection ()
 	{
-		List<RobotItem>		all = new ArrayList<RobotItem> (canvas.selected ());
+		List<RobotItem>		all;
 		boolean				any = false;
+
+		// a family holds its sensors so that they move together, not so that one
+		// key takes them all away
+		if (canvas.isFamilySelected ())			return;
+		all		= new ArrayList<RobotItem> (canvas.selected ());
 
 		// from the last index to the first, so that removing one does not shift the next
 		java.util.Collections.sort (all, new java.util.Comparator<RobotItem> ()
@@ -823,6 +828,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	{
 		int		n = 0;
 
+		if (canvas.isFamilySelected ())			return 0;
 		for (RobotItem it : canvas.selected ())
 			if ((it.kind == RobotItem.LINE) || (it.kind == RobotItem.BUMPER)
 					|| (it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.WHEEL))

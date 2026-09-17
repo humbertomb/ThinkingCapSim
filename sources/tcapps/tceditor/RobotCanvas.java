@@ -224,8 +224,22 @@ public class RobotCanvas extends JPanel
 	{
 		group.clear ();
 		selection	= item;
+		// a family is its sensors: selecting it takes them all, as a band would, so
+		// that dragging any of them moves the whole family at once
+		if ((item != null) && (item.kind == RobotItem.FAMILY) && (robot != null))
+			for (int i = 0; i < robot.family (item.family).n (); i++)
+				group.add (new RobotItem (RobotItem.SENSOR, i, item.family));
 		repaint ();
 		if (listener != null)		listener.selectionChanged (item);
+	}
+
+	/**
+	 * True when what is selected is a whole family, and its group therefore holds
+	 * the sensors it is made of rather than elements picked one by one.
+	 */
+	public boolean isFamilySelected ()
+	{
+		return (selection != null) && (selection.kind == RobotItem.FAMILY);
 	}
 
 	/** What a band picked, when it picked more than one element (empty otherwise). */
