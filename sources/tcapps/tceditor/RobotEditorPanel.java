@@ -12,7 +12,6 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -597,6 +596,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	private void changed ()
 	{
 		dirty	= true;
+		robot.updateGeometry ();				// whatever changed, the wheels have the say on the kinematics
 		canvas.robotChanged ();
 		if (view3d != null)		view3d.robotChanged ();
 		updateTitle ();
@@ -802,7 +802,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/** The view moved or turned an element: the model changed and the table follows. */
 	public void elementChanged (RobotItem item)
 	{
-		robot.updateGeometry ();				// a wheel that moves changes the geometry of the kinematics
 		changed ();
 		propsModel.refresh ();
 	}
@@ -1352,7 +1351,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				String	name = names[r];
 
 				setProperty (item, name, value (name, (v == null) ? "" : v.toString ()));
-				robot.updateGeometry ();		// a wheel typed in changes the geometry too
 				if (name.equals (DRIVE))		setItem (item);		// another model reads other properties
 				else							fireTableRowsUpdated (r, r);
 				if ((item.kind == RobotItem.PLATFORM) && names[r].equals ("name"))		refreshTree ();

@@ -281,7 +281,7 @@ public class RobotDef
 	 * speeds of the platform, the accelerations, the encoders -- is not the
 	 * wheels' to say and stays as it is given.
 	 */
-	static private final String[]	KIN_DERIVED		= { "length", "base", "wheel", "vmax", "rmax" };
+	static private final String[]	KIN_DERIVED		= { "length", "base", "wheel", "vmax", "rmax", "samax" };
 
 	/** True for a kinematics property the wheels of the platform work out. */
 	static public boolean isCalculated (String name)
@@ -314,6 +314,7 @@ public class RobotDef
 	 *   rmax   -- how fast it turns: for a differential drive, both wheels at full
 	 *             speed the other way; for a steered one, going flat out with the
 	 *             wheel hard over, each as its own model works it out
+	 *   samax  -- how fast the steering wheels are turned
 	 */
 	public Double geometry (String name)
 	{
@@ -338,6 +339,7 @@ public class RobotDef
 			return Double.valueOf (Math.abs (meanX (turning) - meanX (fixed)));
 		}
 		if (name.equals ("vmax"))		return speed (driving);
+		if (name.equals ("samax"))		return steerRate (turning);
 		if (name.equals ("rmax"))
 		{
 			Double	v = speed (driving);
@@ -416,6 +418,15 @@ public class RobotDef
 		return (lo < Double.MAX_VALUE) ? Double.valueOf (lo) : null;
 	}
 
+	/** How fast the steering wheels are turned, at the slowest of them (deg/s), or null. */
+	static private Double steerRate (List<Wheel> ws)
+	{
+		double		lo = Double.MAX_VALUE;
+
+		for (Wheel w : ws)		if (w.maxturning > 0.0)		lo = Math.min (lo, w.maxturning);
+		return (lo < Double.MAX_VALUE) ? Double.valueOf (lo) : null;
+	}
+
 	/** How far the steering wheels turn, at the most restrictive of them (deg), or null. */
 	static private Double steering (List<Wheel> ws)
 	{
@@ -461,6 +472,7 @@ public class RobotDef
 			else if (name.equals ("wheel"))			{ if (kinematics.wheel != d)	{ kinematics.wheel = d;		any = true; } }
 			else if (name.equals ("vmax"))			{ if (kinematics.vmax != d)		{ kinematics.vmax = d;		any = true; } }
 			else if (name.equals ("rmax"))			{ if (kinematics.rmax != d)		{ kinematics.rmax = d;		any = true; } }
+			else if (name.equals ("samax"))			{ if (kinematics.samax != d)	{ kinematics.samax = d;		any = true; } }
 		}
 		return any;
 	}
