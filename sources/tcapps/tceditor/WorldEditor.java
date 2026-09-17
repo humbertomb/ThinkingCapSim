@@ -90,6 +90,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	static public final String		TITLE		= "ThinkingCap World Editor";
 	static public final String		MAPS_DIR	= "./conf/maps";
 	static private final int		MAX_UNDO	= 200;
+	/** Width of the column of the units: enough for "deg/s" and no more. */
+	static private final int		UNITS_WIDTH	= 44;
 
 	/* Model */
 	protected World					world;
@@ -256,6 +258,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		propTable.setRowHeight (22);
 		propTable.getColumnModel ().getColumn (0).setPreferredWidth (90);
 		propTable.getColumnModel ().getColumn (1).setPreferredWidth (200);
+		propTable.getColumnModel ().getColumn (2).setPreferredWidth (UNITS_WIDTH);
+		propTable.getColumnModel ().getColumn (2).setMaxWidth (UNITS_WIDTH);
 		propTable.putClientProperty ("terminateEditOnFocusLost", Boolean.TRUE);
 		JScrollPane		propScroll = new JScrollPane (propTable);
 		propScroll.setBorder (BorderFactory.createTitledBorder ("Properties"));
@@ -1026,8 +1030,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 
 		String nameAt (int r)							{ return ((r >= 0) && (r < names.length)) ? names[r] : ""; }
 		public int getRowCount ()						{ return names.length; }
-		public int getColumnCount ()					{ return 2; }
-		public String getColumnName (int c)				{ return (c == 0) ? "Property" : "Value"; }
+		public int getColumnCount ()					{ return 3; }
+		public String getColumnName (int c)				{ return (c == 0) ? "Property" : (c == 1) ? "Value" : "Units"; }
 		public boolean isCellEditable (int r, int c)	{ return (c == 1) && isEnabled (r); }
 		boolean isEnabled (int r)						{ return (item == null) || isEnabledProperty (world, item, nameAt (r)); }
 
@@ -1035,6 +1039,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		{
 			if (item == null)			return "";
 			if (c == 0)					return names[r];
+			if (c == 2)					return Units.of (names[r]);
 			return value (names[r], getProperty (world, item, names[r]));
 		}
 

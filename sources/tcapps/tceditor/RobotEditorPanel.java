@@ -219,6 +219,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		propsTB.putClientProperty ("terminateEditOnFocusLost", Boolean.TRUE);
 		propsTB.getColumnModel ().getColumn (0).setPreferredWidth (150);
 		propsTB.getColumnModel ().getColumn (1).setPreferredWidth (150);
+		propsTB.getColumnModel ().getColumn (2).setPreferredWidth (UNITS_WIDTH);
+		propsTB.getColumnModel ().getColumn (2).setMaxWidth (UNITS_WIDTH);
 		JScrollPane	propsSP = new JScrollPane (propsTB);
 		propsBorder	= BorderFactory.createTitledBorder (" ");
 		JPanel		propsPN = new JPanel (new BorderLayout ());
@@ -931,6 +933,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public boolean isShapeProperty (String name)		{ return name.endsWith ("shape"); }
 	/** The name the editor gives to what a driver is opened with. */
 	static public final String		DRIVER_PARAMS			= "driver parameters";
+	/** Width of the column of the units: enough for "deg/s" and no more. */
+	static private final int		UNITS_WIDTH				= 44;
 	/** True for the properties naming an image file. */
 	static public boolean isImageProperty (String name)		{ return name.equals ("image"); }
 	/** True for the properties naming a file. */
@@ -1120,10 +1124,16 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		String nameAt (int r)						{ return names[r]; }
 
 		public int getRowCount ()					{ return names.length; }
-		public int getColumnCount ()				{ return 2; }
-		public String getColumnName (int c)			{ return (c == 0) ? "Property" : "Value"; }
+		public int getColumnCount ()				{ return 3; }
+		public String getColumnName (int c)			{ return (c == 0) ? "Property" : (c == 1) ? "Value" : "Units"; }
 		public boolean isCellEditable (int r, int c)	{ return (c == 1) && (item != null) && isEditable (item, names[r]); }
-		public Object getValueAt (int r, int c)		{ return (c == 0) ? names[r] : value (names[r], getProperty (item, names[r])); }
+
+		public Object getValueAt (int r, int c)
+		{
+			if (c == 0)			return names[r];
+			if (c == 2)			return Units.of (names[r]);
+			return value (names[r], getProperty (item, names[r]));
+		}
 
 		public void setValueAt (Object v, int r, int c)
 		{
