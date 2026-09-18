@@ -87,7 +87,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
 	protected javax.swing.JToggleButton[]		viewBT;					// the three flat projections
-	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, snapMI, imageMI;
+	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, snapMI, snapVertexMI, imageMI;
 
 	/* ------------------------------------------------------------------ */
 
@@ -313,6 +313,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			public void run ()		{ canvas.setSnapEnabled (snapMI.isSelected ()); }
 		});
 		mview.add (snapMI);
+		snapVertexMI	= checkItem ("Snap to Vertex", KeyEvent.VK_V, mask | java.awt.event.InputEvent.SHIFT_DOWN_MASK, canvas.isSnapVertexEnabled (), new Runnable ()
+		{
+			public void run ()		{ canvas.setSnapVertexEnabled (snapVertexMI.isSelected ()); }
+		});
+		mview.add (snapVertexMI);
 		imageMI	= checkItem ("Robot Image", KeyEvent.VK_I, mask, canvas.isImageVisible (), new Runnable ()
 		{
 			public void run ()		{ canvas.setImageVisible (imageMI.isSelected ()); }

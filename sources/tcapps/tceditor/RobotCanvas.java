@@ -65,6 +65,14 @@ public class RobotCanvas extends JPanel
 	static public final double		MIN_SCALE	= 10.0;			// pixels per metre
 	static public final double		MAX_SCALE	= 20000.0;		// 1 px = 0.05 mm: enough for the sensors of a quaky
 	static public final double		HIT			= 6.0;			// selection tolerance (pixels)
+	/**
+	 * How near a vertex of the same kind has to be for a dragged one to be taken
+	 * to it (pixels). Said in pixels, and not in metres, so that what counts as
+	 * near is what the view shows as near: zooming in asks for a finer aim and
+	 * lets two vertices be left a tenth of a millimetre apart, zooming out makes
+	 * the catch wider.
+	 */
+	static public final double		VERTEX_HIT	= 9.0;
 	static public final double		PENDING_PX	= 40.0;			// where the range handle of a sensor that has none sits
 
 	/** What the editor needs to know about the view. */
@@ -107,6 +115,7 @@ public class RobotCanvas extends JPanel
 	protected boolean				imageVisible	= true;
 	protected boolean				shapeVisible	= true;		// the lines of the 3D model, over the projection
 	protected boolean				snapGrid		= false;	// take the handles to the grid
+	protected boolean				snapVertex		= false;	// take a dragged vertex to a near one of its own kind
 	protected double				gridStep		= 0.1;		// metres, recomputed from the scale
 	protected double				grabX, grabY;				// where the element was grabbed (world coordinates)
 	protected int					bandX, bandY, bandX1, bandY1;	// the rectangle being drawn (px)
@@ -366,6 +375,11 @@ public class RobotCanvas extends JPanel
 	public void setGridVisible (boolean on)			{ gridVisible = on; repaint (); }
 	public boolean isSnapEnabled ()					{ return snapGrid; }
 	public void setSnapEnabled (boolean on)			{ snapGrid = on; }
+	public boolean isSnapVertexEnabled ()			{ return snapVertex; }
+	public void setSnapVertexEnabled (boolean on)	{ snapVertex = on; }
+
+	/** How near two vertices have to be to be made one, at the zoom of the moment (m). */
+	public double getVertexStep ()					{ return VERTEX_HIT / scale; }
 	/** Step of the grid the view is drawing (m). */
 	public double getGridStep ()					{ return gridStep; }
 
@@ -953,22 +967,79 @@ public class RobotCanvas extends JPanel
 		{
 			if (!isTop () || (selection.index >= robot.icon.size ()))		return;
 			RobotDef.IconLine	l = robot.icon.get (selection.index);
-			if (handle == 0)		{ l.xi = x; l.yi = y; }
-			else					{ l.xf = x; l.yf = y; }
+			double[]			p = stick (x, y);
+			if (handle == 0)		{ l.xi = p[0]; l.yi = p[1]; }
+			else					{ l.xf = p[0]; l.yf = p[1]; }
 			break;
 		}
 		case RobotItem.BUMPER:
 		{
 			if (!isTop () || (selection.index >= robot.bumpers.size ()))		return;
 			RobotDef.Bumper		b = robot.bumpers.get (selection.index);
-			if (handle == 0)		{ b.xi = x; b.yi = y; }
-			else					{ b.xf = x; b.yf = y; }
+			double[]			p = stick (x, y);
+			if (handle == 0)		{ b.xi = p[0]; b.yi = p[1]; }
+			else					{ b.xf = p[0]; b.yf = p[1]; }
 			break;
 		}
 		default:
 			return;
 		}
 		changed ();
+	}
+
+	/**
+	 * Where a dragged vertex really goes: the end of another element of its own
+	 * kind -- a drawing line for a drawing line, a bumper for a bumper -- when one
+	 * falls within {@link #VERTEX_HIT} pixels of (x, y), so that the two are left
+	 * exactly on each other; (x, y) itself when there is none, or when vertex
+	 * snapping is off.
+	 *
+	 * The ends of the element being dragged are no target, or a segment would
+	 * collapse onto itself.
+	 */
+	private double[] stick (double x, double y)
+	{
+		double[]	at = new double[] { x, y };
+		double		near = getVertexStep ();
+
+		if (!snapVertex || !isTop () || (selection == null))		return at;
+		switch (selection.kind)
+		{
+		case RobotItem.LINE:
+			for (int i = 0; i < robot.icon.size (); i++)
+			{
+				RobotDef.IconLine	l = robot.icon.get (i);
+
+				if (i == selection.index)		continue;
+				near	= nearer (at, near, x, y, l.xi, l.yi);
+				near	= nearer (at, near, x, y, l.xf, l.yf);
+			}
+			break;
+		case RobotItem.BUMPER:
+			for (int i = 0; i < robot.bumpers.size (); i++)
+			{
+				RobotDef.Bumper		b = robot.bumpers.get (i);
+
+				if (i == selection.index)		continue;
+				near	= nearer (at, near, x, y, b.xi, b.yi);
+				near	= nearer (at, near, x, y, b.xf, b.yf);
+			}
+			break;
+		default:
+			break;
+		}
+		return at;
+	}
+
+	/** Keeps a vertex as the one to snap to when it is the nearest so far, and says how near that now is. */
+	private double nearer (double[] at, double near, double x, double y, double vx, double vy)
+	{
+		double		d = Math.hypot (vx - x, vy - y);
+
+		if (d >= near)			return near;
+		at[0]	= vx;
+		at[1]	= vy;
+		return d;
 	}
 
 	/**
