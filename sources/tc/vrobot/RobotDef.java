@@ -197,6 +197,7 @@ public class RobotDef
 		public int			objects;				// tracker: tracked objects
 		public String		driver;					// class of the device every sensor of the family is read through
 		public String		driverParams;			// what that driver is opened with (a port, an address, ...)
+		public int			simmode;				// how the simulator works a reading out ("MODESON", "MODEIR", ...)
 		public List<Sensor>	sensors	= new ArrayList<Sensor> ();
 
 		/** True when its sensors say what they detect: only the cycle is of the family. */
@@ -210,6 +211,7 @@ public class RobotDef
 			f.rangemax = rangemax;	f.rangemin = rangemin;	f.cone = cone;		f.cycle = cycle;
 			f.rays = rays;		f.reflect = reflect;	f.beacons = beacons;	f.objects = objects;
 			f.driver = driver;	f.driverParams = driverParams;	f.own = own;
+			f.simmode = simmode;
 			for (Sensor s : sensors)		f.sensors.add (s.copy ());
 			return f;
 		}
@@ -329,6 +331,24 @@ public class RobotDef
 	static public final String[]	FAMILY_COUNTS	= { "MAXSONAR", "MAXIR", "MAXLRF", "MAXLSB", "MAXTRACKER", "MAXVISION" };
 	/** Suffix the range properties of each family use (RANGESON, RANGEIR, ...). */
 	static public final String[]	FAMILY_KEYS		= { "SON", "IR", "LRF", "LSB", "TRK", "VIS" };
+	/** How the simulator works a reading of a family out, where it has a say ("MODESON", ...); null where it has none. */
+	static public final String[]	FAMILY_MODES	= { "MODESON", "MODEIR", "MODELRF", "MODELSB", null, null };
+
+	/** True for a family whose readings the simulator works out in a way that can be chosen. */
+	static public boolean hasSimMode (String fam)
+	{
+		int		i = familyIndex (fam);
+
+		return (i >= 0) && (FAMILY_MODES[i] != null);
+	}
+
+	/** The property the simulator reads that choice from, or null. */
+	static public String simModeKey (String fam)
+	{
+		int		i = familyIndex (fam);
+
+		return (i >= 0) ? FAMILY_MODES[i] : null;
+	}
 	/** Prefix of the driver property of each family (LRF0, LSB0, ...); null when the family has none. */
 	static public final String[]	FAMILY_DRIVERS	= { "SONAR", "IR", "LRF", "LSB", "TRK", "VISION" };
 
@@ -791,6 +811,13 @@ public class RobotDef
 				f.driverParams	= d[1];
 			}
 			for (Sensor s : f.sensors)		split (s);
+			// how the simulator works its readings out, which used to sit among the
+			// properties that are not understood
+			if (FAMILY_MODES[familyIndex (fam)] != null)
+			{
+				String	m = extra.remove (FAMILY_MODES[familyIndex (fam)]);
+				if (m != null)		f.simmode = (int) number (m, 0.0);
+			}
 		}
 		if (groups.isEmpty ())		readGroups ();
 		if (fused.isEmpty ())		readFused ();
@@ -1060,6 +1087,7 @@ public class RobotDef
 			p.setProperty (FAMILY_COUNTS[fi], String.valueOf (f.n ()));
 
 			if (f.cycle > 0)		p.setProperty ("CYCLE" + key, String.valueOf (f.cycle));
+			if (FAMILY_MODES[fi] != null)		p.setProperty (FAMILY_MODES[fi], String.valueOf (f.simmode));
 			if (FAMILY_OWN[fi])
 			{
 				// the runtime still reads one set of values for the whole family: the

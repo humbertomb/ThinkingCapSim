@@ -218,6 +218,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 						javax.swing.table.TableCellEditor	ed = classEditor (propsModel.item, name);
 						if (ed != null)		return ed;
 					}
+					if (name.equals (SIM_MODE) && (propsModel.item != null))
+					{
+						javax.swing.table.TableCellEditor	ed = simModeEditor (propsModel.item.family);
+						if (ed != null)		return ed;
+					}
 				}
 				return super.getCellEditor (row, column);
 			}
@@ -1072,10 +1077,21 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 								  "rho", "theta", "height", "orientation", "elevation",
 								  "range max", "range min", "cone", "rays" };
 		case RobotItem.FAMILY:
+		{
+			// how the simulator works their readings out comes first, where it has a say
+			List<String>	names = new ArrayList<String> ();
+
+			if (SimModes.has (it.family))		names.add (SIM_MODE);
 			// only the firing cycle is of the whole family when its sensors say the rest
-			if (RobotDef.hasOwnDetection (it.family))		return new String[] { "cycle" };
-			// the sonars and the infrared: what they all reach, and nothing of what only a scanner or a tracker says
-			return new String[] { DRIVER, DRIVER_PARAMS, "range max", "range min", "cone", "cycle", "rays" };
+			if (RobotDef.hasOwnDetection (it.family))		names.add ("cycle");
+			else
+			{
+				// the sonars and the infrared: what they all reach, and nothing of what only a scanner or a tracker says
+				for (String n : new String[] { DRIVER, DRIVER_PARAMS, "range max", "range min", "cone", "cycle", "rays" })
+					names.add (n);
+			}
+			return names.toArray (new String[0]);
+		}
 		case RobotItem.EXTRA:
 		{
 			List<String>	keys = new ArrayList<String> (robot.extra.keySet ());
@@ -1195,6 +1211,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.FAMILY:
 		{
 			RobotDef.Family		f = robot.family (it.family);
+			if (name.equals (SIM_MODE))		return SimModes.name (it.family, f.simmode);
 			if (name.equals (DRIVER))		return (f.driver != null) ? f.driver : "";
 			if (name.equals (DRIVER_PARAMS))	return (f.driverParams != null) ? f.driverParams : "";
 			if (name.equals ("range max"))	return RobotDef.fmt (f.rangemax);
@@ -1229,6 +1246,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		WHEEL_DIAM				= "wheel diameter";
 	static public final String		MAX_RPM					= "max rpm";
 	static public final String		DRIVER_PARAMS			= "driver parameters";
+	/** The name the editor gives to the way the simulator works the readings of a family out. */
+	static public final String		SIM_MODE				= "simulation mode";
 
 	/*
 	 * The names the editor gives to the kinematics, which the description knows by
@@ -1338,6 +1357,27 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		cb		= new JComboBox<String> (names.toArray (new String[0]));
 		cb.setSelectedItem (current);
 		cb.setToolTipText ("Classes deriving from " + base);
+		return new DefaultCellEditor (cb);
+	}
+
+	/**
+	 * The editor of how the simulator works the readings of a family out: the ways
+	 * it knows, by name. What a description says now comes first when it is not one
+	 * of them -- a number written by hand is not to be lost by opening its editor.
+	 */
+	private javax.swing.table.TableCellEditor simModeEditor (String fam)
+	{
+		List<String>		names;
+		String				current;
+		JComboBox<String>	cb;
+
+		if (!SimModes.has (fam))		return null;
+		names	= SimModes.names (fam);
+		current	= SimModes.name (fam, robot.family (fam).simmode);
+		if (!names.contains (current))		names.add (0, current);
+		cb		= new JComboBox<String> (names.toArray (new String[0]));
+		cb.setSelectedItem (current);
+		cb.setToolTipText ("How the simulator works a reading of this family out");
 		return new DefaultCellEditor (cb);
 	}
 
@@ -1487,7 +1527,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.FAMILY:
 		{
 			RobotDef.Family		f = robot.family (it.family);
-			if (name.equals (DRIVER))			f.driver = token (value);
+			if (name.equals (SIM_MODE))			f.simmode = SimModes.mode (it.family, value);
+			else if (name.equals (DRIVER))		f.driver = token (value);
 			else if (name.equals (DRIVER_PARAMS))	f.driverParams = token (value);
 			else if (name.equals ("range max"))	f.rangemax = num (value);
 			else if (name.equals ("range min"))	f.rangemin = num (value);
