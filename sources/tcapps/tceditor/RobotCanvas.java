@@ -1887,7 +1887,7 @@ public class RobotCanvas extends JPanel
 			if (sel || (scale > 150))
 			{
 				g.setFont (getFont ().deriveFont (10f));
-				g.drawString ("v" + i, (float) (x + 6), (float) (y - 6));
+				g.drawString ("group" + i, (float) (x + 6), (float) (y - 6));
 			}
 		}
 	}

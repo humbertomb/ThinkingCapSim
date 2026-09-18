@@ -768,7 +768,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		treeRoot.add (bumpers);
 
 		ItemNode	virtual = new ItemNode (new RobotItem (RobotItem.GROUPS, 0), "Virtual sensors  (" + robot.groups.size () + ")");
-		for (int i = 0; i < robot.groups.size (); i++)	virtual.add (new ItemNode (new RobotItem (RobotItem.GROUP, i), "Virtual " + i));
+		// named as the description names them (groupfeat0, grouplen0, ...), as a
+		// sensor of a family is named after its family
+		for (int i = 0; i < robot.groups.size (); i++)	virtual.add (new ItemNode (new RobotItem (RobotItem.GROUP, i), "group" + i));
 		treeRoot.add (virtual);
 
 		for (String fam : RobotDef.FAMILIES)
@@ -920,7 +922,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.LINE:		return "Drawing line " + it.index;
 		case RobotItem.BUMPER:		return "Bumper " + it.index;
 		case RobotItem.WHEEL:		return "Wheel " + it.index;
-		case RobotItem.GROUP:		return "Virtual sensor " + it.index;
+		case RobotItem.GROUP:		return "Virtual sensors: group" + it.index;
 		case RobotItem.GROUPS:		return "Virtual sensors";
 		case RobotItem.SENSOR:		return RobotDef.familyName (it.family) + ": " + it.family + it.index;
 		case RobotItem.FAMILY:		return RobotDef.familyName (it.family);

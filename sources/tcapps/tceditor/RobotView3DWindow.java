@@ -330,7 +330,7 @@ public class RobotView3DWindow extends JFrame
 		if (selection.kind == RobotItem.GROUP)
 		{
 			if (selection.index >= robot.groups.size ())	return "";
-			return sector (bg, robot.groups.get (selection.index), "v" + selection.index + ": ");
+			return sector (bg, robot.groups.get (selection.index), "group" + selection.index + ": ");
 		}
 		if (selection.kind == RobotItem.GROUPS)
 		{
