@@ -327,6 +327,17 @@ public class RobotView3DWindow extends JFrame
 			return sector (bg, selection.family, f.sensors.get (selection.index),
 							selection.family + selection.index + ": ");
 		}
+		if (selection.kind == RobotItem.GROUP)
+		{
+			if (selection.index >= robot.groups.size ())	return "";
+			return sector (bg, robot.groups.get (selection.index), "v" + selection.index + ": ");
+		}
+		if (selection.kind == RobotItem.GROUPS)
+		{
+			for (RobotDef.Group q : robot.groups)
+				if (sector (bg, q, null).length () > 0)		n++;
+			return (n > 0) ? "Virtual sensors: " + n + ".   " : "";
+		}
 		if (selection.kind != RobotItem.FAMILY)	return "";
 
 		f	= robot.family (selection.family);
@@ -361,24 +372,71 @@ public class RobotView3DWindow extends JFrame
 		if (ext <= 0.0)
 			return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax) + " m, no aperture.   " : "";
 
-		steps	= Math.max (8, (int) Math.round (Math.toDegrees (ext) / 3.0));
-		// the sector lies in the plane the sensor looks along, tilted by its elevation
-		double[]	f = forward (s), w = across (s);
+		fan (bg, x, y, z, s.orientation, s.elevation, rmax, rmin, ext, coverAppearance (fam, 1.0f));
+
+		return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax)
+								+ " m, " + RobotDef.fmt (d[2]) + " deg.   " : " ";
+	}
+
+	/**
+	 * The flat sector something covers: from <code>rmin</code> to <code>rmax</code>,
+	 * <code>ext</code> wide (radians, half of it to each side of where it looks),
+	 * in the plane it looks along, which its elevation tilts.
+	 */
+	private void fan (BranchGroup bg, double x, double y, double z, double orientation, double elevation,
+					  double rmax, double rmin, double ext, Appearance app)
+	{
+		int			steps = Math.max (8, (int) Math.round (Math.toDegrees (ext) / 3.0));
+		double[]	f = forward (orientation, elevation), w = across (orientation);
 		QuadArray	qa = new QuadArray (4 * steps, QuadArray.COORDINATES);
+
 		for (int i = 0; i < steps; i++)
 		{
-			double	a1 = a0 - Math.toRadians (s.orientation) + ext * i / steps;
+			double	a1 = -ext / 2 + ext * i / steps;
 			double	a2 = a1 + ext / steps;
 			qa.setCoordinate (4 * i,     at (x, y, z, f, w, a1, rmin));
 			qa.setCoordinate (4 * i + 1, at (x, y, z, f, w, a1, rmax));
 			qa.setCoordinate (4 * i + 2, at (x, y, z, f, w, a2, rmax));
 			qa.setCoordinate (4 * i + 3, at (x, y, z, f, w, a2, rmin));
 		}
+		bg.addChild (new Shape3D (qa, app));
+	}
 
-		bg.addChild (new Shape3D (qa, coverAppearance (fam, 1.0f)));
+	/**
+	 * Adds the sector one virtual sensor covers, in a light green of its own: what
+	 * it reads is worked out from the other sensors, not taken from the world.
+	 *
+	 * @return what to say about it
+	 */
+	private String sector (BranchGroup bg, RobotDef.Group q, String what)
+	{
+		double		x, y, rmax, rmin, ext;
+
+		rmax	= q.rangemax;		rmin = Math.max (0.0, q.rangemin);
+		if (rmax <= 0.0)		return (what != null) ? what + "no range.   " : "";
+		if (rmin > rmax)		rmin = 0.0;
+		ext		= Math.toRadians ((q.cone > 0.0) ? Math.min (q.cone, 360.0) : 0.0);
+		if (ext <= 0.0)
+			return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax) + " m, no aperture.   " : "";
+
+		x		= q.rho * Math.cos (Math.toRadians (q.theta));
+		y		= q.rho * Math.sin (Math.toRadians (q.theta));
+		fan (bg, x, y, q.height, q.orientation, q.elevation, rmax, rmin, ext, virtualAppearance ());
 
 		return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax)
-								+ " m, " + RobotDef.fmt (d[2]) + " deg.   " : " ";
+								+ " m, " + RobotDef.fmt (q.cone) + " deg.   " : " ";
+	}
+
+	/** How what a virtual sensor covers is painted: light green, seen through. */
+	private Appearance virtualAppearance ()
+	{
+		Appearance	app = new Appearance ();
+
+		app.setColoringAttributes (new ColoringAttributes (C_VIRTUAL, ColoringAttributes.SHADE_FLAT));
+		app.setTransparencyAttributes (new TransparencyAttributes (TransparencyAttributes.BLENDED, 0.65f));
+		app.setPolygonAttributes (new PolygonAttributes (PolygonAttributes.POLYGON_FILL, PolygonAttributes.CULL_NONE, 0f));
+		app.setRenderingAttributes (new RenderingAttributes ());
+		return app;
 	}
 
 	/**
@@ -426,17 +484,21 @@ public class RobotView3DWindow extends JFrame
 	}
 
 	/** Where a sensor looks at: its orientation over the ground, raised by its elevation. */
-	static private double[] forward (RobotDef.Sensor s)
+	static private double[] forward (RobotDef.Sensor s)					{ return forward (s.orientation, s.elevation); }
+
+	static private double[] forward (double orientation, double elevation)
 	{
-		double	a = Math.toRadians (s.orientation), e = Math.toRadians (s.elevation);
+		double	a = Math.toRadians (orientation), e = Math.toRadians (elevation);
 
 		return new double[] { Math.cos (a) * Math.cos (e), Math.sin (a) * Math.cos (e), Math.sin (e) };
 	}
 
 	/** Across what a sensor looks at, on the ground: the axis its elevation turns about. */
-	static private double[] across (RobotDef.Sensor s)
+	static private double[] across (RobotDef.Sensor s)					{ return across (s.orientation); }
+
+	static private double[] across (double orientation)
 	{
-		double	a = Math.toRadians (s.orientation);
+		double	a = Math.toRadians (orientation);
 
 		return new double[] { Math.sin (a), -Math.cos (a), 0.0 };
 	}
@@ -472,6 +534,9 @@ public class RobotView3DWindow extends JFrame
 		app.setRenderingAttributes (new RenderingAttributes ());
 		return app;
 	}
+
+	/** The colour of a virtual sensor: light green, so that it is not taken for a family of real ones. */
+	static public final Color3f		C_VIRTUAL	= new Color3f (0.55f, 0.95f, 0.55f);
 
 	/** The colour each family of sensors is drawn in, so that several of them are told apart. */
 	static public Color3f familyColor (String fam)
@@ -529,10 +594,26 @@ public class RobotView3DWindow extends JFrame
 			f	= robot.family (selection.family);
 			return (selection.index < f.n ()) ? reach (selection.family, f.sensors.get (selection.index)) : 0.0;
 		}
+		if (selection.kind == RobotItem.GROUP)
+		{
+			if (selection.index >= robot.groups.size ())	return 0.0;
+			return reach (robot.groups.get (selection.index));
+		}
+		if (selection.kind == RobotItem.GROUPS)
+		{
+			for (RobotDef.Group q : robot.groups)		e = Math.max (e, reach (q));
+			return e;
+		}
 		if (selection.kind != RobotItem.FAMILY)		return 0.0;
 		for (RobotDef.Sensor s : robot.family (selection.family).sensors)
 			e	= Math.max (e, reach (selection.family, s));
 		return e;
+	}
+
+	/** How far from the centre of the robot one virtual sensor reaches (m). */
+	private double reach (RobotDef.Group q)
+	{
+		return (q.rangemax > 0.0) ? q.rho + q.rangemax : 0.0;
 	}
 
 	/** How far from the centre of the robot one sensor reaches (m). */
