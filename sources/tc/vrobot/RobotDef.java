@@ -351,6 +351,14 @@ public class RobotDef
 	/** What the simulator takes it to be when a description does not say. */
 	static public final double		DEFAULT_ERROR	= 0.05;
 
+	/**
+	 * Properties nothing reads any more, which a description carries along because
+	 * it always has. MAXSPEED and MAXTURN are what VMAX and RMAX were called
+	 * before the drive train said them, and RAYVIRTU was never read at all. They
+	 * are dropped rather than written out again.
+	 */
+	static private final String[]	DEAD			= { "MAXSPEED", "MAXTURN", "RAYVIRTU" };
+
 	/** True for a family whose readings the simulator works out in a way that can be chosen. */
 	static public boolean hasSimMode (String fam)
 	{
@@ -868,8 +876,13 @@ public class RobotDef
 		// how the fusion works the fused sensors out, which sat there too
 		String	fm = extra.remove ("MODEVIRTU");
 		if (fm != null)				fusionmode = (int) number (fm, 0.0);
+		for (String k : DEAD)		extra.remove (k);
 		if (groups.isEmpty ())		readGroups ();
 		if (fused.isEmpty ())		readFused ();
+		// what the whole lot of them reaches is now what each one of them says, and
+		// is written back from the first: a description read once does not carry it
+		if (!groups.isEmpty ())		{ extra.remove ("RANGEGROUP");	extra.remove ("CONEGROUP"); }
+		if (!fused.isEmpty ())		{ extra.remove ("RANGEVIRTU");	extra.remove ("CONEVIRTU"); }
 	}
 
 	/**
@@ -878,14 +891,15 @@ public class RobotDef
 	 * is not understood. What is read is taken out of there, so that it is not
 	 * written twice.
 	 *
-	 * What the whole lot of them says (RANGEGROUP, CONEGROUP) stays where it is:
-	 * it is read as the default of a sensor that says nothing of its own.
+	 * What the whole lot of them says (RANGEGROUP, CONEGROUP) is what a sensor
+	 * saying nothing of its own reaches, so it is read into every one of them and
+	 * taken out as well; writing puts it back from the first of them.
 	 */
 	protected void readGroups ()
 	{
 		int			n = 0;
-		double		range = number (extra.get ("RANGEGROUP"), 1.0);		// the defaults of the fusion
-		double		cone = number (extra.get ("CONEGROUP"), 30.0);
+		double		range = number (take ("RANGEGROUP"), 1.0);		// the defaults of the fusion
+		double		cone = number (take ("CONEGROUP"), 30.0);
 
 		for (String k : extra.keySet ())
 		{
@@ -916,14 +930,14 @@ public class RobotDef
 	 *
 	 * An older description says how far they all reach and how wide they all are
 	 * (RANGEVIRTU, CONEVIRTU) and not how far each one does, so each one is read
-	 * as reaching what they all do; those two stay where they are, as what a
-	 * sensor that says nothing of its own falls back on.
+	 * as reaching what they all do and those two are taken out; writing puts them
+	 * back from the first of them.
 	 */
 	protected void readFused ()
 	{
 		int			n = 0;
-		double		range = number (extra.get ("RANGEVIRTU"), 8.0);		// the defaults of the fusion
-		double		cone = number (extra.get ("CONEVIRTU"), 20.0);
+		double		range = number (take ("RANGEVIRTU"), 8.0);		// the defaults of the fusion
+		double		cone = number (take ("CONEVIRTU"), 20.0);
 
 		for (String k : extra.keySet ())
 		{
@@ -1196,6 +1210,10 @@ public class RobotDef
 		{
 			p.setProperty ("MAXVIRTU", String.valueOf (fused.size ()));
 			p.setProperty ("MODEVIRTU", String.valueOf (fusionmode));
+			// the fusion reads one range and one cone for the whole lot of them: the
+			// first stands for it, as it did when they were read
+			setNZ (p, "RANGEVIRTU", fused.get (0).rangemax);
+			setNZ (p, "CONEVIRTU", fused.get (0).cone);
 			for (int i = 0; i < fused.size (); i++)
 			{
 				Fused	f = fused.get (i);
@@ -1215,6 +1233,9 @@ public class RobotDef
 		if (!groups.isEmpty ())
 		{
 			p.setProperty ("MAXGROUP", String.valueOf (groups.size ()));
+			// what one of them falls back on when it says nothing of its own
+			setNZ (p, "RANGEGROUP", groups.get (0).rangemax);
+			setNZ (p, "CONEGROUP", groups.get (0).cone);
 			for (int i = 0; i < groups.size (); i++)
 			{
 				Group	g = groups.get (i);
