@@ -1418,14 +1418,22 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	}
 
 	/**
-	 * True when the way the simulator works a family out puts an error of its own
-	 * on the reading. Asked for none of it, there is nothing to say how far off it
-	 * goes, and the editor neither shows a number nor takes one.
+	 * True when the way the simulator works a family out reads the error it is
+	 * given. Only a relative noise is a share of the distance; the ways that add
+	 * nothing, and the two that model a device -- the lobes of a sonar and what an
+	 * infrared reads off a surface -- never look at it, so the editor neither
+	 * shows a number nor takes one.
+	 *
+	 * The gaussian noise is left as it is for now: what it spreads by is a
+	 * separate property of its own (ERRORLRFGAUSS, ...).
 	 */
 	private boolean usesSimError (String fam)
 	{
+		String		mode;
+
 		if ((fam == null) || !RobotDef.hasSimError (fam))		return false;
-		return !SimModes.NONE.equals (SimModes.name (fam, robot.family (fam).simmode));
+		mode	= SimModes.name (fam, robot.family (fam).simmode);
+		return !SimModes.NONE.equals (mode) && !SimModes.RAYTRACING.equals (mode) && !SimModes.ABSORTION.equals (mode);
 	}
 
 	/** True when a property can be edited: what the wheels work out is not typed in. */
