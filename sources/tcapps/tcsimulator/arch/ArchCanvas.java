@@ -26,6 +26,9 @@ import java.util.Map;
 
 import javax.swing.JPanel;
 
+import tc.vrobot.RobotDef;
+import tc.vrobot.RobotImage;
+
 import tcapps.tcsimulator.arch.ArchModel.Block;
 
 /**
@@ -70,9 +73,17 @@ public class ArchCanvas extends JPanel
 	static final Color				C_REGION_BG	= new Color (245, 245, 245);
 	static final Color				C_SELECT	= new Color (30, 110, 230);
 	static final Color				C_ARROW		= new Color (90, 90, 90);
+	static final Color				C_PREVIEW_BG	= new Color (252, 252, 252);
+
+	/** Size of the preview of the robot, in the bottom right corner of the panel (px). */
+	static final int				PREVIEW_W	= 120;
+	static final int				PREVIEW_H	= 120;
+	static final int				PREVIEW_PAD	= 10;
 
 	protected ArchModel				model;
 	protected Block					selection;
+	protected String				previewPath;			// description the preview was read from
+	protected RobotDef				previewRobot;			// and what was read (null when it cannot be)
 	protected List<Listener>		listeners	= new ArrayList<Listener> ();
 
 	// layout, rebuilt at every paint
@@ -369,6 +380,117 @@ public class ArchCanvas extends JPanel
 			paintBlock (g, b, e.getValue (), b.equals (selection));
 		}
 		g.dispose ();
+
+		g	= (Graphics2D) g0.create ();								// the preview sits in the panel, not in the diagram
+		g.setRenderingHint (RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHint (RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		paintRobotPreview (g);
+		g.dispose ();
+	}
+
+	/**
+	 * The robot the selection names, in the bottom right corner of the panel: its
+	 * drawing when it has one and, failing that, its image, so that what a
+	 * description says is seen without opening the robot editor.
+	 *
+	 * The selection is a robot when it is the block of the robot itself or the
+	 * region it lives in.
+	 */
+	protected void paintRobotPreview (Graphics2D g)
+	{
+		RobotDef	robot = selectedRobot ();
+		Rectangle	box;
+		String		name;
+
+		if (robot == null)						return;
+		box		= new Rectangle (getWidth () - PREVIEW_W - PREVIEW_PAD, getHeight () - PREVIEW_H - PREVIEW_PAD,
+								 PREVIEW_W, PREVIEW_H);
+		if ((box.x < 0) || (box.y < 0))			return;				// no room for it
+
+		g.setColor (C_PREVIEW_BG);
+		g.fillRoundRect (box.x, box.y, box.width, box.height, 10, 10);
+		g.setColor (C_REGION);
+		g.drawRoundRect (box.x, box.y, box.width, box.height, 10, 10);
+
+		name	= ((robot.name != null) && (robot.name.trim ().length () > 0)) ? robot.name.trim () : "";
+		g.setFont (getFont ().deriveFont (Font.PLAIN, 10f));
+		if (name.length () > 0)
+		{
+			FontMetrics	fm = g.getFontMetrics ();
+			g.setColor (C_ARROW);
+			g.drawString (name, box.x + (box.width - fm.stringWidth (name)) / 2, box.y + box.height - 5);
+		}
+		drawRobot (g, robot, new Rectangle (box.x + 8, box.y + 8, box.width - 16, box.height - 16 - 12));
+	}
+
+	/** The drawing of a robot, or its image when it has no drawing, fitted into a box of the panel. */
+	protected void drawRobot (Graphics2D g, RobotDef robot, Rectangle box)
+	{
+		double		minx = Double.MAX_VALUE, miny = Double.MAX_VALUE;
+		double		maxx = -Double.MAX_VALUE, maxy = -Double.MAX_VALUE;
+		double		k;
+		double		cx, cy;
+
+		if ((robot.icon != null) && !robot.icon.isEmpty ())			// the drawing comes first
+		{
+			for (RobotDef.IconLine l : robot.icon)
+			{
+				minx	= Math.min (minx, Math.min (l.xi, l.xf));	maxx = Math.max (maxx, Math.max (l.xi, l.xf));
+				miny	= Math.min (miny, Math.min (l.yi, l.yf));	maxy = Math.max (maxy, Math.max (l.yi, l.yf));
+			}
+			if ((maxx <= minx) && (maxy <= miny))					return;
+			k		= Math.min (box.width / Math.max (1e-6, maxx - minx), box.height / Math.max (1e-6, maxy - miny));
+			cx		= (minx + maxx) / 2;			cy = (miny + maxy) / 2;
+			g.setColor (C_LINE);
+			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			for (RobotDef.IconLine l : robot.icon)
+				g.draw (new Line2D.Double (box.getCenterX () + (l.xi - cx) * k, box.getCenterY () - (l.yi - cy) * k,
+										   box.getCenterX () + (l.xf - cx) * k, box.getCenterY () - (l.yf - cy) * k));
+			return;
+		}
+
+		java.awt.Image	img = (robot.image != null) ? RobotImage.get (robot.image) : null;
+		int				iw, ih;
+
+		if (img == null)						return;
+		iw		= img.getWidth (null);			ih = img.getHeight (null);
+		if ((iw <= 0) || (ih <= 0))				return;
+		k		= Math.min (box.width / (double) iw, box.height / (double) ih);
+		iw		= (int) Math.round (iw * k);	ih = (int) Math.round (ih * k);
+		g.drawImage (img, (int) Math.round (box.getCenterX () - iw / 2.0), (int) Math.round (box.getCenterY () - ih / 2.0),
+						  iw, ih, null);
+	}
+
+	/**
+	 * The description the selected robot names, or null when nothing is selected,
+	 * what is selected is not a robot, or it names no description.
+	 *
+	 * Reading a description is slow, so the last one read is kept: the panel is
+	 * repainted at every turn.
+	 */
+	protected RobotDef selectedRobot ()
+	{
+		Block		b = selection;
+		String		path;
+
+		if (b == null)							return null;
+		if (b.kind == ArchModel.ROBOT)			b = new Block (ArchModel.VROBOT, b.robot);
+		if (b.kind != ArchModel.VROBOT)			return null;
+		if (!model.exists (b))					return null;
+		path	= model.get (b, "DESC");
+		if (path == null)						return null;
+		path	= path.trim ();
+		if (path.length () == 0)				return null;
+		if (path.equals (previewPath))			return previewRobot;
+
+		previewPath	= path;
+		previewRobot	= null;
+		try
+		{
+			java.io.File	f = new java.io.File (path);
+			if (f.isFile ())		previewRobot = RobotDef.load (f);
+		} catch (Throwable e)		{ }									// a description that cannot be read shows nothing
+		return previewRobot;
 	}
 
 	protected void paintBlock (Graphics2D g, Block b, Rectangle r, boolean selected)

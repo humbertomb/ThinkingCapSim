@@ -138,7 +138,7 @@ public class ArchModel
 		new Property ("PASSIVE","Passive",		P_BOOLEAN),
 		new Property ("EXTIME",	"Exec. time (ms)"),
 		new Property ("GFX",	"Graphics",	P_BOOLEAN),
-		new Property ("DESC",	"DESC",			"./conf/robots",	"Robot descriptions (*.robot)",	"robot"),
+		new Property ("DESC",	"Robot Definition",	"./conf/robots",	"Robot descriptions (*.robot)",	"robot"),
 	};
 
 	/** Suffixes that exist in the ADF but are not shown in the editor, per kind. */
