@@ -390,8 +390,18 @@ public class RobotDef
 
 		return (i >= 0) ? FAMILY_ERRORS[i] : null;
 	}
-	/** Prefix of the driver property of each family (LRF0, LSB0, ...); null when the family has none. */
-	static public final String[]	FAMILY_DRIVERS	= { "SONAR", "IR", "LRF", "LSB", "TRK", "VISION" };
+	/**
+	 * Prefix of the driver property of each family (LRF0, LSB0, ...); null when
+	 * the family has none. The radar trackers are opened as RADAR0, which is what
+	 * a radar is named by everywhere else; nothing ever read a TRK0.
+	 */
+	static public final String[]	FAMILY_DRIVERS	= { "SONAR", "IR", "LRF", "LSB", "RADAR", "VISION" };
+	/**
+	 * A second count of a family, under the name the rest of the description uses
+	 * for it; null where there is none. The radar trackers are counted as radars
+	 * (MAXRADAR) as well as as trackers (MAXTRACKER), and both are read.
+	 */
+	static private final String[]	FAMILY_ALIAS	= { null, null, null, null, "MAXRADAR", null };
 
 	/**
 	 * The class every driver of a family derives from; null when the family has
@@ -872,6 +882,7 @@ public class RobotDef
 				String	e = extra.remove (FAMILY_ERRORS[familyIndex (fam)]);
 				if (e != null)		f.simerror = number (e, DEFAULT_ERROR);
 			}
+			readAlso (fam, f);
 		}
 		// how the fusion works the fused sensors out, which sat there too
 		String	fm = extra.remove ("MODEVIRTU");
@@ -883,6 +894,31 @@ public class RobotDef
 		// is written back from the first: a description read once does not carry it
 		if (!groups.isEmpty ())		{ extra.remove ("RANGEGROUP");	extra.remove ("CONEGROUP"); }
 		if (!fused.isEmpty ())		{ extra.remove ("RANGEVIRTU");	extra.remove ("CONEVIRTU"); }
+	}
+
+	/**
+	 * What a family is also said as, which the model already holds: a radar is
+	 * counted twice (MAXRADAR beside MAXTRACKER), opened by a name of its own
+	 * (RADAR0, which is the family's driver) and says what it casts as RAYRAD,
+	 * which is the rays of its sensors. All of it is taken out of the properties
+	 * that are not understood, and written back from the family.
+	 */
+	private void readAlso (String fam, Family f)
+	{
+		int		fi = familyIndex (fam);
+
+		if ((fi < 0) || (FAMILY_ALIAS[fi] == null))		return;
+		extra.remove (FAMILY_ALIAS[fi]);				// it is however many there are
+		for (int i = 0; i < f.n (); i++)
+		{
+			String	d = take (FAMILY_DRIVERS[fi] + i);
+			Sensor	s = f.sensors.get (i);
+			if ((d != null) && (s.driver == null))		{ String[] x = split (d, null);		s.driver = x[0];	s.driverParams = x[1]; }
+		}
+		String	rays = take (rayKey (fam, FAMILY_KEYS[fi]));
+		if (rays != null)
+			for (Sensor s : f.sensors)
+				if (s.rays == 0)		s.rays = (int) number (rays, 0.0);
 	}
 
 	/**
@@ -1030,6 +1066,9 @@ public class RobotDef
 	/** The same for a family whose sensors are all read through the one driver. */
 	static public String driverProperty (Family f)			{ return driverProperty (f.driver, f.driverParams); }
 
+	/** The property the rays of a family are written under: a radar has a name of its own. */
+	static private String rayKey (String fam, String key)	{ return fam.equals ("trk") ? "RAYRAD" : ("RAY" + key); }
+
 	static private String driverProperty (String driver, String params)
 	{
 		if ((driver == null) || (driver.trim ().length () == 0))		return null;
@@ -1149,6 +1188,7 @@ public class RobotDef
 					&& (f.rays == 0) && (f.reflect == 0.0) && (f.beacons == 0) && (f.objects == 0)
 					&& (f.simmode == 0))		continue;
 			p.setProperty (FAMILY_COUNTS[fi], String.valueOf (f.n ()));
+			if (FAMILY_ALIAS[fi] != null)		p.setProperty (FAMILY_ALIAS[fi], String.valueOf (f.n ()));
 
 			if (f.cycle > 0)		p.setProperty ("CYCLE" + key, String.valueOf (f.cycle));
 			if (FAMILY_MODES[fi] != null)		p.setProperty (FAMILY_MODES[fi], String.valueOf (f.simmode));
@@ -1162,7 +1202,8 @@ public class RobotDef
 				setNZ (p, "RANGE" + key, s0.rangemax);	setNZ (p, "MINIM" + key, s0.rangemin);
 				setNZ (p, "CONE" + key, hasFov (fam) ? s0.hfov : s0.cone);
 				if (hasFov (fam))		{ setNZ (p, "HFOV" + key, s0.hfov);		setNZ (p, "VFOV" + key, s0.vfov); }
-				if (s0.rays > 0)		p.setProperty ("RAY" + key, String.valueOf (s0.rays));
+				// what a radar casts is read as RAYRAD, and nothing reads a RAYTRK
+				if (s0.rays > 0)		p.setProperty (rayKey (fam, key), String.valueOf (s0.rays));
 				if (s0.reflect != 0.0)	set (p, "REF" + key, s0.reflect);
 				if (s0.beacons > 0)		p.setProperty ("BEAC" + key, String.valueOf (s0.beacons));
 				if (fam.equals ("trk") && (s0.objects > 0))		p.setProperty ("OBJTRK", String.valueOf (s0.objects));
@@ -1170,7 +1211,7 @@ public class RobotDef
 			else
 			{
 				setNZ (p, "RANGE" + key, f.rangemax);	setNZ (p, "MINIM" + key, f.rangemin);	setNZ (p, "CONE" + key, f.cone);
-				if (f.rays > 0)			p.setProperty ("RAY" + key, String.valueOf (f.rays));
+				if (f.rays > 0)			p.setProperty (rayKey (fam, key), String.valueOf (f.rays));
 				if (f.reflect != 0.0)	set (p, "REF" + key, f.reflect);
 				if (f.beacons > 0)		p.setProperty ("BEAC" + key, String.valueOf (f.beacons));
 				if (fam.equals ("trk") && (f.objects > 0))		p.setProperty ("OBJTRK", String.valueOf (f.objects));
@@ -1191,7 +1232,8 @@ public class RobotDef
 					setNZ (p, "RANGE" + key + i, s.rangemax);	setNZ (p, "MINIM" + key + i, s.rangemin);
 					setNZ (p, "CONE" + key + i, hasFov (fam) ? s.hfov : s.cone);
 					if (hasFov (fam))	{ setNZ (p, "HFOV" + key + i, s.hfov);		setNZ (p, "VFOV" + key + i, s.vfov); }
-					if (s.rays > 0)			p.setProperty ("RAY" + key + i, String.valueOf (s.rays));
+					// the radar says what it casts once, for the family, and not one by one
+					if ((s.rays > 0) && !fam.equals ("trk"))	p.setProperty ("RAY" + key + i, String.valueOf (s.rays));
 					if (s.reflect != 0.0)	set (p, "REF" + key + i, s.reflect);
 					if (s.beacons > 0)		p.setProperty ("BEAC" + key + i, String.valueOf (s.beacons));
 					if (s.objects > 0)		p.setProperty ("OBJ" + key + i, String.valueOf (s.objects));
