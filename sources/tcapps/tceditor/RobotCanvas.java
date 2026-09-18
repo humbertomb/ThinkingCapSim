@@ -598,9 +598,38 @@ public class RobotCanvas extends JPanel
 			if ((c = coverage ()) != null)		l.add (c);
 		}
 		else if (selection.kind == RobotItem.FAMILY)
+		{
 			for (RobotDef.Sensor s : robot.family (selection.family).sensors)
 				if ((c = coverageOf (selection.family, s)) != null)		l.add (c);
+		}
+		else if (selection.kind == RobotItem.GROUP)
+		{
+			if ((c = coverageOf (selectedGroup ())) != null)		l.add (c);
+		}
 		return l;
+	}
+
+	/** The selected virtual sensor, or null when the selection is something else. */
+	public RobotDef.Group selectedGroup ()
+	{
+		if ((selection == null) || (selection.kind != RobotItem.GROUP))		return null;
+		return (selection.index < robot.groups.size ()) ? robot.groups.get (selection.index) : null;
+	}
+
+	/** What a virtual sensor covers, said as a sensor's coverage is. */
+	private double[] coverageOf (RobotDef.Group g)
+	{
+		double		rmax, rmin, cone;
+		double		x, y;
+
+		if (g == null)				return null;
+		rmax	= Math.max (0.0, g.rangemax);
+		rmin	= Math.max (0.0, g.rangemin);
+		if (rmin > rmax)			rmin = 0.0;
+		cone	= Math.max (0.0, Math.min (g.cone, 360.0));
+		x		= g.rho * Math.cos (Math.toRadians (g.theta));
+		y		= g.rho * Math.sin (Math.toRadians (g.theta));
+		return new double[] { x, y, rmax, rmin, cone, g.orientation, g.height, g.elevation, 0.0 };
 	}
 
 	/** {x, y, rangemax, rangemin, cone, orientation, z, elevation, vfov} of a sensor, or null when there is none. */

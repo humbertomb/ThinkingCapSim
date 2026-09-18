@@ -736,6 +736,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		for (int i = 0; i < robot.bumpers.size (); i++)	bumpers.add (new ItemNode (new RobotItem (RobotItem.BUMPER, i), "Bumper " + i));
 		treeRoot.add (bumpers);
 
+		DefaultMutableTreeNode	virtual = new DefaultMutableTreeNode ("Virtual sensors  (" + robot.groups.size () + ")");
+		for (int i = 0; i < robot.groups.size (); i++)	virtual.add (new ItemNode (new RobotItem (RobotItem.GROUP, i), "Virtual " + i));
+		treeRoot.add (virtual);
+
 		for (String fam : RobotDef.FAMILIES)
 		{
 			RobotDef.Family			f = robot.family (fam);
@@ -878,6 +882,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.LINE:		return "Drawing line " + it.index;
 		case RobotItem.BUMPER:		return "Bumper " + it.index;
 		case RobotItem.WHEEL:		return "Wheel " + it.index;
+		case RobotItem.GROUP:		return "Virtual sensor " + it.index;
 		case RobotItem.SENSOR:		return RobotDef.familyName (it.family) + ": " + it.family + it.index;
 		case RobotItem.FAMILY:		return RobotDef.familyName (it.family);
 		default:					return RobotItem.NAMES[it.kind];
@@ -960,6 +965,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.WHEEL:		return new String[] { "x", "y", "z", "orientation",
 														  "radius", "width",
 														  "steerable", MAX_STEER, MAX_TURN, "traction", MAX_RPM };
+		// a virtual sensor is read from the others, so it has no device and no step:
+		// where it sits and what it covers is all of it
+		case RobotItem.GROUP:		return new String[] { "rho", "theta", "height", "orientation", "elevation",
+														  "range max", "range min", "cone" };
 		case RobotItem.SENSOR:
 			// the device it is read through comes first, then where it is and what it detects
 			if (!RobotDef.hasOwnDetection (it.family))
@@ -1045,6 +1054,20 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("yi"))			return RobotDef.fmt (b.yi);
 			if (name.equals ("xf"))			return RobotDef.fmt (b.xf);
 			if (name.equals ("yf"))			return RobotDef.fmt (b.yf);
+			break;
+		}
+		case RobotItem.GROUP:
+		{
+			if (it.index >= robot.groups.size ())		break;
+			RobotDef.Group		g = robot.groups.get (it.index);
+			if (name.equals ("rho"))			return RobotDef.fmt (g.rho);
+			if (name.equals ("theta"))			return RobotDef.fmt (g.theta);
+			if (name.equals ("height"))			return RobotDef.fmt (g.height);
+			if (name.equals ("orientation"))	return RobotDef.fmt (g.orientation);
+			if (name.equals ("elevation"))		return RobotDef.fmt (g.elevation);
+			if (name.equals ("range max"))		return RobotDef.fmt (g.rangemax);
+			if (name.equals ("range min"))		return RobotDef.fmt (g.rangemin);
+			if (name.equals ("cone"))			return RobotDef.fmt (g.cone);
 			break;
 		}
 		case RobotItem.WHEEL:
@@ -1321,6 +1344,20 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("yi"))		b.yi = num (value);
 			else if (name.equals ("xf"))		b.xf = num (value);
 			else if (name.equals ("yf"))		b.yf = num (value);
+			break;
+		}
+		case RobotItem.GROUP:
+		{
+			if (it.index >= robot.groups.size ())		break;
+			RobotDef.Group		g = robot.groups.get (it.index);
+			if (name.equals ("rho"))				g.rho = num (value);
+			else if (name.equals ("theta"))			g.theta = num (value);
+			else if (name.equals ("height"))		g.height = num (value);
+			else if (name.equals ("orientation"))	g.orientation = num (value);
+			else if (name.equals ("elevation"))		g.elevation = num (value);
+			else if (name.equals ("range max"))		g.rangemax = num (value);
+			else if (name.equals ("range min"))		g.rangemin = num (value);
+			else if (name.equals ("cone"))			g.cone = num (value);
 			break;
 		}
 		case RobotItem.WHEEL:

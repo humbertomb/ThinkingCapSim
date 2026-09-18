@@ -95,6 +95,47 @@ public class RobotDef
 	 * others every sensor says that for itself and only the firing cycle, which is
 	 * always of the whole family, is kept here.
 	 */
+	/**
+	 * A virtual sensor: a sector that stands for a group of the physical ones, so
+	 * that a controller reads one distance where the robot has a dozen sensors.
+	 *
+	 * It sits where a real sensor sits, said the same way (polar), and covers what
+	 * a real sensor covers. The rest of what the fusion of the runtime works it out
+	 * with -- how it fuses (mode), the sensors it fuses and their weights (equ) and
+	 * the width of the rectangle the buffer modes sweep (base) -- is kept as it was
+	 * given, though the editor does not show it yet.
+	 *
+	 * The properties of the older files name these badly: what they call len is the
+	 * distance, rho the angle of it and feat where it looks.
+	 */
+	static public class Group
+	{
+		public double	rho;						// distance from the centre of the robot (m, "grouplen")
+		public double	theta;						// angle of that distance (deg, "grouprho")
+		public double	height;						// height over the floor (m)
+		public double	orientation;				// direction it looks at over the horizontal plane (deg, "groupfeat")
+		public double	elevation;					// direction it looks at over the vertical plane (deg)
+		public double	rangemax;					// how far it reaches (m, "grouprng")
+		public double	rangemin;					// and from how near (m)
+		public double	cone;						// aperture (deg, "groupcone")
+
+		// what the fusion works it out with, kept as it was given
+		public int		mode;						// "groupmode"
+		public String	equ;						// "groupequ": the sensors it fuses and their weights
+		public double	base;						// "groupbase": width of the rectangle of the buffer modes (m)
+
+		public Group ()								{ }
+		public Group copy ()
+		{
+			Group	g = new Group ();
+			g.rho = rho;			g.theta = theta;		g.height = height;
+			g.orientation = orientation;				g.elevation = elevation;
+			g.rangemax = rangemax;	g.rangemin = rangemin;	g.cone = cone;
+			g.mode = mode;			g.equ = equ;			g.base = base;
+			return g;
+		}
+	}
+
 	static public class Family
 	{
 		public double		rangemax;				// maximum range (m)
@@ -225,6 +266,7 @@ public class RobotDef
 	public Map<String, Family>	sensors		= new LinkedHashMap<String, Family> ();	// by family prefix: son, ir, lrf, lsb, trk, vis
 	public List<Bumper>			bumpers		= new ArrayList<Bumper> ();
 	public List<Wheel>			wheels		= new ArrayList<Wheel> ();				// the drive train
+	public List<Group>			groups		= new ArrayList<Group> ();				// the virtual sensors
 	public Map<String, String>	extra		= new LinkedHashMap<String, String> ();	// everything else of the description (CAN, layers, fusion, ...)
 
 	protected transient File	file;												// where it was loaded from / saved to
@@ -640,10 +682,12 @@ public class RobotDef
 	public String toJson ()
 	{
 		List<Wheel>		w = wheels;
+		List<Group>		g = groups;
 
 		if ((w != null) && w.isEmpty ())		wheels = null;
+		if ((g != null) && g.isEmpty ())		groups = null;
 		try { return gson ().toJson (this); }
-		finally { wheels = w; }
+		finally { wheels = w;	groups = g; }
 	}
 
 	public File getFile ()					{ return file; }
@@ -662,6 +706,7 @@ public class RobotDef
 		for (Map.Entry<String, Family> e : sensors.entrySet ())		d.sensors.put (e.getKey (), e.getValue ().copy ());
 		for (Bumper b : bumpers)		d.bumpers.add (b.copy ());
 		for (Wheel w : wheels)			d.wheels.add (w.copy ());
+		for (Group g : groups)			d.groups.add (g.copy ());
 		d.extra.putAll (extra);
 		d.file			= file;
 		d.original		= original;
@@ -674,6 +719,7 @@ public class RobotDef
 		if (icon == null)			icon = new ArrayList<IconLine> ();
 		if (bumpers == null)		bumpers = new ArrayList<Bumper> ();
 		if (wheels == null)			wheels = new ArrayList<Wheel> ();
+		if (groups == null)			groups = new ArrayList<Group> ();
 		if (extra == null)			extra = new LinkedHashMap<String, String> ();
 		if (kinematics == null)		kinematics = new Kinematics ();
 		if (sensors == null)		sensors = new LinkedHashMap<String, Family> ();
@@ -692,6 +738,65 @@ public class RobotDef
 			}
 			for (Sensor s : f.sensors)		split (s);
 		}
+		if (groups.isEmpty ())		readGroups ();
+	}
+
+	/**
+	 * The virtual sensors of an older description, which named them as loose
+	 * properties (groupfeat0, grouplen0, ...) and now sit among the rest of what
+	 * is not understood. What is read is taken out of there, so that it is not
+	 * written twice.
+	 *
+	 * What the whole lot of them says (RANGEGROUP, CONEGROUP) stays where it is:
+	 * it is read as the default of a sensor that says nothing of its own.
+	 */
+	protected void readGroups ()
+	{
+		int			n = 0;
+		double		range = number (extra.get ("RANGEGROUP"), 1.0);		// the defaults of the fusion
+		double		cone = number (extra.get ("CONEGROUP"), 30.0);
+
+		for (String k : extra.keySet ())
+		{
+			int		i = groupIndex (k);
+			if (i >= n)		n = i + 1;
+		}
+		for (int i = 0; i < n; i++)
+		{
+			Group	g = new Group ();
+
+			g.rho			= number (take ("grouplen" + i), 0.0);
+			g.theta			= number (take ("grouprho" + i), 0.0);
+			g.orientation	= number (take ("groupfeat" + i), g.theta);
+			g.rangemax		= number (take ("grouprng" + i), range);
+			g.cone			= number (take ("groupcone" + i), cone);
+			g.base			= number (take ("groupbase" + i), 0.3);
+			g.mode			= (int) number (take ("groupmode" + i), 0.0);
+			g.equ			= take ("groupequ" + i);
+			groups.add (g);
+		}
+		extra.remove ("MAXGROUP");						// it is however many there are
+	}
+
+	/** The virtual sensor a property of an older description belongs to, or -1. */
+	static private int groupIndex (String key)
+	{
+		String[]	names = { "grouplen", "grouprho", "groupfeat", "grouprng", "groupcone", "groupbase", "groupmode", "groupequ" };
+
+		if (key == null)		return -1;
+		for (String name : names)
+			if (key.startsWith (name))
+				try { return Integer.parseInt (key.substring (name.length ()).trim ()); }	catch (Exception e)		{ }
+		return -1;
+	}
+
+	/** Reads a property of an older description and takes it out of what travels along. */
+	private String take (String key)						{ return extra.remove (key); }
+
+	static private double number (String text, double none)
+	{
+		if (text == null)		return none;
+		try { return Double.parseDouble (text.trim ()); }	catch (Exception e)		{ return none; }
 	}
 
 	/**
@@ -899,6 +1004,25 @@ public class RobotDef
 					String	fdp = driverProperty (f);
 					if (fdp != null)		p.setProperty (FAMILY_DRIVERS[fi] + i, fdp);
 				}
+			}
+		}
+
+		// the virtual sensors, which the fusion of the runtime reads by the names the
+		// older descriptions gave them (what it calls len is the distance, rho the
+		// angle of it and feat where it looks)
+		if (!groups.isEmpty ())
+		{
+			p.setProperty ("MAXGROUP", String.valueOf (groups.size ()));
+			for (int i = 0; i < groups.size (); i++)
+			{
+				Group	g = groups.get (i);
+
+				set (p, "grouplen" + i, g.rho);			set (p, "grouprho" + i, g.theta);
+				set (p, "groupfeat" + i, g.orientation);
+				setNZ (p, "grouprng" + i, g.rangemax);	setNZ (p, "groupcone" + i, g.cone);
+				setNZ (p, "groupbase" + i, g.base);
+				p.setProperty ("groupmode" + i, String.valueOf (g.mode));
+				if ((g.equ != null) && (g.equ.trim ().length () > 0))		p.setProperty ("groupequ" + i, g.equ.trim ());
 			}
 		}
 
