@@ -47,6 +47,13 @@ public class Units
 		put ("rpm", "max rpm");
 		degrees ("max steering");
 		put ("deg/s", "max turning");
+
+		// the kinematics of the platform, as the robot editor names it
+		put ("m/s", "max speed");
+		put ("deg/s", "max turn rate", "max steering rate");
+		put ("m/s2", "max acceleration", "max deceleration");
+		metres ("wheel base", "track width", "rear axle offset", "steering wheel offset");
+		put ("ms", "cycle time");
 	}
 
 	/** The unit of a property, or an empty string when it has none. */

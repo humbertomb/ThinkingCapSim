@@ -905,14 +905,24 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	 */
 	private String[] kinematicsNames ()
 	{
-		String[]		all = { DRIVE, "vmax", "rmax", "samax", "lamax", "ldmax",
-								"length", "base", "rwheel", "skid", WHEEL_DIAM, "gear", "pulses", "dtime",
+		String[]		all = { DRIVE, MAX_SPEED, MAX_TURN_RATE, MAX_STEER_RATE, MAX_ACCEL, MAX_DECEL,
+								WHEEL_BASE, baseLabel (), STEER_OFFSET, SKID_FACTOR, WHEEL_DIAM,
+								GEAR_RATIO, ENCODER_PULSES, CYCLE_TIME,
 								"odom et", "odom er", "odom bias" };
 		List<String>	out = new ArrayList<String> ();
 
 		for (String name : all)
-			if (RobotDef.usesKinematics (robot.kinematics.drive, name))		out.add (name);
+			if (RobotDef.usesKinematics (robot.kinematics.drive, kinKey (name)))	out.add (name);
 		return out.toArray (new String[0]);
+	}
+
+	/**
+	 * What the BASE of the platform is called: the track its two sides are built
+	 * at, or, on a tricycle, how far its axle sits from the centre.
+	 */
+	private String baseLabel ()
+	{
+		return TRICYCLE.equals (robot.kinematics.drive) ? AXLE_OFFSET : TRACK;
 	}
 
 	/** True for a property held in a field the description does not keep. */
@@ -998,23 +1008,27 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("actuator shape"))	return (robot.shapeActuator != null) ? robot.shapeActuator : "";
 			break;
 		case RobotItem.KINEMATICS:
+		{
+			String	key = kinKey (name);					// what the description calls it
+
 			if (name.equals (DRIVE))		return (k.drive != null) ? k.drive : "";
-			if (RobotDef.isCalculated (name))						// the drive train says these
+			if (RobotDef.isCalculated (key))						// the drive train says these
 			{
-				Double	v = robot.derived (name);
+				Double	v = robot.derived (key);
 				return (v != null) ? RobotDef.fmt (v.doubleValue ()) : "";
 			}
-			if (name.equals ("lamax"))		return RobotDef.fmt (k.lamax);
-			if (name.equals ("ldmax"))		return RobotDef.fmt (k.ldmax);
-			if (name.equals ("rwheel"))		return RobotDef.fmt (k.rwheel);
-			if (name.equals ("skid"))		return RobotDef.fmt (k.skid);
-			if (name.equals ("gear"))		return RobotDef.fmt (k.gear);
-			if (name.equals ("pulses"))		return RobotDef.fmt (k.pulses);
-			if (name.equals ("dtime"))		return String.valueOf (k.dtime);
-			if (name.equals ("odom et"))	return RobotDef.fmt (k.odomET);
-			if (name.equals ("odom er"))	return RobotDef.fmt (k.odomER);
-			if (name.equals ("odom bias"))	return RobotDef.fmt (k.odomBias);
+			if (key.equals ("lamax"))		return RobotDef.fmt (k.lamax);
+			if (key.equals ("ldmax"))		return RobotDef.fmt (k.ldmax);
+			if (key.equals ("rwheel"))		return RobotDef.fmt (k.rwheel);
+			if (key.equals ("skid"))		return RobotDef.fmt (k.skid);
+			if (key.equals ("gear"))		return RobotDef.fmt (k.gear);
+			if (key.equals ("pulses"))		return RobotDef.fmt (k.pulses);
+			if (key.equals ("dtime"))		return String.valueOf (k.dtime);
+			if (key.equals ("odom et"))		return RobotDef.fmt (k.odomET);
+			if (key.equals ("odom er"))		return RobotDef.fmt (k.odomER);
+			if (key.equals ("odom bias"))	return RobotDef.fmt (k.odomBias);
 			break;
+		}
 		case RobotItem.LINE:
 		{
 			RobotDef.IconLine	l = robot.icon.get (it.index);
@@ -1109,6 +1123,53 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		WHEEL_DIAM				= "wheel diameter";
 	static public final String		MAX_RPM					= "max rpm";
 	static public final String		DRIVER_PARAMS			= "driver parameters";
+
+	/*
+	 * The names the editor gives to the kinematics, which the description knows by
+	 * the short names its models read them with (vmax, lamax, lenght...). What each
+	 * one stands for is in KIN_KEYS, and kinKey () is what turns one into the other,
+	 * so that the editor can be read without the manual of the models at hand.
+	 */
+	static public final String		MAX_SPEED				= "max speed";				// vmax
+	static public final String		MAX_TURN_RATE			= "max turn rate";			// rmax
+	static public final String		MAX_STEER_RATE			= "max steering rate";		// samax: how fast it steers, not how far
+	static public final String		MAX_ACCEL				= "max acceleration";		// lamax
+	static public final String		MAX_DECEL				= "max deceleration";		// ldmax
+	static public final String		WHEEL_BASE				= "wheel base";				// length: between the two axles
+	static public final String		TRACK					= "track width";			// base, on a platform with two sides
+	static public final String		AXLE_OFFSET				= "rear axle offset";		// base, on a tricycle
+	static public final String		STEER_OFFSET			= "steering wheel offset";	// rwheel
+	static public final String		SKID_FACTOR				= "skid factor";			// skid
+	static public final String		GEAR_RATIO				= "gear ratio";				// gear
+	static public final String		ENCODER_PULSES			= "encoder pulses";			// pulses
+	static public final String		CYCLE_TIME				= "cycle time";				// dtime
+
+	/** The kinematics model whose BASE is not a track but the distance from its axle to the centre. */
+	static private final String		TRICYCLE				= "tc.vrobot.models.TricycleDrive";
+
+	static private final java.util.Map<String, String>	KIN_KEYS = kinKeys ();
+
+	static private java.util.Map<String, String> kinKeys ()
+	{
+		java.util.Map<String, String>	m = new java.util.HashMap<String, String> ();
+
+		m.put (MAX_SPEED, "vmax");				m.put (MAX_TURN_RATE, "rmax");
+		m.put (MAX_STEER_RATE, "samax");		m.put (MAX_ACCEL, "lamax");
+		m.put (MAX_DECEL, "ldmax");				m.put (WHEEL_BASE, "length");
+		m.put (TRACK, "base");					m.put (AXLE_OFFSET, "base");
+		m.put (STEER_OFFSET, "rwheel");			m.put (SKID_FACTOR, "skid");
+		m.put (GEAR_RATIO, "gear");				m.put (ENCODER_PULSES, "pulses");
+		m.put (CYCLE_TIME, "dtime");
+		return m;
+	}
+
+	/** The name the description knows a kinematics property by, whatever the editor calls it. */
+	static public String kinKey (String label)
+	{
+		String		k = (label != null) ? KIN_KEYS.get (label) : null;
+
+		return (k != null) ? k : label;
+	}
 	/** Width of the column of the units: enough for "deg/s" and no more. */
 	static private final int		UNITS_WIDTH				= 44;
 	/** True for the properties naming an image file. */
@@ -1196,7 +1257,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	public boolean isCalculated (RobotItem it, String name)
 	{
 		if ((it == null) || (it.kind != RobotItem.KINEMATICS))		return false;
-		return RobotDef.isCalculated (name);
+		return RobotDef.isCalculated (kinKey (name));
 	}
 
 	public void setProperty (RobotItem it, String name, String value)
@@ -1228,18 +1289,22 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			}
 			break;
 		case RobotItem.KINEMATICS:
+		{
+			String	key = kinKey (name);					// what the description calls it
+
 			if (name.equals (DRIVE))			k.drive = token (value);
-			else if (name.equals ("lamax"))		k.lamax = num (value);
-			else if (name.equals ("ldmax"))		k.ldmax = num (value);
-			else if (name.equals ("rwheel"))	k.rwheel = num (value);
-			else if (name.equals ("skid"))		k.skid = num (value);
-			else if (name.equals ("gear"))		k.gear = num (value);
-			else if (name.equals ("pulses"))	k.pulses = num (value);
-			else if (name.equals ("dtime"))		k.dtime = (long) num (value);
-			else if (name.equals ("odom et"))	k.odomET = num (value);
-			else if (name.equals ("odom er"))	k.odomER = num (value);
-			else if (name.equals ("odom bias"))	k.odomBias = num (value);
+			else if (key.equals ("lamax"))		k.lamax = num (value);
+			else if (key.equals ("ldmax"))		k.ldmax = num (value);
+			else if (key.equals ("rwheel"))		k.rwheel = num (value);
+			else if (key.equals ("skid"))		k.skid = num (value);
+			else if (key.equals ("gear"))		k.gear = num (value);
+			else if (key.equals ("pulses"))		k.pulses = num (value);
+			else if (key.equals ("dtime"))		k.dtime = (long) num (value);
+			else if (key.equals ("odom et"))	k.odomET = num (value);
+			else if (key.equals ("odom er"))	k.odomER = num (value);
+			else if (key.equals ("odom bias"))	k.odomBias = num (value);
 			break;
+		}
 		case RobotItem.LINE:
 		{
 			RobotDef.IconLine	l = robot.icon.get (it.index);
