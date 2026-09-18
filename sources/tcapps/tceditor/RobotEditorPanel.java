@@ -1257,7 +1257,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/** The name the editor gives to the way the simulator works the readings of a family out. */
 	static public final String		SIM_MODE				= "simulation mode";
 	/** How far off the simulator puts a reading, said in parts of a hundred. */
-	static public final String		SIM_ERROR				= "simulation error (%)";
+	static public final String		SIM_ERROR				= "simulation error";
 	/** The name the editor gives to how the fusion works the fused sensors out. */
 	static public final String		FUSION_MODE				= "fusion mode";
 

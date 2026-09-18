@@ -39,6 +39,10 @@ public class Units
 		put ("deg/s", "rmax", "samax");
 		put ("m/s2", "lamax", "ldmax", "acceleration");
 
+		// how far off the simulator puts a reading: a share of the distance, said
+		// in parts of a hundred
+		put ("%", "simulation error");
+
 		// the rest
 		put ("ms", "dtime");
 		put ("m/s", "odom et");					// the odometry errors of the simulation, as standard deviations
