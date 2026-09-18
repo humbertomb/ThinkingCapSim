@@ -151,6 +151,32 @@ public class Component2D extends JComponent
 		{
 			public void mouseWheelMoved (MouseWheelEvent e)		{ mouseWheel (e.getWheelRotation ()); }
 		});
+
+		// And dragging moves the view about. The control key is left alone: where a
+		// window of its own handles it (the monitor does) it zooms with it, and
+		// panning with it as well would do both at once.
+		MouseAdapter	drag = new MouseAdapter ()
+		{
+			public void mousePressed (MouseEvent e)
+			{
+				if (e.isControlDown () || !SwingUtilities.isLeftMouseButton (e))		return;
+				setCursor (Cursor.getPredefinedCursor (Cursor.MOVE_CURSOR));
+				mouseDown (e.getX (), e.getY ());
+			}
+
+			public void mouseDragged (MouseEvent e)
+			{
+				if (e.isControlDown () || !SwingUtilities.isLeftMouseButton (e))		return;
+				mousePan (e.getX (), e.getY ());
+			}
+
+			public void mouseReleased (MouseEvent e)
+			{
+				setCursor (Cursor.getPredefinedCursor (Cursor.DEFAULT_CURSOR));
+			}
+		};
+		addMouseListener (drag);
+		addMouseMotionListener (drag);
 	}
 
 	/* Accessor methods */
