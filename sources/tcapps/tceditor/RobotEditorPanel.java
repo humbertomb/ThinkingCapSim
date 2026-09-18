@@ -1219,7 +1219,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 			RobotDef.Family		f = robot.family (it.family);
 			if (name.equals (SIM_MODE))		return SimModes.name (it.family, f.simmode);
-			if (name.equals (SIM_ERROR))	return percent (f.simerror);
+			// an error of none is not a number to show: the way it is worked out adds none
+			if (name.equals (SIM_ERROR))	return usesSimError (it.family) ? percent (f.simerror) : "";
 			if (name.equals (DRIVER))		return (f.driver != null) ? f.driver : "";
 			if (name.equals (DRIVER_PARAMS))	return (f.driverParams != null) ? f.driverParams : "";
 			if (name.equals ("range max"))	return RobotDef.fmt (f.rangemax);
@@ -1416,10 +1417,23 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		return new DefaultCellEditor (cb);
 	}
 
+	/**
+	 * True when the way the simulator works a family out puts an error of its own
+	 * on the reading. Asked for none of it, there is nothing to say how far off it
+	 * goes, and the editor neither shows a number nor takes one.
+	 */
+	private boolean usesSimError (String fam)
+	{
+		if ((fam == null) || !RobotDef.hasSimError (fam))		return false;
+		return !SimModes.NONE.equals (SimModes.name (fam, robot.family (fam).simmode));
+	}
+
 	/** True when a property can be edited: what the wheels work out is not typed in. */
 	public boolean isEditable (RobotItem it, String name)
 	{
 		if (isCalculated (it, name))		return false;
+		if ((it != null) && (it.kind == RobotItem.FAMILY) && name.equals (SIM_ERROR))
+			return usesSimError (it.family);
 		if ((it != null) && (it.kind == RobotItem.WHEEL) && (it.index < robot.wheels.size ()))
 		{
 			RobotDef.Wheel	w = robot.wheels.get (it.index);
@@ -1637,6 +1651,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 				setProperty (item, name, value (name, (v == null) ? "" : v.toString ()));
 				if (name.equals (DRIVE))		setItem (item);		// another model reads other properties
+				// a way of working a reading out that adds nothing leaves the error
+				// with nothing to say, so the row below is redrawn as well
+				else if (name.equals (SIM_MODE))	fireTableDataChanged ();
 				else							fireTableRowsUpdated (r, r);
 				if ((item.kind == RobotItem.PLATFORM) && names[r].equals ("name"))		refreshTree ();
 			} catch (IllegalArgumentException e)
