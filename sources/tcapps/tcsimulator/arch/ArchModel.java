@@ -67,6 +67,15 @@ public class ArchModel
 	 */
 	static public final String[]	MODULE_TYPES	= { "Controller", "Navigation", "Perception", "Planner" };
 
+	/** The kind of module that runs a program of its own. */
+	static public final String		CONTROLLER		= "Controller";
+
+	/**
+	 * The program a controller runs (PRG). Any file will do: whether it is one the
+	 * controller can read is for the controller to say when it loads it.
+	 */
+	static public final Property	PRG_PROP		= new Property ("PRG", "Program", "./conf/programs", "Programs");
+
 	/** The class the modules of a kind derive from. */
 	static public String moduleTypeBase (String type)
 	{
@@ -336,7 +345,17 @@ public class ArchModel
 		}
 		List<Property>	props = new ArrayList<Property> ();
 		List<String>	known = new ArrayList<String> ();
-		for (Property p : std)		{ props.add (p); known.add (p.key); }
+		for (Property p : std)
+		{
+			props.add (p);
+			known.add (p.key);
+			// only a controller runs a program, and it is of a piece with its class
+			if ((b.kind == MODULE) && p.key.equals ("CLASS") && CONTROLLER.equalsIgnoreCase (get (b, "TYPE")))
+			{
+				props.add (PRG_PROP);
+				known.add (PRG_PROP.key);
+			}
+		}
 		for (String h : hidden)		known.add (h);
 		Module	m = moduleOf (b);
 		if (m != null)

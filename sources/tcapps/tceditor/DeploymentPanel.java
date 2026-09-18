@@ -191,6 +191,13 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		return new DefaultCellEditor (cb);
 	}
 
+	/** What a file property may be chosen from, or null when any file will do. */
+	static private FileNameExtensionFilter fileFilter (Property p)
+	{
+		if ((p.fileExts == null) || (p.fileExts.length == 0))		return null;
+		return new FileNameExtensionFilter (p.fileDesc, p.fileExts);
+	}
+
 	/** The value of a property as it is shown and stored: paths always as "./conf/...". */
 	static private String value (Property p, String v)
 	{
@@ -428,7 +435,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 						if (ed == null)
 						{
 							if (p.type == ArchModel.P_CHOICE)	ed = new DefaultCellEditor (new JComboBox<String> (p.choices));
-							else								ed = new FileCellEditor ("Select " + p.label, p.fileDir, new FileNameExtensionFilter (p.fileDesc, p.fileExts));
+							else								ed = new FileCellEditor ("Select " + p.label, p.fileDir, fileFilter (p));
 							editors.put (id, ed);
 						}
 						return ed;

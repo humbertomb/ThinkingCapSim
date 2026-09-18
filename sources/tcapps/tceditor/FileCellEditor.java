@@ -123,7 +123,7 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 		File			start = resolve (field.getText ());
 		JFileChooser	fc = new JFileChooser ((start != null) ? start.getParentFile () : startDir ());
 		fc.setDialogTitle (title);
-		fc.setFileFilter (filter);
+		if (filter != null)		fc.setFileFilter (filter);		// none: any file will do
 		fc.setAcceptAllFileFilterUsed (true);
 		if (start != null)		fc.setSelectedFile (start);
 
