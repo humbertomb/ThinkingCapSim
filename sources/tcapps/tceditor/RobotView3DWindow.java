@@ -327,16 +327,20 @@ public class RobotView3DWindow extends JFrame
 			return sector (bg, selection.family, f.sensors.get (selection.index),
 							selection.family + selection.index + ": ");
 		}
-		if (selection.kind == RobotItem.GROUP)
+		if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED))
 		{
-			if (selection.index >= robot.groups.size ())	return "";
-			return sector (bg, robot.groups.get (selection.index), "group" + selection.index + ": ");
+			java.util.List<? extends RobotDef.Sector>	l = sectorsOf (selection.kind);
+
+			if (selection.index >= l.size ())			return "";
+			return sector (bg, l.get (selection.index), name (selection.kind, selection.index) + ": ");
 		}
-		if (selection.kind == RobotItem.GROUPS)
+		if ((selection.kind == RobotItem.GROUPS) || (selection.kind == RobotItem.FUSEDS))
 		{
-			for (RobotDef.Group q : robot.groups)
+			int		kind = (selection.kind == RobotItem.FUSEDS) ? RobotItem.FUSED : RobotItem.GROUP;
+
+			for (RobotDef.Sector q : sectorsOf (kind))
 				if (sector (bg, q, null).length () > 0)		n++;
-			return (n > 0) ? "Virtual sensors: " + n + ".   " : "";
+			return (n > 0) ? ((kind == RobotItem.FUSED) ? "Fused sensors: " : "Area groups: ") + n + ".   " : "";
 		}
 		if (selection.kind != RobotItem.FAMILY)	return "";
 
@@ -408,7 +412,7 @@ public class RobotView3DWindow extends JFrame
 	 *
 	 * @return what to say about it
 	 */
-	private String sector (BranchGroup bg, RobotDef.Group q, String what)
+	private String sector (BranchGroup bg, RobotDef.Sector q, String what)
 	{
 		double		x, y, rmax, rmin, ext;
 
@@ -421,18 +425,19 @@ public class RobotView3DWindow extends JFrame
 
 		x		= q.rho * Math.cos (Math.toRadians (q.theta));
 		y		= q.rho * Math.sin (Math.toRadians (q.theta));
-		fan (bg, x, y, q.height, q.orientation, q.elevation, rmax, rmin, ext, virtualAppearance ());
+		fan (bg, x, y, q.height, q.orientation, q.elevation, rmax, rmin, ext,
+			 virtualAppearance ((q instanceof RobotDef.Fused) ? C_FUSED : C_VIRTUAL));
 
 		return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax)
 								+ " m, " + RobotDef.fmt (q.cone) + " deg.   " : " ";
 	}
 
-	/** How what a virtual sensor covers is painted: light green, seen through. */
-	private Appearance virtualAppearance ()
+	/** How what a virtual sensor covers is painted: the colour of its kind, seen through. */
+	private Appearance virtualAppearance (Color3f colour)
 	{
 		Appearance	app = new Appearance ();
 
-		app.setColoringAttributes (new ColoringAttributes (C_VIRTUAL, ColoringAttributes.SHADE_FLAT));
+		app.setColoringAttributes (new ColoringAttributes (colour, ColoringAttributes.SHADE_FLAT));
 		app.setTransparencyAttributes (new TransparencyAttributes (TransparencyAttributes.BLENDED, 0.65f));
 		app.setPolygonAttributes (new PolygonAttributes (PolygonAttributes.POLYGON_FILL, PolygonAttributes.CULL_NONE, 0f));
 		app.setRenderingAttributes (new RenderingAttributes ());
@@ -535,8 +540,10 @@ public class RobotView3DWindow extends JFrame
 		return app;
 	}
 
-	/** The colour of a virtual sensor: light green, so that it is not taken for a family of real ones. */
+	/** The colour of a sensor of an area: light green, so that it is not taken for a family of real ones. */
 	static public final Color3f		C_VIRTUAL	= new Color3f (0.55f, 0.95f, 0.55f);
+	/** The colour of a fused sensor: pink. */
+	static public final Color3f		C_FUSED		= new Color3f (0.95f, 0.5f, 0.75f);
 
 	/** The colour each family of sensors is drawn in, so that several of them are told apart. */
 	static public Color3f familyColor (String fam)
@@ -594,14 +601,16 @@ public class RobotView3DWindow extends JFrame
 			f	= robot.family (selection.family);
 			return (selection.index < f.n ()) ? reach (selection.family, f.sensors.get (selection.index)) : 0.0;
 		}
-		if (selection.kind == RobotItem.GROUP)
+		if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED))
 		{
-			if (selection.index >= robot.groups.size ())	return 0.0;
-			return reach (robot.groups.get (selection.index));
+			java.util.List<? extends RobotDef.Sector>	l = sectorsOf (selection.kind);
+
+			return (selection.index < l.size ()) ? reach (l.get (selection.index)) : 0.0;
 		}
-		if (selection.kind == RobotItem.GROUPS)
+		if ((selection.kind == RobotItem.GROUPS) || (selection.kind == RobotItem.FUSEDS))
 		{
-			for (RobotDef.Group q : robot.groups)		e = Math.max (e, reach (q));
+			for (RobotDef.Sector q : sectorsOf ((selection.kind == RobotItem.FUSEDS) ? RobotItem.FUSED : RobotItem.GROUP))
+				e	= Math.max (e, reach (q));
 			return e;
 		}
 		if (selection.kind != RobotItem.FAMILY)		return 0.0;
@@ -610,8 +619,20 @@ public class RobotView3DWindow extends JFrame
 		return e;
 	}
 
+	/** The virtual sensors of a kind, and what one of them is called. */
+	private java.util.List<? extends RobotDef.Sector> sectorsOf (int kind)
+	{
+		if (kind == RobotItem.FUSED)		return robot.fused;
+		return robot.groups;
+	}
+
+	static private String name (int kind, int index)
+	{
+		return ((kind == RobotItem.FUSED) ? "fusion" : "group") + index;
+	}
+
 	/** How far from the centre of the robot one virtual sensor reaches (m). */
-	private double reach (RobotDef.Group q)
+	private double reach (RobotDef.Sector q)
 	{
 		return (q.rangemax > 0.0) ? q.rho + q.rangemax : 0.0;
 	}

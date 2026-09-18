@@ -19,13 +19,16 @@ public class RobotItem
 	static public final int		FAMILY		= 5;		// the parameters shared by a family of sensors
 	static public final int		EXTRA		= 6;		// the properties the model does not describe
 	static public final int		WHEEL		= 7;		// one wheel of the drive train
-	static public final int		GROUP		= 8;		// one virtual sensor: a sector standing for a group of the real ones
+	static public final int		GROUP		= 8;		// one sensor of an area: a sector standing for a group of the real ones
 	static public final int		GROUPS		= 9;		// all of them together, as a family holds its sensors
+	static public final int		FUSED		= 10;		// one fused sensor: one direction, read from the real sensors looking that way
+	static public final int		FUSEDS		= 11;		// all of them together
 
-	static public final int		NKINDS		= 10;
+	static public final int		NKINDS		= 12;
 
 	static public final String[]	NAMES	= { "Platform", "Kinematics", "Drawing line", "Bumper", "Sensor", "Sensors",
-												"Other properties", "Wheel", "Virtual sensor", "Virtual sensors" };
+												"Other properties", "Wheel", "Area group", "Area groups",
+												"Fused sensor", "Fused sensors" };
 
 	public int			kind;
 	public int			index;

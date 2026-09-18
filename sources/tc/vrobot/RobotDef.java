@@ -108,18 +108,46 @@ public class RobotDef
 	 * The properties of the older files name these badly: what they call len is the
 	 * distance, rho the angle of it and feat where it looks.
 	 */
-	static public class Group
+	/**
+	 * What a virtual sensor is, whichever kind: something that sits where a real
+	 * sensor sits, said the same way (polar), and covers what a real sensor
+	 * covers, but whose reading is worked out from the other sensors instead of
+	 * being taken from the world.
+	 */
+	static public class Sector
 	{
-		public double	rho;						// distance from the centre of the robot (m, "grouplen")
-		public double	theta;						// angle of that distance (deg, "grouprho")
+		public double	rho;						// distance from the centre of the robot (m)
+		public double	theta;						// angle of that distance (deg)
 		public double	height;						// height over the floor (m)
-		public double	orientation;				// direction it looks at over the horizontal plane (deg, "groupfeat")
+		public double	orientation;				// direction it looks at over the horizontal plane (deg)
 		public double	elevation;					// direction it looks at over the vertical plane (deg)
-		public double	rangemax;					// how far it reaches (m, "grouprng")
+		public double	rangemax;					// how far it reaches (m)
 		public double	rangemin;					// and from how near (m)
-		public double	cone;						// aperture (deg, "groupcone")
+		public double	cone;						// aperture (deg)
 
-		// what the fusion works it out with, kept as it was given
+		/** Copies into another what every virtual sensor has. */
+		protected void copyTo (Sector o)
+		{
+			o.rho = rho;			o.theta = theta;		o.height = height;
+			o.orientation = orientation;				o.elevation = elevation;
+			o.rangemax = rangemax;	o.rangemin = rangemin;	o.cone = cone;
+		}
+	}
+
+	/**
+	 * A sensor of an area: the sector that stands for a group of the real ones, so
+	 * that a controller reads one distance where the robot has a dozen sensors.
+	 *
+	 * The rest of what the fusion of the runtime works it out with -- how it fuses
+	 * (mode), the sensors it fuses and their weights (equ) and the width of the
+	 * rectangle the buffer modes sweep (base) -- is kept as it was given, though
+	 * the editor does not show it yet.
+	 *
+	 * The properties of the older files name these badly: what they call len is
+	 * the distance, rho the angle of it and feat where it looks.
+	 */
+	static public class Group extends Sector
+	{
 		public int		mode;						// "groupmode"
 		public String	equ;						// "groupequ": the sensors it fuses and their weights
 		public double	base;						// "groupbase": width of the rectangle of the buffer modes (m)
@@ -128,11 +156,32 @@ public class RobotDef
 		public Group copy ()
 		{
 			Group	g = new Group ();
-			g.rho = rho;			g.theta = theta;		g.height = height;
-			g.orientation = orientation;				g.elevation = elevation;
-			g.rangemax = rangemax;	g.rangemin = rangemin;	g.cone = cone;
+			copyTo (g);
 			g.mode = mode;			g.equ = equ;			g.base = base;
 			return g;
+		}
+	}
+
+	/**
+	 * A fused sensor: one reading in one direction, taken from the real sensors
+	 * that look that way -- the nearest sonar and the nearest infrared -- fused as
+	 * its mode says (the sonar, the infrared, the nearer of the two, a filter, or
+	 * Flynn's rule). They are what the sensors of an area are worked out from.
+	 *
+	 * Named "virtu" in the older files, which name them as badly as the others:
+	 * len is the distance, rho the angle of it and feat where it looks.
+	 */
+	static public class Fused extends Sector
+	{
+		public int		mode;						// "virtumode"
+
+		public Fused ()								{ }
+		public Fused copy ()
+		{
+			Fused	f = new Fused ();
+			copyTo (f);
+			f.mode = mode;
+			return f;
 		}
 	}
 
@@ -266,7 +315,8 @@ public class RobotDef
 	public Map<String, Family>	sensors		= new LinkedHashMap<String, Family> ();	// by family prefix: son, ir, lrf, lsb, trk, vis
 	public List<Bumper>			bumpers		= new ArrayList<Bumper> ();
 	public List<Wheel>			wheels		= new ArrayList<Wheel> ();				// the drive train
-	public List<Group>			groups		= new ArrayList<Group> ();				// the virtual sensors
+	public List<Group>			groups		= new ArrayList<Group> ();				// the virtual sensors of an area
+	public List<Fused>			fused		= new ArrayList<Fused> ();				// the fused ones, of a direction
 	public Map<String, String>	extra		= new LinkedHashMap<String, String> ();	// everything else of the description (CAN, layers, fusion, ...)
 
 	protected transient File	file;												// where it was loaded from / saved to
@@ -683,11 +733,13 @@ public class RobotDef
 	{
 		List<Wheel>		w = wheels;
 		List<Group>		g = groups;
+		List<Fused>		u = fused;
 
 		if ((w != null) && w.isEmpty ())		wheels = null;
 		if ((g != null) && g.isEmpty ())		groups = null;
+		if ((u != null) && u.isEmpty ())		fused = null;
 		try { return gson ().toJson (this); }
-		finally { wheels = w;	groups = g; }
+		finally { wheels = w;	groups = g;		fused = u; }
 	}
 
 	public File getFile ()					{ return file; }
@@ -707,6 +759,7 @@ public class RobotDef
 		for (Bumper b : bumpers)		d.bumpers.add (b.copy ());
 		for (Wheel w : wheels)			d.wheels.add (w.copy ());
 		for (Group g : groups)			d.groups.add (g.copy ());
+		for (Fused f : fused)			d.fused.add (f.copy ());
 		d.extra.putAll (extra);
 		d.file			= file;
 		d.original		= original;
@@ -720,6 +773,7 @@ public class RobotDef
 		if (bumpers == null)		bumpers = new ArrayList<Bumper> ();
 		if (wheels == null)			wheels = new ArrayList<Wheel> ();
 		if (groups == null)			groups = new ArrayList<Group> ();
+		if (fused == null)			fused = new ArrayList<Fused> ();
 		if (extra == null)			extra = new LinkedHashMap<String, String> ();
 		if (kinematics == null)		kinematics = new Kinematics ();
 		if (sensors == null)		sensors = new LinkedHashMap<String, Family> ();
@@ -739,6 +793,7 @@ public class RobotDef
 			for (Sensor s : f.sensors)		split (s);
 		}
 		if (groups.isEmpty ())		readGroups ();
+		if (fused.isEmpty ())		readFused ();
 	}
 
 	/**
@@ -778,11 +833,61 @@ public class RobotDef
 		extra.remove ("MAXGROUP");						// it is however many there are
 	}
 
+	/**
+	 * The fused sensors of an older description, named "virtu" there and, like the
+	 * others, named badly: len is the distance, rho the angle of it and feat where
+	 * it looks. What is read is taken out of the properties that travel along.
+	 *
+	 * An older description says how far they all reach and how wide they all are
+	 * (RANGEVIRTU, CONEVIRTU) and not how far each one does, so each one is read
+	 * as reaching what they all do; those two stay where they are, as what a
+	 * sensor that says nothing of its own falls back on.
+	 */
+	protected void readFused ()
+	{
+		int			n = 0;
+		double		range = number (extra.get ("RANGEVIRTU"), 8.0);		// the defaults of the fusion
+		double		cone = number (extra.get ("CONEVIRTU"), 20.0);
+
+		for (String k : extra.keySet ())
+		{
+			int		i = fusedIndex (k);
+			if (i >= n)		n = i + 1;
+		}
+		for (int i = 0; i < n; i++)
+		{
+			Fused	f = new Fused ();
+
+			f.rho			= number (take ("virtulen" + i), 0.0);
+			f.theta			= number (take ("virturho" + i), 0.0);
+			f.orientation	= number (take ("virtufeat" + i), f.theta);
+			f.rangemax		= number (take ("virturng" + i), range);
+			f.cone			= number (take ("virtucone" + i), cone);
+			f.mode			= (int) number (take ("virtumode" + i), -1.0);
+			fused.add (f);
+		}
+		extra.remove ("MAXVIRTU");						// it is however many there are
+	}
+
+	/** The fused sensor a property of an older description belongs to, or -1. */
+	static private int fusedIndex (String key)
+	{
+		String[]	names = { "virtulen", "virturho", "virtufeat", "virturng", "virtucone", "virtumode" };
+
+		return indexOf (key, names);
+	}
+
 	/** The virtual sensor a property of an older description belongs to, or -1. */
 	static private int groupIndex (String key)
 	{
 		String[]	names = { "grouplen", "grouprho", "groupfeat", "grouprng", "groupcone", "groupbase", "groupmode", "groupequ" };
 
+		return indexOf (key, names);
+	}
+
+	/** The number a property of an older description ends with, when it is one of those named. */
+	static private int indexOf (String key, String[] names)
+	{
 		if (key == null)		return -1;
 		for (String name : names)
 			if (key.startsWith (name))
@@ -1004,6 +1109,23 @@ public class RobotDef
 					String	fdp = driverProperty (f);
 					if (fdp != null)		p.setProperty (FAMILY_DRIVERS[fi] + i, fdp);
 				}
+			}
+		}
+
+		// the fused sensors, under the names the older descriptions gave them
+		if (!fused.isEmpty ())
+		{
+			p.setProperty ("MAXVIRTU", String.valueOf (fused.size ()));
+			for (int i = 0; i < fused.size (); i++)
+			{
+				Fused	f = fused.get (i);
+
+				set (p, "virtulen" + i, f.rho);			set (p, "virturho" + i, f.theta);
+				set (p, "virtufeat" + i, f.orientation);
+				if (f.mode >= 0)	p.setProperty ("virtumode" + i, String.valueOf (f.mode));
+				// how far it reaches and how wide it is are not written: the fusion reads
+				// one of each for the whole lot of them (RANGEVIRTU, CONEVIRTU), which
+				// stay where they are, and what is kept here is what the editor draws
 			}
 		}
 

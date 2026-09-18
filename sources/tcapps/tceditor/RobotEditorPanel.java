@@ -84,7 +84,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected JSplitPane			mainSP, rightSP;
 	protected StatusBar				statusBar;						// where the cursor is
 	protected boolean				dividersSet, syncing, dirty;
-	protected Action				openAC, wheelAC, lineAC, bumperAC, sensorAC, groupAC, deleteAC;
+	protected Action				openAC, wheelAC, lineAC, bumperAC, sensorAC, groupAC, fusedAC, deleteAC;
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
 	protected javax.swing.JToggleButton[]		viewBT;					// the three flat projections
@@ -159,6 +159,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		bumperAC	= ToolButtons.action ("Bumper", ToolIcon.CONNECTOR, "Add a bumper", new Runnable () { public void run () { addBumper (); } });
 		sensorAC	= ToolButtons.action ("Sensor", ToolIcon.BEACON, "Add a sensor to the selected family", new Runnable () { public void run () { addSensor (); } });
 		groupAC		= ToolButtons.action ("Virtual sensor", ToolIcon.VIRTUAL, "Add a virtual sensor: a sector standing for a group of the real ones", new Runnable () { public void run () { addGroup (); } });
+		fusedAC		= ToolButtons.action ("Fused sensor", ToolIcon.FUSED, "Add a fused sensor: one direction, read from the real sensors looking that way", new Runnable () { public void run () { addFused (); } });
 		deleteAC	= ToolButtons.action ("Delete", ToolIcon.DELETE, "Delete the selected element  [Delete]", new Runnable () { public void run () { deleteSelection (); } });
 		tb.add (ToolButtons.flatButton (openAC));
 		tb.addSeparator ();
@@ -168,6 +169,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		tb.add (ToolButtons.flatButton (bumperAC));
 		tb.add (ToolButtons.flatButton (sensorAC));
 		tb.add (ToolButtons.flatButton (groupAC));
+		tb.add (ToolButtons.flatButton (fusedAC));
 		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (deleteAC));
 		tb.addSeparator ();
@@ -703,6 +705,29 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		select (new RobotItem (RobotItem.GROUP, robot.groups.size () - 1));
 	}
 
+	/**
+	 * Adds a fused sensor, looking forward from the rim of the robot: one reading
+	 * in one direction, taken from the real sensors that look that way.
+	 *
+	 * It is made as the nearer of the two (sonar and infrared), which is the mode
+	 * that asks for nothing else, and as far and as wide as the others of its
+	 * robot, since the fusion reads one range and one aperture for the whole lot.
+	 */
+	private void addFused ()
+	{
+		double				r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		RobotDef.Fused		f = new RobotDef.Fused ();
+
+		f.rho		= r;
+		f.rangemax	= robot.fused.isEmpty () ? Math.max (1.0, 8 * r) : robot.fused.get (0).rangemax;
+		f.cone		= robot.fused.isEmpty () ? 20.0 : robot.fused.get (0).cone;
+		f.mode		= 2;						// tclib.utils.fusion.FusionDesc.V_MIN
+		robot.fused.add (f);
+		changed ();
+		refreshTree ();
+		select (new RobotItem (RobotItem.FUSED, robot.fused.size () - 1));
+	}
+
 	private void deleteSelection ()
 	{
 		List<RobotItem>		all;
@@ -726,6 +751,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			case RobotItem.WHEEL:		robot.wheels.remove (it.index);						any = true;		break;
 			case RobotItem.SENSOR:		robot.family (it.family).sensors.remove (it.index);	any = true;		break;
 			case RobotItem.GROUP:		robot.groups.remove (it.index);						any = true;		break;
+			case RobotItem.FUSED:		robot.fused.remove (it.index);						any = true;		break;
 			default:					break;								// the sections themselves are not removable
 			}
 		if (!any)						return;
@@ -767,10 +793,18 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		for (int i = 0; i < robot.bumpers.size (); i++)	bumpers.add (new ItemNode (new RobotItem (RobotItem.BUMPER, i), "Bumper " + i));
 		treeRoot.add (bumpers);
 
-		ItemNode	virtual = new ItemNode (new RobotItem (RobotItem.GROUPS, 0), "Virtual sensors  (" + robot.groups.size () + ")");
-		// named as the description names them (groupfeat0, grouplen0, ...), as a
+		// the virtual sensors: the ones of an area and the fused ones, each lot
+		// named as the description names them (groupfeat0, virtulen0, ...), as a
 		// sensor of a family is named after its family
-		for (int i = 0; i < robot.groups.size (); i++)	virtual.add (new ItemNode (new RobotItem (RobotItem.GROUP, i), "group" + i));
+		DefaultMutableTreeNode	virtual = new DefaultMutableTreeNode ("Virtual sensors  ("
+										+ (robot.groups.size () + robot.fused.size ()) + ")");
+		ItemNode	areas = new ItemNode (new RobotItem (RobotItem.GROUPS, 0), "Area groups  (" + robot.groups.size () + ")");
+		ItemNode	fused = new ItemNode (new RobotItem (RobotItem.FUSEDS, 0), "Fused sensors  (" + robot.fused.size () + ")");
+
+		for (int i = 0; i < robot.groups.size (); i++)	areas.add (new ItemNode (new RobotItem (RobotItem.GROUP, i), "group" + i));
+		for (int i = 0; i < robot.fused.size (); i++)	fused.add (new ItemNode (new RobotItem (RobotItem.FUSED, i), "fusion" + i));
+		virtual.add (areas);
+		virtual.add (fused);
 		treeRoot.add (virtual);
 
 		for (String fam : RobotDef.FAMILIES)
@@ -890,7 +924,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		for (RobotItem it : canvas.selected ())
 			if ((it.kind == RobotItem.LINE) || (it.kind == RobotItem.BUMPER)
 					|| (it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.WHEEL)
-					|| (it.kind == RobotItem.GROUP))
+					|| (it.kind == RobotItem.GROUP) || (it.kind == RobotItem.FUSED))
 				n++;
 		return n;
 	}
@@ -922,8 +956,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.LINE:		return "Drawing line " + it.index;
 		case RobotItem.BUMPER:		return "Bumper " + it.index;
 		case RobotItem.WHEEL:		return "Wheel " + it.index;
-		case RobotItem.GROUP:		return "Virtual sensors: group" + it.index;
-		case RobotItem.GROUPS:		return "Virtual sensors";
+		case RobotItem.GROUP:		return "Area groups: group" + it.index;
+		case RobotItem.GROUPS:		return "Area groups";
+		case RobotItem.FUSED:		return "Fused sensors: fusion" + it.index;
+		case RobotItem.FUSEDS:		return "Fused sensors";
 		case RobotItem.SENSOR:		return RobotDef.familyName (it.family) + ": " + it.family + it.index;
 		case RobotItem.FAMILY:		return RobotDef.familyName (it.family);
 		default:					return RobotItem.NAMES[it.kind];
@@ -1010,7 +1046,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		// where it sits and what it covers is all of it
 		case RobotItem.GROUP:		return new String[] { "rho", "theta", "height", "orientation", "elevation",
 														  "range max", "range min", "cone" };
-		case RobotItem.GROUPS:		return new String[0];			// the lot of them says nothing of its own yet
+		case RobotItem.FUSED:		return new String[] { "rho", "theta", "height", "orientation", "elevation",
+														  "range max", "range min", "cone" };
+		case RobotItem.GROUPS:
+		case RobotItem.FUSEDS:		return new String[0];			// the lot of them says nothing of its own yet
 		case RobotItem.SENSOR:
 			// the device it is read through comes first, then where it is and what it detects
 			if (!RobotDef.hasOwnDetection (it.family))
@@ -1099,9 +1138,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			break;
 		}
 		case RobotItem.GROUP:
+		case RobotItem.FUSED:
 		{
-			if (it.index >= robot.groups.size ())		break;
-			RobotDef.Group		g = robot.groups.get (it.index);
+			if (it.index >= canvas.sectors (it.kind).size ())		break;
+			RobotDef.Sector		g = canvas.sectors (it.kind).get (it.index);
 			if (name.equals ("rho"))			return RobotDef.fmt (g.rho);
 			if (name.equals ("theta"))			return RobotDef.fmt (g.theta);
 			if (name.equals ("height"))			return RobotDef.fmt (g.height);
@@ -1389,9 +1429,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			break;
 		}
 		case RobotItem.GROUP:
+		case RobotItem.FUSED:
 		{
-			if (it.index >= robot.groups.size ())		break;
-			RobotDef.Group		g = robot.groups.get (it.index);
+			if (it.index >= canvas.sectors (it.kind).size ())		break;
+			RobotDef.Sector		g = canvas.sectors (it.kind).get (it.index);
 			if (name.equals ("rho"))				g.rho = num (value);
 			else if (name.equals ("theta"))			g.theta = num (value);
 			else if (name.equals ("height"))		g.height = num (value);

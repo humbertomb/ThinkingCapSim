@@ -53,7 +53,8 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_RADIUS	= new Color (120, 120, 200);
 	static public final Color		C_BUMPER	= new Color (200, 60, 60);
 	static public final Color		C_SENSOR	= new Color (40, 120, 200);
-	static public final Color		C_VIRTUAL	= new Color (120, 90, 190);		// a virtual sensor: read from the others
+	static public final Color		C_VIRTUAL	= new Color (120, 90, 190);		// a sensor of an area: read from the others
+	static public final Color		C_FUSED		= new Color (225, 90, 165);		// a fused sensor: one direction of the real ones
 	static public final Color		C_BAND_FILL	= new Color (255, 140, 0, 30);		// the rectangle that picks several
 	static public final Color		C_WHEEL		= new Color (70, 74, 82);			// the drive train
 	static public final Color		C_TREAD		= new Color (70, 74, 82, 60);		// a wheel that drives, filled
@@ -258,6 +259,9 @@ public class RobotCanvas extends JPanel
 		if ((item != null) && (item.kind == RobotItem.GROUPS) && (robot != null))
 			for (int i = 0; i < robot.groups.size (); i++)
 				group.add (new RobotItem (RobotItem.GROUP, i));
+		if ((item != null) && (item.kind == RobotItem.FUSEDS) && (robot != null))
+			for (int i = 0; i < robot.fused.size (); i++)
+				group.add (new RobotItem (RobotItem.FUSED, i));
 		repaint ();
 		if (listener != null)		listener.selectionChanged (item);
 	}
@@ -268,7 +272,8 @@ public class RobotCanvas extends JPanel
 	 */
 	public boolean isCollectionSelected ()
 	{
-		return (selection != null) && ((selection.kind == RobotItem.FAMILY) || (selection.kind == RobotItem.GROUPS));
+		return (selection != null) && ((selection.kind == RobotItem.FAMILY) || (selection.kind == RobotItem.GROUPS)
+										|| (selection.kind == RobotItem.FUSEDS));
 	}
 
 	/** What a band picked, when it picked more than one element (empty otherwise). */
@@ -320,10 +325,14 @@ public class RobotCanvas extends JPanel
 				if (in (x0, y0, x1, y1, sx (s), sy (s), sz (s)))		found.add (new RobotItem (RobotItem.SENSOR, i, fam));
 			}
 		}
-		for (int i = 0; i < robot.groups.size (); i++)
+		for (int kind : new int[] { RobotItem.GROUP, RobotItem.FUSED })
 		{
-			RobotDef.Group	q = robot.groups.get (i);
-			if (in (x0, y0, x1, y1, gx (q), gy (q), q.height))	found.add (new RobotItem (RobotItem.GROUP, i));
+			java.util.List<? extends RobotDef.Sector>	l = sectors (kind);
+			for (int i = 0; i < l.size (); i++)
+			{
+				RobotDef.Sector		q = l.get (i);
+				if (in (x0, y0, x1, y1, gx (q), gy (q), q.height))	found.add (new RobotItem (kind, i));
+			}
 		}
 		for (int i = 0; i < robot.wheels.size (); i++)
 		{
@@ -640,27 +649,32 @@ public class RobotCanvas extends JPanel
 			for (RobotDef.Sensor s : robot.family (selection.family).sensors)
 				if ((c = coverageOf (selection.family, s)) != null)		l.add (c);
 		}
-		else if (selection.kind == RobotItem.GROUP)
+		else if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED))
 		{
 			if ((c = coverageOf (selectedGroup ())) != null)		l.add (c);
 		}
-		else if (selection.kind == RobotItem.GROUPS)
+		else if ((selection.kind == RobotItem.GROUPS) || (selection.kind == RobotItem.FUSEDS))
 		{
-			for (RobotDef.Group g : robot.groups)
+			int		kind = (selection.kind == RobotItem.FUSEDS) ? RobotItem.FUSED : RobotItem.GROUP;
+			for (RobotDef.Sector g : sectors (kind))
 				if ((c = coverageOf (g)) != null)		l.add (c);
 		}
 		return l;
 	}
 
-	/** The selected virtual sensor, or null when the selection is something else. */
-	public RobotDef.Group selectedGroup ()
+	/** The selected virtual sensor, of either kind, or null when the selection is something else. */
+	public RobotDef.Sector selectedGroup ()
 	{
-		if ((selection == null) || (selection.kind != RobotItem.GROUP))		return null;
-		return (selection.index < robot.groups.size ()) ? robot.groups.get (selection.index) : null;
+		java.util.List<? extends RobotDef.Sector>	l;
+
+		if (selection == null)					return null;
+		if ((selection.kind != RobotItem.GROUP) && (selection.kind != RobotItem.FUSED))		return null;
+		l	= sectors (selection.kind);
+		return (selection.index < l.size ()) ? l.get (selection.index) : null;
 	}
 
 	/** What a virtual sensor covers, said as a sensor's coverage is. */
-	private double[] coverageOf (RobotDef.Group g)
+	private double[] coverageOf (RobotDef.Sector g)
 	{
 		double		rmax, rmin, cone;
 		double		x, y;
@@ -750,7 +764,7 @@ public class RobotCanvas extends JPanel
 	private boolean hasMinHandle ()
 	{
 		if (selection == null)							return false;
-		if (selection.kind == RobotItem.GROUP)			return true;
+		if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED))		return true;
 		return (selection.kind == RobotItem.SENSOR) && !RobotDef.hasFov (selection.family);
 	}
 
@@ -850,7 +864,7 @@ public class RobotCanvas extends JPanel
 	/** Takes the selected virtual sensor to a point of the view, as a sensor is taken. */
 	public void moveGroupTo (double hw, double vw)
 	{
-		RobotDef.Group		q = selectedGroup ();
+		RobotDef.Sector		q = selectedGroup ();
 		double				x, y;
 
 		if (q == null)				return;
@@ -869,7 +883,7 @@ public class RobotCanvas extends JPanel
 	/** Turns it towards a point of the view: its orientation from above, its elevation from the front or the side. */
 	public void turnGroupTo (double hw, double vw)
 	{
-		RobotDef.Group		q = selectedGroup ();
+		RobotDef.Sector		q = selectedGroup ();
 		double				dh, dv, o, axis;
 
 		if (q == null)				return;
@@ -889,7 +903,7 @@ public class RobotCanvas extends JPanel
 	}
 
 	/** What a virtual sensor covers, kept in order (a near limit no farther than the far one). */
-	private void setGroupCoverage (RobotDef.Group q, double rmax, double rmin, double cone)
+	private void setGroupCoverage (RobotDef.Sector q, double rmax, double rmin, double cone)
 	{
 		if (q == null)				return;
 		q.rangemax	= Math.max (0.0, rmax);
@@ -915,11 +929,15 @@ public class RobotCanvas extends JPanel
 					return new RobotItem (RobotItem.SENSOR, i, fam);
 			}
 		}
-		for (int i = 0; i < robot.groups.size (); i++)	// then the virtual ones, drawn the same way
+		for (int kind : new int[] { RobotItem.GROUP, RobotItem.FUSED })		// then the virtual ones, drawn the same way
 		{
-			RobotDef.Group	q = robot.groups.get (i);
-			if (Math.hypot (x - h (gx (q), gy (q), q.height), y - v (gx (q), gy (q), q.height)) <= Math.max (tol, 5.0 / scale))
-				return new RobotItem (RobotItem.GROUP, i);
+			java.util.List<? extends RobotDef.Sector>	l = sectors (kind);
+			for (int i = 0; i < l.size (); i++)
+			{
+				RobotDef.Sector		q = l.get (i);
+				if (Math.hypot (x - h (gx (q), gy (q), q.height), y - v (gx (q), gy (q), q.height)) <= Math.max (tol, 5.0 / scale))
+					return new RobotItem (kind, i);
+			}
 		}
 		for (int i = 0; i < robot.wheels.size (); i++)	// then the wheels, which are bigger
 		{
@@ -976,7 +994,7 @@ public class RobotCanvas extends JPanel
 	{
 		return (it != null) && ((it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.LINE)
 								|| (it.kind == RobotItem.BUMPER) || (it.kind == RobotItem.WHEEL)
-								|| (it.kind == RobotItem.GROUP));
+								|| (it.kind == RobotItem.GROUP) || (it.kind == RobotItem.FUSED));
 	}
 
 	/**
@@ -1024,8 +1042,9 @@ public class RobotCanvas extends JPanel
 								  px (c[0]) + far * ce, py (c[1]) - far * se };
 		}
 		case RobotItem.GROUP:
+		case RobotItem.FUSED:
 		{
-			RobotDef.Group		q = selectedGroup ();
+			RobotDef.Sector		q = selectedGroup ();
 			double				hx, hy;
 			double[]			d, c;
 
@@ -1089,7 +1108,7 @@ public class RobotCanvas extends JPanel
 	{
 		return (selection != null) && (handle == 1)
 				&& ((selection.kind == RobotItem.SENSOR) || (selection.kind == RobotItem.WHEEL)
-					|| (selection.kind == RobotItem.GROUP));
+					|| (selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED));
 	}
 
 	/** Index of the handle of the selection under a point of the view, or -1. */
@@ -1139,8 +1158,9 @@ public class RobotCanvas extends JPanel
 			break;
 		}
 		case RobotItem.GROUP:
+		case RobotItem.FUSED:
 		{
-			RobotDef.Group		q = selectedGroup ();
+			RobotDef.Sector		q = selectedGroup ();
 			double[]			c;
 			double				r, cone;
 
@@ -1282,12 +1302,13 @@ public class RobotCanvas extends JPanel
 			return;
 		}
 		case RobotItem.GROUP:
+		case RobotItem.FUSED:
 		{
-			RobotDef.Group		q;
+			RobotDef.Sector		q;
 			double				x, y;
 
-			if (it.index >= robot.groups.size ())		return;
-			q	= robot.groups.get (it.index);
+			if (it.index >= sectors (it.kind).size ())		return;
+			q	= sectors (it.kind).get (it.index);
 			x	= gx (q);	y = gy (q);
 			switch (view)
 			{
@@ -1872,14 +1893,22 @@ public class RobotCanvas extends JPanel
 	 */
 	private void drawGroups (Graphics2D g)
 	{
-		for (int i = 0; i < robot.groups.size (); i++)
+		drawSectors (g, RobotItem.GROUP);
+		drawSectors (g, RobotItem.FUSED);
+	}
+
+	private void drawSectors (Graphics2D g, int kind)
+	{
+		java.util.List<? extends RobotDef.Sector>	l = sectors (kind);
+
+		for (int i = 0; i < l.size (); i++)
 		{
-			RobotDef.Group	q = robot.groups.get (i);
-			boolean			sel = isSel (RobotItem.GROUP, i, null);
+			RobotDef.Sector	q = l.get (i);
+			boolean			sel = isSel (kind, i, null);
 			double			x = ph (gx (q), gy (q), q.height), y = pv (gx (q), gy (q), q.height);
 			double[]		d = look (q.orientation, q.elevation);
 
-			g.setColor (sel ? C_SEL : C_VIRTUAL);
+			g.setColor (sel ? C_SEL : sectorColor (kind));
 			g.setStroke (stroke (sel ? 2.5f : 1.5f));
 			g.draw (new Line2D.Double (x, y, x + ARROW * d[0], y - ARROW * d[1]));
 			if (!sel)		g.draw (new Ellipse2D.Double (x - 3.5, y - 3.5, 7, 7));
@@ -1887,14 +1916,31 @@ public class RobotCanvas extends JPanel
 			if (sel || (scale > 150))
 			{
 				g.setFont (getFont ().deriveFont (10f));
-				g.drawString ("group" + i, (float) (x + 6), (float) (y - 6));
+				g.drawString (sectorName (kind, i), (float) (x + 6), (float) (y - 6));
 			}
 		}
 	}
 
 	/** Where a virtual sensor sits, in the frame of the robot (its position is polar, as a sensor's is). */
-	static public double gx (RobotDef.Group g)		{ return g.rho * Math.cos (Math.toRadians (g.theta)); }
-	static public double gy (RobotDef.Group g)		{ return g.rho * Math.sin (Math.toRadians (g.theta)); }
+	static public double gx (RobotDef.Sector g)		{ return g.rho * Math.cos (Math.toRadians (g.theta)); }
+	static public double gy (RobotDef.Sector g)		{ return g.rho * Math.sin (Math.toRadians (g.theta)); }
+
+	/** The virtual sensors of a kind ({@link RobotItem#GROUP}, {@link RobotItem#FUSED}). */
+	public java.util.List<? extends RobotDef.Sector> sectors (int kind)
+	{
+		if (kind == RobotItem.GROUP)		return robot.groups;
+		if (kind == RobotItem.FUSED)		return robot.fused;
+		return new ArrayList<RobotDef.Sector> ();
+	}
+
+	/** What one of them is called, as the description names it. */
+	static public String sectorName (int kind, int index)
+	{
+		return ((kind == RobotItem.FUSED) ? "fusion" : "group") + index;
+	}
+
+	/** The colour a virtual sensor of a kind is drawn in. */
+	static public Color sectorColor (int kind)		{ return (kind == RobotItem.FUSED) ? C_FUSED : C_VIRTUAL; }
 
 	/**
 	 * The wheels of the drive train: each one as the two rims of its tread, which
