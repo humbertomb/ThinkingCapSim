@@ -169,7 +169,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	 */
 	private TableCellEditor classEditor (Property p, String current)
 	{
-		List<String>		names = new ArrayList<String> (DriverClasses.of (p.classBase, false, true));
+		List<String>		names = new ArrayList<String> (DriverClasses.of (p.classBase, false, true, p.classNot));
 		JComboBox<String>	cb;
 
 		if (current == null)		current = "";

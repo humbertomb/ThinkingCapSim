@@ -56,15 +56,26 @@ public class DriverClasses
 	 */
 	static public synchronized List<String> of (String base, boolean plain, boolean project)
 	{
+		return of (base, plain, project, (String[]) null);
+	}
+
+	/**
+	 * The same, less what derives from any of <code>not</code>: the modules of an
+	 * architecture and its robots are all threads of the runtime, so what a module
+	 * may be is said by what it may not -- a robot, a monitor.
+	 */
+	static public synchronized List<String> of (String base, boolean plain, boolean project, String... not)
+	{
 		List<String>	found;
 		String			cached;
 
 		if ((base == null) || (base.trim ().length () == 0))		return new ArrayList<String> ();
 		base	= base.trim ();
-		cached	= base + (plain ? "|()" : "|*") + (project ? "|all" : "");
+		cached	= base + (plain ? "|()" : "|*") + (project ? "|all" : "")
+					+ ((not != null) ? "|-" + String.join (",", not) : "");
 		if (CACHE.containsKey (cached))		return CACHE.get (cached);
 
-		found	= search (base, plain, project);
+		found	= search (base, plain, project, not);
 		CACHE.put (cached, found);
 		return found;
 	}
@@ -74,10 +85,11 @@ public class DriverClasses
 
 	/* ------------------------------------------------------------------ */
 
-	static private List<String> search (String base, boolean plain, boolean project)
+	static private List<String> search (String base, boolean plain, boolean project, String[] not)
 	{
 		List<String>	names = new ArrayList<String> ();
 		List<String>	out = new ArrayList<String> ();
+		List<Class<?>>	barred = new ArrayList<Class<?>> ();
 		Class<?>		root;
 		String			pkg;
 
@@ -97,7 +109,10 @@ public class DriverClasses
 			classes (pkg, names);
 		}
 
-		if (project)		names = descendants (base, names);		// before loading them: see hierarchy ()
+		if (project)		names = descendants (base, names);		// before loading them: see descendants ()
+		if (not != null)
+			for (String bar : not)
+				try { barred.add (Class.forName (bar, false, loader ())); }	catch (Throwable e)		{ }
 
 		for (String name : names)
 		{
@@ -115,6 +130,7 @@ public class DriverClasses
 			if (!Modifier.isPublic (c.getModifiers ()))				continue;
 			if (plain && !buildable (c))							continue;
 			if (!plain && (c.getDeclaredConstructors ().length == 0))	continue;
+			if (barredFrom (barred, c))								continue;
 			out.add (name);
 		}
 		Collections.sort (out);
@@ -214,6 +230,13 @@ public class DriverClasses
 		up		= ref[up];
 		if ((up <= 0) || (up >= n) || (kind[up] != 1))			return null;
 		return text[up].replace ('/', '.');
+	}
+
+	/** True when a class is one of those asked to be left out, or derives from one. */
+	static private boolean barredFrom (List<Class<?>> barred, Class<?> c)
+	{
+		for (Class<?> bar : barred)		if (bar.isAssignableFrom (c))		return true;
+		return false;
 	}
 
 	/** True when it can be built the way the device layer builds a driver: with no arguments. */
