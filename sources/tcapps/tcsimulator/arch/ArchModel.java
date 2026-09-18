@@ -67,6 +67,7 @@ public class ArchModel
 		public String[]	choices;		// P_CHOICE values
 		public String	classBase;		// P_CLASS: the class the ones offered derive from
 		public String[]	classNot;		// P_CLASS: and what they must not derive from
+		public boolean	classBlank;		// P_CLASS: whether it may be left with no class at all
 		public String	fileDir;		// P_FILE: default directory
 		public String	fileDesc;		// P_FILE: filter description
 		public String[]	fileExts;		// P_FILE: filter extensions
@@ -85,6 +86,9 @@ public class ArchModel
 			p.classNot	= not;
 			return p;
 		}
+
+		/** The same, which may also be left blank: the first thing offered is no class at all. */
+		public Property orNone ()						{ classBlank = true; return this; }
 		public String toString ()	{ return label; }
 	}
 
@@ -129,7 +133,7 @@ public class ArchModel
 	static public final Property[]	VROBOT_PROPS	=
 	{
 		new Property ("INFO",	"Name"),
-		Property.ofClass ("CLASS", "Class", VROBOT_BASE),
+		Property.ofClass ("CLASS", "Class", VROBOT_BASE).orNone (),
 		new Property ("MODE",	"Mode",			MODES),
 		new Property ("PASSIVE","Passive",		P_BOOLEAN),
 		new Property ("EXTIME",	"Exec. time (ms)"),

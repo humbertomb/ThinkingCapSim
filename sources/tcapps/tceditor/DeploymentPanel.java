@@ -164,8 +164,9 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	 * as threads of the runtime, a router is one of the coordination layer -- so
 	 * that one is chosen from what there is instead of being typed in.
 	 *
-	 * What the block says now comes first when it is not among them: a class of a
-	 * development that is not built here is not to be lost by opening its editor.
+	 * Only the classes that are there are offered: one that the development no
+	 * longer builds is not kept in the list just because a deployment names it.
+	 * A property that may be left blank offers that first.
 	 */
 	private TableCellEditor classEditor (Property p, String current)
 	{
@@ -174,7 +175,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 
 		if (current == null)		current = "";
 		current	= current.trim ();
-		if ((current.length () > 0) && !names.contains (current))	names.add (0, current);
+		if (p.classBlank)			names.add (0, "");
 		cb		= new JComboBox<String> (names.toArray (new String[0]));
 		cb.setSelectedItem (current);
 		cb.setToolTipText ("Classes of the development deriving from " + p.classBase);
