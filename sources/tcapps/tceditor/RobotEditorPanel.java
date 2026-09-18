@@ -83,7 +83,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected javax.swing.border.TitledBorder	propsBorder;
 	protected JSplitPane			mainSP, rightSP;
 	protected boolean				dividersSet, syncing, dirty;
-	protected Action				wheelAC, lineAC, bumperAC, sensorAC, deleteAC;
+	protected Action				openAC, wheelAC, lineAC, bumperAC, sensorAC, deleteAC;
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
 	protected javax.swing.JToggleButton[]		viewBT;					// the three flat projections
@@ -152,11 +152,14 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		// --- left: toolbar
 		JToolBar	tb = new JToolBar (JToolBar.VERTICAL);
 		tb.setFloatable (false);
+		openAC		= ToolButtons.action ("Load Robot", ToolIcon.ROBOT_FILE, "Load a robot description  [Ctrl+O]", new Runnable () { public void run () { loadRobot (); } });
 		wheelAC		= ToolButtons.action ("Wheel", ToolIcon.WHEEL, "Add a wheel to the drive train", new Runnable () { public void run () { addWheel (); } });
 		lineAC		= ToolButtons.action ("Line", ToolIcon.WALL, "Add a segment to the drawing of the robot", new Runnable () { public void run () { addLine (); } });
 		bumperAC	= ToolButtons.action ("Bumper", ToolIcon.CONNECTOR, "Add a bumper", new Runnable () { public void run () { addBumper (); } });
 		sensorAC	= ToolButtons.action ("Sensor", ToolIcon.BEACON, "Add a sensor to the selected family", new Runnable () { public void run () { addSensor (); } });
 		deleteAC	= ToolButtons.action ("Delete", ToolIcon.DELETE, "Delete the selected element  [Delete]", new Runnable () { public void run () { deleteSelection (); } });
+		tb.add (ToolButtons.flatButton (openAC));
+		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (wheelAC));
 		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (lineAC));

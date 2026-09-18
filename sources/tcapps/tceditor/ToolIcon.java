@@ -61,6 +61,7 @@ public class ToolIcon implements Icon
 	static public final int		AOBJECT		= 47;		// object box with motion chevrons (animated object)
 	static public final int		EDIT_WORLD	= 46;		// map with a pencil (edit the world)
 	static public final int		WHEEL		= 48;		// a tyre seen from the side (add a wheel)
+	static public final int		ROBOT_FILE	= 49;		// folder (load) with a small robot at its bottom right corner
 
 	protected int				type;
 	protected int				size;
@@ -272,6 +273,17 @@ public class ToolIcon implements Icon
 			g.drawLine (1, 8, 17, 8);
 			plan (g, fg, 11, 11, 10);
 			break;
+		case ROBOT_FILE:	// folder (load) with a small robot at its bottom right corner
+			g.setColor (new Color (255, 210, 110));
+			g.fillRoundRect (1, 5, 16, 12, 3, 3);
+			g.setColor (new Color (255, 228, 150));
+			g.fillPolygon (new int[] { 1, 7, 9, 17, 17, 1 }, new int[] { 5, 5, 3, 3, 8, 8 }, 6);
+			g.setColor (new Color (170, 120, 30));
+			g.setStroke (new BasicStroke (1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawRoundRect (1, 5, 16, 12, 3, 3);
+			g.drawLine (1, 8, 17, 8);
+			bot (g, fg, 11, 11, 11);
+			break;
 		case VIEW3D:		// isometric cube
 			g.setColor (new Color (120, 160, 220, 110));
 			g.fillPolygon (new int[] { 11, 19, 19, 11 }, new int[] { 9, 5, 14, 18 }, 4);
@@ -401,6 +413,26 @@ public class ToolIcon implements Icon
 		p.setColor (new Color (200, 120, 40));
 		p.setStroke (new BasicStroke (1.2f / (float) s));
 		p.drawLine (9, 6, 9, 11);												// the door
+		p.dispose ();
+	}
+
+	/**
+	 * A robot seen from above (a rounded body with two wheels and the way it
+	 * looks) in a square of side <code>size</code> at (x, y).
+	 */
+	static private void bot (Graphics2D g, Color fg, int x, int y, int size)
+	{
+		double	s = size / 18.0;
+		Graphics2D	p = (Graphics2D) g.create ();
+		p.translate (x, y);
+		p.scale (s, s);
+		p.setColor (new Color (250, 220, 220));
+		p.fillRoundRect (2, 1, 14, 16, 6, 6);
+		p.setColor (fg);
+		p.setStroke (new BasicStroke (1.6f / (float) s, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		p.drawRoundRect (2, 1, 14, 16, 6, 6);
+		p.fillRect (0, 4, 3, 5);	p.fillRect (15, 4, 3, 5);					// the two wheels
+		p.drawLine (9, 9, 9, 2);												// the way it looks
 		p.dispose ();
 	}
 }
