@@ -680,7 +680,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 		// a family holds its sensors so that they move together, not so that one
 		// key takes them all away
-		if (canvas.isFamilySelected ())			return;
+		if (canvas.isCollectionSelected ())			return;
 		all		= new ArrayList<RobotItem> (canvas.selected ());
 
 		// from the last index to the first, so that removing one does not shift the next
@@ -736,7 +736,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		for (int i = 0; i < robot.bumpers.size (); i++)	bumpers.add (new ItemNode (new RobotItem (RobotItem.BUMPER, i), "Bumper " + i));
 		treeRoot.add (bumpers);
 
-		DefaultMutableTreeNode	virtual = new DefaultMutableTreeNode ("Virtual sensors  (" + robot.groups.size () + ")");
+		ItemNode	virtual = new ItemNode (new RobotItem (RobotItem.GROUPS, 0), "Virtual sensors  (" + robot.groups.size () + ")");
 		for (int i = 0; i < robot.groups.size (); i++)	virtual.add (new ItemNode (new RobotItem (RobotItem.GROUP, i), "Virtual " + i));
 		treeRoot.add (virtual);
 
@@ -847,7 +847,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	{
 		int		n = 0;
 
-		if (canvas.isFamilySelected ())			return 0;
+		if (canvas.isCollectionSelected ())			return 0;
 		for (RobotItem it : canvas.selected ())
 			if ((it.kind == RobotItem.LINE) || (it.kind == RobotItem.BUMPER)
 					|| (it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.WHEEL))
@@ -883,6 +883,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.BUMPER:		return "Bumper " + it.index;
 		case RobotItem.WHEEL:		return "Wheel " + it.index;
 		case RobotItem.GROUP:		return "Virtual sensor " + it.index;
+		case RobotItem.GROUPS:		return "Virtual sensors";
 		case RobotItem.SENSOR:		return RobotDef.familyName (it.family) + ": " + it.family + it.index;
 		case RobotItem.FAMILY:		return RobotDef.familyName (it.family);
 		default:					return RobotItem.NAMES[it.kind];
@@ -969,6 +970,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		// where it sits and what it covers is all of it
 		case RobotItem.GROUP:		return new String[] { "rho", "theta", "height", "orientation", "elevation",
 														  "range max", "range min", "cone" };
+		case RobotItem.GROUPS:		return new String[0];			// the lot of them says nothing of its own yet
 		case RobotItem.SENSOR:
 			// the device it is read through comes first, then where it is and what it detects
 			if (!RobotDef.hasOwnDetection (it.family))

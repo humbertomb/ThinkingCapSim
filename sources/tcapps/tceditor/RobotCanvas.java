@@ -53,6 +53,7 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_RADIUS	= new Color (120, 120, 200);
 	static public final Color		C_BUMPER	= new Color (200, 60, 60);
 	static public final Color		C_SENSOR	= new Color (40, 120, 200);
+	static public final Color		C_VIRTUAL	= new Color (120, 90, 190);		// a virtual sensor: read from the others
 	static public final Color		C_BAND_FILL	= new Color (255, 140, 0, 30);		// the rectangle that picks several
 	static public final Color		C_WHEEL		= new Color (70, 74, 82);			// the drive train
 	static public final Color		C_TREAD		= new Color (70, 74, 82, 60);		// a wheel that drives, filled
@@ -235,11 +236,15 @@ public class RobotCanvas extends JPanel
 	{
 		group.clear ();
 		selection	= item;
-		// a family is its sensors: selecting it takes them all, as a band would, so
-		// that dragging any of them moves the whole family at once
+		// a family is its sensors, and the virtual sensors are all of theirs:
+		// selecting one takes them all, as a band would, so that dragging any of
+		// them moves the whole lot at once
 		if ((item != null) && (item.kind == RobotItem.FAMILY) && (robot != null))
 			for (int i = 0; i < robot.family (item.family).n (); i++)
 				group.add (new RobotItem (RobotItem.SENSOR, i, item.family));
+		if ((item != null) && (item.kind == RobotItem.GROUPS) && (robot != null))
+			for (int i = 0; i < robot.groups.size (); i++)
+				group.add (new RobotItem (RobotItem.GROUP, i));
 		repaint ();
 		if (listener != null)		listener.selectionChanged (item);
 	}
@@ -248,9 +253,9 @@ public class RobotCanvas extends JPanel
 	 * True when what is selected is a whole family, and its group therefore holds
 	 * the sensors it is made of rather than elements picked one by one.
 	 */
-	public boolean isFamilySelected ()
+	public boolean isCollectionSelected ()
 	{
-		return (selection != null) && (selection.kind == RobotItem.FAMILY);
+		return (selection != null) && ((selection.kind == RobotItem.FAMILY) || (selection.kind == RobotItem.GROUPS));
 	}
 
 	/** What a band picked, when it picked more than one element (empty otherwise). */
@@ -301,6 +306,11 @@ public class RobotCanvas extends JPanel
 				RobotDef.Sensor		s = ss.get (i);
 				if (in (x0, y0, x1, y1, sx (s), sy (s), sz (s)))		found.add (new RobotItem (RobotItem.SENSOR, i, fam));
 			}
+		}
+		for (int i = 0; i < robot.groups.size (); i++)
+		{
+			RobotDef.Group	q = robot.groups.get (i);
+			if (in (x0, y0, x1, y1, gx (q), gy (q), q.height))	found.add (new RobotItem (RobotItem.GROUP, i));
 		}
 		for (int i = 0; i < robot.wheels.size (); i++)
 		{
@@ -606,6 +616,11 @@ public class RobotCanvas extends JPanel
 		{
 			if ((c = coverageOf (selectedGroup ())) != null)		l.add (c);
 		}
+		else if (selection.kind == RobotItem.GROUPS)
+		{
+			for (RobotDef.Group g : robot.groups)
+				if ((c = coverageOf (g)) != null)		l.add (c);
+		}
 		return l;
 	}
 
@@ -768,9 +783,12 @@ public class RobotCanvas extends JPanel
 	 * length, or the azimuth alone when the direction is perpendicular to the view
 	 * (a sensor looking straight up, seen from above).
 	 */
-	public double[] look (RobotDef.Sensor s)
+	public double[] look (RobotDef.Sensor s)					{ return look (s.orientation, s.elevation); }
+
+	/** The way something pointing there shows in the view: {dh, dv}, of length one. */
+	public double[] look (double orientation, double elevation)
 	{
-		double		o = Math.toRadians (s.orientation), e = Math.toRadians (s.elevation);
+		double		o = Math.toRadians (orientation), e = Math.toRadians (elevation);
 		double		fx = Math.cos (o) * Math.cos (e), fy = Math.sin (o) * Math.cos (e), fz = Math.sin (e);
 		double		dh = h (fx, fy, fz), dv = v (fx, fy, fz), n = Math.hypot (dh, dv);
 
@@ -816,6 +834,12 @@ public class RobotCanvas extends JPanel
 				if (Math.hypot (x - h (sx (s), sy (s), sz (s)), y - v (sx (s), sy (s), sz (s))) <= Math.max (tol, 5.0 / scale))
 					return new RobotItem (RobotItem.SENSOR, i, fam);
 			}
+		}
+		for (int i = 0; i < robot.groups.size (); i++)	// then the virtual ones, drawn the same way
+		{
+			RobotDef.Group	q = robot.groups.get (i);
+			if (Math.hypot (x - h (gx (q), gy (q), q.height), y - v (gx (q), gy (q), q.height)) <= Math.max (tol, 5.0 / scale))
+				return new RobotItem (RobotItem.GROUP, i);
 		}
 		for (int i = 0; i < robot.wheels.size (); i++)	// then the wheels, which are bigger
 		{
@@ -871,7 +895,8 @@ public class RobotCanvas extends JPanel
 	public boolean isMovable (RobotItem it)
 	{
 		return (it != null) && ((it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.LINE)
-								|| (it.kind == RobotItem.BUMPER) || (it.kind == RobotItem.WHEEL));
+								|| (it.kind == RobotItem.BUMPER) || (it.kind == RobotItem.WHEEL)
+								|| (it.kind == RobotItem.GROUP));
 	}
 
 	/**
@@ -1139,6 +1164,24 @@ public class RobotCanvas extends JPanel
 			s.theta		= Math.toDegrees (Math.atan2 (y, x));
 			return;
 		}
+		case RobotItem.GROUP:
+		{
+			RobotDef.Group		q;
+			double				x, y;
+
+			if (it.index >= robot.groups.size ())		return;
+			q	= robot.groups.get (it.index);
+			x	= gx (q);	y = gy (q);
+			switch (view)
+			{
+			case V_FRONT:	y += dx;	q.height += dy;		break;
+			case V_SIDE:	x += dx;	q.height += dy;		break;
+			default:		x += dx;	y += dy;			break;
+			}
+			q.rho		= Math.hypot (x, y);
+			q.theta		= Math.toDegrees (Math.atan2 (y, x));
+			return;
+		}
 		case RobotItem.WHEEL:
 		{
 			RobotDef.Wheel		w;
@@ -1336,6 +1379,7 @@ public class RobotCanvas extends JPanel
 		drawWheels (g);
 		drawCoverage (g);
 		drawSensors (g);
+		drawGroups (g);
 		drawHandles (g);
 		drawBand (g);
 		drawScaleBar (g);
@@ -1703,6 +1747,37 @@ public class RobotCanvas extends JPanel
 			}
 		}
 	}
+
+	/**
+	 * The virtual sensors: each one where it sits and where it looks, as a real
+	 * sensor is drawn, in a colour of its own -- what it reads comes from the
+	 * others and not from the world.
+	 */
+	private void drawGroups (Graphics2D g)
+	{
+		for (int i = 0; i < robot.groups.size (); i++)
+		{
+			RobotDef.Group	q = robot.groups.get (i);
+			boolean			sel = isSel (RobotItem.GROUP, i, null);
+			double			x = ph (gx (q), gy (q), q.height), y = pv (gx (q), gy (q), q.height);
+			double[]		d = look (q.orientation, q.elevation);
+
+			g.setColor (sel ? C_SEL : C_VIRTUAL);
+			g.setStroke (stroke (sel ? 2.5f : 1.5f));
+			g.draw (new Line2D.Double (x, y, x + ARROW * d[0], y - ARROW * d[1]));
+			if (!sel)		g.draw (new Ellipse2D.Double (x - 3.5, y - 3.5, 7, 7));
+			else			g.fill (new Ellipse2D.Double (x - 3.5, y - 3.5, 7, 7));
+			if (sel || (scale > 150))
+			{
+				g.setFont (getFont ().deriveFont (10f));
+				g.drawString ("v" + i, (float) (x + 6), (float) (y - 6));
+			}
+		}
+	}
+
+	/** Where a virtual sensor sits, in the frame of the robot (its position is polar, as a sensor's is). */
+	static public double gx (RobotDef.Group g)		{ return g.rho * Math.cos (Math.toRadians (g.theta)); }
+	static public double gy (RobotDef.Group g)		{ return g.rho * Math.sin (Math.toRadians (g.theta)); }
 
 	/**
 	 * The wheels of the drive train: each one as the two rims of its tread, which
