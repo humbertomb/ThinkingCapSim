@@ -641,8 +641,9 @@ public class RobotDef
 	/**
 	 * Writes a family leaving out what it does not say: the detection properties
 	 * of a family whose sensors carry their own (the laser range finders, the
-	 * beacon scanners and the radar trackers keep only their firing cycle), and
-	 * anything left at its default in the others.
+	 * beacon scanners and the radar trackers keep only their firing cycle and the
+	 * way the simulator works their readings out), and anything left at its
+	 * default in the others.
 	 */
 	static private class FamilyWriter implements com.google.gson.JsonSerializer<Family>
 	{
@@ -663,6 +664,7 @@ public class RobotDef
 				if (f.objects != 0)			o.addProperty ("objects", f.objects);
 			}
 			if (f.cycle != 0)				o.addProperty ("cycle", f.cycle);
+			if (f.simmode != 0)				o.addProperty ("simmode", f.simmode);
 			o.add ("sensors", ctx.serialize (f.sensors));
 			return o;
 		}
@@ -1083,7 +1085,8 @@ public class RobotDef
 
 			// a family with no sensors and no parameters is simply not there
 			if ((f.n () == 0) && (f.rangemax == 0.0) && (f.rangemin == 0.0) && (f.cone == 0.0) && (f.cycle == 0)
-					&& (f.rays == 0) && (f.reflect == 0.0) && (f.beacons == 0) && (f.objects == 0))		continue;
+					&& (f.rays == 0) && (f.reflect == 0.0) && (f.beacons == 0) && (f.objects == 0)
+					&& (f.simmode == 0))		continue;
 			p.setProperty (FAMILY_COUNTS[fi], String.valueOf (f.n ()));
 
 			if (f.cycle > 0)		p.setProperty ("CYCLE" + key, String.valueOf (f.cycle));
