@@ -133,12 +133,13 @@ public class ArchModel
 	static public final Property[]	VROBOT_PROPS	=
 	{
 		new Property ("INFO",	"Name"),
+		// the description comes right after the name: it is what says which robot this is
+		new Property ("DESC",	"Robot Definition",	"./conf/robots",	"Robot descriptions (*.robot)",	"robot"),
 		Property.ofClass ("CLASS", "Class", VROBOT_BASE).orNone (),
 		new Property ("MODE",	"Mode",			MODES),
 		new Property ("PASSIVE","Passive",		P_BOOLEAN),
 		new Property ("EXTIME",	"Exec. time (ms)"),
 		new Property ("GFX",	"Graphics",	P_BOOLEAN),
-		new Property ("DESC",	"Robot Definition",	"./conf/robots",	"Robot descriptions (*.robot)",	"robot"),
 	};
 
 	/** Suffixes that exist in the ADF but are not shown in the editor, per kind. */

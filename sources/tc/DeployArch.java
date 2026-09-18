@@ -269,7 +269,9 @@ public class DeployArch
 	static public Module newVirtualRobot ()
 	{
 		Module	m = new Module ("Virtual Robot");
-		m.set ("CLASS", "tc.vrobot.VirtualRobot");
+		// no class: VirtualRobot is abstract, so which one this robot is has to be
+		// said, and the editor offers the ones the development has
+		m.set ("CLASS", "");
 		m.set ("MODE", "shared");
 		m.set ("PASSIVE", "false");
 		m.set ("EXTIME", "100");
