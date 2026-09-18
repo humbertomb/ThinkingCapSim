@@ -26,6 +26,7 @@ public class Component2D extends JComponent
 	public static final double			DEFSCALE	= 1.0;			// Default scale factor 
 	public static final double			MINSCALE	= 0.005;		// Minimum scale factor 
 	public static final double			KCDRAG		= 0.01;					
+	public static final double			KCWHEEL		= 1.15;			// Zooming factor of one notch of the mouse wheel
 	public static final int				MAXHUDS		= 20;
 
 	// Basic shapes constants
@@ -143,6 +144,13 @@ public class Component2D extends JComponent
 		// Set default visualization options
 		ref_label[0]	= "x";
 		ref_label[1]	= "y";
+
+		// The wheel zooms, as it does on the editors: what the middle of the view
+		// shows stays where it is
+		addMouseWheelListener (new MouseWheelListener ()
+		{
+			public void mouseWheelMoved (MouseWheelEvent e)		{ mouseWheel (e.getWheelRotation ()); }
+		});
 	}
 
 	/* Accessor methods */
@@ -1067,6 +1075,31 @@ public class Component2D extends JComponent
 
 		prevx = x;
 		prevy = y;
+	}
+
+	/**
+	 * Zooms by <code>notches</code> of the mouse wheel: away from the user (a
+	 * negative rotation) brings the view closer, as everywhere else. What the
+	 * middle of the view shows stays where it is, as it does while dragging with
+	 * the control key down.
+	 */
+	public void mouseWheel (int notches) 
+	{
+		Point2			pt;
+		double			nscale;
+
+		if (notches == 0)						return;
+		pt		= screen2world (getSize ().width / 2, getSize ().height / 2);
+		nscale	= scale * Math.pow (KCWHEEL, -notches);
+		nscale	= Math.min (Math.max (nscale, MINSCALE), MAXSCALE);
+		if (nscale == scale)					return;					// as far in or out as it goes
+
+		scale	= nscale;
+		pre_scaling ();
+		autoCenter (pt.x, pt.y);
+
+		modified	= true;
+		repaint ();
 	}
 
 	public Point2 mouseClick (int x, int y) 
