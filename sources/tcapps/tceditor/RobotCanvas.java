@@ -721,7 +721,9 @@ public class RobotCanvas extends JPanel
 	/** True when the selected sensor has a near limit to drag (a camera has not). */
 	private boolean hasMinHandle ()
 	{
-		return (selection != null) && (selection.kind == RobotItem.SENSOR) && !RobotDef.hasFov (selection.family);
+		if (selection == null)							return false;
+		if (selection.kind == RobotItem.GROUP)			return true;
+		return (selection.kind == RobotItem.SENSOR) && !RobotDef.hasFov (selection.family);
 	}
 
 	/** The three axes of a sensor: where it looks at, across it and up from it. */
@@ -815,6 +817,56 @@ public class RobotCanvas extends JPanel
 		s.rho		= Math.hypot (x, y);
 		s.theta		= Math.toDegrees (Math.atan2 (y, x));
 		changed ();
+	}
+
+	/** Takes the selected virtual sensor to a point of the view, as a sensor is taken. */
+	public void moveGroupTo (double hw, double vw)
+	{
+		RobotDef.Group		q = selectedGroup ();
+		double				x, y;
+
+		if (q == null)				return;
+		x	= gx (q);	y = gy (q);
+		switch (view)
+		{
+		case V_FRONT:	y = hw;		q.height = vw;		break;
+		case V_SIDE:	x = hw;		q.height = vw;		break;
+		default:		x = hw;		y = vw;				break;
+		}
+		q.rho		= Math.hypot (x, y);
+		q.theta		= Math.toDegrees (Math.atan2 (y, x));
+		changed ();
+	}
+
+	/** Turns it towards a point of the view: its orientation from above, its elevation from the front or the side. */
+	public void turnGroupTo (double hw, double vw)
+	{
+		RobotDef.Group		q = selectedGroup ();
+		double				dh, dv, o, axis;
+
+		if (q == null)				return;
+		dh	= hw - h (gx (q), gy (q), q.height);
+		dv	= vw - v (gx (q), gy (q), q.height);
+		if (isTop ())
+		{
+			q.orientation	= Math.toDegrees (Math.atan2 (dv, dh));
+			changed ();
+			return;
+		}
+		o		= Math.toRadians (q.orientation);
+		axis	= (view == V_FRONT) ? Math.sin (o) : Math.cos (o);
+		if (Math.abs (axis) < 1e-6)		axis = 1.0;			// it looks across the view: take its front as the right
+		q.elevation		= Math.toDegrees (Math.atan2 (dv, dh * Math.signum (axis)));
+		changed ();
+	}
+
+	/** What a virtual sensor covers, kept in order (a near limit no farther than the far one). */
+	private void setGroupCoverage (RobotDef.Group q, double rmax, double rmin, double cone)
+	{
+		if (q == null)				return;
+		q.rangemax	= Math.max (0.0, rmax);
+		q.rangemin	= Math.max (0.0, Math.min (rmin, q.rangemax));
+		q.cone		= Math.max (0.0, Math.min (cone, 360.0));
 	}
 
 	/* Selection */
@@ -943,6 +995,25 @@ public class RobotCanvas extends JPanel
 								  px (c[0] + c[3] * ce), py (c[1] + c[3] * se),
 								  px (c[0]) + far * ce, py (c[1]) - far * se };
 		}
+		case RobotItem.GROUP:
+		{
+			RobotDef.Group		q = selectedGroup ();
+			double				hx, hy;
+			double[]			d, c;
+
+			if (q == null)					return new double[0];
+			hx	= ph (gx (q), gy (q), q.height);	hy = pv (gx (q), gy (q), q.height);
+			d	= look (q.orientation, q.elevation);
+			c	= isTop () ? coverageOf (q) : null;					// a cone is edited from above
+			if (c == null)
+				return new double[] { hx, hy, hx + ARROW * d[0], hy - ARROW * d[1] };
+
+			double		e = coverEdge (c), ce = Math.cos (e), se = Math.sin (e);
+			double		far = (c[2] > 0.0) ? c[2] * scale : PENDING_PX;
+			return new double[] { hx, hy, hx + ARROW * d[0], hy - ARROW * d[1],
+								  px (c[0] + c[3] * ce), py (c[1] + c[3] * se),
+								  px (c[0]) + far * ce, py (c[1]) - far * se };
+		}
 		case RobotItem.WHEEL:
 		{
 			RobotDef.Wheel		w = selectedWheel ();
@@ -989,7 +1060,8 @@ public class RobotCanvas extends JPanel
 	public boolean isRotationHandle (int handle)
 	{
 		return (selection != null) && (handle == 1)
-				&& ((selection.kind == RobotItem.SENSOR) || (selection.kind == RobotItem.WHEEL));
+				&& ((selection.kind == RobotItem.SENSOR) || (selection.kind == RobotItem.WHEEL)
+					|| (selection.kind == RobotItem.GROUP));
 	}
 
 	/** Index of the handle of the selection under a point of the view, or -1. */
@@ -1036,6 +1108,23 @@ public class RobotCanvas extends JPanel
 				if ((handle == 2) && hasMinHandle ())	setCoverage (c[2], r, cone);	// the near end: range min
 				else									setCoverage (r, c[3], cone);	// the far end: range max
 			}
+			break;
+		}
+		case RobotItem.GROUP:
+		{
+			RobotDef.Group		q = selectedGroup ();
+			double[]			c;
+			double				r, cone;
+
+			if (q == null)					return;
+			if (handle == 0)				{ moveGroupTo (x, y); return; }		// where it sits
+			if (handle == 1)				{ turnGroupTo (x, y); return; }		// where it looks at
+			c	= coverageOf (q);											// what it covers
+			if (c == null)					return;
+			r		= Math.hypot (x - c[0], y - c[1]);
+			cone	= 2 * Math.abs (norm180 (Math.toDegrees (Math.atan2 (y - c[1], x - c[0])) - c[5]));
+			if (handle == 2)				setGroupCoverage (q, c[2], r, cone);	// the near end: range min
+			else							setGroupCoverage (q, r, c[3], cone);	// the far end: range max
 			break;
 		}
 		case RobotItem.WHEEL:
