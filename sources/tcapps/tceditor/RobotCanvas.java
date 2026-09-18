@@ -73,6 +73,8 @@ public class RobotCanvas extends JPanel
 	 * the catch wider.
 	 */
 	static public final double		VERTEX_HIT	= 9.0;
+	/** How much of the view is left around a newly created element, on each side. */
+	static public final double		NEW_INSET	= 0.25;
 	static public final double		PENDING_PX	= 40.0;			// where the range handle of a sensor that has none sits
 
 	/** What the editor needs to know about the view. */
@@ -417,6 +419,33 @@ public class RobotCanvas extends JPanel
 	public double py (double y)						{ return getHeight () / 2.0 - (y - cy) * scale; }
 	public double wx (double px)					{ return cx + (px - getWidth () / 2.0) / scale; }
 	public double wy (double py)					{ return cy - (py - getHeight () / 2.0) / scale; }
+
+	/** What the view is showing, in the coordinates of the robot: {x0, y0, x1, y1} (m). */
+	public double[] visibleArea ()
+	{
+		return new double[] { wx (0), wy (getHeight ()), wx (getWidth ()), wy (0) };
+	}
+
+	/**
+	 * The box a new flat element is created in: what the view shows, taken in by
+	 * {@link #NEW_INSET} of it on every side, so that whatever is created lands
+	 * where the user is looking, at whatever zoom, with room around it for its
+	 * handles.
+	 *
+	 * Null when the view cannot say: it has no size yet, or it is not the one from
+	 * above, the only projection the flat drawing and the bumpers belong to.
+	 */
+	public double[] newArea ()
+	{
+		double[]	a;
+		double		mx, my;
+
+		if (!isTop () || (getWidth () <= 0) || (getHeight () <= 0))		return null;
+		a	= visibleArea ();
+		mx	= (a[2] - a[0]) * NEW_INSET;
+		my	= (a[3] - a[1]) * NEW_INSET;
+		return new double[] { a[0] + mx, a[1] + my, a[2] - mx, a[3] - my };
+	}
 
 	public void zoom (double factor)
 	{

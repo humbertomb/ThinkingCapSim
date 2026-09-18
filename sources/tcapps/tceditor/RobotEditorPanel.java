@@ -638,8 +638,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 	private void addLine ()
 	{
-		double	r = (robot.radius > 0.0) ? robot.radius : 0.25;
-		robot.icon.add (new RobotDef.IconLine (-r / 2, -r / 2, r / 2, r / 2));
+		double		r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		double[]	a = canvas.newArea ();					// inside what the view shows, at its zoom
+
+		if (a != null)		robot.icon.add (new RobotDef.IconLine (a[0], a[1], a[2], a[3]));
+		else				robot.icon.add (new RobotDef.IconLine (-r / 2, -r / 2, r / 2, r / 2));
 		changed ();
 		refreshTree ();
 		select (new RobotItem (RobotItem.LINE, robot.icon.size () - 1));
@@ -647,8 +650,12 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 	private void addBumper ()
 	{
-		double	r = (robot.radius > 0.0) ? robot.radius : 0.25;
-		robot.bumpers.add (new RobotDef.Bumper (r, -r, r, r));
+		double		r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		double[]	a = canvas.newArea ();					// inside what the view shows, at its zoom
+
+		// across the view, as a bumper usually runs across the front of the robot
+		if (a != null)		robot.bumpers.add (new RobotDef.Bumper (a[2], a[1], a[2], a[3]));
+		else				robot.bumpers.add (new RobotDef.Bumper (r, -r, r, r));
 		changed ();
 		refreshTree ();
 		select (new RobotItem (RobotItem.BUMPER, robot.bumpers.size () - 1));
