@@ -685,13 +685,9 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 											   JOptionPane.PLAIN_MESSAGE, null,
 											   ArchModel.MODULE_TYPES, ArchModel.MODULE_TYPES[0]);
 		if (type == null)				return;						// cancelled
-		Block			b = model.addModule (r, type.toString ());
-		List<String>	classes = DriverClasses.of (ArchModel.moduleTypeBase (type.toString ()), false, true, ArchModel.MODULE_NOT);
-
-		// the first class of its kind, so that it is a module that runs rather than
-		// one that has still to be told what it is
-		if ((b != null) && !classes.isEmpty ())		model.set (b, "CLASS", classes.get (0));
-		select (b);
+		// with no class: which one of its kind it is has to be chosen, and a module
+		// left blank says so when the deployment is run
+		select (model.addModule (r, type.toString ()));
 	}
 
 	private void deleteSelection ()

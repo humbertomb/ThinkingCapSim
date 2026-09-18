@@ -312,7 +312,8 @@ public class DeployArch
 		return m;
 	}
 
-	static public Linda newGlobalLinda ()			{ return new Linda ("localhost", 5500, false); }
+	/** A global Linda space, which is created rather than connected to: there is none to connect to yet. */
+	static public Linda newGlobalLinda ()			{ return new Linda ("localhost", 5500, true); }
 
 	/**
 	 * Problems that prevent the deployment from being executed, as messages
