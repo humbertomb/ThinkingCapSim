@@ -790,7 +790,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		treeRoot.add (lines);
 
 		DefaultMutableTreeNode	bumpers = new DefaultMutableTreeNode ("Bumpers  (" + robot.bumpers.size () + ")");
-		for (int i = 0; i < robot.bumpers.size (); i++)	bumpers.add (new ItemNode (new RobotItem (RobotItem.BUMPER, i), "Bumper " + i));
+		// named as the description names them (bumxi0, bumyi0, ...)
+		for (int i = 0; i < robot.bumpers.size (); i++)	bumpers.add (new ItemNode (new RobotItem (RobotItem.BUMPER, i), "bumper" + i));
 		treeRoot.add (bumpers);
 
 		// the virtual sensors: the ones of an area and the fused ones, each lot
@@ -954,7 +955,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		switch (it.kind)
 		{
 		case RobotItem.LINE:		return "Drawing line " + it.index;
-		case RobotItem.BUMPER:		return "Bumper " + it.index;
+		case RobotItem.BUMPER:		return "Bumpers: bumper" + it.index;
 		case RobotItem.WHEEL:		return "Wheel " + it.index;
 		case RobotItem.GROUP:		return "Area groups: group" + it.index;
 		case RobotItem.GROUPS:		return "Area groups";
