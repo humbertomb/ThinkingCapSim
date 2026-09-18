@@ -385,28 +385,32 @@ public class ArchCanvas extends JPanel
 			if (b.kind == ArchModel.ROBOT)		continue;
 			paintBlock (g, b, e.getValue (), b.equals (selection));
 		}
-		paintRobotPreview (g);
+		paintRobotPreviews (g);
 		g.dispose ();
 	}
 
 	/**
-	 * The robot the selection names, hanging off the bottom right corner of its
-	 * block: its drawing when it has one and, failing that, its image, so that
-	 * what a description says is seen without opening the robot editor.
-	 *
-	 * The selection is a robot when it is the block of the robot itself or the
-	 * region it lives in.
+	 * Every robot the diagram holds, hanging off the bottom right corner of its
+	 * block: what a description says of a robot is part of the drawing of the
+	 * architecture and not something to be gone looking for.
 	 */
-	protected void paintRobotPreview (Graphics2D g)
+	protected void paintRobotPreviews (Graphics2D g)
 	{
-		RobotDef	robot = selectedRobot ();
-		Rectangle	block;
+		for (Map.Entry<Block, Rectangle> e : bounds.entrySet ())
+			if (e.getKey ().kind == ArchModel.VROBOT)
+				paintRobotPreview (g, describedRobot (e.getKey ().robot), e.getValue ());
+	}
+
+	/**
+	 * One of them: its image when its description carries one and, failing that,
+	 * the drawing its outline is made of.
+	 */
+	protected void paintRobotPreview (Graphics2D g, RobotDef robot, Rectangle block)
+	{
 		Rectangle	box;
 		String		name;
 
-		if (robot == null)						return;
-		block	= bounds.get (new Block (ArchModel.VROBOT, selection.robot));
-		if (block == null)						return;
+		if ((robot == null) || (block == null))		return;
 		box		= previewBox (block);
 
 		g.setColor (C_PREVIEW_BG);
@@ -432,15 +436,30 @@ public class ArchCanvas extends JPanel
 							  PREVIEW_W, PREVIEW_H);
 	}
 
-	/** The drawing of a robot, or its image when it has no drawing, fitted into a box of the panel. */
+	/** The image of a robot, or the drawing of its outline when it has no image, fitted into a box. */
 	protected void drawRobot (Graphics2D g, RobotDef robot, Rectangle box)
 	{
-		double		minx = Double.MAX_VALUE, miny = Double.MAX_VALUE;
-		double		maxx = -Double.MAX_VALUE, maxy = -Double.MAX_VALUE;
-		double		k;
-		double		cx, cy;
+		double			minx = Double.MAX_VALUE, miny = Double.MAX_VALUE;
+		double			maxx = -Double.MAX_VALUE, maxy = -Double.MAX_VALUE;
+		double			k;
+		double			cx, cy;
+		java.awt.Image	img = (robot.image != null) ? RobotImage.get (robot.image) : null;
+		int				iw, ih;
 
-		if ((robot.icon != null) && !robot.icon.isEmpty ())			// the drawing comes first
+		if (img != null)											// the image comes first
+		{
+			iw	= img.getWidth (null);			ih = img.getHeight (null);
+			if ((iw > 0) && (ih > 0))
+			{
+				k	= Math.min (box.width / (double) iw, box.height / (double) ih);
+				iw	= (int) Math.round (iw * k);	ih = (int) Math.round (ih * k);
+				g.drawImage (img, (int) Math.round (box.getCenterX () - iw / 2.0),
+								  (int) Math.round (box.getCenterY () - ih / 2.0), iw, ih, null);
+				return;
+			}
+		}
+
+		if ((robot.icon != null) && !robot.icon.isEmpty ())
 		{
 			for (RobotDef.IconLine l : robot.icon)
 			{
@@ -457,36 +476,14 @@ public class ArchCanvas extends JPanel
 										   box.getCenterX () + (l.xf - cx) * k, box.getCenterY () - (l.yf - cy) * k));
 			return;
 		}
-
-		java.awt.Image	img = (robot.image != null) ? RobotImage.get (robot.image) : null;
-		int				iw, ih;
-
-		if (img == null)						return;
-		iw		= img.getWidth (null);			ih = img.getHeight (null);
-		if ((iw <= 0) || (ih <= 0))				return;
-		k		= Math.min (box.width / (double) iw, box.height / (double) ih);
-		iw		= (int) Math.round (iw * k);	ih = (int) Math.round (ih * k);
-		g.drawImage (img, (int) Math.round (box.getCenterX () - iw / 2.0), (int) Math.round (box.getCenterY () - ih / 2.0),
-						  iw, ih, null);
 	}
 
 	/**
-	 * The description the selected robot names, or null when nothing is selected,
-	 * what is selected is not a robot, or it names no description.
+	 * The description the robot of a region names, or null when there is none.
 	 *
-	 * Reading a description is slow, so the last one read is kept: the panel is
-	 * repainted at every turn.
+	 * Reading a description is slow and the panel is repainted at every turn, so
+	 * what has been read is kept, by path.
 	 */
-	protected RobotDef selectedRobot ()
-	{
-		Block		b = selection;
-
-		if (b == null)							return null;
-		if ((b.kind != ArchModel.ROBOT) && (b.kind != ArchModel.VROBOT))		return null;
-		return describedRobot (b.robot);
-	}
-
-	/** The description the robot of a region names, read and kept, or null when there is none. */
 	protected RobotDef describedRobot (int r)
 	{
 		Block		b = new Block (ArchModel.VROBOT, r);
