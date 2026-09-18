@@ -42,17 +42,29 @@ public class DriverClasses
 	 */
 	static public synchronized List<String> of (String base)			{ return of (base, true); }
 
-	static public synchronized List<String> of (String base, boolean plain)
+	static public synchronized List<String> of (String base, boolean plain)		{ return of (base, plain, false); }
+
+	/**
+	 * The same, over the whole development rather than over the package of the
+	 * base class: the modules of an architecture derive from a class of the
+	 * runtime (<code>StdThread</code>) but live wherever the robot they were
+	 * written for does, so there is no one package to look in.
+	 *
+	 * Only the directories of the class path are walked, which is where the
+	 * classes of the development are; the jars it is built against are left
+	 * alone.
+	 */
+	static public synchronized List<String> of (String base, boolean plain, boolean project)
 	{
 		List<String>	found;
 		String			cached;
 
 		if ((base == null) || (base.trim ().length () == 0))		return new ArrayList<String> ();
 		base	= base.trim ();
-		cached	= base + (plain ? "|()" : "|*");
+		cached	= base + (plain ? "|()" : "|*") + (project ? "|all" : "");
 		if (CACHE.containsKey (cached))		return CACHE.get (cached);
 
-		found	= search (base, plain);
+		found	= search (base, plain, project);
 		CACHE.put (cached, found);
 		return found;
 	}
@@ -62,7 +74,7 @@ public class DriverClasses
 
 	/* ------------------------------------------------------------------ */
 
-	static private List<String> search (String base, boolean plain)
+	static private List<String> search (String base, boolean plain, boolean project)
 	{
 		List<String>	names = new ArrayList<String> ();
 		List<String>	out = new ArrayList<String> ();
@@ -78,14 +90,22 @@ public class DriverClasses
 			return out;
 		}
 
-		pkg		= (base.lastIndexOf ('.') > 0) ? base.substring (0, base.lastIndexOf ('.')) : "";
-		classes (pkg, names);
+		if (project)		development (names);
+		else
+		{
+			pkg		= (base.lastIndexOf ('.') > 0) ? base.substring (0, base.lastIndexOf ('.')) : "";
+			classes (pkg, names);
+		}
+
+		if (project)		names = descendants (base, names);		// before loading them: see hierarchy ()
 
 		for (String name : names)
 		{
 			Class<?>	c;
 
-			if (name.equals (base))			continue;
+			// the base itself is offered when it can be used as it is (a router is; a
+			// thread of the runtime is abstract and falls at the tests below)
+			if (!project && name.equals (base))			continue;
 			try
 			{
 				c	= Class.forName (name, false, loader ());
@@ -99,6 +119,101 @@ public class DriverClasses
 		}
 		Collections.sort (out);
 		return out;
+	}
+
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * The ones of a list of classes that derive from another, read off the class
+	 * files themselves.
+	 *
+	 * Loading every class of the development to ask it (thousands of them, each
+	 * dragging in whatever it is written against) takes seconds, which is too
+	 * long for opening the editor of a cell. The name of the superclass sits in
+	 * the class file, a few bytes in, so the family tree is read from there and
+	 * only what is already known to belong to it is loaded.
+	 */
+	static private List<String> descendants (String base, List<String> names)
+	{
+		Map<String, String>		parent = new HashMap<String, String> ();
+		List<String>			out = new ArrayList<String> ();
+
+		for (String name : names)
+		{
+			String		up = superOf (name);
+
+			if (up != null)		parent.put (name, up);
+		}
+		for (String name : names)
+		{
+			String		up = name;
+
+			for (int i = 0; (up != null) && (i < 64); i++)			// 64: a tree, not a knot
+			{
+				if (up.equals (base))		{ out.add (name); break; }
+				up	= parent.get (up);
+			}
+		}
+		return out;
+	}
+
+	/** The superclass a class file names, or null when it cannot be read. */
+	static private String superOf (String name)
+	{
+		java.io.InputStream		in = null;
+
+		try
+		{
+			in	= loader ().getResourceAsStream (name.replace ('.', '/') + ".class");
+			if (in == null)				return null;
+			return superOf (new java.io.DataInputStream (new java.io.BufferedInputStream (in)));
+		} catch (Throwable e)			{ return null; }
+		finally
+		{
+			if (in != null)		try { in.close (); } catch (Throwable e) { }
+		}
+	}
+
+	/**
+	 * Reads the constant pool of a class file and, with it, the name of its
+	 * superclass: what comes before it is the magic number and the version, and
+	 * what comes after is its own name and the one that is wanted.
+	 */
+	static private String superOf (java.io.DataInputStream d) throws java.io.IOException
+	{
+		int			n;
+		int[]		kind;
+		int[]		ref;
+		String[]	text;
+		int			up;
+
+		if (d.readInt () != 0xCAFEBABE)			return null;
+		d.readUnsignedShort ();					d.readUnsignedShort ();			// minor, major
+		n		= d.readUnsignedShort ();
+		kind	= new int[n];
+		ref		= new int[n];
+		text	= new String[n];
+		for (int i = 1; i < n; i++)
+		{
+			int		tag = d.readUnsignedByte ();
+
+			kind[i]	= tag;
+			switch (tag)
+			{
+			case 1:								text[i] = d.readUTF ();					break;	// Utf8
+			case 7: case 8: case 16: case 19: case 20:
+												ref[i] = d.readUnsignedShort ();		break;	// Class, String, MethodType, Module, Package
+			case 15:							d.skipBytes (3);						break;	// MethodHandle
+			case 5: case 6:						d.skipBytes (8);	i++;				break;	// Long, Double: two slots
+			default:							d.skipBytes (4);						break;	// the rest are four bytes
+			}
+		}
+		d.readUnsignedShort ();					d.readUnsignedShort ();			// access flags, its own name
+		up		= d.readUnsignedShort ();
+		if ((up <= 0) || (up >= n) || (kind[up] != 7))			return null;		// Object, or something unexpected
+		up		= ref[up];
+		if ((up <= 0) || (up >= n) || (kind[up] != 1))			return null;
+		return text[up].replace ('/', '.');
 	}
 
 	/** True when it can be built the way the device layer builds a driver: with no arguments. */
@@ -117,6 +232,20 @@ public class DriverClasses
 	}
 
 	/* ------------------------------------------------------------------ */
+
+	/** The names of every class of the development: what the directories of the class path hold. */
+	static private void development (List<String> out)
+	{
+		String		cp = System.getProperty ("java.class.path");
+
+		if (cp == null)			return;
+		for (String entry : cp.split (File.pathSeparator))
+		{
+			File	f = new File (entry);
+
+			if (f.isDirectory ())		walk (f, "", out);
+		}
+	}
 
 	/** The names of every class of a package and of the packages under it. */
 	static private void classes (String pkg, List<String> out)
@@ -143,9 +272,15 @@ public class DriverClasses
 		if (files == null)				return;
 		for (File f : files)
 			if (f.isDirectory ())
-				walk (f, pkg + "." + f.getName (), out);
+				walk (f, sub (pkg, f.getName ()), out);
 			else if (f.getName ().endsWith (".class"))
-				add (pkg + "." + f.getName ().substring (0, f.getName ().length () - 6), out);
+				add (sub (pkg, f.getName ().substring (0, f.getName ().length () - 6)), out);
+	}
+
+	/** A name inside a package, which at the root of the class path is the name itself. */
+	static private String sub (String pkg, String name)
+	{
+		return ((pkg == null) || (pkg.length () == 0)) ? name : pkg + "." + name;
 	}
 
 	static private void jar (File f, String path, List<String> out)

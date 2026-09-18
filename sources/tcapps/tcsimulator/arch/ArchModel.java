@@ -41,6 +41,12 @@ public class ArchModel
 	static public final int		P_BOOLEAN	= 1;
 	static public final int		P_CHOICE	= 2;
 	static public final int		P_FILE		= 3;
+	static public final int		P_CLASS		= 4;		// chosen among the classes of the development deriving from one
+
+	/** The class the modules and the robots of an architecture are run as threads of. */
+	static public final String	THREAD_BASE	= "tc.runtime.thread.StdThread";
+	/** The class a router of the coordination layer is. */
+	static public final String	ROUTER_BASE	= "tc.coord.LindaRouter";
 
 	/** Execution modes of a module (ThreadDesc.parse_mode) and protocols towards the global Linda (RouterDesc GMODE). */
 	static public final String[]	MODES		= { "shared", "udp", "tcp" };
@@ -51,8 +57,9 @@ public class ArchModel
 	{
 		public String	key;			// suffix of the ADF key (INFO, CLASS, ...)
 		public String	label;			// name shown to the user
-		public int		type;			// P_TEXT, P_BOOLEAN, P_CHOICE, P_FILE
+		public int		type;			// P_TEXT, P_BOOLEAN, P_CHOICE, P_FILE, P_CLASS
 		public String[]	choices;		// P_CHOICE values
+		public String	classBase;		// P_CLASS: the class the ones offered derive from
 		public String	fileDir;		// P_FILE: default directory
 		public String	fileDesc;		// P_FILE: filter description
 		public String[]	fileExts;		// P_FILE: filter extensions
@@ -61,6 +68,13 @@ public class ArchModel
 		public Property (String key, String label, int type)						{ this.key = key; this.label = label; this.type = type; }
 		public Property (String key, String label, String[] choices)				{ this (key, label, P_CHOICE); this.choices = choices; }
 		public Property (String key, String label, String dir, String desc, String... exts)	{ this (key, label, P_FILE); fileDir = dir; fileDesc = desc; fileExts = exts; }
+		/** A property naming a class: what is offered are the ones of the development deriving from <code>base</code>. */
+		static public Property ofClass (String key, String label, String base)
+		{
+			Property	p = new Property (key, label, P_CLASS);
+			p.classBase	= base;
+			return p;
+		}
 		public String toString ()	{ return label; }
 	}
 
@@ -86,7 +100,7 @@ public class ArchModel
 	static public final Property[]	ROUTER_PROPS	=
 	{
 		new Property ("INFO",	"Name"),
-		new Property ("CLASS",	"Class"),
+		Property.ofClass ("CLASS", "Class", ROUTER_BASE),
 		new Property ("MODE",	"Mode",			MODES),
 		new Property ("GMODE",	"Protocol",		PROTOCOLS),
 		new Property ("GFX",	"Graphics",	P_BOOLEAN),
@@ -94,7 +108,7 @@ public class ArchModel
 	static public final Property[]	MODULE_PROPS	=
 	{
 		new Property ("INFO",	"Name"),
-		new Property ("CLASS",	"Class"),
+		Property.ofClass ("CLASS", "Class", THREAD_BASE),
 		new Property ("MODE",	"Mode",			MODES),
 		new Property ("PASSIVE","Passive",		P_BOOLEAN),
 		new Property ("QUEUED",	"Queued",		P_BOOLEAN),
@@ -105,7 +119,7 @@ public class ArchModel
 	static public final Property[]	VROBOT_PROPS	=
 	{
 		new Property ("INFO",	"Name"),
-		new Property ("CLASS",	"Class"),
+		Property.ofClass ("CLASS", "Class", THREAD_BASE),
 		new Property ("MODE",	"Mode",			MODES),
 		new Property ("PASSIVE","Passive",		P_BOOLEAN),
 		new Property ("EXTIME",	"Exec. time (ms)"),

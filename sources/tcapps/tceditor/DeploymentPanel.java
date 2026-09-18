@@ -158,6 +158,29 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 				if (p.type == ArchModel.P_FILE)		m.set (b, p.key, FileCellEditor.normalise (m.get (b, p.key)));
 	}
 
+	/**
+	 * The editor of a property naming a class: the classes of the development
+	 * deriving from the one the property asks for -- a module and a robot are run
+	 * as threads of the runtime, a router is one of the coordination layer -- so
+	 * that one is chosen from what there is instead of being typed in.
+	 *
+	 * What the block says now comes first when it is not among them: a class of a
+	 * development that is not built here is not to be lost by opening its editor.
+	 */
+	private TableCellEditor classEditor (Property p, String current)
+	{
+		List<String>		names = new ArrayList<String> (DriverClasses.of (p.classBase, false, true));
+		JComboBox<String>	cb;
+
+		if (current == null)		current = "";
+		current	= current.trim ();
+		if ((current.length () > 0) && !names.contains (current))	names.add (0, current);
+		cb		= new JComboBox<String> (names.toArray (new String[0]));
+		cb.setSelectedItem (current);
+		cb.setToolTipText ("Classes of the development deriving from " + p.classBase);
+		return new DefaultCellEditor (cb);
+	}
+
 	/** The value of a property as it is shown and stored: paths always as "./conf/...". */
 	static private String value (Property p, String v)
 	{
@@ -386,6 +409,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 					switch (p.type)
 					{
 					case ArchModel.P_BOOLEAN:	return boolEditor;
+					case ArchModel.P_CLASS:		return classEditor (p, model.get (propsModel.block, p.key));
 					case ArchModel.P_CHOICE:
 					case ArchModel.P_FILE:
 					{
