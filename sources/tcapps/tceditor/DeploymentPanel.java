@@ -170,15 +170,24 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	 */
 	private TableCellEditor classEditor (Property p, String current)
 	{
-		List<String>		names = new ArrayList<String> (DriverClasses.of (p.classBase, false, true, p.classNot));
+		String				base = p.classBase;
+		String[]			not = p.classNot;
+		String				kind = ArchModel.moduleTypeBase (model.get (propsModel.block, "TYPE"));
+		List<String>		names;
 		JComboBox<String>	cb;
+
+		// a module of a kind is one of the classes of that kind, and a monitor is
+		// still no module of an architecture even though it is a controller
+		if ((propsModel.block != null) && (propsModel.block.kind == ArchModel.MODULE) && (kind != null))
+			base	= kind;
+		names	= new ArrayList<String> (DriverClasses.of (base, false, true, not));
 
 		if (current == null)		current = "";
 		current	= current.trim ();
 		if (p.classBlank)			names.add (0, "");
 		cb		= new JComboBox<String> (names.toArray (new String[0]));
 		cb.setSelectedItem (current);
-		cb.setToolTipText ("Classes of the development deriving from " + p.classBase);
+		cb.setToolTipText ("Classes of the development deriving from " + base);
 		return new DefaultCellEditor (cb);
 	}
 
@@ -352,7 +361,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		tb.setFloatable (false);
 		lindaAC		= ToolButtons.action ("Linda", ToolIcon.LINDA, "Add a global Linda space", new Runnable () { public void run () { select (model.addGlobalLinda ()); } });
 		routerAC	= ToolButtons.action ("Router", ToolIcon.ROUTER, "Add the Linda router of the selected robot", new Runnable () { public void run () { select (model.addRouter (currentRobot ())); } });
-		moduleAC	= ToolButtons.action ("Module", ToolIcon.MODULE, "Add a module to the selected robot", new Runnable () { public void run () { select (model.addModule (currentRobot ())); } });
+		moduleAC	= ToolButtons.action ("Module", ToolIcon.MODULE, "Add a module to the selected robot", new Runnable () { public void run () { addModule (); } });
 		robotAC		= ToolButtons.action ("Robot", ToolIcon.ROBOT, "Add a robot", new Runnable () { public void run () { select (model.addRobot ()); } });
 		deleteAC	= ToolButtons.action ("Delete", ToolIcon.DELETE, "Delete the selected block  [Delete]", new Runnable () { public void run () { deleteSelection (); } });
 		tb.add (ToolButtons.flatButton (lindaAC));
@@ -653,14 +662,30 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		}
 	}
 
-	/** Robot the toolbar acts on: the one of the selection, or the first one (created when there is none). */
+	/** Robot the toolbar acts on: the one of the selection, or none (-1). */
 	private int currentRobot ()
 	{
 		Block	sel = canvas.getSelection ();
-		if ((sel != null) && (sel.robot >= 0))		return sel.robot;
-		List<Integer>	robots = model.robots ();
-		if (robots.size () > 0)		return robots.get (0);
-		return model.addRobot ().robot;
+
+		return ((sel != null) && (sel.robot >= 0)) ? sel.robot : -1;
+	}
+
+	/**
+	 * Adds a module to the selected robot, of the kind the user picks: the kind
+	 * names it and says which classes it may be, so it is asked for first rather
+	 * than left to be worked out afterwards.
+	 */
+	private void addModule ()
+	{
+		int			r = currentRobot ();
+		Object		type;
+
+		if (r < 0)						return;
+		type	= JOptionPane.showInputDialog (this, "Kind of module to add:", "Add Module",
+											   JOptionPane.PLAIN_MESSAGE, null,
+											   ArchModel.MODULE_TYPES, ArchModel.MODULE_TYPES[0]);
+		if (type == null)				return;						// cancelled
+		select (model.addModule (r, type.toString ()));
 	}
 
 	private void deleteSelection ()
@@ -737,9 +762,12 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	private void updateActions ()
 	{
 		Block	sel = canvas.getSelection ();
-		int		r = ((sel != null) && (sel.robot >= 0)) ? sel.robot : (model.robots ().size () > 0 ? model.robots ().get (0) : -1);
+		int		r = currentRobot ();						// the robot of the selection, and nothing without one
 		lindaAC.setEnabled (!model.hasGlobalLinda ());				// local spaces come with the robot
-		routerAC.setEnabled ((r < 0) || !model.hasRouter (r));
+		// a router and a module belong to a robot: with none selected there is
+		// nothing to add them to
+		routerAC.setEnabled ((r >= 0) && !model.hasRouter (r));
+		moduleAC.setEnabled (r >= 0);
 		robotAC.setEnabled (true);
 		deleteAC.setEnabled ((sel != null) && model.isRemovable (sel));
 	}

@@ -54,6 +54,22 @@ public class ArchModel
 	/** What a module is not, though it is a thread of the runtime as they are. */
 	static public final String[]	MODULE_NOT	= { VROBOT_BASE, MONITOR_BASE };
 
+	/**
+	 * The kinds of module an architecture is made of, which are the classes of
+	 * <code>tc.modules</code> they derive from: the kind a module is created as is
+	 * kept with it (TYPE) and is what names it and says which classes it may be.
+	 */
+	static public final String[]	MODULE_TYPES	= { "Controller", "Navigation", "Perception", "Planner" };
+
+	/** The class the modules of a kind derive from. */
+	static public String moduleTypeBase (String type)
+	{
+		if (type == null)						return null;
+		type	= type.trim ();
+		for (String t : MODULE_TYPES)			if (t.equalsIgnoreCase (type))		return "tc.modules." + t;
+		return null;
+	}
+
 	/** Execution modes of a module (ThreadDesc.parse_mode) and protocols towards the global Linda (RouterDesc GMODE). */
 	static public final String[]	MODES		= { "shared", "udp", "tcp" };
 	static public final String[]	PROTOCOLS	= { "tcp", "udp", "shared" };
@@ -122,7 +138,7 @@ public class ArchModel
 	static public final Property[]	MODULE_PROPS	=
 	{
 		new Property ("INFO",	"Name"),
-		Property.ofClass ("CLASS", "Class", THREAD_BASE, MODULE_NOT),
+		Property.ofClass ("CLASS", "Class", THREAD_BASE, MODULE_NOT).orNone (),
 		new Property ("MODE",	"Mode",			MODES),
 		new Property ("PASSIVE","Passive",		P_BOOLEAN),
 		new Property ("QUEUED",	"Queued",		P_BOOLEAN),
@@ -145,7 +161,7 @@ public class ArchModel
 	/** Suffixes that exist in the ADF but are not shown in the editor, per kind. */
 	static public final String[]	LINDA_HIDDEN	= { "CLASS" };
 	static public final String[]	ROUTER_HIDDEN	= { "PRI", "CONNECT" };
-	static public final String[]	MODULE_HIDDEN	= { "PRI", "CONNECT" };		// CONNECT is edited in the events table
+	static public final String[]	MODULE_HIDDEN	= { "PRI", "CONNECT", "TYPE" };		// CONNECT is edited in the events table, TYPE is what the module was created as
 	static public final String[]	VROBOT_HIDDEN	= { "PRI", "CONNECT" };
 
 	/** A block of the deployment: kind, robot (-1 for the global Linda) and, for modules, position in the robot. */
@@ -476,11 +492,35 @@ public class ArchModel
 		return new Block (MODULE, r, robot (r).modules.size () - 1);
 	}
 
+	/**
+	 * Adds a module of a kind ({@link #MODULE_TYPES}), named after it: "Perception"
+	 * and, when the robot already has one, "Perception 2".
+	 */
+	public Block addModule (int r, String type)
+	{
+		if (!hasRobot (r))				return null;
+		if (moduleTypeBase (type) == null)		return addModule (r);
+		type	= type.trim ();
+		robot (r).modules.add (DeployArch.newModule (uniqueName (r, type), type));
+		return new Block (MODULE, r, robot (r).modules.size () - 1);
+	}
+
 	protected String uniqueModuleName (int r, String base)
 	{
 		List<String>	names = new ArrayList<String> ();
 		for (Block b : robotBlocks (r))		names.add (labelOf (b));
 		for (int i = 1; ; i++)
+			if (!names.contains (base + " " + i))		return base + " " + i;
+	}
+
+	/** The name itself when the robot has nothing by it, and the name with a numeral when it has. */
+	protected String uniqueName (int r, String base)
+	{
+		List<String>	names = new ArrayList<String> ();
+
+		for (Block b : robotBlocks (r))		names.add (labelOf (b));
+		if (!names.contains (base))			return base;
+		for (int i = 2; ; i++)
 			if (!names.contains (base + " " + i))		return base + " " + i;
 	}
 

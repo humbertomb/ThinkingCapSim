@@ -289,10 +289,23 @@ public class DeployArch
 		return m;
 	}
 
-	static public Module newModule (String name)
+	static public Module newModule (String name)				{ return newModule (name, null); }
+
+	/**
+	 * A module of a kind ("Controller", "Navigation", "Perception", "Planner"):
+	 * the kind is kept with it (<code>TYPE</code>), which is what says the class
+	 * it may be given -- one deriving from the class of that kind in
+	 * <code>tc.modules</code>.
+	 *
+	 * It is created with no class: the one it used to be given was StdThread
+	 * itself, which is abstract and could never run, so which module this is has
+	 * to be said.
+	 */
+	static public Module newModule (String name, String type)
 	{
 		Module	m = new Module (name);
-		m.set ("CLASS", "tc.runtime.thread.StdThread");
+		if ((type != null) && (type.trim ().length () > 0))		m.set ("TYPE", type.trim ());
+		m.set ("CLASS", "");
 		m.set ("MODE", "shared");
 		m.set ("PASSIVE", "true");
 		m.set ("GFX", "false");
