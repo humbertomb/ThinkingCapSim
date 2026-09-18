@@ -83,7 +83,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected javax.swing.border.TitledBorder	propsBorder;
 	protected JSplitPane			mainSP, rightSP;
 	protected boolean				dividersSet, syncing, dirty;
-	protected Action				openAC, wheelAC, lineAC, bumperAC, sensorAC, deleteAC;
+	protected Action				openAC, wheelAC, lineAC, bumperAC, sensorAC, groupAC, deleteAC;
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
 	protected javax.swing.JToggleButton[]		viewBT;					// the three flat projections
@@ -157,6 +157,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		lineAC		= ToolButtons.action ("Line", ToolIcon.WALL, "Add a segment to the drawing of the robot", new Runnable () { public void run () { addLine (); } });
 		bumperAC	= ToolButtons.action ("Bumper", ToolIcon.CONNECTOR, "Add a bumper", new Runnable () { public void run () { addBumper (); } });
 		sensorAC	= ToolButtons.action ("Sensor", ToolIcon.BEACON, "Add a sensor to the selected family", new Runnable () { public void run () { addSensor (); } });
+		groupAC		= ToolButtons.action ("Virtual sensor", ToolIcon.VIRTUAL, "Add a virtual sensor: a sector standing for a group of the real ones", new Runnable () { public void run () { addGroup (); } });
 		deleteAC	= ToolButtons.action ("Delete", ToolIcon.DELETE, "Delete the selected element  [Delete]", new Runnable () { public void run () { deleteSelection (); } });
 		tb.add (ToolButtons.flatButton (openAC));
 		tb.addSeparator ();
@@ -165,6 +166,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		tb.add (ToolButtons.flatButton (lineAC));
 		tb.add (ToolButtons.flatButton (bumperAC));
 		tb.add (ToolButtons.flatButton (sensorAC));
+		tb.add (ToolButtons.flatButton (groupAC));
 		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (deleteAC));
 		tb.addSeparator ();
@@ -673,6 +675,30 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		select (new RobotItem (RobotItem.SENSOR, robot.family (fam).n () - 1, fam));
 	}
 
+	/**
+	 * Adds a virtual sensor, looking forward from the rim of the robot.
+	 *
+	 * It is made as an arc over the range buffer (the weighted one, which takes an
+	 * older reading as a farther one), since that is the one kind that stands on
+	 * its own: the others read the virtual sensors of the fusion by index, which
+	 * is nothing this editor can offer yet.
+	 */
+	private void addGroup ()
+	{
+		double				r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		RobotDef.Group		g = new RobotDef.Group ();
+
+		g.rho		= r;
+		g.rangemax	= Math.max (1.0, 4 * r);
+		g.cone		= 30.0;
+		g.mode		= 4;						// tclib.utils.fusion.FusionDesc.G_WBUF_ARC
+		g.base		= 0.3;
+		robot.groups.add (g);
+		changed ();
+		refreshTree ();
+		select (new RobotItem (RobotItem.GROUP, robot.groups.size () - 1));
+	}
+
 	private void deleteSelection ()
 	{
 		List<RobotItem>		all;
@@ -695,6 +721,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			case RobotItem.BUMPER:		robot.bumpers.remove (it.index);					any = true;		break;
 			case RobotItem.WHEEL:		robot.wheels.remove (it.index);						any = true;		break;
 			case RobotItem.SENSOR:		robot.family (it.family).sensors.remove (it.index);	any = true;		break;
+			case RobotItem.GROUP:		robot.groups.remove (it.index);						any = true;		break;
 			default:					break;								// the sections themselves are not removable
 			}
 		if (!any)						return;
@@ -850,7 +877,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		if (canvas.isCollectionSelected ())			return 0;
 		for (RobotItem it : canvas.selected ())
 			if ((it.kind == RobotItem.LINE) || (it.kind == RobotItem.BUMPER)
-					|| (it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.WHEEL))
+					|| (it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.WHEEL)
+					|| (it.kind == RobotItem.GROUP))
 				n++;
 		return n;
 	}

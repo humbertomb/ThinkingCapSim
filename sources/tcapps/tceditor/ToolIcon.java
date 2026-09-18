@@ -62,6 +62,7 @@ public class ToolIcon implements Icon
 	static public final int		EDIT_WORLD	= 46;		// map with a pencil (edit the world)
 	static public final int		WHEEL		= 48;		// a tyre seen from the side (add a wheel)
 	static public final int		ROBOT_FILE	= 49;		// folder (load) with a small robot at its bottom right corner
+	static public final int		VIRTUAL		= 50;		// a sector spreading from a point (add a virtual sensor)
 
 	protected int				type;
 	protected int				size;
@@ -272,6 +273,14 @@ public class ToolIcon implements Icon
 			g.drawRoundRect (1, 5, 16, 12, 3, 3);
 			g.drawLine (1, 8, 17, 8);
 			plan (g, fg, 11, 11, 10);
+			break;
+		case VIRTUAL:		// a sector spreading from a point, as a virtual sensor covers one
+			g.setColor (new Color (215, 205, 245));
+			g.fillArc (-8, 1, 38, 20, -32, 64);
+			g.setColor (new Color (120, 90, 190));
+			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawArc (-8, 1, 38, 20, -32, 64);
+			g.fillOval (9, 8, 5, 5);
 			break;
 		case ROBOT_FILE:	// folder (load) with a small robot at its bottom right corner
 			g.setColor (new Color (255, 210, 110));
