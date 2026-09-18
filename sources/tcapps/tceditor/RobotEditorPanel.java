@@ -84,7 +84,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected JSplitPane			mainSP, rightSP;
 	protected StatusBar				statusBar;						// where the cursor is
 	protected boolean				dividersSet, syncing, dirty;
-	protected Action				openAC, wheelAC, lineAC, bumperAC, sensorAC, groupAC, fusedAC, deleteAC;
+	protected Action				openAC, wheelAC, lineAC, bumperAC, sensorAC, groupAC, fusedAC, scanAC, deleteAC;
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
 	protected javax.swing.JToggleButton[]		viewBT;					// the three flat projections
@@ -160,6 +160,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		sensorAC	= ToolButtons.action ("Sensor", ToolIcon.BEACON, "Add a sensor to the selected family", new Runnable () { public void run () { addSensor (); } });
 		groupAC		= ToolButtons.action ("Virtual sensor", ToolIcon.VIRTUAL, "Add a virtual sensor: a sector standing for a group of the real ones", new Runnable () { public void run () { addGroup (); } });
 		fusedAC		= ToolButtons.action ("Fused sensor", ToolIcon.FUSED, "Add a fused sensor: one direction, read from the real sensors looking that way", new Runnable () { public void run () { addFused (); } });
+		scanAC		= ToolButtons.action ("Laser reduction", ToolIcon.SCAN, "Add a reduced laser scan: the fan the rays of the laser are taken down to", new Runnable () { public void run () { addScan (); } });
 		deleteAC	= ToolButtons.action ("Delete", ToolIcon.DELETE, "Delete the selected element  [Delete]", new Runnable () { public void run () { deleteSelection (); } });
 		tb.add (ToolButtons.flatButton (openAC));
 		tb.addSeparator ();
@@ -170,6 +171,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		tb.add (ToolButtons.flatButton (sensorAC));
 		tb.add (ToolButtons.flatButton (groupAC));
 		tb.add (ToolButtons.flatButton (fusedAC));
+		tb.add (ToolButtons.flatButton (scanAC));
 		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (deleteAC));
 		tb.addSeparator ();
@@ -224,6 +226,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 						if (ed != null)		return ed;
 					}
 					if (name.equals (FUSION_MODE))		return fusionModeEditor ();
+					if (name.equals (SCAN_MODE) && (propsModel.item != null))
+						return reductionEditor (propsModel.item.index);
 				}
 				return super.getCellEditor (row, column);
 			}
@@ -734,6 +738,30 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		select (new RobotItem (RobotItem.FUSED, robot.fused.size () - 1));
 	}
 
+	/**
+	 * Adds a reduced laser scan, looking forward from the rim of the robot: the
+	 * fan the fusion takes the rays of the laser down to.
+	 *
+	 * It is made as the least of each bunch of rays, which is what a scan is read
+	 * for, and as wide and as far as the others of its robot, since the fusion
+	 * reads one fan for the whole lot.
+	 */
+	private void addScan ()
+	{
+		double				r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		RobotDef.Scanner	s = new RobotDef.Scanner ();
+
+		s.rho		= r;
+		s.rays		= robot.scans.isEmpty () ? 90 : robot.scans.get (0).rays;
+		s.cone		= robot.scans.isEmpty () ? 180.0 : robot.scans.get (0).cone;
+		s.rangemax	= robot.scans.isEmpty () ? Math.max (1.0, 40 * r) : robot.scans.get (0).rangemax;
+		s.mode		= 0;						// tclib.utils.fusion.FusionDesc.S_MIN
+		robot.scans.add (s);
+		changed ();
+		refreshTree ();
+		select (new RobotItem (RobotItem.SCAN, robot.scans.size () - 1));
+	}
+
 	private void deleteSelection ()
 	{
 		List<RobotItem>		all;
@@ -758,6 +786,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			case RobotItem.SENSOR:		robot.family (it.family).sensors.remove (it.index);	any = true;		break;
 			case RobotItem.GROUP:		robot.groups.remove (it.index);						any = true;		break;
 			case RobotItem.FUSED:		robot.fused.remove (it.index);						any = true;		break;
+			case RobotItem.SCAN:		robot.scans.remove (it.index);						any = true;		break;
 			default:					break;								// the sections themselves are not removable
 			}
 		if (!any)						return;
@@ -804,14 +833,22 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		// named as the description names them (groupfeat0, virtulen0, ...), as a
 		// sensor of a family is named after its family
 		DefaultMutableTreeNode	virtual = new DefaultMutableTreeNode ("Virtual sensors  ("
-										+ (robot.groups.size () + robot.fused.size ()) + ")");
+										+ (robot.groups.size () + robot.fused.size () + robot.scans.size ()) + ")");
 		ItemNode	areas = new ItemNode (new RobotItem (RobotItem.GROUPS, 0), "Area groups  (" + robot.groups.size () + ")");
-		ItemNode	fused = new ItemNode (new RobotItem (RobotItem.FUSEDS, 0), "Fused sensors  (" + robot.fused.size () + ")");
+		// what is worked out of the real sensors before anything reads them: the pair
+		// a direction gives, and the fan a laser is taken down to
+		ItemNode	filter = new ItemNode (new RobotItem (RobotItem.FILTERING, 0), "Sensor filtering  ("
+										+ (robot.fused.size () + robot.scans.size ()) + ")");
+		ItemNode	fused = new ItemNode (new RobotItem (RobotItem.FUSEDS, 0), "Sonar and infrared fusion  (" + robot.fused.size () + ")");
+		ItemNode	scans = new ItemNode (new RobotItem (RobotItem.SCANS, 0), "Laser reduction  (" + robot.scans.size () + ")");
 
 		for (int i = 0; i < robot.groups.size (); i++)	areas.add (new ItemNode (new RobotItem (RobotItem.GROUP, i), "group" + i));
 		for (int i = 0; i < robot.fused.size (); i++)	fused.add (new ItemNode (new RobotItem (RobotItem.FUSED, i), "fusion" + i));
+		for (int i = 0; i < robot.scans.size (); i++)	scans.add (new ItemNode (new RobotItem (RobotItem.SCAN, i), "scan" + i));
+		filter.add (fused);
+		filter.add (scans);
 		virtual.add (areas);
-		virtual.add (fused);
+		virtual.add (filter);
 		treeRoot.add (virtual);
 
 		for (String fam : RobotDef.FAMILIES)
@@ -965,8 +1002,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.WHEEL:		return "Wheel " + it.index;
 		case RobotItem.GROUP:		return "Area groups: group" + it.index;
 		case RobotItem.GROUPS:		return "Area groups";
-		case RobotItem.FUSED:		return "Fused sensors: fusion" + it.index;
-		case RobotItem.FUSEDS:		return "Fused sensors";
+		case RobotItem.FUSED:		return "Sonar and infrared fusion: fusion" + it.index;
+		case RobotItem.FUSEDS:		return "Sonar and infrared fusion";
+		case RobotItem.SCAN:		return "Laser reduction: scan" + it.index;
+		case RobotItem.SCANS:		return "Laser reduction";
 		case RobotItem.SENSOR:		return RobotDef.familyName (it.family) + ": " + it.family + it.index;
 		case RobotItem.FAMILY:		return RobotDef.familyName (it.family);
 		default:					return RobotItem.NAMES[it.kind];
@@ -1055,10 +1094,16 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 														  "range max", "range min", "cone" };
 		case RobotItem.FUSED:		return new String[] { "rho", "theta", "height", "orientation", "elevation",
 														  "range max", "range min", "cone" };
-		case RobotItem.GROUPS:		return new String[0];			// the lot of them says nothing of its own yet
+		case RobotItem.GROUPS:
+		case RobotItem.SCANS:
+		case RobotItem.FILTERING:	return new String[0];			// the lot of them says nothing of its own yet
 		// how the fusion turns the sensors that look the same way into one reading
 		// is of all the fused sensors at once, and not of any one of them
 		case RobotItem.FUSEDS:		return new String[] { FUSION_MODE };
+		// a reduced scan is a fan: where it is taken from, how wide it opens, how
+		// far it reads and how many readings the rays of the laser come down to
+		case RobotItem.SCAN:		return new String[] { SCAN_MODE, "rho", "theta", "height", "orientation", "elevation",
+														  "range max", "cone", "rays" };
 		case RobotItem.SENSOR:
 			// the device it is read through comes first, then where it is and what it detects
 			if (!RobotDef.hasOwnDetection (it.family))
@@ -1176,6 +1221,21 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.FUSEDS:
 			if (name.equals (FUSION_MODE))		return SimModes.fusionName (robot.fusionmode);
 			break;
+		case RobotItem.SCAN:
+		{
+			if (it.index >= robot.scans.size ())		break;
+			RobotDef.Scanner	s = robot.scans.get (it.index);
+			if (name.equals (SCAN_MODE))		return SimModes.reductionName (s.mode);
+			if (name.equals ("rho"))			return RobotDef.fmt (s.rho);
+			if (name.equals ("theta"))			return RobotDef.fmt (s.theta);
+			if (name.equals ("height"))			return RobotDef.fmt (s.height);
+			if (name.equals ("orientation"))	return RobotDef.fmt (s.orientation);
+			if (name.equals ("elevation"))		return RobotDef.fmt (s.elevation);
+			if (name.equals ("range max"))		return RobotDef.fmt (s.rangemax);
+			if (name.equals ("cone"))			return RobotDef.fmt (s.cone);
+			if (name.equals ("rays"))			return String.valueOf (s.rays);
+			break;
+		}
 		case RobotItem.WHEEL:
 		{
 			RobotDef.Wheel		w = robot.wheels.get (it.index);
@@ -1261,6 +1321,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		SIM_ERROR				= "simulation error";
 	/** The name the editor gives to how the fusion works the fused sensors out. */
 	static public final String		FUSION_MODE				= "fusion mode";
+	/** And to how it takes a bunch of laser rays down to one reading. */
+	static public final String		SCAN_MODE				= "reduction mode";
 
 	/** A share of the distance, as the parts of a hundred it is worth. */
 	static private String percent (double share)	{ return String.format (java.util.Locale.US, "%.1f", share * 100.0); }
@@ -1417,6 +1479,20 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		return new DefaultCellEditor (cb);
 	}
 
+	/** The editor of how a bunch of laser rays is taken down to the one reading of a scan. */
+	private javax.swing.table.TableCellEditor reductionEditor (int index)
+	{
+		List<String>		names = SimModes.reductionNames ();
+		String				current = SimModes.reductionName ((index < robot.scans.size ()) ? robot.scans.get (index).mode : 0);
+		JComboBox<String>	cb;
+
+		if (!names.contains (current))		names.add (0, current);
+		cb		= new JComboBox<String> (names.toArray (new String[0]));
+		cb.setSelectedItem (current);
+		cb.setToolTipText ("How a bunch of laser rays is taken down to one reading");
+		return new DefaultCellEditor (cb);
+	}
+
 	/**
 	 * True when the way the simulator works a family out reads the error it is
 	 * given. Only a relative noise is a share of the distance; the ways that add
@@ -1546,6 +1622,21 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.FUSEDS:
 			if (name.equals (FUSION_MODE))		robot.fusionmode = SimModes.fusionMode (value);
 			break;
+		case RobotItem.SCAN:
+		{
+			if (it.index >= robot.scans.size ())		break;
+			RobotDef.Scanner	s = robot.scans.get (it.index);
+			if (name.equals (SCAN_MODE))			s.mode = SimModes.reductionMode (value);
+			else if (name.equals ("rho"))			s.rho = num (value);
+			else if (name.equals ("theta"))			s.theta = num (value);
+			else if (name.equals ("height"))		s.height = num (value);
+			else if (name.equals ("orientation"))	s.orientation = num (value);
+			else if (name.equals ("elevation"))		s.elevation = num (value);
+			else if (name.equals ("range max"))		s.rangemax = num (value);
+			else if (name.equals ("cone"))			s.cone = num (value);
+			else if (name.equals ("rays"))			s.rays = (int) num (value);
+			break;
+		}
 		case RobotItem.WHEEL:
 		{
 			RobotDef.Wheel		w = robot.wheels.get (it.index);

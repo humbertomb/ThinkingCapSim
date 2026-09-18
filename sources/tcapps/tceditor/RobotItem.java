@@ -23,12 +23,16 @@ public class RobotItem
 	static public final int		GROUPS		= 9;		// all of them together, as a family holds its sensors
 	static public final int		FUSED		= 10;		// one fused sensor: one direction, read from the real sensors looking that way
 	static public final int		FUSEDS		= 11;		// all of them together
+	static public final int		SCAN		= 12;		// one reduced laser scan: the fan a laser is taken down to
+	static public final int		SCANS		= 13;		// all of them together
+	static public final int		FILTERING	= 14;		// both lots at once: what is worked out of the real sensors
 
-	static public final int		NKINDS		= 12;
+	static public final int		NKINDS		= 15;
 
 	static public final String[]	NAMES	= { "Platform", "Kinematics", "Drawing line", "Bumper", "Sensor", "Sensors",
 												"Other properties", "Wheel", "Area group", "Area groups",
-												"Fused sensor", "Fused sensors" };
+												"Fused sensor", "Fused sensors",
+												"Laser reduction", "Laser reduction", "Sensor filtering" };
 
 	public int			kind;
 	public int			index;

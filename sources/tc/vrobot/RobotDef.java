@@ -185,6 +185,32 @@ public class RobotDef
 		}
 	}
 
+	/**
+	 * A reduced laser scan: the fan the fusion builds out of the rays of the first
+	 * laser range finder, taking each bunch of them down to one reading -- the
+	 * least of the bunch or their average, as its mode says. A controller reads a
+	 * scan of ninety rays where the laser gives it hundreds.
+	 *
+	 * The older files name it as badly as the rest: scanlen is the distance,
+	 * scanrho the angle of it and scanfeat where it looks. What it says of the fan
+	 * itself is said once for the whole description (RAYSCAN, CONESCAN,
+	 * RANGESCAN), and the fusion reads one of these, so the first stands for it.
+	 */
+	static public class Scanner extends Sector
+	{
+		public int		mode;						// "scanmode": the least of a bunch of rays, or their average
+		public int		rays;						// "RAYSCAN": how many readings the fan is taken down to
+
+		public Scanner ()							{ }
+		public Scanner copy ()
+		{
+			Scanner	s = new Scanner ();
+			copyTo (s);
+			s.mode = mode;			s.rays = rays;
+			return s;
+		}
+	}
+
 	static public class Family
 	{
 		public double		rangemax;				// maximum range (m)
@@ -323,6 +349,7 @@ public class RobotDef
 	public List<Group>			groups		= new ArrayList<Group> ();				// the virtual sensors of an area
 	public List<Fused>			fused		= new ArrayList<Fused> ();				// the fused ones, of a direction
 	public int					fusionmode;											// how the fusion works them out ("MODEVIRTU")
+	public List<Scanner>		scans		= new ArrayList<Scanner> ();			// the reduced laser scans
 	public Map<String, String>	extra		= new LinkedHashMap<String, String> ();	// everything else of the description (CAN, layers, fusion, ...)
 
 	protected transient File	file;												// where it was loaded from / saved to
@@ -810,12 +837,14 @@ public class RobotDef
 		List<Wheel>		w = wheels;
 		List<Group>		g = groups;
 		List<Fused>		u = fused;
+		List<Scanner>	s = scans;
 
 		if ((w != null) && w.isEmpty ())		wheels = null;
 		if ((g != null) && g.isEmpty ())		groups = null;
 		if ((u != null) && u.isEmpty ())		fused = null;
+		if ((s != null) && s.isEmpty ())		scans = null;
 		try { return gson ().toJson (this); }
-		finally { wheels = w;	groups = g;		fused = u; }
+		finally { wheels = w;	groups = g;		fused = u;		scans = s; }
 	}
 
 	public File getFile ()					{ return file; }
@@ -836,6 +865,7 @@ public class RobotDef
 		for (Wheel w : wheels)			d.wheels.add (w.copy ());
 		for (Group g : groups)			d.groups.add (g.copy ());
 		for (Fused f : fused)			d.fused.add (f.copy ());
+		for (Scanner s : scans)			d.scans.add (s.copy ());
 		d.fusionmode	= fusionmode;
 		d.extra.putAll (extra);
 		d.file			= file;
@@ -851,6 +881,7 @@ public class RobotDef
 		if (wheels == null)			wheels = new ArrayList<Wheel> ();
 		if (groups == null)			groups = new ArrayList<Group> ();
 		if (fused == null)			fused = new ArrayList<Fused> ();
+		if (scans == null)			scans = new ArrayList<Scanner> ();
 		if (extra == null)			extra = new LinkedHashMap<String, String> ();
 		if (kinematics == null)		kinematics = new Kinematics ();
 		if (sensors == null)		sensors = new LinkedHashMap<String, Family> ();
@@ -890,10 +921,12 @@ public class RobotDef
 		for (String k : DEAD)		extra.remove (k);
 		if (groups.isEmpty ())		readGroups ();
 		if (fused.isEmpty ())		readFused ();
+		if (scans.isEmpty ())		readScans ();
 		// what the whole lot of them reaches is now what each one of them says, and
 		// is written back from the first: a description read once does not carry it
 		if (!groups.isEmpty ())		{ extra.remove ("RANGEGROUP");	extra.remove ("CONEGROUP"); }
 		if (!fused.isEmpty ())		{ extra.remove ("RANGEVIRTU");	extra.remove ("CONEVIRTU"); }
+		if (!scans.isEmpty ())		{ extra.remove ("RAYSCAN");		extra.remove ("CONESCAN");	extra.remove ("RANGESCAN"); }
 	}
 
 	/**
@@ -993,6 +1026,59 @@ public class RobotDef
 			fused.add (f);
 		}
 		extra.remove ("MAXVIRTU");						// it is however many there are
+	}
+
+	/**
+	 * The reduced laser scans of an older description, which says one and says it
+	 * without a number (scanlen, scanrho, scanfeat, scanmode), and says of the fan
+	 * itself once for the whole description (RAYSCAN, CONESCAN, RANGESCAN). The
+	 * first is read from those names and any further one from the same names with
+	 * its number; all of it is taken out, and writing puts it back the same way.
+	 *
+	 * Nothing is read where a description says nothing of a scan: a robot without
+	 * one has none rather than an empty one.
+	 */
+	protected void readScans ()
+	{
+		int			n = 0;
+		int			rays = (int) number (take ("RAYSCAN"), 0.0);
+		double		cone = number (take ("CONESCAN"), 180.0);
+		double		range = number (take ("RANGESCAN"), 10.0);
+
+		for (String k : extra.keySet ())
+		{
+			int		i = scanIndex (k);
+			if (i >= n)		n = i + 1;
+		}
+		if ((n == 0) && (rays > 0))		n = 1;			// it says how many rays and nothing else
+		for (int i = 0; i < n; i++)
+		{
+			Scanner	s = new Scanner ();
+			String	sfx = (i == 0) ? "" : String.valueOf (i);
+
+			s.rho			= number (take ("scanlen" + sfx), 0.0);
+			s.theta			= number (take ("scanrho" + sfx), 0.0);
+			s.orientation	= number (take ("scanfeat" + sfx), s.theta);
+			s.mode			= (int) number (take ("scanmode" + sfx), 0.0);
+			s.rays			= rays;
+			s.cone			= cone;
+			s.rangemax		= range;
+			scans.add (s);
+		}
+	}
+
+	/**
+	 * The reduced scan a property of an older description belongs to: the one
+	 * without a number is the first, and the rest are numbered from one.
+	 */
+	static private int scanIndex (String key)
+	{
+		String[]	names = { "scanlen", "scanrho", "scanfeat", "scanmode" };
+
+		if (key == null)		return -1;
+		for (String name : names)
+			if (key.equals (name))		return 0;
+		return indexOf (key, names);
 	}
 
 	/** The fused sensor a property of an older description belongs to, or -1. */
@@ -1266,6 +1352,25 @@ public class RobotDef
 				// how far it reaches and how wide it is are not written: the fusion reads
 				// one of each for the whole lot of them (RANGEVIRTU, CONEVIRTU), which
 				// stay where they are, and what is kept here is what the editor draws
+			}
+		}
+
+		// the reduced laser scans, said without a number for the first, which is the
+		// one the fusion reads, and what the fan itself is said once
+		if (!scans.isEmpty ())
+		{
+			Scanner	s0 = scans.get (0);
+
+			if (s0.rays > 0)		p.setProperty ("RAYSCAN", String.valueOf (s0.rays));
+			setNZ (p, "CONESCAN", s0.cone);		setNZ (p, "RANGESCAN", s0.rangemax);
+			for (int i = 0; i < scans.size (); i++)
+			{
+				Scanner	s = scans.get (i);
+				String	sfx = (i == 0) ? "" : String.valueOf (i);
+
+				set (p, "scanlen" + sfx, s.rho);		set (p, "scanrho" + sfx, s.theta);
+				set (p, "scanfeat" + sfx, s.orientation);
+				p.setProperty ("scanmode" + sfx, String.valueOf (s.mode));
 			}
 		}
 

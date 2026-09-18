@@ -64,6 +64,7 @@ public class ToolIcon implements Icon
 	static public final int		ROBOT_FILE	= 49;		// folder (load) with a small robot at its bottom right corner
 	static public final int		VIRTUAL		= 50;		// a sector spreading from a point (add a sensor of an area)
 	static public final int		FUSED		= 51;		// the same, in the colour of a fused sensor
+	static public final int		SCAN		= 52;		// a wide fan of rays (add a reduced laser scan)
 
 	protected int				type;
 	protected int				size;
@@ -277,9 +278,28 @@ public class ToolIcon implements Icon
 			break;
 		case VIRTUAL:		// a sector spreading from a point, as a virtual sensor covers one
 		case FUSED:			// the same, in the colour each kind is drawn in
+		case SCAN:			// and the fan of a reduced laser scan, wider and ruled by its rays
 		{
-			Color	edge = (type == FUSED) ? new Color (225, 90, 165) : new Color (120, 90, 190);
-			Color	fill = (type == FUSED) ? new Color (250, 210, 235) : new Color (215, 205, 245);
+			Color	edge = (type == FUSED) ? new Color (225, 90, 165)
+						: (type == SCAN) ? new Color (60, 150, 200) : new Color (120, 90, 190);
+			Color	fill = (type == FUSED) ? new Color (250, 210, 235)
+						: (type == SCAN) ? new Color (205, 232, 246) : new Color (215, 205, 245);
+
+			if (type == SCAN)
+			{
+				g.setColor (fill);
+				g.fillArc (-4, 2, 30, 30, 20, 140);
+				g.setColor (edge);
+				g.setStroke (new BasicStroke (1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+				g.drawArc (-4, 2, 30, 30, 20, 140);
+				for (int k = 0; k <= 4; k++)
+				{
+					double	al = Math.toRadians (20 + k * 35);
+					g.drawLine (11, 17, (int) Math.round (11 + 15 * Math.cos (al)), (int) Math.round (17 - 15 * Math.sin (al)));
+				}
+				g.fillOval (9, 15, 5, 5);
+				break;
+			}
 
 			g.setColor (fill);
 			g.fillArc (-8, 1, 38, 20, -32, 64);

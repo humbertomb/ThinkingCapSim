@@ -327,20 +327,26 @@ public class RobotView3DWindow extends JFrame
 			return sector (bg, selection.family, f.sensors.get (selection.index),
 							selection.family + selection.index + ": ");
 		}
-		if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED))
+		if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED)
+				|| (selection.kind == RobotItem.SCAN))
 		{
 			java.util.List<? extends RobotDef.Sector>	l = sectorsOf (selection.kind);
 
 			if (selection.index >= l.size ())			return "";
 			return sector (bg, l.get (selection.index), name (selection.kind, selection.index) + ": ");
 		}
-		if ((selection.kind == RobotItem.GROUPS) || (selection.kind == RobotItem.FUSEDS))
+		if (RobotCanvas.kindsOf (selection.kind).length > 0)
 		{
-			int		kind = (selection.kind == RobotItem.FUSEDS) ? RobotItem.FUSED : RobotItem.GROUP;
+			StringBuilder	what = new StringBuilder ();
 
-			for (RobotDef.Sector q : sectorsOf (kind))
-				if (sector (bg, q, null).length () > 0)		n++;
-			return (n > 0) ? ((kind == RobotItem.FUSED) ? "Fused sensors: " : "Area groups: ") + n + ".   " : "";
+			for (int kind : RobotCanvas.kindsOf (selection.kind))
+			{
+				n	= 0;
+				for (RobotDef.Sector q : sectorsOf (kind))
+					if (sector (bg, q, null).length () > 0)		n++;
+				if (n > 0)		what.append (lotName (kind)).append (": ").append (n).append (".   ");
+			}
+			return what.toString ();
 		}
 		if (selection.kind != RobotItem.FAMILY)	return "";
 
@@ -426,7 +432,8 @@ public class RobotView3DWindow extends JFrame
 		x		= q.rho * Math.cos (Math.toRadians (q.theta));
 		y		= q.rho * Math.sin (Math.toRadians (q.theta));
 		fan (bg, x, y, q.height, q.orientation, q.elevation, rmax, rmin, ext,
-			 virtualAppearance ((q instanceof RobotDef.Fused) ? C_FUSED : C_VIRTUAL));
+			 virtualAppearance ((q instanceof RobotDef.Fused) ? C_FUSED
+					: (q instanceof RobotDef.Scanner) ? C_SCAN : C_VIRTUAL));
 
 		return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax)
 								+ " m, " + RobotDef.fmt (q.cone) + " deg.   " : " ";
@@ -544,6 +551,8 @@ public class RobotView3DWindow extends JFrame
 	static public final Color3f		C_VIRTUAL	= new Color3f (0.55f, 0.95f, 0.55f);
 	/** The colour of a fused sensor: pink. */
 	static public final Color3f		C_FUSED		= new Color3f (0.95f, 0.5f, 0.75f);
+	/** And a reduced laser scan. */
+	static public final Color3f		C_SCAN		= new Color3f (0.35f, 0.72f, 0.95f);
 
 	/** The colour each family of sensors is drawn in, so that several of them are told apart. */
 	static public Color3f familyColor (String fam)
@@ -601,16 +610,18 @@ public class RobotView3DWindow extends JFrame
 			f	= robot.family (selection.family);
 			return (selection.index < f.n ()) ? reach (selection.family, f.sensors.get (selection.index)) : 0.0;
 		}
-		if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED))
+		if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED)
+				|| (selection.kind == RobotItem.SCAN))
 		{
 			java.util.List<? extends RobotDef.Sector>	l = sectorsOf (selection.kind);
 
 			return (selection.index < l.size ()) ? reach (l.get (selection.index)) : 0.0;
 		}
-		if ((selection.kind == RobotItem.GROUPS) || (selection.kind == RobotItem.FUSEDS))
+		if (RobotCanvas.kindsOf (selection.kind).length > 0)
 		{
-			for (RobotDef.Sector q : sectorsOf ((selection.kind == RobotItem.FUSEDS) ? RobotItem.FUSED : RobotItem.GROUP))
-				e	= Math.max (e, reach (q));
+			for (int kind : RobotCanvas.kindsOf (selection.kind))
+				for (RobotDef.Sector q : sectorsOf (kind))
+					e	= Math.max (e, reach (q));
 			return e;
 		}
 		if (selection.kind != RobotItem.FAMILY)		return 0.0;
@@ -623,12 +634,21 @@ public class RobotView3DWindow extends JFrame
 	private java.util.List<? extends RobotDef.Sector> sectorsOf (int kind)
 	{
 		if (kind == RobotItem.FUSED)		return robot.fused;
+		if (kind == RobotItem.SCAN)			return robot.scans;
 		return robot.groups;
 	}
 
 	static private String name (int kind, int index)
 	{
-		return ((kind == RobotItem.FUSED) ? "fusion" : "group") + index;
+		return RobotCanvas.sectorName (kind, index);
+	}
+
+	/** What a whole lot of them is called, for the line under the view. */
+	static private String lotName (int kind)
+	{
+		if (kind == RobotItem.FUSED)		return "Sonar and infrared fusion";
+		if (kind == RobotItem.SCAN)			return "Laser reduction";
+		return "Area groups";
 	}
 
 	/** How far from the centre of the robot one virtual sensor reaches (m). */

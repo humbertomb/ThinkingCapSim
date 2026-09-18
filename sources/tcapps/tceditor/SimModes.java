@@ -78,6 +78,41 @@ public class SimModes
 		return m;
 	}
 
+	/** What each way of taking a bunch of laser rays down to one reading is called. */
+	static public final String		LEAST		= "Nearest of the rays";
+	static public final String		AVERAGE		= "Average of the rays";
+
+	static private final Map<Integer, String>	REDUCTION = reduction ();
+
+	static private Map<Integer, String> reduction ()
+	{
+		Map<Integer, String>	m = new LinkedHashMap<Integer, String> ();
+
+		m.put (Integer.valueOf (FusionDesc.S_MIN), LEAST);
+		m.put (Integer.valueOf (FusionDesc.S_AVG), AVERAGE);
+		return m;
+	}
+
+	/** The ways it knows of reducing a scan, by name and in the order they are offered. */
+	static public List<String> reductionNames ()				{ return new ArrayList<String> (REDUCTION.values ()); }
+
+	/** The name of one of them, or the number itself when it is not one the fusion knows. */
+	static public String reductionName (int mode)
+	{
+		String	name = REDUCTION.get (Integer.valueOf (mode));
+
+		return (name != null) ? name : String.valueOf (mode);
+	}
+
+	/** The way a name stands for, or what the text says when it names none. */
+	static public int reductionMode (String name)
+	{
+		if (name != null)
+			for (Map.Entry<Integer, String> e : REDUCTION.entrySet ())
+				if (e.getValue ().equalsIgnoreCase (name.trim ()))		return e.getKey ().intValue ();
+		try { return Integer.parseInt (name.trim ()); }	catch (Exception e)		{ return 0; }
+	}
+
 	/** The ways the fusion knows, by name and in the order they are offered. */
 	static public List<String> fusionNames ()					{ return new ArrayList<String> (FUSION.values ()); }
 

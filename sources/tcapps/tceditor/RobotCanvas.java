@@ -55,6 +55,7 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_SENSOR	= new Color (40, 120, 200);
 	static public final Color		C_VIRTUAL	= new Color (120, 90, 190);		// a sensor of an area: read from the others
 	static public final Color		C_FUSED		= new Color (225, 90, 165);		// a fused sensor: one direction of the real ones
+	static public final Color		C_SCAN		= new Color (60, 150, 200);		// a reduced laser scan: the fan a laser is taken down to
 	static public final Color		C_BAND_FILL	= new Color (255, 140, 0, 30);		// the rectangle that picks several
 	static public final Color		C_WHEEL		= new Color (70, 74, 82);			// the drive train
 	static public final Color		C_TREAD		= new Color (70, 74, 82, 60);		// a wheel that drives, filled
@@ -262,6 +263,15 @@ public class RobotCanvas extends JPanel
 		if ((item != null) && (item.kind == RobotItem.FUSEDS) && (robot != null))
 			for (int i = 0; i < robot.fused.size (); i++)
 				group.add (new RobotItem (RobotItem.FUSED, i));
+		if ((item != null) && (item.kind == RobotItem.SCANS) && (robot != null))
+			for (int i = 0; i < robot.scans.size (); i++)
+				group.add (new RobotItem (RobotItem.SCAN, i));
+		// the lot that holds both: everything that is worked out of the real sensors
+		if ((item != null) && (item.kind == RobotItem.FILTERING) && (robot != null))
+		{
+			for (int i = 0; i < robot.fused.size (); i++)		group.add (new RobotItem (RobotItem.FUSED, i));
+			for (int i = 0; i < robot.scans.size (); i++)		group.add (new RobotItem (RobotItem.SCAN, i));
+		}
 		repaint ();
 		if (listener != null)		listener.selectionChanged (item);
 	}
@@ -273,7 +283,8 @@ public class RobotCanvas extends JPanel
 	public boolean isCollectionSelected ()
 	{
 		return (selection != null) && ((selection.kind == RobotItem.FAMILY) || (selection.kind == RobotItem.GROUPS)
-										|| (selection.kind == RobotItem.FUSEDS));
+										|| (selection.kind == RobotItem.FUSEDS) || (selection.kind == RobotItem.SCANS)
+										|| (selection.kind == RobotItem.FILTERING));
 	}
 
 	/** What a band picked, when it picked more than one element (empty otherwise). */
@@ -325,7 +336,7 @@ public class RobotCanvas extends JPanel
 				if (in (x0, y0, x1, y1, sx (s), sy (s), sz (s)))		found.add (new RobotItem (RobotItem.SENSOR, i, fam));
 			}
 		}
-		for (int kind : new int[] { RobotItem.GROUP, RobotItem.FUSED })
+		for (int kind : new int[] { RobotItem.GROUP, RobotItem.FUSED, RobotItem.SCAN })
 		{
 			java.util.List<? extends RobotDef.Sector>	l = sectors (kind);
 			for (int i = 0; i < l.size (); i++)
@@ -649,15 +660,16 @@ public class RobotCanvas extends JPanel
 			for (RobotDef.Sensor s : robot.family (selection.family).sensors)
 				if ((c = coverageOf (selection.family, s)) != null)		l.add (c);
 		}
-		else if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED))
+		else if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED) || (selection.kind == RobotItem.SCAN))
 		{
 			if ((c = coverageOf (selectedGroup ())) != null)		l.add (c);
 		}
-		else if ((selection.kind == RobotItem.GROUPS) || (selection.kind == RobotItem.FUSEDS))
+		else if ((selection.kind == RobotItem.GROUPS) || (selection.kind == RobotItem.FUSEDS)
+					|| (selection.kind == RobotItem.SCANS) || (selection.kind == RobotItem.FILTERING))
 		{
-			int		kind = (selection.kind == RobotItem.FUSEDS) ? RobotItem.FUSED : RobotItem.GROUP;
-			for (RobotDef.Sector g : sectors (kind))
-				if ((c = coverageOf (g)) != null)		l.add (c);
+			for (int kind : kindsOf (selection.kind))
+				for (RobotDef.Sector g : sectors (kind))
+					if ((c = coverageOf (g)) != null)		l.add (c);
 		}
 		return l;
 	}
@@ -668,7 +680,8 @@ public class RobotCanvas extends JPanel
 		java.util.List<? extends RobotDef.Sector>	l;
 
 		if (selection == null)					return null;
-		if ((selection.kind != RobotItem.GROUP) && (selection.kind != RobotItem.FUSED))		return null;
+		if ((selection.kind != RobotItem.GROUP) && (selection.kind != RobotItem.FUSED)
+				&& (selection.kind != RobotItem.SCAN))		return null;
 		l	= sectors (selection.kind);
 		return (selection.index < l.size ()) ? l.get (selection.index) : null;
 	}
@@ -764,7 +777,7 @@ public class RobotCanvas extends JPanel
 	private boolean hasMinHandle ()
 	{
 		if (selection == null)							return false;
-		if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED))		return true;
+		if ((selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED) || (selection.kind == RobotItem.SCAN))		return true;
 		return (selection.kind == RobotItem.SENSOR) && !RobotDef.hasFov (selection.family);
 	}
 
@@ -929,7 +942,7 @@ public class RobotCanvas extends JPanel
 					return new RobotItem (RobotItem.SENSOR, i, fam);
 			}
 		}
-		for (int kind : new int[] { RobotItem.GROUP, RobotItem.FUSED })		// then the virtual ones, drawn the same way
+		for (int kind : new int[] { RobotItem.GROUP, RobotItem.FUSED, RobotItem.SCAN })		// then the virtual ones, drawn the same way
 		{
 			java.util.List<? extends RobotDef.Sector>	l = sectors (kind);
 			for (int i = 0; i < l.size (); i++)
@@ -994,7 +1007,7 @@ public class RobotCanvas extends JPanel
 	{
 		return (it != null) && ((it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.LINE)
 								|| (it.kind == RobotItem.BUMPER) || (it.kind == RobotItem.WHEEL)
-								|| (it.kind == RobotItem.GROUP) || (it.kind == RobotItem.FUSED));
+								|| (it.kind == RobotItem.GROUP) || (it.kind == RobotItem.FUSED) || (it.kind == RobotItem.SCAN));
 	}
 
 	/**
@@ -1043,6 +1056,7 @@ public class RobotCanvas extends JPanel
 		}
 		case RobotItem.GROUP:
 		case RobotItem.FUSED:
+		case RobotItem.SCAN:
 		{
 			RobotDef.Sector		q = selectedGroup ();
 			double				hx, hy;
@@ -1108,7 +1122,7 @@ public class RobotCanvas extends JPanel
 	{
 		return (selection != null) && (handle == 1)
 				&& ((selection.kind == RobotItem.SENSOR) || (selection.kind == RobotItem.WHEEL)
-					|| (selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED));
+					|| (selection.kind == RobotItem.GROUP) || (selection.kind == RobotItem.FUSED) || (selection.kind == RobotItem.SCAN));
 	}
 
 	/** Index of the handle of the selection under a point of the view, or -1. */
@@ -1159,6 +1173,7 @@ public class RobotCanvas extends JPanel
 		}
 		case RobotItem.GROUP:
 		case RobotItem.FUSED:
+		case RobotItem.SCAN:
 		{
 			RobotDef.Sector		q = selectedGroup ();
 			double[]			c;
@@ -1303,6 +1318,7 @@ public class RobotCanvas extends JPanel
 		}
 		case RobotItem.GROUP:
 		case RobotItem.FUSED:
+		case RobotItem.SCAN:
 		{
 			RobotDef.Sector		q;
 			double				x, y;
@@ -1895,6 +1911,7 @@ public class RobotCanvas extends JPanel
 	{
 		drawSectors (g, RobotItem.GROUP);
 		drawSectors (g, RobotItem.FUSED);
+		drawSectors (g, RobotItem.SCAN);
 	}
 
 	private void drawSectors (Graphics2D g, int kind)
@@ -1930,17 +1947,31 @@ public class RobotCanvas extends JPanel
 	{
 		if (kind == RobotItem.GROUP)		return robot.groups;
 		if (kind == RobotItem.FUSED)		return robot.fused;
+		if (kind == RobotItem.SCAN)			return robot.scans;
 		return new ArrayList<RobotDef.Sector> ();
 	}
 
 	/** What one of them is called, as the description names it. */
 	static public String sectorName (int kind, int index)
 	{
-		return ((kind == RobotItem.FUSED) ? "fusion" : "group") + index;
+		return ((kind == RobotItem.FUSED) ? "fusion" : (kind == RobotItem.SCAN) ? "scan" : "group") + index;
 	}
 
 	/** The colour a virtual sensor of a kind is drawn in. */
-	static public Color sectorColor (int kind)		{ return (kind == RobotItem.FUSED) ? C_FUSED : C_VIRTUAL; }
+	static public Color sectorColor (int kind)
+	{
+		return (kind == RobotItem.FUSED) ? C_FUSED : (kind == RobotItem.SCAN) ? C_SCAN : C_VIRTUAL;
+	}
+
+	/** The kinds a whole lot of the tree stands for: one of them, or both under the filtering. */
+	static public int[] kindsOf (int kind)
+	{
+		if (kind == RobotItem.GROUPS)		return new int[] { RobotItem.GROUP };
+		if (kind == RobotItem.FUSEDS)		return new int[] { RobotItem.FUSED };
+		if (kind == RobotItem.SCANS)		return new int[] { RobotItem.SCAN };
+		if (kind == RobotItem.FILTERING)	return new int[] { RobotItem.FUSED, RobotItem.SCAN };
+		return new int[0];
+	}
 
 	/**
 	 * The wheels of the drive train: each one as the two rims of its tread, which
