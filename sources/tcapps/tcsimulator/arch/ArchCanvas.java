@@ -75,15 +75,15 @@ public class ArchCanvas extends JPanel
 	static final Color				C_ARROW		= new Color (90, 90, 90);
 	static final Color				C_PREVIEW_BG	= new Color (252, 252, 252);
 
-	/** Size of the preview of the robot, in the bottom right corner of the panel (px). */
-	static final int				PREVIEW_W	= 120;
-	static final int				PREVIEW_H	= 120;
-	static final int				PREVIEW_PAD	= 10;
+	/** Size of the preview of the robot, hanging off the bottom right corner of its block (px). */
+	static final int				PREVIEW_W	= 88;
+	static final int				PREVIEW_H	= 88;
+	static final int				PREVIEW_OVER	= 16;					// how much of the block it covers
 
 	protected ArchModel				model;
 	protected Block					selection;
-	protected String				previewPath;			// description the preview was read from
-	protected RobotDef				previewRobot;			// and what was read (null when it cannot be)
+	/** Descriptions read for the previews, by path (a null value: one that cannot be read). */
+	protected Map<String, RobotDef>	previews = new LinkedHashMap<String, RobotDef> ();
 	protected List<Listener>		listeners	= new ArrayList<Listener> ();
 
 	// layout, rebuilt at every paint
@@ -292,9 +292,11 @@ public class ArchCanvas extends JPanel
 			if (model.hasLocalLinda (r))
 				bounds.put (new Block (ArchModel.LOCAL_LINDA, r), new Rectangle (rcx - LINDA_W / 2, modTop + (modsH - LINDA_H) / 2, LINDA_W, LINDA_H));
 			int		vy = modTop + modsH + 40;
+			Rectangle	vrobot = null;
 			if (model.hasVRobot (r))
 			{
-				bounds.put (new Block (ArchModel.VROBOT, r), new Rectangle (rcx - VROB_W / 2, vy, VROB_W, VROB_H));
+				vrobot	= new Rectangle (rcx - VROB_W / 2, vy, VROB_W, VROB_H);
+				bounds.put (new Block (ArchModel.VROBOT, r), vrobot);
 				vy += VROB_H;
 			}
 			Rectangle	region = new Rectangle (rcx - REGION_HW, top, 2 * REGION_HW, vy + REGION_PAD - top);
@@ -306,6 +308,10 @@ public class ArchCanvas extends JPanel
 			int			lx = region.x + 14, ly = region.y + LABEL_DY;
 			robotLabels.put (r, new Rectangle (lx - 4, ly - fm.getAscent () - 2, fm.stringWidth (name) + 8, fm.getHeight () + 4));
 			bottom = Math.max (bottom, region.y + region.height);
+			// the preview of the robot hangs off its block: leave room for it, so that
+			// it is not cut off when the panel is at its smallest
+			if ((vrobot != null) && (describedRobot (r) != null))
+				bottom = Math.max (bottom, previewBox (vrobot).y + PREVIEW_H + 6);
 		}
 		layoutSize	= new Dimension (2 * MARGIN + total, bottom + MARGIN);
 		setPreferredSize (layoutSize);
@@ -379,19 +385,14 @@ public class ArchCanvas extends JPanel
 			if (b.kind == ArchModel.ROBOT)		continue;
 			paintBlock (g, b, e.getValue (), b.equals (selection));
 		}
-		g.dispose ();
-
-		g	= (Graphics2D) g0.create ();								// the preview sits in the panel, not in the diagram
-		g.setRenderingHint (RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g.setRenderingHint (RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		paintRobotPreview (g);
 		g.dispose ();
 	}
 
 	/**
-	 * The robot the selection names, in the bottom right corner of the panel: its
-	 * drawing when it has one and, failing that, its image, so that what a
-	 * description says is seen without opening the robot editor.
+	 * The robot the selection names, hanging off the bottom right corner of its
+	 * block: its drawing when it has one and, failing that, its image, so that
+	 * what a description says is seen without opening the robot editor.
 	 *
 	 * The selection is a robot when it is the block of the robot itself or the
 	 * region it lives in.
@@ -399,13 +400,14 @@ public class ArchCanvas extends JPanel
 	protected void paintRobotPreview (Graphics2D g)
 	{
 		RobotDef	robot = selectedRobot ();
+		Rectangle	block;
 		Rectangle	box;
 		String		name;
 
 		if (robot == null)						return;
-		box		= new Rectangle (getWidth () - PREVIEW_W - PREVIEW_PAD, getHeight () - PREVIEW_H - PREVIEW_PAD,
-								 PREVIEW_W, PREVIEW_H);
-		if ((box.x < 0) || (box.y < 0))			return;				// no room for it
+		block	= bounds.get (new Block (ArchModel.VROBOT, selection.robot));
+		if (block == null)						return;
+		box		= previewBox (block);
 
 		g.setColor (C_PREVIEW_BG);
 		g.fillRoundRect (box.x, box.y, box.width, box.height, 10, 10);
@@ -420,7 +422,14 @@ public class ArchCanvas extends JPanel
 			g.setColor (C_ARROW);
 			g.drawString (name, box.x + (box.width - fm.stringWidth (name)) / 2, box.y + box.height - 5);
 		}
-		drawRobot (g, robot, new Rectangle (box.x + 8, box.y + 8, box.width - 16, box.height - 16 - 12));
+		drawRobot (g, robot, new Rectangle (box.x + 7, box.y + 7, box.width - 14, box.height - 14 - 11));
+	}
+
+	/** Where the preview of a robot goes: off the bottom right corner of its block, covering a little of it. */
+	static protected Rectangle previewBox (Rectangle block)
+	{
+		return new Rectangle (block.x + block.width - PREVIEW_OVER, block.y + block.height - PREVIEW_OVER,
+							  PREVIEW_W, PREVIEW_H);
 	}
 
 	/** The drawing of a robot, or its image when it has no drawing, fitted into a box of the panel. */
@@ -471,27 +480,36 @@ public class ArchCanvas extends JPanel
 	protected RobotDef selectedRobot ()
 	{
 		Block		b = selection;
-		String		path;
 
 		if (b == null)							return null;
-		if (b.kind == ArchModel.ROBOT)			b = new Block (ArchModel.VROBOT, b.robot);
-		if (b.kind != ArchModel.VROBOT)			return null;
+		if ((b.kind != ArchModel.ROBOT) && (b.kind != ArchModel.VROBOT))		return null;
+		return describedRobot (b.robot);
+	}
+
+	/** The description the robot of a region names, read and kept, or null when there is none. */
+	protected RobotDef describedRobot (int r)
+	{
+		Block		b = new Block (ArchModel.VROBOT, r);
+		String		path;
+
 		if (!model.exists (b))					return null;
 		path	= model.get (b, "DESC");
 		if (path == null)						return null;
 		path	= path.trim ();
 		if (path.length () == 0)				return null;
-		if (path.equals (previewPath))			return previewRobot;
+		if (previews.containsKey (path))		return previews.get (path);
 
-		previewPath	= path;
-		previewRobot	= null;
+		previews.put (path, null);											// what cannot be read is not read again
 		try
 		{
 			java.io.File	f = new java.io.File (path);
-			if (f.isFile ())		previewRobot = RobotDef.load (f);
+			if (f.isFile ())		previews.put (path, RobotDef.load (f));
 		} catch (Throwable e)		{ }									// a description that cannot be read shows nothing
-		return previewRobot;
+		return previews.get (path);
 	}
+
+	/** Forgets the descriptions read for the previews (one of them having been edited, say). */
+	public void flushPreviews ()				{ previews.clear (); repaint (); }
 
 	protected void paintBlock (Graphics2D g, Block b, Rectangle r, boolean selected)
 	{
