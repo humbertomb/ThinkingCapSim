@@ -223,6 +223,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 						javax.swing.table.TableCellEditor	ed = simModeEditor (propsModel.item.family);
 						if (ed != null)		return ed;
 					}
+					if (name.equals (FUSION_MODE))		return fusionModeEditor ();
 				}
 				return super.getCellEditor (row, column);
 			}
@@ -1054,8 +1055,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 														  "range max", "range min", "cone" };
 		case RobotItem.FUSED:		return new String[] { "rho", "theta", "height", "orientation", "elevation",
 														  "range max", "range min", "cone" };
-		case RobotItem.GROUPS:
-		case RobotItem.FUSEDS:		return new String[0];			// the lot of them says nothing of its own yet
+		case RobotItem.GROUPS:		return new String[0];			// the lot of them says nothing of its own yet
+		// how the fusion turns the sensors that look the same way into one reading
+		// is of all the fused sensors at once, and not of any one of them
+		case RobotItem.FUSEDS:		return new String[] { FUSION_MODE };
 		case RobotItem.SENSOR:
 			// the device it is read through comes first, then where it is and what it detects
 			if (!RobotDef.hasOwnDetection (it.family))
@@ -1082,6 +1085,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			List<String>	names = new ArrayList<String> ();
 
 			if (SimModes.has (it.family))		names.add (SIM_MODE);
+			if (RobotDef.hasSimError (it.family))	names.add (SIM_ERROR);
 			// only the firing cycle is of the whole family when its sensors say the rest
 			if (RobotDef.hasOwnDetection (it.family))		names.add ("cycle");
 			else
@@ -1169,6 +1173,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("cone"))			return RobotDef.fmt (g.cone);
 			break;
 		}
+		case RobotItem.FUSEDS:
+			if (name.equals (FUSION_MODE))		return SimModes.fusionName (robot.fusionmode);
+			break;
 		case RobotItem.WHEEL:
 		{
 			RobotDef.Wheel		w = robot.wheels.get (it.index);
@@ -1212,6 +1219,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 			RobotDef.Family		f = robot.family (it.family);
 			if (name.equals (SIM_MODE))		return SimModes.name (it.family, f.simmode);
+			if (name.equals (SIM_ERROR))	return percent (f.simerror);
 			if (name.equals (DRIVER))		return (f.driver != null) ? f.driver : "";
 			if (name.equals (DRIVER_PARAMS))	return (f.driverParams != null) ? f.driverParams : "";
 			if (name.equals ("range max"))	return RobotDef.fmt (f.rangemax);
@@ -1248,6 +1256,15 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		DRIVER_PARAMS			= "driver parameters";
 	/** The name the editor gives to the way the simulator works the readings of a family out. */
 	static public final String		SIM_MODE				= "simulation mode";
+	/** How far off the simulator puts a reading, said in parts of a hundred. */
+	static public final String		SIM_ERROR				= "simulation error (%)";
+	/** The name the editor gives to how the fusion works the fused sensors out. */
+	static public final String		FUSION_MODE				= "fusion mode";
+
+	/** A share of the distance, as the parts of a hundred it is worth. */
+	static private String percent (double share)	{ return String.format (java.util.Locale.US, "%.1f", share * 100.0); }
+	/** And back: what is typed in hundredths is kept as the share the simulator reads. */
+	static private double share (String value)		{ return num (value) / 100.0; }
 
 	/*
 	 * The names the editor gives to the kinematics, which the description knows by
@@ -1381,6 +1398,24 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		return new DefaultCellEditor (cb);
 	}
 
+	/**
+	 * The editor of how the fusion turns the sonar and the infrared that look the
+	 * same way into the one reading of a fused sensor. What a description says now
+	 * comes first when it is not one of the ways the fusion knows.
+	 */
+	private javax.swing.table.TableCellEditor fusionModeEditor ()
+	{
+		List<String>		names = SimModes.fusionNames ();
+		String				current = SimModes.fusionName (robot.fusionmode);
+		JComboBox<String>	cb;
+
+		if (!names.contains (current))		names.add (0, current);
+		cb		= new JComboBox<String> (names.toArray (new String[0]));
+		cb.setSelectedItem (current);
+		cb.setToolTipText ("How the fusion works the fused sensors out");
+		return new DefaultCellEditor (cb);
+	}
+
 	/** True when a property can be edited: what the wheels work out is not typed in. */
 	public boolean isEditable (RobotItem it, String name)
 	{
@@ -1486,6 +1521,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("cone"))			g.cone = num (value);
 			break;
 		}
+		case RobotItem.FUSEDS:
+			if (name.equals (FUSION_MODE))		robot.fusionmode = SimModes.fusionMode (value);
+			break;
 		case RobotItem.WHEEL:
 		{
 			RobotDef.Wheel		w = robot.wheels.get (it.index);
@@ -1528,6 +1566,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 			RobotDef.Family		f = robot.family (it.family);
 			if (name.equals (SIM_MODE))			f.simmode = SimModes.mode (it.family, value);
+			else if (name.equals (SIM_ERROR))	f.simerror = share (value);
 			else if (name.equals (DRIVER))		f.driver = token (value);
 			else if (name.equals (DRIVER_PARAMS))	f.driverParams = token (value);
 			else if (name.equals ("range max"))	f.rangemax = num (value);

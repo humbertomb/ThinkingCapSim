@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import tcapps.tcsimulator.simulator.Simulator;
+import tclib.utils.fusion.FusionDesc;
 
 /**
  * How the simulator works the readings of a family of sensors out: the ways it
@@ -47,6 +48,54 @@ public class SimModes
 		m.put ("lrf", of (Simulator.LRF_EXACT, NONE, Simulator.LRF_GEOM, RELATIVE, Simulator.LRF_GAUSS, GAUSSIAN));
 		m.put ("lsb", of (Simulator.LSB_EXACT, NONE, Simulator.LSB_GEOM, RELATIVE, Simulator.LSB_GAUSS, GAUSSIAN));
 		return m;
+	}
+
+	/** What each way of working a fused sensor out is called, in the order they are offered. */
+	static public final String		SONAR_ONLY	= "Sonar only";
+	static public final String		IR_ONLY		= "Infrared only";
+	static public final String		NEAREST		= "Nearest of both";
+	static public final String		FILTERED	= "2x1 filter";
+	static public final String		FLYNN		= "Flynn's rules";
+
+	/**
+	 * How the fusion turns the sonar and the infrared that look the same way into
+	 * the one reading of a fused sensor: which of the two it keeps, the nearer of
+	 * them, what the filter of the description (FILTERVIRTU) makes of the pair, or
+	 * the rules of Flynn, which keep the infrared while it is close enough to be
+	 * trusted and the sonar beyond that.
+	 */
+	static private final Map<Integer, String>	FUSION = fusion ();
+
+	static private Map<Integer, String> fusion ()
+	{
+		Map<Integer, String>	m = new LinkedHashMap<Integer, String> ();
+
+		m.put (Integer.valueOf (FusionDesc.V_SONAR), SONAR_ONLY);
+		m.put (Integer.valueOf (FusionDesc.V_IR), IR_ONLY);
+		m.put (Integer.valueOf (FusionDesc.V_MIN), NEAREST);
+		m.put (Integer.valueOf (FusionDesc.V_FILTER), FILTERED);
+		m.put (Integer.valueOf (FusionDesc.V_FLYNN), FLYNN);
+		return m;
+	}
+
+	/** The ways the fusion knows, by name and in the order they are offered. */
+	static public List<String> fusionNames ()					{ return new ArrayList<String> (FUSION.values ()); }
+
+	/** The name of one of them, or the number itself when it is not one the fusion knows. */
+	static public String fusionName (int mode)
+	{
+		String	name = FUSION.get (Integer.valueOf (mode));
+
+		return (name != null) ? name : String.valueOf (mode);
+	}
+
+	/** The way a name stands for, or what the text says when it names none. */
+	static public int fusionMode (String name)
+	{
+		if (name != null)
+			for (Map.Entry<Integer, String> e : FUSION.entrySet ())
+				if (e.getValue ().equalsIgnoreCase (name.trim ()))		return e.getKey ().intValue ();
+		try { return Integer.parseInt (name.trim ()); }	catch (Exception e)		{ return 0; }
 	}
 
 	static private Map<Integer, String> of (int a, String na, int b, String nb, int c, String nc)

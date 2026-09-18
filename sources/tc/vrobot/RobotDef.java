@@ -198,10 +198,13 @@ public class RobotDef
 		public String		driver;					// class of the device every sensor of the family is read through
 		public String		driverParams;			// what that driver is opened with (a port, an address, ...)
 		public int			simmode;				// how the simulator works a reading out ("MODESON", "MODEIR", ...)
+		public double		simerror = DEFAULT_ERROR;	// how far off it puts it, as a share of the distance ("ERRORSON", ...)
 		public List<Sensor>	sensors	= new ArrayList<Sensor> ();
 
 		/** True when its sensors say what they detect: only the cycle is of the family. */
 		transient boolean	own;
+		/** Which family it is (son, ir, ...), so that it can be written knowing what it has. */
+		transient String	prefix;
 
 		public int n ()								{ return sensors.size (); }
 
@@ -210,8 +213,8 @@ public class RobotDef
 			Family	f = new Family ();
 			f.rangemax = rangemax;	f.rangemin = rangemin;	f.cone = cone;		f.cycle = cycle;
 			f.rays = rays;		f.reflect = reflect;	f.beacons = beacons;	f.objects = objects;
-			f.driver = driver;	f.driverParams = driverParams;	f.own = own;
-			f.simmode = simmode;
+			f.driver = driver;	f.driverParams = driverParams;	f.own = own;	f.prefix = prefix;
+			f.simmode = simmode;	f.simerror = simerror;
 			for (Sensor s : sensors)		f.sensors.add (s.copy ());
 			return f;
 		}
@@ -319,6 +322,7 @@ public class RobotDef
 	public List<Wheel>			wheels		= new ArrayList<Wheel> ();				// the drive train
 	public List<Group>			groups		= new ArrayList<Group> ();				// the virtual sensors of an area
 	public List<Fused>			fused		= new ArrayList<Fused> ();				// the fused ones, of a direction
+	public int					fusionmode;											// how the fusion works them out ("MODEVIRTU")
 	public Map<String, String>	extra		= new LinkedHashMap<String, String> ();	// everything else of the description (CAN, layers, fusion, ...)
 
 	protected transient File	file;												// where it was loaded from / saved to
@@ -333,6 +337,19 @@ public class RobotDef
 	static public final String[]	FAMILY_KEYS		= { "SON", "IR", "LRF", "LSB", "TRK", "VIS" };
 	/** How the simulator works a reading of a family out, where it has a say ("MODESON", ...); null where it has none. */
 	static public final String[]	FAMILY_MODES	= { "MODESON", "MODEIR", "MODELRF", "MODELSB", null, null };
+	/**
+	 * How far off the simulator puts a reading of a family when it adds an error
+	 * of its own ("ERRORSON", ...); null where it adds none. It is a share of the
+	 * distance (0.05 is five parts in a hundred of it), which is what the
+	 * simulator reads and what a description has always said.
+	 *
+	 * The beacon scanners have one of these for the range and another for the
+	 * angle (ERRORANGLELSB); what is kept here is the one of the range, which is
+	 * the reading the rest of the families give as well.
+	 */
+	static public final String[]	FAMILY_ERRORS	= { "ERRORSON", "ERRORIR", "ERRORLRF", "ERRORRANGELSB", null, null };
+	/** What the simulator takes it to be when a description does not say. */
+	static public final double		DEFAULT_ERROR	= 0.05;
 
 	/** True for a family whose readings the simulator works out in a way that can be chosen. */
 	static public boolean hasSimMode (String fam)
@@ -348,6 +365,22 @@ public class RobotDef
 		int		i = familyIndex (fam);
 
 		return (i >= 0) ? FAMILY_MODES[i] : null;
+	}
+
+	/** True for a family the simulator puts an error of its own on. */
+	static public boolean hasSimError (String fam)
+	{
+		int		i = familyIndex (fam);
+
+		return (i >= 0) && (FAMILY_ERRORS[i] != null);
+	}
+
+	/** The property the simulator reads that error from, or null. */
+	static public String simErrorKey (String fam)
+	{
+		int		i = familyIndex (fam);
+
+		return (i >= 0) ? FAMILY_ERRORS[i] : null;
 	}
 	/** Prefix of the driver property of each family (LRF0, LSB0, ...); null when the family has none. */
 	static public final String[]	FAMILY_DRIVERS	= { "SONAR", "IR", "LRF", "LSB", "TRK", "VISION" };
@@ -665,6 +698,9 @@ public class RobotDef
 			}
 			if (f.cycle != 0)				o.addProperty ("cycle", f.cycle);
 			if (f.simmode != 0)				o.addProperty ("simmode", f.simmode);
+			// what the simulator puts on top of a reading is always written, so that
+			// asking for none of it is not read back as not having said anything
+			if (hasSimError (f.prefix))		o.addProperty ("simerror", f.simerror);
 			o.add ("sensors", ctx.serialize (f.sensors));
 			return o;
 		}
@@ -782,6 +818,7 @@ public class RobotDef
 		for (Wheel w : wheels)			d.wheels.add (w.copy ());
 		for (Group g : groups)			d.groups.add (g.copy ());
 		for (Fused f : fused)			d.fused.add (f.copy ());
+		d.fusionmode	= fusionmode;
 		d.extra.putAll (extra);
 		d.file			= file;
 		d.original		= original;
@@ -805,6 +842,7 @@ public class RobotDef
 			if (f == null)			sensors.put (fam, f = new Family ());
 			if (f.sensors == null)	f.sensors = new ArrayList<Sensor> ();
 			f.own	= hasOwnDetection (fam);
+			f.prefix	= fam;
 			if (f.own)				migrate (fam, f);
 			else
 			{
@@ -820,7 +858,16 @@ public class RobotDef
 				String	m = extra.remove (FAMILY_MODES[familyIndex (fam)]);
 				if (m != null)		f.simmode = (int) number (m, 0.0);
 			}
+			// and how far off it puts a reading, which sat there as well
+			if (FAMILY_ERRORS[familyIndex (fam)] != null)
+			{
+				String	e = extra.remove (FAMILY_ERRORS[familyIndex (fam)]);
+				if (e != null)		f.simerror = number (e, DEFAULT_ERROR);
+			}
 		}
+		// how the fusion works the fused sensors out, which sat there too
+		String	fm = extra.remove ("MODEVIRTU");
+		if (fm != null)				fusionmode = (int) number (fm, 0.0);
 		if (groups.isEmpty ())		readGroups ();
 		if (fused.isEmpty ())		readFused ();
 	}
@@ -1091,6 +1138,7 @@ public class RobotDef
 
 			if (f.cycle > 0)		p.setProperty ("CYCLE" + key, String.valueOf (f.cycle));
 			if (FAMILY_MODES[fi] != null)		p.setProperty (FAMILY_MODES[fi], String.valueOf (f.simmode));
+			if (FAMILY_ERRORS[fi] != null)		set (p, FAMILY_ERRORS[fi], f.simerror);
 			if (FAMILY_OWN[fi])
 			{
 				// the runtime still reads one set of values for the whole family: the
@@ -1147,6 +1195,7 @@ public class RobotDef
 		if (!fused.isEmpty ())
 		{
 			p.setProperty ("MAXVIRTU", String.valueOf (fused.size ()));
+			p.setProperty ("MODEVIRTU", String.valueOf (fusionmode));
 			for (int i = 0; i < fused.size (); i++)
 			{
 				Fused	f = fused.get (i);

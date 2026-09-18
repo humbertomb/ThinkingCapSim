@@ -59,6 +59,7 @@ public class SimulatorDesc
 		try { MODEIR 		= Integer.valueOf (props.getProperty ("MODEIR")).intValue (); } catch (Exception e) 					{ MODEIR			= Simulator.I_GEOM; }
 		
 		try { MODELRF 		= Integer.valueOf (props.getProperty ("MODELRF")).intValue (); } catch (Exception e) 					{ MODELRF			= Simulator.LRF_GEOM; }
+		try { ERRORLRF	 	= Double.valueOf (props.getProperty ("ERRORLRF")).doubleValue (); } catch (Exception e) 				{ ERRORLRF			= 0.05; }
 		try { ERRORLRFGAUSS	= Double.valueOf (props.getProperty ("ERRORLRFGAUSS")).doubleValue (); } catch (Exception e) 			{ ERRORLRFGAUSS		= 0.005; }
 
 		try { RAYRAD	 		= Integer.valueOf (props.getProperty ("RAYRAD")).intValue (); } 		catch (Exception e) 			{ RAYRAD		= 16; }
