@@ -82,6 +82,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected PropertyModel			propsModel;
 	protected javax.swing.border.TitledBorder	propsBorder;
 	protected JSplitPane			mainSP, rightSP;
+	protected StatusBar				statusBar;						// where the cursor is
 	protected boolean				dividersSet, syncing, dirty;
 	protected Action				openAC, wheelAC, lineAC, bumperAC, sensorAC, groupAC, deleteAC;
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
@@ -177,6 +178,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		tb.addSeparator ();
 		tb.add (view3dButton ());
 
+		statusBar	= new StatusBar ();
+
 		// --- right: tree of the description and properties of the selection
 		treeRoot	= new DefaultMutableTreeNode ("Robot");
 		treeModel	= new DefaultTreeModel (treeRoot);
@@ -267,6 +270,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 		add (tb, BorderLayout.WEST);
 		add (mainSP, BorderLayout.CENTER);
+		add (statusBar, BorderLayout.SOUTH);
 	}
 
 	/** Puts the split dividers at the world editor proportions. */
@@ -856,6 +860,12 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		propsModel.refresh ();
 	}
 
+	/** The view says where the cursor is. */
+	public void cursorMoved (String where)
+	{
+		statusBar.setStatus (where);
+	}
+
 	/** The view changed the selection. */
 	public void selectionChanged (RobotItem item)
 	{
@@ -1386,7 +1396,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("orientation"))	g.orientation = num (value);
 			else if (name.equals ("elevation"))		g.elevation = num (value);
 			else if (name.equals ("range max"))		g.rangemax = num (value);
-			else if (name.equals ("range min"))		g.rangemin = num (value);
+			// no farther than the far end, or neither the sector nor its handle would
+			// show what was typed
+			else if (name.equals ("range min"))		g.rangemin = Math.max (0.0, Math.min (num (value), g.rangemax));
 			else if (name.equals ("cone"))			g.cone = num (value);
 			break;
 		}

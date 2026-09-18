@@ -84,6 +84,8 @@ public class RobotCanvas extends JPanel
 		void selectionChanged (RobotItem item);
 		/** The element was moved or rotated on the view. */
 		void elementChanged (RobotItem item);
+		/** Where the cursor is, ready to be shown (empty when it has left the view). */
+		void cursorMoved (String where);
 	}
 
 	protected RobotDef				robot;
@@ -177,6 +179,7 @@ public class RobotCanvas extends JPanel
 			{
 				double		x = wx (e.getX ()), y = wy (e.getY ());
 
+				if (listener != null)		listener.cursorMoved (at (e.getX (), e.getY ()));
 				switch (drag)
 				{
 				case D_PAN:
@@ -205,6 +208,16 @@ public class RobotCanvas extends JPanel
 					repaint ();
 					break;
 				}
+			}
+
+			public void mouseMoved (MouseEvent e)
+			{
+				if (listener != null)		listener.cursorMoved (at (e.getX (), e.getY ()));
+			}
+
+			public void mouseExited (MouseEvent e)
+			{
+				if (listener != null)		listener.cursorMoved ("");
 			}
 
 			public void mouseReleased (MouseEvent e)
@@ -351,6 +364,21 @@ public class RobotCanvas extends JPanel
 
 	/** The model changed behind the view. */
 	public void robotChanged ()						{ repaint (); }
+
+	/**
+	 * Where a point of the view is, in the frame of the robot: the two coordinates
+	 * the projection shows and, of the two, the polar pair -- which from above is
+	 * the rho and the theta a sensor is placed by.
+	 */
+	public String at (int mx, int my)
+	{
+		double		hw = wx (mx), vw = wy (my);
+		String		hn = (view == V_FRONT) ? "y" : "x";
+		String		vn = (view == V_TOP) ? "y" : "z";
+
+		return String.format (java.util.Locale.US, "%s %.3f m   %s %.3f m      rho %.3f m   theta %.1f deg",
+							  hn, hw, vn, vw, Math.hypot (hw, vw), Math.toDegrees (Math.atan2 (vw, hw)));
+	}
 
 	/** The projection being drawn ({@link #V_TOP}, {@link #V_FRONT}, {@link #V_SIDE}). */
 	public int getView ()							{ return view; }
