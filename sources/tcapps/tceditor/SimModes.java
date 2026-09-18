@@ -16,6 +16,12 @@ import tcapps.tcsimulator.simulator.Simulator;
  * knows, by name, so that one is chosen from what there is instead of a number
  * being typed in.
  *
+ * They are named after what they do to the measure and not after who wrote
+ * them: every one of them casts the same rays and cuts them against the world,
+ * and what tells them apart is the error they then add -- none, a share of the
+ * distance, or a gaussian spread -- except the two that model a device: the
+ * lobes of a sonar and what an infrared reads off a surface.
+ *
  * What each name stands for is the constant of {@link Simulator} the property
  * of the description (MODESON, MODEIR, MODELRF, MODELSB) is read as, so a
  * description written by hand with a number the simulator does not know shows
@@ -25,17 +31,21 @@ public class SimModes
 {
 	static private final Map<String, Map<Integer, String>>	MODES = modes ();
 
+	/** What each way is called, in the order they are offered: what the simulator does, not who wrote it. */
+	static public final String		NONE		= "No noise";			// the measure as the rays give it
+	static public final String		RELATIVE	= "Relative noise";		// that measure with a percentual error
+	static public final String		GAUSSIAN	= "Gaussian noise";		// with an error of a gaussian spread
+	static public final String		RAYTRACING	= "Raytracing";			// the lobes of Gallardo (Watt & Watt)
+	static public final String		ABSORTION	= "Absortion";			// the curve of a Sharp GP2D02
+
 	static private Map<String, Map<Integer, String>> modes ()
 	{
 		Map<String, Map<Integer, String>>	m = new LinkedHashMap<String, Map<Integer, String>> ();
 
-		// a sonar: the cone, the lobes of Gallardo (Watt & Watt), or the exact distance
-		m.put ("son", of (Simulator.S_GEOM, "Geometric", Simulator.S_GALLARDO, "Gallardo", Simulator.S_EXACT, "Exact"));
-		// an infrared: the cone, the exact distance, or the curve of a Sharp GP2D02
-		m.put ("ir", of (Simulator.I_GEOM, "Geometric", Simulator.I_EXACT, "Exact", Simulator.I_SHARP, "Sharp GP2D02"));
-		// a laser: the cone, the exact distance, or the exact one with gaussian noise
-		m.put ("lrf", of (Simulator.LRF_GEOM, "Geometric", Simulator.LRF_EXACT, "Exact", Simulator.LRF_GAUSS, "Gaussian"));
-		m.put ("lsb", of (Simulator.LSB_GEOM, "Geometric", Simulator.LSB_EXACT, "Exact", Simulator.LSB_GAUSS, "Gaussian"));
+		m.put ("son", of (Simulator.S_EXACT, NONE, Simulator.S_GEOM, RELATIVE, Simulator.S_GALLARDO, RAYTRACING));
+		m.put ("ir", of (Simulator.I_EXACT, NONE, Simulator.I_GEOM, RELATIVE, Simulator.I_SHARP, ABSORTION));
+		m.put ("lrf", of (Simulator.LRF_EXACT, NONE, Simulator.LRF_GEOM, RELATIVE, Simulator.LRF_GAUSS, GAUSSIAN));
+		m.put ("lsb", of (Simulator.LSB_EXACT, NONE, Simulator.LSB_GEOM, RELATIVE, Simulator.LSB_GAUSS, GAUSSIAN));
 		return m;
 	}
 
