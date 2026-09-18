@@ -32,7 +32,8 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "POLLED": "false",
-            "QUEUED": "false"
+            "QUEUED": "false",
+            "TYPE": "Navigation"
           },
           "events": [
             {
@@ -63,7 +64,8 @@
             "CLASS": "tcrob.ingenia.ifork.IForkController",
             "GFX": "false",
             "MODE": "shared",
-            "PASSIVE": "true"
+            "PASSIVE": "true",
+            "TYPE": "Controller"
           },
           "events": [
             {
@@ -92,7 +94,8 @@
             "MODE": "shared",
             "PASSIVE": "false",
             "POLLED": "true",
-            "QUEUED": "false"
+            "QUEUED": "false",
+            "TYPE": "Planner"
           },
           "events": [
             {
@@ -128,7 +131,8 @@
             "CLASS": "tcrob.ingenia.ifork.IForkPerception",
             "GFX": "true",
             "MODE": "shared",
-            "PASSIVE": "true"
+            "PASSIVE": "true",
+            "TYPE": "Perception"
           },
           "events": [
             {
@@ -233,7 +237,8 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "POLLED": "false",
-            "QUEUED": "false"
+            "QUEUED": "false",
+            "TYPE": "Navigation"
           },
           "events": [
             {
@@ -264,7 +269,8 @@
             "CLASS": "tcrob.ingenia.ifork.IForkController",
             "GFX": "false",
             "MODE": "shared",
-            "PASSIVE": "true"
+            "PASSIVE": "true",
+            "TYPE": "Controller"
           },
           "events": [
             {
@@ -293,7 +299,8 @@
             "MODE": "shared",
             "PASSIVE": "false",
             "POLLED": "true",
-            "QUEUED": "false"
+            "QUEUED": "false",
+            "TYPE": "Planner"
           },
           "events": [
             {
@@ -329,7 +336,8 @@
             "CLASS": "tcrob.ingenia.ifork.IForkPerception",
             "GFX": "true",
             "MODE": "shared",
-            "PASSIVE": "true"
+            "PASSIVE": "true",
+            "TYPE": "Perception"
           },
           "events": [
             {

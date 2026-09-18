@@ -29,7 +29,8 @@
           "properties": {
             "CLASS": "um.satant.SatantPerception",
             "MODE": "shared",
-            "PASSIVE": "true"
+            "PASSIVE": "true",
+            "TYPE": "Perception"
           },
           "events": []
         },
@@ -40,7 +41,8 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "conf/programs/satant.b"
+            "PRG": "conf/programs/satant.b",
+            "TYPE": "Controller"
           },
           "events": []
         },
@@ -89,7 +91,8 @@
           "properties": {
             "CLASS": "um.satant.SatantPerception",
             "MODE": "shared",
-            "PASSIVE": "true"
+            "PASSIVE": "true",
+            "TYPE": "Perception"
           },
           "events": []
         }

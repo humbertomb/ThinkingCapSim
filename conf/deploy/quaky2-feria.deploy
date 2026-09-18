@@ -17,7 +17,8 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "PRG": "conf/programs/quaky2.soccer.b",
-            "PRG_": "conf/programs/quaky2.indoor.b"
+            "PRG_": "conf/programs/quaky2.indoor.b",
+            "TYPE": "Controller"
           },
           "events": [
             {
@@ -46,7 +47,8 @@
             "MODE": "shared",
             "PASSIVE": "false",
             "POLLED": "true",
-            "QUEUED": "false"
+            "QUEUED": "false",
+            "TYPE": "Planner"
           },
           "events": [
             {
@@ -66,7 +68,8 @@
           "properties": {
             "CLASS": "tcrob.umu.quaky2.SoccerPerception",
             "MODE": "shared",
-            "PASSIVE": "true"
+            "PASSIVE": "true",
+            "TYPE": "Perception"
           },
           "events": [
             {

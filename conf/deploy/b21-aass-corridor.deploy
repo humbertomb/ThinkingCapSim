@@ -1,8 +1,8 @@
 {
-  "world": "conf/maps/dulzet.world",
+  "world": "./conf/maps/aass_corr.world",
   "robots": [
     {
-      "name": "IFORK-1",
+      "name": "B21",
       "linda": {
         "address": "localhost",
         "port": 3000,
@@ -12,7 +12,7 @@
         {
           "name": "Navigation",
           "properties": {
-            "CLASS": "tcrob.ingenia.ifork.IForkNavigation",
+            "CLASS": "tcrob.umu.indoor.IndoorNavigation",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
@@ -30,24 +30,16 @@
               "symbol": "GOAL",
               "itemClass": "tc.shared.linda.ItemGoal",
               "method": "notify_goal"
-            },
-            {
-              "symbol": "COORD",
-              "itemClass": "tcrob.ingenia.ifork.linda.ItemCoordination",
-              "method": "notify_coord"
-            },
-            {
-              "symbol": "DELROBOT",
-              "itemClass": "tc.shared.linda.ItemDelRobot",
-              "method": "notify_delrobot"
             }
           ]
         },
         {
           "name": "Controller",
           "properties": {
-            "CLASS": "tcrob.ingenia.ifork.IForkController",
-            "GFX": "false",
+            "BEH": "MainBehaviour",
+            "CLASS": "tclib.behaviours.fhb.FHBController",
+            "FACT": "tcrob.umu.indoor.behs, ./sources/tcrob/umu/indoor/behs/, ./runtime",
+            "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
             "TYPE": "Controller"
@@ -67,13 +59,28 @@
               "symbol": "PATH",
               "itemClass": "tc.shared.linda.ItemPath",
               "method": "notify_path"
+            },
+            {
+              "symbol": "BEHNAME",
+              "itemClass": "tc.shared.linda.ItemBehName",
+              "method": "notify_beh_name"
+            },
+            {
+              "symbol": "BEHRULES",
+              "itemClass": "tc.shared.linda.ItemBehRules",
+              "method": "notify_beh_rules"
+            },
+            {
+              "symbol": "BEHDEBUG",
+              "itemClass": "tc.shared.linda.ItemBehDebug",
+              "method": "notify_beh_debug"
             }
           ]
         },
         {
           "name": "Planner",
           "properties": {
-            "CLASS": "tcrob.ingenia.ifork.IForkPlanner",
+            "CLASS": "tclib.planning.sequence.SeqPlanner",
             "EXTIME": "1000",
             "GFX": "true",
             "MODE": "shared",
@@ -92,28 +99,13 @@
               "symbol": "BEHRESULT",
               "itemClass": "tc.shared.linda.ItemBehResult",
               "method": "notify_beh_result"
-            },
-            {
-              "symbol": "STATUS",
-              "itemClass": "tc.shared.linda.ItemStatus",
-              "method": "notify_status"
-            },
-            {
-              "symbol": "COORD",
-              "itemClass": "tcrob.ingenia.ifork.linda.ItemCoordination",
-              "method": "notify_coord"
-            },
-            {
-              "symbol": "DELROBOT",
-              "itemClass": "tc.shared.linda.ItemDelRobot",
-              "method": "notify_delrobot"
             }
           ]
         },
         {
           "name": "Perception",
           "properties": {
-            "CLASS": "tcrob.ingenia.ifork.IForkPerception",
+            "CLASS": "tcrob.umu.indoor.IndoorPerception",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
@@ -134,16 +126,6 @@
               "symbol": "NAVIGATION",
               "itemClass": "tc.shared.linda.ItemNavigation",
               "method": "notify_navigation"
-            },
-            {
-              "symbol": "COORD",
-              "itemClass": "tcrob.ingenia.ifork.linda.ItemCoordination",
-              "method": "notify_coord"
-            },
-            {
-              "symbol": "DELROBOT",
-              "itemClass": "tc.shared.linda.ItemDelRobot",
-              "method": "notify_delrobot"
             }
           ]
         }
@@ -151,9 +133,8 @@
       "virtualRobot": {
         "name": "Virtual Robot",
         "properties": {
-          "CLASS": "tcrob.ingenia.ifork.IFork",
-          "DESC": "conf/robots/ifork.robot",
-          "EXTIME": "115",
+          "DESC": "./conf/robots/b21.robot",
+          "EXTIME": "175",
           "GFX": "true",
           "MODE": "shared",
           "PASSIVE": "false"
@@ -165,36 +146,13 @@
             "method": "notify_motion"
           },
           {
-            "symbol": "ZONE",
-            "itemClass": "tcrob.ingenia.ifork.linda.ItemIForkZone",
-            "method": "notify_zone"
-          },
-          {
             "symbol": "DATACTRL",
             "itemClass": "tc.shared.linda.ItemDataCtrl",
             "method": "notify_data_ctrl"
-          },
-          {
-            "symbol": "DELROBOT",
-            "itemClass": "tc.shared.linda.ItemDelRobot",
-            "method": "notify_delrobot"
-          },
-          {
-            "symbol": "STATUS",
-            "itemClass": "tc.shared.linda.ItemStatus",
-            "method": "notify_status"
-          },
-          {
-            "symbol": "PALLETCTRL",
-            "itemClass": "tcapps.tcsimulator.simulator.ItemPallet",
-            "method": "notify_pallet"
           }
         ]
       },
-      "properties": {
-        "WHCOORD": "false"
-      },
-      "start": "START_1"
+      "properties": {}
     }
   ]
 }

@@ -17,7 +17,8 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "POLLED": "false",
-            "QUEUED": "false"
+            "QUEUED": "false",
+            "TYPE": "Navigation"
           },
           "events": [
             {
@@ -38,7 +39,8 @@
             "CLASS": "tcrob.oru.rasmus.RasmusPerception",
             "GFX": "true",
             "MODE": "shared",
-            "PASSIVE": "true"
+            "PASSIVE": "true",
+            "TYPE": "Perception"
           },
           "events": [
             {
@@ -65,7 +67,8 @@
             "FACT": "tcrob.oru.rasmus.behs, ./sources/tcrob/oru/rasmus/behs, ../sources/tc/runtime",
             "GFX": "true",
             "MODE": "shared",
-            "PASSIVE": "true"
+            "PASSIVE": "true",
+            "TYPE": "Controller"
           },
           "events": [
             {

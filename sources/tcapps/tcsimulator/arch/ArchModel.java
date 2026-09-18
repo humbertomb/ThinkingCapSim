@@ -53,6 +53,12 @@ public class ArchModel
 	static public final String	MONITOR_BASE	= "tc.modules.Monitor";
 	/** What a module is not, though it is a thread of the runtime as they are. */
 	static public final String[]	MODULE_NOT	= { VROBOT_BASE, MONITOR_BASE };
+	/**
+	 * What a robot of a deployment is not, though it is a virtual robot: the robot
+	 * of the simulator itself, which stands for a real robot and is only used when
+	 * running on one.
+	 */
+	static public final String[]	VROBOT_NOT	= { "tcapps.tcsimulator.simulator.objects.SimRobot" };
 
 	/**
 	 * The kinds of module an architecture is made of, which are the classes of
@@ -151,7 +157,7 @@ public class ArchModel
 		new Property ("INFO",	"Name"),
 		// the description comes right after the name: it is what says which robot this is
 		new Property ("DESC",	"Robot Definition",	"./conf/robots",	"Robot descriptions (*.robot)",	"robot"),
-		Property.ofClass ("CLASS", "Class", VROBOT_BASE).orNone (),
+		Property.ofClass ("CLASS", "Class", VROBOT_BASE, VROBOT_NOT).orNone (),
 		new Property ("MODE",	"Mode",			MODES),
 		new Property ("PASSIVE","Passive",		P_BOOLEAN),
 		new Property ("EXTIME",	"Exec. time (ms)"),

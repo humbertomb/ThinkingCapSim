@@ -17,7 +17,8 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "POLLED": "false",
-            "QUEUED": "false"
+            "QUEUED": "false",
+            "TYPE": "Navigation"
           },
           "events": [
             {
@@ -40,7 +41,8 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "PRG": "conf/programs/iasf-ejemplo-1.b",
-            "QUEUED": "true"
+            "QUEUED": "true",
+            "TYPE": "Controller"
           },
           "events": [
             {
@@ -69,7 +71,8 @@
             "MODE": "shared",
             "PASSIVE": "false",
             "POLLED": "true",
-            "QUEUED": "false"
+            "QUEUED": "false",
+            "TYPE": "Planner"
           },
           "events": [
             {
@@ -90,7 +93,8 @@
             "CLASS": "tcrob.umu.indoor.IndoorPerception",
             "GFX": "true",
             "MODE": "shared",
-            "PASSIVE": "true"
+            "PASSIVE": "true",
+            "TYPE": "Perception"
           },
           "events": [
             {
