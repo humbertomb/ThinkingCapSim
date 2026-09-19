@@ -21,8 +21,6 @@ public abstract class Controller extends StdThread
 	// Linda related variables
 	protected Tuple					mtuple;
 	protected ItemMotion			mitem;
-	protected Tuple					dtuple;
-	protected ItemSensorsCtrl			ditem;
 	protected Tuple					btuple;
 	protected ItemBehResult			bitem;
 
@@ -38,8 +36,6 @@ public abstract class Controller extends StdThread
 		// Setup local stuff
 		mitem	= new ItemMotion ();
 		mtuple	= new Tuple (Tuple.MOTION, mitem);
-		ditem	= new ItemSensorsCtrl ();
-		dtuple	= new Tuple (Tuple.SENSORS_CTRL, ditem);
 		bitem	= new ItemBehResult ();
 		btuple	= new Tuple (Tuple.BEHRESULT, bitem);
 	}
@@ -67,14 +63,6 @@ public abstract class Controller extends StdThread
 		bitem.set (result, reason, serial, System.currentTimeMillis ());
 		linda.write (btuple);
 	}
-
-	public void setRobotCtrl (RobotDataCtrl dctrl)
-	{
-		if (ditem == null)		return;
-		
-		ditem.set (dctrl, System.currentTimeMillis ());
-		linda.write (dtuple);
-	}	
 
 	public void notify_config (String space, ItemConfig item)
 	{

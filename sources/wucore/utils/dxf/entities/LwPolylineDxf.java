@@ -25,7 +25,7 @@ public class LwPolylineDxf extends PolylineDxf{
 	public void read(BufferedReader br) throws IOException{
 		String line;
 		Point3 vertex = null;
-		int cont = -1;
+//		int cont = -1;
 		while( (line = br.readLine()) != null && !line.endsWith(" 0")){
 			if(line.endsWith(" 5"))	setID(br.readLine());
 			else if(line.endsWith(" 8"))  setLayer(br.readLine());
@@ -39,7 +39,7 @@ public class LwPolylineDxf extends PolylineDxf{
 					addVertex(new VertexDxf(vertex));
 				vertex = new Point3();
 				vertex.x(Double.parseDouble(line));
-				cont ++;
+//				cont ++;
 			}
 			else if(line.endsWith(" 20")){
 				line = br.readLine();

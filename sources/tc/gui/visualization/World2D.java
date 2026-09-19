@@ -10,7 +10,6 @@ import java.awt.geom.*;
 
 import tc.vrobot.*;
 import tclib.utils.fusion.*;
-import tc.shared.lps.lpo.*;
 import tc.shared.world.*;
 
 import devices.pos.*;

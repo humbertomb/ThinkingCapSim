@@ -14,6 +14,7 @@ import tc.shared.linda.ItemConfig;
 import tc.shared.linda.ItemExecution;
 import tc.shared.linda.ItemGoal;
 import tc.shared.linda.ItemPath;
+import tc.shared.linda.ItemSensorsCtrl;
 import tc.shared.linda.Linda;
 import tc.shared.linda.Tuple;
 import tc.shared.lps.lpo.LPO;
@@ -64,6 +65,8 @@ public class IForkController extends Controller
 	protected RobotDataCtrl				robot_ctrl;
 	protected Tuple						miftuple;
 	protected ItemIForkMotion			mifitem;
+	protected Tuple						dtuple;
+	protected ItemSensorsCtrl			ditem;
 
 	// Debugging and logging tools
 	protected LogPlot					c_plot;
@@ -145,7 +148,9 @@ public class IForkController extends Controller
 		// Local variables
 		robot_ctrl		= new RobotDataCtrl ();
 		mifitem			= new ItemIForkMotion ();
-		miftuple			= new Tuple (Tuple.MOTION, mifitem);
+		miftuple		= new Tuple (Tuple.MOTION, mifitem);
+		ditem			= new ItemSensorsCtrl ();
+		dtuple			= new Tuple (Tuple.SENSORS_CTRL, ditem);
 		lhorn			= ItemIForkMotion.TS_NONE;
 		lcoord			= ItemIForkMotion.TS_NONE;
 		behavoid		= false;
@@ -510,9 +515,13 @@ public class IForkController extends Controller
 		default:				robot_ctrl.lrf	= false;
 		}
 		
-		setRobotCtrl (robot_ctrl);
+		if (ditem != null)
+		{
+			ditem.set (robot_ctrl, System.currentTimeMillis ());
+			linda.write (dtuple);	
+		}
 	}
-	
+
 	protected void looka_selection (double speed) 
 	{
 		// Select the appropiate look-ahead distance depending on the task	
