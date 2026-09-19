@@ -270,7 +270,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		}	
 	}	
 	
-	public void notify_data_ctrl (String space, ItemSensorsCtrl item)
+	public void notify_sensors_ctrl (String space, ItemSensorsCtrl item)
 	{
 		data_ctrl.set (item.data_ctrl);
 	}

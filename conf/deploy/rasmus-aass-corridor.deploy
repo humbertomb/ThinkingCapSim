@@ -46,7 +46,7 @@
             {
               "symbol": "SENSORS",
               "itemClass": "tc.shared.linda.ItemSensors",
-              "method": "notify_data"
+              "method": "notify_sensors"
             },
             {
               "symbol": "OBJECT",

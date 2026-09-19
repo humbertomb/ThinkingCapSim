@@ -83,7 +83,7 @@ public abstract class Perception extends StdThread
 		}	
 	}	
 
-	public void notify_data (String space, ItemSensors item) 
+	public void notify_sensors (String space, ItemSensors item) 
 	{
 		if (state != RUN)				return;
 		
