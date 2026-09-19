@@ -49,10 +49,8 @@ public class ArchModel
 	static public final String	VROBOT_BASE	= "tc.vrobot.VirtualRobot";
 	/** The class a router of the coordination layer is. */
 	static public final String	ROUTER_BASE	= "tc.coord.LindaRouter";
-	/** The class a monitor of a robot is: a thread of the runtime, but not a module of the architecture. */
-	static public final String	MONITOR_BASE	= "tc.modules.Monitor";
 	/** What a module is not, though it is a thread of the runtime as they are. */
-	static public final String[]	MODULE_NOT	= { VROBOT_BASE, MONITOR_BASE };
+	static public final String[]	MODULE_NOT	= { VROBOT_BASE };
 	/**
 	 * What a robot of a deployment is not, though it is a virtual robot: the robot
 	 * of the simulator itself, which stands for a real robot and is only used when
