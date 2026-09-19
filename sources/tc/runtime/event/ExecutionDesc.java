@@ -7,10 +7,10 @@ package tc.runtime.event;
 import tc.runtime.thread.*;
 import tc.shared.linda.*;
 
-public class DebugDesc extends EventDesc
+public class ExecutionDesc extends EventDesc
 {	
 	// Constructors
-	public DebugDesc (StdThread object, Linda linda)
+	public ExecutionDesc (StdThread object, Linda linda)
 	{
 		key		= "EXECUTION";
 		classn	= "tc.shared.linda.ItemExecution";

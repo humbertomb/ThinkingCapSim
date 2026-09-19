@@ -499,7 +499,7 @@ public class ArchModel
 
 	/**
 	 * The events every thread of the runtime registers for itself, whatever a
-	 * deployment says: {@link tc.runtime.event.DebugDesc} and
+	 * deployment says: {@link tc.runtime.event.ExecutionDesc} and
 	 * {@link tc.runtime.event.ConfigDesc}, which
 	 * {@link tc.runtime.thread.StdThread#setTDesc} puts in after the ones the
 	 * deployment asks for. A module and the robot are given them whether they

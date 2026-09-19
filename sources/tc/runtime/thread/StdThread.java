@@ -58,7 +58,7 @@ public abstract class StdThread implements Runnable, LindaListener
 		String			event;
 		EventDesc		edesc;
 		ConfigDesc		cdesc;
-		DebugDesc		ddesc;
+		ExecutionDesc	execdesc;
 		StringTokenizer	st;
 		
 		this.tdesc	= tdesc; 
@@ -78,8 +78,8 @@ public abstract class StdThread implements Runnable, LindaListener
 		}
 		
 		// Initialise standard event receivers (the ConfigDesc MUST always be the last one)
-		ddesc		= new DebugDesc (this, linda);
-		recvs.put (ddesc.key, ddesc);
+		execdesc	= new ExecutionDesc (this, linda);
+		recvs.put (execdesc.key, execdesc);
 		cdesc		= new ConfigDesc (this, linda);
 		recvs.put (cdesc.key, cdesc);
 		
