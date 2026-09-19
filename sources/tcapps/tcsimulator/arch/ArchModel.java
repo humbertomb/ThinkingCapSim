@@ -76,6 +76,13 @@ public class ArchModel
 	 */
 	static public final Property	PRG_PROP		= new Property ("PRG", "Program", "./conf/programs", "Programs");
 
+	/**
+	 * Whether a controller starts running of its own accord (AUTO), instead of
+	 * waiting to be told to start. It is what the module is given in its
+	 * configuration, and nothing is taken to be no.
+	 */
+	static public final Property	AUTO_PROP		= new Property ("AUTO", "Autostart", P_BOOLEAN);
+
 	/** The class the modules of a kind derive from. */
 	static public String moduleTypeBase (String type)
 	{
@@ -354,6 +361,9 @@ public class ArchModel
 			{
 				props.add (PRG_PROP);
 				known.add (PRG_PROP.key);
+				// and whether it starts on its own, which goes with the program it runs
+				props.add (AUTO_PROP);
+				known.add (AUTO_PROP.key);
 			}
 		}
 		for (String h : hidden)		known.add (h);
@@ -389,6 +399,10 @@ public class ArchModel
 		if (m == null)					return "";
 		if (key.equals ("INFO"))		return m.name;
 		String	v = m.get (key);
+		// a controller that says nothing of starting on its own does not, which is
+		// what a description written before it was asked for says
+		if ((v == null) && key.equals (AUTO_PROP.key) && CONTROLLER.equalsIgnoreCase (m.get ("TYPE")))
+			return "false";
 		return (v == null) ? "" : v;
 	}
 

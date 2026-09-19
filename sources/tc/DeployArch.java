@@ -309,6 +309,8 @@ public class DeployArch
 		m.set ("MODE", "shared");
 		m.set ("PASSIVE", "true");
 		m.set ("GFX", "false");
+		// a controller waits to be told to start unless it is said otherwise
+		if ("Controller".equalsIgnoreCase (m.get ("TYPE")))		m.set ("AUTO", "false");
 		return m;
 	}
 
