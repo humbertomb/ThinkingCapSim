@@ -18,7 +18,6 @@ import javax.swing.SwingUtilities;
 import tc.coord.RobotList;
 import tc.gui.monitor.EventList;
 import tc.gui.monitor.EventListRenderer;
-import tc.modules.MonitorData;
 import tc.shared.linda.ItemConfig;
 import tc.shared.linda.ItemGoal;
 import tc.shared.linda.ItemLPS;
@@ -33,9 +32,9 @@ import tclib.utils.fusion.FusionDesc;
 /**
  * "Robots" and "Events" tables of the monitor (tc.gui.monitor.MultiRobotPanel),
  * fed directly from the local Linda space of the running architecture: CONFIG
- * registers the robot, LPS updates its position (as the Linda router does for
- * the global monitor), GOAL its destination and STATUS its state and the event
- * log. Same table models as the monitor: {@link RobotList} and {@link EventList}.
+ * registers the robot, LPS updates its position, GOAL its destination and
+ * STATUS its state and the event log. Same table models as the monitor:
+ * {@link RobotList} and {@link EventList}.
  */
 public class RobotMonitorPanel extends JTabbedPane
 {
@@ -50,7 +49,6 @@ public class RobotMonitorPanel extends JTabbedPane
 	protected JScrollPane			robotSP, eventSP;
 
 	protected World					world;					// to name the zone of the robot position
-	protected java.util.Map<String, MonitorData>	mdatas	= new java.util.HashMap<String, MonitorData> ();	// per robot
 	protected java.util.Map<String, Long>			ltimes	= new java.util.HashMap<String, Long> ();
 
 	public RobotMonitorPanel ()
@@ -158,7 +156,6 @@ public class RobotMonitorPanel extends JTabbedPane
 			{
 				for (String id : ids)		robots.delete (id);
 				events.clear ();
-				mdatas.clear ();
 				ltimes.clear ();
 			}
 		});
@@ -181,7 +178,7 @@ public class RobotMonitorPanel extends JTabbedPane
 		}
 		else if (tuple.key.equals (Tuple.LPS))
 		{
-			// same throttling as LindaRouter when it builds the MONITOR tuple for the global monitor
+			// a robot moves faster than a table is worth redrawing
 			long	now = System.currentTimeMillis ();
 			Long	last = ltimes.get (id);
 			if ((last != null) && (now - last < LPS_PERIOD))		return;
@@ -191,11 +188,8 @@ public class RobotMonitorPanel extends JTabbedPane
 			{
 				public void run ()
 				{
-					MonitorData	mdata = mdatas.get (id);
-					if (mdata == null)		mdatas.put (id, mdata = new MonitorData ());
-					mdata.update (item.lps);
-					String	posmsg = (world != null) ? world.toString (mdata.cur.x (), mdata.cur.y ()) : "unknown";
-					robots.update (id, mdata, new tc.shared.lps.lpo.LPO[0], posmsg);
+					// where it says it is: the zone of the world it is in, and no more
+					robots.updatePosition (id, (world != null) ? world.toString (item.lps.cur.x (), item.lps.cur.y ()) : "unknown");
 				}
 			});
 		}

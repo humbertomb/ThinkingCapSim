@@ -120,6 +120,19 @@ public class RobotList extends VehicleList
     	return true;
     }
     
+    /** Where a robot is, as the table shows it: what it is told, and nothing worked out from a summary of its perceptual space. */
+    public boolean updatePosition (String id, String rdinfo)
+    {
+    	if (!rdesc.containsKey (id))
+    		return false;
+
+    	rdatainfo.put (id, rdinfo);
+
+		fireTableDataChanged();
+
+    	return true;
+    }
+    
     public boolean update (String id, String newstatus)
     {
     	if (!rdesc.containsKey (id))
