@@ -229,6 +229,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 			rows.get (r)[c] = (v == null) ? "" : v.toString ().trim ();
 			fireTableCellUpdated (r, c);
 			model.setEvents (block, rows);
+			eventsChanged ();
 		}
 
 		void add ()
@@ -242,7 +243,20 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 			rows.remove (r);
 			fireTableRowsDeleted (r, r);
 			model.setEvents (block, rows);
+			eventsChanged ();
 		}
+	}
+
+	/**
+	 * The events of a module were edited: what a module is given is written under
+	 * its block in the diagram, and how much of it there is says how much room the
+	 * row of the module takes, so the diagram is laid out again there and then
+	 * instead of waiting to be clicked on.
+	 */
+	private void eventsChanged ()
+	{
+		canvas.modelChanged ();
+		updateTitle ();
 	}
 
 	private JPanel buildEventsPanel ()
@@ -274,6 +288,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		{
 			public void actionPerformed (ActionEvent e)
 			{
+				if (eventsTB.isEditing ())		eventsTB.getCellEditor ().stopCellEditing ();	// whatever was being typed belongs to its own row
 				eventsModel.add ();
 				int	r = eventsModel.getRowCount () - 1;
 				eventsTB.setRowSelectionInterval (r, r);
@@ -296,7 +311,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		buttons.add (removeEventBT);
 
 		JPanel		pn = new JPanel (new BorderLayout ());
-		pn.setBorder (BorderFactory.createTitledBorder ("Events"));
+		pn.setBorder (BorderFactory.createTitledBorder ("Trigger Events"));
 		pn.add (sp, BorderLayout.CENTER);
 		pn.add (buttons, BorderLayout.SOUTH);
 		return pn;

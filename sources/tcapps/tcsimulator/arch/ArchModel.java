@@ -438,6 +438,17 @@ public class ArchModel
 		return (b != null) && ((b.kind == MODULE) || (b.kind == VROBOT));
 	}
 
+	/**
+	 * True when the symbols of a block are part of the drawing of the
+	 * architecture: the modules and the virtual robot, which say in the
+	 * deployment what they are given, and the router, which says it in its own
+	 * code.
+	 */
+	public boolean hasSymbols (Block b)
+	{
+		return (b != null) && ((b.kind == MODULE) || (b.kind == VROBOT) || (b.kind == ROUTER));
+	}
+
 	/** Events of a module as { symbol, class, method } rows. */
 	public List<String[]> events (Block b)
 	{
@@ -456,34 +467,94 @@ public class ArchModel
 	static private final String[][]	NOT_PRODUCED	= { { "tc.modules.Planner", "LPS" } };		// the planner polls the LPS
 
 	/**
+	 * Symbols a router writes without being registered for them: read off a class
+	 * file the traffic of a router is one lot of names, and what it makes up
+	 * itself is not told apart from what it passes on. The few there are said
+	 * here.
+	 */
+	static private final String[]	ROUTER_WRITES	= { "MONITOR" };			// the router sums up the LPS for the global space
+
+	/**
+	 * The class a block runs, as it is read: what a description names when the
+	 * development builds it, and what stands for it when it does not -- the robot
+	 * of the simulator, and the plain router of the coordination layer, which is
+	 * the case of the classes left out of the development for the hardware they
+	 * need.
+	 */
+	private String classOf (Block b)
+	{
+		String		cls = get (b, "CLASS");
+
+		if (tcapps.tceditor.DriverClasses.exists (cls))		return cls;
+		if (b.kind == VROBOT)								return SIM_ROBOT;
+		if (b.kind == ROUTER)								return ROUTER_BASE;
+		return cls;
+	}
+
+	/** The symbols the class of a block, or one of its ancestors, names. */
+	private java.util.Map<String, List<String>> named (Block b)
+	{
+		return tcapps.tceditor.DriverClasses.symbolsOf (classOf (b), symbols ());
+	}
+
+	/**
+	 * Symbols a block is given: the ones its events register, and, for a router,
+	 * the ones its code registers for -- which is its whole traffic but what it
+	 * writes of its own accord.
+	 */
+	public List<String> inputs (Block b)
+	{
+		List<String>	in = new ArrayList<String> ();
+
+		if ((b == null) || !hasSymbols (b))					return in;
+		if (b.kind == ROUTER)
+		{
+			for (List<String> syms : named (b).values ())
+				for (String sym : syms)
+					if (!in.contains (sym) && !writesOnly (sym))		in.add (sym);
+			return in;
+		}
+		for (String[] e : events (b))
+		{
+			String	sym = (e[0] != null) ? e[0].trim () : "";
+			if ((sym.length () > 0) && !in.contains (sym))			in.add (sym);
+		}
+		return in;
+	}
+
+	static private boolean writesOnly (String sym)
+	{
+		for (String s : ROUTER_WRITES)
+			if (s.equals (sym))		return true;
+		return false;
+	}
+
+	/**
 	 * Symbols a block produces: the ones the class it runs, or one of its
 	 * ancestors, names -- which is how a module says what it writes, since a
 	 * deployment only says what it is given -- less the ones it is given and less
 	 * the ones a class is known to read rather than write.
+	 *
+	 * A router is the exception to the first of those: it routes what it is
+	 * registered for, so what comes into it is what goes out of it, and taking
+	 * the one from the other would leave it writing nothing.
 	 */
 	public List<String> produces (Block b)
 	{
 		List<String>				out = new ArrayList<String> ();
-		List<String>				in = new ArrayList<String> ();
-		java.util.Map<String, List<String>>	found;
-		String						cls;
+		List<String>				in;
 
-		if ((b == null) || !hasEvents (b))					return out;
-		cls		= get (b, "CLASS");
-		// whatever a description names, what runs in a simulation is the robot of the
-		// simulator, so that is what is read when the named class is not to be had --
-		// which is the case of the classes left out of the development for the
-		// hardware they need
-		if ((b.kind == VROBOT) && !tcapps.tceditor.DriverClasses.exists (cls))		cls = SIM_ROBOT;
-		found	= tcapps.tceditor.DriverClasses.symbolsOf (cls, symbols ());
-		for (String[] e : events (b))		in.add (e[0]);
-		for (java.util.Map.Entry<String, List<String>> e : found.entrySet ())
+		if ((b == null) || !hasSymbols (b))					return out;
+		in		= inputs (b);
+		for (java.util.Map.Entry<String, List<String>> e : named (b).entrySet ())
 			for (String sym : e.getValue ())
 			{
 				boolean		reads = false;
 				for (String[] no : NOT_PRODUCED)
 					if (no[0].equals (e.getKey ()) && no[1].equals (sym))		reads = true;
-				if (!reads && !in.contains (sym) && !out.contains (sym))			out.add (sym);
+				if (reads || out.contains (sym))								continue;
+				if ((b.kind != ROUTER) && in.contains (sym))					continue;
+				out.add (sym);
 			}
 		return out;
 	}
