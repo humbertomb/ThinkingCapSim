@@ -7,9 +7,7 @@ package tc.coord;
 import java.util.*;
 
 import tc.vrobot.*;
-import tc.modules.*;
 import tc.fleet.*;
-import tc.shared.lps.lpo.*;
 
 import tclib.utils.fusion.*;
 
@@ -25,7 +23,6 @@ public class RobotList extends VehicleList
     protected Hashtable<String, Position>	goal;
     protected Hashtable<String, RobotData>	rrdata;
 	protected Hashtable<String, String>		rdatainfo;
-	protected Hashtable<String, LPO[]>		rlpos;
     protected Hashtable<String, String>		status;
    	
 	
@@ -44,7 +41,6 @@ public class RobotList extends VehicleList
 		goal			= new Hashtable<String, Position>(n);
 		rrdata 		= new Hashtable<String, RobotData>(n);
 		rdatainfo 	= new Hashtable<String, String>(n);
-		rlpos		= new Hashtable<String, LPO[]>(n);
 		status 		= new Hashtable<String, String>(n);
 	
 		columnNames	= new String []{ "Robot", "Position", "Status" };
@@ -79,7 +75,6 @@ public class RobotList extends VehicleList
 			goal.remove (robotkey);
 			rrdata.remove (robotkey);
 			rdatainfo.remove (robotkey);
-			rlpos.remove (robotkey);
 			status.remove (robotkey);
 
 			fireTableDataChanged();
@@ -106,20 +101,7 @@ public class RobotList extends VehicleList
     	return true;
     }
     
-   public boolean update (String id, MonitorData pdata, LPO[] lpos, String rdinfo)
-    {
-    	if (!rdesc.containsKey (id))
-    		return false;
-
-    	rpdata.put (id, pdata);
-    	rlpos.put (id, lpos);
-    	rdatainfo.put (id, rdinfo);
-    	
-		fireTableDataChanged();
-
-    	return true;
-    }
-    
+       
     /** Where a robot is, as the table shows it: what it is told, and nothing worked out from a summary of its perceptual space. */
     public boolean updatePosition (String id, String rdinfo)
     {
@@ -189,26 +171,10 @@ public class RobotList extends VehicleList
     	return (rrdata.get(id));
     }
     
-    public MonitorData getMData (int i)
-    {
-    	return ((MonitorData)rpdata.get(robotsid.get(i)));
-     }
-    
-    public MonitorData getMData (String id)
-    {
-    	return ((MonitorData)rpdata.get(id));
-    }
-    
-    public LPO[] getLPOs (int i)
-    {
-    	return (rlpos.get (robotsid.get (i)));
-     }
-    
-    public LPO[] getLPOs (String id)
-    {
-    	return (rlpos.get (id));
-    }
-    
+        
+        
+        
+        
     public String toString ()
     {
     	return (new String ("\tRobotlist content: "+robotsid+","+rdesc+", "+rcol));
