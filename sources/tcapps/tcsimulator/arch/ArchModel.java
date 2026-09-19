@@ -465,14 +465,6 @@ public class ArchModel
 	static private final String[][]	NOT_PRODUCED	= { { "tc.modules.Planner", "LPS" } };		// the planner polls the LPS
 
 	/**
-	 * Symbols a router writes without being registered for them: read off a class
-	 * file the traffic of a router is one lot of names, and what it makes up
-	 * itself is not told apart from what it passes on. The few there are said
-	 * here.
-	 */
-	static private final String[]	ROUTER_WRITES	= { "MONITOR" };			// the router sums up the LPS for the global space
-
-	/**
 	 * The class a block runs, as it is read: what a description names when the
 	 * development builds it, and what stands for it when it does not -- the robot
 	 * of the simulator, and the plain router of the coordination layer, which is
@@ -552,8 +544,8 @@ public class ArchModel
 	/**
 	 * Symbols a block is given: the ones its events register and the ones every
 	 * thread of the runtime gets anyway, in the order they are registered in;
-	 * and, for a router, the ones its code registers for -- which is its whole
-	 * traffic but what it writes of its own accord.
+	 * and, for a router, the ones its code registers for, which is the whole
+	 * traffic of a robot.
 	 */
 	public List<String> inputs (Block b)
 	{
@@ -564,19 +556,12 @@ public class ArchModel
 		{
 			for (List<String> syms : named (b).values ())
 				for (String sym : syms)
-					if (!in.contains (sym) && !writesOnly (sym))		in.add (sym);
+					if (!in.contains (sym))		in.add (sym);
 			return in;
 		}
 		in.addAll (declared (b));
 		in.addAll (standard (b));
 		return in;
-	}
-
-	static private boolean writesOnly (String sym)
-	{
-		for (String s : ROUTER_WRITES)
-			if (s.equals (sym))		return true;
-		return false;
 	}
 
 	/**
