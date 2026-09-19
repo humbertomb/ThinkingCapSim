@@ -5,19 +5,15 @@
 package tc;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.StringTokenizer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -29,9 +25,7 @@ import com.google.gson.GsonBuilder;
  * space, an optional Linda router, its modules and its virtual robot. Module
  * properties keep the names the runtime reads (CLASS, MODE, PASSIVE, ...,
  * see tc.runtime.thread.ThreadDesc), so {@link ExecArch} executes a robot
- * straight from this model. A legacy
- * <code>.arch</code> file can still be imported with
- * {@link #fromProperties(Properties, String)}.
+ * straight from this model.
  */
 public class DeployArch
 {
@@ -338,126 +332,5 @@ public class DeployArch
 				problems.add ("Every robot of a multi-robot deployment needs a Linda router; missing in: " + String.join (", ", without) + ".");
 		}
 		return problems;
-	}
-
-	/* ------------------------------------------------------------------ */
-	/* ADF (Properties) conversion                                         */
-	/* ------------------------------------------------------------------ */
-
-	/**
-	 * Imports a legacy architecture definition file (.arch) as a deployment
-	 * with one robot, named after the file (IFORK-1) unless the ADF has a NAME.
-	 */
-	static public DeployArch importArch (File f) throws IOException
-	{
-		String	n = f.getName ();
-		int		dot = n.lastIndexOf ('.');
-		if (dot > 0)		n = n.substring (0, dot);
-		Properties	props = new Properties ();
-		InputStream	in = new FileInputStream (f);
-		try { props.load (in); } finally { in.close (); }
-		DeployArch	d = fromProperties (props, n.toUpperCase () + "-1");
-		d.normalise ();								// drops the keys the runtime no longer reads (APW, ...)
-		return d;
-	}
-
-	/**
-	 * Imports a legacy architecture definition (the Properties of a .arch) as
-	 * a deployment with one robot; <code>robotName</code> is used when the
-	 * ADF has no NAME property.
-	 */
-	static public DeployArch fromProperties (Properties props, String robotName)
-	{
-		DeployArch	d = new DeployArch ();
-		if (hasPrefix (props, "GLIN"))
-			d.globalLinda	= readLinda (props, "GLIN", 5500, false);
-
-		String	name = props.getProperty ("NAME");
-		Robot	r = new Robot (((name != null) && (name.trim ().length () > 0)) ? name.trim () : robotName);
-		r.linda	= readLinda (props, "LLIN", 3000, true);
-		List<String>	prefixes = new ArrayList<String> ();						// blocks read, to spot the loose entries
-		prefixes.add ("GLIN"); prefixes.add ("LLIN");
-		String	mods = props.getProperty ("MODULES");
-		if (mods != null)
-		{
-			StringTokenizer	st = new StringTokenizer (mods, ", \t");
-			while (st.hasMoreTokens ())
-			{
-				String	pre = st.nextToken ();
-				prefixes.add (pre);
-				r.modules.add (readModule (props, pre));
-			}
-		}
-		String	router = props.getProperty ("ROUTER");
-		if ((router != null) && (router.trim ().length () > 0))		{ prefixes.add (router.trim ()); r.router = readModule (props, router.trim ()); }
-		String	vrobot = props.getProperty ("VROBOT");
-		if ((vrobot != null) && (vrobot.trim ().length () > 0))		{ prefixes.add (vrobot.trim ()); r.virtualRobot = readModule (props, vrobot.trim ()); }
-		// entries that belong to no block: robot-wide properties
-		List<String>	keys = new ArrayList<String> (props.stringPropertyNames ());
-		java.util.Collections.sort (keys);
-		for (String k : keys)
-		{
-			boolean	owned = isGlobalKey (k);
-			for (String pre : prefixes)
-				if ((pre != null) && k.startsWith (pre) && (k.length () > pre.length ()) && Character.isUpperCase (k.charAt (pre.length ())))		owned = true;
-			if (!owned)		r.properties.put (k, props.getProperty (k).trim ());
-		}
-		d.robots.add (r);
-		d.getWorldFile ();													// adopt the robot's world as the deployment world
-		d.original	= null;												// imported: counts as modified until saved
-		return d;
-	}
-
-	static private boolean hasPrefix (Properties props, String prefix)
-	{
-		for (String k : props.stringPropertyNames ())
-			if (k.startsWith (prefix) && (k.length () > prefix.length ()) && Character.isUpperCase (k.charAt (prefix.length ())))		return true;
-		return false;
-	}
-
-	static private Linda readLinda (Properties props, String prefix, int defPort, boolean defCreate)
-	{
-		Linda	l = new Linda ();
-		l.address	= props.getProperty (prefix + "ADDR", "localhost").trim ();
-		try { l.port = Integer.parseInt (props.getProperty (prefix + "PORT", "").trim ()); } catch (Exception e) { l.port = defPort; }
-		String	c = props.getProperty (prefix + "CREATE");
-		l.instantiate	= (c == null) ? defCreate : Boolean.parseBoolean (c.trim ());
-		return l;
-	}
-
-	static private final String[]	GLOBAL_KEYS	= { "MODULES", "ROUTER", "VROBOT", "ROBNAME", "NAME" };
-
-	static private boolean isGlobalKey (String k)
-	{
-		for (String g : GLOBAL_KEYS)		if (g.equals (k))	return true;
-		return false;
-	}
-
-	static private Module readModule (Properties props, String prefix)
-	{
-		Module	m = new Module (prefix);
-		List<String>	keys = new ArrayList<String> (props.stringPropertyNames ());
-		java.util.Collections.sort (keys);
-		for (String k : keys)
-		{
-			if (isGlobalKey (k) || !k.startsWith (prefix) || (k.length () <= prefix.length ()) || !Character.isUpperCase (k.charAt (prefix.length ())))		continue;
-			String	suffix = k.substring (prefix.length ());
-			String	value = props.getProperty (k).trim ();
-			if (suffix.equals ("INFO"))				m.name = value;
-			else if (suffix.equals ("CONNECT"))
-			{
-				StringTokenizer	st = new StringTokenizer (value, ",");
-				while (st.hasMoreTokens ())
-				{
-					StringTokenizer	tk = new StringTokenizer (st.nextToken (), " \t");
-					if (!tk.hasMoreTokens ())		continue;
-					String[]	e = { "", "", "" };
-					for (int i = 0; (i < 3) && tk.hasMoreTokens (); i++)		e[i] = tk.nextToken ();
-					m.events.add (new Event (e[0], e[1], e[2]));
-				}
-			}
-			else									m.set (suffix, value);
-		}
-		return m;
 	}
 }

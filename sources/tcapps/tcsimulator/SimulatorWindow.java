@@ -62,7 +62,7 @@ import wucore.utils.geom.Point3;
 /**
  * Main window of the new ThinkingCap simulator. Everything the simulator
  * runs (modules, robot type, world, ...) comes from an architecture
- * ({@link DeployArch}, conf/deploy/*.deploy; a legacy conf/archs/*.arch can be imported);
+ * ({@link DeployArch}, conf/deploy/*.deploy);
  * the world shown is the one of the architecture's virtual robot. The
  * visualisation is shared with the editor: the 2D view is a read-only
  * {@link WorldCanvas} and the 3D view a {@link View3DController}.
@@ -74,7 +74,6 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	static public final String		TITLE		= "ThinkingCap Simulator";
 	static public final String		MAPS_DIR	= "./conf/maps";
-	static public final String		ARCHS_DIR	= "./conf/archs";		// legacy .arch files (import)
 	static public final String		DEPLOY_DIR	= "./conf/deploy";		// deployment architectures (.deploy)
 
 	protected DeployArch			deploy;					// Deployment architecture in use (never null)
@@ -244,7 +243,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	private Action openArchAction ()
 	{
-		return ToolButtons.action ("Load Deployment...", ToolIcon.FOLDER, "Load deployment  [Ctrl+O]", new Runnable () { public void run () { loadArch (); } });
+		return ToolButtons.action ("Load Deployment...", ToolIcon.FOLDER, "Load deployment  [Ctrl+O]", new Runnable () { public void run () { loadDeployment (); } });
 	}
 
 	private Action openWorldAction ()
@@ -274,7 +273,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 		JMenu		mfile = new JMenu ("File");
 		mfile.add (item ("New Deployment", KeyEvent.VK_N, mask, new Runnable () { public void run () { newArch (); } }));
-		mfile.add (item ("Load Deployment...", KeyEvent.VK_O, mask, new Runnable () { public void run () { loadArch (); } }));
+		mfile.add (item ("Load Deployment...", KeyEvent.VK_O, mask, new Runnable () { public void run () { loadDeployment (); } }));
 		mfile.add (item ("Save Deployment", KeyEvent.VK_S, mask, new Runnable () { public void run () { saveArch (false); } }));
 		mfile.add (item ("Save Deployment As...", KeyEvent.VK_S, mask | KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { saveArch (true); } }));
 		mfile.addSeparator ();
@@ -394,23 +393,22 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		setDeploy (DeployArch.create ());
 	}
 
-	public void loadArch ()
+	public void loadDeployment ()
 	{
 		if (!confirmDiscard ())			return;
 		JFileChooser	fc = chooser (deploy.getFile (), DEPLOY_DIR, DeployArch.EXTENSION, "Deployment architectures (*.deploy)");
 		fc.setDialogTitle ("Load Deployment");
 		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
-		loadArch (fc.getSelectedFile ());
+		loadDeployment (fc.getSelectedFile ());
 	}
 
-	/** Loads a .deploy file (a legacy .arch is imported instead). */
-	public void loadArch (File f)
+	/** Loads a deployment. */
+	public void loadDeployment (File f)
 	{
 		terminate ();
 		try
 		{
-			if (f.getName ().toLowerCase ().endsWith (".arch"))		setDeploy (DeployArch.importArch (f));
-			else														setDeploy (DeployArch.load (f));
+			setDeploy (DeployArch.load (f));
 		} catch (Exception e)
 		{
 			e.printStackTrace ();
@@ -1067,7 +1065,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		statusBar.setStatus ("World saved to " + f.getPath ());
 	}
 
-	/** Path relative to the working directory when possible (as used in the .arch files), with '/' separators. */
+	/** Path relative to the working directory when possible (as a description says it), with '/' separators. */
 	static private String relativePath (File f)
 	{
 		String	path = f.getAbsolutePath ();
@@ -1127,7 +1125,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			{
 				SimulatorWindow	win = new SimulatorWindow ();
 				win.setVisible (true);
-				if (name != null)		win.loadArch (new File (name));
+				if (name != null)		win.loadDeployment (new File (name));
 				else					win.canvas.zoomToFit ();
 			}
 		});

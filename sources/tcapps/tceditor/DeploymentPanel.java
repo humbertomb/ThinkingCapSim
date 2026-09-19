@@ -72,7 +72,6 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 
 	static public final String		TITLE		= "Deployment Architecture Editor";
 	static public final String		DEPLOY_DIR	= "./conf/deploy";		// deployment architectures (.deploy)
-	static public final String		ARCHS_DIR	= "./conf/archs";		// legacy .arch files (import)
 
 	/** What the window or dialog hosting the editor needs to know. */
 	public interface Host
@@ -509,8 +508,6 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		mfile.add (menuItem ("Load Deployment...", KeyEvent.VK_O, mask, new Runnable () { public void run () { loadDeployment (); } }));
 		mfile.add (menuItem ("Save Deployment", KeyEvent.VK_S, mask, new Runnable () { public void run () { saveDeployment (false); } }));
 		mfile.add (menuItem ("Save Deployment As...", KeyEvent.VK_S, mask | KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { saveDeployment (true); } }));
-		mfile.addSeparator ();
-		mfile.add (menuItem ("Import Execution...", KeyEvent.VK_I, mask, new Runnable () { public void run () { importExecutionArchitecture (); } }));
 		if (withQuit)
 		{
 			mfile.addSeparator ();
@@ -641,31 +638,6 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 			e.printStackTrace ();
 			JOptionPane.showMessageDialog (this, "Cannot save " + f.getName () + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
 			return false;
-		}
-	}
-
-	/**
-	 * Imports an execution architecture (.arch) as a new robot of the
-	 * deployment: its local Linda space, router, modules and virtual robot.
-	 * The global Linda space of the file is discarded (the deployment keeps
-	 * its own, if any).
-	 */
-	private void importExecutionArchitecture ()
-	{
-		File		dir = new File (ARCHS_DIR);
-		JFileChooser	fc = new JFileChooser (dir.isDirectory () ? dir : new File ("."));
-		fc.setDialogTitle ("Import Execution");
-		fc.setFileFilter (new FileNameExtensionFilter ("Architecture definition files (*.arch)", "arch"));
-		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
-		try
-		{
-			DeployArch	imported = DeployArch.importArch (fc.getSelectedFile ());
-			if (imported.robots.isEmpty ())		return;
-			select (model.addRobot (imported.robots.get (0)));
-		} catch (Exception e)
-		{
-			e.printStackTrace ();
-			JOptionPane.showMessageDialog (this, "Cannot import " + fc.getSelectedFile ().getName () + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

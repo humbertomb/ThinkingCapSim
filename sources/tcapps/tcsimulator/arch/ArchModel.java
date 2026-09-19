@@ -499,16 +499,6 @@ public class ArchModel
 		return new Block (ROBOT, deploy.robots.size () - 1);
 	}
 
-	/** Adds an existing robot (imported), renaming it if the name is already in use. */
-	public Block addRobot (Robot r)
-	{
-		String	base = r.name, name = base;
-		for (int i = 2; robotNames ().contains (name); i++)		name = base + i;
-		r.name	= name;
-		deploy.robots.add (r);
-		return new Block (ROBOT, deploy.robots.size () - 1);
-	}
-
 	protected List<String> robotNames ()
 	{
 		List<String>	l = new ArrayList<String> ();
