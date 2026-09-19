@@ -68,7 +68,6 @@ public class BPlanTaskBehaviour extends Behaviour {
 	 * 
 	 * @param data information about the BPlan
 	 */
-	@SuppressWarnings("unchecked")
 	public void createRules(BPlanData data) {
 		if (data == null) 
 			return;

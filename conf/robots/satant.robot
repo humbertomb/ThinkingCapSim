@@ -143,10 +143,10 @@
   ],
   "kinematics": {
     "drive": "tc.vrobot.models.AckermanDrive",
-    "samax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,
+    "skid": 1.0,
     "gear": 0.0,
     "pulses": 0.0,
     "dtime": 100,
@@ -156,15 +156,19 @@
   },
   "sensors": {
     "son": {
+      "simerror": 0.05,
       "sensors": []
     },
     "ir": {
+      "simerror": 0.05,
       "sensors": []
     },
     "lrf": {
+      "simerror": 0.05,
       "sensors": []
     },
     "lsb": {
+      "simerror": 0.05,
       "sensors": []
     },
     "trk": {
@@ -180,6 +184,7 @@
           "rangemax": 140.0,
           "rangemin": 5.0,
           "cone": 16.0,
+          "rays": 16,
           "objects": 8
         }
       ]
@@ -243,38 +248,43 @@
       "maxrpm": 1288.0
     }
   ],
+  "groups": [
+    {
+      "mode": 6,
+      "base": 0.3,
+      "rho": 1.6,
+      "theta": 15.0,
+      "height": 0.0,
+      "orientation": 0.0,
+      "elevation": 0.0,
+      "rangemax": 50.0,
+      "rangemin": 0.0,
+      "cone": 16.0
+    }
+  ],
+  "fusionmode": 0,
   "extra": {
-    "RAYRAD": "16",
     "CAN_ADDRESS": "mimics4.inf.um.es",
     "REC_PORT": "10005",
     "CAPTORS": "devices.drivers.captors.UDP.UDPCaptors|10005",
-    "grouplen0": "1.6",
     "COMPASS0_OFFSET": "-180.0",
     "MAXENCS": "4",
-    "CONEGROUP": "16.0",
     "BRAKE30_T3": "1500",
     "BRAKE30_T1": "1000",
-    "RANGEGROUP": "50.00",
     "BRAKE30_T2": "1000",
     "CAN_PORT": "10001",
     "MAXCOMPASS": "1",
     "COMPASS0": "devices.drivers.compass.TCM2.TCM2|/dev/ttyS3",
     "KMSPD": "30",
-    "RADAR0": "devices.drivers.radar.Fujitsu.Fujitsu|/dev/ttyS0",
     "KMOTOR": "70",
     "BRAKE20_T1": "1000",
     "BRAKE20_T2": "2000",
     "BRAKE20_T3": "1500",
     "GPS0": "devices.drivers.gps.Novatel.Novatel|/dev/ttyS1",
-    "groupfeat0": "0.0",
-    "MAXRADAR": "1",
     "MAXGPS": "1",
     "KSTEER": "150",
-    "MAXGROUP": "1",
     "BRAKE40_T1": "1000",
-    "groupmode0": "6",
     "BRAKE40_T2": "500",
-    "BRAKE40_T3": "1500",
-    "grouprho0": "15.0"
+    "BRAKE40_T3": "1500"
   }
 }

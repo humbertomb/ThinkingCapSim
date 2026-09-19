@@ -1,12 +1,28 @@
 {
-  "world": "./conf/maps/aass_corr.world",
+  "world": "./conf/maps/um_diic_small.world",
+  "globalLinda": {
+    "address": "localhost",
+    "port": 5500,
+    "instantiate": true
+  },
   "robots": [
     {
-      "name": "B21",
+      "name": "QUAKY-2",
       "linda": {
         "address": "localhost",
         "port": 3000,
         "instantiate": true
+      },
+      "router": {
+        "name": "Linda Router",
+        "properties": {
+          "CLASS": "tc.coord.LindaRouter",
+          "GFX": "true",
+          "GMODE": "udp",
+          "GPORT": "20029",
+          "MODE": "shared"
+        },
+        "events": []
       },
       "modules": [
         {
@@ -36,12 +52,13 @@
         {
           "name": "Controller",
           "properties": {
-            "CLASS": "tclib.behaviours.bg.BGController",
+            "BEH": "MainBehaviour",
+            "CLASS": "tclib.behaviours.fhb.FHBController",
+            "FACT": "tcrob.umu.indoor.behs, ./sources/tcrob/umu/indoor/behs/, ./runtime",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "TYPE": "Controller",
-            "PRG": "./conf/programs/b21-corridor.b"
+            "TYPE": "Controller"
           },
           "events": [
             {
@@ -58,6 +75,21 @@
               "symbol": "PATH",
               "itemClass": "tc.shared.linda.ItemPath",
               "method": "notify_path"
+            },
+            {
+              "symbol": "BEHNAME",
+              "itemClass": "tc.shared.linda.ItemBehName",
+              "method": "notify_beh_name"
+            },
+            {
+              "symbol": "BEHRULES",
+              "itemClass": "tc.shared.linda.ItemBehRules",
+              "method": "notify_beh_rules"
+            },
+            {
+              "symbol": "BEHDEBUG",
+              "itemClass": "tc.shared.linda.ItemBehDebug",
+              "method": "notify_beh_debug"
             }
           ]
         },
@@ -117,7 +149,8 @@
       "virtualRobot": {
         "name": "Virtual Robot",
         "properties": {
-          "DESC": "./conf/robots/b21.robot",
+          "CLASS": "tcrob.umu.quaky2.Quaky2",
+          "DESC": "./conf/robots/quaky2.robot",
           "EXTIME": "175",
           "GFX": "true",
           "MODE": "shared",

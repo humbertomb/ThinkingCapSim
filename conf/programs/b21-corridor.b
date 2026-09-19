@@ -36,6 +36,12 @@ set GZ		= trapezoid {-0.087, -0.02, 0.02, 0.087};	// Zero
 set GSP		= trapezoid {0.0, 0.087, 0.52, 0.87};		// Small Positive
 set GP		= trapezoid {0.52, 0.87, 3.5, 3.5};			// Positive
 
+// Sets for additional calculations {0.0, 1.0} 
+set ZERO	= crisp {0.0};								// Zero
+set Q_ONE	= crisp {0.7};								// Quasi-One
+set ONE		= crisp {1.0};								// One
+set UZONE	= trapezoid {0.5, 0.95, 1.0, 1.0};			// U-Shape threshold
+
 /* ----------------- */
 /* C O N S T A N T S */
 /* ----------------- */
@@ -46,6 +52,7 @@ set GP		= trapezoid {0.52, 0.87, 3.5, 3.5};			// Positive
 /* ----------------- */
 
 // External Blackboard Variables
+sensor float 		virtu15, virtu0;
 sensor float		group0, group1, group2, group3, group4;
 sensor float 		bumper0, bumper1, bumper2, bumper3;
 sensor float 		alpha, heading;
@@ -53,7 +60,8 @@ effector float 		turn, speed;
 
 // State and Control Variables
 float 				collision = 0.0;
-float 				left, leftd, front, rightd, right; 	// Group sensors
+float 				left, leftd, front, rightd, right, uobject; 	// Group sensors
+float				ushape = 0.0, usense;							// For U-shaped obstacles
 
 /* ----------------- */
 /* F U N C T I O N S */
@@ -94,6 +102,9 @@ initialization
 {
 	turn = 0.0;
 	speed = 0.0;
+	
+	usense = -1.0;
+	ushape = 0.0;
 }
 
 
@@ -103,7 +114,7 @@ initialization
 
 agent ReactiveControl
 {
-	blending	left range (0.0, 2.0), leftd range (0.0, 1.0), right range (0.0, 2.0), rightd range (0.0, 1.0), front range (0.0, 2.0), collision range (0.0, 1.0);
+	blending	left range (0.0, 2.0), leftd range (0.0, 1.0), right range (0.0, 2.0), rightd range (0.0, 1.0), front range (0.0, 2.0), collision range (0.0, 1.0), uobject range (0.0, 1.0);
 
 	common
 	{
@@ -115,17 +126,45 @@ agent ReactiveControl
 		
 		collision = bumper0 + bumper1 + bumper2 + bumper3;
 		if (collision > 1.0) collision = 1.0;
+		
+		rules
+		{
+			background (0.01)													uobject is ZERO;
+			
+			if ((front is CLOSE) && ((rightd is CLOSE) || (leftd is CLOSE)))	uobject is ONE;
+			if ((front is NEAR) && ((rightd is CLOSE) || (leftd is CLOSE)))		uobject is Q_ONE;
+			if ((front is CLOSE) && ((rightd is NEAR) || (leftd is NEAR)))		uobject is ONE;
+			if ((front is NEAR) && ((rightd is NEAR) || (leftd is NEAR)))		uobject is Q_ONE;
+		}
 	}
 
-	behaviour wander priority 1.0
+	behaviour escape priority 1.25
 	{
 		fusion	turn, speed;
 
-		rules
+		if (front > 0.3)
+			ushape = 0.0;
+
+		if ((front < 0.2) && (ushape == 0.0))
 		{
-			background (1.0)								speed is SFULL;
-			background (1.0)								turn is TC;
+			ushape = 1.0;
+
+			// These tests are someway random
+			if (virtu15 < virtu0)
+				usense = 1.0;				// Turn Right
+			if (virtu15 >= virtu0)
+				usense = -1.0;				// Turn Left
 		}
+
+		if (ushape == 1.0)
+		{
+			if (usense == 1.0)
+				turn = 6.0;
+			if (usense == -1.0)
+				turn = -6.0;
+		}
+
+		speed = 0.0;
 	}
 
 	behaviour avoidL priority 1.0
@@ -228,28 +267,49 @@ agent ReactiveControl
 		}
 	}
 
+	behaviour toGoal priority 0.7 // 0.3
+	{
+		fusion		turn, speed;
+		float		diff;
+
+		diff = heading - alpha;
+			
+		rules
+		{
+			if (diff is GP)			turn is TTL, speed is SLOW;
+			if (diff is GSP)		turn is TL, speed is SMEDIUM;		// TSL
+			if (diff is GZ)			turn is TC, speed is SFULL;
+			if (diff is GSN)		turn is TR, speed is SMEDIUM;		// TSR
+			if (diff is GN)			turn is TTR, speed is SLOW;
+		}
+	}
+
 	blender
 	{
 		// OJO: no se pueden usar ORs en las reglas del blender, y SOLO conjuntos trapezoidales
 		rules
 		{
- 			background (0.01)					wander is HIGH;
+ 			background (0.01)					escape is LOW;
 			background (0.01)					avoidR is LOW;
 			background (0.01)					avoidL is LOW;
 			background (0.01)					avoidF is LOW;
+			background (0.01)					toGoal is HIGH;
+
+			// Rules for U-shaped objects
+			if (uobject is UZONE)				escape is HIGH, 	toGoal is ZERO;
 
 			// Rules for obstacle avoidance
-			if (leftd is CLOSE)					avoidL is HIGH,		wander is LOW;
-			if (front is CLOSE)					avoidF is HIGH,		wander is LOW;
-			if (rightd is CLOSE)				avoidR is HIGH,		wander is LOW;
+			if (leftd is CLOSE)					avoidL is HIGH, 	toGoal is LOW;
+			if (front is CLOSE)					avoidF is HIGH,		toGoal is LOW;
+			if (rightd is CLOSE)				avoidR is HIGH, 	toGoal is LOW;
 
-			if (leftd is NEAR) 					avoidL is HALFH,	wander is HALFL;
-			if (front is NEAR)					avoidF is HALFH,	wander is HALFL;
-			if (rightd is NEAR) 				avoidR is HALFH,	wander is HALFL;
+			if (leftd is NEAR) 					avoidL is HALFH, 	toGoal is HALFL;
+			if (front is NEAR)					avoidF is HALFH,	toGoal is HALFL;
+			if (rightd is NEAR) 				avoidR is HALFH, 	toGoal is HALFL;
 
-			if (leftd is MED) 					avoidL is HALFL,	wander is HALFH;
-			if (front is MED)					avoidF is HALFL,	wander is HALFH;
-			if (rightd is MED) 					avoidR is HALFL,	wander is HALFH;
+			if (leftd is MED) 					avoidL is HALFL, 	toGoal is HALFH;
+			if (front is MED)					avoidF is HALFL,	toGoal is HALFH;
+			if (rightd is MED) 					avoidR is HALFL,	toGoal is HALFH;
 		}
 	}
 }

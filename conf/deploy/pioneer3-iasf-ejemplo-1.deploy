@@ -10,80 +10,22 @@
       },
       "modules": [
         {
-          "name": "Navigation",
-          "properties": {
-            "CLASS": "tcrob.umu.indoor.IndoorNavigation",
-            "GFX": "true",
-            "MODE": "shared",
-            "PASSIVE": "true",
-            "POLLED": "false",
-            "QUEUED": "false",
-            "TYPE": "Navigation"
-          },
-          "events": [
-            {
-              "symbol": "LPS",
-              "itemClass": "tc.shared.linda.ItemLPS",
-              "method": "notify_lps"
-            },
-            {
-              "symbol": "GOAL",
-              "itemClass": "tc.shared.linda.ItemGoal",
-              "method": "notify_goal"
-            }
-          ]
-        },
-        {
           "name": "Controller",
           "properties": {
             "CLASS": "tclib.behaviours.bg.BGController",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "conf/programs/iasf-ejemplo-1.b",
+            "PRG": "./conf/programs/iasf-ejemplo-1.b",
             "QUEUED": "true",
-            "TYPE": "Controller"
+            "TYPE": "Controller",
+            "AUTO": "true"
           },
           "events": [
             {
               "symbol": "LPS",
               "itemClass": "tc.shared.linda.ItemLPS",
               "method": "notify_lps"
-            },
-            {
-              "symbol": "GOAL",
-              "itemClass": "tc.shared.linda.ItemGoal",
-              "method": "notify_goal"
-            },
-            {
-              "symbol": "PATH",
-              "itemClass": "tc.shared.linda.ItemPath",
-              "method": "notify_path"
-            }
-          ]
-        },
-        {
-          "name": "Planner",
-          "properties": {
-            "CLASS": "tclib.planning.sequence.SeqPlanner",
-            "EXTIME": "1000",
-            "GFX": "true",
-            "MODE": "shared",
-            "PASSIVE": "false",
-            "POLLED": "true",
-            "QUEUED": "false",
-            "TYPE": "Planner"
-          },
-          "events": [
-            {
-              "symbol": "PLAN",
-              "itemClass": "tc.shared.linda.ItemPlan",
-              "method": "notify_plan"
-            },
-            {
-              "symbol": "BEHRESULT",
-              "itemClass": "tc.shared.linda.ItemBehResult",
-              "method": "notify_beh_result"
             }
           ]
         },
@@ -101,16 +43,6 @@
               "symbol": "DATA",
               "itemClass": "tc.shared.linda.ItemData",
               "method": "notify_data"
-            },
-            {
-              "symbol": "OBJECT",
-              "itemClass": "tc.shared.linda.ItemObject",
-              "method": "notify_object"
-            },
-            {
-              "symbol": "NAVIGATION",
-              "itemClass": "tc.shared.linda.ItemNavigation",
-              "method": "notify_navigation"
             }
           ]
         }
@@ -119,7 +51,7 @@
         "name": "Virtual Robot",
         "properties": {
           "CLASS": "tcrob.umu.pioneer3.Pioneer3",
-          "DESC": "conf/robots/pioneer3.robot",
+          "DESC": "./conf/robots/pioneer3.robot",
           "EXTIME": "100",
           "GFX": "false",
           "MODE": "shared",

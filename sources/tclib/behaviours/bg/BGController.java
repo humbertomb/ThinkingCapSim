@@ -136,6 +136,10 @@ public class BGController extends Controller
 				}
 			}
 		}
+		
+		// Autostart the controller without a plan
+		if (cfg.getBoolean ("AUTO", false))
+			has_goal = true;
 	}
 	
 	protected int inGoal ()

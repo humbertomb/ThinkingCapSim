@@ -44,6 +44,7 @@ public class SimpleClassLoader extends ClassLoader {
 			FileInputStream fi = new FileInputStream(classImplementationPath+"/"+className.replace('.','/')+".class");
 			result = new byte[fi.available()];
 			fi.read(result);
+			fi.close ();
 			return result;
 		} catch (Exception e) {
 			return null;

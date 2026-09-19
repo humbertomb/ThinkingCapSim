@@ -1,16 +1,16 @@
 {
   "apw": true,
   "starts": [
-    { "x": 0, "y": 0, "z": 0, "orientation": 90 }
+    { "x": 1.8414, "y": 3.9117, "z": 0, "orientation": 90 }
   ],
   "path": [],
   "walls": {
     "defaults": { "width": 0.01, "height": 0.75, "texture": "./conf/3dmodels/textures/wall.jpg" },
     "items": [
-      { "x1": -10, "y1": -10, "z1": 0, "x2": -10, "y2": 10, "z2": 0 },
-      { "x1": -10, "y1": 10, "z1": 0, "x2": 10, "y2": 10, "z2": 0 },
-      { "x1": 10, "y1": 10, "z1": 0, "x2": 10, "y2": -10, "z2": 0 },
-      { "x1": 10, "y1": -10, "z1": 0, "x2": -10, "y2": -10, "z2": 0 }
+      { "x1": -5, "y1": -5, "z1": 0, "x2": -5, "y2": 5, "z2": 0 },
+      { "x1": -5, "y1": 5, "z1": 0, "x2": 5, "y2": 5, "z2": 0 },
+      { "x1": 5, "y1": 5, "z1": 0, "x2": 5, "y2": -5, "z2": 0 },
+      { "x1": 5, "y1": -5, "z1": 0, "x2": -5, "y2": -5, "z2": 0 }
     ]
   },
   "icons": [],
@@ -19,7 +19,7 @@
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
     "items": [
-      { "label": "Habitación", "x": -10, "y": -10, "z": 0, "width": 20, "height": 20, "texture": "./conf/3dmodels/textures/floor2.jpg" }
+      { "label": "Habitación", "x": -5, "y": -5, "z": 0, "width": 10, "height": 10, "texture": "./conf/3dmodels/textures/floor2.jpg" }
     ]
   },
   "fareas": {
@@ -31,7 +31,7 @@
     "items": []
   },
   "waypoints": [
-    { "label": "ficticio", "x": 6.7356, "y": 12.1002, "z": 0, "orientation": 0 }
+    { "label": "ficticio", "x": 2.7356, "y": 6.1002, "z": 0, "orientation": 0 }
   ],
   "docks": [],
   "beacons": [],
