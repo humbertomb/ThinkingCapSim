@@ -52,9 +52,6 @@ public abstract class Navigation extends StdThread
 		case ItemExecution.DEBUG:
 			debug	= item.dbg_navigation;
 			break;
-		case ItemExecution.MODE:
-			mode	= item.mode_navigation;
-			break;
 		case ItemExecution.COMMAND:
 		default:
 		}	

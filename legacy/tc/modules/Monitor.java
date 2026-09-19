@@ -124,13 +124,7 @@ public class Monitor extends Controller
 		ditem.debug (rob, per, con, nav, pla, System.currentTimeMillis ());
 		linda.write (dtuple);
 	}
-	
-	public void setMode (int rob, int per, int con, int nav, int pla)
-	{
-		ditem.mode (rob, per, con, nav, pla, System.currentTimeMillis ());
-		linda.write (dtuple);
-	}
-	
+		
 	public void setGoal (double gx, double gy)
 	{
 		gitem.set (gx, gy, System.currentTimeMillis ());

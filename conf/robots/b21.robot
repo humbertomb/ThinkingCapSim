@@ -427,8 +427,21 @@
       ]
     },
     "lrf": {
+      "cycle": 1,
       "simerror": 0.05,
-      "sensors": []
+      "sensors": [
+        {
+          "rho": 3.061616997868383E-18,
+          "theta": -0.0,
+          "height": 1.43,
+          "orientation": 0.0,
+          "step": 1,
+          "rangemax": 30.0,
+          "rangemin": 0.2,
+          "cone": 120.0,
+          "rays": 120
+        }
+      ]
     },
     "lsb": {
       "simerror": 0.05,
@@ -839,6 +852,20 @@
     }
   ],
   "fusionmode": 4,
+  "scans": [
+    {
+      "mode": 0,
+      "rays": 90,
+      "rho": 0.0,
+      "theta": 180.0,
+      "height": 1.43,
+      "orientation": 0.0,
+      "elevation": 0.0,
+      "rangemax": 12.0,
+      "rangemin": 0.0,
+      "cone": 180.0
+    }
+  ],
   "extra": {
     "SENSIBSON": "0.0000001"
   }

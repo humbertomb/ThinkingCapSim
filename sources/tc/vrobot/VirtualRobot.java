@@ -263,9 +263,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		case ItemExecution.DEBUG:
 			debug	= item.dbg_vrobot;
 			break;
-		case ItemExecution.MODE:
-			mode	= item.mode_vrobot;
-			break;
 		default:
 		}	
 	}	

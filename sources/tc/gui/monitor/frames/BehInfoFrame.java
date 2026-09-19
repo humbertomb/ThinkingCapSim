@@ -16,7 +16,6 @@ import java.util.*;
 import java.text.DecimalFormat;
 
 import tc.shared.linda.*;
-import tc.modules.*;
 import tclib.behaviours.fhb.*;
 import tclib.utils.fuzzy.*;
 
@@ -84,7 +83,7 @@ public class BehInfoFrame extends MonitorFrame
 	private MyTableModel tableData;
 	/* Stores the data display by the table in the bottom side */
 	private MyTableModel tableData2;
-	private Monitor monitor;
+//	private Monitor monitor;
 	/* This variable is used to say when the tree has to be updated */
 	private boolean treeUpdate;
 	/* This variable is used to say when the reload command has been sent */
@@ -102,10 +101,10 @@ public class BehInfoFrame extends MonitorFrame
 	 * @param xPos x coordinate of the window location
 	 * @param yPos y coordinate of the window location
 	 */
-	public BehInfoFrame (String identifier, Monitor monitor, ChildWindowListener container,int xPos, int yPos) {
+	public BehInfoFrame (String identifier, ChildWindowListener container,int xPos, int yPos) {
 		this.container = container;
 		this.identifier = identifier;
-		this.monitor = monitor;
+//		this.monitor = monitor;
 		pathToActiveNode = null;
 		antecedentFuzzyPredicates = null;
 		fuzzyPredicatesWindow = null;
@@ -361,8 +360,8 @@ public class BehInfoFrame extends MonitorFrame
 	 * sending the behaviour information.
 	 */
 	private void sendDebugCommand(int command) {
-		monitor.setID(identifier);
-		monitor.setBehaviourDebug(command);
+//		monitor.setID(identifier);
+//		monitor.setBehaviourDebug(command);
 	}
 	
 	/*
@@ -371,8 +370,8 @@ public class BehInfoFrame extends MonitorFrame
 	 * be reloaded.
 	 */
 	private void sendReloadCommand() {
-		monitor.setID(identifier);			
-		monitor.setBehaviourName(behInformation.getName());
+//		monitor.setID(identifier);			
+//		monitor.setBehaviourName(behInformation.getName());
 //		System.out.println("DEBUG: beh reload requested -> "+behInformation.getName());
 		reloadCommandSent = true;
 		treeUpdate = true;
@@ -667,8 +666,8 @@ public class BehInfoFrame extends MonitorFrame
 			}
 		}
 		/* Sends the list to the controller */
-		monitor.setID(identifier);			
-		monitor.setBehaviourRuleNames(rulesNames);
+//		monitor.setID(identifier);			
+//		monitor.setBehaviourRuleNames(rulesNames);
 		/* The tree has to be updated to show the new current behaviour */
 		treeUpdate = true;
 	}

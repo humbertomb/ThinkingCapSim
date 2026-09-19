@@ -11,7 +11,6 @@ public class ItemExecution extends Item
 	// Operation modes
 	public static final int 		COMMAND		= 0;
 	public static final int 		DEBUG		= 1;
-	public static final int 		MODE		= 2;
 	
 	// Command types
 	public static final int 		START		= 0;
@@ -26,14 +25,7 @@ public class ItemExecution extends Item
 
 	// Control commands
 	public int						command;
-	
-	// Ececution parameters commands
-	public int						mode_vrobot;
-	public int						mode_perception;
-	public int						mode_controller;
-	public int						mode_navigation;
-	public int						mode_planner;
-	
+		
 	// Debug commands
 	public boolean					dbg_vrobot;
 	public boolean					dbg_perception;
@@ -54,7 +46,6 @@ public class ItemExecution extends Item
 		{
 		case COMMAND:	return "COMMAND";
 		case DEBUG:		return "DEBUG";
-		case MODE:		return "MODE";
 		default:		return "N/A";
 		}
 	}
@@ -95,20 +86,6 @@ public class ItemExecution extends Item
 		this.dbg_navigation		= nav;
 		this.dbg_planner		= pla;
 	}
-	
-	public void mode (int rob, int per, int con, int nav, int pla, long tstamp)
-	{
-		set (tstamp);
-		
-		this.operation			= MODE;
-
-		this.mode_vrobot		= rob;
-		this.mode_perception	= per;
-		this.mode_controller	= con;
-		this.mode_navigation	= nav;
-		this.mode_planner		= pla;
-	}
-
 	
 	public String toString ()
 	{

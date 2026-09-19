@@ -118,9 +118,6 @@ public abstract class Planner extends StdThread
 		case ItemExecution.DEBUG:
 			debug	= item.dbg_planner;
 			break;
-		case ItemExecution.MODE:
-			mode	= item.mode_planner;
-			break;
 		case ItemExecution.COMMAND:
 		default:
 		}	

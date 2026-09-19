@@ -365,8 +365,7 @@ public class RobotView3DWindow extends JFrame
 	private String sector (BranchGroup bg, String fam, RobotDef.Sensor s, String what)
 	{
 		double[]	d = robot.detection (fam, s);
-		double		x, y, z, rmax, rmin, a0, ext;
-		int			steps;
+		double		x, y, z, rmax, rmin, ext;
 
 		rmax	= d[0];		rmin = Math.max (0.0, d[1]);
 		if (rmax <= 0.0)		return (what != null) ? what + "no range.   " : "";
@@ -378,7 +377,6 @@ public class RobotView3DWindow extends JFrame
 		y		= s.rho * Math.sin (Math.toRadians (s.theta));
 		z		= s.height;
 		ext		= Math.toRadians ((d[2] > 0.0) ? Math.min (d[2], 360.0) : 0.0);
-		a0		= Math.toRadians (s.orientation) - ext / 2;
 		if (ext <= 0.0)
 			return (what != null) ? what + RobotDef.fmt (rmin) + " to " + RobotDef.fmt (rmax) + " m, no aperture.   " : "";
 

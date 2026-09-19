@@ -75,9 +75,6 @@ public abstract class Perception extends StdThread
 		case ItemExecution.DEBUG:
 			debug	= item.dbg_perception;
 			break;
-		case ItemExecution.MODE:
-			mode	= item.mode_perception;
-			break;
 		case ItemExecution.COMMAND:
 		default:
 		}	

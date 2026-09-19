@@ -99,9 +99,6 @@ public abstract class Controller extends StdThread
 		case ItemExecution.DEBUG:
 			debug	= item.dbg_controller;
 			break;
-		case ItemExecution.MODE:
-			mode	= item.mode_controller;
-			break;
 		case ItemExecution.COMMAND:
 		default:
 		}	

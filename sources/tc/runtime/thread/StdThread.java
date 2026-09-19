@@ -31,7 +31,6 @@ public abstract class StdThread implements Runnable, LindaListener
 	
 	// Debug and control parameters
 	protected int				state;
-	protected int				mode;
 	protected boolean			running		= false;
 	protected boolean			step		= false;
 	protected boolean			debug		= false;
@@ -266,7 +265,6 @@ public abstract class StdThread implements Runnable, LindaListener
 			}	
 			break;
 		case ItemExecution.DEBUG:
-		case ItemExecution.MODE:
 		default:
 		}	
 	}	

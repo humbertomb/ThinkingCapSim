@@ -44,7 +44,8 @@ public class LogFile extends Object
 		{
 			try
 			{
-				new FileReader (preffix + logorder + suffix);
+				FileReader file = new FileReader (preffix + logorder + suffix);
+				try { file.close (); } catch (Exception e) { }
 				logorder ++;
 			}
 			catch (FileNotFoundException fnfe) { notfound = false; }
