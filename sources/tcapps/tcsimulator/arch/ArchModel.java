@@ -58,7 +58,8 @@ public class ArchModel
 	 * of the simulator itself, which stands for a real robot and is only used when
 	 * running on one.
 	 */
-	static public final String[]	VROBOT_NOT	= { "tcapps.tcsimulator.simulator.objects.SimRobot" };
+	static public final String		SIM_ROBOT	= "tcapps.tcsimulator.simulator.objects.SimRobot";
+	static public final String[]	VROBOT_NOT	= { SIM_ROBOT };
 
 	/**
 	 * The kinds of module an architecture is made of, which are the classes of
@@ -465,9 +466,16 @@ public class ArchModel
 		List<String>				out = new ArrayList<String> ();
 		List<String>				in = new ArrayList<String> ();
 		java.util.Map<String, List<String>>	found;
+		String						cls;
 
 		if ((b == null) || !hasEvents (b))					return out;
-		found	= tcapps.tceditor.DriverClasses.symbolsOf (get (b, "CLASS"), symbols ());
+		cls		= get (b, "CLASS");
+		// whatever a description names, what runs in a simulation is the robot of the
+		// simulator, so that is what is read when the named class is not to be had --
+		// which is the case of the classes left out of the development for the
+		// hardware they need
+		if ((b.kind == VROBOT) && !tcapps.tceditor.DriverClasses.exists (cls))		cls = SIM_ROBOT;
+		found	= tcapps.tceditor.DriverClasses.symbolsOf (cls, symbols ());
 		for (String[] e : events (b))		in.add (e[0]);
 		for (java.util.Map.Entry<String, List<String>> e : found.entrySet ())
 			for (String sym : e.getValue ())

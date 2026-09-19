@@ -84,6 +84,23 @@ public class DriverClasses
 	/** Forgets what was found (the development having been built again, say). */
 	static public synchronized void flush ()					{ CACHE.clear ();	SYMBOLS.clear (); }
 
+	/** True when the development holds a class by that name. */
+	static public boolean exists (String name)
+	{
+		java.io.InputStream		in = null;
+
+		if ((name == null) || (name.trim ().length () == 0))		return false;
+		try
+		{
+			in	= loader ().getResourceAsStream (name.trim ().replace ('.', '/') + ".class");
+			return (in != null);
+		} catch (Throwable e)			{ return false; }
+		finally
+		{
+			if (in != null)		try { in.close (); } catch (Throwable e) { }
+		}
+	}
+
 	/** Where the walk of the ancestors of a module stops: what every one of them is. */
 	static public final String		MODULE_ROOT	= "tc.runtime.thread.StdThread";
 
