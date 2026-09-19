@@ -40,7 +40,11 @@ public class IndoorLPSWindow extends JFrame
 	{				
 		// Initialise widgets
 		mlps 		= new LPS2D (lpsCO.getModel ());
-			
+		// zooming out past the fit takes the boundary of the perceptual space out
+		// with it, instead of drawing the same thing smaller in the middle of the
+		// window: what lies beyond the reach of the sensors comes into view
+		lpsCO.setWider (mlps);
+
 		try { initComponents (); } catch (Exception e) { e.printStackTrace (); }
 		
 		setTitle ("[" + name +"] Local Perceptual Space");

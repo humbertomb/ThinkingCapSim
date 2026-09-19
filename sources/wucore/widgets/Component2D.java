@@ -96,6 +96,8 @@ public class Component2D extends JComponent
 	protected Hashtable<String,Image>	img_hash;					// Hashtable for images and icons
 	protected ImageCache				img_cache;					// Cache for images and icons
 	protected Component2DListener		img_listener;				// Listener for ToolTip labels
+	protected Component2DWider			wider;						// What can be drawn wider than it reaches (optional)
+	protected boolean					widened;					// The last zoom went into the boundary of what is drawn
 
 	// Scaling and projection parameters
 	protected double[] 					mod_bor;					// Model boundaries (world coordinates) - Bounding Box
@@ -183,6 +185,13 @@ public class Component2D extends JComponent
 
 	/* Accessor methods */
 	public final void			setListener (Component2DListener lter)	{ this.img_listener = lter; }
+	/**
+	 * What is drawn here, when it can be drawn wider than it reaches on its own.
+	 * Given one, zooming out past the fit widens it rather than drawing the same
+	 * thing smaller inside empty margins.
+	 */
+	public final void			setWider (Component2DWider wider)		{ this.wider = wider; }
+	public final Component2DWider	getWider ()							{ return wider; }
 	public Component2DListener	getListener ()							{ return img_listener; }
 
 	public final void 			setScale (double scale)					{ if (scale > 0.0) { this.scale = scale; modified = true; } }
@@ -1078,7 +1087,43 @@ public class Component2D extends JComponent
 		prevy = y; 
 	}
 
-	public void mouseZoom (int x, int y) 
+	/**
+	 * The scale a zoom is to end at, once what is drawn has been given the chance
+	 * to be drawn wider instead.
+	 *
+	 * Zooming out fits the model into the window and then makes it smaller, which
+	 * leaves it in the middle of empty margins: nothing is drawn out there because
+	 * there is nothing to draw. Where what is drawn can be widened -- a local
+	 * perceptual space can, by taking its boundary further out -- it is asked to
+	 * widen instead, by just enough to fill the window again, and what was cut
+	 * away beyond the old boundary comes into view. Zooming back in narrows it
+	 * again, down to what it reaches on its own, and only then does the scale rise
+	 * above the fit.
+	 *
+	 * What is drawn wider is scaled here and now as well, so that the view does
+	 * not wait for whoever fills it to draw its next frame.
+	 */
+	private double fit (double nscale)
+	{
+		double		f;
+		double		cx, cy;
+
+		widened	= false;
+		if ((wider == null) || (nscale == 1.0))				return nscale;
+		f		= wider.widen (1.0 / nscale);
+		if ((f <= 0.0) || (f == 1.0) || Double.isNaN (f))	return nscale;
+
+		cx		= 0.5 * (mod_bor[0] + mod_bor[2]);
+		cy		= 0.5 * (mod_bor[1] + mod_bor[3]);
+		model.setBB (cx + (mod_bor[0] - cx) * f, cy + (mod_bor[1] - cy) * f,
+					 cx + (mod_bor[2] - cx) * f, cy + (mod_bor[3] - cy) * f);
+		mod_bor	= model.getBoundingBox ();
+		widened	= true;
+		// as far as it widened, that much of the zoom is already in the boundary
+		return Math.min (Math.max (nscale * f, MINSCALE), MAXSCALE);
+	}
+
+	public void mouseZoom (int x, int y)
 	{
 		double			dy;
 		Point2			pt;
@@ -1090,15 +1135,14 @@ public class Component2D extends JComponent
 
 		if (dy != 0.0)
 		{
-			scale	+= KCDRAG * dy;
-			scale	= Math.min (Math.max (scale, MINSCALE), MAXSCALE);
+			scale	= fit (Math.min (Math.max (scale + KCDRAG * dy, MINSCALE), MAXSCALE));
 			//prescal = scal_fac;
 
-			pre_scaling ();		
+			pre_scaling ();
 			autoCenter (pt.x, pt.y);
 
 			modified	= true;
-			repaint ();			
+			repaint ();
 		}
 
 		prevx = x;
@@ -1119,8 +1163,8 @@ public class Component2D extends JComponent
 		if (notches == 0)						return;
 		pt		= screen2world (getSize ().width / 2, getSize ().height / 2);
 		nscale	= scale * Math.pow (KCWHEEL, -notches);
-		nscale	= Math.min (Math.max (nscale, MINSCALE), MAXSCALE);
-		if (nscale == scale)					return;					// as far in or out as it goes
+		nscale	= fit (Math.min (Math.max (nscale, MINSCALE), MAXSCALE));
+		if ((nscale == scale) && !widened)		return;					// as far in or out as it goes
 
 		scale	= nscale;
 		pre_scaling ();

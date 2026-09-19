@@ -12,8 +12,10 @@ import tc.fleet.*;
 import devices.pos.*;
 import wucore.widgets.*;
 
-public class Object2D extends Object
+public class Object2D extends Object implements Component2DWider
 {
+	static public final double			MAXWIDE		= 50.0;				// as wide as the view goes, over what it reaches
+
 	// Icon properties
 	static public final double			T_WIDTH		= 0.25;				// Trace icon width (m)
 	static public final double			T_LENGHT		= 0.5;				// Trace icon lenght (m)
@@ -33,6 +35,7 @@ public class Object2D extends Object
 	// Behaviour of the widget
 	protected boolean					autoscale	= true;
 	protected boolean					clipping		= false;
+	protected double						viewwide		= 1.0;				// How much wider than it reaches the view is drawn
 	
 	// Configuration of the layers to be drawn
 	protected boolean					drawpath;						// Draw the path followed by the robot
@@ -62,8 +65,33 @@ public class Object2D extends Object
 	public void				boundary (double maxx, double maxy)								{ MAXX_BNDRY = maxx; MAXY_BNDRY = maxy; MINX_BNDRY = -maxx; MINY_BNDRY = -maxy; } 
 	public void				boundary (double minx, double miny, double maxx, double maxy)		{ MAXX_BNDRY = maxx; MAXY_BNDRY = maxy; MINX_BNDRY = minx; MINY_BNDRY = miny; } 
 	
+	/** How much wider than what it reaches the view is drawn: one is its own extent. */
+	public final double		widening ()							{ return viewwide; }
+
+	/**
+	 * Widens (a factor over one) or narrows (under one) what is drawn, and says
+	 * what it did it by. It never narrows past what it reaches on its own, and
+	 * only goes so far out; asked past either end, it does what is left and says
+	 * so, and answers one when there is nothing left to do.
+	 *
+	 * What is drawn wider takes its boundary out with it, so that what lies beyond
+	 * the reach of the sensors is kept instead of being cut away. Whoever draws
+	 * reads {@link #widening()} for it.
+	 */
+	public double widen (double factor)
+	{
+		double		w;
+
+		if ((factor <= 0.0) || Double.isNaN (factor))		return 1.0;
+		w	= Math.min (Math.max (viewwide * factor, 1.0), MAXWIDE);
+		if (w == viewwide)									return 1.0;
+		factor		= w / viewwide;
+		viewwide	= w;
+		return factor;
+	}
+
 	/* Instance methods */
-	protected void initialise (Model2D model) 
+	protected void initialise (Model2D model)
 	{
 		this.model			= model;
 		this.drawpath		= true;

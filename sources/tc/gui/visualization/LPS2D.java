@@ -25,8 +25,11 @@ public class LPS2D extends World2D
 	// LPS HUD's labels
 	public static final int				H_TIME			= 0;
 	
+	public static final double			MARKS			= 80.0;					// as many marks as an axis carries, about
+
 	// LPS objects drawing policies
 	protected LPOView					view;									// Viewing properties
+	protected double					reach			= 3.0;					// how far it reads on its own (m)
 	
 	/* Constructors */
 	public LPS2D (Model2D model) 
@@ -37,6 +40,13 @@ public class LPS2D extends World2D
 	
 	/* Accessors */
 	public void			orientation (double rotation)				{ view.rotation = rotation; }
+
+	/** Told how far to draw, that is how far it reads: a wider view is asked for on top of it. */
+	public void boundary (double bound)
+	{
+		super.boundary (bound);
+		reach	= bound;
+	}
 	
 	/* Instance methods */
 	protected void initialise () 
@@ -71,15 +81,17 @@ public class LPS2D extends World2D
 		model.clearView ();
 		
 		// Compute maximum LPS window bounding box
-		cmax	= Math.max (MAXX_BNDRY, Math.max (MAXY_BNDRY, Math.max (MINX_BNDRY, MINY_BNDRY)));
 		rbuffer	= (LPORangeBuffer) lps.find ("RBuffer");		// This should be "smarter"
 		if (rbuffer != null)
-		{
 			// Check for the boundary size (WARNING: This is a hack, and MUST be modified!!!!)
-			cmax	= Math.max (Math.max (rbuffer.getRangeSON (), rbuffer.getRangeLRF ()), cmax);
-			boundary (cmax);
-		}
-		
+			reach	= Math.max (Math.max (rbuffer.getRangeSON (), rbuffer.getRangeLRF ()), reach);
+		// as far as it reads, and as much wider as the view was zoomed out: the
+		// boundary goes out with the view, so that what lies beyond the reach of the
+		// sensors is kept instead of being cut away into empty margins
+		cmax		= reach * widening ();
+		MAXX_BNDRY	= cmax;			MAXY_BNDRY = cmax;
+		MINX_BNDRY	= -cmax;		MINY_BNDRY = -cmax;
+
 		view.min.set (-cmax, -cmax, -cmax);
 		view.max.set (cmax, cmax, cmax);
 		
@@ -99,18 +111,28 @@ public class LPS2D extends World2D
 			// Draw central cross
 			model.addRawLine (0.0, MINY_BNDRY, 0.0, MAXY_BNDRY, Color.BLACK);
 			model.addRawLine (MINX_BNDRY, 0.0, MAXX_BNDRY, 0.0, Color.BLACK);
-			for (xx = MINX_BNDRY; xx <= MAXX_BNDRY; xx += STEP_MARK)
+			// the marks are spaced by a tenth of a metre while that leaves an axis
+			// readable, and by ten times as much each time it would not: a view taken
+			// far out is ruled in metres, and then in tens of them
+			double	step = STEP_MARK;
+			double	shrt, lng;
+			while ((2.0 * cmax / step) > MARKS)		step *= 10.0;
+			// and they are as long on the screen as they always were, which is as much
+			// longer in metres as the view was widened
+			shrt	= SHORT_MARK * widening ();
+			lng		= LONG_MARK * widening ();
+			for (xx = MINX_BNDRY; xx <= MAXX_BNDRY; xx += step)
 			{
-				yy = SHORT_MARK;
-				if (Math.abs (Math.IEEEremainder (xx, 1.0)) < (STEP_MARK / 10.0))		yy = LONG_MARK;
-				
+				yy = shrt;
+				if (Math.abs (Math.IEEEremainder (xx, 10.0 * step)) < (step / 10.0))	yy = lng;
+
 				model.addRawLine (xx, -yy, xx, yy, Color.BLACK);
 			}
-			for (yy = MINY_BNDRY; yy <= MAXY_BNDRY; yy += STEP_MARK)
+			for (yy = MINY_BNDRY; yy <= MAXY_BNDRY; yy += step)
 			{
-				xx = SHORT_MARK;
-				if (Math.abs (Math.IEEEremainder (yy, 1.0)) < (STEP_MARK / 10.0))		xx = LONG_MARK;
-				
+				xx = shrt;
+				if (Math.abs (Math.IEEEremainder (yy, 10.0 * step)) < (step / 10.0))	xx = lng;
+
 				model.addRawLine (-xx, yy, xx, yy, Color.BLACK);
 			}
 		}
