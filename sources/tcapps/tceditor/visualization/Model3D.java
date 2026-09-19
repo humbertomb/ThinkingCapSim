@@ -4,7 +4,7 @@
  * (c) 2004 Humberto Martinez Barbera
  */
 
-package tcapps.tcsim.gui.visualization;
+package tcapps.tceditor.visualization;
 
 import java.awt.*;
 import javax.media.j3d.*;
@@ -15,7 +15,6 @@ import tc.vrobot.*;
 
 import wucore.utils.geom.*;
 
-import tcapps.tcsim.gui.visualization.objects.*;
 import tcapps.tcsimulator.simulator.*;
 import tcapps.tcsimulator.simulator.objects.*;
 

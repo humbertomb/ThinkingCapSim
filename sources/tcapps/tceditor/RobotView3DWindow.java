@@ -46,7 +46,7 @@ import javax.vecmath.Point3d;
 import com.sun.j3d.utils.universe.SimpleUniverse;
 
 import tc.vrobot.RobotDef;
-import tcapps.tcsim.gui.visualization.Scene3D;
+import tcapps.tceditor.visualization.Scene3D;
 
 /**
  * Java 3D view of the models a robot description carries: the platform

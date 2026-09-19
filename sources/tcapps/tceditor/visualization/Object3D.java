@@ -4,7 +4,7 @@
  * To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package tcapps.tcsim.gui.visualization.objects;
+package tcapps.tceditor.visualization;
 
 import javax.media.j3d.*;
 import javax.vecmath.*;

@@ -3,7 +3,7 @@
  * (c) 2004 Humberto Martinez
  */
  
-package tcapps.tcsim.gui.visualization;
+package tcapps.tceditor.visualization;
 
 import java.awt.*;
 

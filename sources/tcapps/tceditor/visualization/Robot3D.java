@@ -4,13 +4,12 @@
  * To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package tcapps.tcsim.gui.visualization.objects;
+package tcapps.tceditor.visualization;
 
 import javax.media.j3d.*;
 import javax.vecmath.*;
 
 import tc.vrobot.*;
-import tcapps.tcsim.gui.visualization.Color3D;
 import wucore.utils.geom.*;
 
 /**
@@ -50,12 +49,12 @@ public class Robot3D extends BranchGroup
 		this (rdesc, ro, rl, pt, fhgt, a, null);
 	}
 
-	/** Height at which a name floats over a 3D object: just above its top ({@link tcapps.tcsim.gui.visualization.Scene3D#height}). */
+	/** Height at which a name floats over a 3D object: just above its top ({@link Scene3D#height}). */
 	static public double labelHeight (Node... parts)
 	{
 		double	h = 0.0;
 		for (Node n : parts)
-			if (n != null)		h = Math.max (h, tcapps.tcsim.gui.visualization.Scene3D.height (n));
+			if (n != null)		h = Math.max (h, Scene3D.height (n));
 		return (h > 0.0) ? h + LABEL_GAP : LABEL_HEIGHT;
 	}
 

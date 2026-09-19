@@ -4,7 +4,7 @@
  * To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package tcapps.tcsim.gui.visualization.objects;
+package tcapps.tceditor.visualization;
 
 import java.awt.*;
 
@@ -14,7 +14,6 @@ import javax.vecmath.*;
 import com.sun.j3d.utils.geometry.*;
 
 import tc.shared.world.*;
-import tcapps.tcsim.gui.visualization.*;
 
 import wucore.utils.geom.*;
 
