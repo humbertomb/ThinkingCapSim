@@ -913,7 +913,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		if (eventsTB.isEditing ())		eventsTB.getCellEditor ().stopCellEditing ();
 		eventsModel.setBlock (b);
 		symbolCB.removeAllItems ();
-		for (String sym : model.symbols ())		symbolCB.addItem (sym);
+		for (String sym : model.offered ())		symbolCB.addItem (sym);
 		updateEventButtons ();
 		if (b == null)							setPropsTitle (" ");
 		else if (b.kind == ArchModel.ROBOT)		setPropsTitle ("Robot " + model.getRobotId (b.robot));

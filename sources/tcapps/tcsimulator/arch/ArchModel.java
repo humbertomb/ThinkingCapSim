@@ -745,6 +745,20 @@ public class ArchModel
 		return new ArrayList<String> (set);
 	}
 
+	/**
+	 * The symbols an event of a deployment can be registered for, which is all of
+	 * them but the ones every thread of the runtime is given anyway: asking for
+	 * CONFIG or EXECUTION is asking for what one already has.
+	 */
+	public List<String> offered ()
+	{
+		List<String>	l = new ArrayList<String> ();
+
+		for (String sym : symbols ())
+			if (!isStandard (sym))		l.add (sym);
+		return l;
+	}
+
 	/* ------------------------------------------------------------------ */
 	/* Edition                                                             */
 	/* ------------------------------------------------------------------ */
