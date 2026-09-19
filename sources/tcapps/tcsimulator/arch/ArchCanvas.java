@@ -59,7 +59,8 @@ public class ArchCanvas extends JPanel
 	static final int				COL_DX		= 205;						// module column offset from the centre
 	static final int				ROW_DY		= 66;						// module row pitch, with nothing written under a module
 	static final int				SYM_TOP		= 4;						// from the foot of a module to the first symbol under it
-	static final int				SYM_W		= 150;						// as wide as a symbol is written, at most
+	static final int				SYM_W		= 138;						// as wide as a symbol is written, at most
+	static final int				SYM_BUS		= 12;						// and the room the line they come in by takes
 	static final float				SYM_FONT	= 10f;
 	static final int				REGION_HW	= 290;						// robot region half width
 	static final int				REGION_PAD	= 22;
@@ -316,7 +317,7 @@ public class ArchCanvas extends JPanel
 			{
 				vrobot	= new Rectangle (rcx - VROB_W / 2, vy, VROB_W, VROB_H);
 				bounds.put (new Block (ArchModel.VROBOT, r), vrobot);
-				vy += VROB_H;
+				vy += VROB_H + symbolsHeight (symbolsOf (new Block (ArchModel.VROBOT, r)).size ());
 			}
 			Rectangle	region = new Rectangle (rcx - REGION_HW, top, 2 * REGION_HW, vy + REGION_PAD - top);
 			Block		robot = new Block (ArchModel.ROBOT, r);
@@ -581,6 +582,7 @@ public class ArchCanvas extends JPanel
 			g.fillRoundRect (r.x + r.width - 38, r.y + r.height - 3, 22, 6, 3, 3);
 			g.setColor (border);
 			if (!b.equals (editing))	centeredText (g, new String[] { model.labelOf (b) }, r, Font.BOLD);
+			paintSymbols (g, b, r);
 			break;
 		}
 		}
@@ -600,7 +602,7 @@ public class ArchCanvas extends JPanel
 		List<String>	syms = symbolsOf (b);
 		Rectangle		box = symbolsBox (b, r);
 		FontMetrics		fm;
-		int				y;
+		int				bx, top, y;
 
 		if (syms.isEmpty () || (box == null))		return;
 		g.setColor (C_REGION_BG);
@@ -608,21 +610,40 @@ public class ArchCanvas extends JPanel
 		g.setFont (getFont ().deriveFont (Font.PLAIN, SYM_FONT));
 		fm		= g.getFontMetrics ();
 		g.setColor (C_SYMBOL);
+
+		// they come in: a line up into the block, with an arrow head where it meets
+		// it, and a stub off it to every symbol that comes in by it
+		bx		= box.x + 4;
+		// the wheels of a robot hang under its block: the arrow starts below them
+		top		= r.y + r.height + ((b.kind == ArchModel.VROBOT) ? 4 : 0);
+		y		= box.y + (syms.size () - 1) * fm.getHeight () + fm.getHeight () / 2;
+		g.setStroke (new BasicStroke (1f));
+		g.drawLine (bx, top + 3, bx, y);
+		g.fillPolygon (new int[] { bx, bx - 3, bx + 3 },
+					   new int[] { top, top + 5, top + 5 }, 3);
+
 		y		= box.y + fm.getAscent ();
-		for (String sym : syms)
+		for (int i = 0; i < syms.size (); i++)
 		{
-			String	t = shortened (fm, sym);
-			g.drawString (t, r.x + (r.width - fm.stringWidth (t)) / 2, y);
+			String	t = shortened (fm, syms.get (i));
+
+			g.drawLine (bx, box.y + i * fm.getHeight () + fm.getHeight () / 2,
+						box.x + SYM_BUS - 2, box.y + i * fm.getHeight () + fm.getHeight () / 2);
+			g.drawString (t, box.x + SYM_BUS, y);
 			y	+= fm.getHeight ();
 		}
 	}
 
-	/** The symbols a module asks for, each one once and in the order it asks for them. */
+	/**
+	 * The symbols a block asks for, each one once and in the order it asks for
+	 * them: the modules and the virtual robot, which is given what it is to do
+	 * the same way they are given what to work on.
+	 */
 	protected List<String> symbolsOf (Block b)
 	{
 		List<String>	l = new java.util.ArrayList<String> ();
 
-		if ((model == null) || (b == null) || (b.kind != ArchModel.MODULE) || !model.hasEvents (b))		return l;
+		if ((model == null) || (b == null) || !model.hasEvents (b))		return l;
 		for (String[] e : model.events (b))
 		{
 			String	sym = (e[0] != null) ? e[0].trim () : "";
@@ -649,11 +670,18 @@ public class ArchCanvas extends JPanel
 		List<String>	syms = symbolsOf (b);
 		FontMetrics		fm;
 		int				w = 0;
+		int				x;
 
 		if ((r == null) || syms.isEmpty ())			return null;
 		fm		= getFontMetrics (getFont ().deriveFont (Font.PLAIN, SYM_FONT));
 		for (String sym : syms)						w = Math.max (w, fm.stringWidth (shortened (fm, sym)));
-		return new Rectangle (r.x + (r.width - w) / 2, r.y + r.height + SYM_TOP, w, syms.size () * fm.getHeight ());
+		w		+= SYM_BUS;							// the line the symbols come in by, on their left
+		x		= r.x + (r.width - w) / 2;
+		// the drawing of a robot hangs off the corner of its block: what is written
+		// under it steps aside rather than under it
+		if ((b.kind == ArchModel.VROBOT) && (describedRobot (b.robot) != null))
+			x	= Math.min (x, previewBox (r).x - 6 - w);
+		return new Rectangle (x, r.y + r.height + SYM_TOP, w, syms.size () * fm.getHeight ());
 	}
 
 	/** A symbol cut to what a column under a module holds. */
