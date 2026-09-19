@@ -62,11 +62,6 @@
             "symbol": "MOTION",
             "itemClass": "tc.shared.linda.ItemMotion",
             "method": "notify_motion"
-          },
-          {
-            "symbol": "SENSORS_CTRL",
-            "itemClass": "tc.shared.linda.ItemSensorsCtrl",
-            "method": "notify_sensors_ctrl"
           }
         ]
       },
