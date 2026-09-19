@@ -9,12 +9,12 @@ package tc.shared.linda;
 import java.io.*;
 import tc.vrobot.*;
 
-public class ItemData extends Item implements Serializable
+public class ItemSensors extends Item implements Serializable
 {
 	public RobotData				data;
 	
 	// Constructors
-	public ItemData () 
+	public ItemSensors () 
 	{
 		this.set (0);
 	}	

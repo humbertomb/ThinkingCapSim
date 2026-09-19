@@ -136,8 +136,8 @@
           },
           "events": [
             {
-              "symbol": "DATA",
-              "itemClass": "tc.shared.linda.ItemData",
+              "symbol": "SENSORS",
+              "itemClass": "tc.shared.linda.ItemSensors",
               "method": "notify_data"
             },
             {
@@ -185,8 +185,8 @@
             "method": "notify_zone"
           },
           {
-            "symbol": "DATACTRL",
-            "itemClass": "tc.shared.linda.ItemDataCtrl",
+            "symbol": "SENSORS_CTRL",
+            "itemClass": "tc.shared.linda.ItemSensorsCtrl",
             "method": "notify_data_ctrl"
           },
           {
@@ -341,8 +341,8 @@
           },
           "events": [
             {
-              "symbol": "DATA",
-              "itemClass": "tc.shared.linda.ItemData",
+              "symbol": "SENSORS",
+              "itemClass": "tc.shared.linda.ItemSensors",
               "method": "notify_data"
             },
             {
@@ -390,8 +390,8 @@
             "method": "notify_zone"
           },
           {
-            "symbol": "DATACTRL",
-            "itemClass": "tc.shared.linda.ItemDataCtrl",
+            "symbol": "SENSORS_CTRL",
+            "itemClass": "tc.shared.linda.ItemSensorsCtrl",
             "method": "notify_data_ctrl"
           },
           {

@@ -105,7 +105,7 @@ public class SimRobot extends VirtualRobot
 			odata = simul.getVisionData ();
 	}
 	
-	public void notify_data_ctrl (String space, ItemDataCtrl item)
+	public void notify_data_ctrl (String space, ItemSensorsCtrl item)
 	{
 		super.notify_data_ctrl (space, item);
 		simul.set_data_ctrl (r_index, data_ctrl);

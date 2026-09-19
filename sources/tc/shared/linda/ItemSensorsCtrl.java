@@ -9,12 +9,12 @@ package tc.shared.linda;
 import java.io.*;
 import tc.vrobot.*;
 
-public class ItemDataCtrl extends Item implements Serializable
+public class ItemSensorsCtrl extends Item implements Serializable
 {
 	public RobotDataCtrl				data_ctrl;
 	
 	// Constructors
-	public ItemDataCtrl () 
+	public ItemSensorsCtrl () 
 	{
 		this.set (0);
 	}	
@@ -28,11 +28,11 @@ public class ItemDataCtrl extends Item implements Serializable
 
 	public Item dup ()
 	{
-		ItemDataCtrl		item = null;
+		ItemSensorsCtrl		item = null;
 		
 		try 
 		{ 
-			item = (ItemDataCtrl) this.clone (); 
+			item = (ItemSensorsCtrl) this.clone (); 
 			item.data_ctrl = data_ctrl.dup ();
 		} catch (Exception e) { }
 		

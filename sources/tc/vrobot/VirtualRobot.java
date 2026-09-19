@@ -10,8 +10,8 @@ import java.util.Properties;
 import tc.runtime.thread.ModuleConfig;
 import tc.runtime.thread.StdThread;
 import tc.shared.linda.ItemConfig;
-import tc.shared.linda.ItemData;
-import tc.shared.linda.ItemDataCtrl;
+import tc.shared.linda.ItemSensors;
+import tc.shared.linda.ItemSensorsCtrl;
 import tc.shared.linda.ItemDebug;
 import tc.shared.linda.ItemMotion;
 import tc.shared.linda.ItemObject;
@@ -51,7 +51,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	
 	// Data sent by the robot
 	protected Tuple					tdata;
-	protected ItemData				sdata;
+	protected ItemSensors				sdata;
 	protected RobotData				data;
 	protected Tuple					tobj;
 	protected ItemObject			sobj;
@@ -96,8 +96,8 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		}
 
 		// Prepare Linda data structures
-		sdata		= new ItemData ();
-		tdata		= new Tuple (Tuple.DATA, sdata);
+		sdata		= new ItemSensors ();
+		tdata		= new Tuple (Tuple.SENSORS, sdata);
 		sobj			= new ItemObject ();
 		tobj			= new Tuple (Tuple.OBJECT, sobj);
 		
@@ -270,7 +270,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		}	
 	}	
 	
-	public void notify_data_ctrl (String space, ItemDataCtrl item)
+	public void notify_data_ctrl (String space, ItemSensorsCtrl item)
 	{
 		data_ctrl.set (item.data_ctrl);
 	}

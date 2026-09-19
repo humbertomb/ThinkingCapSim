@@ -22,7 +22,7 @@ public abstract class Controller extends StdThread
 	protected Tuple					mtuple;
 	protected ItemMotion			mitem;
 	protected Tuple					dtuple;
-	protected ItemDataCtrl			ditem;
+	protected ItemSensorsCtrl			ditem;
 	protected Tuple					btuple;
 	protected ItemBehResult			bitem;
 
@@ -38,8 +38,8 @@ public abstract class Controller extends StdThread
 		// Setup local stuff
 		mitem	= new ItemMotion ();
 		mtuple	= new Tuple (Tuple.MOTION, mitem);
-		ditem	= new ItemDataCtrl ();
-		dtuple	= new Tuple (Tuple.DATACTRL, ditem);
+		ditem	= new ItemSensorsCtrl ();
+		dtuple	= new Tuple (Tuple.SENSORS_CTRL, ditem);
 		bitem	= new ItemBehResult ();
 		btuple	= new Tuple (Tuple.BEHRESULT, bitem);
 	}

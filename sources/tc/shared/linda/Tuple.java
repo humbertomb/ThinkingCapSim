@@ -19,7 +19,7 @@ public class Tuple implements Serializable
 	public static final String			DELROBOT	= "DELROBOT";
 
 	// Key values (data structures)
-	public static final String			DATA		= "DATA";
+	public static final String			SENSORS		= "SENSORS";
 	public static final String			CONFIG		= "CONFIG";
 	public static final String			LPS			= "LPS";
 	public static final String			VIDEO		= "VIDEO";
@@ -43,7 +43,7 @@ public class Tuple implements Serializable
 	public static final String			CAMERA		= "CAMERA";
 
 	// Key values (control of actions)
-	public static final String			DATACTRL	= "DATACTRL";
+	public static final String			SENSORS_CTRL	= "SENSORS_CTRL";
 	
 	public static final String			PALLETCTRL	= "PALLETCTRL";
 

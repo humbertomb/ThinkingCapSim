@@ -44,8 +44,8 @@
           },
           "events": [
             {
-              "symbol": "DATA",
-              "itemClass": "tc.shared.linda.ItemData",
+              "symbol": "SENSORS",
+              "itemClass": "tc.shared.linda.ItemSensors",
               "method": "notify_data"
             },
             {
