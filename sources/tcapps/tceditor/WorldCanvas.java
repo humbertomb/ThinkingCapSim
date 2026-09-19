@@ -150,6 +150,7 @@ public class WorldCanvas extends JPanel
 	protected List<Point2>			polyPoints	= new ArrayList<Point2> ();	// points of the area being drawn
 	protected boolean				spaceDown	= false;
 	protected boolean				editable	= true;		// false: viewer mode (select, pan and zoom only)
+	protected boolean				orientable	= false;	// viewer mode: the orientation of the selection can still be turned
 	protected Overlay				overlay;				// extra drawing on top of the world (robots, ...)
 	protected int					iconVertex	= -1;		// icon tool: vertex being dragged / last clicked
 	protected int					iconSegment	= -1;		// icon tool: segment under the last click
@@ -228,6 +229,49 @@ public class WorldCanvas extends JPanel
 	}
 
 	public boolean isEditable ()		{ return editable; }
+
+	/**
+	 * Viewer mode: whether the orientation handle of the selection can still be
+	 * dragged. What it turns is nothing but the way an element faces -- it cannot
+	 * be moved, deleted or added to -- and it is meant for what a viewer asks of
+	 * the world it is showing rather than of the file it came from: aiming a
+	 * waypoint to see the path that reaches it that way. Whoever turns it on is
+	 * saying the world it shows is its own to turn.
+	 */
+	public void setOrientable (boolean orientable)
+	{
+		this.orientable	= orientable;
+		showUsage ();
+	}
+
+	public boolean isOrientable ()		{ return orientable; }
+
+	/** True when the last handle of an element is the one that turns it. */
+	static public boolean hasOrientation (WorldItem it)
+	{
+		return (it != null) && ((it.kind == WorldItem.WAYPOINT) || (it.kind == WorldItem.DOCK)
+				|| (it.kind == WorldItem.START) || WorldItem.isObject (it.kind) || (it.kind == WorldItem.ICON));
+	}
+
+	/**
+	 * True when the selection can be turned in viewer mode: what a task is aimed
+	 * at -- a waypoint, a dock, a start -- and nothing else. The objects of a
+	 * world face the way the simulation has them facing, and an icon is the shape
+	 * of a robot, not a pose in the world.
+	 */
+	protected boolean canTurn ()
+	{
+		return orientable && (selection != null) && ((selection.kind == WorldItem.WAYPOINT)
+				|| (selection.kind == WorldItem.DOCK) || (selection.kind == WorldItem.START));
+	}
+
+	/** True when a handle of the selection can be dragged: all of them while editing, the orientation alone in viewer mode. */
+	protected boolean canDrag (int handle, int handles)
+	{
+		if (editable)				return true;
+		if (handles < 2)			return false;
+		return (handle == handles - 1) && canTurn ();
+	}
 
 	public void setOverlay (Overlay overlay)		{ this.overlay = overlay; repaint (); }
 
@@ -410,7 +454,7 @@ public class WorldCanvas extends JPanel
 		case T_SELECT:
 		{
 			// handle of the current selection?
-			if ((selection != null) && editable)
+			if (selection != null)
 			{
 				Point2[]	hs = WorldEditor.handles (world, selection);
 				int			best = -1;
@@ -418,6 +462,7 @@ public class WorldCanvas extends JPanel
 				for (int i = 0; i < hs.length; i++)
 				{
 					double	d = hs[i].distance (curX, curY);
+					if (!canDrag (i, hs.length))		continue;
 					if (d < bd) { bd = d; best = i; }
 				}
 				if (best >= 0)
@@ -692,6 +737,8 @@ public class WorldCanvas extends JPanel
 		switch (tool)
 		{
 		case T_SELECT:
+			if (!editable && canTurn ())
+										return "Drag the round handle to turn the element (the world is not changed). Wheel: zoom, middle button / Space+drag: pan, Esc: deselect";
 			if (!editable)				return "Click an element to select it. Wheel: zoom, middle button / Space+drag: pan, Esc: deselect";
 			if (selection == null)		return "Click an element to select it; drag to move it. Double-click an object to edit its icon. Wheel: zoom, middle button / Space+drag: pan";
 			return "Drag the element or its handles (round handle: orientation). Del: delete, arrows: nudge, Esc: deselect";
@@ -1369,8 +1416,11 @@ public class WorldCanvas extends JPanel
 		for (int i = 0; i < hs.length; i++)
 		{
 			int		x = toPixelX (hs[i].x ()), y = toPixelY (hs[i].y ());
-			boolean	rot = (i == hs.length - 1) && ((selection.kind == WorldItem.WAYPOINT) || (selection.kind == WorldItem.DOCK)
-						|| (selection.kind == WorldItem.START) || WorldItem.isObject (selection.kind) || (selection.kind == WorldItem.ICON));
+			boolean	rot = (i == hs.length - 1) && hasOrientation (selection);
+
+			// a handle that cannot be dragged is not drawn: in viewer mode there is
+			// nothing to take hold of but the orientation, when even that is allowed
+			if (!canDrag (i, hs.length))		continue;
 			if (rot)
 			{
 				g.setColor (C_SEL);

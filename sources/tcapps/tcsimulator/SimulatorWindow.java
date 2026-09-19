@@ -165,6 +165,10 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		canvas = new WorldCanvas (world);
 		canvas.setEditable (false);
+		// a waypoint can still be aimed: the path that reaches it depends on the way
+		// it faces, and turning it is how one is tried out. The world of a simulation
+		// is never written back, so what is turned here is lost with the execution
+		canvas.setOrientable (true);
 		canvas.setListener (this);
 		canvas.setOverlay (this);
 
@@ -1100,7 +1104,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		view3d.selectionChanged (item);
 	}
 
-	public void worldChanged (String what)		{ view3d.worldChanged (); }		// not expected: the canvas is read-only
+	public void worldChanged (String what)		{ view3d.worldChanged (); }		// the orientation of an element, which is all the canvas allows
 	public void worldPreview ()					{ view3d.worldPreview (); }
 	public void statusChanged (String text)		{ statusBar.setStatus (text); }
 	public void usageChanged (String text)		{ statusBar.setUsage (text); }
