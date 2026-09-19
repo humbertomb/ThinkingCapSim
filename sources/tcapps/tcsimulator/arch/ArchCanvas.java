@@ -868,13 +868,15 @@ public class ArchCanvas extends JPanel
 	}
 
 	/**
-	 * The symbols of a block the runtime hands out by itself, which are written in
-	 * bold: a router registers for CONFIG and EXECUTION of its own accord, and its
-	 * own are written like the rest of what it asks for.
+	 * The symbols of a block that are no one's to edit, which are written in bold:
+	 * what every thread of the runtime is given and what the code of the block
+	 * itself takes out of the space. A router registers for CONFIG and EXECUTION
+	 * of its own accord, and its own are written like the rest of what it asks
+	 * for.
 	 */
 	protected List<String> standardOf (Block b)
 	{
-		return ((model != null) && (b != null)) ? model.standard (b) : new java.util.ArrayList<String> ();
+		return ((model != null) && (b != null)) ? model.fixed (b) : new java.util.ArrayList<String> ();
 	}
 
 	/** How wide a lot of symbols is written, the lines they travel by and the columns they take included (0 for none). */

@@ -462,11 +462,45 @@ public class ArchModel
 	}
 
 	/**
-	 * Symbols a class names but does not produce: it builds the tuple to read
-	 * them, not to write them, and read off a class file there is no telling the
-	 * two apart. The few there are said here, by the class they are found in.
+	 * Symbols a class takes out of the space by itself: it is not notified of
+	 * them, it goes and reads them, so no deployment declares them and a module
+	 * has them all the same. Read off a class file there is no telling a tuple
+	 * built to be read from one built to be written, so the few there are are
+	 * said here, by the class they are found in and by whether it also writes
+	 * them.
 	 */
-	static private final String[][]	NOT_PRODUCED	= { { "tc.modules.Planner", "LPS" } };		// the planner polls the LPS
+	static private final String[][]	WIRED	=
+	{
+		{ "tc.modules.Planner",					"LPS",	"reads" },		// it polls the perceptual space when it plans
+		{ "tcrob.ingenia.ifork.IForkPlanner",	"SYNC",	"writes" },		// it says it is waiting for a dock, and takes the answer
+	};
+
+	/** True when the class of a block, or one of its ancestors, takes that symbol by itself. */
+	private boolean isWired (Block b, String sym, boolean written)
+	{
+		java.util.Map<String, List<String>>	found = named (b);
+
+		if ((b == null) || (b.kind == ROUTER))			return false;		// a router is read for its whole traffic already
+		for (String[] w : WIRED)
+			if (w[1].equals (sym) && (written == w[2].equals ("writes"))
+					&& found.containsKey (w[0]) && found.get (w[0]).contains (sym))		return true;
+		return false;
+	}
+
+	/**
+	 * The symbols a block takes by itself, in the order they are said in: they
+	 * are drawn like the standard events, because a module has them whether the
+	 * deployment says so or not.
+	 */
+	public List<String> wired (Block b)
+	{
+		List<String>	l = new ArrayList<String> ();
+
+		if ((b == null) || !hasSymbols (b))				return l;
+		for (String[] w : WIRED)
+			if (!l.contains (w[1]) && (isWired (b, w[1], false) || isWired (b, w[1], true)))		l.add (w[1]);
+		return l;
+	}
 
 	/**
 	 * The class a block runs, as it is read: what a description names when the
@@ -531,6 +565,20 @@ public class ArchModel
 		return l;
 	}
 
+	/**
+	 * What a block is given whatever its deployment says: the events every thread
+	 * of the runtime registers and the symbols its own code takes out of the
+	 * space. They are written in bold, being no one's to edit.
+	 */
+	public List<String> fixed (Block b)
+	{
+		List<String>	l = new ArrayList<String> (standard (b));
+
+		for (String sym : wired (b))
+			if (!l.contains (sym))		l.add (sym);
+		return l;
+	}
+
 	/** Symbols the events of a block register, as the deployment says them. */
 	public List<String> declared (Block b)
 	{
@@ -564,7 +612,8 @@ public class ArchModel
 			return in;
 		}
 		in.addAll (declared (b));
-		in.addAll (standard (b));
+		for (String sym : fixed (b))
+			if (!in.contains (sym))		in.add (sym);
 		return in;
 	}
 
@@ -592,10 +641,10 @@ public class ArchModel
 		for (java.util.Map.Entry<String, List<String>> e : named (b).entrySet ())
 			for (String sym : e.getValue ())
 			{
-				boolean		reads = false;
-				for (String[] no : NOT_PRODUCED)
-					if (no[0].equals (e.getKey ()) && no[1].equals (sym))		reads = true;
-				if (reads || out.contains (sym))								continue;
+				if (out.contains (sym))											continue;
+				// a symbol it only reads it does not write, however it is named in it
+				if (isWired (b, sym, false))									continue;
+				if (isWired (b, sym, true))										{ out.add (sym); continue; }
 				if ((b.kind != ROUTER) && in.contains (sym))					continue;
 				out.add (sym);
 			}
@@ -727,13 +776,31 @@ public class ArchModel
 	}
 
 	/**
-	 * Symbols an event can register: the keys defined in {@link tc.shared.linda.Tuple}
-	 * (public static String constants) plus any other symbol already used in
-	 * the events of this deployment (COORD, ZONE, ...), sorted.
+	 * Every symbol there is to be recognised, which is what a class is read
+	 * against: the keys defined in {@link tc.shared.linda.Tuple}, the ones the
+	 * items of the development are named after -- a class writing a key of its
+	 * own names it in full (GRIDMAP, FSEGMAP, VEHDATA, SYNC), and the item is
+	 * what says the name is a symbol at all -- and the ones the deployments use.
 	 */
 	public List<String> symbols ()
 	{
+		java.util.TreeSet<String>	set = new java.util.TreeSet<String> (named ().keySet ());
+
+		set.addAll (offered ());
+		return new ArrayList<String> (set);
+	}
+
+	/**
+	 * The symbols an event of a deployment can be registered for: the keys
+	 * defined in {@link tc.shared.linda.Tuple} and the ones the deployments of
+	 * the project use (COORD, ZONE, ...), less the ones every thread of the
+	 * runtime is given anyway, since asking for CONFIG or EXECUTION is asking
+	 * for what one already has.
+	 */
+	public List<String> offered ()
+	{
 		java.util.TreeSet<String>	set = new java.util.TreeSet<String> ();
+
 		for (java.lang.reflect.Field f : tc.shared.linda.Tuple.class.getFields ())
 			if (java.lang.reflect.Modifier.isStatic (f.getModifiers ()) && (f.getType () == String.class))
 				try { set.add ((String) f.get (null)); } catch (Exception e) { }
@@ -742,21 +809,8 @@ public class ArchModel
 			if (hasEvents (b))
 				for (String[] e : events (b))
 					if (e[0].length () > 0)		set.add (e[0]);
+		for (String[] e : STD_EVENTS)			set.remove (e[0]);
 		return new ArrayList<String> (set);
-	}
-
-	/**
-	 * The symbols an event of a deployment can be registered for, which is all of
-	 * them but the ones every thread of the runtime is given anyway: asking for
-	 * CONFIG or EXECUTION is asking for what one already has.
-	 */
-	public List<String> offered ()
-	{
-		List<String>	l = new ArrayList<String> ();
-
-		for (String sym : symbols ())
-			if (!isStandard (sym))		l.add (sym);
-		return l;
 	}
 
 	/* ------------------------------------------------------------------ */
