@@ -36,7 +36,7 @@ import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tc.ExecArch;
-import tc.shared.linda.ItemDebug;
+import tc.shared.linda.ItemExecution;
 import tc.shared.world.WMAObject;
 import tc.shared.world.World;
 import tc.vrobot.RobotData;
@@ -217,9 +217,9 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomOut (canvas)));
 		tb.addSeparator ();
 		executeAction	= ToolButtons.action ("Execute", ToolIcon.EXECUTE, "Execute the architecture (restarts it if running)  [F5]", new Runnable () { public void run () { execute (); } });
-		startAction		= ToolButtons.action ("Start", ToolIcon.RUN, "Start  [F6]", new Runnable () { public void run () { command (ItemDebug.START); } });
-		stepAction		= ToolButtons.action ("Step", ToolIcon.STEP, "Step  [F7]", new Runnable () { public void run () { command (ItemDebug.STEP); } });
-		stopAction		= ToolButtons.action ("Stop", ToolIcon.STOP, "Stop  [F8]", new Runnable () { public void run () { command (ItemDebug.STOP); } });
+		startAction		= ToolButtons.action ("Start", ToolIcon.RUN, "Start  [F6]", new Runnable () { public void run () { command (ItemExecution.START); } });
+		stepAction		= ToolButtons.action ("Step", ToolIcon.STEP, "Step  [F7]", new Runnable () { public void run () { command (ItemExecution.STEP); } });
+		stopAction		= ToolButtons.action ("Stop", ToolIcon.STOP, "Stop  [F8]", new Runnable () { public void run () { command (ItemExecution.STOP); } });
 		tb.add (ToolButtons.flatButton (executeAction));
 		tb.add (ToolButtons.flatButton (startAction));
 		tb.add (ToolButtons.flatButton (stepAction));
@@ -541,7 +541,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		if (running == null)			return;
 		List<ExecArch>	execs = running;
-		for (ExecArch r : execs)		r.sendCommand (ItemDebug.STOP);		// stop the modules before tearing them down
+		for (ExecArch r : execs)		r.sendCommand (ItemExecution.STOP);		// stop the modules before tearing them down
 		running		= null;
 		monitorPanel.detach ();
 		for (int i = execs.size () - 1; i >= 0; i--)				// last first: the first robot hosts the global Linda space

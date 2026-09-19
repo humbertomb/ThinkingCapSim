@@ -11,7 +11,7 @@ import java.io.*;
 public class Tuple implements Serializable
 {
 	// Key values (general purpose)
-	public static final String			DEBUG		= "DEBUG";
+	public static final String			EXECUTION	= "EXECUTION";
 	public static final String			LINDACTRL	= "LINDACTRL";
 	public static final String			GUISVC		= "GUISVC";
 	public static final String			GUIDATA		= "GUIDATA";

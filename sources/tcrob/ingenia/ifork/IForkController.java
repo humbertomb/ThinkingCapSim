@@ -11,7 +11,7 @@ import java.io.*;
 import tc.modules.Controller;
 import tc.shared.linda.ItemBehResult;
 import tc.shared.linda.ItemConfig;
-import tc.shared.linda.ItemDebug;
+import tc.shared.linda.ItemExecution;
 import tc.shared.linda.ItemGoal;
 import tc.shared.linda.ItemPath;
 import tc.shared.linda.Linda;
@@ -1200,9 +1200,9 @@ public class IForkController extends Controller
 			win		= new IndoorLPSWindow (robotid);
 	}
 
-	public void notify_debug (String space, ItemDebug item)
+	public void notify_execution (String space, ItemExecution item)
 	{
-		super.notify_debug (space, item);
+		super.notify_execution (space, item);
 	    	    
 		if (debug)
 		{

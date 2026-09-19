@@ -90,19 +90,19 @@ public abstract class Controller extends StdThread
 			world = World.fromJsonText (item.world);
 	}
 	
-	public void notify_debug (String space, ItemDebug item) 
+	public void notify_execution (String space, ItemExecution item) 
 	{		
-		super.notify_debug (space, item);
+		super.notify_execution (space, item);
 		
 		switch (item.operation)
 		{
-		case ItemDebug.DEBUG:
+		case ItemExecution.DEBUG:
 			debug	= item.dbg_controller;
 			break;
-		case ItemDebug.MODE:
+		case ItemExecution.MODE:
 			mode	= item.mode_controller;
 			break;
-		case ItemDebug.COMMAND:
+		case ItemExecution.COMMAND:
 		default:
 		}	
 	}	

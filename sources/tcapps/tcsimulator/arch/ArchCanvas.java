@@ -358,9 +358,8 @@ public class ArchCanvas extends JPanel
 	protected int vrobotWidth (int r)
 	{
 		Block			b = new Block (ArchModel.VROBOT, r);
-		FontMetrics		fm = getFontMetrics (getFont ().deriveFont (Font.PLAIN, SYM_FONT));
-		int				wi = width (fm, symbolsOf (b));
-		int				wo = width (fm, producedBy (b));
+		int				wi = width (symbolsOf (b), false);
+		int				wo = width (producedBy (b), true);
 		int				total = wi + wo + (((wi > 0) && (wo > 0)) ? SYM_GAP : 0);
 
 		if (total == 0)			return VROB_W;
@@ -689,9 +688,14 @@ public class ArchCanvas extends JPanel
 
 			for (int i = 0; i < part.size (); i++)
 			{
-				String	t = shortened (fm, part.get (i));
-				int		my = box.y + i * fm.getHeight () + fm.getHeight () / 2;
+				// what the runtime hands out anyway is written in bold: it is asked for
+				// nowhere and cannot be taken away, and it is no less given for that
+				boolean		std = !produced && ArchModel.isStandard (part.get (i));
+				FontMetrics	cfm = symbolMetrics (std);
+				String		t = shortened (cfm, part.get (i));
+				int			my = box.y + i * fm.getHeight () + fm.getHeight () / 2;
 
+				g.setFont (getFont ().deriveFont (std ? Font.BOLD : Font.PLAIN, SYM_FONT));
 				g.drawLine (bx, my, cx + SYM_BUS - 2, my);
 				g.drawString (t, cx + SYM_BUS, box.y + fm.getAscent () + i * fm.getHeight ());
 			}
@@ -800,9 +804,9 @@ public class ArchCanvas extends JPanel
 		int				wi, wo, x;
 
 		if ((r == null) || syms.isEmpty ())			return null;
-		fm		= getFontMetrics (getFont ().deriveFont (Font.PLAIN, SYM_FONT));
-		wi		= width (fm, symbolsOf (b));
-		wo		= width (fm, producedBy (b));
+		fm		= symbolMetrics (false);
+		wi		= width (symbolsOf (b), false);
+		wo		= width (producedBy (b), true);
 		x		= r.x + (r.width - (wi + wo + (((wi > 0) && (wo > 0)) ? SYM_GAP : 0))) / 2;
 		if ((b.kind == ArchModel.VROBOT) && (describedRobot (b.robot) != null))
 			x	= Math.min (x, previewBox (r).x - 6 - (wi + wo + SYM_GAP));
@@ -817,13 +821,23 @@ public class ArchCanvas extends JPanel
 		return new Rectangle (x, r.y + r.height + SYM_TOP, produced ? wo : wi, rows (syms.size ()) * fm.getHeight ());
 	}
 
+	/** The metrics a symbol is written with: the standard events, which are written in bold, are wider. */
+	protected FontMetrics symbolMetrics (boolean bold)
+	{
+		return getFontMetrics (getFont ().deriveFont (bold ? Font.BOLD : Font.PLAIN, SYM_FONT));
+	}
+
 	/** How wide a lot of symbols is written, the lines they travel by and the columns they take included (0 for none). */
-	static protected int width (FontMetrics fm, List<String> syms)
+	protected int width (List<String> syms, boolean produced)
 	{
 		int		w = 0;
 
 		if (syms.isEmpty ())		return 0;
-		for (String sym : syms)		w = Math.max (w, fm.stringWidth (shortened (fm, sym)));
+		for (String sym : syms)
+		{
+			FontMetrics	fm = symbolMetrics (!produced && ArchModel.isStandard (sym));
+			w	= Math.max (w, fm.stringWidth (shortened (fm, sym)));
+		}
 		return columns (syms.size ()) * (w + SYM_BUS);
 	}
 

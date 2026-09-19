@@ -498,9 +498,64 @@ public class ArchModel
 	}
 
 	/**
-	 * Symbols a block is given: the ones its events register, and, for a router,
-	 * the ones its code registers for -- which is its whole traffic but what it
-	 * writes of its own accord.
+	 * The events every thread of the runtime registers for itself, whatever a
+	 * deployment says: {@link tc.runtime.event.DebugDesc} and
+	 * {@link tc.runtime.event.ConfigDesc}, which
+	 * {@link tc.runtime.thread.StdThread#setTDesc} puts in after the ones the
+	 * deployment asks for. A module and the robot are given them whether they
+	 * want them or not, so they are not edited with the others; they are drawn
+	 * with them, since being given them is no less true for not being written
+	 * down.
+	 */
+	static public final String[][]	STD_EVENTS	=
+	{
+		{ "EXECUTION",	"tc.shared.linda.ItemExecution",	"notify_execution" },
+		{ "CONFIG",		"tc.shared.linda.ItemConfig",		"notify_config" },
+	};
+
+	/** True when a symbol is one of those. */
+	static public boolean isStandard (String sym)
+	{
+		for (String[] e : STD_EVENTS)
+			if (e[0].equals (sym))		return true;
+		return false;
+	}
+
+	/**
+	 * The standard events a block is given: a module and the robot are threads of
+	 * the runtime and so get them; a router is none, and gets none.
+	 */
+	public List<String> standard (Block b)
+	{
+		List<String>	l = new ArrayList<String> ();
+		List<String>	dec;
+
+		if ((b == null) || ((b.kind != MODULE) && (b.kind != VROBOT)))		return l;
+		dec		= declared (b);
+		for (String[] e : STD_EVENTS)
+			if (!dec.contains (e[0]))		l.add (e[0]);
+		return l;
+	}
+
+	/** Symbols the events of a block register, as the deployment says them. */
+	public List<String> declared (Block b)
+	{
+		List<String>	in = new ArrayList<String> ();
+
+		if ((b == null) || !hasEvents (b))					return in;
+		for (String[] e : events (b))
+		{
+			String	sym = (e[0] != null) ? e[0].trim () : "";
+			if ((sym.length () > 0) && !in.contains (sym))			in.add (sym);
+		}
+		return in;
+	}
+
+	/**
+	 * Symbols a block is given: the ones its events register and the ones every
+	 * thread of the runtime gets anyway, in the order they are registered in;
+	 * and, for a router, the ones its code registers for -- which is its whole
+	 * traffic but what it writes of its own accord.
 	 */
 	public List<String> inputs (Block b)
 	{
@@ -514,11 +569,8 @@ public class ArchModel
 					if (!in.contains (sym) && !writesOnly (sym))		in.add (sym);
 			return in;
 		}
-		for (String[] e : events (b))
-		{
-			String	sym = (e[0] != null) ? e[0].trim () : "";
-			if ((sym.length () > 0) && !in.contains (sym))			in.add (sym);
-		}
+		in.addAll (declared (b));
+		in.addAll (standard (b));
 		return in;
 	}
 
@@ -538,6 +590,10 @@ public class ArchModel
 	 * A router is the exception to the first of those: it routes what it is
 	 * registered for, so what comes into it is what goes out of it, and taking
 	 * the one from the other would leave it writing nothing.
+	 *
+	 * What is taken away is what the deployment asks for and not what the runtime
+	 * hands out anyway: every thread is given CONFIG, and the robot, which is
+	 * given it as they all are, is the one that writes it.
 	 */
 	public List<String> produces (Block b)
 	{
@@ -545,7 +601,7 @@ public class ArchModel
 		List<String>				in;
 
 		if ((b == null) || !hasSymbols (b))					return out;
-		in		= inputs (b);
+		in		= (b.kind == ROUTER) ? inputs (b) : declared (b);
 		for (java.util.Map.Entry<String, List<String>> e : named (b).entrySet ())
 			for (String sym : e.getValue ())
 			{

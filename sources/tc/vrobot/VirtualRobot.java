@@ -12,7 +12,7 @@ import tc.runtime.thread.StdThread;
 import tc.shared.linda.ItemConfig;
 import tc.shared.linda.ItemSensors;
 import tc.shared.linda.ItemSensorsCtrl;
-import tc.shared.linda.ItemDebug;
+import tc.shared.linda.ItemExecution;
 import tc.shared.linda.ItemMotion;
 import tc.shared.linda.ItemObject;
 import tc.shared.linda.ItemStatus;
@@ -231,26 +231,26 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		}
 	}
 
-	public void notify_debug (String space, ItemDebug item) 
+	public void notify_execution (String space, ItemExecution item) 
 	{		
 		switch (item.operation)
 		{
-		case ItemDebug.COMMAND:
+		case ItemExecution.COMMAND:
 			switch (item.command)
 			{
-			case ItemDebug.START:
+			case ItemExecution.START:
 				running	= true;
 				step	= false;
 				break;
-			case ItemDebug.STOP:
+			case ItemExecution.STOP:
 				running	= false;
 				step	= false;
 				break;
-			case ItemDebug.STEP:
+			case ItemExecution.STEP:
 				running	= true;
 				step	= true;
 				break;
-			case ItemDebug.RESET:
+			case ItemExecution.RESET:
 				configure ();
 				reset ();
 				
@@ -260,10 +260,10 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 			default:
 			}	
 			break;
-		case ItemDebug.DEBUG:
+		case ItemExecution.DEBUG:
 			debug	= item.dbg_vrobot;
 			break;
-		case ItemDebug.MODE:
+		case ItemExecution.MODE:
 			mode	= item.mode_vrobot;
 			break;
 		default:

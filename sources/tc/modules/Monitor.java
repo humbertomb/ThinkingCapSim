@@ -20,7 +20,7 @@ public class Monitor extends Controller
 	protected ItemGoal				gitem;
 	
 	protected Tuple					dtuple;
-	protected ItemDebug				ditem;
+	protected ItemExecution				ditem;
 	
 	protected Tuple					ptuple;
 	protected ItemPlan				pitem;
@@ -67,8 +67,8 @@ public class Monitor extends Controller
 		gitem	= new ItemGoal ();
 		gtuple	= new Tuple (Tuple.GOAL, gitem);
 
-		ditem	= new ItemDebug ();
-		dtuple	= new Tuple (Tuple.DEBUG, ditem);
+		ditem	= new ItemExecution ();
+		dtuple	= new Tuple (Tuple.EXECUTION, ditem);
 
 		pitem 	= new ItemPlan ();
 		ptuple 	= new Tuple (Tuple.PLAN, pitem);

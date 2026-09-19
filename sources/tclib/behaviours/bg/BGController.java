@@ -330,9 +330,9 @@ public class BGController extends Controller
 	    // parse (name);
 	}
 	
-	public void notify_debug (String space, ItemDebug item)
+	public void notify_execution (String space, ItemExecution item)
 	{
-		super.notify_debug (space, item);
+		super.notify_execution (space, item);
 	}
 	
 	public void notify_goal (String space, ItemGoal goal)

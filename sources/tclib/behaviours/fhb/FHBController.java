@@ -442,11 +442,11 @@ public class FHBController extends Controller
 		sendBehInformation();	
 	}
 	
-	public void notify_debug (String space, ItemDebug item)
+	public void notify_execution (String space, ItemExecution item)
 	{
 		String[]			labels = null;
 
-		super.notify_debug (space, item);
+		super.notify_execution (space, item);
 	    	    
 		if (debug)
 		{

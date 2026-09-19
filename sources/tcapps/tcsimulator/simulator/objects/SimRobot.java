@@ -116,9 +116,9 @@ public class SimRobot extends VirtualRobot
 		System.out.println ("  [Sim] Change zone message received <"+item.zone+">");
 	}
 	
-	public void notify_debug (String space, ItemDebug item)
+	public void notify_execution (String space, ItemExecution item)
 	{
-		super.notify_debug (space, item);
+		super.notify_execution (space, item);
 	}	  
 	
 	public void notify_motion (String space, ItemMotion item)

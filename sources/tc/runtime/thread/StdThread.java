@@ -236,37 +236,37 @@ public abstract class StdThread implements Runnable, LindaListener
 		Thread.yield ();
 	}	  
 	
-	public void notify_debug (String space, ItemDebug item) 
+	public void notify_execution (String space, ItemExecution item) 
 	{
 		switch (item.operation)
 		{
-		case ItemDebug.COMMAND:
+		case ItemExecution.COMMAND:
 			switch (item.command)
 			{
-			case ItemDebug.START:
+			case ItemExecution.START:
 				running	= true;
 				step	= false;
 				break;
-			case ItemDebug.STOP:
-			case ItemDebug.RESET:
+			case ItemExecution.STOP:
+			case ItemExecution.RESET:
 				running	= false;
 				step	= false;
 				break;
-			case ItemDebug.STEP:
+			case ItemExecution.STEP:
 				running	= true;
 				step	= true;
 				break;
-			case ItemDebug.MANUAL:
+			case ItemExecution.MANUAL:
 				auto	= false;
 				break;
-			case ItemDebug.AUTO:
+			case ItemExecution.AUTO:
 				auto	= true;
 				break;
 			default:
 			}	
 			break;
-		case ItemDebug.DEBUG:
-		case ItemDebug.MODE:
+		case ItemExecution.DEBUG:
+		case ItemExecution.MODE:
 		default:
 		}	
 	}	

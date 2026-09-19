@@ -276,16 +276,16 @@ public class ExecArch extends Thread
 	public Linda getLocalLinda ()		{ return linda_loc; }
 
 	/**
-	 * Sends an execution command (ItemDebug.START, STOP, STEP, ...) to every
+	 * Sends an execution command (ItemExecution.START, STOP, STEP, ...) to every
 	 * module of the robot through the local Linda space, as the monitor's
 	 * execution control does. Returns false when there is no local space.
 	 */
 	public boolean sendCommand (int command)
 	{
 		if (linda_loc == null)			return false;
-		ItemDebug	item = new ItemDebug ();
+		ItemExecution	item = new ItemExecution ();
 		item.command (command, System.currentTimeMillis ());
-		Tuple		tuple = new Tuple (Tuple.DEBUG, item);
+		Tuple		tuple = new Tuple (Tuple.EXECUTION, item);
 		tuple.space	= robotid;
 		linda_loc.write (tuple);
 		return true;

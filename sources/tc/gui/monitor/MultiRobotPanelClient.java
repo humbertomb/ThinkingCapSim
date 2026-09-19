@@ -609,7 +609,7 @@ public class MultiRobotPanelClient extends MultiRobotPanelInterf //implements GU
 		if (monitor != null)
 		{
 			monitor.setID ((String) robotsCB.getSelectedItem());	
-			monitor.setCommand (ItemDebug.STEP);
+			monitor.setCommand (ItemExecution.STEP);
 		}
 	}
 
@@ -618,7 +618,7 @@ public class MultiRobotPanelClient extends MultiRobotPanelInterf //implements GU
 		if (monitor != null)
 		{
 			monitor.setID ((String) robotsCB.getSelectedItem());			
-			monitor.setCommand (ItemDebug.STOP);
+			monitor.setCommand (ItemExecution.STOP);
 		}
 	}
 
@@ -627,7 +627,7 @@ public class MultiRobotPanelClient extends MultiRobotPanelInterf //implements GU
 		if (monitor != null)
 		{
 			monitor.setID ((String) robotsCB.getSelectedItem());	
-			monitor.setCommand (ItemDebug.START);
+			monitor.setCommand (ItemExecution.START);
 		}
 	}
 
@@ -636,7 +636,7 @@ public class MultiRobotPanelClient extends MultiRobotPanelInterf //implements GU
 		if (monitor != null)
 		{
 			monitor.setID ((String) robotsCB.getSelectedItem());	
-			monitor.setCommand (ItemDebug.RESET);
+			monitor.setCommand (ItemExecution.RESET);
 		}
 	}	
 

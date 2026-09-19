@@ -12,9 +12,9 @@ public class DebugDesc extends EventDesc
 	// Constructors
 	public DebugDesc (StdThread object, Linda linda)
 	{
-		key		= "DEBUG";
-		classn	= "tc.shared.linda.ItemDebug";
-		methodn	= "notify_debug";
+		key		= "EXECUTION";
+		classn	= "tc.shared.linda.ItemExecution";
+		methodn	= "notify_execution";
 		
 		configure (object, linda);
 	}

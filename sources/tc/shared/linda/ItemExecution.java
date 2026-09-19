@@ -6,7 +6,7 @@
 
 package tc.shared.linda;
 
-public class ItemDebug extends Item
+public class ItemExecution extends Item
 {
 	// Operation modes
 	public static final int 		COMMAND		= 0;
@@ -42,7 +42,7 @@ public class ItemDebug extends Item
 	public boolean					dbg_planner;
 	
 	// Constructors
-	public ItemDebug () 
+	public ItemExecution () 
 	{
 		this.command (STOP, 0);
 	}	
