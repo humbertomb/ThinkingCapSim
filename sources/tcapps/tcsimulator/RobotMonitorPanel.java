@@ -6,6 +6,10 @@ package tcapps.tcsimulator;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -14,27 +18,22 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.table.AbstractTableModel;
 
-import tc.coord.RobotList;
 import tc.gui.monitor.EventList;
 import tc.gui.monitor.EventListRenderer;
 import tc.shared.linda.ItemConfig;
-import tc.shared.linda.ItemGoal;
 import tc.shared.linda.ItemLPS;
 import tc.shared.linda.ItemStatus;
 import tc.shared.linda.Linda;
 import tc.shared.linda.LindaListener;
 import tc.shared.linda.Tuple;
 import tc.shared.world.World;
-import tc.vrobot.RobotDesc;
-import tclib.utils.fusion.FusionDesc;
 
 /**
- * "Robots" and "Events" tables of the monitor (tc.gui.monitor.MultiRobotPanel),
- * fed directly from the local Linda space of the running architecture: CONFIG
- * registers the robot, LPS updates its position, GOAL its destination and
- * STATUS its state and the event log. Same table models as the monitor:
- * {@link RobotList} and {@link EventList}.
+ * "Robots" and "Events" tables of a running architecture, fed directly from
+ * the local Linda space of each robot: CONFIG registers the robot, LPS says
+ * where it is and STATUS its state and the event log.
  */
 public class RobotMonitorPanel extends JTabbedPane
 {
@@ -43,18 +42,81 @@ public class RobotMonitorPanel extends JTabbedPane
 	static public final long		LPS_PERIOD	= 500;		// min. ms between position updates of a robot
 	static public final int			VISIBLE_ROWS	= 6;	// preferred rows of the tables
 
-	protected RobotList				robots;
+	protected Robots				robots;
 	protected EventList				events;
 	protected JTable				robotTB, eventTB;
 	protected JScrollPane			robotSP, eventSP;
 
 	protected World					world;					// to name the zone of the robot position
-	protected java.util.Map<String, Long>			ltimes	= new java.util.HashMap<String, Long> ();
+	protected Map<String, Long>		ltimes	= new HashMap<String, Long> ();
+
+	/**
+	 * The Robots table: a robot, where it is and how it is, which is all of a
+	 * robot this says. A robot appears when it announces itself and stays until
+	 * an execution ends.
+	 */
+	protected class Robots extends AbstractTableModel
+	{
+		private static final long		serialVersionUID = 1L;
+
+		private final String[]			COLUMNS = { "Robot", "Position", "Status" };
+		private final List<String>		ids = new ArrayList<String> ();		// in the order they announced themselves
+		private final Map<String, String>	where = new HashMap<String, String> ();
+		private final Map<String, String>	how = new HashMap<String, String> ();
+
+		/** A robot that has announced itself; one that had already done so is left as it is. */
+		void add (String id)
+		{
+			if (ids.contains (id))		return;
+			ids.add (id);
+			fireTableDataChanged ();
+		}
+
+		void position (String id, String zone)
+		{
+			if (!ids.contains (id))		return;
+			where.put (id, zone);
+			fireTableDataChanged ();
+		}
+
+		void status (String id, String status)
+		{
+			if (!ids.contains (id))		return;
+			how.put (id, status);
+			fireTableDataChanged ();
+		}
+
+		void clear ()
+		{
+			ids.clear ();
+			where.clear ();
+			how.clear ();
+			fireTableDataChanged ();
+		}
+
+		public int		getRowCount ()				{ return ids.size (); }
+		public int		getColumnCount ()			{ return COLUMNS.length; }
+		public String	getColumnName (int col)		{ return COLUMNS[col]; }
+
+		public Object getValueAt (int row, int col)
+		{
+			String	id = ids.get (row);
+			String	value;
+
+			switch (col)
+			{
+			case 0:		value = id;					break;
+			case 1:		value = where.get (id);		break;
+			default:	value = how.get (id);		break;
+			}
+			return (value == null) ? "N/A" : value;
+		}
+	}
 
 	public RobotMonitorPanel ()
 	{
 		super (SwingConstants.LEFT);
-		robots	= new RobotList (RobotList.MAXROBOTS);
+		robots	= new Robots ();
 		events	= new EventList ();
 
 		robotTB	= new JTable (robots);
@@ -83,7 +145,6 @@ public class RobotMonitorPanel extends JTabbedPane
 		setMinimumSize (new Dimension (300, 60));
 	}
 
-	public RobotList	getRobotList ()		{ return robots; }
 	public EventList	getEventList ()		{ return events; }
 	public void			setWorld (World w)	{ world = w; }
 
@@ -106,7 +167,6 @@ public class RobotMonitorPanel extends JTabbedPane
 			linda.register (new Tuple (Tuple.CONFIG), this);
 			linda.register (new Tuple (Tuple.LPS), this);
 			linda.register (new Tuple (Tuple.STATUS), this);
-			linda.register (new Tuple (Tuple.GOAL), this);
 		}
 
 		void unregister ()
@@ -116,7 +176,6 @@ public class RobotMonitorPanel extends JTabbedPane
 				linda.unregister (new Tuple (Tuple.CONFIG), this);
 				linda.unregister (new Tuple (Tuple.LPS), this);
 				linda.unregister (new Tuple (Tuple.STATUS), this);
-				linda.unregister (new Tuple (Tuple.GOAL), this);
 			} catch (Exception e) { }
 		}
 	}
@@ -149,12 +208,11 @@ public class RobotMonitorPanel extends JTabbedPane
 	/** Removes every robot and event (a new execution starts). */
 	public void clear ()
 	{
-		final String[]	ids = robots.getIDs ();
 		SwingUtilities.invokeLater (new Runnable ()
 		{
 			public void run ()
 			{
-				for (String id : ids)		robots.delete (id);
+				robots.clear ();
 				events.clear ();
 				ltimes.clear ();
 			}
@@ -169,11 +227,10 @@ public class RobotMonitorPanel extends JTabbedPane
 
 		if (tuple.key.equals (Tuple.CONFIG))
 		{
-			final ItemConfig	item = (ItemConfig) tuple.value;
-			if (item.props_robot == null)		return;
+			if (((ItemConfig) tuple.value).props_robot == null)		return;		// not a robot announcing itself
 			SwingUtilities.invokeLater (new Runnable ()
 			{
-				public void run ()		{ robots.add (id, new RobotDesc (item.props_robot), new FusionDesc (item.props_robot)); }
+				public void run ()		{ robots.add (id); }
 			});
 		}
 		else if (tuple.key.equals (Tuple.LPS))
@@ -189,17 +246,8 @@ public class RobotMonitorPanel extends JTabbedPane
 				public void run ()
 				{
 					// where it says it is: the zone of the world it is in, and no more
-					robots.updatePosition (id, (world != null) ? world.toString (item.lps.cur.x (), item.lps.cur.y ()) : "unknown");
+					robots.position (id, (world != null) ? world.toString (item.lps.cur.x (), item.lps.cur.y ()) : "unknown");
 				}
-			});
-		}
-		else if (tuple.key.equals (Tuple.GOAL))
-		{
-			final ItemGoal	item = (ItemGoal) tuple.value;
-			if ((item.task == null) || (item.task.tpos == null))		return;
-			SwingUtilities.invokeLater (new Runnable ()
-			{
-				public void run ()		{ robots.update (id, item.task.tpos); }
 			});
 		}
 		else if (tuple.key.equals (Tuple.STATUS))
@@ -216,7 +264,7 @@ public class RobotMonitorPanel extends JTabbedPane
 						JScrollBar	scroll = eventSP.getVerticalScrollBar ();
 						scroll.setValue (scroll.getMaximum ());
 					}
-					robots.update (id, ItemStatus.typeToString (item.type) + ". " + item.message);
+					robots.status (id, ItemStatus.typeToString (item.type) + ". " + item.message);
 				}
 			});
 		}
