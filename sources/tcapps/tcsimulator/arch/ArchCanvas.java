@@ -90,6 +90,8 @@ public class ArchCanvas extends JPanel
 
 	protected ArchModel				model;
 	protected Block					selection;
+	/** Whether the symbols of the blocks are written at all: with many of them the diagram is a thicket. */
+	protected boolean				showsymbols	= true;
 	/** Descriptions read for the previews, by path (a null value: one that cannot be read). */
 	protected Map<String, RobotDef>	previews = new LinkedHashMap<String, RobotDef> ();
 	protected List<Listener>		listeners	= new ArrayList<Listener> ();
@@ -703,13 +705,28 @@ public class ArchCanvas extends JPanel
 	 */
 	protected List<String> symbolsOf (Block b)
 	{
-		return ((model != null) && (b != null)) ? model.inputs (b) : new java.util.ArrayList<String> ();
+		return (showsymbols && (model != null) && (b != null)) ? model.inputs (b) : new java.util.ArrayList<String> ();
 	}
 
 	/** The symbols a block writes, as the model reads them off the class it runs. */
 	protected List<String> producedBy (Block b)
 	{
-		return ((model != null) && (b != null)) ? model.produces (b) : new java.util.ArrayList<String> ();
+		return (showsymbols && (model != null) && (b != null)) ? model.produces (b) : new java.util.ArrayList<String> ();
+	}
+
+	/** Whether the symbols of the blocks are written under them. */
+	public boolean getShowSymbols ()			{ return showsymbols; }
+
+	/**
+	 * Writes the symbols of the blocks, or leaves them out: which symbol goes
+	 * where is one thing to read an architecture for, and how it is wired together
+	 * is another, and the second is read better without the first.
+	 */
+	public void setShowSymbols (boolean on)
+	{
+		if (on == showsymbols)		return;
+		showsymbols	= on;
+		modelChanged ();										// what is written says how much room a row takes
 	}
 
 	/**

@@ -509,15 +509,16 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	}
 
 	/**
-	 * Menu bar of the editor: File (new, load, save, import of a legacy
-	 * execution architecture) and, when <code>withQuit</code>, the Quit entry
-	 * of a stand-alone window.
+	 * Menu bar of the editor: File (new, load, save) and, when
+	 * <code>withQuit</code>, the Quit entry of a stand-alone window, plus View,
+	 * which says whether the symbols of the blocks are written in the diagram.
 	 */
 	public JMenuBar buildMenuBar (boolean withQuit)
 	{
 		int			mask = java.awt.Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ();
 		JMenuBar	mb = new JMenuBar ();
 		JMenu		mfile = new JMenu ("File");
+		JMenu		mview = new JMenu ("View");
 
 		mfile.add (menuItem ("New Deployment", KeyEvent.VK_N, mask, new Runnable () { public void run () { newDeployment (); } }));
 		mfile.add (menuItem ("Load Deployment...", KeyEvent.VK_O, mask, new Runnable () { public void run () { loadDeployment (); } }));
@@ -529,7 +530,26 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 			mfile.add (menuItem ("Quit", KeyEvent.VK_Q, mask, new Runnable () { public void run () { quit (); } }));
 		}
 		mb.add (mfile);
+		// the symbols of the blocks are written by default: they are part of the
+		// drawing of an architecture, and they are left out when what is being
+		// looked at is how it is wired together instead
+		mview.add (check ("Show Events", canvas.getShowSymbols (), new java.awt.event.ItemListener ()
+		{
+			public void itemStateChanged (java.awt.event.ItemEvent e)
+			{
+				canvas.setShowSymbols (e.getStateChange () == java.awt.event.ItemEvent.SELECTED);
+			}
+		}));
+		mb.add (mview);
 		return mb;
+	}
+
+	private javax.swing.JCheckBoxMenuItem check (String text, boolean on, java.awt.event.ItemListener l)
+	{
+		javax.swing.JCheckBoxMenuItem	mi = new javax.swing.JCheckBoxMenuItem (text, on);
+
+		mi.addItemListener (l);
+		return mi;
 	}
 
 	/** Closes the window hosting the editor (the Quit entry of the menu). */
