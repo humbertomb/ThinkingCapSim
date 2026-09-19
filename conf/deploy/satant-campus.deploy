@@ -78,7 +78,7 @@
       "router": {
         "name": "Linda Router",
         "properties": {
-          "CLASS": "tc.coord.LindaRouter",
+          "CLASS": "tc.modules.LindaRouter",
           "GMODE": "udp",
           "GPORT": "20029",
           "MODE": "shared"

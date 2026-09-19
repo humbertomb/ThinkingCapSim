@@ -276,7 +276,7 @@ public class DeployArch
 	static public Module newRouter ()
 	{
 		Module	m = new Module ("Linda Router");
-		m.set ("CLASS", "tc.coord.LindaRouter");
+		m.set ("CLASS", "tc.modules.LindaRouter");
 		m.set ("MODE", "shared");
 		m.set ("GMODE", "tcp");
 		m.set ("GFX", "false");

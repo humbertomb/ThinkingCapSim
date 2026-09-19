@@ -6,7 +6,7 @@
  */
 package tcrob.umu.quaky2;
 
-import tc.coord.*;
+import tc.modules.*;
 import tc.shared.linda.*;
 
 /**

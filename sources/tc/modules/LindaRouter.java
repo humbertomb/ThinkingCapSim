@@ -2,7 +2,7 @@
  * (c) 2002 Humberto Martinez, Juan Pedro Canovas
  */
  
-package tc.coord;
+package tc.modules;
 
 import tc.shared.linda.*;
 

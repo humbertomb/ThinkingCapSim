@@ -48,7 +48,7 @@ public class ArchModel
 	/** The class the robot of an architecture is. */
 	static public final String	VROBOT_BASE	= "tc.vrobot.VirtualRobot";
 	/** The class a router of the coordination layer is. */
-	static public final String	ROUTER_BASE	= "tc.coord.LindaRouter";
+	static public final String	ROUTER_BASE	= "tc.modules.LindaRouter";
 	/** What a module is not, though it is a thread of the runtime as they are. */
 	static public final String[]	MODULE_NOT	= { VROBOT_BASE };
 	/**

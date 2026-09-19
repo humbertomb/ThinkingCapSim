@@ -5,7 +5,7 @@
 package tcrob.ingenia.ifork;
 
 
-import tc.coord.*;
+import tc.modules.*;
 import tc.shared.linda.*;
 import tcrob.ingenia.ifork.linda.*;
 
