@@ -57,7 +57,10 @@ public class ArchCanvas extends JPanel
 	static final int				LINDA_W		= 132,	LINDA_H		= 66;
 	static final int				VROB_W		= 136,	VROB_H		= 50;
 	static final int				COL_DX		= 205;						// module column offset from the centre
-	static final int				ROW_DY		= 66;						// module row pitch
+	static final int				ROW_DY		= 66;						// module row pitch, with nothing written under a module
+	static final int				SYM_TOP		= 4;						// from the foot of a module to the first symbol under it
+	static final int				SYM_W		= 150;						// as wide as a symbol is written, at most
+	static final float				SYM_FONT	= 10f;
 	static final int				REGION_HW	= 290;						// robot region half width
 	static final int				REGION_PAD	= 22;
 	static final int				LABEL_DY	= 20;						// baseline of the robot name below the region top
@@ -74,6 +77,7 @@ public class ArchCanvas extends JPanel
 	static final Color				C_SELECT	= new Color (30, 110, 230);
 	static final Color				C_ARROW		= new Color (90, 90, 90);
 	static final Color				C_PREVIEW_BG	= new Color (252, 252, 252);
+	static final Color				C_SYMBOL	= new Color (70, 95, 70);	// the symbols a module asks for
 
 	/** Size of the preview of the robot, hanging off the bottom right corner of its block (px). */
 	static final int				PREVIEW_W	= 88;
@@ -280,14 +284,29 @@ public class ArchCanvas extends JPanel
 			int		modTop = top + BOX_H / 2 + 34;
 			int		nmods = model.moduleCount (r);
 			int		nrows = (nmods + 1) / 2;
-			int		modsH = Math.max (nrows * ROW_DY - (ROW_DY - BOX_H), LINDA_H);
+			int		gap = ROW_DY - BOX_H;								// between one row and the next
+			// a row is as tall as its modules plus the longer of the two columns of
+			// symbols written under them, so that what is written never reaches the
+			// row below
+			int[]	rowH = new int[Math.max (1, nrows)];
+			int		stackH = 0;
+			for (int row = 0; row < nrows; row++)
+			{
+				int		lines = 0;
+				for (int m = 2 * row; (m < nmods) && (m < 2 * row + 2); m++)
+					lines	= Math.max (lines, symbolsOf (new Block (ArchModel.MODULE, r, m)).size ());
+				rowH[row]	= BOX_H + symbolsHeight (lines);
+				stackH		+= rowH[row] + ((row > 0) ? gap : 0);
+			}
+			int		modsH = Math.max (stackH, LINDA_H);
+			int		my = modTop + Math.max (0, (LINDA_H - stackH) / 2);
 			for (int m = 0; m < nmods; m++)
 			{
 				int		col = (m % 2 == 0) ? -1 : 1;
 				int		row = m / 2;
-				int		my = modTop + row * ROW_DY;
-				if (nrows * ROW_DY - (ROW_DY - BOX_H) < LINDA_H)		my += (LINDA_H - (nrows * ROW_DY - (ROW_DY - BOX_H))) / 2;
-				bounds.put (new Block (ArchModel.MODULE, r, m), new Rectangle (rcx + col * COL_DX - BOX_W / 2, my, BOX_W, BOX_H));
+				int		ry = my;
+				for (int k = 0; k < row; k++)		ry += rowH[k] + gap;
+				bounds.put (new Block (ArchModel.MODULE, r, m), new Rectangle (rcx + col * COL_DX - BOX_W / 2, ry, BOX_W, BOX_H));
 			}
 			if (model.hasLocalLinda (r))
 				bounds.put (new Block (ArchModel.LOCAL_LINDA, r), new Rectangle (rcx - LINDA_W / 2, modTop + (modsH - LINDA_H) / 2, LINDA_W, LINDA_H));
@@ -548,6 +567,7 @@ public class ArchCanvas extends JPanel
 			g.setColor (border);
 			g.drawRect (r.x, r.y, r.width, r.height);
 			if (!b.equals (editing))	centeredText (g, new String[] { model.labelOf (b) }, r, Font.BOLD);
+			paintSymbols (g, b, r);
 			break;
 		case ArchModel.VROBOT:
 		{
@@ -564,6 +584,85 @@ public class ArchCanvas extends JPanel
 			break;
 		}
 		}
+	}
+
+	/**
+	 * The symbols a module asks the Linda space for, written in a column under its
+	 * block: what a module reacts to is as much part of the drawing of the
+	 * architecture as what it is wired to.
+	 *
+	 * They are written on the ground of the region, so that an arrow passing by
+	 * reads as passing behind them, and the row they sit in was made tall enough
+	 * for them, so they never reach the module below.
+	 */
+	protected void paintSymbols (Graphics2D g, Block b, Rectangle r)
+	{
+		List<String>	syms = symbolsOf (b);
+		Rectangle		box = symbolsBox (b, r);
+		FontMetrics		fm;
+		int				y;
+
+		if (syms.isEmpty () || (box == null))		return;
+		g.setColor (C_REGION_BG);
+		g.fillRect (box.x - 3, box.y, box.width + 6, box.height);
+		g.setFont (getFont ().deriveFont (Font.PLAIN, SYM_FONT));
+		fm		= g.getFontMetrics ();
+		g.setColor (C_SYMBOL);
+		y		= box.y + fm.getAscent ();
+		for (String sym : syms)
+		{
+			String	t = shortened (fm, sym);
+			g.drawString (t, r.x + (r.width - fm.stringWidth (t)) / 2, y);
+			y	+= fm.getHeight ();
+		}
+	}
+
+	/** The symbols a module asks for, each one once and in the order it asks for them. */
+	protected List<String> symbolsOf (Block b)
+	{
+		List<String>	l = new java.util.ArrayList<String> ();
+
+		if ((model == null) || (b == null) || (b.kind != ArchModel.MODULE) || !model.hasEvents (b))		return l;
+		for (String[] e : model.events (b))
+		{
+			String	sym = (e[0] != null) ? e[0].trim () : "";
+			if ((sym.length () > 0) && !l.contains (sym))		l.add (sym);
+		}
+		return l;
+	}
+
+	/** How much room a column of that many symbols takes under a module (none for none). */
+	protected int symbolsHeight (int lines)
+	{
+		if (lines <= 0)		return 0;
+		return SYM_TOP + lines * getFontMetrics (getFont ().deriveFont (Font.PLAIN, SYM_FONT)).getHeight ();
+	}
+
+	/** Where every block of the diagram sits, the regions of the robots included. */
+	public Map<Block, Rectangle> blockBounds ()		{ return bounds; }
+
+	/** Where the symbols of a module are written, or null when it asks for none. */
+	public Rectangle symbolsBox (Block b)			{ return symbolsBox (b, bounds.get (b)); }
+
+	protected Rectangle symbolsBox (Block b, Rectangle r)
+	{
+		List<String>	syms = symbolsOf (b);
+		FontMetrics		fm;
+		int				w = 0;
+
+		if ((r == null) || syms.isEmpty ())			return null;
+		fm		= getFontMetrics (getFont ().deriveFont (Font.PLAIN, SYM_FONT));
+		for (String sym : syms)						w = Math.max (w, fm.stringWidth (shortened (fm, sym)));
+		return new Rectangle (r.x + (r.width - w) / 2, r.y + r.height + SYM_TOP, w, syms.size () * fm.getHeight ());
+	}
+
+	/** A symbol cut to what a column under a module holds. */
+	static protected String shortened (FontMetrics fm, String sym)
+	{
+		String	t = sym;
+
+		while ((fm.stringWidth (t) > SYM_W) && (t.length () > 3))		t = t.substring (0, t.length () - 2).trim () + "\u2026";
+		return t;
 	}
 
 	protected void centeredText (Graphics2D g, String[] lines, Rectangle r, int style)
