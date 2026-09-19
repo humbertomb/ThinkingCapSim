@@ -56,12 +56,14 @@ public class ArchCanvas extends JPanel
 	static final int				BOX_W		= 124,	BOX_H		= 44;
 	static final int				LINDA_W		= 132,	LINDA_H		= 66;
 	static final int				VROB_W		= 136,	VROB_H		= 50;
-	static final int				COL_DX		= 205;						// module column offset from the centre
+	static final int				COL_DX		= 205;						// module column offset from the centre, with nothing written under a module
+	static final int				COL_GAP		= COL_DX - LINDA_W / 2 - BOX_W / 2;	// and the room the arrows to the Linda space take, whatever the blocks measure
 	static final int				ROW_DY		= 66;						// module row pitch, with nothing written under a module
 	static final int				SYM_TOP		= 4;						// from the foot of a module to the first symbol under it
 	static final int				SYM_W		= 92;						// as wide as a symbol is written, at most (SENSORS_CTRL, the longest there is)
 	static final int				SYM_BUS		= 12;						// and the room the line they travel by takes
 	static final int				SYM_GAP		= 12;						// between what comes in and what goes out
+	static final int				SYM_PAD		= 16;						// what a block is wider than the symbols written under it
 	static final int				SYM_MAX_ROWS	= 9;					// and as tall as a lot of them is written before it goes on in another column
 	static final float				SYM_FONT	= 10f;
 	static final int				REGION_HW	= 290;						// robot region half width
@@ -95,6 +97,12 @@ public class ArchCanvas extends JPanel
 	/** Descriptions read for the previews, by path (a null value: one that cannot be read). */
 	protected Map<String, RobotDef>	previews = new LinkedHashMap<String, RobotDef> ();
 	protected List<Listener>		listeners	= new ArrayList<Listener> ();
+
+	// measures of the layout, taken at every paint: the blocks are as wide as what
+	// is written under them, and the diagram opens up to hold them
+	protected int					modw		= BOX_W;					// every module box, so that a row of them reads as a row
+	protected int					coldx		= COL_DX;					// how far from the centre their columns sit
+	protected int					regionhw	= REGION_HW;				// and half the width of the region of a robot
 
 	// layout, rebuilt at every paint
 	protected Map<Block, Rectangle>	bounds		= new LinkedHashMap<Block, Rectangle> ();	// robot containers included
@@ -267,9 +275,10 @@ public class ArchCanvas extends JPanel
 	{
 		bounds.clear ();
 		robotLabels.clear ();
+		measure ();
 		List<Integer>	robots = model.robots ();
 		int				n = Math.max (1, robots.size ());
-		int				total = n * 2 * REGION_HW + (n - 1) * REGION_GAP;		// width of the row of robots
+		int				total = n * 2 * regionhw + (n - 1) * REGION_GAP;		// width of the row of robots
 		int				cx = MARGIN + total / 2;
 		int				y = MARGIN;
 
@@ -283,10 +292,14 @@ public class ArchCanvas extends JPanel
 		for (int i = 0; i < robots.size (); i++)
 		{
 			int		r = robots.get (i);
-			int		rcx = MARGIN + REGION_HW + i * (2 * REGION_HW + REGION_GAP);
+			int		rcx = MARGIN + regionhw + i * (2 * regionhw + REGION_GAP);
 			int		top = y + BOX_H / 2;								// region top: the router straddles it
 			if (model.hasRouter (r))
-				bounds.put (new Block (ArchModel.ROUTER, r), new Rectangle (rcx - BOX_W / 2, y, BOX_W, BOX_H));
+			{
+				int		rw = routerWidth (r);
+
+				bounds.put (new Block (ArchModel.ROUTER, r), new Rectangle (rcx - rw / 2, y, rw, BOX_H));
+			}
 			// the router writes its symbols under its block, as a module does: what
 			// comes after it starts below them
 			int		modTop = top + BOX_H / 2 + 34 + (model.hasRouter (r) ? symbolsHeight (symbolRows (new Block (ArchModel.ROUTER, r))) : 0);
@@ -314,7 +327,7 @@ public class ArchCanvas extends JPanel
 				int		row = m / 2;
 				int		ry = my;
 				for (int k = 0; k < row; k++)		ry += rowH[k] + gap;
-				bounds.put (new Block (ArchModel.MODULE, r, m), new Rectangle (rcx + col * COL_DX - BOX_W / 2, ry, BOX_W, BOX_H));
+				bounds.put (new Block (ArchModel.MODULE, r, m), new Rectangle (rcx + col * coldx - modw / 2, ry, modw, BOX_H));
 			}
 			if (model.hasLocalLinda (r))
 				bounds.put (new Block (ArchModel.LOCAL_LINDA, r), new Rectangle (rcx - LINDA_W / 2, modTop + (modsH - LINDA_H) / 2, LINDA_W, LINDA_H));
@@ -328,7 +341,7 @@ public class ArchCanvas extends JPanel
 				bounds.put (new Block (ArchModel.VROBOT, r), vrobot);
 				vy += VROB_H + symbolsHeight (symbolRows (new Block (ArchModel.VROBOT, r)));
 			}
-			Rectangle	region = new Rectangle (rcx - REGION_HW, top, 2 * REGION_HW, vy + REGION_PAD - top);
+			Rectangle	region = new Rectangle (rcx - regionhw, top, 2 * regionhw, vy + REGION_PAD - top);
 			Block		robot = new Block (ArchModel.ROBOT, r);
 			bounds.put (robot, region);
 			// bounds of the robot name (top-left corner of the region), for hit testing and in-place editing
@@ -350,21 +363,53 @@ public class ArchCanvas extends JPanel
 	}
 
 	/**
-	 * How wide the block of the robot of a region is: as wide as what is written
-	 * under it, so that what it is given and what it writes stay under the block
-	 * instead of reaching out of it, and wide enough besides for the drawing of the
-	 * robot, which hangs off its corner and which they step aside from.
+	 * Takes the measures the layout is built on: a block is as wide as the two
+	 * columns written under it, so that what it is given and what it writes stay
+	 * under the block instead of reaching out of one side of it, and the region of
+	 * a robot opens up to hold its blocks. The modules are all of one width,
+	 * because a row of them that was not would not read as a row.
+	 */
+	protected void measure ()
+	{
+		int		mw = BOX_W, rw = BOX_W;
+
+		for (int r : model.robots ())
+		{
+			for (int m = 0; m < model.moduleCount (r); m++)
+				mw	= Math.max (mw, blockWidth (new Block (ArchModel.MODULE, r, m), BOX_W, SYM_PAD));
+			if (model.hasRouter (r))		rw = Math.max (rw, routerWidth (r));
+		}
+		modw		= mw;
+		// the arrows to the Linda space keep the room they had, whatever the blocks measure
+		coldx		= LINDA_W / 2 + COL_GAP + modw / 2;
+		regionhw	= Math.max (REGION_HW, Math.max (coldx + modw / 2 + REGION_PAD, rw / 2 + REGION_PAD));
+	}
+
+	/** How wide a block is drawn: as wide as the two columns written under it, and never narrower than its own size. */
+	protected int blockWidth (Block b, int least, int pad)
+	{
+		int		wi = width (b, symbolsOf (b), false);
+		int		wo = width (b, producedBy (b), true);
+		int		total = wi + wo + (((wi > 0) && (wo > 0)) ? SYM_GAP : 0);
+
+		return (total == 0) ? least : Math.max (least, total + pad);
+	}
+
+	/** The router of a robot, which routes the whole traffic of it and so writes far more symbols than a module. */
+	protected int routerWidth (int r)
+	{
+		return blockWidth (new Block (ArchModel.ROUTER, r), BOX_W, SYM_PAD);
+	}
+
+	/**
+	 * The block of the robot of a region: wide enough besides for the drawing of
+	 * the robot, which hangs off its corner and which the columns step aside from.
 	 */
 	protected int vrobotWidth (int r)
 	{
-		Block			b = new Block (ArchModel.VROBOT, r);
-		int				wi = width (symbolsOf (b), false);
-		int				wo = width (producedBy (b), true);
-		int				total = wi + wo + (((wi > 0) && (wo > 0)) ? SYM_GAP : 0);
+		int		pad = (describedRobot (r) != null) ? 2 * (PREVIEW_OVER + 6) : SYM_PAD;
 
-		if (total == 0)			return VROB_W;
-		return Math.min (2 * REGION_HW - 2 * REGION_PAD,
-						 Math.max (VROB_W, total + ((describedRobot (r) != null) ? 2 * (PREVIEW_OVER + 6) : 16)));
+		return Math.min (2 * regionhw - 2 * REGION_PAD, blockWidth (new Block (ArchModel.VROBOT, r), VROB_W, pad));
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -604,11 +649,6 @@ public class ArchCanvas extends JPanel
 			g.fillRoundRect (r.x, r.y, r.width, r.height, 22, 22);
 			g.setColor (border);
 			g.drawRoundRect (r.x, r.y, r.width, r.height, 22, 22);
-			// wheels
-			g.setColor (C_LINE);
-			g.fillRoundRect (r.x + 16, r.y + r.height - 3, 22, 6, 3, 3);
-			g.fillRoundRect (r.x + r.width - 38, r.y + r.height - 3, 22, 6, 3, 3);
-			g.setColor (border);
 			if (!b.equals (editing))	centeredText (g, new String[] { model.labelOf (b) }, r, Font.BOLD);
 			paintSymbols (g, b, r);
 			break;
@@ -639,6 +679,7 @@ public class ArchCanvas extends JPanel
 	protected void paintColumn (Graphics2D g, Block b, Rectangle r, boolean produced)
 	{
 		List<String>	syms = produced ? producedBy (b) : symbolsOf (b);
+		List<String>	std = produced ? new java.util.ArrayList<String> () : standardOf (b);
 		Rectangle		box = columnBox (b, r, produced);
 		FontMetrics		fm;
 		int				cols, cw, stem;
@@ -654,8 +695,7 @@ public class ArchCanvas extends JPanel
 
 		cols	= columns (syms.size ());
 		cw		= box.width / cols;
-		// the wheels of a robot hang under its block: the line starts below them
-		top		= r.y + r.height + ((b.kind == ArchModel.VROBOT) ? 4 : 0);
+		top		= r.y + r.height;
 		busy	= box.y - 2;											// where the columns hang from
 		// the lot leaves the block at the middle of what is written, and always
 		// against the block itself however far aside it had to be written
@@ -690,12 +730,12 @@ public class ArchCanvas extends JPanel
 			{
 				// what the runtime hands out anyway is written in bold: it is asked for
 				// nowhere and cannot be taken away, and it is no less given for that
-				boolean		std = !produced && ArchModel.isStandard (part.get (i));
-				FontMetrics	cfm = symbolMetrics (std);
+				boolean		bold = std.contains (part.get (i));
+				FontMetrics	cfm = symbolMetrics (bold);
 				String		t = shortened (cfm, part.get (i));
 				int			my = box.y + i * fm.getHeight () + fm.getHeight () / 2;
 
-				g.setFont (getFont ().deriveFont (std ? Font.BOLD : Font.PLAIN, SYM_FONT));
+				g.setFont (getFont ().deriveFont (bold ? Font.BOLD : Font.PLAIN, SYM_FONT));
 				g.drawLine (bx, my, cx + SYM_BUS - 2, my);
 				g.drawString (t, cx + SYM_BUS, box.y + fm.getAscent () + i * fm.getHeight ());
 			}
@@ -805,8 +845,8 @@ public class ArchCanvas extends JPanel
 
 		if ((r == null) || syms.isEmpty ())			return null;
 		fm		= symbolMetrics (false);
-		wi		= width (symbolsOf (b), false);
-		wo		= width (producedBy (b), true);
+		wi		= width (b, symbolsOf (b), false);
+		wo		= width (b, producedBy (b), true);
 		x		= r.x + (r.width - (wi + wo + (((wi > 0) && (wo > 0)) ? SYM_GAP : 0))) / 2;
 		if ((b.kind == ArchModel.VROBOT) && (describedRobot (b.robot) != null))
 			x	= Math.min (x, previewBox (r).x - 6 - (wi + wo + SYM_GAP));
@@ -827,15 +867,26 @@ public class ArchCanvas extends JPanel
 		return getFontMetrics (getFont ().deriveFont (bold ? Font.BOLD : Font.PLAIN, SYM_FONT));
 	}
 
-	/** How wide a lot of symbols is written, the lines they travel by and the columns they take included (0 for none). */
-	protected int width (List<String> syms, boolean produced)
+	/**
+	 * The symbols of a block the runtime hands out by itself, which are written in
+	 * bold: a router registers for CONFIG and EXECUTION of its own accord, and its
+	 * own are written like the rest of what it asks for.
+	 */
+	protected List<String> standardOf (Block b)
 	{
-		int		w = 0;
+		return ((model != null) && (b != null)) ? model.standard (b) : new java.util.ArrayList<String> ();
+	}
+
+	/** How wide a lot of symbols is written, the lines they travel by and the columns they take included (0 for none). */
+	protected int width (Block b, List<String> syms, boolean produced)
+	{
+		List<String>	std = produced ? new java.util.ArrayList<String> () : standardOf (b);
+		int				w = 0;
 
 		if (syms.isEmpty ())		return 0;
 		for (String sym : syms)
 		{
-			FontMetrics	fm = symbolMetrics (!produced && ArchModel.isStandard (sym));
+			FontMetrics	fm = symbolMetrics (std.contains (sym));
 			w	= Math.max (w, fm.stringWidth (shortened (fm, sym)));
 		}
 		return columns (syms.size ()) * (w + SYM_BUS);
