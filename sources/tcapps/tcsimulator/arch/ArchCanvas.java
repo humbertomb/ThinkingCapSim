@@ -59,8 +59,9 @@ public class ArchCanvas extends JPanel
 	static final int				COL_DX		= 205;						// module column offset from the centre
 	static final int				ROW_DY		= 66;						// module row pitch, with nothing written under a module
 	static final int				SYM_TOP		= 4;						// from the foot of a module to the first symbol under it
-	static final int				SYM_W		= 138;						// as wide as a symbol is written, at most
-	static final int				SYM_BUS		= 12;						// and the room the line they come in by takes
+	static final int				SYM_W		= 70;						// as wide as a symbol is written, at most
+	static final int				SYM_BUS		= 12;						// and the room the line they travel by takes
+	static final int				SYM_GAP		= 12;						// between what comes in and what goes out
 	static final float				SYM_FONT	= 10f;
 	static final int				REGION_HW	= 290;						// robot region half width
 	static final int				REGION_PAD	= 22;
@@ -79,6 +80,7 @@ public class ArchCanvas extends JPanel
 	static final Color				C_ARROW		= new Color (90, 90, 90);
 	static final Color				C_PREVIEW_BG	= new Color (252, 252, 252);
 	static final Color				C_SYMBOL	= new Color (70, 95, 70);	// the symbols a module asks for
+	static final Color				C_PRODUCED	= new Color (70, 85, 120);	// and the ones it writes
 
 	/** Size of the preview of the robot, hanging off the bottom right corner of its block (px). */
 	static final int				PREVIEW_W	= 88;
@@ -295,7 +297,7 @@ public class ArchCanvas extends JPanel
 			{
 				int		lines = 0;
 				for (int m = 2 * row; (m < nmods) && (m < 2 * row + 2); m++)
-					lines	= Math.max (lines, symbolsOf (new Block (ArchModel.MODULE, r, m)).size ());
+					lines	= Math.max (lines, symbolRows (new Block (ArchModel.MODULE, r, m)));
 				rowH[row]	= BOX_H + symbolsHeight (lines);
 				stackH		+= rowH[row] + ((row > 0) ? gap : 0);
 			}
@@ -317,7 +319,7 @@ public class ArchCanvas extends JPanel
 			{
 				vrobot	= new Rectangle (rcx - VROB_W / 2, vy, VROB_W, VROB_H);
 				bounds.put (new Block (ArchModel.VROBOT, r), vrobot);
-				vy += VROB_H + symbolsHeight (symbolsOf (new Block (ArchModel.VROBOT, r)).size ());
+				vy += VROB_H + symbolsHeight (symbolRows (new Block (ArchModel.VROBOT, r)));
 			}
 			Rectangle	region = new Rectangle (rcx - REGION_HW, top, 2 * REGION_HW, vy + REGION_PAD - top);
 			Block		robot = new Block (ArchModel.ROBOT, r);
@@ -599,38 +601,54 @@ public class ArchCanvas extends JPanel
 	 */
 	protected void paintSymbols (Graphics2D g, Block b, Rectangle r)
 	{
-		List<String>	syms = symbolsOf (b);
-		Rectangle		box = symbolsBox (b, r);
+		paintColumn (g, b, r, false);
+		paintColumn (g, b, r, true);
+	}
+
+	/**
+	 * One of the two lots, on the line it travels by: what comes in with the arrow
+	 * head against the block, what goes out with it at the far end, so which way
+	 * a symbol goes is read off the picture and not off the names.
+	 */
+	protected void paintColumn (Graphics2D g, Block b, Rectangle r, boolean produced)
+	{
+		List<String>	syms = produced ? producedBy (b) : symbolsOf (b);
+		Rectangle		box = columnBox (b, r, produced);
 		FontMetrics		fm;
-		int				bx, top, y;
+		int				bx, top, foot;
 
 		if (syms.isEmpty () || (box == null))		return;
 		g.setColor (C_REGION_BG);
 		g.fillRect (box.x - 3, box.y, box.width + 6, box.height);
 		g.setFont (getFont ().deriveFont (Font.PLAIN, SYM_FONT));
 		fm		= g.getFontMetrics ();
-		g.setColor (C_SYMBOL);
+		g.setColor (produced ? C_PRODUCED : C_SYMBOL);
 
-		// they come in: a line up into the block, with an arrow head where it meets
-		// it, and a stub off it to every symbol that comes in by it
 		bx		= box.x + 4;
-		// the wheels of a robot hang under its block: the arrow starts below them
+		// the wheels of a robot hang under its block: the line starts below them
 		top		= r.y + r.height + ((b.kind == ArchModel.VROBOT) ? 4 : 0);
-		y		= box.y + (syms.size () - 1) * fm.getHeight () + fm.getHeight () / 2;
+		foot	= box.y + (syms.size () - 1) * fm.getHeight () + fm.getHeight () / 2;
 		g.setStroke (new BasicStroke (1f));
-		g.drawLine (bx, top + 3, bx, y);
-		g.fillPolygon (new int[] { bx, bx - 3, bx + 3 },
-					   new int[] { top, top + 5, top + 5 }, 3);
+		if (produced)
+		{
+			g.drawLine (bx, top, bx, foot + 5);
+			g.fillPolygon (new int[] { bx, bx - 3, bx + 3 },
+						   new int[] { foot + 10, foot + 5, foot + 5 }, 3);
+		}
+		else
+		{
+			g.drawLine (bx, top + 3, bx, foot);
+			g.fillPolygon (new int[] { bx, bx - 3, bx + 3 },
+						   new int[] { top, top + 5, top + 5 }, 3);
+		}
 
-		y		= box.y + fm.getAscent ();
 		for (int i = 0; i < syms.size (); i++)
 		{
 			String	t = shortened (fm, syms.get (i));
+			int		my = box.y + i * fm.getHeight () + fm.getHeight () / 2;
 
-			g.drawLine (bx, box.y + i * fm.getHeight () + fm.getHeight () / 2,
-						box.x + SYM_BUS - 2, box.y + i * fm.getHeight () + fm.getHeight () / 2);
-			g.drawString (t, box.x + SYM_BUS, y);
-			y	+= fm.getHeight ();
+			g.drawLine (bx, my, box.x + SYM_BUS - 2, my);
+			g.drawString (t, box.x + SYM_BUS, box.y + fm.getAscent () + i * fm.getHeight ());
 		}
 	}
 
@@ -652,6 +670,18 @@ public class ArchCanvas extends JPanel
 		return l;
 	}
 
+	/** The symbols a block writes, as the model reads them off the class it runs. */
+	protected List<String> producedBy (Block b)
+	{
+		return ((model != null) && (b != null)) ? model.produces (b) : new java.util.ArrayList<String> ();
+	}
+
+	/** How many rows the two lots of a block take: the longer of them. */
+	protected int symbolRows (Block b)
+	{
+		return Math.max (symbolsOf (b).size (), producedBy (b).size ());
+	}
+
 	/** How much room a column of that many symbols takes under a module (none for none). */
 	protected int symbolsHeight (int lines)
 	{
@@ -667,21 +697,54 @@ public class ArchCanvas extends JPanel
 
 	protected Rectangle symbolsBox (Block b, Rectangle r)
 	{
-		List<String>	syms = symbolsOf (b);
+		Rectangle	in = columnBox (b, r, false), out = columnBox (b, r, true);
+
+		if (in == null)					return out;
+		if (out == null)				return in;
+		return in.union (out);
+	}
+
+	/**
+	 * Where one of the two lots of a block is written: what it is given on the
+	 * left, what it writes on the right, the pair of them under the middle of the
+	 * block.
+	 *
+	 * The pair steps aside from the drawing of a robot, which hangs off the corner
+	 * of its block, and stays inside the region of its robot, which is what it
+	 * would run out of first.
+	 */
+	protected Rectangle columnBox (Block b, Rectangle r, boolean produced)
+	{
+		List<String>	syms = produced ? producedBy (b) : symbolsOf (b);
 		FontMetrics		fm;
-		int				w = 0;
-		int				x;
+		int				wi, wo, x;
 
 		if ((r == null) || syms.isEmpty ())			return null;
 		fm		= getFontMetrics (getFont ().deriveFont (Font.PLAIN, SYM_FONT));
-		for (String sym : syms)						w = Math.max (w, fm.stringWidth (shortened (fm, sym)));
-		w		+= SYM_BUS;							// the line the symbols come in by, on their left
-		x		= r.x + (r.width - w) / 2;
-		// the drawing of a robot hangs off the corner of its block: what is written
-		// under it steps aside rather than under it
+		wi		= width (fm, symbolsOf (b));
+		wo		= width (fm, producedBy (b));
+		x		= r.x + (r.width - (wi + wo + (((wi > 0) && (wo > 0)) ? SYM_GAP : 0))) / 2;
 		if ((b.kind == ArchModel.VROBOT) && (describedRobot (b.robot) != null))
-			x	= Math.min (x, previewBox (r).x - 6 - w);
-		return new Rectangle (x, r.y + r.height + SYM_TOP, w, syms.size () * fm.getHeight ());
+			x	= Math.min (x, previewBox (r).x - 6 - (wi + wo + SYM_GAP));
+		// inside the region of its robot, whichever way it has to move to be
+		Rectangle	region = bounds.get (new Block (ArchModel.ROBOT, b.robot));
+		if (region != null)
+		{
+			x	= Math.min (x, region.x + region.width - 8 - (wi + wo + (((wi > 0) && (wo > 0)) ? SYM_GAP : 0)));
+			x	= Math.max (x, region.x + 8);
+		}
+		if (produced)		x += wi + ((wi > 0) ? SYM_GAP : 0);
+		return new Rectangle (x, r.y + r.height + SYM_TOP, produced ? wo : wi, syms.size () * fm.getHeight ());
+	}
+
+	/** How wide a lot of symbols is written, the line they travel by included (0 for none). */
+	static protected int width (FontMetrics fm, List<String> syms)
+	{
+		int		w = 0;
+
+		if (syms.isEmpty ())		return 0;
+		for (String sym : syms)		w = Math.max (w, fm.stringWidth (shortened (fm, sym)));
+		return w + SYM_BUS;
 	}
 
 	/** A symbol cut to what a column under a module holds. */

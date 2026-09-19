@@ -447,6 +447,39 @@ public class ArchModel
 		return l;
 	}
 
+	/**
+	 * Symbols a class names but does not produce: it builds the tuple to read
+	 * them, not to write them, and read off a class file there is no telling the
+	 * two apart. The few there are said here, by the class they are found in.
+	 */
+	static private final String[][]	NOT_PRODUCED	= { { "tc.modules.Planner", "LPS" } };		// the planner polls the LPS
+
+	/**
+	 * Symbols a block produces: the ones the class it runs, or one of its
+	 * ancestors, names -- which is how a module says what it writes, since a
+	 * deployment only says what it is given -- less the ones it is given and less
+	 * the ones a class is known to read rather than write.
+	 */
+	public List<String> produces (Block b)
+	{
+		List<String>				out = new ArrayList<String> ();
+		List<String>				in = new ArrayList<String> ();
+		java.util.Map<String, List<String>>	found;
+
+		if ((b == null) || !hasEvents (b))					return out;
+		found	= tcapps.tceditor.DriverClasses.symbolsOf (get (b, "CLASS"), symbols ());
+		for (String[] e : events (b))		in.add (e[0]);
+		for (java.util.Map.Entry<String, List<String>> e : found.entrySet ())
+			for (String sym : e.getValue ())
+			{
+				boolean		reads = false;
+				for (String[] no : NOT_PRODUCED)
+					if (no[0].equals (e.getKey ()) && no[1].equals (sym))		reads = true;
+				if (!reads && !in.contains (sym) && !out.contains (sym))			out.add (sym);
+			}
+		return out;
+	}
+
 	/** Replaces the events of a module (blank rows are dropped). */
 	public void setEvents (Block b, List<String[]> rows)
 	{

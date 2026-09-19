@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -81,7 +82,55 @@ public class DriverClasses
 	}
 
 	/** Forgets what was found (the development having been built again, say). */
-	static public synchronized void flush ()					{ CACHE.clear (); }
+	static public synchronized void flush ()					{ CACHE.clear ();	SYMBOLS.clear (); }
+
+	/** Where the walk of the ancestors of a module stops: what every one of them is. */
+	static public final String		MODULE_ROOT	= "tc.runtime.thread.StdThread";
+
+	static private final Map<String, Map<String, List<String>>>	SYMBOLS = new HashMap<String, Map<String, List<String>>> ();
+
+	/**
+	 * The symbols a class names, and those its ancestors name, by the class each
+	 * one was found in and in the order they were found.
+	 *
+	 * A symbol is a constant of {@link tc.shared.linda.Tuple}, so it is compiled
+	 * into the class that writes with it as the text it is worth: what a module
+	 * produces, which a deployment does not say anywhere, is read off its class
+	 * without it having to declare a thing. The ancestors are read as well
+	 * because that is where most of it sits -- a controller writes its MOTION in
+	 * <code>tc.modules.Controller</code> -- and the walk stops at
+	 * {@link #MODULE_ROOT}, which every module is and which names only what they
+	 * all receive.
+	 *
+	 * @param known the symbols worth looking for (anything else in the class is
+	 *              a string of its own business)
+	 */
+	static public synchronized Map<String, List<String>> symbolsOf (String name, java.util.Collection<String> known)
+	{
+		Map<String, List<String>>	out;
+		String						cls;
+
+		if ((name == null) || (name.trim ().length () == 0))		return new LinkedHashMap<String, List<String>> ();
+		name	= name.trim ();
+		out		= SYMBOLS.get (name);
+		if (out != null)											return out;
+
+		out		= new LinkedHashMap<String, List<String>> ();
+		cls		= name;
+		for (int i = 0; (cls != null) && (i < 32) && !MODULE_ROOT.equals (cls); i++)
+		{
+			List<String>	found = new ArrayList<String> ();
+			List<String>	all = new ArrayList<String> ();
+			String			up = superOf (cls, all);
+
+			for (String t : all)
+				if ((known != null) && known.contains (t) && !found.contains (t))		found.add (t);
+			if (!found.isEmpty ())		out.put (cls, found);
+			cls	= up;
+		}
+		SYMBOLS.put (name, out);
+		return out;
+	}
 
 	/* ------------------------------------------------------------------ */
 
@@ -174,7 +223,13 @@ public class DriverClasses
 	}
 
 	/** The superclass a class file names, or null when it cannot be read. */
-	static private String superOf (String name)
+	static private String superOf (String name)						{ return superOf (name, null); }
+
+	/**
+	 * The same, filling <code>strings</code> with the text of every string
+	 * constant the class holds when one is given.
+	 */
+	static private String superOf (String name, List<String> strings)
 	{
 		java.io.InputStream		in = null;
 
@@ -182,7 +237,7 @@ public class DriverClasses
 		{
 			in	= loader ().getResourceAsStream (name.replace ('.', '/') + ".class");
 			if (in == null)				return null;
-			return superOf (new java.io.DataInputStream (new java.io.BufferedInputStream (in)));
+			return superOf (new java.io.DataInputStream (new java.io.BufferedInputStream (in)), strings);
 		} catch (Throwable e)			{ return null; }
 		finally
 		{
@@ -195,7 +250,7 @@ public class DriverClasses
 	 * superclass: what comes before it is the magic number and the version, and
 	 * what comes after is its own name and the one that is wanted.
 	 */
-	static private String superOf (java.io.DataInputStream d) throws java.io.IOException
+	static private String superOf (java.io.DataInputStream d, List<String> strings) throws java.io.IOException
 	{
 		int			n;
 		int[]		kind;
@@ -224,6 +279,15 @@ public class DriverClasses
 			default:							d.skipBytes (4);						break;	// the rest are four bytes
 			}
 		}
+		// the text of every string constant, for whoever asked for it
+		if (strings != null)
+			for (int i = 1; i < n; i++)
+				if (kind[i] == 8)					// String: it points at the Utf8 it is worth
+				{
+					int		at = ref[i];
+					if ((at > 0) && (at < n) && (kind[at] == 1) && (text[at] != null))		strings.add (text[at]);
+				}
+
 		d.readUnsignedShort ();					d.readUnsignedShort ();			// access flags, its own name
 		up		= d.readUnsignedShort ();
 		if ((up <= 0) || (up >= n) || (kind[up] != 7))			return null;		// Object, or something unexpected
