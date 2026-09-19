@@ -14,6 +14,10 @@ public class PlotWindow extends JFrame
 {
 	static public int				POINTS		= 50;
 	static public final int			OFFSET		= 50;
+	static public final int			WIDTH		= 584;						// the plot on its own
+	static public final int			HEIGHT		= 300;
+	static public final int			VALUES_W	= 175;						// and what a panel of values adds to it (a third)
+	static public final Color		C_VALUE		= new Color (226, 226, 226);	// the ground a value is read off
 	
 	static public String				PSUFFIX		= ".plot";
 	static private int				counter		= 0;
@@ -23,6 +27,11 @@ public class PlotWindow extends JFrame
 	
 	protected int					curx			= 0;
 	protected PrintWriter				stream		= null;
+
+	// the values of the lines, written beside the plot when they are asked for
+	protected String					vtitle		= null;
+	protected JPanel					vpanel		= null;
+	protected JTextField[]			vfields		= null;
 	
 	protected PlotWindow ()
 	{		
@@ -70,7 +79,7 @@ public class PlotWindow extends JFrame
 		plot.setConnected (true);
 		plot.setButtons (false);
 		pack ();
-		setSize (584,300);
+		setSize (WIDTH, HEIGHT);
 		
 		//{{INIT_MENUS
 		//}}
@@ -105,6 +114,32 @@ public class PlotWindow extends JFrame
 		dispose ();
 	}
 	
+	/**
+	 * Asks for a panel of values beside the plot, under the title given (null
+	 * asks for none, and it is built once): what every line of the plot is worth
+	 * right now, as a pair of its label and its value, which a plot of impulses
+	 * does not let anybody read off the picture.
+	 *
+	 * The window is made a third wider for it, so that the plot keeps the room it
+	 * had. The values themselves are not to be typed in.
+	 */
+	public void setValues (String title)
+	{
+		JScrollPane		sp;
+
+		if ((title == null) || (vtitle != null))		return;
+		vtitle	= title;
+		vpanel	= new JPanel (new GridBagLayout ());
+		vpanel.setBorder (BorderFactory.createTitledBorder (title));
+		sp		= new JScrollPane (vpanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+									ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		sp.setBorder (BorderFactory.createEmptyBorder ());
+		sp.setPreferredSize (new Dimension (VALUES_W, HEIGHT));
+		getContentPane ().add ("East", sp);
+		setSize (getWidth () + VALUES_W, getHeight ());
+		validate ();
+	}
+
 	public void setLegend (String[] labels)
 	{
 		int			i;
@@ -112,6 +147,65 @@ public class PlotWindow extends JFrame
 		plot.clearLegends ();
 		for (i = 0; i < labels.length; i++)
 			plot.addLegend (i, labels[i]);
+		if (vpanel != null)			buildValues (labels);
+	}
+
+	/** One row per line of the plot: what it is called, and a field for its value. */
+	protected void buildValues (String[] labels)
+	{
+		GridBagConstraints	gc = new GridBagConstraints ();
+
+		vpanel.removeAll ();
+		vfields		= new JTextField[labels.length];
+		gc.insets	= new Insets (2, 4, 2, 4);
+		gc.anchor	= GridBagConstraints.WEST;
+		for (int i = 0; i < labels.length; i++)
+		{
+			JLabel		l = new JLabel (labels[i]);
+
+			l.setFont (l.getFont ().deriveFont (Font.PLAIN, 11f));
+			gc.gridx = 0;		gc.gridy = i;		gc.weightx = 0.0;
+			gc.fill = GridBagConstraints.NONE;
+			vpanel.add (l, gc);
+
+			vfields[i]	= new JTextField (5);
+			vfields[i].setEditable (false);							// read, not typed in
+			vfields[i].setFocusable (false);
+			vfields[i].setBackground (C_VALUE);
+			vfields[i].setHorizontalAlignment (JTextField.RIGHT);
+			vfields[i].setFont (vfields[i].getFont ().deriveFont (Font.PLAIN, 11f));
+			gc.gridx = 1;		gc.weightx = 1.0;
+			gc.fill = GridBagConstraints.HORIZONTAL;
+			vpanel.add (vfields[i], gc);
+		}
+		// and a filler, so that the rows stay at the top of the panel
+		gc.gridx = 0;		gc.gridy = labels.length;		gc.gridwidth = 2;
+		gc.weighty = 1.0;	gc.fill = GridBagConstraints.BOTH;
+		vpanel.add (new JLabel (), gc);
+		vpanel.revalidate ();
+		vpanel.repaint ();
+	}
+
+	/**
+	 * What every line is worth, written beside the plot. Whoever draws does it
+	 * from its own thread, so the fields are written on the event thread.
+	 */
+	protected void showValues (final double[] data)
+	{
+		final int		n;
+		Runnable		r;
+
+		if ((vfields == null) || (data == null))		return;
+		n	= Math.min (vfields.length, data.length);
+		r	= new Runnable ()
+		{
+			public void run ()
+			{
+				for (int i = 0; i < n; i++)		vfields[i].setText (String.format (java.util.Locale.US, "%.3f", data[i]));
+			}
+		};
+		if (SwingUtilities.isEventDispatchThread ())		r.run ();
+		else												SwingUtilities.invokeLater (r);
 	}
 	
 	public void setLabels (String horiz, String vert)
@@ -145,6 +239,7 @@ public class PlotWindow extends JFrame
 		if (curx > POINTS)		plot.setXRange ((double)  (curx - POINTS), (double) curx);
 		
 		plot.repaint ();
+		showValues (data);
 	}	
 	
 	public void updateData (double[][] data, int n, int m)

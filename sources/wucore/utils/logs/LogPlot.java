@@ -15,6 +15,7 @@ public class LogPlot implements ChildWindowListener
 	protected double				ymin;
 	protected double				ymax;
 	protected boolean				impulses;
+	protected String				values;						// title of the panel of values, when one is asked for
 
 	// Constructors
 	protected LogPlot ()
@@ -31,12 +32,15 @@ public class LogPlot implements ChildWindowListener
 		ymin			= -1.0;
 		ymax			= 1.0;
 		impulses		= false;
+		values			= null;
 		
 	}
 	
 	// Accessors
 	public final void		setImpulses (boolean impulses)			{ this.impulses = impulses; }
 	public final void		setYRange (double ymin, double ymax)	{ this.ymin = ymin; this.ymax = ymax; }
+	/** Asks for what every line is worth to be written beside the plot, under this title (null: none). */
+	public final void		setValues (String title)				{ this.values = title; }
 	
 	// Instance methods
 
@@ -53,6 +57,7 @@ public class LogPlot implements ChildWindowListener
 			{
 				if (plot == null)				plot	= new PlotWindow (LogPlot.this, tittle);
 				
+				plot.setValues (values);						// before the legend: the rows are named by it
 				plot.setLegend (labels);
 				plot.setLabels (xlabel, ylabel);
 				plot.setYRange (ymin, ymax);
