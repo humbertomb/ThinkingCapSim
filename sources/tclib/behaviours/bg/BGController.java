@@ -5,7 +5,6 @@
 package tclib.behaviours.bg;
 
 import tc.runtime.thread.ModuleConfig;
-import java.util.*;
 
 import tc.modules.*;
 import tc.shared.lps.lpo.*;
@@ -48,6 +47,7 @@ public class BGController extends Controller
 	// Look-ahead related variables
 	protected Path					path;						// Desired robot path
 	protected Position				pos;						// Current robot location
+	protected boolean				need_looka;					// Do we need a look-ahead point?
 	protected Position				looka;						// Current look-ahead point
 	protected int					looka_pts;					// Current look-ahead distance (points)
 	protected double				path_dst;					// Current robot to desired path distance (m)
@@ -74,6 +74,7 @@ public class BGController extends Controller
 		new_plan	= new Task ();
 		new_goal	= false;
 		new_id		= 0;
+		need_looka	= true;
 		
 		idtask		= 0;
 		looka_pts	= 15;
@@ -139,7 +140,10 @@ public class BGController extends Controller
 		
 		// Autostart the controller without a plan
 		if (cfg.getBoolean ("AUTO", false))
-			has_goal = true;
+		{
+			has_goal	= true;
+			need_looka	= false;
+		}
 	}
 	
 	protected int inGoal ()
@@ -247,7 +251,7 @@ public class BGController extends Controller
 			
 		case ItemBehResult.T_NOTYET:
 		default:
-			if (!looka.valid ())
+			if (need_looka && !looka.valid ())
 			{
 				speed 	= 0.0;
 				turn	= 0.0;

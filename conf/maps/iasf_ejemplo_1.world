@@ -1,7 +1,7 @@
 {
   "apw": true,
   "starts": [
-    { "x": 1.8414, "y": 3.9117, "z": 0, "orientation": 90 }
+    { "x": 1.8414, "y": 3.9117, "z": 0, "orientation": -153.9273 }
   ],
   "path": [],
   "walls": {
@@ -30,9 +30,7 @@
     "defaults": { "width": 0.005, "height": 1.9, "texture": "./conf/3dmodels/textures/wall.jpg" },
     "items": []
   },
-  "waypoints": [
-    { "label": "ficticio", "x": 2.7356, "y": 6.1002, "z": 0, "orientation": 0 }
-  ],
+  "waypoints": [],
   "docks": [],
   "beacons": [],
   "cbeacons": []
