@@ -578,6 +578,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		JMenuBar	mb = new JMenuBar ();
 		JMenu		mfile = new JMenu ("File");
 		JMenu		mview = new JMenu ("View");
+		JMenu		mhelp = new JMenu ("Help");
 
 		mfile.add (menuItem ("New Deployment", KeyEvent.VK_N, mask, new Runnable () { public void run () { newDeployment (); } }));
 		mfile.add (menuItem ("Load Deployment...", KeyEvent.VK_O, mask, new Runnable () { public void run () { loadDeployment (); } }));
@@ -600,8 +601,210 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 			}
 		}));
 		mb.add (mview);
+		mhelp.add (menuItem ("Events", KeyEvent.VK_E, mask | KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { showEventsHelp (); } }));
+		mb.add (mhelp);
 		return mb;
 	}
+
+	/** Opens the help of the events on this deployment. */
+	protected void showEventsHelp ()
+	{
+		HelpWindow.show (this, "Events of a Deployment", eventsHelp ());
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Help                                                                */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * What each symbol carries. The diagram of an architecture says which block
+	 * is given what and which writes it; this says what it is.
+	 */
+	static private final String[][]	EVENT_HELP	=
+	{
+		{ "CONFIG",			"The description of the robot and of the world it runs in. The robot writes it when it starts and whenever it is asked again for it, and a module reads the properties of its robot -- its shape, its sensors, its drive -- out of it." },
+		{ "EXECUTION",		"What a thread of the runtime is to do with itself: start, stop, step, reset, run on its own or be driven, and which parts of it are to be traced. It is what the Start of the simulator sends." },
+		{ "SENSORS",		"The readings of the robot: its sonars, its infrared, its laser, its beacons and its odometry, as they came out of this turn." },
+		{ "SENSORS_CTRL",	"Which families of sensors the robot is to read. Every family is read until something says otherwise, and the controller of the forklifts is what says it: it puts the laser out while it works inside a dock." },
+		{ "LPS",			"The local perceptual space: where the robot believes it is and what it has around it, sensors fused and objects recognised. It is the one thing everything downstream of perception works on." },
+		{ "MOTION",			"The speed and the turn asked of the robot, which is what a controller has to say and what the robot does with itself." },
+		{ "GOAL",			"The task in hand and the place it is to be carried out at, as the planner hands it down to the rest." },
+		{ "PLAN",			"The plan a robot is to carry out, which comes from outside the robot: the task sent from the simulator, or from whoever commands the fleet." },
+		{ "PATH",			"The path worked out to the place of the goal, for a controller to follow." },
+		{ "NAVIGATION",		"What navigation knows of the map it is working on, for perception to read its own surroundings against." },
+		{ "STATUS",			"What a module has to report of itself -- idle, occupied, waiting, completed, failed -- with a line of its own. The Events table of the simulator is a log of these." },
+		{ "OBJECT",			"The objects the robot has around it, as the robot itself sees them: the ones the world has moving about." },
+		{ "BEHRESULT",		"Whether the behaviour a controller was running has finished, and why. A planner waits on it to go on with the plan." },
+		{ "BEHINFO",		"What each behaviour of a controller is asking for, and how much it is heeded. The Behaviour Fusion window of the simulator draws these." },
+		{ "BEHRULES",		"The rules the behaviours of a controller are to be fused by, sent to it from outside." },
+		{ "BEHNAME",		"Which behaviour a controller is to run, named from outside." },
+		{ "BEHDEBUG",		"Which behaviours of a controller are to be traced." },
+		{ "CAMERA",			"What a camera watching the robots has to say of them, which is how the soccer robots are told where they are." },
+		{ "VIDEO",			"A frame of video of a robot. Nothing of the development writes it or reads it today." },
+		{ "DELROBOT",		"A robot has left the global space, which the space itself says when the connection of that robot drops. The rest stop counting on it." },
+		{ "LINDACTRL",		"Control of the space itself rather than of a robot: how often the router sums up, what it holds, what is to be forgotten." },
+		{ "GUICTRL",		"Control of the windows of a robot from outside it." },
+		{ "PALLETCTRL",		"The pallet of a forklift: what it is to pick up and what it is to put down." },
+		{ "COORD",			"Where each forklift of the fleet is, what it is doing and which place it has booked, so that two of them do not book the same one. It travels the global space." },
+		{ "ZONE",			"The zone of the warehouse a forklift is in, as its navigation works it out." },
+		{ "SYNC",			"Leave to go into a dock. The planner of a forklift says that it waits, that it has arrived or that it is leaving, and takes the answer of the warehouse. It is not registered as an event: the planner goes and reads it." },
+	};
+
+	/** The style of a page of help, in what the HTML of Swing understands of CSS. */
+	static private final String		HELP_CSS	=
+		"body { font-family: sans-serif; font-size: 11pt; color: #202020; margin: 12px 18px 18px 18px; }"
+		+ "h1 { font-size: 17pt; color: #12324d; margin-bottom: 2px; }"
+		+ "h2 { font-size: 12pt; color: #24507a; margin-top: 16px; margin-bottom: 4px; }"
+		+ "p { margin-top: 3px; margin-bottom: 7px; }"
+		+ "li { margin-bottom: 3px; }"
+		+ ".lead { color: #555555; }"
+		+ ".mono { font-family: monospaced; font-size: 10pt; color: #24507a; }"
+		+ ".cls { font-family: monospaced; font-size: 9pt; color: #666666; }"
+		+ ".sym { font-family: monospaced; font-size: 12pt; font-weight: bold; color: #12324d; }"
+		+ ".wire { font-size: 9pt; color: #4a4a4a; }"
+		+ ".none { font-size: 9pt; color: #999999; }";
+
+	/** Escapes what goes into a page of help. */
+	static private String esc (String s)
+	{
+		if (s == null)		return "";
+		return s.replace ("&", "&amp;").replace ("<", "&lt;").replace (">", "&gt;");
+	}
+
+	/** What a symbol carries, in a line, or a line saying that nothing says. */
+	static private String helpOf (String sym)
+	{
+		for (String[] e : EVENT_HELP)
+			if (e[0].equals (sym))		return e[1];
+		return "<span class=\"none\">Nothing is written down of this one yet.</span>";
+	}
+
+	/** The method an event of a block arrives at, as the deployment says it (blank when it does not). */
+	private String methodOf (Block b, String sym)
+	{
+		for (String[] e : model.events (b))
+			if (sym.equals (e[0]))				return e[2];
+		for (String[] e : ArchModel.STD_EVENTS)
+			if (sym.equals (e[0]))				return e[2];
+		return "";
+	}
+
+	/** The blocks of this deployment that write a symbol, and the ones that are given it. */
+	private String[] traffic (String sym)
+	{
+		StringBuilder	writes = new StringBuilder ();
+		StringBuilder	reads = new StringBuilder ();
+
+		if (ArchModel.isStandard (sym))
+			reads.append ("<span class=\"none\">every module and every robot, by themselves</span>");
+		for (Block b : model.allRobotBlocks ())
+		{
+			String	who;
+			String	how;
+
+			if (!model.hasSymbols (b))					continue;
+			who		= esc (model.labelOf (b)) + " <span class=\"none\">of</span> " + esc (model.getRobotId (b.robot));
+			if (model.produces (b).contains (sym))
+			{
+				if (writes.length () > 0)				writes.append (", ");
+				writes.append (who);
+			}
+			if (model.inputs (b).contains (sym) && !ArchModel.isStandard (sym))
+			{
+				how		= methodOf (b, sym);
+				if (reads.length () > 0)				reads.append (", ");
+				reads.append (who);
+				if (how.length () > 0)					reads.append (" <span class=\"mono\">").append (esc (how)).append ("</span>");
+			}
+		}
+		return new String[] { writes.toString (), reads.toString () };
+	}
+
+	/** One symbol of the help: what it is, what it carries, and what this deployment does with it. */
+	private void helpCard (StringBuilder h, String sym, boolean fixed)
+	{
+		String		item = model.itemClassOf (sym);
+		String[]	t = traffic (sym);
+
+		h.append ("<a name=\"").append (sym).append ("\"></a>");
+		h.append ("<table width=\"100%\" cellpadding=\"5\" cellspacing=\"0\" bgcolor=\"").append (fixed ? "#eceff3" : "#f2f7f2").append ("\">");
+		h.append ("<tr>");
+		h.append ("<td width=\"64\" align=\"center\" bgcolor=\"").append (fixed ? "#5b6b7c" : "#2f7d4f").append ("\">");
+		h.append ("<font color=\"#ffffff\" face=\"monospaced\" size=\"2\"><b>").append (fixed ? "FIXED" : "EVENT").append ("</b></font></td>");
+		h.append ("<td><span class=\"sym\">").append (sym).append ("</span></td>");
+		h.append ("<td align=\"right\"><span class=\"cls\">").append ((item.length () > 0) ? esc (item) : "&mdash;").append ("</span></td>");
+		h.append ("</tr>");
+		h.append ("<tr><td></td><td colspan=\"2\">").append (helpOf (sym)).append ("</td></tr>");
+		h.append ("<tr><td></td><td colspan=\"2\"><span class=\"wire\"><b>written by</b> ")
+		 .append ((t[0].length () > 0) ? t[0] : "<span class=\"none\">no block of this deployment</span>")
+		 .append ("</span></td></tr>");
+		h.append ("<tr><td></td><td colspan=\"2\"><span class=\"wire\"><b>given to</b> ")
+		 .append ((t[1].length () > 0) ? t[1] : "<span class=\"none\">no block of this deployment</span>")
+		 .append ("</span></td></tr>");
+		h.append ("</table><br>");
+	}
+
+	/**
+	 * The help of the events, as a page of HTML: how an event works, and what
+	 * every symbol there is carries, with what this deployment does with it.
+	 *
+	 * It is written out of the deployment being edited and out of the classes of
+	 * the development, so it says what is the case and not what was the case when
+	 * it was written down.
+	 */
+	public String eventsHelp ()
+	{
+		StringBuilder			h = new StringBuilder ();
+		java.util.List<String>	fixed = new ArrayList<String> ();
+		java.util.TreeSet<String>	rest = new java.util.TreeSet<String> (model.offered ());
+
+		// what no deployment can register: the two every thread is given, and the ones
+		// a class takes by itself and nothing offers (a symbol that can be registered
+		// is an event even when one class of the development polls it as well)
+		for (String[] e : ArchModel.STD_EVENTS)			fixed.add (e[0]);
+		for (Block b : model.allRobotBlocks ())
+			for (String sym : model.wired (b))
+				if (!fixed.contains (sym) && !rest.contains (sym))		fixed.add (sym);
+		rest.removeAll (fixed);
+
+		h.append ("<html><head><style>").append (HELP_CSS).append ("</style></head><body>");
+		h.append ("<h1>Events of a Deployment</h1>");
+		h.append ("<p class=\"lead\">A module of an architecture does not call another one: it leaves what it has in the ")
+		 .append ("Linda space of its robot and is woken up by what it asked to be woken up by. An <i>event</i> is that asking.</p>");
+
+		h.append ("<h2>How an event works</h2>");
+		h.append ("<ol>");
+		h.append ("<li>The deployment says, for a module, a <b>symbol</b> to be woken up by, the <b>item class</b> that symbol carries and the <b>method</b> it is to arrive at:");
+		h.append ("<table cellpadding=\"6\" cellspacing=\"0\" bgcolor=\"#f6f6f6\" width=\"100%\"><tr><td><span class=\"mono\">")
+		 .append ("{ \"symbol\": \"SENSORS\", \"itemClass\": \"tc.shared.linda.ItemSensors\", \"method\": \"notify_sensors\" }")
+		 .append ("</span></td></tr></table></li>");
+		h.append ("<li>When the robot starts, <span class=\"mono\">StdThread.setTDesc</span> registers one listener of the space for each of them, ")
+		 .append ("and then the two every thread gets whether it asked for them or not.</li>");
+		h.append ("<li>Whoever writes a tuple of that symbol into the space wakes the module up, and the runtime calls the method with the item as it came.</li>");
+		h.append ("<li>The method has to be public and to take the space it came from and one item of that class: ")
+		 .append ("<span class=\"mono\">public void notify_sensors (String space, ItemSensors item)</span>. ")
+		 .append ("The editor offers the ones of the class of the module that do.</li>");
+		h.append ("<li>Inside a robot the modules write with no space of their own; the router of the robot is what labels what goes out to the global space with the name of the robot, and what filters what comes back.</li>");
+		h.append ("</ol>");
+
+		h.append ("<h2>What is fixed and what is asked for</h2>");
+		h.append ("<p><table cellpadding=\"4\" cellspacing=\"0\"><tr>")
+		 .append ("<td bgcolor=\"#5b6b7c\" align=\"center\"><font color=\"#ffffff\" face=\"monospaced\" size=\"2\"><b>FIXED</b></font></td>")
+		 .append ("<td>&nbsp;is had whatever the deployment says, and is written in bold in the diagram.</td></tr><tr>")
+		 .append ("<td bgcolor=\"#2f7d4f\" align=\"center\"><font color=\"#ffffff\" face=\"monospaced\" size=\"2\"><b>EVENT</b></font></td>")
+		 .append ("<td>&nbsp;is registered by the deployment, one row of the Trigger Events table.</td></tr></table></p>");
+		h.append ("<p>A symbol is one kind of item, so the editor fills the class in from the symbol and does not let it be typed. ")
+		 .append ("What a block writes is not asked for anywhere: it is read off the class it runs.</p>");
+
+		h.append ("<h2>The symbols</h2>");
+		for (String sym : fixed)		helpCard (h, sym, true);
+		for (String sym : rest)			helpCard (h, sym, false);
+
+		h.append ("<p class=\"none\">Written out of ").append (esc (getTitle ())).append (" and of the classes of the development.</p>");
+		h.append ("</body></html>");
+		return h.toString ();
+	}
+
 
 	private javax.swing.JCheckBoxMenuItem check (String text, boolean on, java.awt.event.ItemListener l)
 	{
