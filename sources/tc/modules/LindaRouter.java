@@ -33,8 +33,6 @@ public class LindaRouter implements LindaListener
 		lindalocal.register (new Tuple (Tuple.STATUS), listener);
 		lindalocal.register (new Tuple (Tuple.GOAL), listener);
 		lindalocal.register (new Tuple (Tuple.BEHINFO), listener);
-		lindalocal.register (new Tuple (Tuple.GUISVC), listener);		
-		lindalocal.register (new Tuple (Tuple.GUIDATA), listener);		
 		
 		// Register GLOBAL linda listeners
 		lindaglobal.register (new Tuple (robotid, Tuple.EXECUTION, null), listener);
@@ -60,8 +58,7 @@ public class LindaRouter implements LindaListener
 			process_linda (tuple);			
 		// Tuples from local to global
 		else if (tuple.key.equals (Tuple.CONFIG) || tuple.key.equals (Tuple.STATUS) 
-				|| tuple.key.equals (Tuple.GOAL) || tuple.key.equals (Tuple.BEHINFO) 
-				|| tuple.key.equals (Tuple.GUISVC) || tuple.key.equals (Tuple.GUIDATA))
+				|| tuple.key.equals (Tuple.GOAL) || tuple.key.equals (Tuple.BEHINFO))
 		{
 			tuple.space	= robotid;
 			lindaglobal.write (tuple);
