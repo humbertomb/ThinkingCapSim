@@ -50,6 +50,7 @@ import tcapps.tceditor.WorldCanvas;
 import tcapps.tceditor.WorldEditor;
 import tcapps.tceditor.WorldEditorDialog;
 import tcapps.tceditor.WorldItem;
+import tcapps.tceditor.WorldItem;
 import tcapps.tcsimulator.simulator.Simulator;
 import tcapps.tcsimulator.simulator.SimulatorDesc;
 import tcapps.tcsimulator.simulator.SimulatorListener;
@@ -88,6 +89,15 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	protected boolean				aobjectsLayer	= true;					// AOBJECT layer state before the execution hid it
 	protected Sequence				lastTasks;				// last task set edited (shown again when the dialog reopens)
 
+	protected boolean				showPath;				// draw the route every robot has taken
+	protected boolean				showPose;				// and the robot itself along it, now and then
+
+	/** How the route of a robot is kept and how often it is stamped with a pose of the robot. */
+	static private final double		TRAIL_STEP	= 0.02;						// a step of the route is kept every two centimetres
+	static private final double		TRAIL_TURN	= Math.toRadians (5.0);		// or every five degrees it turns on the spot
+	static private final int		TRAIL_MAX	= 20000;					// and this many steps at most, the oldest going first
+	static private final long		POSE_MS		= 3000;						// a pose of the robot every three seconds of it
+
 	/** A simulated robot as seen by the window: description, last data and its index in the 3D view. */
 	protected static class RobotView
 	{
@@ -96,6 +106,22 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		String			name;			// robot identifier (null when the simulator did not give one)
 		RobotData		data;			// last data received (null until the first update)
 		int				index3d	= -1;	// index in the 3D view (-1: not added yet)
+
+		/** Where it has been, in order, and which of those are stamped with a pose. */
+		List<Pose>		trail	= new ArrayList<Pose> ();
+		long			posed;			// when the last pose was stamped (ms; 0: none yet)
+
+		/** One step of the route: where the robot was, and whether it is drawn there. */
+		static class Pose
+		{
+			double		x, y, a;
+			boolean		stamp;
+
+			Pose (double x, double y, double a, boolean stamp)
+			{
+				this.x = x;		this.y = y;		this.a = a;		this.stamp = stamp;
+			}
+		}
 	}
 
 	/** A simulated animated object as seen by the window: the simulator object, its last pose and its index in the 3D view. */
@@ -282,10 +308,38 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		mview.add (new JMenuItem (ToolButtons.zoomIn (canvas)));
 		mview.add (new JMenuItem (ToolButtons.zoomOut (canvas)));
 		mview.addSeparator ();
+		// what a robot has done, which the live view of it does not say: where it went
+		// and how it stood along the way
+		mview.add (check ("Show robot path", showPath, new java.awt.event.ItemListener ()
+		{
+			public void itemStateChanged (java.awt.event.ItemEvent e)
+			{
+				showPath	= (e.getStateChange () == java.awt.event.ItemEvent.SELECTED);
+				canvas.repaint ();
+			}
+		}));
+		mview.add (check ("Show robot pose", showPose, new java.awt.event.ItemListener ()
+		{
+			public void itemStateChanged (java.awt.event.ItemEvent e)
+			{
+				showPose	= (e.getStateChange () == java.awt.event.ItemEvent.SELECTED);
+				canvas.repaint ();
+			}
+		}));
+		mview.addSeparator ();
 		mview.add (view3d.menuItem (mask));
 		mb.add (mview);
 
 		return mb;
+	}
+
+	/** A menu item that is either on or off. */
+	private javax.swing.JCheckBoxMenuItem check (String text, boolean on, java.awt.event.ItemListener l)
+	{
+		javax.swing.JCheckBoxMenuItem	mi = new javax.swing.JCheckBoxMenuItem (text, on);
+
+		mi.addItemListener (l);
+		return mi;
 	}
 
 	private JMenuItem accel (JMenuItem mi, int key, int mask)
@@ -589,8 +643,38 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		synchronized (robots)
 		{
 			if ((roboindex < 0) || (roboindex >= robots.size ()))		return;
-			robots.get (roboindex).data = data;
+			RobotView	rv = robots.get (roboindex);
+			rv.data		= data;
+			trail (rv, data);
 		}
+	}
+
+	/**
+	 * Keeps where a robot has been: a step of the route every couple of
+	 * centimetres it moves or few degrees it turns, which is enough to draw the
+	 * route without keeping a point per cycle, and one of those stamped every
+	 * three seconds, which is where the robot itself is drawn.
+	 *
+	 * A robot standing still adds nothing, so the route of a robot that has
+	 * stopped neither grows nor piles poses up on one spot.
+	 */
+	private void trail (RobotView rv, RobotData data)
+	{
+		long				now = System.currentTimeMillis ();
+		RobotView.Pose		last = rv.trail.isEmpty () ? null : rv.trail.get (rv.trail.size () - 1);
+		boolean				stamp;
+
+		if (last != null)
+		{
+			double	dx = data.real_x - last.x, dy = data.real_y - last.y;
+			double	da = Math.abs (wucore.utils.math.Angles.radnorm_180 (data.real_a - last.a));
+
+			if ((Math.sqrt (dx * dx + dy * dy) < TRAIL_STEP) && (da < TRAIL_TURN))		return;
+		}
+		stamp	= (rv.posed == 0) || ((now - rv.posed) >= POSE_MS);
+		if (stamp)		rv.posed = now;
+		rv.trail.add (new RobotView.Pose (data.real_x, data.real_y, data.real_a, stamp));
+		while (rv.trail.size () > TRAIL_MAX)		rv.trail.remove (0);
 	}
 
 	public int addObject (SimObject object)
@@ -684,6 +768,8 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 	static private final Color		C_ROBOT		= new Color (30, 90, 200);
 	static private final Color		C_ROBOT_FILL	= new Color (30, 90, 200, 60);
+	static private final Color		C_PATH		= new Color (200, 60, 40, 170);		// the route it has taken
+	static private final float		POSE_ALPHA	= 0.28f;							// how faintly it is drawn along it
 
 	public void paint (Graphics2D g, WorldCanvas c)
 	{
@@ -694,6 +780,12 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		}
 		synchronized (robots)
 		{
+			// what a robot has done goes under it: the route first, then the poses along
+			// it, and the robot as it is now on top of both
+			if (showPath)
+				for (RobotView rv : robots)		drawPath (g, c, rv);
+			if (showPose)
+				for (RobotView rv : robots)		drawPoses (g, c, rv);
 			for (RobotView rv : robots)
 				if (rv.data != null)		drawRobot (g, c, rv);
 		}
@@ -761,12 +853,39 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	{
 		double		x = rv.data.real_x, y = rv.data.real_y, a = rv.data.real_a;
 		double		ca = Math.cos (a), sa = Math.sin (a);
+
+		drawBody (g, c, rv, x, y, a);
+		// heading
+		double	len = Math.max (0.5, rv.rdesc.RADIUS * 1.5);
+		g.setColor (C_ROBOT);
+		g.draw (new Line2D.Double (c.toPixelX (x), c.toPixelY (y), c.toPixelX (x + len * ca), c.toPixelY (y + len * sa)));
+		g.fillOval (c.toPixelX (x) - 3, c.toPixelY (y) - 3, 6, 6);
+		// name, beside the robot (top-right of its bounding circle), with a light halo for readability
+		if (rv.name != null)
+		{
+			double	r = Math.max (0.5, rv.rdesc.RADIUS);
+			int		tx = (int) Math.round (c.toPixelX (x + r * 0.7)) + 4, ty = (int) Math.round (c.toPixelY (y + r * 0.7)) - 4;
+			g.setFont (g.getFont ().deriveFont (java.awt.Font.BOLD, 12f));
+			g.setColor (new Color (255, 255, 255, 200));
+			for (int dx = -1; dx <= 1; dx++)	for (int dy = -1; dy <= 1; dy++)	if ((dx != 0) || (dy != 0))	g.drawString (rv.name, tx + dx, ty + dy);
+			g.setColor (C_ROBOT);
+			g.drawString (rv.name, tx, ty);
+		}
+	}
+
+	/**
+	 * The body of a robot at a pose: its bitmap when it has one and, failing that,
+	 * the drawing of its outline, or the circle of its radius when it has neither.
+	 * What tells the robot apart from where it has been -- its heading, its centre
+	 * and its name -- is not part of it.
+	 */
+	private void drawBody (Graphics2D g, WorldCanvas c, RobotView rv, double x, double y, double a)
+	{
+		double		ca = Math.cos (a), sa = Math.sin (a);
 		Line2[]		icon = rv.rdesc.icon;
-		boolean		image;
 
 		g.setStroke (new BasicStroke (2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-		image	= drawRobotImage (g, c, rv, x, y, a);	// the bitmap of the robot, instead of its outline
-		if (image)									// the bitmap already stands for the body of the robot
+		if (drawRobotImage (g, c, rv, x, y, a))		// the bitmap already stands for the body of the robot
 			;
 		else if ((icon != null) && (icon.length > 0))
 		{
@@ -792,22 +911,38 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			g.setColor (C_ROBOT);
 			g.drawOval ((int) Math.round (c.toPixelX (x) - r), (int) Math.round (c.toPixelY (y) - r), (int) Math.round (2 * r), (int) Math.round (2 * r));
 		}
-		// heading
-		double	len = Math.max (0.5, rv.rdesc.RADIUS * 1.5);
-		g.setColor (C_ROBOT);
-		g.draw (new Line2D.Double (c.toPixelX (x), c.toPixelY (y), c.toPixelX (x + len * ca), c.toPixelY (y + len * sa)));
-		g.fillOval (c.toPixelX (x) - 3, c.toPixelY (y) - 3, 6, 6);
-		// name, beside the robot (top-right of its bounding circle), with a light halo for readability
-		if (rv.name != null)
+	}
+
+	/** The route a robot has taken, as the line joining the steps of it that are kept. */
+	private void drawPath (Graphics2D g, WorldCanvas c, RobotView rv)
+	{
+		Path2D		path;
+		boolean		first = true;
+
+		if (rv.trail.size () < 2)		return;
+		path	= new Path2D.Double ();
+		for (RobotView.Pose q : rv.trail)
 		{
-			double	r = Math.max (0.5, rv.rdesc.RADIUS);
-			int		tx = (int) Math.round (c.toPixelX (x + r * 0.7)) + 4, ty = (int) Math.round (c.toPixelY (y + r * 0.7)) - 4;
-			g.setFont (g.getFont ().deriveFont (java.awt.Font.BOLD, 12f));
-			g.setColor (new Color (255, 255, 255, 200));
-			for (int dx = -1; dx <= 1; dx++)	for (int dy = -1; dy <= 1; dy++)	if ((dx != 0) || (dy != 0))	g.drawString (rv.name, tx + dx, ty + dy);
-			g.setColor (C_ROBOT);
-			g.drawString (rv.name, tx, ty);
+			if (first)		{ path.moveTo (c.toPixelX (q.x), c.toPixelY (q.y));		first = false; }
+			else			path.lineTo (c.toPixelX (q.x), c.toPixelY (q.y));
 		}
+		g.setStroke (new BasicStroke (1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		g.setColor (C_PATH);
+		g.draw (path);
+	}
+
+	/**
+	 * The robot itself along the route it has taken, at the poses that were
+	 * stamped, and faintly: they are where it has been, not where it is.
+	 */
+	private void drawPoses (Graphics2D g, WorldCanvas c, RobotView rv)
+	{
+		java.awt.Composite	was = g.getComposite ();
+
+		g.setComposite (java.awt.AlphaComposite.getInstance (java.awt.AlphaComposite.SRC_OVER, POSE_ALPHA));
+		for (RobotView.Pose q : rv.trail)
+			if (q.stamp)		drawBody (g, c, rv, q.x, q.y, q.a);
+		g.setComposite (was);
 	}
 
 	/**
