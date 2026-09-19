@@ -71,7 +71,9 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	private static final long		serialVersionUID = 1L;
 
 	static public final String		TITLE		= "Deployment Architecture Editor";
-	static public final String		DEPLOY_DIR	= "./conf/deploy";		// deployment architectures (.deploy)
+	static public final String		DEPLOY_DIR	= ArchModel.DEPLOY_DIR;	// deployment architectures (.deploy)
+
+	static public final java.awt.Color	C_FIXED	= new java.awt.Color (238, 238, 238);	// a cell that is filled in rather than typed
 
 	/** What the window or dialog hosting the editor needs to know. */
 	public interface Host
@@ -222,14 +224,37 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		public int getColumnCount ()			{ return 3; }
 		public String getColumnName (int c)		{ return (c == 0) ? "Symbol" : (c == 1) ? "Class" : "Method"; }
 		public Object getValueAt (int r, int c)	{ return rows.get (r)[c]; }
-		public boolean isCellEditable (int r, int c)	{ return (block != null) && model.hasEvents (block); }
+		// the class is not typed: it is what the symbol carries
+		public boolean isCellEditable (int r, int c)	{ return (block != null) && model.hasEvents (block) && (c != 1); }
 
 		public void setValueAt (Object v, int r, int c)
 		{
-			rows.get (r)[c] = (v == null) ? "" : v.toString ().trim ();
-			fireTableCellUpdated (r, c);
+			String		val = (v == null) ? "" : v.toString ().trim ();
+
+			if (val.equals (rows.get (r)[c]))		return;
+			rows.get (r)[c] = val;
+			// the symbol says what the event carries, and what it carries says which
+			// methods it can arrive at: the one method that takes it is no choice at all
+			if (c == 0)
+			{
+				List<String>	ms;
+
+				rows.get (r)[1]	= model.itemClassOf (val);
+				ms				= model.methodsFor (block, rows.get (r)[1]);
+				if (ms.size () == 1)								rows.get (r)[2] = ms.get (0);
+				else if (!ms.contains (rows.get (r)[2]))			rows.get (r)[2] = "";
+				fireTableRowsUpdated (r, r);
+			}
+			else	fireTableCellUpdated (r, c);
 			model.setEvents (block, rows);
 			eventsChanged ();
+		}
+
+		/** The methods the event of a row can arrive at, as its symbol decides. */
+		List<String> methodsAt (int r)
+		{
+			if ((r < 0) || (r >= rows.size ()))		return new ArrayList<String> ();
+			return model.methodsFor (block, rows.get (r)[1]);
 		}
 
 		void add ()
@@ -262,7 +287,28 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	private JPanel buildEventsPanel ()
 	{
 		eventsModel	= new EventsModel ();
-		eventsTB	= new JTable (eventsModel);
+		eventsTB	= new JTable (eventsModel)
+		{
+			private static final long	serialVersionUID = 1L;
+
+			/**
+			 * The method of an event is picked among the ones of the class of the
+			 * module that take what the symbol carries, and can still be typed: a
+			 * module whose class the development does not hold offers none.
+			 */
+			public TableCellEditor getCellEditor (int row, int column)
+			{
+				if (column == 2)
+				{
+					JComboBox<String>	cb = new JComboBox<String> (eventsModel.methodsAt (row).toArray (new String[0]));
+
+					cb.setEditable (true);
+					cb.setSelectedItem (eventsModel.getValueAt (row, column));
+					return new DefaultCellEditor (cb);
+				}
+				return super.getCellEditor (row, column);
+			}
+		};
 		eventsTB.setSelectionMode (ListSelectionModel.SINGLE_SELECTION);
 		eventsTB.setRowHeight (20);
 		eventsTB.putClientProperty ("terminateEditOnFocusLost", Boolean.TRUE);
@@ -271,6 +317,19 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		symbolCB.setEditable (true);										// new symbols can still be typed
 		eventsTB.getColumnModel ().getColumn (0).setCellEditor (new DefaultCellEditor (symbolCB));
 		eventsTB.getColumnModel ().getColumn (1).setPreferredWidth (150);
+		eventsTB.getColumnModel ().getColumn (1).setCellRenderer (new javax.swing.table.DefaultTableCellRenderer ()
+		{
+			private static final long	serialVersionUID = 1L;
+
+			public java.awt.Component getTableCellRendererComponent (JTable t, Object value, boolean sel, boolean focus, int row, int col)
+			{
+				super.getTableCellRendererComponent (t, value, sel, focus, row, col);
+				if (!sel)		setBackground (C_FIXED);
+				setToolTipText (((value == null) || (value.toString ().trim ().length () == 0))
+								? "No item class is known for this symbol" : value.toString ());
+				return this;
+			}
+		});
 		eventsTB.getColumnModel ().getColumn (2).setPreferredWidth (90);
 		eventsTB.getSelectionModel ().addListSelectionListener (new javax.swing.event.ListSelectionListener ()
 		{

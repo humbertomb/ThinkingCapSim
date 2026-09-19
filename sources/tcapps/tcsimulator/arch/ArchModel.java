@@ -49,6 +49,10 @@ public class ArchModel
 	static public final String	VROBOT_BASE	= "tc.vrobot.VirtualRobot";
 	/** The class a router of the coordination layer is. */
 	static public final String	ROUTER_BASE	= "tc.modules.LindaRouter";
+	/** The class the value of a tuple of the coordination space is. */
+	static public final String	ITEM_BASE	= "tc.shared.linda.Item";
+	/** Where the deployments of the project live. */
+	static public final String	DEPLOY_DIR	= "./conf/deploy";
 	/** What a module is not, though it is a thread of the runtime as they are. */
 	static public final String[]	MODULE_NOT	= { VROBOT_BASE };
 	/**
@@ -598,6 +602,117 @@ public class ArchModel
 		return out;
 	}
 
+	/**
+	 * What a symbol carries, which is not a matter of opinion: a symbol is one
+	 * kind of item and the deployment says which only because the runtime reads
+	 * it there. It is worked out instead of being asked for.
+	 *
+	 * Where it is looked for, in this order: the events every thread registers by
+	 * itself; the deployments of the project, which are what the project itself
+	 * says a symbol carries (COORD, ZONE, PALLETCTRL, whose classes are named
+	 * after something else); and the items of the development named after the
+	 * symbol, which is the rule the rest of them follow. Nothing found is nothing
+	 * said: the answer is blank rather than a guess.
+	 */
+	public String itemClassOf (String symbol)
+	{
+		String		sym = (symbol == null) ? "" : symbol.trim ();
+		String		found;
+
+		if (sym.length () == 0)					return "";
+		for (String[] e : STD_EVENTS)
+			if (e[0].equals (sym))				return e[1];
+		found	= learned ().get (sym);
+		if (found != null)						return found;
+		found	= named ().get (plain (sym));
+		return (found != null) ? found : "";
+	}
+
+	/** A symbol and the name of an item class read as the same word: no underscores, no case. */
+	static private String plain (String s)		{ return s.replace ("_", "").toUpperCase (); }
+
+	static private java.util.Map<String, String>	LEARNED;
+	static private java.util.Map<String, String>	NAMED;
+
+	/** What the deployments of the project pair a symbol with, read once. */
+	static private synchronized java.util.Map<String, String> learned ()
+	{
+		java.io.File[]	files;
+
+		if (LEARNED != null)					return LEARNED;
+		LEARNED	= new java.util.HashMap<String, String> ();
+		files	= new java.io.File (DEPLOY_DIR).listFiles ();
+		if (files == null)						return LEARNED;
+		java.util.Arrays.sort (files);
+		for (java.io.File f : files)
+		{
+			if (!f.getName ().toLowerCase ().endsWith ("." + DeployArch.EXTENSION))		continue;
+			try
+			{
+				DeployArch	d = DeployArch.load (f);
+				for (Robot r : d.robots)
+				{
+					List<Module>	ms = new ArrayList<Module> (r.modules);
+					if (r.router != null)			ms.add (r.router);
+					if (r.virtualRobot != null)		ms.add (r.virtualRobot);
+					for (Module m : ms)
+						for (Event e : m.events)
+							if ((e.symbol != null) && (e.itemClass != null) && (e.itemClass.trim ().length () > 0))
+								if (!LEARNED.containsKey (e.symbol))		LEARNED.put (e.symbol, e.itemClass.trim ());
+				}
+			} catch (Throwable e)		{ }						// a deployment that cannot be read teaches nothing
+		}
+		return LEARNED;
+	}
+
+	/** The items of the development, by the symbol their name reads as. */
+	static private synchronized java.util.Map<String, String> named ()
+	{
+		if (NAMED != null)						return NAMED;
+		NAMED	= new java.util.HashMap<String, String> ();
+		for (String cls : tcapps.tceditor.DriverClasses.of (ITEM_BASE, false, true))
+		{
+			String	simple = cls.substring (cls.lastIndexOf ('.') + 1);
+			if (!simple.startsWith ("Item") || simple.equals ("Item"))		continue;
+			String	key = plain (simple.substring (4));
+			if (!NAMED.containsKey (key))		NAMED.put (key, cls);
+		}
+		return NAMED;
+	}
+
+	/** Forgets what the project and the development were read to say (either having changed). */
+	static public synchronized void flushSymbols ()		{ LEARNED = null; NAMED = null; }
+
+	/**
+	 * The methods of the class of a block an event carrying that item can arrive
+	 * at: the ones that take exactly one of it, whatever else they take. A class
+	 * the development does not hold has none to offer.
+	 */
+	public List<String> methodsFor (Block b, String itemClass)
+	{
+		java.util.TreeSet<String>	found = new java.util.TreeSet<String> ();
+		String						cls;
+
+		if ((b == null) || (itemClass == null) || (itemClass.trim ().length () == 0))		return new ArrayList<String> ();
+		cls		= classOf (b);
+		if (!tcapps.tceditor.DriverClasses.exists (cls))									return new ArrayList<String> ();
+		try
+		{
+			Class<?>	item = Class.forName (itemClass.trim ());
+			for (Class<?> c = Class.forName (cls); c != null; c = c.getSuperclass ())
+				for (java.lang.reflect.Method m : c.getDeclaredMethods ())
+				{
+					int		n = 0;
+
+					if (!java.lang.reflect.Modifier.isPublic (m.getModifiers ()))		continue;
+					for (Class<?> p : m.getParameterTypes ())
+						if (p == item)		n++;
+					if (n == 1)				found.add (m.getName ());
+				}
+		} catch (Throwable e)		{ }							// what cannot be loaded offers nothing
+		return new ArrayList<String> (found);
+	}
+
 	/** Replaces the events of a module (blank rows are dropped). */
 	public void setEvents (Block b, List<String[]> rows)
 	{
@@ -622,6 +737,7 @@ public class ArchModel
 		for (java.lang.reflect.Field f : tc.shared.linda.Tuple.class.getFields ())
 			if (java.lang.reflect.Modifier.isStatic (f.getModifiers ()) && (f.getType () == String.class))
 				try { set.add ((String) f.get (null)); } catch (Exception e) { }
+		set.addAll (learned ().keySet ());							// what the deployments of the project use (COORD, ZONE, ...)
 		for (Block b : allRobotBlocks ())
 			if (hasEvents (b))
 				for (String[] e : events (b))
