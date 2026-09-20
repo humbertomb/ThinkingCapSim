@@ -64,8 +64,9 @@ public class RobotDef
 		public double	reflect;					// lsb: maximum reflection angle (deg)
 		public int		beacons;					// lsb: beacons it can see at once
 		public int		objects;					// trk: objects it can track at once
-		public double	hfov;						// vis: horizontal field of view (deg; it is not a cone)
-		public double	vfov;						// vis: vertical field of view (deg)
+		public double	hfov;						// vis, camera: horizontal field of view (deg; it is not a cone)
+		public double	vfov;						// vis, camera: vertical field of view (deg)
+		public double	framerate;					// camera: frames it takes in a second (fps)
 
 		public Sensor ()							{ }
 		public Sensor copy ()
@@ -76,7 +77,7 @@ public class RobotDef
 			s.driver = driver;	s.driverParams = driverParams;
 			s.rangemax = rangemax;	s.rangemin = rangemin;	s.cone = cone;	s.rays = rays;
 			s.reflect = reflect;	s.beacons = beacons;	s.objects = objects;
-			s.hfov = hfov;			s.vfov = vfov;
+			s.hfov = hfov;			s.vfov = vfov;		s.framerate = framerate;
 			return s;
 		}
 
@@ -85,7 +86,7 @@ public class RobotDef
 		{
 			return (driver == null) && (driverParams == null) && (rangemax == 0.0) && (rangemin == 0.0) && (cone == 0.0)
 				&& (rays == 0) && (reflect == 0.0) && (beacons == 0) && (objects == 0)
-				&& (hfov == 0.0) && (vfov == 0.0);
+				&& (hfov == 0.0) && (vfov == 0.0) && (framerate == 0.0);
 		}
 	}
 
@@ -691,6 +692,14 @@ public class RobotDef
 	 */
 	static public boolean hasFov (String fam)			{ return "vis".equals (fam) || "camera".equals (fam); }
 
+	/**
+	 * True for a family whose sensors take so many frames in a second: a camera
+	 * hands over the frames themselves, so how often it takes one is what says how
+	 * often it has anything to hand over. The rest of the families are read on the
+	 * cycle of the runtime and say a step of it instead.
+	 */
+	static public boolean hasFrameRate (String fam)		{ return "camera".equals (fam); }
+
 	/** True for a family whose sensors carry their own detection properties. */
 	static public boolean hasOwnDetection (String fam)
 	{
@@ -784,6 +793,7 @@ public class RobotDef
 			if (s.objects != 0)			o.addProperty ("objects", s.objects);
 			if (s.hfov != 0.0)			o.addProperty ("hfov", s.hfov);
 			if (s.vfov != 0.0)			o.addProperty ("vfov", s.vfov);
+			if (s.framerate != 0.0)		o.addProperty ("framerate", s.framerate);
 			return o;
 		}
 	}
@@ -977,6 +987,7 @@ public class RobotDef
 					s.hfov	= number (take ("HFOV" + key + i), number (take ("CONE" + key + i), 0.0));
 					s.vfov	= number (take ("VFOV" + key + i), 0.0);
 				}
+				if (hasFrameRate (fam))		s.framerate = number (take ("FPS" + key + i), 0.0);
 				else
 				{
 					s.rangemin	= number (take ("MINIM" + key + i), 0.0);
@@ -993,8 +1004,10 @@ public class RobotDef
 			double	r = number (take ("RANGE" + key), 0.0), c = number (take ("CONE" + key), 0.0);
 			double	v = number (take ("VFOV" + key), 0.0), h = number (take ("HFOV" + key), 0.0);
 			double	m = number (take ("MINIM" + key), 0.0);
+			double	fps = number (take ("FPS" + key), 0.0);
 
 			if (s0.rangemax == 0.0)		s0.rangemax = r;
+			if (hasFrameRate (fam) && (s0.framerate == 0.0))		s0.framerate = fps;
 			if (hasFov (fam))
 			{
 				if (s0.hfov == 0.0)		s0.hfov = (h != 0.0) ? h : c;
@@ -1367,6 +1380,7 @@ public class RobotDef
 				setNZ (p, "RANGE" + key, s0.rangemax);	setNZ (p, "MINIM" + key, s0.rangemin);
 				setNZ (p, "CONE" + key, hasFov (fam) ? s0.hfov : s0.cone);
 				if (hasFov (fam))		{ setNZ (p, "HFOV" + key, s0.hfov);		setNZ (p, "VFOV" + key, s0.vfov); }
+				if (hasFrameRate (fam))	setNZ (p, "FPS" + key, s0.framerate);
 				// what a radar casts is read as RAYRAD, and nothing reads a RAYTRK
 				if (s0.rays > 0)		p.setProperty (rayKey (fam, key), String.valueOf (s0.rays));
 				if (s0.reflect != 0.0)	set (p, "REF" + key, s0.reflect);
@@ -1397,6 +1411,7 @@ public class RobotDef
 					setNZ (p, "RANGE" + key + i, s.rangemax);	setNZ (p, "MINIM" + key + i, s.rangemin);
 					setNZ (p, "CONE" + key + i, hasFov (fam) ? s.hfov : s.cone);
 					if (hasFov (fam))	{ setNZ (p, "HFOV" + key + i, s.hfov);		setNZ (p, "VFOV" + key + i, s.vfov); }
+					if (hasFrameRate (fam))		setNZ (p, "FPS" + key + i, s.framerate);
 					// the radar says what it casts once, for the family, and not one by one
 					if ((s.rays > 0) && !fam.equals ("trk"))	p.setProperty ("RAY" + key + i, String.valueOf (s.rays));
 					if (s.reflect != 0.0)	set (p, "REF" + key + i, s.reflect);

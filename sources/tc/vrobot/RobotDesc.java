@@ -63,6 +63,7 @@ public class RobotDesc extends VehicleDesc implements Serializable
 
 	public double				CONECAM; 		// Camera horizontal field of view (rad)
 	public double				VFOVCAM; 		// Camera vertical field of view (rad)
+	public double				FPSCAM; 			// Camera frame rate (fps)
 	public int					CYCLECAM; 		// Number of camera firing cycles
 
 	public RobotModel			model;			// Kynematics model of the robot platform
@@ -73,6 +74,7 @@ public class RobotDesc extends VehicleDesc implements Serializable
 	public SensorPos[]			lsbfeat; 		// LSB sensors robot-local position
 	public SensorPos[]			visfeat; 		// Vision sensors robot-local position
 	public SensorPos[]			camfeat; 		// Cameras robot-local position
+	public double[]				camfps; 		// Cameras frame rate (fps)
 	public Line2[]			    bumfeat;			// Bumper sensors detection robot-local line
 	public String[]				digfeat;			// Digitizer configuration
 
@@ -167,6 +169,7 @@ public class RobotDesc extends VehicleDesc implements Serializable
 
 		try { CONECAM	 	= Double.valueOf (props.getProperty ("CONECAM")).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 		try { VFOVCAM	 	= Double.valueOf (props.getProperty ("VFOVCAM")).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
+		try { FPSCAM	 	= Double.valueOf (props.getProperty ("FPSCAM")).doubleValue (); }				catch (Exception e) 	{ }
 		try { CYCLECAM	 	= Integer.valueOf (props.getProperty ("CYCLECAM")).intValue (); } 				catch (Exception e) 	{ }
 
 		try { MAXGPS 		= Integer.valueOf (props.getProperty ("MAXGPS")).intValue (); } 				catch (Exception e) 	{ }
@@ -190,6 +193,7 @@ public class RobotDesc extends VehicleDesc implements Serializable
 		lsbfeat		= new SensorPos [MAXLSB];
 		visfeat		= new SensorPos [MAXVISION];
 		camfeat		= new SensorPos [MAXCAMERA];
+		camfps		= new double [MAXCAMERA];
 		bumfeat		= new Line2 [MAXBUMPER];
 		digfeat		= new String [MAXDIGITIZER];
 
@@ -295,6 +299,8 @@ public class RobotDesc extends VehicleDesc implements Serializable
 			try { hgt		= Double.valueOf (props.getProperty ("camerahgt" + i)).doubleValue (); } 		catch (Exception e) 	{ }
 			try { elev		= Double.valueOf (props.getProperty ("cameraelev" + i)).doubleValue (); } 		catch (Exception e) 	{ elev = 0.0; }
 			try { stp		= Integer.valueOf (props.getProperty ("camerastep" + i)).intValue (); } 		catch (Exception e) 	{ }
+			camfps[i]		= FPSCAM;
+			try { camfps[i]	= Double.valueOf (props.getProperty ("FPSCAM" + i)).doubleValue (); } 			catch (Exception e) 	{ }
 			camfeat[i]		= new SensorPos ();
 			camfeat[i].set_polar (len, rho * Angles.DTOR, alpha * Angles.DTOR);
 			camfeat[i].set_height (hgt);

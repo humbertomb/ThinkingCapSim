@@ -1116,11 +1116,18 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				return new String[] { DRIVER, DRIVER_PARAMS, "step",
 									  "rho", "theta", "height", "orientation", "elevation",
 									  "range max", "range min", "cone", "rays", "objects" };
-			// a camera sees a rectangle: two fields of view, no cone and no near limit
+			// a camera sees a rectangle: two fields of view, no cone and no near limit,
+			// and one that hands over its frames says how many it takes in a second
 			if (RobotDef.hasFov (it.family))
+			{
+				if (RobotDef.hasFrameRate (it.family))
+					return new String[] { DRIVER, DRIVER_PARAMS, "step",
+										  "rho", "theta", "height", "orientation", "elevation",
+										  "range max", "hfov", "vfov", FRAME_RATE };
 				return new String[] { DRIVER, DRIVER_PARAMS, "step",
 									  "rho", "theta", "height", "orientation", "elevation",
 									  "range max", "hfov", "vfov" };
+			}
 			return new String[] { DRIVER, DRIVER_PARAMS, "step",
 								  "rho", "theta", "height", "orientation", "elevation",
 								  "range max", "range min", "cone", "rays" };
@@ -1273,6 +1280,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("objects"))		return String.valueOf (s.objects);
 			if (name.equals ("hfov"))			return RobotDef.fmt (s.hfov);
 			if (name.equals ("vfov"))			return RobotDef.fmt (s.vfov);
+			if (name.equals (FRAME_RATE))		return RobotDef.fmt (s.framerate);
 			break;
 		}
 		case RobotItem.FAMILY:
@@ -1321,6 +1329,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		SIM_ERROR				= "simulation error";
 	/** The name the editor gives to how the fusion works the fused sensors out. */
 	static public final String		FUSION_MODE				= "fusion mode";
+	/** How many frames a camera takes in a second. */
+	static public final String		FRAME_RATE				= "frame rate";
 	/** And to how it takes a bunch of laser rays down to one reading. */
 	static public final String		SCAN_MODE				= "reduction mode";
 
@@ -1673,6 +1683,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("objects"))		s.objects = (int) num (value);
 			else if (name.equals ("hfov"))			s.hfov = num (value);
 			else if (name.equals ("vfov"))			s.vfov = num (value);
+			else if (name.equals (FRAME_RATE))		s.framerate = num (value);
 			break;
 		}
 		case RobotItem.FAMILY:

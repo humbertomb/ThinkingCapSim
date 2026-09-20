@@ -58,6 +58,9 @@ public class Units
 		put ("m/s2", "max acceleration", "max deceleration");
 		metres ("wheel base", "track width", "rear axle offset", "steering wheel offset");
 		put ("ms", "cycle time");
+
+		// how many frames a camera takes in a second
+		put ("fps", "frame rate");
 	}
 
 	/** The unit of a property, or an empty string when it has none. */
