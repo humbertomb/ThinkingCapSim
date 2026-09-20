@@ -13,8 +13,6 @@ import tclib.behaviours.bg.*;
 import tclib.navigation.mapbuilding.*;
 import tclib.navigation.pathplanning.*;
 
-import tcrob.umu.indoor.linda.*;
-
 import devices.pos.*;
 import wucore.utils.math.*;
 		
@@ -32,10 +30,6 @@ public class SoccerController extends BGController
 	// Navigation structures
 	protected Grid						grid;
 	protected GridPath					gpath;
-
-	// Linda data structures
-	protected Tuple						gmtuple;
-	protected ItemGridMap				gmitem;
 
 	// Relevant objects (LPOs)
 	protected Position					robot;
@@ -77,10 +71,6 @@ public class SoccerController extends BGController
 	protected void initialise (ModuleConfig cfg)
 	{		
 		super.initialise (cfg);
-
-		// Initialise Linda related structures
-		gmitem		= new ItemGridMap ();
-		gmtuple		= new Tuple ("GRIDMAP", gmitem);
 		
 		// Local variables
 		robot		= new Position (0.0, 0.0, 0.0);
@@ -191,9 +181,6 @@ banchor = lpo.anchor ();
 		while (!gpath.newPath ())
 			gpath.replan (robot);
 		path	= gpath.path ();
-
-		gmitem.set (grid, gpath, robot, System.currentTimeMillis ());
-		linda.write (gmtuple);
 
 		// Compute look-ahead point
 		looka.valid (false);

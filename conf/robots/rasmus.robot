@@ -350,6 +350,9 @@
     },
     "vis": {
       "sensors": []
+    },
+    "camera": {
+      "sensors": []
     }
   },
   "bumpers": [
@@ -699,8 +702,6 @@
     }
   ],
   "extra": {
-    "CAMERA0": "mimics.devices.camera.CCD400E.CCD400E|/dev/ttyS3",
-    "MAXCAMERA": "1",
     "CAMERA0_SERVER": "50000",
     "ERRORLRFGAUSS": "0.0009",
     "SENSIBSON": "0.0000001"

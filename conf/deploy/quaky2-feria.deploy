@@ -18,7 +18,8 @@
             "PASSIVE": "true",
             "PRG": "./conf/programs/quaky2.soccer.b",
             "PRG_": "conf/programs/quaky2.indoor.b",
-            "TYPE": "Controller"
+            "TYPE": "Controller",
+            "AUTO": "true"
           },
           "events": [
             {

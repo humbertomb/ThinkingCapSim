@@ -111,7 +111,8 @@
           "DESC": "./conf/robots/rasmus.robot",
           "GFX": "true",
           "MODE": "shared",
-          "PASSIVE": "false"
+          "PASSIVE": "false",
+          "EXTIME": "100"
         },
         "events": [
           {

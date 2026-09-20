@@ -423,17 +423,34 @@
       "cycle": 1,
       "sensors": [
         {
-          "rho": 0.15000000000000002,
+          "rho": 0.12536540809227956,
           "theta": -0.0,
-          "height": 0.43,
+          "height": 0.39937321006067117,
           "orientation": 0.0,
-          "elevation": -15.0,
+          "elevation": -23.0,
           "step": 1,
           "driver": "devices.drivers.vision.quaky2.Quaky2Vis",
           "driverParams": "5,7000,10.0.0.1:8000",
           "rangemax": 11.668769833972743,
-          "hfov": 60.0,
-          "vfov": 50.0
+          "hfov": 70.0,
+          "vfov": 43.0
+        }
+      ]
+    },
+    "camera": {
+      "sensors": [
+        {
+          "rho": 0.12536540809227956,
+          "theta": 0.0,
+          "height": 0.40070480962325067,
+          "orientation": 0.0,
+          "elevation": -25.0,
+          "step": 0,
+          "rangemax": 10.0,
+          "hfov": 70.0,
+          "vfov": 43.0,
+          "framerate": 5.0,
+          "resolution": "800x600"
         }
       ]
     }
@@ -496,8 +513,8 @@
     {
       "mode": 4,
       "base": 0.3,
-      "rho": 0.1,
-      "theta": 120.0,
+      "rho": 0.20384852240668122,
+      "theta": 104.00807143739657,
       "height": 0.0,
       "orientation": 90.0,
       "elevation": 0.0,
@@ -508,8 +525,8 @@
     {
       "mode": 4,
       "base": 0.3,
-      "rho": 0.21,
-      "theta": 45.0,
+      "rho": 0.24823666925837046,
+      "theta": 45.33743638103079,
       "height": 0.0,
       "orientation": 45.0,
       "elevation": 0.0,
@@ -532,8 +549,8 @@
     {
       "mode": 4,
       "base": 0.3,
-      "rho": 0.21,
-      "theta": -45.0,
+      "rho": 0.24277787086820887,
+      "theta": -44.70099762041784,
       "height": 0.0,
       "orientation": -45.0,
       "elevation": 0.0,
@@ -544,8 +561,8 @@
     {
       "mode": 4,
       "base": 0.3,
-      "rho": 0.1,
-      "theta": -120.0,
+      "rho": 0.2115730753843907,
+      "theta": -103.75562084558092,
       "height": 0.0,
       "orientation": -90.0,
       "elevation": 0.0,

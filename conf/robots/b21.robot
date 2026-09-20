@@ -176,9 +176,9 @@
     "gear": 60.0,
     "pulses": 500.0,
     "dtime": 100,
-    "odomET": 0.025,
-    "odomER": 0.1,
-    "odomBias": 0.1
+    "odomET": 0.0,
+    "odomER": 0.0,
+    "odomBias": 0.0
   },
   "sensors": {
     "son": {

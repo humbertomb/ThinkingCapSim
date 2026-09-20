@@ -3,11 +3,11 @@
 /* -------------------- */
 
 // Sets for ToF sensor range [0 .. 10] (meters)
-set CLOSE	= trapezoid {0.0, 0.0, 0.2, 0.3};			// Close 
-set NEAR	= trapezoid {0.2, 0.3, 0.4, 0.5};			// Near 
-set MED		= trapezoid {0.4, 0.5, 0.6, 0.7};			// Medium
-set FAR		= trapezoid {0.6, 0.7, 1.3, 1.4};			// Far
-set VFAR	= trapezoid {1.3, 1.4, 10.0, 10.0};			// Very Far
+set CLOSE	= trapezoid {0.0, 0.0, 0.6, 0.7};			// Close 
+set NEAR	= trapezoid {0.6, 0.7, 0.8, 0.9};			// Near 
+set MED		= trapezoid {0.8, 0.9, 0.10, 0.11};			// Medium
+set FAR		= trapezoid {0.10, 0.11, 1.6, 1.7};			// Far
+set VFAR	= trapezoid {1.6, 1.7, 10.0, 10.0};			// Very Far
 
 // Sets for steering [-10 .. 10]
 set TTR		= trapezoid {-150.0, -150.0, -100.0, -90.0};	// Tight Right

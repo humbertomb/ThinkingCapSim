@@ -116,11 +116,6 @@
               "method": "notify_sensors"
             },
             {
-              "symbol": "OBJECT",
-              "itemClass": "tc.shared.linda.ItemObject",
-              "method": "notify_object"
-            },
-            {
               "symbol": "NAVIGATION",
               "itemClass": "tc.shared.linda.ItemNavigation",
               "method": "notify_navigation"
