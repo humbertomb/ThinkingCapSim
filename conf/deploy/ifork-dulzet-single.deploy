@@ -186,7 +186,7 @@
           },
           {
             "symbol": "PALLETCTRL",
-            "itemClass": "tcapps.tcsimulator.simulator.ItemPallet",
+            "itemClass": "tcrob.ingenia.ifork.linda.ItemPallet",
             "method": "notify_pallet"
           }
         ]
