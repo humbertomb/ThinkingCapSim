@@ -37,6 +37,7 @@ public class BGController extends Controller
 	
 	// Goal and task related variables
 	protected boolean				has_goal;					// Is any goal available?
+	protected boolean				has_plan;					// Has anybody said where to go? (a plan was received)
 	protected boolean				new_goal;					// New goal received
 	protected long					new_id;						// New task ID received
 	protected Task					new_plan;					// New task received
@@ -71,6 +72,7 @@ public class BGController extends Controller
 		plan		= new Task ();
 		
 		has_goal	= false;
+		has_plan	= false;
 		new_plan	= new Task ();
 		new_goal	= false;
 		new_id		= 0;
@@ -102,6 +104,16 @@ public class BGController extends Controller
 
 		// Parse BG file
 		parse (cfg);		
+		
+		// Autostart the controller without a plan: it runs its program from the
+		// first cycle, and until somebody says where to go there is no goal to have
+		// arrived at (see inGoal)
+		if (cfg.getBoolean ("AUTO", false))
+		{
+			has_goal	= true;
+			has_plan	= false;
+			need_looka	= false;
+		}
 	}
 	
 	protected void parse (ModuleConfig cfg)
@@ -136,20 +148,26 @@ public class BGController extends Controller
 					c_dump.open (c_labels);
 				}
 			}
-		}
-		
-		// Autostart the controller without a plan
-		if (cfg.getBoolean ("AUTO", false))
-		{
-			has_goal	= true;
-			need_looka	= false;
-		}
+		}	
 	}
 	
+	/**
+	 * Whether the robot has arrived where it was told to go: reached, failed, or
+	 * not yet.
+	 *
+	 * Nobody having said where to go is not arriving: a controller started on its
+	 * own (AUTO) runs its program with no plan, and the task it carries is then
+	 * the one a Task is born with -- the origin of the world, within a quarter of a
+	 * metre and any heading at all. Checked against that, a robot standing at the
+	 * start of its world reported the task finished on every cycle, and a finished
+	 * task zeroes what the behaviours asked for: it ran and did not move.
+	 */
 	protected int inGoal ()
 	{
 		double			dx, dy;
 		double			dist, delta;
+
+		if (!has_plan)												return ItemBehResult.T_NOTYET;
 
 		// Check if goal position has been reached
 		dx		= plan.tpos.x () - pos.x ();
@@ -351,6 +369,7 @@ public class BGController extends Controller
 		
 		new_goal	= true;
 		has_goal	= true;
+		has_plan	= true;										// now there is somewhere to arrive at
 	}
 
 	public void notify_path (String space, ItemPath item)
