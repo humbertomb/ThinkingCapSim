@@ -149,7 +149,7 @@ public class SimRobot extends VirtualRobot
 			{
 				camwin	= new tcapps.tcsimulator.CameraWindow (SimRobot.this, "Cameras of " + r_id);
 				for (SimCamera c : cams)
-					camwin.add ("camera" + c.device (), c.width (), c.height ());
+					camwin.add ("camera" + c.device (), c.width (), c.height (), c.framerate ());
 				camwin.open ();
 			}
 		};

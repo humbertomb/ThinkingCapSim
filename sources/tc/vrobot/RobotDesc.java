@@ -75,6 +75,8 @@ public class RobotDesc extends VehicleDesc implements Serializable
 	public SensorPos[]			visfeat; 		// Vision sensors robot-local position
 	public SensorPos[]			camfeat; 		// Cameras robot-local position
 	public double[]				camfps; 		// Cameras frame rate (fps)
+	public double[]				camhfov; 		// Cameras horizontal field of view (rad)
+	public double[]				camvfov; 		// Cameras vertical field of view (rad)
 	public Line2[]			    bumfeat;			// Bumper sensors detection robot-local line
 	public String[]				digfeat;			// Digitizer configuration
 
@@ -194,6 +196,8 @@ public class RobotDesc extends VehicleDesc implements Serializable
 		visfeat		= new SensorPos [MAXVISION];
 		camfeat		= new SensorPos [MAXCAMERA];
 		camfps		= new double [MAXCAMERA];
+		camhfov		= new double [MAXCAMERA];
+		camvfov		= new double [MAXCAMERA];
 		bumfeat		= new Line2 [MAXBUMPER];
 		digfeat		= new String [MAXDIGITIZER];
 
@@ -301,6 +305,11 @@ public class RobotDesc extends VehicleDesc implements Serializable
 			try { stp		= Integer.valueOf (props.getProperty ("camerastep" + i)).intValue (); } 		catch (Exception e) 	{ }
 			camfps[i]		= FPSCAM;
 			try { camfps[i]	= Double.valueOf (props.getProperty ("FPSCAM" + i)).doubleValue (); } 			catch (Exception e) 	{ }
+			camhfov[i]		= CONECAM;
+			camvfov[i]		= VFOVCAM;
+			try { camhfov[i]	= Double.valueOf (props.getProperty ("CONECAM" + i)).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
+			try { camhfov[i]	= Double.valueOf (props.getProperty ("HFOVCAM" + i)).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
+			try { camvfov[i]	= Double.valueOf (props.getProperty ("VFOVCAM" + i)).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 			camfeat[i]		= new SensorPos ();
 			camfeat[i].set_polar (len, rho * Angles.DTOR, alpha * Angles.DTOR);
 			camfeat[i].set_height (hgt);

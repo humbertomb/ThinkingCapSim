@@ -112,8 +112,8 @@ public class SimCamera extends Scene3D
 		feat	= rdesc.camfeat[dev];
 		if (feat == null)														return null;
 
-		hfov	= (rdesc.CONECAM > 0.0) ? rdesc.CONECAM : DEF_HFOV;
-		vfov	= (rdesc.VFOVCAM > 0.0) ? rdesc.VFOVCAM : DEF_VFOV;
+		hfov	= fov (rdesc.camhfov, dev, rdesc.CONECAM, DEF_HFOV);
+		vfov	= fov (rdesc.camvfov, dev, rdesc.VFOVCAM, DEF_VFOV);
 		w		= WIDTH;
 		h		= (int) Math.round (WIDTH * Math.tan (vfov / 2.0) / Math.tan (hfov / 2.0));
 		h		= Math.max (16, Math.min (4 * WIDTH, h));
@@ -186,6 +186,17 @@ public class SimCamera extends Scene3D
 		scene.setTransform (new Transform3D ());
 
 		build ();
+	}
+
+	/**
+	 * How wide this camera sees, as the description says (rad): what it says of
+	 * itself, what the platform says of the whole family of them, or what a camera
+	 * is taken to see when neither says.
+	 */
+	static private double fov (double[] own, int dev, double family, double none)
+	{
+		if ((own != null) && (dev >= 0) && (dev < own.length) && (own[dev] > 0.0))		return own[dev];
+		return (family > 0.0) ? family : none;
 	}
 
 	/** How many frames a second this camera takes, as the description says (fps). */
