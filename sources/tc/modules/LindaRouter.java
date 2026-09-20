@@ -40,7 +40,6 @@ public class LindaRouter implements LindaListener
 		lindaglobal.register (new Tuple (robotid, Tuple.BEHRULES, null), listener);
 		lindaglobal.register (new Tuple (robotid, Tuple.BEHNAME, null), listener);
 		lindaglobal.register (new Tuple (robotid, Tuple.BEHDEBUG, null), listener);
-		lindaglobal.register (new Tuple (robotid, Tuple.DELROBOT, null), listener);
 	}
 	
 	public void notify (Tuple tuple)
@@ -58,7 +57,7 @@ public class LindaRouter implements LindaListener
 			if (debug) System.out.println (" G=>"+tuple);
 		}			
 		// Tuples from global to local (broadcast)
-		else if (tuple.key.equals (Tuple.EXECUTION) || tuple.key.equals(Tuple.DELROBOT))
+		else if (tuple.key.equals (Tuple.EXECUTION))
 		{	
 			lindalocal.write (tuple);
 			if (debug) System.out.println (" L=>"+tuple);

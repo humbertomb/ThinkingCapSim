@@ -106,7 +106,6 @@ public class IForkPlanner extends SeqPlanner
 	protected boolean								laserexception	= false;
 	// Private and debug variables
 	protected IForkPlanWindow						win;
-	protected Hashtable<String,Long>				agv_runtime;
 	
 	// Debug
 	PrintWriter pout = null;
@@ -136,7 +135,6 @@ public class IForkPlanner extends SeqPlanner
 		
 		asoclocks	= new Hashtable<String,String> ();
 		locks 		= new LinkedList<String> ();
-		agv_runtime  = new Hashtable<String,Long> ();
 		
 		fdebug = false;
 		
@@ -1304,16 +1302,6 @@ public class IForkPlanner extends SeqPlanner
 	public void notify_coord (String space, ItemCoordination coord)
 	{
 		
-		if(agv_runtime.contains(space)){
-			if((System.currentTimeMillis() - ((Long)agv_runtime.get(space)).longValue())<20000){
-				//System.out.println("  [IForkPlanner]: notify_coord Recibido coord de "+space+" estando borrado.");
-				return;
-			}else{
-				//System.out.println("  [IForkPlanner]: notify_coord "+space+" esta eliminado mas de 20 seg. Borrar de agv_runtime");
-				agv_runtime.remove(space);
-			}
-		}
-
 		if (robotid!=null && !robotid.equalsIgnoreCase(space))			
 		{
 			agvinfo.put(space,coord);	
@@ -1353,42 +1341,6 @@ public class IForkPlanner extends SeqPlanner
 				System.out.println("[IForkPlanner:]notify_status ALARM received. item="+item+" laserexc="+laserexception);
 		}
 	}
-	
-	public synchronized void notify_delrobot(String space,ItemDelRobot item){
-		Enumeration<String> enum1;
-		String wp;
-		
-		if(item.cmd==ItemDelRobot.INFO){
-			//System.out.println("  [IForkPlanner] Recibido tuple INFO "+space+" item="+item);
-		}
-		else if(item.cmd==ItemDelRobot.DELETE){
-			//System.out.println("  [IForkPlanner] Recibido tuple delrobot "+item+" space="+space+" robotid="+robotid);
-			
-			agv_runtime.put(item.robotid, Long.valueOf(System.currentTimeMillis()));
-			
-			if(robotid!=null && robotid.equalsIgnoreCase(item.robotid)){
-				System.out.println("  [IForkPlanner] Stop robot "+robotid);
-				stop();
-				return;
-			}
-			if(asoclocks.containsValue(item.robotid)){
-				for(enum1 = asoclocks.keys();enum1.hasMoreElements();){
-					wp = enum1.nextElement();
-					if(item.robotid.equalsIgnoreCase((String)asoclocks.get(wp))){
-						System.out.println("  [IForkPlanner] Robot "+robotid+": eliminando "+wp+" del robot "+item.robotid);
-						asoclocks.remove(wp);
-						locks.remove(wp);
-					}
-				}
-			}
-			agvinfo.remove(item.robotid);
-		}
-	}
-//	public synchronized void notify_delrobot(String space,ItemDelRobot item){
-//		System.out.println("  [IForkPlanner] Recibido tuple delrobot "+item+" space="+space+" myrobotid="+robotid);
-//	
-//	}
-
 	
 	public void printPlan ()
 	{

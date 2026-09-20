@@ -67,8 +67,8 @@ public class LindaEntry
 		
 		if (tuple.value == null)			return;
 		
-		// Hay que hacer una copia del vector listeners, debido a con la tupla delrobot se eliminan los elementos del 
-		//  vector antes de que se notifiquen la tupla a todos los listeners
+		// Hay que hacer una copia del vector listeners, porque un listener puede eliminar
+		//  elementos del vector mientras se esta notificando la tupla a todos ellos
 		LindaEntryRegistry ler[] = (LindaEntryRegistry[]) listeners.toArray(new LindaEntryRegistry[0]);
 		for(int j=0; j<ler.length;j++)
 		{

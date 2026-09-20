@@ -103,24 +103,8 @@ public class LindaServer implements Linda, LindaNetProcessor
 	}
 	
 	public void manage(int command,LindaNetListener con,String robotid){
-		ItemDelRobot 	dritem;
-		Tuple			drtuple;
-		
 		switch(command){
 			case LindaNetProcessor.DELETE:
-//				Enviar tupla DELROBOT
-				dritem 	= new ItemDelRobot();
-				drtuple 	= new Tuple (Tuple.DELROBOT, dritem);
-				
-				dritem.set(ItemDelRobot.DELETE,robotid,System.currentTimeMillis());
-				write(drtuple);
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				dritem.set(ItemDelRobot.INFO,robotid,System.currentTimeMillis());
-				write(drtuple);
 //				Eliminar todas las conexiones con del LindaSpace
 				space.unregister(con);
 			

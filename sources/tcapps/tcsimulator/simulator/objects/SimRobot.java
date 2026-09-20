@@ -184,12 +184,4 @@ public class SimRobot extends VirtualRobot
 			}	
 		}
 	}
-	
-	public void notify_delrobot (String space, ItemDelRobot item){
-		//System.out.println("  [SimRobot] Recibido tuple DELROBOT space="+space+" "+item);
-		if(r_id.equalsIgnoreCase(item.robotid)){
-			System.out.println("  [SimRobot] Stop robot "+r_id);
-			stop();
-		}
-	}
 }

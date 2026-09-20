@@ -35,11 +35,6 @@
               "symbol": "COORD",
               "itemClass": "tcrob.ingenia.ifork.linda.ItemCoordination",
               "method": "notify_coord"
-            },
-            {
-              "symbol": "DELROBOT",
-              "itemClass": "tc.shared.linda.ItemDelRobot",
-              "method": "notify_delrobot"
             }
           ]
         },
@@ -102,11 +97,6 @@
               "symbol": "COORD",
               "itemClass": "tcrob.ingenia.ifork.linda.ItemCoordination",
               "method": "notify_coord"
-            },
-            {
-              "symbol": "DELROBOT",
-              "itemClass": "tc.shared.linda.ItemDelRobot",
-              "method": "notify_delrobot"
             }
           ]
         },
@@ -139,11 +129,6 @@
               "symbol": "COORD",
               "itemClass": "tcrob.ingenia.ifork.linda.ItemCoordination",
               "method": "notify_coord"
-            },
-            {
-              "symbol": "DELROBOT",
-              "itemClass": "tc.shared.linda.ItemDelRobot",
-              "method": "notify_delrobot"
             }
           ]
         }
@@ -152,7 +137,7 @@
         "name": "Virtual Robot",
         "properties": {
           "CLASS": "tcrob.ingenia.ifork.IFork",
-          "DESC": "conf/robots/ifork.robot",
+          "DESC": "./conf/robots/ifork.robot",
           "EXTIME": "115",
           "GFX": "true",
           "MODE": "shared",
@@ -173,11 +158,6 @@
             "symbol": "SENSORS_CTRL",
             "itemClass": "tc.shared.linda.ItemSensorsCtrl",
             "method": "notify_sensors_ctrl"
-          },
-          {
-            "symbol": "DELROBOT",
-            "itemClass": "tc.shared.linda.ItemDelRobot",
-            "method": "notify_delrobot"
           },
           {
             "symbol": "STATUS",

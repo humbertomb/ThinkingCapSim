@@ -34,14 +34,12 @@ public class IForkPerception extends IndoorPerception
 	protected IForkKLoc						kloc;
 	protected Position						kpos;
 	protected boolean						kfilter;
-	protected Hashtable<String,Long>		agv_runtime;
 
 	// Constructors
 	public IForkPerception (ModuleConfig cfg, Linda linda)
 	{
 		super (cfg, linda);
 
-		agv_runtime  = new Hashtable<String,Long> ();
 	}
 	
 	// Instance methods
@@ -141,16 +139,6 @@ public class IForkPerception extends IndoorPerception
 
 	public synchronized void notify_coord (String space, ItemCoordination coord)
 	{
-		if(agv_runtime.contains(space)){
-			if((System.currentTimeMillis() - (agv_runtime.get(space)).longValue())<20000){
-				//System.out.println("  [IForkPerception]: notify_coord Recibido coord de "+space+" estando borrado.");
-				return;
-			}else{
-				//System.out.println("  [IForkPerception]: notify_coord "+space+" esta eliminado mas de 20 seg. Borrar de agv_runtime");
-				agv_runtime.remove(space);
-			}
-		}
-
 		int				i, k = 0;
 		String			name;
 		
@@ -212,38 +200,6 @@ public class IForkPerception extends IndoorPerception
 		// Local behaviour configuration
 		segments		= false; 
 		kfilter		= true;
-	}
-	
-	public synchronized void notify_delrobot(String space,ItemDelRobot item){
-		String name;
-		
-		if(l_mates == null) return;
-		
-		if(item.cmd==ItemDelRobot.INFO){
-//			System.out.println("  [IForkPerception] Recibido tuple INFO "+space+" item="+item);
-		}
-		else if(item.cmd==ItemDelRobot.DELETE){
-//			System.out.println("  [IForkPerception] Recibido tuple delrobot yo="+robotid+" el otro="+item+" space="+space);
-			
-			agv_runtime.put(item.robotid, Long.valueOf (System.currentTimeMillis()));
-			
-			if(robotid.equalsIgnoreCase(item.robotid)){
-				
-				System.out.println("  [IForkPerception] Stop robot "+robotid);
-				stop();
-				return;
-			}
-			for (int i = 0; i < MAX_MATES; i++)
-			{
-				name		= l_mates[i].label ();
-				if ((name != null) && (name.equals (item.robotid)))
-				{
-					System.out.println("  [IForkPerception] Robot "+robotid+": eliminando "+name);
-					l_mates[i].active(false);
-					l_mates[i].label(null);
-				}
-			}
-		}
 	}
 }
 

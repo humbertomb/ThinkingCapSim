@@ -37,7 +37,6 @@ public class IForkNavigation extends IndoorNavigation
 	protected int							g_src;
 	protected Point2						iconMax;
 	protected Point2						iconMin;
-	protected Hashtable<String,Long>		agv_runtime;
 
 	// Constructors
 	public IForkNavigation (ModuleConfig cfg, Linda linda)
@@ -51,7 +50,6 @@ public class IForkNavigation extends IndoorNavigation
 		// Linda data
 		zitem 	= new ItemIForkZone ();
 		ztuple 	= new Tuple (IForkTuple.ZONE, zitem); 
-		agv_runtime  = new Hashtable<String,Long> ();
 	}
 		
 	// Instance methods
@@ -152,15 +150,6 @@ public class IForkNavigation extends IndoorNavigation
 
 	public synchronized void notify_coord (String space, ItemCoordination coord)
 	{
-		if(agv_runtime.contains(space)){
-			if((System.currentTimeMillis() - ((Long)agv_runtime.get(space)).longValue())<20000){
-				//System.out.println("  [IForkNavigation]: notify_coord Recibido coord de "+space+" estando borrado.");
-				return;
-			}else{
-				//System.out.println("  [IForkNavigation]: notify_coord "+space+" esta eliminado mas de 20 seg. Borrar de agv_runtime");
-				agv_runtime.remove(space);
-			}
-		}
 		if (my_id.equalsIgnoreCase(space) || space.equalsIgnoreCase(LindaEntryFilter.ANY))				return;
 				
 		if (grid != null)
@@ -169,42 +158,6 @@ public class IForkNavigation extends IndoorNavigation
 			    grid.robotOccupied (coord.position, iconMax, iconMin, space);
 		}
 		agvinfo.put (space, coord.position);	
-	}
-	
-	public synchronized void notify_delrobot(String space,ItemDelRobot item){
-		
-		if(item.cmd==ItemDelRobot.INFO){
-//			System.out.println("  [IForkNavigation] Recibido tuple INFO "+space+" item="+item);
-		}
-		else if(item.cmd==ItemDelRobot.DELETE){
-			//System.out.println("  [IForkNavigation] Recibido tuple delrobot "+item+" space="+space+" my_id="+my_id);
-			
-			agv_runtime.put(item.robotid, Long.valueOf (System.currentTimeMillis()));
-			
-			if(my_id.equalsIgnoreCase(item.robotid)){
-				System.out.println("  [IForkNavigation] Stop robot "+my_id);
-				stop();
-				return;
-			}
-			if(agvinfo!=null && agvinfo.contains(item.robotid))
-				agvinfo.remove(item.robotid);
-			
-			if(topol != null){
-				GNodeFL node;
-				Grid zonegrid;
-				// Se elimina el robot de todos los grids
-				for(int i = 0; i<topol.numNodes(); i++){
-					node = (GNodeFL)topol.getNode(i);
-					if(node != null){
-						System.out.println("  [IForkNavigation] Robot "+my_id+": eliminando "+item.robotid+" del Grid "+node.getLabel());
-						zonegrid = node.getGrid();
-						if(zonegrid != null)
-							zonegrid.restartChanges(item.robotid);
-					}
-				}
-			}
-			
-		}
 	}
 
 }
