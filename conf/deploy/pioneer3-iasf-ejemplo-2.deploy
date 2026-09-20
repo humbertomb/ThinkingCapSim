@@ -40,7 +40,7 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "conf/programs/iasf-ejemplo-2.b",
+            "PRG": "./conf/programs/iasf-ejemplo-2.b",
             "TYPE": "Controller"
           },
           "events": [
@@ -118,7 +118,7 @@
         "name": "Virtual Robot",
         "properties": {
           "CLASS": "tcrob.umu.pioneer3.Pioneer3",
-          "DESC": "conf/robots/pioneer3.robot",
+          "DESC": "./conf/robots/pioneer3.robot",
           "EXTIME": "100",
           "GFX": "false",
           "MODE": "shared",

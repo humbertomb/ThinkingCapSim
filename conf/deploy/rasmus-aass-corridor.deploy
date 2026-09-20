@@ -108,7 +108,7 @@
         "name": "Virtual Robot",
         "properties": {
           "CLASS": "oru.rasmus.Rasmus",
-          "DESC": "conf/robots/rasmus.robot",
+          "DESC": "./conf/robots/rasmus.robot",
           "GFX": "true",
           "MODE": "shared",
           "PASSIVE": "false"

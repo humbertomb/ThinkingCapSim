@@ -41,7 +41,7 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "conf/programs/satant.b",
+            "PRG": "./conf/programs/satant.b",
             "TYPE": "Controller"
           },
           "events": []
@@ -60,7 +60,7 @@
         "name": "Virtual Robot",
         "properties": {
           "CLASS": "um.satant.Satant",
-          "DESC": "conf/robots/satant.robot",
+          "DESC": "./conf/robots/satant.robot",
           "GFX": "false",
           "MODE": "shared"
         },
@@ -101,7 +101,7 @@
         "name": "Virtual Robot",
         "properties": {
           "CLASS": "um.satant.Satant",
-          "DESC": "conf/robots/satant2.robot",
+          "DESC": "./conf/robots/satant2.robot",
           "GFX": "false",
           "LOG": "conf/logs/SATANT.campus.20021213.1.path",
           "MODE": "shared"

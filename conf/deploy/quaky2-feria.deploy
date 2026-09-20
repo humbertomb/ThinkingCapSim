@@ -16,7 +16,7 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "conf/programs/quaky2.soccer.b",
+            "PRG": "./conf/programs/quaky2.soccer.b",
             "PRG_": "conf/programs/quaky2.indoor.b",
             "TYPE": "Controller"
           },
@@ -94,7 +94,7 @@
         "name": "Virtual Robot",
         "properties": {
           "CLASS": "tcrob.umu.quaky2.Quaky2",
-          "DESC": "conf/robots/quaky2.robot",
+          "DESC": "./conf/robots/quaky2.robot",
           "EXTIME": "75",
           "GFX": "true",
           "MODE": "shared",
