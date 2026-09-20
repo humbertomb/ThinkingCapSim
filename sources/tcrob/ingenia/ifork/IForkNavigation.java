@@ -9,8 +9,6 @@ import java.util.*;
 
 
 import tc.shared.linda.*;
-
-import tclib.navigation.mapbuilding.Grid;
 import tclib.planning.htopol.*;
 import tclib.planning.htopol.gui.*;
 
