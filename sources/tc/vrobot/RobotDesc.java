@@ -77,6 +77,8 @@ public class RobotDesc extends VehicleDesc implements Serializable
 	public double[]				camfps; 		// Cameras frame rate (fps)
 	public double[]				camhfov; 		// Cameras horizontal field of view (rad)
 	public double[]				camvfov; 		// Cameras vertical field of view (rad)
+	public int[]				camwidth; 		// Cameras frame width (pixels; 0: not stated)
+	public int[]				camheight; 		// Cameras frame height (pixels; 0: not stated)
 	public Line2[]			    bumfeat;			// Bumper sensors detection robot-local line
 	public String[]				digfeat;			// Digitizer configuration
 
@@ -198,6 +200,8 @@ public class RobotDesc extends VehicleDesc implements Serializable
 		camfps		= new double [MAXCAMERA];
 		camhfov		= new double [MAXCAMERA];
 		camvfov		= new double [MAXCAMERA];
+		camwidth	= new int [MAXCAMERA];
+		camheight	= new int [MAXCAMERA];
 		bumfeat		= new Line2 [MAXBUMPER];
 		digfeat		= new String [MAXDIGITIZER];
 
@@ -310,6 +314,9 @@ public class RobotDesc extends VehicleDesc implements Serializable
 			try { camhfov[i]	= Double.valueOf (props.getProperty ("CONECAM" + i)).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 			try { camhfov[i]	= Double.valueOf (props.getProperty ("HFOVCAM" + i)).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 			try { camvfov[i]	= Double.valueOf (props.getProperty ("VFOVCAM" + i)).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
+			int[]	res = RobotDef.resolutionOf (props.getProperty ("RESCAM" + i));
+			if (res == null)	res = RobotDef.resolutionOf (props.getProperty ("RESCAM"));
+			if (res != null)	{ camwidth[i] = res[0];		camheight[i] = res[1]; }
 			camfeat[i]		= new SensorPos ();
 			camfeat[i].set_polar (len, rho * Angles.DTOR, alpha * Angles.DTOR);
 			camfeat[i].set_height (hgt);

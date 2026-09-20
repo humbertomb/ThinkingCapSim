@@ -225,6 +225,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 						javax.swing.table.TableCellEditor	ed = simModeEditor (propsModel.item.family);
 						if (ed != null)		return ed;
 					}
+					if (name.equals (RESOLUTION))		return resolutionEditor (propsModel.item);
 					if (name.equals (FUSION_MODE))		return fusionModeEditor ();
 					if (name.equals (SCAN_MODE) && (propsModel.item != null))
 						return reductionEditor (propsModel.item.index);
@@ -1123,7 +1124,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				if (RobotDef.hasFrameRate (it.family))
 					return new String[] { DRIVER, DRIVER_PARAMS, "step",
 										  "rho", "theta", "height", "orientation", "elevation",
-										  "range max", "hfov", "vfov", FRAME_RATE };
+										  "range max", "hfov", "vfov", FRAME_RATE, RESOLUTION };
 				return new String[] { DRIVER, DRIVER_PARAMS, "step",
 									  "rho", "theta", "height", "orientation", "elevation",
 									  "range max", "hfov", "vfov" };
@@ -1281,6 +1282,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("hfov"))			return RobotDef.fmt (s.hfov);
 			if (name.equals ("vfov"))			return RobotDef.fmt (s.vfov);
 			if (name.equals (FRAME_RATE))		return RobotDef.fmt (s.framerate);
+			if (name.equals (RESOLUTION))		return (s.resolution != null) ? s.resolution : "";
 			break;
 		}
 		case RobotItem.FAMILY:
@@ -1331,6 +1333,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		FUSION_MODE				= "fusion mode";
 	/** How many frames a camera takes in a second. */
 	static public final String		FRAME_RATE				= "frame rate";
+	/** How large a frame of a camera is, in pixels. */
+	static public final String		RESOLUTION				= "resolution";
 	/** And to how it takes a bunch of laser rays down to one reading. */
 	static public final String		SCAN_MODE				= "reduction mode";
 
@@ -1487,6 +1491,38 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		cb.setSelectedItem (current);
 		cb.setToolTipText ("How the fusion works the fused sensors out");
 		return new DefaultCellEditor (cb);
+	}
+
+	/**
+	 * The chooser of how large a frame of a camera is: the sizes that are usual,
+	 * and whatever the description says now when it is not one of them. It takes a
+	 * size typed by hand as well, since a camera may have any.
+	 *
+	 * Nothing said is a size of its own: the simulator then draws a frame as wide
+	 * as it draws one and as tall as the two fields of view ask.
+	 */
+	private javax.swing.table.TableCellEditor resolutionEditor (RobotItem it)
+	{
+		List<String>		names = new ArrayList<String> ();
+		String				current = (it != null) ? getProperty (it, RESOLUTION) : "";
+		JComboBox<String>	cb;
+
+		names.add ("");												// as the fields of view ask
+		for (String r : RobotDef.RESOLUTIONS)		names.add (r);
+		if ((current.length () > 0) && !names.contains (current))	names.add (1, current);
+		cb		= new JComboBox<String> (names.toArray (new String[0]));
+		cb.setEditable (true);										// any size, typed
+		cb.setSelectedItem (current);
+		cb.setToolTipText ("How large a frame is, as 640x480; empty: as wide as the simulator draws and as tall as the fields of view ask");
+		return new DefaultCellEditor (cb);
+	}
+
+	/** A size of a frame as it is kept: as it was typed when it is a size, and nothing when it is not. */
+	static private String resolution (String value)
+	{
+		int[]		res = RobotDef.resolutionOf (value);
+
+		return (res != null) ? (res[0] + "x" + res[1]) : null;
 	}
 
 	/** The editor of how a bunch of laser rays is taken down to the one reading of a scan. */
@@ -1684,6 +1720,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("hfov"))			s.hfov = num (value);
 			else if (name.equals ("vfov"))			s.vfov = num (value);
 			else if (name.equals (FRAME_RATE))		s.framerate = num (value);
+			else if (name.equals (RESOLUTION))		s.resolution = resolution (value);
 			break;
 		}
 		case RobotItem.FAMILY:

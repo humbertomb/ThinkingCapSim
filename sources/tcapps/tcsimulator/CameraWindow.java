@@ -7,7 +7,6 @@ package tcapps.tcsimulator;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -192,7 +191,9 @@ public class CameraWindow extends JFrame
 		this.owner	= owner;
 		setDefaultCloseOperation (WindowConstants.DISPOSE_ON_CLOSE);
 		getContentPane ().setLayout (new BorderLayout ());
-		getContentPane ().add (new JPanel (new FlowLayout (FlowLayout.LEFT, 8, 8)), BorderLayout.CENTER);
+		// a row of views that share what the window gives them: each one grows with
+		// it and keeps the shape of its frame by drawing it as large as it fits
+		getContentPane ().add (new JPanel (new java.awt.GridLayout (1, 0, 8, 8)), BorderLayout.CENTER);
 		addWindowListener (new java.awt.event.WindowAdapter ()
 		{
 			public void windowClosed (java.awt.event.WindowEvent e)

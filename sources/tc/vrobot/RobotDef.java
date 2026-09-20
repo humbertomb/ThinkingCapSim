@@ -67,6 +67,7 @@ public class RobotDef
 		public double	hfov;						// vis, camera: horizontal field of view (deg; it is not a cone)
 		public double	vfov;						// vis, camera: vertical field of view (deg)
 		public double	framerate;					// camera: frames it takes in a second (fps)
+		public String	resolution;					// camera: how large a frame is ("640x480"); null: as wide as the simulator draws
 
 		public Sensor ()							{ }
 		public Sensor copy ()
@@ -77,7 +78,7 @@ public class RobotDef
 			s.driver = driver;	s.driverParams = driverParams;
 			s.rangemax = rangemax;	s.rangemin = rangemin;	s.cone = cone;	s.rays = rays;
 			s.reflect = reflect;	s.beacons = beacons;	s.objects = objects;
-			s.hfov = hfov;			s.vfov = vfov;		s.framerate = framerate;
+			s.hfov = hfov;			s.vfov = vfov;		s.framerate = framerate;		s.resolution = resolution;
 			return s;
 		}
 
@@ -86,7 +87,7 @@ public class RobotDef
 		{
 			return (driver == null) && (driverParams == null) && (rangemax == 0.0) && (rangemin == 0.0) && (cone == 0.0)
 				&& (rays == 0) && (reflect == 0.0) && (beacons == 0) && (objects == 0)
-				&& (hfov == 0.0) && (vfov == 0.0) && (framerate == 0.0);
+				&& (hfov == 0.0) && (vfov == 0.0) && (framerate == 0.0) && (resolution == null);
 		}
 	}
 
@@ -700,6 +701,46 @@ public class RobotDef
 	 */
 	static public boolean hasFrameRate (String fam)		{ return "camera".equals (fam); }
 
+	/**
+	 * True for a family whose sensors say how large a frame of theirs is: a camera
+	 * hands over a picture, and a picture has a size in pixels. The rest of the
+	 * families hand over a reading and have none.
+	 */
+	static public boolean hasResolution (String fam)		{ return "camera".equals (fam); }
+
+	/**
+	 * The sizes of a frame that are usual, for an editor to offer. A camera may be
+	 * given any size; these are the ones worth having at hand, from the smallest a
+	 * camera of a robot ever had to the ones of today.
+	 */
+	static public final String[]	RESOLUTIONS	=
+	{
+		"160x120", "176x144", "320x240", "352x288", "640x360", "640x480", "800x600",
+		"1024x768", "1280x720", "1280x960", "1600x1200", "1920x1080", "2560x1440", "3840x2160",
+	};
+
+	/**
+	 * How large a frame is, as {width, height}, or null when it is not said or is
+	 * not a size. Written "640x480"; the spaces and the case of the x do not
+	 * matter, and neither does a "*" or a "X" in its place.
+	 */
+	static public int[] resolutionOf (String text)
+	{
+		String[]	part;
+		int			w, h;
+
+		if (text == null)								return null;
+		part	= text.trim ().toLowerCase ().replace ('*', 'x').replace ('\u00d7', 'x').split ("x");
+		if (part.length != 2)							return null;
+		try
+		{
+			w	= Integer.parseInt (part[0].trim ());
+			h	= Integer.parseInt (part[1].trim ());
+		} catch (Exception e)							{ return null; }
+		if ((w <= 0) || (h <= 0))						return null;
+		return new int[] { w, h };
+	}
+
 	/** True for a family whose sensors carry their own detection properties. */
 	static public boolean hasOwnDetection (String fam)
 	{
@@ -794,6 +835,7 @@ public class RobotDef
 			if (s.hfov != 0.0)			o.addProperty ("hfov", s.hfov);
 			if (s.vfov != 0.0)			o.addProperty ("vfov", s.vfov);
 			if (s.framerate != 0.0)		o.addProperty ("framerate", s.framerate);
+			if (s.resolution != null)	o.addProperty ("resolution", s.resolution);
 			return o;
 		}
 	}
@@ -988,6 +1030,7 @@ public class RobotDef
 					s.vfov	= number (take ("VFOV" + key + i), 0.0);
 				}
 				if (hasFrameRate (fam))		s.framerate = number (take ("FPS" + key + i), 0.0);
+				if (hasResolution (fam))		s.resolution = take ("RES" + key + i);
 				else
 				{
 					s.rangemin	= number (take ("MINIM" + key + i), 0.0);
@@ -1005,9 +1048,11 @@ public class RobotDef
 			double	v = number (take ("VFOV" + key), 0.0), h = number (take ("HFOV" + key), 0.0);
 			double	m = number (take ("MINIM" + key), 0.0);
 			double	fps = number (take ("FPS" + key), 0.0);
+			String	res = take ("RES" + key);
 
 			if (s0.rangemax == 0.0)		s0.rangemax = r;
 			if (hasFrameRate (fam) && (s0.framerate == 0.0))		s0.framerate = fps;
+			if (hasResolution (fam) && (s0.resolution == null))		s0.resolution = res;
 			if (hasFov (fam))
 			{
 				if (s0.hfov == 0.0)		s0.hfov = (h != 0.0) ? h : c;
@@ -1381,6 +1426,7 @@ public class RobotDef
 				setNZ (p, "CONE" + key, hasFov (fam) ? s0.hfov : s0.cone);
 				if (hasFov (fam))		{ setNZ (p, "HFOV" + key, s0.hfov);		setNZ (p, "VFOV" + key, s0.vfov); }
 				if (hasFrameRate (fam))	setNZ (p, "FPS" + key, s0.framerate);
+				if (hasResolution (fam) && (s0.resolution != null))		p.setProperty ("RES" + key, s0.resolution.trim ());
 				// what a radar casts is read as RAYRAD, and nothing reads a RAYTRK
 				if (s0.rays > 0)		p.setProperty (rayKey (fam, key), String.valueOf (s0.rays));
 				if (s0.reflect != 0.0)	set (p, "REF" + key, s0.reflect);
@@ -1412,6 +1458,7 @@ public class RobotDef
 					setNZ (p, "CONE" + key + i, hasFov (fam) ? s.hfov : s.cone);
 					if (hasFov (fam))	{ setNZ (p, "HFOV" + key + i, s.hfov);		setNZ (p, "VFOV" + key + i, s.vfov); }
 					if (hasFrameRate (fam))		setNZ (p, "FPS" + key + i, s.framerate);
+					if (hasResolution (fam) && (s.resolution != null))		p.setProperty ("RES" + key + i, s.resolution.trim ());
 					// the radar says what it casts once, for the family, and not one by one
 					if ((s.rays > 0) && !fam.equals ("trk"))	p.setProperty ("RAY" + key + i, String.valueOf (s.rays));
 					if (s.reflect != 0.0)	set (p, "REF" + key + i, s.reflect);

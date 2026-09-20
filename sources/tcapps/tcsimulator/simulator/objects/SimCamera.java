@@ -62,8 +62,13 @@ import wucore.utils.geom.Point3;
  */
 public class SimCamera extends Scene3D
 {
-	/** Pixels across of a frame; how many down follows from the two fields of view. */
+	/**
+	 * Pixels across of a frame when the description does not say how large one is;
+	 * how many down then follows from the two fields of view.
+	 */
 	static public final int			WIDTH		= 320;
+	/** As many pixels a side as a frame is ever given. */
+	static public final int			MAX_SIDE	= 4096;
 	/** Bounds of what it sees along the way it looks (m). */
 	static public final double		NEAR		= 0.05;
 	static public final double		FAR			= 300.0;
@@ -114,9 +119,20 @@ public class SimCamera extends Scene3D
 
 		hfov	= fov (rdesc.camhfov, dev, rdesc.CONECAM, DEF_HFOV);
 		vfov	= fov (rdesc.camvfov, dev, rdesc.VFOVCAM, DEF_VFOV);
-		w		= WIDTH;
-		h		= (int) Math.round (WIDTH * Math.tan (vfov / 2.0) / Math.tan (hfov / 2.0));
-		h		= Math.max (16, Math.min (4 * WIDTH, h));
+		// how large a frame is: what the description says, and otherwise as wide as
+		// the simulator draws one and as tall as the two fields of view ask
+		if ((rdesc.camwidth != null) && (dev < rdesc.camwidth.length) && (rdesc.camwidth[dev] > 0))
+		{
+			w	= rdesc.camwidth[dev];
+			h	= rdesc.camheight[dev];
+		}
+		else
+		{
+			w	= WIDTH;
+			h	= (int) Math.round (WIDTH * Math.tan (vfov / 2.0) / Math.tan (hfov / 2.0));
+		}
+		w		= Math.max (16, Math.min (MAX_SIDE, w));
+		h		= Math.max (16, Math.min (MAX_SIDE, h));
 		try
 		{
 			GraphicsConfigTemplate3D	tmpl = new GraphicsConfigTemplate3D ();
@@ -172,9 +188,12 @@ public class SimCamera extends Scene3D
 		Transform3D	eye = new Transform3D ();
 
 		v.setCompatibilityModeEnable (true);
-		// the field of view across and the shape of the frame, which was worked out
-		// of the two of them, so the one down the frame is the one that was asked for
-		proj.perspective (hfov, frame.getWidth () / (double) frame.getHeight (), NEAR, FAR);
+		// both fields of view, whatever the shape of the frame: the aspect asked of
+		// perspective is the one of the fields of view and not the one of the frame,
+		// so a frame of a size that does not follow from them -- a description that
+		// asks for 640x480 of a camera that sees 60 by 50 -- still sees what it says
+		// it sees, with pixels that are not square, as such a camera has
+		proj.perspective (hfov, Math.tan (hfov / 2.0) / Math.tan (vfov / 2.0), NEAR, FAR);
 		v.setLeftProjection (proj);
 		eye.setIdentity ();											// the eye sits on the platform of the view, looking down its -z
 		v.setVpcToEc (eye);
