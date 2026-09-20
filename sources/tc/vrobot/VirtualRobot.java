@@ -9,6 +9,7 @@ import java.util.Properties;
 
 import tc.runtime.thread.ModuleConfig;
 import tc.runtime.thread.StdThread;
+import tc.shared.linda.ItemCamera;
 import tc.shared.linda.ItemConfig;
 import tc.shared.linda.ItemSensors;
 import tc.shared.linda.ItemSensorsCtrl;
@@ -56,6 +57,10 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected Tuple					tobj;
 	protected ItemObject			sobj;
 	protected VisionData[]			odata;
+	protected Tuple					tcam;
+	protected ItemCamera			scam;
+	protected java.awt.image.BufferedImage	cdata;			// frame of the current cycle (null: no camera, or nothing taken)
+	protected int					cdev;					// which camera of the robot took it
 	protected RobotDataCtrl			data_ctrl;
 
 	private double[]				buffer;				// Buffer to store curve points
@@ -100,6 +105,8 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		tdata		= new Tuple (Tuple.SENSORS, sdata);
 		sobj			= new ItemObject ();
 		tobj			= new Tuple (Tuple.OBJECT, sobj);
+		scam			= new ItemCamera ();
+		tcam			= new Tuple (Tuple.CAMERA, scam);
 		
 		// Setup robot description and data structures		
 		rdesc 		= new RobotDesc (rprops, tdesc.exectime);
@@ -205,6 +212,15 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 			sobj.set (vobj, ctime);
 			if(linda==null) return;
 			linda.write (tobj);
+		}
+		
+		// Write the frame of the cameras to the Linda space
+		if (cdata != null)
+		{
+			scam.set (ItemCamera.copy (cdata), cdev, ctime);
+			cdata	= null;										// one frame is written once
+			if(linda==null) return;
+			linda.write (tcam);
 		}
 	}	
 	

@@ -20,6 +20,7 @@ public class Tuple implements Serializable
 	public static final String			LPS				= "LPS";
 	public static final String			STATUS			= "STATUS";
 	public static final String			OBJECT			= "OBJECT";
+	public static final String			CAMERA			= "CAMERA";
 	public static final String			CAMERA_CTRL		= "CAMERA_CTRL";
 	
 	// Key values (behaviours)

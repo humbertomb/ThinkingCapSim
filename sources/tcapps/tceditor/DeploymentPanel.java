@@ -633,6 +633,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		{ "PATH",			"The path worked out to the place of the goal, for a controller to follow." },
 		{ "NAVIGATION",		"What navigation knows of the map it is working on, for perception to read its own surroundings against." },
 		{ "STATUS",			"What a module has to report of itself -- idle, occupied, waiting, completed, failed -- with a line of its own. The Events table of the simulator is a log of these." },
+		{ "CAMERA",			"A frame of one of the cameras of a robot, as it was taken, and which camera of the robot took it. On a real robot it comes from the camera itself; on a simulated one it is rendered out of the 3D model of the world, from where the camera is mounted. What travels is the picture and not what is in it: making something of it is the work of whoever perceives. It stays in the space of its robot -- a frame is large, and nothing outside the robot has anything to do with it." },
 		{ "OBJECT",			"The objects the robot has around it, as the robot itself sees them: the ones the world has moving about." },
 		{ "BEHRESULT",		"Whether the behaviour a controller was running has finished, and why. A planner waits on it to go on with the plan." },
 		{ "BEHINFO",		"What each behaviour of a controller is asking for, and how much it is heeded. The Behaviour Fusion window of the simulator draws these." },
