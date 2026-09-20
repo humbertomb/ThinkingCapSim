@@ -18,6 +18,7 @@ import javax.media.j3d.ImageComponent2D;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
 import javax.media.j3d.View;
+import javax.vecmath.Matrix3d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
@@ -158,9 +159,25 @@ public class SimCamera extends Scene3D
 		buffer		= new ImageComponent2D (ImageComponent.FORMAT_RGB, frame, true, false);
 		off.setOffScreenBuffer (buffer);
 
-		// what it sees: as wide as the description says, and as far
+		// What it sees: the two fields of view of the description, exactly.
+		//
+		// Not View.setFieldOfView, which says the horizontal one and leaves the
+		// vertical one to be worked out of the size Java 3D takes the screen to be
+		// physically -- something an off-screen canvas has no say in, and which came
+		// out as a vertical field of view of well over a hundred degrees. In
+		// compatibility mode the projection is ours to give, so both are what they
+		// are said to be and the pixels are square.
 		View		v = universe.getViewer ().getView ();
-		v.setFieldOfView (hfov);										// the vertical one follows from the shape of the frame
+		Transform3D	proj = new Transform3D ();
+		Transform3D	eye = new Transform3D ();
+
+		v.setCompatibilityModeEnable (true);
+		// the field of view across and the shape of the frame, which was worked out
+		// of the two of them, so the one down the frame is the one that was asked for
+		proj.perspective (hfov, frame.getWidth () / (double) frame.getHeight (), NEAR, FAR);
+		v.setLeftProjection (proj);
+		eye.setIdentity ();											// the eye sits on the platform of the view, looking down its -z
+		v.setVpcToEc (eye);
 		v.setFrontClipDistance (NEAR);
 		v.setBackClipDistance (FAR);
 
@@ -333,7 +350,24 @@ public class SimCamera extends Scene3D
 
 	/**
 	 * Puts the eye of the view where the camera is and points it where the camera
-	 * looks: the robot carries it, so its pose is added to the one of the sensor.
+	 * looks: the robot carries it, so the pose of the robot is added to the one of
+	 * the sensor -- the camera turns with the robot and sits where the description
+	 * puts it, at its distance and angle from the centre and at its height.
+	 *
+	 * The frame of the view is built here rather than by {@link Transform3D#lookAt}
+	 * and an inversion, which come to the same thing: said outright it is one
+	 * transform instead of two, it says which way round the picture goes rather
+	 * than leaving it to an up vector, and it has nothing to say about a camera
+	 * looking straight up or down. A view looks down its own -z, with its x to the
+	 * right of the picture and its y up, so that is what is built:
+	 *
+	 *   where it looks  f = (cos yaw cos pitch, sin yaw cos pitch, sin pitch)
+	 *   to its right    r = (sin yaw, -cos yaw, 0)
+	 *   and up          u = r x f
+	 *
+	 * and the transform of the platform is [r, u, -f] with the eye for a
+	 * translation. The pitch is held short of straight up or down, where the up of
+	 * the world says nothing about which way round the picture goes.
 	 */
 	protected void aim (RobotData data)
 	{
@@ -342,15 +376,38 @@ public class SimCamera extends Scene3D
 		double			cx = data.real_x + feat.rho () * Math.cos (data.real_a + feat.theta ());
 		double			cy = data.real_y + feat.rho () * Math.sin (data.real_a + feat.theta ());
 		double			cz = feat.z ();
-		Point3d			eye = new Point3d (cx, cy, cz);
-		Point3d			at = new Point3d (cx + Math.cos (yaw) * Math.cos (pitch),
-										  cy + Math.sin (yaw) * Math.cos (pitch),
-										  cz + Math.sin (pitch));
+		Vector3d			f = new Vector3d (Math.cos (yaw) * Math.cos (pitch), Math.sin (yaw) * Math.cos (pitch), Math.sin (pitch));
+		Vector3d			r = new Vector3d (Math.sin (yaw), -Math.cos (yaw), 0.0);
+		Vector3d			u = new Vector3d ();
+		Matrix3d			rot = new Matrix3d ();
 		Transform3D		cam = new Transform3D ();
 
-		cam.lookAt (eye, at, new Vector3d (0.0, 0.0, 1.0));
-		cam.invert ();													// lookAt looks the other way round
+		u.cross (r, f);
+		rot.setColumn (0, r);
+		rot.setColumn (1, u);
+		rot.setColumn (2, new Vector3d (-f.x, -f.y, -f.z));
+		cam.set (rot, new Vector3d (cx, cy, cz), 1.0);
 		universe.getViewingPlatform ().getViewPlatformTransform ().setTransform (cam);
+	}
+
+	/**
+	 * Where the eye of the view is, where it looks and which way round the picture
+	 * goes, in the world, as the platform of the view has it: {x, y, z} of the eye,
+	 * then the way it looks, then its right and its up. What the picture was taken
+	 * from, for whoever wants to check it against where the camera is.
+	 */
+	public double[] eye ()
+	{
+		Transform3D		t = new Transform3D ();
+		Point3d			o = new Point3d (0.0, 0.0, 0.0);
+		Point3d			f = new Point3d (0.0, 0.0, -1.0);			// a view looks down its own -z
+		Point3d			r = new Point3d (1.0, 0.0, 0.0);			// with its x to the right of the picture
+		Point3d			u = new Point3d (0.0, 1.0, 0.0);			// and its y up
+
+		universe.getViewingPlatform ().getViewPlatformTransform ().getTransform (t);
+		t.transform (o);	t.transform (f);	t.transform (r);	t.transform (u);
+		return new double[] { o.x, o.y, o.z, f.x - o.x, f.y - o.y, f.z - o.z,
+							  r.x - o.x, r.y - o.y, r.z - o.z, u.x - o.x, u.y - o.y, u.z - o.z };
 	}
 
 	/** Lets go of the universe it renders with. */
