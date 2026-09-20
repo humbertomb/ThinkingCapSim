@@ -6,7 +6,7 @@ package tc.shared.linda;
 
 import java.io.*;
 
-public class ItemCamera extends Item implements Serializable
+public class ItemCameraControl extends Item implements Serializable
 {
 	// Traction and steering control mode
 	public static final int		 	CTRL_NONE		= 0;
@@ -19,12 +19,12 @@ public class ItemCamera extends Item implements Serializable
 	public double					zoom;				// Zoom aperture control
 
 	// Constructors
-	public ItemCamera () 
+	public ItemCameraControl () 
 	{
 		this.set (0.0, 0.0, 0.0, 0);
 	}	
 	
-	public ItemCamera (double pan, double tilt, double zoom, long tstamp) 
+	public ItemCameraControl (double pan, double tilt, double zoom, long tstamp) 
 	{
 		this.set (pan, tilt, zoom, tstamp);
 	}	

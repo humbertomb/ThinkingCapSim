@@ -22,6 +22,6 @@ public class SoccerLindaRouter extends LindaRouter
 		super (robotid, linda, lindaglobal);
 
 		// Register GLOBAL linda listeners
-		lindaglobal.register (new Tuple (robotid, Tuple.CAMERA, null), this);
+		lindaglobal.register (new Tuple (robotid, Tuple.CAMERA_CTRL, null), this);
 	}
 }

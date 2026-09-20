@@ -725,6 +725,11 @@ public class ArchModel
 			if (!simple.startsWith ("Item") || simple.equals ("Item"))		continue;
 			String	key = plain (simple.substring (4));
 			if (!NAMED.containsKey (key))		NAMED.put (key, cls);
+			// the control of a thing is CTRL in a symbol and either in a class name
+			if (key.endsWith ("CONTROL"))		key = key.substring (0, key.length () - 7) + "CTRL";
+			else if (key.endsWith ("CTRL"))		key = key.substring (0, key.length () - 4) + "CONTROL";
+			else								continue;
+			if (!NAMED.containsKey (key))		NAMED.put (key, cls);
 		}
 		return NAMED;
 	}

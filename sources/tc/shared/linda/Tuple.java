@@ -36,7 +36,7 @@ public class Tuple implements Serializable
 	public static final String			NAVIGATION	= "NAVIGATION";
 	public static final String			PLAN		= "PLAN";
 	public static final String			PATH		= "PATH";
-	public static final String			CAMERA		= "CAMERA";
+	public static final String			CAMERA_CTRL	= "CAMERA_CTRL";
 
 	// Key values (control of actions)
 	public static final String			SENSORS_CTRL	= "SENSORS_CTRL";

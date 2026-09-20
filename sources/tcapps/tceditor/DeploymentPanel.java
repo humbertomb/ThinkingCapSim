@@ -639,7 +639,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		{ "BEHRULES",		"The rules the behaviours of a controller are to be fused by, sent to it from outside." },
 		{ "BEHNAME",		"Which behaviour a controller is to run, named from outside." },
 		{ "BEHDEBUG",		"Which behaviours of a controller are to be traced." },
-		{ "CAMERA",			"What a camera watching the robots has to say of them, which is how the soccer robots are told where they are." },
+		{ "CAMERA_CTRL",	"What the camera of a robot is to do with itself: where to pan, where to tilt and how far to open. It travels the global space, so a camera is aimed from outside the robot that carries it." },
 		{ "DELROBOT",		"A robot has left the global space, which the space itself says when the connection of that robot drops. The rest stop counting on it." },
 		{ "LINDACTRL",		"Control of the space itself rather than of a robot: how often the router sums up, what it holds, what is to be forgotten." },
 		{ "GUICTRL",		"Control of the windows of a robot from outside it." },
