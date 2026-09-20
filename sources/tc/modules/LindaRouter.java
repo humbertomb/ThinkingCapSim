@@ -42,7 +42,6 @@ public class LindaRouter implements LindaListener
 		lindaglobal.register (new Tuple (robotid, Tuple.BEHRULES, null), listener);
 		lindaglobal.register (new Tuple (robotid, Tuple.BEHNAME, null), listener);
 		lindaglobal.register (new Tuple (robotid, Tuple.BEHDEBUG, null), listener);
-		lindaglobal.register (new Tuple (robotid, Tuple.GUICTRL, null), listener);
 		lindaglobal.register (new Tuple (robotid, Tuple.DELROBOT, null), listener);
 		lindaglobal.register (new Tuple (robotid, Tuple.PALLETCTRL, null), listener);
 	}
@@ -74,7 +73,7 @@ public class LindaRouter implements LindaListener
 		// Tuples from global to local (filtered)
 		else if (tuple.key.equals (Tuple.PLAN) || tuple.key.equals (Tuple.MOTION) 
 				|| tuple.key.equals (Tuple.BEHNAME) || tuple.key.equals (Tuple.BEHRULES) 
-				|| tuple.key.equals (Tuple.BEHDEBUG) || tuple.key.equals (Tuple.GUICTRL))
+				|| tuple.key.equals (Tuple.BEHDEBUG))
 		{			
 			if (tuple.space.equals (robotid))
 			{	

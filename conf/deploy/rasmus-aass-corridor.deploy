@@ -121,13 +121,7 @@
           }
         ]
       },
-      "properties": {
-        "MONCLASS": "oru.rasmus.gui.RasmusGUI",
-        "MONCONNECT": "LPS\t\t\ttc.shared.linda.ItemLPS \t\tnotify_lps, GUICTRL\t\ttc.shared.linda.ItemGUICtrl\tnotify_gui_ctrl, GRIDMAP \ttcrob.indoor.linda.ItemGridMap \tnotify_grid, FSEGMAP \ttcrob.indoor.linda.ItemFSegMap \tnotify_fmap",
-        "MONINFO": "Local GUI Server",
-        "MONMODE": "shared",
-        "MONPASSIVE": "true"
-      }
+      "properties": {}
     }
   ]
 }
