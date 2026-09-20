@@ -31,6 +31,9 @@ import wucore.utils.math.*;
 		
 public class IForkPlanner extends SeqPlanner
 {
+	/** What it understands (see parsePlan): go to a dock, load there, unload there, or stay. */
+	static public final String[]	ACTIONS		= { "goto", "load", "unload", "stay" };
+
 	// Plan types
 	static public final int							STAY			= 0;
 	static public final int							GOTO			= 1;

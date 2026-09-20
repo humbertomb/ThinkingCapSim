@@ -45,11 +45,35 @@ public class TaskDialog extends JDialog
 {
 	private static final long		serialVersionUID = 1L;
 
-	static public final String[]	ACTIONS	= { "load", "unload", "goto", "stay" };
+	/**
+	 * The actions a planner understands, as the planner class itself declares them
+	 * in an <code>ACTIONS</code> of its own ({@link tc.modules.Planner#ACTIONS}),
+	 * looked up the ancestry so that a planner of a development inherits the ones
+	 * of the planner it is built on. A class the development does not hold, or one
+	 * that declares none, understands nothing: nothing is offered for it.
+	 */
+	static public String[] actionsOf (String cls)
+	{
+		if ((cls == null) || (cls.trim ().length () == 0))		return new String[0];
+		try
+		{
+			for (Class<?> c = Class.forName (cls.trim ()); c != null; c = c.getSuperclass ())
+				try
+				{
+					java.lang.reflect.Field		f = c.getDeclaredField ("ACTIONS");
+					if (!java.lang.reflect.Modifier.isStatic (f.getModifiers ()))		continue;
+					f.setAccessible (true);
+					String[]	a = (String[]) f.get (null);
+					if ((a != null) && (a.length > 0))		return a;
+				} catch (NoSuchFieldException e)			{ }
+		} catch (Throwable t)		{ }
+		return new String[0];
+	}
 
 	protected World					world;					// docks with their flow type (null: no filtering)
 	protected String[]				places;					// all the places offered
 	protected String[]				robots;
+	protected java.util.Map<String, String>	planners;		// robot -> the planner class it runs (empty: none known)
 	protected JComboBox<String>		robotCB;				// null with one robot or none
 	protected JComboBox<String>		placeCB;
 	protected JComboBox<String>		actionCB;
@@ -87,7 +111,7 @@ public class TaskDialog extends JDialog
 	/** @param robots  robots the task set can be sent to (a selector is shown when there is more than one) */
 	public TaskDialog (Frame owner, String[] places, Sequence initial, String[] robots)
 	{
-		this (owner, null, places, initial, robots);
+		this (owner, null, places, initial, robots, null);
 	}
 
 	/**
@@ -97,15 +121,29 @@ public class TaskDialog extends JDialog
 	 */
 	public TaskDialog (Frame owner, World world, Sequence initial, String[] robots)
 	{
-		this (owner, world, placesOf (world), initial, robots);
+		this (owner, world, placesOf (world), initial, robots, null);
 	}
 
-	protected TaskDialog (Frame owner, World world, String[] places, Sequence initial, String[] robots)
+	/**
+	 * Task editor for the robots of a running deployment: every one of them with
+	 * the planner it runs, so that the Action selector offers what that planner
+	 * understands and nothing else. The robots are the keys of the map, in the
+	 * order it holds them.
+	 */
+	public TaskDialog (Frame owner, World world, Sequence initial, java.util.Map<String, String> planners)
+	{
+		this (owner, world, placesOf (world), initial,
+			  planners.keySet ().toArray (new String[0]), planners);
+	}
+
+	protected TaskDialog (Frame owner, World world, String[] places, Sequence initial, String[] robots,
+						  java.util.Map<String, String> planners)
 	{
 		super (owner, "Tasks", true);
-		this.world	= world;
-		this.places	= places;
-		this.robots	= robots;
+		this.world		= world;
+		this.places		= places;
+		this.robots		= robots;
+		this.planners	= (planners != null) ? planners : new java.util.LinkedHashMap<String, String> ();
 		buildGUI (places);
 		if (initial != null)
 			for (int i = 0; i < initial.size (); i++)		model.add (initial.place[i], initial.action[i]);
@@ -154,13 +192,36 @@ public class TaskDialog extends JDialog
 		placeCB.setModel (new javax.swing.DefaultComboBoxModel<String> (offered));
 		if (current != null)
 			for (String p : offered)		if (p.equals (current))		{ placeCB.setSelectedItem (current); break; }
-		addBT.setEnabled (offered.length > 0);
+		// nowhere to go, or nothing its planner would make of it: nothing to add
+		addBT.setEnabled ((offered.length > 0) && (actionCB.getItemCount () > 0));
+	}
+
+	/** The actions the planner of the robot the tasks are addressed to understands. */
+	protected String[] actions ()
+	{
+		return actionsOf (planners.get (getRobot ()));
+	}
+
+	/**
+	 * Refills the Action selector for the robot the tasks are addressed to,
+	 * keeping the selected action when its planner understands it too, and the
+	 * Place selector after it.
+	 */
+	protected void updateActions ()
+	{
+		String		current = (String) actionCB.getSelectedItem ();
+		String[]	offered = actions ();
+
+		actionCB.setModel (new javax.swing.DefaultComboBoxModel<String> (offered));
+		if (current != null)
+			for (String a : offered)		if (a.equals (current))		{ actionCB.setSelectedItem (current); break; }
+		updatePlaces ();
 	}
 
 	private void buildGUI (String[] places)
 	{
 		// --- first line: action, place, add
-		actionCB	= new JComboBox<String> (ACTIONS);
+		actionCB	= new JComboBox<String> (actions ());
 		placeCB		= new JComboBox<String> (places);
 		addBT		= new JButton ("Add Task");
 		actionCB.addActionListener (new ActionListener ()
@@ -252,6 +313,10 @@ public class TaskDialog extends JDialog
 		if (robots.length > 1)
 		{
 			robotCB	= new JComboBox<String> (robots);
+			robotCB.addActionListener (new ActionListener ()
+			{
+				public void actionPerformed (ActionEvent e)		{ updateActions (); }		// another robot, another planner
+			});
 			JPanel	rp = new JPanel (new FlowLayout (FlowLayout.LEFT, 6, 6));
 			rp.add (new JLabel ("Send to robot"));
 			rp.add (robotCB);

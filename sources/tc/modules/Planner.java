@@ -11,6 +11,14 @@ import tc.shared.world.*;
 		
 public abstract class Planner extends StdThread
 {
+	/**
+	 * The actions this kind of planner understands, for whoever offers a task to
+	 * be built: the words a plan may name beside a place, which each planner reads
+	 * with a parsePlan of its own. A planner that says nothing understands
+	 * nothing, and nothing is to be asked of it.
+	 */
+	static public final String[]	ACTIONS		= { };
+
 	// Linda related variables
 	protected Tuple					ltuple;
 	protected ItemLPS				litem;

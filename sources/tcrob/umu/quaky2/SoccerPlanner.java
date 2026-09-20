@@ -5,6 +5,7 @@
 package tcrob.umu.quaky2;
 
 import tc.runtime.thread.ModuleConfig;
+import java.util.*;
 
 import tc.shared.linda.*;
 import tclib.navigation.pathplanning.GridPath;
@@ -14,6 +15,9 @@ import wucore.utils.math.*;
 		
 public class SoccerPlanner extends SeqPlanner
 {
+	/** What it understands (see parsePlan): stay where it is, kick the ball, or score. */
+	static public final String[]	ACTIONS		= { "kick", "score", "stay" };
+
 	// Manouvering tolerances
 	static public final  double		TOL_BALL_DIST	= 0.35;		// Tolerance in ball operations (m)
 	static public final  double		TOL_BALL_HEAD	= 180.0;	// Tolerance in ball operations (deg)

@@ -5,6 +5,7 @@
 package tclib.planning.sequence;
 
 import tc.runtime.thread.ModuleConfig;
+import java.util.*;
 
 import tc.modules.*;
 import tc.shared.linda.*;
@@ -14,6 +15,13 @@ import wucore.utils.geom.*;
 		
 public class SeqPlanner extends Planner
 {
+	/**
+	 * What a plain sequence planner understands: it walks the places of the plan
+	 * in turn, setting a goal at each of them, and makes nothing of the action
+	 * beyond that -- so going to a place and staying at one is all it does.
+	 */
+	static public final String[]	ACTIONS		= { "goto", "stay" };
+
 	// Overall plan parameters
 	protected Task[]				task;
 	protected int					task_n;

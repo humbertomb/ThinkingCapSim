@@ -136,7 +136,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	protected JSplitPane			splitPane;
 	protected StatusBar				statusBar;
 	protected View3DController		view3d;
-	protected Action				executeAction, startAction, stepAction, stopAction;
+	protected Action				executeAction, startAction, stepAction, stopAction, tasksAction;
 
 	public SimulatorWindow ()
 	{
@@ -213,7 +213,8 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (editWorldAction ()));
 		tb.add (ToolButtons.flatButton (editArchAction ()));
-		tb.add (ToolButtons.flatButton (tasksAction ()));
+		tasksAction	= tasksAction ();
+		tb.add (ToolButtons.flatButton (tasksAction));
 		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomFit (canvas)));
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomIn (canvas)));
@@ -296,7 +297,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		mexec.add (accel (new JMenuItem (stepAction), KeyEvent.VK_F7, 0));
 		mexec.add (accel (new JMenuItem (stopAction), KeyEvent.VK_F8, 0));
 		mexec.addSeparator ();
-		JMenuItem	tasks = new JMenuItem (tasksAction ());
+		JMenuItem	tasks = new JMenuItem (tasksAction);
 		tasks.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_T, mask));
 		mexec.add (tasks);
 		mexec.addSeparator ();
@@ -429,6 +430,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		if (wname != null)		showWorld (new File (wname));
 		else					showWorld (null);
 		updateTitle ();
+		updateTasksState ();					// another deployment, other planners (or none)
 	}
 
 	public boolean saveArch (boolean saveAs)
@@ -484,6 +486,37 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	}
 
 	/** Names of the robots of the deployment, in order. */
+	/**
+	 * The class of the planner of a robot of the deployment, or null when it has
+	 * none: the class of the module the deployment tagged as a Planner.
+	 */
+	protected String plannerOf (DeployArch.Robot rob)
+	{
+		if (rob == null)					return null;
+		for (DeployArch.Module m : rob.modules)
+			if ("Planner".equalsIgnoreCase (m.get ("TYPE")))		return m.get ("CLASS");
+		return null;
+	}
+
+	/**
+	 * The robots a task set can be sent to, each with the planner it runs: the
+	 * ones the deployment gives a planner that understands some action. A robot
+	 * with no planner has nothing to do with a task, and one whose planner
+	 * understands nothing has nothing that could be asked of it.
+	 */
+	protected java.util.Map<String, String> planners ()
+	{
+		java.util.Map<String, String>	all = new java.util.LinkedHashMap<String, String> ();
+
+		if (deploy == null)					return all;
+		for (DeployArch.Robot rob : deploy.robots)
+		{
+			String	cls = plannerOf (rob);
+			if ((cls != null) && (TaskDialog.actionsOf (cls).length > 0))		all.put (rob.name, cls);
+		}
+		return all;
+	}
+
 	protected String[] robotNames ()
 	{
 		String[]	n = new String[deploy.robots.size ()];
@@ -586,7 +619,14 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	/** Opens the task set editor and sends the resulting plan to the chosen robot. */
 	public void editTasks ()
 	{
-		TaskDialog	dlg = new TaskDialog (this, world, lastTasks, robotNames ());
+		java.util.Map<String, String>	with = planners ();
+
+		if (with.isEmpty ())
+		{
+			JOptionPane.showMessageDialog (this, "No robot of this deployment has a planner to send tasks to.", TITLE, JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+		TaskDialog	dlg = new TaskDialog (this, world, lastTasks, with);
 		Sequence	seq = dlg.showDialog ();
 		if (seq == null)				return;
 		lastTasks = seq;
@@ -609,6 +649,16 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		startAction.setEnabled (on);
 		stepAction.setEnabled (on);
 		stopAction.setEnabled (on);
+		updateTasksState ();
+	}
+
+	/**
+	 * Tasks are offered only when there is somebody to send them to: a robot of
+	 * the deployment with a planner that understands some action.
+	 */
+	private void updateTasksState ()
+	{
+		if (tasksAction != null)			tasksAction.setEnabled (!planners ().isEmpty ());
 	}
 
 	/* ------------------------------------------------------------------ */
