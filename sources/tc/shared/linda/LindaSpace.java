@@ -103,9 +103,6 @@ public class LindaSpace {
 		record.update_local(tuple);
 		record.update_listeners(connection);
 
-		if (tuple.key.equals(Tuple.LINDACTRL)) {
-			process_linda(tuple);
-		}
 		return true;
 	}
 
@@ -297,65 +294,42 @@ public class LindaSpace {
 		}
 	}
 
-	/**
-	 *  Description of the Method
-	 *
-	 * @param  tuple  Description of the Parameter
-	 */
-	protected void process_linda(Tuple tuple) {
-		ItemLindaCtrl  lctrl;
-		LindaEntryListener lel;
-
-		lctrl = (ItemLindaCtrl) tuple.value;
-
-		switch (lctrl.cmd) {
-				case ItemLindaCtrl.DELETE:
-					Enumeration<String>    enu;
-					Enumeration<String>    enu1;
-					String         key;
-					LindaEntry     entry;
-
-					if (!tuple.space.equals(LindaEntryFilter.ANY)) {
-						enu = content.keys();
-						while (enu.hasMoreElements()) {
-							key = enu.nextElement();
-							if(key.equals(Tuple.CONFIG)){
-								enu1 = content_config.keys();
-								while (enu1.hasMoreElements()) {
-									key = enu1.nextElement();
-									if(key.equals(tuple.space)){
-										content_config.remove(key);	
-									}else{
-										entry = content_config.get(key);
-										entry.unregister(tuple.space);
-										lel=ifork_connection.get(tuple.space);
-										if(lel!=null)
-											entry.unregister(LindaEntryFilter.ANY,lel);
-									}
-								}
-							}else{
-								entry = (LindaEntry) content.get(key);
-								entry.unregister(tuple.space);
-								lel=ifork_connection.get(tuple.space);
-								if(lel!=null)
-									entry.unregister(LindaEntryFilter.ANY,lel);
-								
-							}
-							
-						}
-					}
-					break;
-				case ItemLindaCtrl.DUMPREG:
-					System.out.println(toString(true));
-					break;
-				case ItemLindaCtrl.DUMPSPC:
-					System.out.println(toString(false));
-					break;
-				case ItemLindaCtrl.TIMEOUT:
-				default:
-		}
-	}
-
+//				case ItemLindaCtrl.DELETE:
+//					Enumeration<String>    enu;
+//					Enumeration<String>    enu1;
+//					String         key;
+//					LindaEntry     entry;
+//
+//					if (!tuple.space.equals(LindaEntryFilter.ANY)) {
+//						enu = content.keys();
+//						while (enu.hasMoreElements()) {
+//							key = enu.nextElement();
+//							if(key.equals(Tuple.CONFIG)){
+//								enu1 = content_config.keys();
+//								while (enu1.hasMoreElements()) {
+//									key = enu1.nextElement();
+//									if(key.equals(tuple.space)){
+//										content_config.remove(key);	
+//									}else{
+//										entry = content_config.get(key);
+//										entry.unregister(tuple.space);
+//										lel=ifork_connection.get(tuple.space);
+//										if(lel!=null)
+//											entry.unregister(LindaEntryFilter.ANY,lel);
+//									}
+//								}
+//							}else{
+//								entry = (LindaEntry) content.get(key);
+//								entry.unregister(tuple.space);
+//								lel=ifork_connection.get(tuple.space);
+//								if(lel!=null)
+//									entry.unregister(LindaEntryFilter.ANY,lel);
+//								
+//							}
+//							
+//						}
+//					}
+//					break;
 
 	/**
 	 *  Description of the Method

@@ -12,7 +12,6 @@ public class LindaRouter implements LindaListener
 	protected Linda					lindalocal;				// Local Linda for this robot.
 	protected Linda					lindaglobal;			// Global Linda for multirrobot.
 	
-	protected long					timeout		= 1500;		// Timeout asked for by a Linda control event
 	protected boolean				debug		= false;
 	
 	// Constructors
@@ -38,7 +37,6 @@ public class LindaRouter implements LindaListener
 		lindaglobal.register (new Tuple (robotid, Tuple.EXECUTION, null), listener);
 		lindaglobal.register (new Tuple (robotid, Tuple.PLAN, null), listener);
 		lindaglobal.register (new Tuple (robotid, Tuple.MOTION, null), listener);
-		lindaglobal.register (new Tuple (robotid, Tuple.LINDACTRL, null), listener);
 		lindaglobal.register (new Tuple (robotid, Tuple.BEHRULES, null), listener);
 		lindaglobal.register (new Tuple (robotid, Tuple.BEHNAME, null), listener);
 		lindaglobal.register (new Tuple (robotid, Tuple.BEHDEBUG, null), listener);
@@ -52,11 +50,8 @@ public class LindaRouter implements LindaListener
 			
     	if (debug) System.out.print ("  [Router] <="+tuple);
     	
-		// Tuples for Linda control
-		if (tuple.key.equals (Tuple.LINDACTRL))
-			process_linda (tuple);			
 		// Tuples from local to global
-		else if (tuple.key.equals (Tuple.CONFIG) || tuple.key.equals (Tuple.STATUS) 
+		if (tuple.key.equals (Tuple.CONFIG) || tuple.key.equals (Tuple.STATUS) 
 				|| tuple.key.equals (Tuple.GOAL) || tuple.key.equals (Tuple.BEHINFO))
 		{
 			tuple.space	= robotid;
@@ -86,26 +81,5 @@ public class LindaRouter implements LindaListener
 		else
 			System.out.println ("--[Router] Un-requested tuple KEY received");	
 	}	  
-
-	protected void process_linda (Tuple tuple)
-	{
-		ItemLindaCtrl		lctrl;
-		
-		if (debug) System.out.println (" <Processing Linda Event>");
-		
-		lctrl	= (ItemLindaCtrl) tuple.value;
-		switch (lctrl.cmd)
-		{
-		case ItemLindaCtrl.TIMEOUT:
-			timeout	= lctrl.param;
-			break;
-			
-		case ItemLindaCtrl.DUMPREG:
-		case ItemLindaCtrl.DUMPSPC:
-		case ItemLindaCtrl.DELETE:
-		default:
-			lindalocal.write (tuple);
-		}
-	}
 }
 
