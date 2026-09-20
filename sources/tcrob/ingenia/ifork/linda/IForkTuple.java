@@ -15,6 +15,7 @@ package tcrob.ingenia.ifork.linda;
 public class IForkTuple 
 {
 	static public final String 		SYNC		= "SYNC";
-	static public final String		COORD	= "COORD";
+	static public final String		COORD		= "COORD";
 	static public final String		ZONE		= "ZONE";
+	public static final String		PALLETCTRL	= "PALLETCTRL";
 }

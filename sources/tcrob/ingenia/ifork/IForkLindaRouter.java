@@ -16,19 +16,26 @@ public class IForkLindaRouter extends LindaRouter
 		super (robotid, linda, lindaglobal);
 
 		//For warehouse coordination
-		this.lindalocal.register (new Tuple (IForkTuple.SYNC), this);
-		this.lindalocal.register (new Tuple (IForkTuple.COORD), this);
+		lindalocal.register (new Tuple (IForkTuple.SYNC), this);
+		lindalocal.register (new Tuple (IForkTuple.COORD), this);
 		
-		this.lindaglobal.register (new Tuple (robotid, IForkTuple.SYNC, null), this);	
-		this.lindaglobal.register (new Tuple (IForkTuple.COORD), this);
+		lindaglobal.register (new Tuple (robotid, IForkTuple.SYNC, null), this);	
+		lindaglobal.register (new Tuple (IForkTuple.COORD), this);
+		lindaglobal.register (new Tuple (robotid, IForkTuple.PALLETCTRL, null), this);
 	}
 	
 	public void notify (Tuple tuple)
 	{		
 		if ((tuple.key == null) || (tuple.value == null))		return;
-		
+
+		// Tuples from global to local (broadcast)
+		if (tuple.key.equals(IForkTuple.PALLETCTRL) )
+		{	
+			lindalocal.write (tuple);
+			if (debug) System.out.println (" L=>"+tuple);
+		}
 		//Tuples for warehouse coordination
-		if (tuple.key.equals (IForkTuple.SYNC)) 
+		else if (tuple.key.equals (IForkTuple.SYNC)) 
 		{
 			ItemSync syncitem;
 			
