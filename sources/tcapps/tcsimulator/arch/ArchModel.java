@@ -658,7 +658,7 @@ public class ArchModel
 	 *
 	 * Where it is looked for, in this order: the events every thread registers by
 	 * itself; the deployments of the project, which are what the project itself
-	 * says a symbol carries (COORD, ZONE, PALLETCTRL, whose classes are named
+	 * says a symbol carries (COORD, ZONE, PALLET_CTRL, whose classes are named
 	 * after something else); and the items of the development named after the
 	 * symbol, which is the rule the rest of them follow. Nothing found is nothing
 	 * said: the answer is blank rather than a guess.

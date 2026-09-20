@@ -17,5 +17,5 @@ public class IForkTuple
 	static public final String 		SYNC		= "SYNC";
 	static public final String		COORD		= "COORD";
 	static public final String		ZONE		= "ZONE";
-	public static final String		PALLETCTRL	= "PALLETCTRL";
+	public static final String		PALLET_CTRL	= "PALLET_CTRL";
 }

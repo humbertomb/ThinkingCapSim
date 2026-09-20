@@ -21,7 +21,7 @@ public class IForkLindaRouter extends LindaRouter
 		
 		lindaglobal.register (new Tuple (robotid, IForkTuple.SYNC, null), this);	
 		lindaglobal.register (new Tuple (IForkTuple.COORD), this);
-		lindaglobal.register (new Tuple (robotid, IForkTuple.PALLETCTRL, null), this);
+		lindaglobal.register (new Tuple (robotid, IForkTuple.PALLET_CTRL, null), this);
 	}
 	
 	public void notify (Tuple tuple)
@@ -29,7 +29,7 @@ public class IForkLindaRouter extends LindaRouter
 		if ((tuple.key == null) || (tuple.value == null))		return;
 
 		// Tuples from global to local (broadcast)
-		if (tuple.key.equals(IForkTuple.PALLETCTRL) )
+		if (tuple.key.equals(IForkTuple.PALLET_CTRL) )
 		{	
 			lindalocal.write (tuple);
 			if (debug) System.out.println (" L=>"+tuple);

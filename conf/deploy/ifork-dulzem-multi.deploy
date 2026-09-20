@@ -200,7 +200,7 @@
             "method": "notify_status"
           },
           {
-            "symbol": "PALLETCTRL",
+            "symbol": "PALLET_CTRL",
             "itemClass": "tcrob.ingenia.ifork.linda.ItemPallet",
             "method": "notify_pallet"
           }
@@ -405,7 +405,7 @@
             "method": "notify_status"
           },
           {
-            "symbol": "PALLETCTRL",
+            "symbol": "PALLET_CTRL",
             "itemClass": "tcrob.ingenia.ifork.linda.ItemPallet",
             "method": "notify_pallet"
           }

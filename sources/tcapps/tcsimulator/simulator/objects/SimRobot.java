@@ -171,7 +171,7 @@ public class SimRobot extends VirtualRobot
 	}	  
 	public void notify_pallet (String space, ItemPallet item){
 		
-//		System.out.println("  [SimRobot] Recibido tuple PALLETCTRL space="+space+" "+item);
+//		System.out.println("  [SimRobot] Recibido tuple PALLET_CTRL space="+space+" "+item);
 		if(item.robotid!=null && r_id.equalsIgnoreCase(item.robotid)){
 			if(item.destiny==ItemPallet.AGV){
 				if(item.action==ItemPallet.ADD){

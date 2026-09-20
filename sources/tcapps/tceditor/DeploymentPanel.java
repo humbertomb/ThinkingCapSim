@@ -641,7 +641,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		{ "BEHDEBUG",		"Which behaviours of a controller are to be traced." },
 		{ "CAMERA_CTRL",	"What the camera of a robot is to do with itself: where to pan, where to tilt and how far to open. It travels the global space, so a camera is aimed from outside the robot that carries it." },
 		{ "DELROBOT",		"A robot has left the global space, which the space itself says when the connection of that robot drops. The rest stop counting on it." },
-		{ "PALLETCTRL",		"The pallet of a forklift: what it is to pick up and what it is to put down." },
+		{ "PALLET_CTRL",	"What a forklift is to do with a pallet: the pallet by its name, where it stands, whether it is free, free with a box on it or loaded, and whether it is to be added, taken, moved or moved and changed. It travels the global space, and a forklift acts on the ones addressed to it." },
 		{ "COORD",			"Where each forklift of the fleet is, what it is doing and which place it has booked, so that two of them do not book the same one. It travels the global space." },
 		{ "ZONE",			"The zone of the warehouse a forklift is in, as its navigation works it out." },
 		{ "SYNC",			"Leave to go into a dock. The planner of a forklift says that it waits, that it has arrived or that it is leaving, and takes the answer of the warehouse. It is not registered as an event: the planner goes and reads it." },
