@@ -42,6 +42,17 @@ public class World3D extends BranchGroup
 	/** @param showAnimated false to leave out the animated objects (the simulator shows its own, live). */
 	public World3D (World map, Scene3D scene, boolean showAnimated)
 	{
+		this (map, scene, showAnimated, true);
+	}
+
+	/**
+	 * @param showAnimated false to leave out the animated objects (the simulator shows its own, live)
+	 * @param showDecor    false to leave out what is drawn for whoever edits the world rather than
+	 *                     being in it: the names of the objects, the docks, the waypoints and the
+	 *                     doors. A camera of a robot sees the warehouse and not the marks on the map.
+	 */
+	public World3D (World map, Scene3D scene, boolean showAnimated, boolean showDecor)
+	{
 		int				i;
 		
 		this.scene	= scene;
@@ -62,7 +73,7 @@ public class World3D extends BranchGroup
 			obj	= createObject (object);
 			if (obj != null)
 				addChild (obj);
-			if (object instanceof WMAObject)
+			if (showDecor && (object instanceof WMAObject))
 				addChild (createLabel (object.label, object.pos, (obj != null) ? Robot3D.labelHeight (obj) : Robot3D.LABEL_GAP));
 		}
 		
@@ -74,24 +85,28 @@ public class World3D extends BranchGroup
 		for ( i = 0;i<map.zones().n();i++)
 			addChild (createZone (map.zones().at(i)));
 		
-		// Add docks
-		for (i = 0; i < map.docks().size(); i++)
-			addChild (createDock (map.docks().get(i)));
-		
-		// Add waypoints
-		for (i = 0; i < map.wps().size(); i++)
-			addChild (createWaypoint (map.wps().get(i)));
-		
-		// Add doors
-		WMConnectors			doors;
-		
-		doors	= map.connectors ();
-		for (i = 0; i < doors.n (); i++)
+		// What is drawn for whoever edits the world rather than being in it
+		if (showDecor)
 		{
-//			WMConnector			door;
-//			door		= (doors.edges ())[i];
-			addChild (createDoorOrig (map.connectors ().at(i)));
-			addChild (createDoorDest (map.connectors ().at(i)));
+			// Add docks
+			for (i = 0; i < map.docks().size(); i++)
+				addChild (createDock (map.docks().get(i)));
+			
+			// Add waypoints
+			for (i = 0; i < map.wps().size(); i++)
+				addChild (createWaypoint (map.wps().get(i)));
+			
+			// Add doors
+			WMConnectors			doors;
+			
+			doors	= map.connectors ();
+			for (i = 0; i < doors.n (); i++)
+			{
+	//			WMConnector			door;
+	//			door		= (doors.edges ())[i];
+				addChild (createDoorOrig (map.connectors ().at(i)));
+				addChild (createDoorDest (map.connectors ().at(i)));
+			}
 		}
 	}
 	
