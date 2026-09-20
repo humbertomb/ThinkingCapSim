@@ -488,6 +488,65 @@ public class ArchModel
 	}
 
 	/**
+	 * Symbols the robot writes only when its platform carries the devices behind
+	 * them, by the family of {@link tc.vrobot.RobotDef} that has to have one: the picture of
+	 * a camera (CAMERA) when the description declares a camera, and what a vision
+	 * made of what it saw (OBJECT) when it declares a vision.
+	 *
+	 * The code of the virtual robot names both whichever platform it runs, since
+	 * it writes them if its subclass hands it something to write; whether anything
+	 * ever does is said by the description and not by the code, so it is looked up
+	 * there instead of being drawn always.
+	 */
+	static private final String[][]	BY_DEVICE	=
+	{
+		{ "CAMERA",	"camera" },			// tc.shared.linda.ItemCamera: the frame of a camera
+		{ "OBJECT",	"vis" },			// tc.shared.linda.ItemObject: the blobs of a vision
+	};
+
+	/** Descriptions of the robots already read, by file and by when it was last written. */
+	static private java.util.Map<String, tc.vrobot.RobotDef>	DESCS = new java.util.HashMap<String, tc.vrobot.RobotDef> ();
+
+	/**
+	 * The description of the platform a block runs, or null: the file its DESC
+	 * names, read once and read again whenever it is written.
+	 */
+	static private synchronized tc.vrobot.RobotDef description (String path)
+	{
+		java.io.File	f;
+		String			key;
+
+		if ((path == null) || (path.trim ().length () == 0))		return null;
+		f		= new java.io.File (path.trim ());
+		if (!f.isFile ())										return null;
+		key		= f.getAbsolutePath () + "@" + f.lastModified ();
+		if (DESCS.containsKey (key))								return DESCS.get (key);
+		tc.vrobot.RobotDef	d = null;
+		try { d = tc.vrobot.RobotDef.load (f); } catch (Exception e) { }
+		DESCS.put (key, d);
+		return d;
+	}
+
+	/**
+	 * True when a symbol is one the platform has to carry a device for and this
+	 * one does not: a description that cannot be read carries nothing, since what
+	 * is not said is not there.
+	 */
+	private boolean lacksDevice (Block b, String sym)
+	{
+		tc.vrobot.RobotDef	d;
+
+		if ((b == null) || (b.kind != VROBOT))					return false;
+		for (String[] r : BY_DEVICE)
+			if (r[0].equals (sym))
+			{
+				d	= description (get (b, "DESC"));
+				return (d == null) || (d.family (r[1]).n () == 0);
+			}
+		return false;
+	}
+
+	/**
 	 * The symbols a block takes by itself, in the order they are said in: they
 	 * are drawn like the standard events, because a module has them whether the
 	 * deployment says so or not.
@@ -630,6 +689,9 @@ public class ArchModel
 	 * What is taken away is what the deployment asks for and not what the runtime
 	 * hands out anyway: every thread is given CONFIG, and the robot, which is
 	 * given it as they all are, is the one that writes it.
+	 *
+	 * And less, for the robot, the ones its platform carries no device for: see
+	 * {@link #BY_DEVICE}.
 	 */
 	public List<String> produces (Block b)
 	{
@@ -644,6 +706,8 @@ public class ArchModel
 				if (out.contains (sym))											continue;
 				// a symbol it only reads it does not write, however it is named in it
 				if (isWired (b, sym, false))									continue;
+				// nothing of this platform ever writes it: it carries no such device
+				if (lacksDevice (b, sym))										continue;
 				if (isWired (b, sym, true))										{ out.add (sym); continue; }
 				if ((b.kind != ROUTER) && in.contains (sym))					continue;
 				out.add (sym);
@@ -735,7 +799,7 @@ public class ArchModel
 	}
 
 	/** Forgets what the project and the development were read to say (either having changed). */
-	static public synchronized void flushSymbols ()		{ LEARNED = null; NAMED = null; }
+	static public synchronized void flushSymbols ()		{ LEARNED = null; NAMED = null; DESCS.clear (); }
 
 	/**
 	 * The methods of the class of a block an event carrying that item can arrive
