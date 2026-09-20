@@ -356,14 +356,14 @@ public class RobotDef
 	protected transient String	original;											// JSON as loaded or saved (to detect changes)
 
 	/** Families of range sensors, by the prefix their properties use. */
-	static public final String[]	FAMILIES		= { "son", "ir", "lrf", "lsb", "trk", "vis" };
-	static public final String[]	FAMILY_NAMES	= { "Sonars", "Infrared", "Laser range finders", "Laser beacon scanners", "Radar trackers", "Vision" };
+	static public final String[]	FAMILIES		= { "son", "ir", "lrf", "lsb", "trk", "vis", "camera" };
+	static public final String[]	FAMILY_NAMES	= { "Sonars", "Infrared", "Laser range finders", "Laser beacon scanners", "Radar trackers", "Vision", "Cameras" };
 	/** Property suffix of the count of each family (MAXSONAR, MAXIR, ...). */
-	static public final String[]	FAMILY_COUNTS	= { "MAXSONAR", "MAXIR", "MAXLRF", "MAXLSB", "MAXTRACKER", "MAXVISION" };
+	static public final String[]	FAMILY_COUNTS	= { "MAXSONAR", "MAXIR", "MAXLRF", "MAXLSB", "MAXTRACKER", "MAXVISION", "MAXCAMERA" };
 	/** Suffix the range properties of each family use (RANGESON, RANGEIR, ...). */
-	static public final String[]	FAMILY_KEYS		= { "SON", "IR", "LRF", "LSB", "TRK", "VIS" };
+	static public final String[]	FAMILY_KEYS		= { "SON", "IR", "LRF", "LSB", "TRK", "VIS", "CAM" };
 	/** How the simulator works a reading of a family out, where it has a say ("MODESON", ...); null where it has none. */
-	static public final String[]	FAMILY_MODES	= { "MODESON", "MODEIR", "MODELRF", "MODELSB", null, null };
+	static public final String[]	FAMILY_MODES	= { "MODESON", "MODEIR", "MODELRF", "MODELSB", null, null, null };
 	/**
 	 * How far off the simulator puts a reading of a family when it adds an error
 	 * of its own ("ERRORSON", ...); null where it adds none. It is a share of the
@@ -374,7 +374,7 @@ public class RobotDef
 	 * angle (ERRORANGLELSB); what is kept here is the one of the range, which is
 	 * the reading the rest of the families give as well.
 	 */
-	static public final String[]	FAMILY_ERRORS	= { "ERRORSON", "ERRORIR", "ERRORLRF", "ERRORRANGELSB", null, null };
+	static public final String[]	FAMILY_ERRORS	= { "ERRORSON", "ERRORIR", "ERRORLRF", "ERRORRANGELSB", null, null, null };
 	/** What the simulator takes it to be when a description does not say. */
 	static public final double		DEFAULT_ERROR	= 0.05;
 
@@ -422,13 +422,13 @@ public class RobotDef
 	 * the family has none. The radar trackers are opened as RADAR0, which is what
 	 * a radar is named by everywhere else; nothing ever read a TRK0.
 	 */
-	static public final String[]	FAMILY_DRIVERS	= { "SONAR", "IR", "LRF", "LSB", "RADAR", "VISION" };
+	static public final String[]	FAMILY_DRIVERS	= { "SONAR", "IR", "LRF", "LSB", "RADAR", "VISION", "CAMERA" };
 	/**
 	 * A second count of a family, under the name the rest of the description uses
 	 * for it; null where there is none. The radar trackers are counted as radars
 	 * (MAXRADAR) as well as as trackers (MAXTRACKER), and both are read.
 	 */
-	static private final String[]	FAMILY_ALIAS	= { null, null, null, null, "MAXRADAR", null };
+	static private final String[]	FAMILY_ALIAS	= { null, null, null, null, "MAXRADAR", null, null };
 
 	/**
 	 * The class every driver of a family derives from; null when the family has
@@ -440,7 +440,8 @@ public class RobotDef
 														"devices.drivers.laser.Laser",
 														"devices.drivers.beacon.LaserBeacon",
 														"devices.drivers.radar.Radar",
-														"devices.drivers.vision.Vision" };
+														"devices.drivers.vision.Vision",
+															"devices.drivers.camera.Camera" };
 
 	/** The class every kinematics model of a platform derives from. */
 	static public final String		DRIVE_BASE		= "tc.vrobot.RobotModel";
@@ -677,14 +678,18 @@ public class RobotDef
 	 * detects (driver, range, cone, rays, ...) instead of taking it from the
 	 * family. Only the firing cycle stays with the family.
 	 */
-	static public final boolean[]	FAMILY_OWN		= { false, false, true, true, true, true };
+	static public final boolean[]	FAMILY_OWN		= { false, false, true, true, true, true, true };
 
 	/**
 	 * True for a family that sees a rectangle and not a cone: a camera says a
 	 * horizontal and a vertical field of view instead of an aperture, and its near
 	 * limit is always zero.
+	 *
+	 * Both families of cameras are like this: a vision, which hands over what it
+	 * has already made of what it saw (blobs, objects), and a camera, which hands
+	 * over the picture itself (CAMERA, tc.shared.linda.ItemCamera).
 	 */
-	static public boolean hasFov (String fam)			{ return "vis".equals (fam); }
+	static public boolean hasFov (String fam)			{ return "vis".equals (fam) || "camera".equals (fam); }
 
 	/** True for a family whose sensors carry their own detection properties. */
 	static public boolean hasOwnDetection (String fam)
@@ -914,6 +919,7 @@ public class RobotDef
 				if (e != null)		f.simerror = number (e, DEFAULT_ERROR);
 			}
 			readAlso (fam, f);
+			if (f.n () == 0)		readFamily (fam, f);
 		}
 		// how the fusion works the fused sensors out, which sat there too
 		String	fm = extra.remove ("MODEVIRTU");
@@ -927,6 +933,79 @@ public class RobotDef
 		if (!groups.isEmpty ())		{ extra.remove ("RANGEGROUP");	extra.remove ("CONEGROUP"); }
 		if (!fused.isEmpty ())		{ extra.remove ("RANGEVIRTU");	extra.remove ("CONEVIRTU"); }
 		if (!scans.isEmpty ())		{ extra.remove ("RAYSCAN");		extra.remove ("CONESCAN");	extra.remove ("RANGESCAN"); }
+	}
+
+	/**
+	 * A family of a description written before the model knew about it: its
+	 * sensors are not in the sensors of the description, and its properties sit
+	 * among the ones that are not understood. However many the count says are
+	 * built out of those, which are taken out of there so that they are written
+	 * back from the family like everybody else's.
+	 *
+	 * It is what brings the cameras of the older descriptions in (MAXCAMERA,
+	 * CAMERA0), and does nothing to a family that is already there.
+	 */
+	private void readFamily (String fam, Family f)
+	{
+		int		fi = familyIndex (fam);
+		int		n;
+		String	key;
+
+		if (fi < 0)											return;
+		n		= (int) number (take (FAMILY_COUNTS[fi]), 0.0);
+		if (n <= 0)											return;
+		key		= FAMILY_KEYS[fi];
+		f.cycle	= (int) number (take ("CYCLE" + key), 0.0);
+		for (int i = 0; i < n; i++)
+		{
+			Sensor	s = new Sensor ();
+
+			s.rho			= number (take (fam + "len" + i), 0.0);
+			s.theta			= number (take (fam + "rho" + i), 0.0);
+			s.height		= number (take (fam + "hgt" + i), 0.0);
+			s.orientation	= number (take (fam + "feat" + i), s.theta);
+			s.elevation		= number (take (fam + "elev" + i), 0.0);
+			s.step			= (int) number (take (fam + "step" + i), 0.0);
+			if (FAMILY_OWN[fi])
+			{
+				String[]	d = split (take (FAMILY_DRIVERS[fi] + i), null);
+				s.driver		= d[0];
+				s.driverParams	= d[1];
+				s.rangemax		= number (take ("RANGE" + key + i), 0.0);
+				if (hasFov (fam))
+				{
+					s.hfov	= number (take ("HFOV" + key + i), number (take ("CONE" + key + i), 0.0));
+					s.vfov	= number (take ("VFOV" + key + i), 0.0);
+				}
+				else
+				{
+					s.rangemin	= number (take ("MINIM" + key + i), 0.0);
+					s.cone		= number (take ("CONE" + key + i), 0.0);
+					s.rays		= (int) number (take ("RAY" + key + i), 0.0);
+				}
+			}
+			f.sensors.add (s);
+		}
+		// what the whole family was said to reach, which the first sensor now says
+		if (FAMILY_OWN[fi])
+		{
+			Sensor	s0 = f.sensors.get (0);
+			double	r = number (take ("RANGE" + key), 0.0), c = number (take ("CONE" + key), 0.0);
+			double	v = number (take ("VFOV" + key), 0.0), h = number (take ("HFOV" + key), 0.0);
+			double	m = number (take ("MINIM" + key), 0.0);
+
+			if (s0.rangemax == 0.0)		s0.rangemax = r;
+			if (hasFov (fam))
+			{
+				if (s0.hfov == 0.0)		s0.hfov = (h != 0.0) ? h : c;
+				if (s0.vfov == 0.0)		s0.vfov = v;
+			}
+			else
+			{
+				if (s0.cone == 0.0)		s0.cone = c;
+				if (s0.rangemin == 0.0)	s0.rangemin = m;
+			}
+		}
 	}
 
 	/**
