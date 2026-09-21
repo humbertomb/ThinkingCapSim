@@ -65,6 +65,8 @@ public class ToolIcon implements Icon
 	static public final int		VIRTUAL		= 50;		// a sector spreading from a point (add a sensor of an area)
 	static public final int		FUSED		= 51;		// the same, in the colour of a fused sensor
 	static public final int		SCAN		= 52;		// a wide fan of rays (add a reduced laser scan)
+	static public final int		NEW_FILE	= 53;		// a blank page with a folded corner and a plus (a new file)
+	static public final int		SAVE		= 54;		// a floppy disk (save to a file)
 
 	protected int				type;
 	protected int				size;
@@ -254,6 +256,32 @@ public class ToolIcon implements Icon
 			for (int yy = 6; yy <= 16; yy += 5)		{ g.drawLine (5, yy + 1, 7, yy + 3); g.drawLine (7, yy + 3, 10, yy - 1); }
 			g.setColor (fg);
 			for (int yy = 6; yy <= 16; yy += 5)		g.drawLine (12, yy + 1, 17, yy + 1);
+			break;
+		case NEW_FILE:		// a blank page with its corner folded, and a plus
+			g.setColor (Color.WHITE);
+			g.fillPolygon (new int[] { 4, 13, 18, 18, 4 }, new int[] { 2, 2, 7, 20, 20 }, 5);
+			g.setColor (new Color (110, 110, 110));
+			g.setStroke (new BasicStroke (1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawPolygon (new int[] { 4, 13, 18, 18, 4 }, new int[] { 2, 2, 7, 20, 20 }, 5);
+			g.drawPolyline (new int[] { 13, 13, 18 }, new int[] { 2, 7, 7 }, 3);
+			g.setColor (new Color (40, 150, 60));
+			g.setStroke (new BasicStroke (2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawLine (8, 14, 14, 14);	g.drawLine (11, 11, 11, 17);
+			break;
+		case SAVE:			// a floppy disk
+			g.setColor (new Color (70, 110, 180));
+			g.fillRoundRect (3, 3, 16, 16, 3, 3);
+			g.setColor (Color.WHITE);
+			g.fillRect (6, 11, 10, 7);
+			g.setColor (new Color (200, 210, 225));
+			g.fillRect (7, 3, 8, 5);
+			g.setColor (new Color (70, 110, 180));
+			g.fillRect (12, 4, 2, 3);
+			g.setColor (new Color (40, 60, 110));
+			g.setStroke (new BasicStroke (1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawRoundRect (3, 3, 16, 16, 3, 3);
+			g.setColor (new Color (150, 160, 175));
+			g.drawLine (8, 14, 14, 14);	g.drawLine (8, 16, 14, 16);
 			break;
 		case FOLDER:		// classic folder
 			g.setColor (new Color (255, 210, 110));

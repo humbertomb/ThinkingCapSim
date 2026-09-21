@@ -94,7 +94,7 @@ public class CPColorTable extends JPanel
 
 		btsave.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e) {
-//				pam.saveConf ();
+				guicamera.saveConfig ();						// the configuration of the vision, to its .chaos file
 			}
 		});	
 		btcolspc.addActionListener(new java.awt.event.ActionListener() {
@@ -265,10 +265,26 @@ public class CPColorTable extends JPanel
 		guicamera.redrawBufferedImage ();
 	}
 			
+	/**
+	 * The configuration of the vision was replaced (new, loaded): its channels
+	 * are shown, the first one selected, and what could be undone is forgotten.
+	 */
+	public void configChanged ()
+	{
+		undo.removeAllElements ();
+		redo.removeAllElements ();
+		btundo.setEnabled (false);
+		btredo.setEnabled (false);
+		selectedChannel	= 0;
+		cpchannelsconf.refresh ();
+		clusters.setText ((pam.vconfig.channels.size () > 0) ? pam.vconfig.channels.at (0).getCluster ().paramCookedData () : "");
+		guicamera.updateSeeds (shownSeeds ());
+	}
+
 	/** The channel whose seeds the image shows: the selected one while View is on, none otherwise. */
 	public Channel shownSeeds ()
 	{
-		return viewSeeds.isSelected () ? pam.vconfig.channels.at (selectedChannel) : null;
+		return (viewSeeds.isSelected () && (selectedChannel < pam.vconfig.channels.size ())) ? pam.vconfig.channels.at (selectedChannel) : null;
 	}
 
 	public int getSelectedChannel ()

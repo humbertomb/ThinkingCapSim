@@ -213,4 +213,11 @@ public class CPChannelsConfTable extends JPanel
 		
 		return height * model.getRowCount ();
 	}
+
+	/** Shows the channels again (the configuration was replaced), and selects the first one. */
+	public void refresh ()
+	{
+		chsconf.fireTableDataChanged ();
+		if (chsconf.getRowCount () > 0)		paramTable.setRowSelectionInterval (0, 0);
+	}
 }

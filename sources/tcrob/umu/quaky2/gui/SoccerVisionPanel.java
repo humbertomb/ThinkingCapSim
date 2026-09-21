@@ -21,6 +21,8 @@ import tcrob.umu.quaky2.gui.images.CPImageCanvas;
 import tcrob.umu.quaky2.gui.images.CPZoomCanvas;
 import tcrob.umu.quaky2.gui.images.ImageFileFilter;
 import tclib.vision.chaos.channels.*;
+import tcapps.tceditor.ToolButtons;
+import tcapps.tceditor.ToolIcon;
 
 public class SoccerVisionPanel extends JPanel
 {	
@@ -57,6 +59,11 @@ public class SoccerVisionPanel extends JPanel
 	private JButton						btsegcon;
 	private JButton						btblobcon;
 
+	// Configuration file (.chaos) and its toolbar
+	protected String					cfgfile;
+	protected JLabel					cfglabel;
+	protected JFileChooser				cfgchooser;
+
 	// Image management
 	protected BufferedImage				imagein;
 	protected BufferedImage				imageout;
@@ -84,6 +91,7 @@ public class SoccerVisionPanel extends JPanel
 
 		setLayout (new BorderLayout ());
 		setVisible (false);
+		add (createToolBar (), BorderLayout.NORTH);
 		add (createMainPanel (), BorderLayout.CENTER);
 
 //		if (frame instanceof MouseRegisterer)		((MouseRegisterer) frame).register (mouse);
@@ -96,6 +104,112 @@ public class SoccerVisionPanel extends JPanel
 		lutmodeCB.setSelectedIndex (0);
 		segmodeCB.setSelectedIndex (0);
 		blobmodeCB.setSelectedIndex (0);
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Configuration: new, load, save (.chaos)                             */
+	/* ------------------------------------------------------------------ */
+
+	protected JToolBar createToolBar ()
+	{
+		JToolBar	bar = new JToolBar ();
+
+		bar.setFloatable (false);
+		bar.add (ToolButtons.flatButton (ToolButtons.action ("New", ToolIcon.NEW_FILE, "New vision configuration (the default channels)", new Runnable () { public void run () { newConfig (); } })));
+		bar.add (ToolButtons.flatButton (ToolButtons.action ("Load", ToolIcon.FOLDER, "Load a vision configuration (" + SoccerVisionConfig.EXTENSION + ")...", new Runnable () { public void run () { loadConfig (); } })));
+		bar.add (ToolButtons.flatButton (ToolButtons.action ("Save", ToolIcon.SAVE, "Save the vision configuration (" + SoccerVisionConfig.EXTENSION + ")...", new Runnable () { public void run () { saveConfig (); } })));
+		bar.addSeparator ();
+		cfglabel	= new JLabel ();
+		cfglabel.setFont (cfglabel.getFont ().deriveFont (Font.PLAIN, 11f));
+		bar.add (cfglabel);
+		showConfigFile ();
+		return bar;
+	}
+
+	/** The name of the file of the configuration, in the toolbar. */
+	protected void showConfigFile ()
+	{
+		cfglabel.setText ((cfgfile == null) ? "(not saved)" : new File (cfgfile).getName ());
+		cfglabel.setToolTipText (cfgfile);
+	}
+
+	/** The chooser of the configuration files: .chaos, starting where they are kept. */
+	protected JFileChooser configChooser ()
+	{
+		if (cfgchooser == null)
+		{
+			cfgchooser	= new JFileChooser (new File (SoccerVisionConfig.DIRECTORY));
+			cfgchooser.setFileFilter (new javax.swing.filechooser.FileNameExtensionFilter ("Vision configurations (*" + SoccerVisionConfig.EXTENSION + ")", SoccerVisionConfig.EXTENSION.substring (1)));
+		}
+		return cfgchooser;
+	}
+
+	public void newConfig ()
+	{
+		setConfig (new SoccerVisionConfig (), null);
+	}
+
+	public void loadConfig ()
+	{
+		JFileChooser		fc = configChooser ();
+		SoccerVisionConfig	cfg = new SoccerVisionConfig ();
+		String				name;
+
+		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+		name	= fc.getSelectedFile ().getPath ();
+		try { cfg.loadFromFilename (name); }
+		catch (Exception e)
+		{
+			JOptionPane.showMessageDialog (this, "Cannot load <" + name + ">:\n" + e.getMessage (), "Load vision configuration", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		setConfig (cfg, name);
+	}
+
+	public void saveConfig ()
+	{
+		JFileChooser		fc = configChooser ();
+		String				name;
+
+		fc.setSelectedFile ((cfgfile != null) ? new File (cfgfile) : new File (SoccerVisionConfig.DIRECTORY, "untitled" + SoccerVisionConfig.EXTENSION));
+		if (fc.showSaveDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+		name	= fc.getSelectedFile ().getPath ();
+		if (!name.toLowerCase ().endsWith (SoccerVisionConfig.EXTENSION))		name += SoccerVisionConfig.EXTENSION;
+		if (new File (name).exists () && !name.equals (cfgfile)
+			&& (JOptionPane.showConfirmDialog (this, "<" + new File (name).getName () + "> already exists. Replace it?", "Save vision configuration", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION))
+			return;
+		try { pam.vconfig.saveToFilename (name); }
+		catch (Exception e)
+		{
+			JOptionPane.showMessageDialog (this, "Cannot save <" + name + ">:\n" + e.getMessage (), "Save vision configuration", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		cfgfile	= name;
+		showConfigFile ();
+	}
+
+	/**
+	 * The vision works with another configuration: its algorithms are made again
+	 * from it, and the panel shows it (channels, methods).
+	 */
+	public void setConfig (SoccerVisionConfig cfg, String file)
+	{
+		pam.vconfig	= cfg;
+		pam.instanceLUT ();
+		pam.instanceSegment ();
+		pam.instanceBlob ();
+
+		lutmodeCB.setSelectedIndex (cfg.lutmode);
+		segmodeCB.setSelectedIndex (cfg.segmode);
+		blobmodeCB.setSelectedIndex (cfg.blobmode);
+		btlutcon.setEnabled (pam.lut.configurable ());
+		btsegcon.setEnabled (pam.segment.configurable ());
+		btblobcon.setEnabled (pam.blobbing.configurable ());
+
+		cpcolortable.configChanged ();
+		cfgfile	= file;
+		showConfigFile ();
+		redrawBufferedImage ();
 	}
 
 	protected JPanel createMainPanel ()

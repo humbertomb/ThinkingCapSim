@@ -1,0 +1,129 @@
+{
+  "channels": {
+    "channels": [
+      {
+        "id": 0,
+        "name": "BLACK",
+        "color": {
+          "value": -16777216
+        },
+        "segmented": false,
+        "blobbed": false,
+        "threshold": 0,
+        "gap": 0,
+        "minpix": 4,
+        "clustype": "tclib.vision.chaos.channels.ColorPrism",
+        "params": "0,255,0,255,0,255",
+        "seeds": "EMPTY"
+      },
+      {
+        "id": 1,
+        "name": "WHITE",
+        "color": {
+          "value": -1
+        },
+        "segmented": false,
+        "blobbed": false,
+        "threshold": 0,
+        "gap": 0,
+        "minpix": 4,
+        "clustype": "tclib.vision.chaos.channels.ColorPrism",
+        "params": "0,255,0,255,0,255",
+        "seeds": "EMPTY"
+      },
+      {
+        "id": 2,
+        "name": "RED",
+        "color": {
+          "value": -65536
+        },
+        "segmented": true,
+        "blobbed": true,
+        "threshold": 0,
+        "gap": 0,
+        "minpix": 4,
+        "clustype": "tclib.vision.chaos.channels.ColorPrism",
+        "params": "0,255,0,255,0,255",
+        "seeds": "EMPTY"
+      },
+      {
+        "id": 3,
+        "name": "BLUE",
+        "color": {
+          "value": -16776961
+        },
+        "segmented": true,
+        "blobbed": true,
+        "threshold": 5,
+        "gap": 3,
+        "minpix": 4,
+        "clustype": "tclib.vision.chaos.channels.ColorPrism",
+        "params": "0,255,0,255,0,255",
+        "seeds": "EMPTY"
+      },
+      {
+        "id": 4,
+        "name": "GREEN",
+        "color": {
+          "value": -16711936
+        },
+        "segmented": false,
+        "blobbed": false,
+        "threshold": 5,
+        "gap": 0,
+        "minpix": 4,
+        "clustype": "tclib.vision.chaos.channels.ColorPrism",
+        "params": "0,255,0,255,0,255",
+        "seeds": "EMPTY"
+      },
+      {
+        "id": 5,
+        "name": "YELLOW",
+        "color": {
+          "value": -256
+        },
+        "segmented": false,
+        "blobbed": false,
+        "threshold": 5,
+        "gap": 3,
+        "minpix": 4,
+        "clustype": "tclib.vision.chaos.channels.ColorPrism",
+        "params": "0,255,0,255,0,255",
+        "seeds": "EMPTY"
+      },
+      {
+        "id": 6,
+        "name": "ORANGE",
+        "color": {
+          "value": -256
+        },
+        "segmented": true,
+        "blobbed": true,
+        "threshold": 5,
+        "gap": 3,
+        "minpix": 4,
+        "clustype": "tclib.vision.chaos.channels.ColorPrism",
+        "params": "0,255,0,255,0,255",
+        "seeds": "EMPTY"
+      },
+      {
+        "id": 7,
+        "name": "GRAY",
+        "color": {
+          "value": -6908266
+        },
+        "segmented": false,
+        "blobbed": false,
+        "threshold": 0,
+        "gap": 0,
+        "minpix": 4,
+        "clustype": "tclib.vision.chaos.channels.ColorPrism",
+        "params": "0,255,0,255,0,255",
+        "seeds": "EMPTY"
+      }
+    ]
+  },
+  "lutmode": 0,
+  "segmode": 0,
+  "blobmode": 0
+}
