@@ -72,12 +72,21 @@ public class ArchModel
 
 	/** The kind of module that runs a program of its own. */
 	static public final String		CONTROLLER		= "Controller";
+	/** The kind of module that reads its parameters from a file of its own. */
+	static public final String		PERCEPTION		= "Perception";
 
 	/**
 	 * The program a controller runs (PRG). Any file will do: whether it is one the
 	 * controller can read is for the controller to say when it loads it.
 	 */
 	static public final Property	PRG_PROP		= new Property ("PRG", "Program", "./conf/programs", "Programs");
+
+	/**
+	 * The file of parameters of a perception module (PARAMS), which it reads with
+	 * <code>cfg.get ("PARAMS")</code>: a vision configuration (.chaos), say. Any
+	 * file will do: whether it is of the right kind is for the module to say.
+	 */
+	static public final Property	PARAMS_PROP		= new Property ("PARAMS", "Parameters", "./conf", "Parameters");
 
 	/**
 	 * Whether a controller starts running of its own accord (AUTO), instead of
@@ -372,6 +381,12 @@ public class ArchModel
 				// and whether it starts on its own, which goes with the program it runs
 				props.add (AUTO_PROP);
 				known.add (AUTO_PROP.key);
+			}
+			// and a perception module, the file of its parameters
+			if ((b.kind == MODULE) && p.key.equals ("CLASS") && PERCEPTION.equalsIgnoreCase (get (b, "TYPE")))
+			{
+				props.add (PARAMS_PROP);
+				known.add (PARAMS_PROP.key);
 			}
 		}
 		for (String h : hidden)		known.add (h);
