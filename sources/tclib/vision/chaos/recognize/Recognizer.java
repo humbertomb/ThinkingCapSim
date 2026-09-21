@@ -8,22 +8,20 @@ package tclib.vision.chaos.recognize;
 import java.util.*;
 import java.awt.*;
 import java.awt.image.*;
-import javax.swing.*;
 
-import dasboot.data.*;
 import tclib.vision.chaos.blobs.*;
 import tclib.vision.chaos.channels.*;
 
-public abstract class Recognizer extends JsonData
+public abstract class Recognizer
 {
 	protected transient ArrayList<RecognizedObject>	objects = new ArrayList<RecognizedObject> ();	
 	
 	public ArrayList<RecognizedObject> getRecgnizedObjects ()				{ return objects; }
 	
 	public abstract void process (Blobs[] blobs, Channels channels);
-	public abstract void loadFromFile (String filename);
-	public abstract void saveToFile (String filename);
-	public abstract JPanel configPanel ();
+//	public abstract void loadFromFile (String filename);
+//	public abstract void saveToFile (String filename);
+//	public abstract JPanel configPanel ();
 
 	public BufferedImage getRecognizedImage (BufferedImage input)
 	{

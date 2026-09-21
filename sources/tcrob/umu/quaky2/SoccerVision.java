@@ -8,14 +8,20 @@ package tcrob.umu.quaky2;
 import tc.modules.*;
 import tc.runtime.thread.ModuleConfig;
 import tc.shared.lps.lpo.*;
+import tclib.vision.chaos.blobs.BlobForming;
+import tclib.vision.chaos.segment.LUT;
+import tclib.vision.chaos.segment.Segmentation;
 import tc.shared.linda.*;
 import tcrob.umu.quaky2.lpo.*;
 
 import wucore.utils.color.*;
+
 import devices.data.*;
 
 public class SoccerVision extends Perception
 {
+	static public final double		FACTOR		= 1.0;
+	
 	static public final double		BALL_RADIUS	= 0.11;			// Ball radius (m)
 	static public final double		NET_SIZE	= 0.2;			// Net size (m)
 	
@@ -26,7 +32,15 @@ public class SoccerVision extends Perception
 	protected Net					net1;
 	protected Net					net2;
 	protected LPOPoint				align;
+
+	// Vision processing
+	public SoccerVisionConfig		vconfig;
 	
+	public LUT						lut;
+	public Segmentation				segment;
+	public BlobForming				blobbing;
+	public SoccerRecognizer			recognizer;
+
 	// Constructors
 	public SoccerVision (ModuleConfig cfg, Linda linda)
 	{
@@ -34,6 +48,46 @@ public class SoccerVision extends Perception
 	}
 	
 	// Instance methods
+	public void instanceLUT ()
+	{
+		Class<?>		sclass;
+		String		pack;
+		
+		try 
+		{
+			pack		= LUT.class.getPackage().getName();
+			sclass	= Class.forName (pack + "." + SoccerVisionConfig.LUTMODES[vconfig.lutmode]);
+			lut		= (LUT) sclass.getDeclaredConstructor().newInstance();
+			lut.initialise (vconfig.channels);
+		} catch (Exception ex) { ex.printStackTrace (); }		
+	}
+
+	public void instanceSegment ()
+	{
+		Class<?>		sclass;
+		String		pack;
+		
+		try 
+		{
+			pack			= Segmentation.class.getPackage().getName();
+			sclass		= Class.forName(pack + "." + SoccerVisionConfig.SEGMODES[vconfig.segmode]);
+			segment 		= (Segmentation) sclass.getDeclaredConstructor().newInstance();
+		} catch (Exception ex) { ex.printStackTrace (); }
+	}
+
+	public void instanceBlob ()
+	{
+		Class<?>		sclass;
+		String		pack;
+		
+		try 
+		{
+			pack			= BlobForming.class.getPackage().getName();
+			sclass		= Class.forName(pack + "." + SoccerVisionConfig.BLOBMODES[vconfig.blobmode]);
+			blobbing 	= (BlobForming) sclass.getDeclaredConstructor().newInstance();
+		} catch (Exception ex) { ex.printStackTrace (); }
+	}
+	
 	protected void lowlevel_fusion ()
 	{
 		int				i;
@@ -62,8 +116,6 @@ public class SoccerVision extends Perception
 	{
 		if (state != RUN)		return;
 				
-		// Sensor fusion and LPS update
-		lowlevel_fusion ();
 //				
 //		lps.add_time ((double) (System.currentTimeMillis () - ctime));
 //		
@@ -95,10 +147,25 @@ public class SoccerVision extends Perception
 		lps.add (net1);
 		lps.add (net2);
 		lps.add (align);
+		
+		// Instance vision processing algorithms
+		vconfig		= new SoccerVisionConfig ();
+		
+		instanceLUT ();
+		instanceSegment ();
+		instanceBlob ();
+		
+		recognizer	= new SoccerRecognizer ();
 	}
 	
 	public void notify_camera (String space, ItemCamera item)
 	{
+		segment.process (item.image, lut, vconfig.channels);
+		blobbing.process (segment);
+		blobbing.postProcess ();
+		recognizer.process (item.image, segment.getSegmented(), blobbing.getBlobs (), vconfig.channels, vconfig);
+
+		
 //		// Add domain specific LPOs to the LPS
 //		ball	= new Ball (BALL_RADIUS, "Ball", LPO.PERCEPT);
 //		ball.color (WColor.YELLOW.darker());

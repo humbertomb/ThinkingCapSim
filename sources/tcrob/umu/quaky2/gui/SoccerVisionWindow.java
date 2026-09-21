@@ -3,29 +3,28 @@
  *
  * @author Humberto Martinez Barbera
  */
-package tclib.vision.chaos.gui;
+package tcrob.umu.quaky2.gui;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-
 import javax.swing.*;
 
-import tclib.vision.chaos.*;
+import tcrob.umu.quaky2.*;
 
-import static dasboot.utils.WindowUtils.adjustLocationToScreenBounds;
+//import static dasboot.utils.WindowUtils.adjustLocationToScreenBounds;
 
-public class ChaosVisionWindow extends JFrame
+public class SoccerVisionWindow extends JFrame
 {	
 	static public final int				GUI_IMAGE_WIDTH		= 275;
 	static public final int				GUI_IMAGE_HEIGHT		= 155;
 	
-	protected ChaosVisionPanel			panel;
+	protected SoccerVisionPanel			panel;
 
 	// Constructors
-	public ChaosVisionWindow (JFrame frame, ChaosPam pam)
+	public SoccerVisionWindow (JFrame frame, SoccerVision pam)
 	{
-		panel = new ChaosVisionPanel (frame, pam);
+		panel = new SoccerVisionPanel (frame, pam);
 		
 		setLayout (new GridLayout (1, 1));
 		setVisible (false);
@@ -39,7 +38,7 @@ public class ChaosVisionWindow extends JFrame
 			setLocation (frame.getWidth (), 0);
 
 		// Ensure the window is within screen bounds
-		adjustLocationToScreenBounds(this);
+		//adjustLocationToScreenBounds(this);
 
 		setVisible (false);
 		

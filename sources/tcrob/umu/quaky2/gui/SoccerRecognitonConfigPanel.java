@@ -1,14 +1,14 @@
 /**
  * @author Humberto Martinez Barbera 
  */
-package tclib.vision.chaos.gui;
+package tcrob.umu.quaky2.gui;
 
 import java.awt.*;
 import javax.swing.*;
 
-import tclib.vision.chaos.recognize.*;
+import tcrob.umu.quaky2.SoccerRecognizer;
 
-public class CPRecogSoccerConfig extends JPanel 
+public class SoccerRecognitonConfigPanel extends JPanel 
 {
 	// GUI components
 	private JTextField ballsxmin;
@@ -30,9 +30,9 @@ public class CPRecogSoccerConfig extends JPanel
 	private JTextField lmhorihgt;
 	private JTextField lmdensity;
 	
-	public RecognizerSoccer			recognizer;
+	public SoccerRecognizer			recognizer;
 	
-	public CPRecogSoccerConfig (RecognizerSoccer recognizer)
+	public SoccerRecognitonConfigPanel (SoccerRecognizer recognizer)
 	{
 		JScrollPane	scroll;
 		JPanel		view;

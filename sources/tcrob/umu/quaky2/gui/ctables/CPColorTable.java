@@ -5,18 +5,17 @@
  * 
  */
 
-package tclib.vision.chaos.gui.ctables;
+package tcrob.umu.quaky2.gui.ctables;
 
 import java.awt.*;
 import java.util.*;
-
 import javax.swing.*;
 
-import tclib.vision.chaos.*;
 import tclib.vision.chaos.channels.*;
-import tclib.vision.chaos.gui.*;
-import tclib.vision.chaos.gui.ctables.colspace.*;
 import tclib.vision.chaos.segment.Segmentation;
+import tcrob.umu.quaky2.SoccerVision;
+import tcrob.umu.quaky2.gui.SoccerVisionPanel;
+import tcrob.umu.quaky2.gui.ctables.colspace.CPSpaceWindow;
 
 public class CPColorTable extends JPanel
 {
@@ -36,13 +35,13 @@ public class CPColorTable extends JPanel
 	private Vector<HashSet<Pixel>> undo = new Vector<HashSet<Pixel>> (); 
 	private Vector<HashSet<Pixel>> redo = new Vector<HashSet<Pixel>> ();
 	
-	protected ChaosPam pam;
-	protected ChaosVisionPanel guicamera;	
+	protected SoccerVision pam;
+	protected SoccerVisionPanel guicamera;	
 	protected CPChannelsConfTable cpchannelsconf;
 	public CPSpaceWindow cpspacewin;
 	protected JLabel	clusters;
 		
-	public CPColorTable (ChaosVisionPanel guicamera, ChaosPam pam) 
+	public CPColorTable (SoccerVisionPanel guicamera, SoccerVision pam) 
 	{
 		this.guicamera = guicamera;
 		this.pam = pam;
@@ -95,7 +94,7 @@ public class CPColorTable extends JPanel
 
 		btsave.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e) {
-				pam.saveConf ();
+//				pam.saveConf ();
 			}
 		});	
 		btcolspc.addActionListener(new java.awt.event.ActionListener() {
@@ -117,9 +116,9 @@ public class CPColorTable extends JPanel
 		});	
 		newSeeds.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e) {
-				pam.config.channels.at(selectedChannel).resetCluster ();		
-				pam.lut.initialise (pam.config.channels);
-				guicamera.updateSeeds (pam.config.channels.at(selectedChannel));
+				pam.vconfig.channels.at(selectedChannel).resetCluster ();		
+				pam.lut.initialise (pam.vconfig.channels);
+				guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
 				guicamera.redrawBufferedImage ();
 			}
 		});
@@ -127,11 +126,11 @@ public class CPColorTable extends JPanel
 			public void actionPerformed(java.awt.event.ActionEvent e) {
 	            if(JOptionPane.showConfirmDialog(null,"Press 'Yes' to apply New Seeds to all channels.","Confirmation", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)                
 	            {
-					for(int i=0; i<pam.config.channels.getNumChannels(); i++)
-						pam.config.channels.at(i).resetCluster ();				
+					for(int i=0; i<pam.vconfig.channels.getNumChannels(); i++)
+						pam.vconfig.channels.at(i).resetCluster ();				
 	            }
-				pam.lut.initialise (pam.config.channels);
-				guicamera.updateSeeds (pam.config.channels.at(selectedChannel));
+				pam.lut.initialise (pam.vconfig.channels);
+				guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
 				guicamera.redrawBufferedImage ();
 			}
 		});	
@@ -146,7 +145,7 @@ public class CPColorTable extends JPanel
 					subSeeds.setSelected (false);
 					action = ACT_NONE;
 				}
-				guicamera.updateSeeds (pam.config.channels.at(selectedChannel));
+				guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
 				guicamera.redrawBufferedImage ();
 			}
 		});	
@@ -192,17 +191,17 @@ public class CPColorTable extends JPanel
 			
 			set = undo.lastElement();
 			undo.removeElementAt (undo.size() - 1);
-			redo.add(pam.config.channels.at(selectedChannel).getCluster().cloneSeeds());
+			redo.add(pam.vconfig.channels.at(selectedChannel).getCluster().cloneSeeds());
 			
 			if (undo.size() == 0)
 				btundo.setEnabled(false);
 			btredo.setEnabled(true);
 			
-			pam.config.channels.at(selectedChannel).getCluster().setSeeds (set);
+			pam.vconfig.channels.at(selectedChannel).getCluster().setSeeds (set);
 			
-			guicamera.updateSeeds (pam.config.channels.at(selectedChannel));
+			guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
 			guicamera.redrawBufferedImage ();
-			clusters.setText (pam.config.channels.at (selectedChannel).getCluster ().paramCookedData ());
+			clusters.setText (pam.vconfig.channels.at (selectedChannel).getCluster ().paramCookedData ());
 		}
 	}
 	
@@ -214,17 +213,17 @@ public class CPColorTable extends JPanel
 			
 			set = redo.lastElement ();
 			redo.removeElementAt(redo.size() - 1);
-			undo.add(pam.config.channels.at(selectedChannel).getCluster().cloneSeeds());
+			undo.add(pam.vconfig.channels.at(selectedChannel).getCluster().cloneSeeds());
 
 			if (redo.size() == 0)
 				btredo.setEnabled(false);
 			btundo.setEnabled(true);
 			
-			pam.config.channels.at(selectedChannel).getCluster().setSeeds (set);
+			pam.vconfig.channels.at(selectedChannel).getCluster().setSeeds (set);
 				
-			guicamera.updateSeeds (pam.config.channels.at(selectedChannel));
+			guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
 			guicamera.redrawBufferedImage ();
-			clusters.setText (pam.config.channels.at (selectedChannel).getCluster ().paramCookedData ());
+			clusters.setText (pam.vconfig.channels.at (selectedChannel).getCluster ().paramCookedData ());
 		}	
 	}
 	
@@ -235,7 +234,7 @@ public class CPColorTable extends JPanel
 			
 		if (action == ACT_NONE)				return;
 
-		channel	= pam.config.channels.at (selectedChannel);		
+		channel	= pam.vconfig.channels.at (selectedChannel);		
 		hsv	= Segmentation.rgbToHsv (rgb);
 
 		undo.add (channel.getCluster ().cloneSeeds());
@@ -257,7 +256,7 @@ public class CPColorTable extends JPanel
 		testCollisions ();
 		clusters.setText (channel.getCluster ().paramCookedData ());
 		
-		pam.lut.update (pam.config.channels, selectedChannel);
+		pam.lut.update (pam.vconfig.channels, selectedChannel);
 //		pam.lut.initialise (pam.chs);
 		
 		guicamera.updateSeeds (channel);
@@ -273,25 +272,25 @@ public class CPColorTable extends JPanel
 	{
 		selectedChannel = ch;
 
-		clusters.setText (pam.config.channels.at (ch).getCluster ().paramCookedData ());
+		clusters.setText (pam.vconfig.channels.at (ch).getCluster ().paramCookedData ());
 
 		if (viewSeeds.isSelected ())
 		{
-			guicamera.updateSeeds (pam.config.channels.at(selectedChannel));
+			guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
 			guicamera.redrawBufferedImage ();
 		}
 	}
 		
 	private void testCollisions()
 	{
-		Vector<Integer> collisions = pam.config.channels.testCollisions();
+		Vector<Integer> collisions = pam.vconfig.channels.testCollisions();
 		
 		if (!collisions.isEmpty())
 		{
 			String msg = new String();
 			
 			for (int i = 0; i < collisions.size(); i+=2)
-				msg = msg + "Channels: " + pam.config.channels.at (((Integer) collisions.get(i)).intValue()).name + "-" + pam.config.channels.at (((Integer) collisions.get(i+1)).intValue()).name + "\n";	
+				msg = msg + "Channels: " + pam.vconfig.channels.at (((Integer) collisions.get(i)).intValue()).name + "-" + pam.vconfig.channels.at (((Integer) collisions.get(i+1)).intValue()).name + "\n";	
 			
 			JOptionPane.showMessageDialog(this, msg, "Collision warning", JOptionPane.WARNING_MESSAGE);
 		}

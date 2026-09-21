@@ -10,7 +10,7 @@ import java.awt.image.*;
 
 import tclib.vision.chaos.blobs.*;
 import tclib.vision.chaos.channels.*;
-import tclib.vision.chaos.gui.images.BufferedImageDrawing;
+import tcrob.umu.quaky2.gui.images.BufferedImageDrawing;
 
 public class CircleFitting 
 {

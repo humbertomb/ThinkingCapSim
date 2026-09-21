@@ -3,7 +3,7 @@
  *
  * @author Humberto Martinez Barbera
  */
-package tclib.vision.chaos.gui.images;
+package tcrob.umu.quaky2.gui.images;
 
 import java.awt.*;
 import java.awt.geom.*;

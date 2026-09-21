@@ -7,15 +7,15 @@
  * 
  */
 
-package tclib.vision.chaos.gui.images;
+package tcrob.umu.quaky2.gui.images;
 
 import java.awt.*;
 import java.awt.image.*;
 import javax.swing.*;
 
-import tclib.vision.chaos.gui.*;
 import tclib.vision.chaos.channels.*;
 import tclib.vision.chaos.segment.*;
+import tcrob.umu.quaky2.gui.SoccerVisionWindow;
 
 public class CPImageCanvas extends JPanel
 {		
@@ -42,8 +42,8 @@ public class CPImageCanvas extends JPanel
 		this.rescolor	= rescolor;
 		this.id			= id;
 		
-		setMinimumSize (new Dimension (ChaosVisionWindow.GUI_IMAGE_WIDTH, ChaosVisionWindow.GUI_IMAGE_HEIGHT));
-		setPreferredSize (new Dimension (ChaosVisionWindow.GUI_IMAGE_WIDTH, ChaosVisionWindow.GUI_IMAGE_HEIGHT));
+		setMinimumSize (new Dimension (SoccerVisionWindow.GUI_IMAGE_WIDTH, SoccerVisionWindow.GUI_IMAGE_HEIGHT));
+		setPreferredSize (new Dimension (SoccerVisionWindow.GUI_IMAGE_WIDTH, SoccerVisionWindow.GUI_IMAGE_HEIGHT));
 
 		initialiseImages ();
 		
@@ -57,8 +57,8 @@ public class CPImageCanvas extends JPanel
 		
 	private void initialiseImages ()
 	{
-		imageTake = new BufferedImage (ChaosVisionWindow.GUI_IMAGE_WIDTH, ChaosVisionWindow.GUI_IMAGE_HEIGHT, BufferedImage.TYPE_INT_RGB);
-		imagePaint = new BufferedImage (ChaosVisionWindow.GUI_IMAGE_WIDTH, ChaosVisionWindow.GUI_IMAGE_HEIGHT, BufferedImage.TYPE_INT_RGB);
+		imageTake = new BufferedImage (SoccerVisionWindow.GUI_IMAGE_WIDTH, SoccerVisionWindow.GUI_IMAGE_HEIGHT, BufferedImage.TYPE_INT_RGB);
+		imagePaint = new BufferedImage (SoccerVisionWindow.GUI_IMAGE_WIDTH, SoccerVisionWindow.GUI_IMAGE_HEIGHT, BufferedImage.TYPE_INT_RGB);
 		
 		for (int y = 0; y < imageTake.getHeight(); y++)
 			for (int x = 0; x < imageTake.getWidth(); x++)

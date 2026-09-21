@@ -1,4 +1,4 @@
-package tclib.vision.chaos.gui.ctables;
+package tcrob.umu.quaky2.gui.ctables;
 
 import java.io.File;
 import javax.swing.filechooser.*;

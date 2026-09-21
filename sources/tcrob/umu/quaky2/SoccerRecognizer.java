@@ -3,7 +3,7 @@
  *
  * @author Humberto Martinez Barbera
  */
-package tclib.vision.chaos.recognize;
+package tcrob.umu.quaky2;
 
 import java.awt.*;
 import java.awt.image.*;
@@ -12,100 +12,55 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Properties;
 
-import tclib.vision.chaos.*;
 import tclib.vision.chaos.blobs.*;
 import tclib.vision.chaos.channels.*;
-import tclib.vision.chaos.gui.images.*;
+import tclib.vision.chaos.recognize.*;
+import tcrob.umu.quaky2.gui.images.BufferedImageDrawing;
 
-public class RecognizerSoccer
+public class SoccerRecognizer
 {
 	static public final double		FOVEA_XSIZE		= 0.3;
 	static public final double		FOVEA_YSIZE		= 0.3;
 
-	static public final int 			XSIZEDIFF_MAX	= 160;
-	static public final int 			YSIZEDIFF_MAX	= 180;
-	static public final int 			XOVERLAP_MIN	= 30;
-	static public final int 			YGAP_MAX		= 4;	
-	static public final int 			YOVERLAP_MAX	= 40;
-	static public final int 			XGAP_MAX		= 70;
+	static public final int 		XSIZEDIFF_MAX	= 160;
+	static public final int 		YSIZEDIFF_MAX	= 180;
+	static public final int 		XOVERLAP_MIN	= 30;
+	static public final int 		YGAP_MAX		= 4;	
+	static public final int 		YOVERLAP_MAX	= 40;
+	static public final int 		XGAP_MAX		= 70;
 
 	static private int				fovea_xmin;
 	static private int				fovea_xmax;
 	static private int				fovea_ymin;
 	static private int				fovea_ymax;
 
-	public int 							BALL_SX_MIN		= 2;					// Minimum reliable size in image (pix)
-	public int 							BALL_SY_MIN		= 2;					// was 5 --AS 020618
-	public int 							BALL_HORIZ_HGT	= 20;
-	public int 							BALL_DENSITY		= 2;
-	public int 							BALL_XDISP		= -8;
-	public int							BALL_YDISP		= -18;
-	public int 							NET_SX_MIN		= 16;				// Minimum reliable size in image (pix)
-	public int 							NET_SY_MIN		= 10;
-	public int 							NET_HORIZ_HGT	= 40;
-	public int 							NET_DENSITY		= 2;
-	public int 							NET_IN_MINX		= 130;				// we are inside net if we see blobs this big
-	public int 							NET_IN_MINY		= 110;				// ...
-	public int 							NET_IN_MINA		= 120;				// all around us at this angle
-	public int 							NET_IN_MEMO		= 2000;				// during this time	
-	public int 							LM_SX_MIN		= 3;					// Minimum reliable size in image (pix)  //-- ZW
-	public int 							LM_SY_MIN		= 3;					// resolution: 10pix~=10cm, 15pix~=5cm
-	public int 							LM_HORIZ_HGT		= -20;
-	public int 							LM_DENSITY		= 10;
+	public int 						BALL_SX_MIN		= 2;				// Minimum reliable size in image (pix)
+	public int 						BALL_SY_MIN		= 2;				// was 5 --AS 020618
+	public int 						BALL_HORIZ_HGT	= 20;
+	public int 						BALL_DENSITY	= 2;
+	public int 						BALL_XDISP		= -8;
+	public int						BALL_YDISP		= -18;
+	public int 						NET_SX_MIN		= 16;				// Minimum reliable size in image (pix)
+	public int 						NET_SY_MIN		= 10;
+	public int 						NET_HORIZ_HGT	= 40;
+	public int 						NET_DENSITY		= 2;
+	public int 						NET_IN_MINX		= 130;				// we are inside net if we see blobs this big
+	public int 						NET_IN_MINY		= 110;				// ...
+	public int 						NET_IN_MINA		= 120;				// all around us at this angle
+	public int 						NET_IN_MEMO		= 2000;				// during this time	
+	public int 						LM_SX_MIN		= 3;				// Minimum reliable size in image (pix)  //-- ZW
+	public int 						LM_SY_MIN		= 3;				// resolution: 10pix~=10cm, 15pix~=5cm
+	public int 						LM_HORIZ_HGT	= -20;
+	public int 						LM_DENSITY		= 10;
 
-	private BufferedImageDrawing		dwg = new BufferedImageDrawing ();
+	private BufferedImageDrawing	dwg = new BufferedImageDrawing ();
 
-	public RecognizerSoccer ()
+	public SoccerRecognizer ()
 	{
 		
 	}
 
-	public BufferedImage process (BufferedImage input, int[] segmented, Blobs[] blobs, Channels channels, ChaosPamConfig config)
-	{
-		int					i;
-		BufferedImage		output;
-		CircleFitting		ellipse;
-		NetFitting			net;
-		VisualHorizon		horizon;
-		
-		output	= new BufferedImage (input.getWidth(), input.getHeight(), BufferedImage.TYPE_INT_RGB);
-		output.setData (input.getData ());
-		dwg.updateImage (output);
-		
-		computeFovea (output, dwg);
-		horizon = new VisualHorizon ();
-		horizon.findHorizon (output, segmented, channels.at (3), channels.at (0));
-
-		ellipse	= new CircleFitting ();
-		for (i = 0; i < blobs[0].getBlobNumber (); i++)
-		{
-			Blob		blob = blobs[0].getBlob (i);
-			if (testValidBall (blob, config, horizon, dwg))
-				ellipse.doFitting (output, segmented, blob, channels.at (0));
-		}
-		
-		net	= new NetFitting ();
-		for (i = 0; i < blobs[1].getBlobNumber (); i++)
-		{
-			Blob		blob = blobs[1].getBlob (i);
-			if (!testPinkOverlap (blob, blobs[4]) && testValidNet (blob, config, horizon, dwg, Color.YELLOW.getRGB()))
-				net.doFitting (output, segmented, blobs[1], channels.at (1), channels.at (3));
-			else
-				testValidLandmark (blob, blobs[4], config, horizon, dwg, Color.YELLOW.getRGB());
-		}
-		for (i = 0; i < blobs[2].getBlobNumber (); i++)
-		{
-			Blob		blob = blobs[2].getBlob (i);
-			if (!testPinkOverlap (blob, blobs[4]) && testValidNet (blob, config, horizon, dwg, Color.CYAN.getRGB()))
-				net.doFitting (output, segmented, blobs[2], channels.at (2), channels.at (3));
-			else
-				testValidLandmark (blob, blobs[4], config, horizon, dwg, Color.CYAN.getRGB());
-		}
-				
-		return output;
-	}
-
-	public BufferedImage recognize (BufferedImage input, int[] segmented, Blobs[] blobs, Channels channels, ChaosPamConfig config)
+	public BufferedImage process (BufferedImage input, int[] segmented, Blobs[] blobs, Channels channels, SoccerVisionConfig config)
 	{
 		int					i;
 		BufferedImage		output;
@@ -149,8 +104,53 @@ public class RecognizerSoccer
 				
 		return output;
 	}
+
+	public BufferedImage recognize (BufferedImage input, int[] segmented, Blobs[] blobs, Channels channels, SoccerVisionConfig config)
+	{
+		int					i;
+		BufferedImage		output;
+		CircleFitting		ellipse;
+		NetFitting			net;
+		VisualHorizon		horizon;
 		
-	protected boolean testValidBall (Blob blob, ChaosPamConfig config, VisualHorizon horizon, BufferedImageDrawing dwg)
+		output	= new BufferedImage (input.getWidth(), input.getHeight(), BufferedImage.TYPE_INT_RGB);
+		output.setData (input.getData ());
+		dwg.updateImage (output);
+		
+		computeFovea (output, dwg);
+		horizon = new VisualHorizon ();
+		horizon.findHorizon (output, segmented, channels.at (3), channels.at (0));
+
+		ellipse	= new CircleFitting ();
+		for (i = 0; i < blobs[0].getBlobNumber (); i++)
+		{
+			Blob		blob = blobs[0].getBlob (i);
+			if (testValidBall (blob, config, horizon, dwg))
+				ellipse.doFitting (output, segmented, blob, channels.at (0));
+		}
+		
+		net	= new NetFitting ();
+		for (i = 0; i < blobs[1].getBlobNumber (); i++)
+		{
+			Blob		blob = blobs[1].getBlob (i);
+			if (!testPinkOverlap (blob, blobs[4]) && testValidNet (blob, config, horizon, dwg, Color.YELLOW.getRGB()))
+				net.doFitting (output, segmented, blobs[1], channels.at (1), channels.at (3));
+			else
+				testValidLandmark (blob, blobs[4], config, horizon, dwg, Color.YELLOW.getRGB());
+		}
+		for (i = 0; i < blobs[2].getBlobNumber (); i++)
+		{
+			Blob		blob = blobs[2].getBlob (i);
+			if (!testPinkOverlap (blob, blobs[4]) && testValidNet (blob, config, horizon, dwg, Color.CYAN.getRGB()))
+				net.doFitting (output, segmented, blobs[2], channels.at (2), channels.at (3));
+			else
+				testValidLandmark (blob, blobs[4], config, horizon, dwg, Color.CYAN.getRGB());
+		}
+				
+		return output;
+	}
+		
+	protected boolean testValidBall (Blob blob, SoccerVisionConfig config, VisualHorizon horizon, BufferedImageDrawing dwg)
 	{
 		if ((blob.getSizeX() < BALL_SX_MIN) || (blob.getSizeY() < BALL_SY_MIN))
 			return false;
@@ -165,7 +165,7 @@ public class RecognizerSoccer
 		return true;
 	}
 	
-	protected boolean testValidNet (Blob blob, ChaosPamConfig config, VisualHorizon horizon, BufferedImageDrawing dwg, int color)
+	protected boolean testValidNet (Blob blob, SoccerVisionConfig config, VisualHorizon horizon, BufferedImageDrawing dwg, int color)
 	{
 		if ((blob.getSizeX() < NET_SX_MIN) || (blob.getSizeY() < NET_SY_MIN))
 			return false;
@@ -180,7 +180,7 @@ public class RecognizerSoccer
 		return true;
 	}
 	
-	protected boolean testValidLandmark (Blob blob, Blobs pinks, ChaosPamConfig config, VisualHorizon horizon, BufferedImageDrawing dwg, int color)
+	protected boolean testValidLandmark (Blob blob, Blobs pinks, SoccerVisionConfig config, VisualHorizon horizon, BufferedImageDrawing dwg, int color)
 	{
 		Blob			lmark;
 		
@@ -238,7 +238,7 @@ public class RecognizerSoccer
 		return false;
 	}
 
-	protected Blob checkBlobPair (Blob blob_color, Blob blob_pink, ChaosPamConfig config)
+	protected Blob checkBlobPair (Blob blob_color, Blob blob_pink, SoccerVisionConfig config)
 	{
 		// If blob is TOO SMALL for this object, reject it
 		if (((blob_pink.getSizeX()) < LM_SX_MIN) || ((blob_pink.getSizeY()) < LM_SY_MIN ))

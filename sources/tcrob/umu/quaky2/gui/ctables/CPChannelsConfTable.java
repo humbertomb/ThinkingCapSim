@@ -7,7 +7,7 @@
  * 
  */
 
-package tclib.vision.chaos.gui.ctables;
+package tcrob.umu.quaky2.gui.ctables;
 
 import java.awt.*;
 
@@ -15,18 +15,18 @@ import javax.swing.*;
 import javax.swing.table.*;
 import javax.swing.event.*;
 
-import tclib.vision.chaos.*;
+import tcrob.umu.quaky2.*;
 
 public class CPChannelsConfTable extends JPanel
 {
-	protected ChaosPam pam;
+	protected SoccerVision pam;
 	protected ChannelsConfTableModel chsconf;
 	protected JTable paramTable;
 	protected JScrollPane paramScroll;
 	protected ListSelectionModel paramSelect;
 	protected CPColorTable ctable;
 		
-	public CPChannelsConfTable (CPColorTable rctable, ChaosPam pam)
+	public CPChannelsConfTable (CPColorTable rctable, SoccerVision pam)
 	{
 		int			csize, rsize;
 		
@@ -73,7 +73,7 @@ public class CPChannelsConfTable extends JPanel
 				
 				label	= new JLabel (((String) value).substring (0, 1)+" ");
 				label.setOpaque (true);
-				label.setBackground (pam.config.channels.at(row).color);
+				label.setBackground (pam.vconfig.channels.at(row).color);
 
 				return label;
 			}
@@ -94,8 +94,8 @@ public class CPChannelsConfTable extends JPanel
 		}
 
 		public String		getColumnName (int col)				{ return columnNames[col]; }
-		public Class	<?>		getColumnClass (int col)				{ return columnClass[col]; }
-		public int			getRowCount ()						{ if (pam.config.channels == null) return 0; else return pam.config.channels.size (); }
+		public Class<?>		getColumnClass (int col)			{ return columnClass[col]; }
+		public int			getRowCount ()						{ if (pam.vconfig.channels == null) return 0; else return pam.vconfig.channels.size (); }
 		public int			getColumnCount ()					{ return columnNames.length; }
         public boolean		isCellEditable (int row, int col)	{ return columnEdit[col]; }
 
@@ -106,23 +106,23 @@ public class CPChannelsConfTable extends JPanel
 			switch (col)
 			{
 			case 0:
-				obj	= Boolean.valueOf (pam.config.channels.at(row).segmented);
+				obj	= Boolean.valueOf (pam.vconfig.channels.at(row).segmented);
 				break;
 				
 			case 1:
-				obj	= Boolean.valueOf (pam.config.channels.at(row).blobbed);
+				obj	= Boolean.valueOf (pam.vconfig.channels.at(row).blobbed);
 				break;
 				
 			case 2: 
-				obj = pam.config.channels.at(row).name;
+				obj = pam.vconfig.channels.at(row).name;
 				break;
 								
 			case 3: 
-				obj = Integer.valueOf (pam.config.channels.at(row).threshold);
+				obj = Integer.valueOf (pam.vconfig.channels.at(row).threshold);
 				break;
 				
 			case 4: 
-				obj = Integer.valueOf (pam.config.channels.at(row).gap);
+				obj = Integer.valueOf (pam.vconfig.channels.at(row).gap);
 				break;
 								
 			default:
@@ -136,23 +136,23 @@ public class CPChannelsConfTable extends JPanel
         		switch (col)
 			{
         		case 0:
-				pam.config.channels.at(row).segmented = ((Boolean) value).booleanValue ();
+				pam.vconfig.channels.at(row).segmented = ((Boolean) value).booleanValue ();
         			break;
         			
         		case 1:
-    				pam.config.channels.at(row).blobbed = ((Boolean) value).booleanValue ();
+    				pam.vconfig.channels.at(row).blobbed = ((Boolean) value).booleanValue ();
             			break;
             			
        		case 2: 
-				pam.config.channels.at(row).name = (String) value;
+				pam.vconfig.channels.at(row).name = (String) value;
 				break;
 
        		case 3: 
-				pam.config.channels.at(row).threshold = ((Integer) value).intValue ();
+				pam.vconfig.channels.at(row).threshold = ((Integer) value).intValue ();
 				break;
 
        		case 4: 
-				pam.config.channels.at(row).gap = ((Integer) value).intValue ();
+				pam.vconfig.channels.at(row).gap = ((Integer) value).intValue ();
 				break;
 			}
         		

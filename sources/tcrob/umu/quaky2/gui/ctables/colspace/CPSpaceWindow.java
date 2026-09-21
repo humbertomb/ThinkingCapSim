@@ -3,7 +3,7 @@
  *
  * @author Humberto Martinez Barbera
  */
-package tclib.vision.chaos.gui.ctables.colspace;
+package tcrob.umu.quaky2.gui.ctables.colspace;
 
 import java.awt.*;
 import java.awt.image.*;
@@ -15,6 +15,7 @@ import ptolemy.plot.*;
 
 import tclib.vision.chaos.channels.*;
 import tclib.vision.chaos.segment.*;
+import tcrob.umu.quaky2.gui.images.CPScalableImageCanvas;
 import tclib.vision.chaos.gui.images.*;
 
 public class CPSpaceWindow extends JFrame

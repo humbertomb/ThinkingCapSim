@@ -5,7 +5,7 @@
  * @author Hu8mberto Martinez Barbera
  */
 
-package tclib.vision.chaos.gui.ctables.colspace;
+package tcrob.umu.quaky2.gui.ctables.colspace;
 
 import java.awt.image.*;
 import javax.media.j3d.*;

@@ -3,7 +3,7 @@
  *
  * @author Humberto Martinez Barbera
  */
-package tclib.vision.chaos.gui;
+package tcrob.umu.quaky2.gui;
 
 import java.io.*;
 import java.awt.*;
@@ -13,45 +13,46 @@ import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
-import dasboot.arch.modules.*;
-import dasboot.hmi.dasboot.MouseRegisterer;
-import tclib.vision.chaos.*;
+import tcrob.umu.quaky2.*;
 import tclib.vision.chaos.segment.*;
+import tcrob.umu.quaky2.SoccerVisionConfig;
+import tcrob.umu.quaky2.gui.ctables.CPColorTable;
+import tcrob.umu.quaky2.gui.images.CPImageCanvas;
+import tcrob.umu.quaky2.gui.images.CPZoomCanvas;
+import tcrob.umu.quaky2.gui.images.ImageFileFilter;
 import tclib.vision.chaos.channels.*;
-import tclib.vision.chaos.gui.ctables.*;
-import tclib.vision.chaos.gui.images.*;
 
-public class ChaosVisionPanel extends JPanel
+public class SoccerVisionPanel extends JPanel
 {	
 	static public final String			IMAGEFORMAT 			= ImageFileFilter.PNG;
 		
-	public enum ChaosImageFormat			{ SEG, BLOB, RECOG};
+	public enum ChaosImageFormat		{ SEG, BLOB, RECOG};
 	static protected final String[]		MODES	= { "SEGMENT.", "BLOBS", "RECOG." };
 
-	protected ChaosPam					pam;
-	protected ChaosVisionMotionMouse		mouse;
+	protected SoccerVision				pam;
+	protected ChaosVisionMotionMouse	mouse;
 
 	protected CPColorTable				cpcolortable;
 	protected CPZoomCanvas				cpzoom;
 	protected CPImageCanvas				cpimage;
-	protected JPanel						cprecogcfg;
+	protected JPanel					cprecogcfg;
 	protected JFileChooser				chooser;
 
 	// Channel monitor and zoom
-	protected JLabel						lbx;
-	protected JLabel						lby;
-	protected JLabel						lbr;
-	protected JLabel						lbg;
-	protected JLabel						lbb;
-	protected JLabel						lbh;
-	protected JLabel						lbs;
-	protected JLabel						lbv;
-	protected JComboBox<String> 			modeCB = new JComboBox<String> (MODES);
+	protected JLabel					lbx;
+	protected JLabel					lby;
+	protected JLabel					lbr;
+	protected JLabel					lbg;
+	protected JLabel					lbb;
+	protected JLabel					lbh;
+	protected JLabel					lbs;
+	protected JLabel					lbv;
+	protected JComboBox<String> 		modeCB = new JComboBox<String> (MODES);
 
 	// Algorithms and methods
-	private JComboBox<String>			lutmodeCB = new JComboBox<String> (ChaosPamConfig.LUTMODES);
-	private JComboBox<String>			segmodeCB = new JComboBox<String> (ChaosPamConfig.SEGMODES);
-	private JComboBox<String>			blobmodeCB = new JComboBox<String> (ChaosPamConfig.BLOBMODES);
+	private JComboBox<String>			lutmodeCB = new JComboBox<String> (SoccerVisionConfig.LUTMODES);
+	private JComboBox<String>			segmodeCB = new JComboBox<String> (SoccerVisionConfig.SEGMODES);
+	private JComboBox<String>			blobmodeCB = new JComboBox<String> (SoccerVisionConfig.BLOBMODES);
 	private JButton						btlutcon;
 	private JButton						btsegcon;
 	private JButton						btblobcon;
@@ -59,12 +60,12 @@ public class ChaosVisionPanel extends JPanel
 	// Image management
 	protected BufferedImage				imagein;
 	protected BufferedImage				imageout;
-	protected String						filename;
+	protected String					filename;
 
 	private ChaosImageFormat 			imgmode = ChaosImageFormat.RECOG;
 
 	// Constructors
-	public ChaosVisionPanel (JFrame frame, ChaosPam pam)
+	public SoccerVisionPanel (JFrame frame, SoccerVision pam)
 	{
 		this.pam = pam;
 		
@@ -78,14 +79,14 @@ public class ChaosVisionPanel extends JPanel
 
 		cpzoom 			= new CPZoomCanvas ();
 		cpimage			= new CPImageCanvas ();
-		cprecogcfg		= pam.recognizer.configPanel ();
-		cpcolortable		= new CPColorTable (this, pam);
+		cprecogcfg		= new SoccerRecognitonConfigPanel (pam.recognizer);
+		cpcolortable	= new CPColorTable (this, pam);
 
 		setLayout (new BorderLayout ());
 		setVisible (false);
 		add (createMainPanel (), BorderLayout.CENTER);
 
-		if (frame instanceof MouseRegisterer)		((MouseRegisterer) frame).register (mouse);
+//		if (frame instanceof MouseRegisterer)		((MouseRegisterer) frame).register (mouse);
 
 		setVisible (true);
 		
@@ -182,9 +183,9 @@ public class ChaosVisionPanel extends JPanel
 		btblobcon = new JButton("Conf");
 		btblobcon.setEnabled (pam.blobbing.configurable ());
 		
-		lutmodeCB.setSelectedIndex (pam.config.lutmode);
-		segmodeCB.setSelectedIndex (pam.config.segmode);
-		blobmodeCB.setSelectedIndex (pam.config.blobmode);
+		lutmodeCB.setSelectedIndex (pam.vconfig.lutmode);
+		segmodeCB.setSelectedIndex (pam.vconfig.segmode);
+		blobmodeCB.setSelectedIndex (pam.vconfig.blobmode);
 		
 		JPanel luts = new JPanel ();
 		luts.setLayout (new BorderLayout ());
@@ -208,7 +209,7 @@ public class ChaosVisionPanel extends JPanel
 		lutmodeCB.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e)
 			{
-				pam.config.lutmode = lutmodeCB.getSelectedIndex ();
+				pam.vconfig.lutmode = lutmodeCB.getSelectedIndex ();
 				pam.instanceLUT ();
 				
 				btlutcon.setEnabled (pam.lut.configurable ());
@@ -218,14 +219,14 @@ public class ChaosVisionPanel extends JPanel
 		btlutcon.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e) 
 			{
-				pam.lut.configureDialog (pam.config.channels);
+				pam.lut.configureDialog (pam.vconfig.channels);
 				redrawBufferedImage ();
 			}
 		});	
 		segmodeCB.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e)
 			{
-				pam.config.segmode = segmodeCB.getSelectedIndex ();
+				pam.vconfig.segmode = segmodeCB.getSelectedIndex ();
 				pam.instanceSegment ();
 
 				btsegcon.setEnabled (pam.segment.configurable ());
@@ -242,7 +243,7 @@ public class ChaosVisionPanel extends JPanel
 		blobmodeCB.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e)
 			{
-				pam.config.blobmode = blobmodeCB.getSelectedIndex ();
+				pam.vconfig.blobmode = blobmodeCB.getSelectedIndex ();
 				pam.instanceBlob ();
 				
 				btblobcon.setEnabled (pam.blobbing.configurable ());
@@ -271,14 +272,14 @@ public class ChaosVisionPanel extends JPanel
 		{
 		case SEG:	imageout = pam.segment.getSegmentedImage (); break;
 		case BLOB:	imageout = pam.blobbing.getBlobbedImage (); break;
-		case RECOG:	imageout = pam.recognition (imagein); break;
+//		case RECOG:	imageout = pam.recognition (imagein); break;
 		}
 
 		cpzoom.updateBufferedImage (imagein);
 		cpimage.updateBufferedImage (imageout);
 		
 		if ((cpcolortable.cpspacewin != null) && cpcolortable.cpspacewin.isVisible ())
-			cpcolortable.cpspacewin.update (imagein, pam.config.channels);
+			cpcolortable.cpspacewin.update (imagein, pam.vconfig.channels);
 	}
 
 	public void updateSeeds(Channel channel) 
@@ -385,11 +386,11 @@ public class ChaosVisionPanel extends JPanel
 			Dimension		dim;
 
 			dim		= ((JComponent) evt.getSource ()).getSize ();
-			imgx		= (int) (image.getWidth () * ModulePam.FACTOR);
-			imgy		= (int) (image.getHeight () * ModulePam.FACTOR);
+			imgx		= (int) (image.getWidth () * SoccerVision.FACTOR);
+			imgy		= (int) (image.getHeight () * SoccerVision.FACTOR);
 			scale	= Math.min (dim.getWidth () / (double) imgx, dim.getHeight () / (double) imgy);
 			offx		= (int) Math.max ((dim.getWidth () - imgx*scale) / 2.0, 0.0);
-			ix		= Math.round ((double) (evt.getX () - offx) / (ModulePam.FACTOR * scale));
+			ix		= Math.round ((double) (evt.getX () - offx) / (SoccerVision.FACTOR * scale));
 
 			return Math.max (Math.min ((int) ix, image.getWidth ()-1), 0);
 		}
@@ -401,11 +402,11 @@ public class ChaosVisionPanel extends JPanel
 			Dimension		dim;
 
 			dim		= ((JComponent) evt.getSource ()).getSize ();
-			imgx		= (int) (image.getWidth () * ModulePam.FACTOR);
-			imgy		= (int) (image.getHeight () * ModulePam.FACTOR);
+			imgx		= (int) (image.getWidth () * SoccerVision.FACTOR);
+			imgy		= (int) (image.getHeight () * SoccerVision.FACTOR);
 			scale	= Math.min (dim.getWidth () / (double) imgx, dim.getHeight () / (double) imgy);
 			offy		= (int) Math.max ((dim.getHeight () - imgy*scale) / 2.0, 0.0);
-			iy		= Math.round ((double) (evt.getY () - offy) / (ModulePam.FACTOR * scale));
+			iy		= Math.round ((double) (evt.getY () - offy) / (SoccerVision.FACTOR * scale));
 
 			return Math.max (Math.min ((int) iy, image.getHeight ()-1), 0);
 		}
