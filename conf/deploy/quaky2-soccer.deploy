@@ -69,7 +69,8 @@
             "CLASS": "tcrob.umu.quaky2.SoccerPerception",
             "MODE": "shared",
             "PASSIVE": "true",
-            "TYPE": "Perception"
+            "TYPE": "Perception",
+            "GFX": "true"
           },
           "events": [
             {
