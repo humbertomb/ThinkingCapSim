@@ -87,6 +87,9 @@ public class SoccerVisionPanel extends JPanel
 		add (createMainPanel (), BorderLayout.CENTER);
 
 //		if (frame instanceof MouseRegisterer)		((MouseRegisterer) frame).register (mouse);
+		// the mouse on the image: the pixel under it (zoom, values) and, with Add or Remove, a seed of the channel
+		cpimage.addMouseListener (mouse);
+		cpimage.addMouseMotionListener (mouse);
 
 		setVisible (true);
 		
@@ -389,7 +392,7 @@ public class SoccerVisionPanel extends JPanel
 			dim		= ((JComponent) evt.getSource ()).getSize ();
 			imgx		= (int) (image.getWidth () * SoccerVision.FACTOR);
 			imgy		= (int) (image.getHeight () * SoccerVision.FACTOR);
-			scale	= Math.min (dim.getWidth () / (double) imgx, dim.getHeight () / (double) imgy);
+			scale	= Math.min (1.0, Math.min (dim.getWidth () / (double) imgx, dim.getHeight () / (double) imgy));	// as CPImageCanvas draws it: only made smaller
 			offx		= (int) Math.max ((dim.getWidth () - imgx*scale) / 2.0, 0.0);
 			ix		= Math.round ((double) (evt.getX () - offx) / (SoccerVision.FACTOR * scale));
 
@@ -405,7 +408,7 @@ public class SoccerVisionPanel extends JPanel
 			dim		= ((JComponent) evt.getSource ()).getSize ();
 			imgx		= (int) (image.getWidth () * SoccerVision.FACTOR);
 			imgy		= (int) (image.getHeight () * SoccerVision.FACTOR);
-			scale	= Math.min (dim.getWidth () / (double) imgx, dim.getHeight () / (double) imgy);
+			scale	= Math.min (1.0, Math.min (dim.getWidth () / (double) imgx, dim.getHeight () / (double) imgy));
 			offy		= (int) Math.max ((dim.getHeight () - imgy*scale) / 2.0, 0.0);
 			iy		= Math.round ((double) (evt.getY () - offy) / (SoccerVision.FACTOR * scale));
 

@@ -82,8 +82,9 @@ public class CPImageCanvas extends JPanel
 			imagePaint	= null;
 		}
 		
-//		if ((clistener != null) && clistener.isSelectedViewSeeds() /*&& (imageformat == CPImageFormat.MODE_RGB)*/)
-//			putSeedsInImage();
+		// the pixels the channel takes (its seeds' prism), in black, when its seeds are shown
+		if ((imageTake != null) && (seeds != null))
+			putSeedsInImage ();
 		
 		repaint ();
 	}

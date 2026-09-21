@@ -120,7 +120,7 @@ public class CPColorTable extends JPanel
 			public void actionPerformed(java.awt.event.ActionEvent e) {
 				pam.vconfig.channels.at(selectedChannel).resetCluster ();		
 				pam.lut.initialise (pam.vconfig.channels);
-				guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
+				guicamera.updateSeeds (shownSeeds ());
 				guicamera.redrawBufferedImage ();
 			}
 		});
@@ -132,7 +132,7 @@ public class CPColorTable extends JPanel
 						pam.vconfig.channels.at(i).resetCluster ();				
 	            }
 				pam.lut.initialise (pam.vconfig.channels);
-				guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
+				guicamera.updateSeeds (shownSeeds ());
 				guicamera.redrawBufferedImage ();
 			}
 		});	
@@ -147,7 +147,7 @@ public class CPColorTable extends JPanel
 					subSeeds.setSelected (false);
 					action = ACT_NONE;
 				}
-				guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
+				guicamera.updateSeeds (shownSeeds ());
 				guicamera.redrawBufferedImage ();
 			}
 		});	
@@ -201,7 +201,7 @@ public class CPColorTable extends JPanel
 			
 			pam.vconfig.channels.at(selectedChannel).getCluster().setSeeds (set);
 			
-			guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
+			guicamera.updateSeeds (shownSeeds ());
 			guicamera.redrawBufferedImage ();
 			clusters.setText (pam.vconfig.channels.at (selectedChannel).getCluster ().paramCookedData ());
 		}
@@ -223,7 +223,7 @@ public class CPColorTable extends JPanel
 			
 			pam.vconfig.channels.at(selectedChannel).getCluster().setSeeds (set);
 				
-			guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
+			guicamera.updateSeeds (shownSeeds ());
 			guicamera.redrawBufferedImage ();
 			clusters.setText (pam.vconfig.channels.at (selectedChannel).getCluster ().paramCookedData ());
 		}	
@@ -261,10 +261,16 @@ public class CPColorTable extends JPanel
 		pam.lut.update (pam.vconfig.channels, selectedChannel);
 //		pam.lut.initialise (pam.chs);
 		
-		guicamera.updateSeeds (channel);
+		guicamera.updateSeeds (shownSeeds ());
 		guicamera.redrawBufferedImage ();
 	}
 			
+	/** The channel whose seeds the image shows: the selected one while View is on, none otherwise. */
+	public Channel shownSeeds ()
+	{
+		return viewSeeds.isSelected () ? pam.vconfig.channels.at (selectedChannel) : null;
+	}
+
 	public int getSelectedChannel ()
 	{
 		return selectedChannel;
@@ -278,7 +284,7 @@ public class CPColorTable extends JPanel
 
 		if (viewSeeds.isSelected ())
 		{
-			guicamera.updateSeeds (pam.vconfig.channels.at(selectedChannel));
+			guicamera.updateSeeds (shownSeeds ());
 			guicamera.redrawBufferedImage ();
 		}
 	}
