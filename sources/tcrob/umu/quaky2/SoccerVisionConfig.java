@@ -109,7 +109,6 @@ public class SoccerVisionConfig
 			Channel		ch = channels.at (i);
 
 			if ((ch.clustype == null) || (ch.clustype.trim ().length () == 0))		ch.clustype = ColorPrism.class.getName ();
-			if (ch.params == null)							ch.params	= "0,255,0,255,0,255";
 			if (ch.seeds == null)							ch.seeds	= "EMPTY";
 			if (ch.color == null)							ch.color	= Color.GRAY;
 			ch.setClusterParameters ();

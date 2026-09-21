@@ -38,14 +38,18 @@ public class ColorPrism extends Cluster
 
 	public void initialise (String params, String slist)
 	{
-		StringTokenizer st = new StringTokenizer (params, ", ");
-		
-		max0 = Integer.parseInt(st.nextToken());
-		min0 = Integer.parseInt(st.nextToken());
-		max1 = Integer.parseInt(st.nextToken());
-		min1 = Integer.parseInt(st.nextToken());
-		max2 = Integer.parseInt(st.nextToken());
-		min2 = Integer.parseInt(st.nextToken());
+		// the limits given are only a start: the prism is made again from the seeds (recomputeShape)
+		if ((params != null) && (params.trim ().length () > 0))
+		{
+			StringTokenizer st = new StringTokenizer (params, ", ");
+			
+			max0 = Integer.parseInt(st.nextToken());
+			min0 = Integer.parseInt(st.nextToken());
+			max1 = Integer.parseInt(st.nextToken());
+			min1 = Integer.parseInt(st.nextToken());
+			max2 = Integer.parseInt(st.nextToken());
+			min2 = Integer.parseInt(st.nextToken());
+		}
 
 		parseSeeds (slist);
 		recomputeShape ();

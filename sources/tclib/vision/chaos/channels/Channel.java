@@ -22,7 +22,7 @@ public class Channel
 	
 	// loadable parameters
 	public String				clustype;
-	public String				params;
+	public transient String		params;		// the limits of the cluster: made from its seeds, so not kept in the files
 	public String				seeds;
 	
 	// temporary items

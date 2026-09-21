@@ -13,7 +13,6 @@
         "gap": 0,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "params": "0,255,0,255,0,255",
         "seeds": "EMPTY"
       },
       {
@@ -28,7 +27,6 @@
         "gap": 0,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "params": "0,255,0,255,0,255",
         "seeds": "EMPTY"
       },
       {
@@ -43,7 +41,6 @@
         "gap": 3,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "params": "0,0,255,255,255,255",
         "seeds": " 0,255,255"
       },
       {
@@ -58,7 +55,6 @@
         "gap": 3,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "params": "170,170,255,255,255,255",
         "seeds": " 170,255,255"
       },
       {
@@ -73,7 +69,6 @@
         "gap": 0,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "params": "0,255,0,255,0,255",
         "seeds": "EMPTY"
       },
       {
@@ -88,7 +83,6 @@
         "gap": 3,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "params": "0,255,0,255,0,255",
         "seeds": "EMPTY"
       },
       {
@@ -103,7 +97,6 @@
         "gap": 3,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "params": "35,15,255,115,255,149",
         "seeds": " 15,242,222 26,162,255 15,239,217 15,253,168 15,255,168 15,245,183 21,186,255 15,242,149 35,115,255"
       },
       {
@@ -118,7 +111,6 @@
         "gap": 0,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "params": "0,255,0,255,0,255",
         "seeds": "EMPTY"
       }
     ]
