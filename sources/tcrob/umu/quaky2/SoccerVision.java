@@ -41,6 +41,7 @@ public class SoccerVision extends Perception
 	public Segmentation				segment;
 	public BlobForming				blobbing;
 	public SoccerRecognizer			recognizer;
+	public java.awt.image.BufferedImage	recognized;		// the last frame with what was recognised drawn on it
 
 	// Local graphics: configuration and monitoring of the vision
 	protected SoccerVisionWindow		win;
@@ -186,7 +187,7 @@ public class SoccerVision extends Perception
 		segment.process (item.image, lut, vconfig.channels);
 		blobbing.process (segment);
 		blobbing.postProcess ();
-		recognizer.process (item.image, segment.getSegmented(), blobbing.getBlobs (), vconfig.channels, vconfig);
+		recognized	= recognizer.process (item.image, segment.getSegmented(), blobbing.getBlobs (), vconfig.channels, vconfig);
 
 		// what the camera saw, and what came out of it, to the window
 		if (win != null)

@@ -272,7 +272,7 @@ public class SoccerVisionPanel extends JPanel
 		{
 		case SEG:	imageout = pam.segment.getSegmentedImage (); break;
 		case BLOB:	imageout = pam.blobbing.getBlobbedImage (); break;
-//		case RECOG:	imageout = pam.recognition (imagein); break;
+		case RECOG:	imageout = (pam.recognized != null) ? pam.recognized : imagein; break;
 		}
 
 		cpzoom.updateBufferedImage (imagein);
