@@ -95,7 +95,7 @@
         "id": 6,
         "name": "ORANGE",
         "color": {
-          "value": -256
+          "value": -32768
         },
         "segmented": true,
         "blobbed": true,
