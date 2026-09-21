@@ -12,12 +12,12 @@ import javax.swing.*;
 
 import tcrob.umu.quaky2.*;
 
-//import static dasboot.utils.WindowUtils.adjustLocationToScreenBounds;
-
 public class SoccerVisionWindow extends JFrame
 {	
 	static public final int				GUI_IMAGE_WIDTH		= 275;
-	static public final int				GUI_IMAGE_HEIGHT		= 155;
+	static public final int				GUI_IMAGE_HEIGHT	= 155;		// the image canvases (CPImageCanvas and the others take it as their size)
+	static public final int				WIN_WIDTH			= 275;		// the window, with all its panels
+	static public final int				WIN_HEIGHT			= 720;		// 690 and the toolbar
 	
 	protected SoccerVisionPanel			panel;
 
@@ -31,14 +31,11 @@ public class SoccerVisionWindow extends JFrame
 		add (panel);
 
 		setTitle ("Chaos Vision Monitor");
-		setSize (new Dimension (275, 690));
+		setSize (new Dimension (WIN_WIDTH, WIN_HEIGHT));
 		setLocationRelativeTo (frame);
 
 		if (frame != null)
 			setLocation (frame.getWidth (), 0);
-
-		// Ensure the window is within screen bounds
-		//adjustLocationToScreenBounds(this);
 
 		setVisible (false);
 		

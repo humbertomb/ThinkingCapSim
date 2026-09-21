@@ -1,5 +1,5 @@
 {
-  "world": "./conf/maps/feria.world",
+  "world": "./conf/maps/soccer_field.world",
   "robots": [
     {
       "name": "QUAKY2-1",
@@ -17,7 +17,6 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "PRG": "./conf/programs/quaky2.soccer.b",
-            "PRG_": "conf/programs/quaky2.indoor.b",
             "TYPE": "Controller",
             "AUTO": "true"
           },
@@ -92,7 +91,8 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "GFX": "true",
-            "CLASS": "tcrob.umu.quaky2.SoccerVision"
+            "CLASS": "tcrob.umu.quaky2.SoccerVision",
+            "PARAMS": "./conf/vision/quaky2-soccer.chaos"
           },
           "events": [
             {

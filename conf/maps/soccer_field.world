@@ -1,16 +1,16 @@
 {
   "apw": true,
   "starts": [
-    { "x": 0, "y": 0, "z": 0, "orientation": 0 }
+    { "x": 0, "y": -0.5, "z": 0, "orientation": 90 }
   ],
   "path": [],
   "walls": {
     "defaults": { "width": 0.01, "height": 0.75, "texture": "./conf/3dmodels/textures/wall.jpg" },
     "items": [
-      { "x1": -2.75, "y1": -2.75, "z1": 0, "x2": 2.75, "y2": -2.75, "z2": 0 },
-      { "x1": 2.75, "y1": -2.75, "z1": 0, "x2": 2.75, "y2": 2.75, "z2": 0 },
-      { "x1": 2.75, "y1": 2.75, "z1": 0, "x2": -2.75, "y2": 2.75, "z2": 0 },
-      { "x1": -2.75, "y1": 2.75, "z1": 0, "x2": -2.75, "y2": -2.75, "z2": 0 }
+      { "x1": -2.5, "y1": -2.5, "z1": 0, "x2": 2.5, "y2": -2.5, "z2": 0 },
+      { "x1": 2.5, "y1": -2.5, "z1": 0, "x2": 2.5, "y2": 5, "z2": 0 },
+      { "x1": 2.5, "y1": 5, "z1": 0, "x2": -2.5, "y2": 5, "z2": 0 },
+      { "x1": -2.5, "y1": 5, "z1": 0, "x2": -2.5, "y2": -2.5, "z2": 0 }
     ]
   },
   "icons": [
@@ -45,18 +45,18 @@
     }
   ],
   "objects": [
-    { "icon": "net", "x": -2.16, "y": 2.12, "z": 0, "orientation": -45, "color": "red", "shape": "./conf/3dmodels/net.3ds", "usecolor": true },
-    { "icon": "net", "x": 2.16, "y": -2.12, "z": 0, "orientation": 135, "color": "blue", "shape": "./conf/3dmodels/net.3ds", "usecolor": true }
+    { "icon": "net", "x": 0, "y": 4.5, "z": 0, "orientation": -90, "color": "red", "shape": "./conf/3dmodels/net.3ds", "usecolor": true },
+    { "icon": "net", "x": 0, "y": -2, "z": 0, "orientation": 90, "color": "blue", "shape": "./conf/3dmodels/net.3ds", "usecolor": true }
   ],
   "aobjects": [
-    { "label": "ball", "icon": "ball", "x": 0.5792, "y": 1.4662, "z": 0.11, "orientation": -9.8287, "radius": 0.11, "color": "gray_dark", "shape": "./conf/3dmodels/ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0.2, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0 }
+    { "label": "ball", "icon": "ball", "x": 0, "y": 1.5, "z": 0.11, "orientation": -9.8287, "radius": 0.11, "color": "gray_dark", "shape": "./conf/3dmodels/ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0.2, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0 }
   ],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
     "items": [
-      { "label": "Tarima", "x": -3, "y": -3, "z": 0, "width": 6, "height": 6 },
-      { "label": "Gol-1", "x": -2.4, "y": 2.1, "z": 0, "width": 0.3, "height": 0.3 },
-      { "label": "Gol-2", "x": 2.05, "y": -2.45, "z": 0, "width": 0.4, "height": 0.4 }
+      { "label": "Area", "x": -2.5, "y": -2.5, "z": 0, "width": 5, "height": 7.5, "texture": "./conf/3dmodels/textures/floor2.jpg" },
+      { "label": "Gol-1", "x": -0.48, "y": 4.15, "z": 0, "width": 0.96, "height": 0.7 },
+      { "label": "Gol-2", "x": -0.48, "y": -2.35, "z": 0, "width": 0.96, "height": 0.69 }
     ]
   },
   "fareas": {

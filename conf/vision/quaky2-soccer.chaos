@@ -82,8 +82,8 @@
         "color": {
           "value": -256
         },
-        "segmented": false,
-        "blobbed": false,
+        "segmented": true,
+        "blobbed": true,
         "threshold": 5,
         "gap": 3,
         "minpix": 4,

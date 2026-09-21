@@ -44,11 +44,9 @@ public class SoccerVisionConfig
 		{
 			{ "BLACK",	-16777216,	false,	false,	0,	0,	4,	ColorPrism.class,	"0,255,0,255,0,255",	"EMPTY" },
 			{ "WHITE",	-1,			false,	false,	0,	0,	4,	ColorPrism.class,	"0,255,0,255,0,255",	"EMPTY" },
-			{ "RED",	-65536,		false,	false,	0,	0,	4,	ColorPrism.class,	"0,255,0,255,0,255",	"EMPTY" },
+			{ "RED",	-65536,		true,	true,	0,	0,	4,	ColorPrism.class,	"0,255,0,255,0,255",	"EMPTY" },
 			{ "BLUE",	-16776961,	true,	true,	5,	3,	4,	ColorPrism.class,	"0,255,0,255,0,255",	"EMPTY" },
-			{ "GREEN",	-16711936,	true,	true,	5,	0,	4,	ColorPrism.class,	"0,255,0,255,0,255",	"EMPTY" },
-			{ "YELLOW",	-256,		true,	true,	5,	3,	4,	ColorPrism.class,	"0,255,0,255,0,255",	"EMPTY" },
-			{ "GRAY",	-6908266,	false,	false,	0,	0,	4,	ColorPrism.class,	"0,255,0,255,0,255",	"EMPTY" },
+			{ "GREEN",	-16711936,	false,	false,	5,	0,	4,	ColorPrism.class,	"0,255,0,255,0,255",	"EMPTY" }
 		};
 
 		channels	= new Channels ();
@@ -78,10 +76,6 @@ public class SoccerVisionConfig
 	static public final String			EXTENSION		= ".chaos";
 	/** Where they are kept. */
 	static public final String			DIRECTORY		= "./conf/vision";
-
-	/** Package the cluster classes of the files written by DasBoot were in, and where they are now. */
-	static protected final String		OLD_PACKAGE		= "dasboot.lib.vision.chaos.";
-	static protected final String		NEW_PACKAGE		= "tclib.vision.chaos.";
 
 	/**
 	 * Reads the configuration from a file: its channels (and the cluster of each,
@@ -115,7 +109,6 @@ public class SoccerVisionConfig
 			Channel		ch = channels.at (i);
 
 			if ((ch.clustype == null) || (ch.clustype.trim ().length () == 0))		ch.clustype = ColorPrism.class.getName ();
-			if (ch.clustype.startsWith (OLD_PACKAGE))		ch.clustype = NEW_PACKAGE + ch.clustype.substring (OLD_PACKAGE.length ());
 			if (ch.params == null)							ch.params	= "0,255,0,255,0,255";
 			if (ch.seeds == null)							ch.seeds	= "EMPTY";
 			if (ch.color == null)							ch.color	= Color.GRAY;
