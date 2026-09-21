@@ -26,8 +26,8 @@ public class SoccerVisionPanel extends JPanel
 {	
 	static public final String			IMAGEFORMAT 			= ImageFileFilter.PNG;
 		
-	public enum ChaosImageFormat		{ SEG, BLOB, RECOG};
-	static protected final String[]		MODES	= { "SEGMENT.", "BLOBS", "RECOG." };
+	public enum ChaosImageFormat		{ RAW, SEG, BLOB, RECOG};
+	static protected final String[]		MODES	= { "RAW", "SEGMENT.", "BLOBS", "RECOG." };
 
 	protected SoccerVision				pam;
 	protected ChaosVisionMotionMouse	mouse;
@@ -270,6 +270,7 @@ public class SoccerVisionPanel extends JPanel
 
 		switch (imgmode) 
 		{
+		case RAW:	imageout = imagein; break;								// the frame as the camera took it
 		case SEG:	imageout = pam.segment.getSegmentedImage (); break;
 		case BLOB:	imageout = pam.blobbing.getBlobbedImage (); break;
 		case RECOG:	imageout = (pam.recognized != null) ? pam.recognized : imagein; break;
