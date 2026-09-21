@@ -7,10 +7,10 @@
   "walls": {
     "defaults": { "width": 0.01, "height": 0.75, "texture": "./conf/3dmodels/textures/wall.jpg" },
     "items": [
-      { "x1": -2.5, "y1": -2.5, "z1": 0, "x2": 2.5, "y2": -2.5, "z2": 0 },
-      { "x1": 2.5, "y1": -2.5, "z1": 0, "x2": 2.5, "y2": 2.5, "z2": 0 },
-      { "x1": 2.5, "y1": 2.5, "z1": 0, "x2": -2.5, "y2": 2.5, "z2": 0 },
-      { "x1": -2.5, "y1": 2.5, "z1": 0, "x2": -2.5, "y2": -2.5, "z2": 0 }
+      { "x1": -2.75, "y1": -2.75, "z1": 0, "x2": 2.75, "y2": -2.75, "z2": 0 },
+      { "x1": 2.75, "y1": -2.75, "z1": 0, "x2": 2.75, "y2": 2.75, "z2": 0 },
+      { "x1": 2.75, "y1": 2.75, "z1": 0, "x2": -2.75, "y2": 2.75, "z2": 0 },
+      { "x1": -2.75, "y1": 2.75, "z1": 0, "x2": -2.75, "y2": -2.75, "z2": 0 }
     ]
   },
   "icons": [
@@ -21,7 +21,9 @@
       "z": 0,
       "orientation": -45,
       "lines": [
-        { "x1": -0.0233, "y1": -0.264, "z1": 0, "x2": 0.0127, "y2": 0.3125, "z2": 0 }
+        { "x1": 0.3612, "y1": -0.4894, "z1": 0, "x2": -0.3626, "y2": -0.494, "z2": 0 },
+        { "x1": -0.3626, "y1": -0.494, "z1": 0, "x2": -0.361, "y2": 0.491, "z2": 0 },
+        { "x1": -0.361, "y1": 0.491, "z1": 0, "x2": 0.3658, "y2": 0.4894, "z2": 0 }
       ]
     },
     {
@@ -31,30 +33,30 @@
       "z": 0,
       "orientation": 0.1387,
       "lines": [
-        { "x1": -0.0053, "y1": 0.0794, "z1": 0, "x2": 0.0647, "y2": 0.0665, "z2": 0 },
-        { "x1": 0.0647, "y1": 0.0665, "z1": 0, "x2": 0.1067, "y2": 0.0091, "z2": 0 },
-        { "x1": 0.1067, "y1": 0.0091, "z1": 0, "x2": 0.0937, "y2": -0.0691, "z2": 0 },
-        { "x1": 0.0937, "y1": -0.0691, "z1": 0, "x2": -0.0042, "y2": -0.0997, "z2": 0 },
-        { "x1": -0.0042, "y1": -0.0997, "z1": 0, "x2": -0.0741, "y2": -0.0604, "z2": 0 },
-        { "x1": -0.0741, "y1": -0.0604, "z1": 0, "x2": -0.101, "y2": 0.0074, "z2": 0 },
-        { "x1": -0.101, "y1": 0.0074, "z1": 0, "x2": -0.0648, "y2": 0.063, "z2": 0 },
-        { "x1": -0.0648, "y1": 0.063, "z1": 0, "x2": -0.0053, "y2": 0.0794, "z2": 0 },
-        { "x1": 0.1135, "y1": 0.0069, "z1": 0, "x2": 0.1105, "y2": 0.0061, "z2": 0 }
+        { "x1": 0.1016, "y1": 0.0421, "z1": 0, "x2": 0.0421, "y2": 0.1016, "z2": 0 },
+        { "x1": 0.0421, "y1": 0.1016, "z1": 0, "x2": -0.0421, "y2": 0.1016, "z2": 0 },
+        { "x1": -0.0421, "y1": 0.1016, "z1": 0, "x2": -0.1016, "y2": 0.0421, "z2": 0 },
+        { "x1": -0.1016, "y1": 0.0421, "z1": 0, "x2": -0.1016, "y2": -0.0421, "z2": 0 },
+        { "x1": -0.1016, "y1": -0.0421, "z1": 0, "x2": -0.0421, "y2": -0.1016, "z2": 0 },
+        { "x1": -0.0421, "y1": -0.1016, "z1": 0, "x2": 0.0421, "y2": -0.1016, "z2": 0 },
+        { "x1": 0.0421, "y1": -0.1016, "z1": 0, "x2": 0.1016, "y2": -0.0421, "z2": 0 },
+        { "x1": 0.1016, "y1": -0.0421, "z1": 0, "x2": 0.1016, "y2": 0.0421, "z2": 0 }
       ]
     }
   ],
   "objects": [
-    { "icon": "net", "x": -2.2356, "y": 2.168, "z": 0, "orientation": -45, "color": "red", "shape": "./conf/3dmodels/net.3ds", "usecolor": true },
-    { "icon": "net", "x": 2.2243, "y": -2.2491, "z": 0, "orientation": 135, "color": "blue", "shape": "./conf/3dmodels/net.3ds", "usecolor": true }
+    { "icon": "net", "x": -2.16, "y": 2.12, "z": 0, "orientation": -45, "color": "red", "shape": "./conf/3dmodels/net.3ds", "usecolor": true },
+    { "icon": "net", "x": 2.16, "y": -2.12, "z": 0, "orientation": 135, "color": "blue", "shape": "./conf/3dmodels/net.3ds", "usecolor": true }
   ],
   "aobjects": [
-    { "label": "ball", "icon": "ball", "x": 0.5792, "y": 1.4662, "z": 0, "orientation": -59.5051, "radius": 0.2436, "color": "gray_dark", "shape": "./conf/3dmodels/ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0.2, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.001 }
+    { "label": "ball", "icon": "ball", "x": 0.5792, "y": 1.4662, "z": 0.11, "orientation": -9.8287, "radius": 0.11, "color": "gray_dark", "shape": "./conf/3dmodels/ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0.2, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0 }
   ],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
     "items": [
       { "label": "Tarima", "x": -3, "y": -3, "z": 0, "width": 6, "height": 6 },
-      { "label": "Gol-1", "x": 2, "y": 2, "z": 0, "width": 0.2, "height": 0.2 }
+      { "label": "Gol-1", "x": -2.4, "y": 2.1, "z": 0, "width": 0.3, "height": 0.3 },
+      { "label": "Gol-2", "x": 2.05, "y": -2.45, "z": 0, "width": 0.4, "height": 0.4 }
     ]
   },
   "fareas": {
@@ -66,9 +68,7 @@
     "items": []
   },
   "waypoints": [],
-  "docks": [
-    { "label": "AA0", "x": -3, "y": -3, "z": 0, "orientation": 0, "flow": "INOUT" }
-  ],
+  "docks": [],
   "beacons": [],
   "cbeacons": []
 }

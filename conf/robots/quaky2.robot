@@ -421,34 +421,20 @@
     },
     "vis": {
       "cycle": 1,
-      "sensors": [
-        {
-          "rho": 0.12536540809227956,
-          "theta": -0.0,
-          "height": 0.39937321006067117,
-          "orientation": 0.0,
-          "elevation": -23.0,
-          "step": 1,
-          "driver": "devices.drivers.vision.quaky2.Quaky2Vis",
-          "driverParams": "5,7000,10.0.0.1:8000",
-          "rangemax": 11.668769833972743,
-          "hfov": 70.0,
-          "vfov": 43.0
-        }
-      ]
+      "sensors": []
     },
     "camera": {
       "sensors": [
         {
-          "rho": 0.12536540809227956,
+          "rho": 0.13232967864843265,
           "theta": 0.0,
-          "height": 0.40070480962325067,
+          "height": 0.3623064919283577,
           "orientation": 0.0,
-          "elevation": -25.0,
+          "elevation": -18.408692469621943,
           "step": 0,
           "rangemax": 10.0,
-          "hfov": 70.0,
-          "vfov": 43.0,
+          "hfov": 43.6,
+          "vfov": 33.4,
           "framerate": 5.0,
           "resolution": "800x600"
         }
