@@ -41,7 +41,7 @@
         "gap": 3,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "seeds": " 0,255,255"
+        "seeds": " 0,255,255 0,223,255 0,212,255 0,209,255 0,190,255 0,247,255"
       },
       {
         "id": 3,
@@ -55,7 +55,7 @@
         "gap": 3,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "seeds": " 170,255,255"
+        "seeds": " 170,255,232 170,255,255 170,249,239 170,166,255 170,251,236 170,248,241"
       },
       {
         "id": 4,

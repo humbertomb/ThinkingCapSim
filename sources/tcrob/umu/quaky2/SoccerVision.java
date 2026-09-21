@@ -49,6 +49,8 @@ public class SoccerVision extends Perception
 
 	// Local graphics: configuration and monitoring of the vision
 	protected SoccerVisionWindow	win;
+	
+	private boolean					initialized = false;
 
 	// Constructors
 	public SoccerVision (ModuleConfig cfg, Linda linda)
@@ -167,10 +169,14 @@ public class SoccerVision extends Perception
 					win.setVisible (true);
 				}
 			});
+		
+		initialized = true;
 	}
 	
 	public void notify_camera (String space, ItemCamera item)
 	{
+		if (!initialized)			return;
+		
 		segment.process (item.image, lut, vconfig.channels);
 		blobbing.process (segment);
 		blobbing.postProcess ();
