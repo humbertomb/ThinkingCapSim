@@ -118,6 +118,7 @@ public class WorldCanvas extends JPanel
 	static private final Color		C_DOCK		= new Color (0, 140, 60);
 	static private final Color		C_START		= new Color (220, 30, 30);
 	static private final Color		C_SEL		= new Color (255, 140, 0);
+	static private final Color		C_SHAPE		= new Color (170, 175, 185);		// contour of the 3D model of an object, as the robot editor draws a model
 	static private final Color		C_HANDLE	= new Color (255, 255, 255);
 	static private final Color		C_RUBBER	= new Color (0, 120, 215);
 
@@ -936,8 +937,32 @@ public class WorldCanvas extends JPanel
 		g.draw (new Line2D.Double (px (l.orig ().x ()), py (l.orig ().y ()), px (l.dest ().x ()), py (l.dest ().y ())));
 	}
 
+	/**
+	 * The contour of the 3D model of an object, where the object stands and
+	 * turned as it is: the floor the model covers, in light grey under the
+	 * drawing of the object. A model is read the first time it is asked for, on a
+	 * thread of its own, and the plan is drawn again when its contour is ready.
+	 */
+	private void drawShape (Graphics2D g, WMObject o)
+	{
+		double[][]	lines = ShapeOutline.get (o.shape, repainter);
+		double		cs = Math.cos (o.a), sn = Math.sin (o.a);
+		double		ox = o.pos.x (), oy = o.pos.y ();
+
+		if ((lines == null) || (lines.length == 0))		return;
+		g.setColor (C_SHAPE);
+		g.setStroke (stroke (1f));
+		for (double[] l : lines)
+			g.draw (new Line2D.Double (px (ox + l[0] * cs - l[1] * sn), py (oy + l[0] * sn + l[1] * cs),
+									   px (ox + l[2] * cs - l[3] * sn), py (oy + l[2] * sn + l[3] * cs)));
+	}
+
+	/** Draws the plan again: a model whose contour was being worked out is ready. */
+	private final Runnable		repainter	= new Runnable () { public void run () { repaint (); } };
+
 	private void drawObject (Graphics2D g, WMObject o, boolean sel)
 	{
+		if (o.shape != null)		drawShape (g, o);					// under the drawing of the object
 		Color	c = sel ? C_SEL : ColorTool.fromWColorToColor (o.color);
 		if (!o.visible && !sel)		c = new Color (c.getRed (), c.getGreen (), c.getBlue (), 90);
 		g.setColor (c);

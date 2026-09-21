@@ -64,10 +64,16 @@ public class ShapeLines
 	static public synchronized void flush ()					{ CACHE.clear (); }
 	static public synchronized void flush (String path)			{ if (path != null)		CACHE.remove (path.trim ()); }
 
+	/** What is done with every face of a model: a triangle or a quad, its corners in robot coordinates. */
+	interface Faces
+	{
+		void face (Point3d[] corners);
+	}
+
 	static private double[][] read (String path)
 	{
-		List<double[]>	out = new ArrayList<double[]> ();
-		Set<String>		seen = new HashSet<String> ();
+		final List<double[]>	out = new ArrayList<double[]> ();
+		final Set<String>		seen = new HashSet<String> ();
 
 		try
 		{
@@ -75,7 +81,14 @@ public class ShapeLines
 			if (!f.isFile ())			return new double[0][];
 			Loader3DS		loader = new Loader3DS ();
 			com.sun.j3d.loaders.Scene	scene = loader.load (path);
-			walk (scene.getSceneGroup (), new Transform3D (), out, seen);
+			// the sides of every face
+			walk (scene.getSceneGroup (), new Transform3D (), new Faces ()
+			{
+				public void face (Point3d[] c)
+				{
+					for (int i = 0; i < c.length; i++)		edge (c[i], c[(i + 1) % c.length], out, seen);
+				}
+			});
 		} catch (Throwable e)
 		{
 			System.out.println ("--[ShapeLines] Cannot read the 3D model <" + path + ">: " + e);
@@ -86,12 +99,42 @@ public class ShapeLines
 
 	/* ------------------------------------------------------------------ */
 
-	static private void walk (Node node, Transform3D t, List<double[]> out, Set<String> seen)
+	/**
+	 * The faces of a model, each one as its corners {x, y, z, x, y, z, ...} in the
+	 * coordinates of the robot -- three for a triangle and four for a quad. It is
+	 * read again every time: whoever asks keeps what it makes of them.
+	 */
+	static public double[][] faces (String path)
+	{
+		final List<double[]>	out = new ArrayList<double[]> ();
+
+		if ((path == null) || !new java.io.File (path.trim ()).isFile ())		return new double[0][];
+		try
+		{
+			com.sun.j3d.loaders.Scene	scene = new Loader3DS ().load (path.trim ());
+			walk (scene.getSceneGroup (), new Transform3D (), new Faces ()
+			{
+				public void face (Point3d[] c)
+				{
+					double[]	f = new double[3 * c.length];
+					for (int i = 0; i < c.length; i++)		{ f[3 * i] = c[i].x;	f[3 * i + 1] = c[i].y;	f[3 * i + 2] = c[i].z; }
+					out.add (f);
+				}
+			});
+		} catch (Throwable e)
+		{
+			System.out.println ("--[ShapeLines] Cannot read the 3D model <" + path + ">: " + e);
+			return new double[0][];
+		}
+		return out.toArray (new double[0][]);
+	}
+
+	static private void walk (Node node, Transform3D t, Faces out)
 	{
 		if (node instanceof Shape3D)
 		{
 			Shape3D		shape = (Shape3D) node;
-			for (int i = 0; i < shape.numGeometries (); i++)		edges (shape.getGeometry (i), t, out, seen);
+			for (int i = 0; i < shape.numGeometries (); i++)		faces (shape.getGeometry (i), t, out);
 		}
 		else if (node instanceof Group)
 		{
@@ -105,41 +148,46 @@ public class ShapeLines
 				sub		= new Transform3D (t);
 				sub.mul (own);
 			}
-			for (int i = 0; i < g.numChildren (); i++)		walk (g.getChild (i), sub, out, seen);
+			for (int i = 0; i < g.numChildren (); i++)		walk (g.getChild (i), sub, out);
 		}
 	}
 
-	/** The edges of one geometry: the sides of its triangles (or of its quads). */
-	static private void edges (Geometry geo, Transform3D t, List<double[]> out, Set<String> seen)
+	/** The faces of one geometry: its triangles (or its quads). */
+	static private void faces (Geometry geo, Transform3D t, Faces out)
 	{
 		GeometryArray	ga;
 		int				n, first, per;
 
 		if (!(geo instanceof GeometryArray))		return;
 		ga		= (GeometryArray) geo;
-		if (geo instanceof IndexedGeometryArray)	{ indexed ((IndexedGeometryArray) geo, t, out, seen); return; }
-		if (geo instanceof GeometryStripArray)		{ strips ((GeometryStripArray) geo, t, out, seen); return; }
+		if (geo instanceof IndexedGeometryArray)	{ indexed ((IndexedGeometryArray) geo, t, out); return; }
+		if (geo instanceof GeometryStripArray)		{ strips ((GeometryStripArray) geo, t, out); return; }
 
 		per		= (geo instanceof javax.media.j3d.QuadArray) ? 4 : 3;
 		n		= ga.getValidVertexCount ();
 		first	= ((ga.getVertexFormat () & GeometryArray.BY_REFERENCE) != 0) ? ga.getInitialVertexIndex () : 0;
 		for (int k = first; k + per <= first + n; k += per)
-			for (int i = 0; i < per; i++)
-				edge (point (ga, k + i, t), point (ga, k + (i + 1) % per, t), out, seen);
+		{
+			Point3d[]	c = new Point3d[per];
+			for (int i = 0; i < per; i++)		c[i] = point (ga, k + i, t);
+			out.face (c);
+		}
 	}
 
-	static private void indexed (IndexedGeometryArray ga, Transform3D t, List<double[]> out, Set<String> seen)
+	static private void indexed (IndexedGeometryArray ga, Transform3D t, Faces out)
 	{
 		int		per = (ga instanceof javax.media.j3d.IndexedQuadArray) ? 4 : 3;
 		int		n = ga.getValidIndexCount (), first = ga.getInitialIndexIndex ();
 
 		for (int k = first; k + per <= first + n; k += per)
-			for (int i = 0; i < per; i++)
-				edge (point (ga, ga.getCoordinateIndex (k + i), t),
-					  point (ga, ga.getCoordinateIndex (k + (i + 1) % per), t), out, seen);
+		{
+			Point3d[]	c = new Point3d[per];
+			for (int i = 0; i < per; i++)		c[i] = point (ga, ga.getCoordinateIndex (k + i), t);
+			out.face (c);
+		}
 	}
 
-	static private void strips (GeometryStripArray ga, Transform3D t, List<double[]> out, Set<String> seen)
+	static private void strips (GeometryStripArray ga, Transform3D t, Faces out)
 	{
 		int[]	counts = new int[ga.getNumStrips ()];
 		int		at = 0;
@@ -148,10 +196,7 @@ public class ShapeLines
 		for (int s = 0; s < counts.length; s++)
 		{
 			for (int k = 0; k + 2 < counts[s]; k++)					// every three in a row make a triangle
-			{
-				Point3d		a = point (ga, at + k, t), b = point (ga, at + k + 1, t), c = point (ga, at + k + 2, t);
-				edge (a, b, out, seen);		edge (b, c, out, seen);		edge (c, a, out, seen);
-			}
+				out.face (new Point3d[] { point (ga, at + k, t), point (ga, at + k + 1, t), point (ga, at + k + 2, t) });
 			at	+= counts[s];
 		}
 	}
