@@ -21,12 +21,8 @@ public class LUTStandard extends LUT
 
 	public void initialise (Channels chs)
 	{
-		int 				rgb, hsv;
-		int				r, g, b;
-		int				ch;
 		int				ttime;
 		long				ctime;
-		boolean			labeled;
 
 		shiftsR		= 8 - BITS_R;
 		sizeR		= 1 << BITS_R;
@@ -36,61 +32,30 @@ public class LUTStandard extends LUT
 		sizeB		= 1 << BITS_B;
 
 		System.out.print ("  [LUTStandard] Recomputing LUT values (" + BITS_R + ":" + BITS_G + ":" + BITS_B + " bits) ... ");
-		lut		= new int[sizeR][sizeG][sizeB];
 		ctime	= System.currentTimeMillis ();
 
-		for (r = 0; r < sizeR; r++)
-			for (g = 0; g < sizeG; g++)
-				for (b = 0; b < sizeB; b++)
-				{
-					rgb = Pixel.mergeComponents (r<<shiftsR, g<<shiftsG, b<<shiftsB);
-					hsv	= Segmentation.rgbToHsv (rgb);
-
-					labeled = false;
-					for (ch = 0; ch < chs.getNumChannels(); ch++)
-						if (chs.at(ch).segmented && chs.at(ch).insideChannel (hsv))
-						{
-							lut[r][g][b] = ch;
-							labeled = true;
-							break;
-						}
-
-					if (!labeled)
-						lut[r][g][b] = NO_COLOR;
-				}
+		// the first channel that takes some colour of each cell (a plane of the table per core: they are apart),
+		// in a table of its own, which replaces the one in use when it is done (frames go on being segmented)
+		final int[][][]	table = new int[sizeR][sizeG][sizeB];
+		java.util.stream.IntStream.range (0, sizeR).parallel ().forEach (pr ->
+		{
+			for (int pg = 0; pg < sizeG; pg++)
+				for (int pb = 0; pb < sizeB; pb++)
+					table[pr][pg][pb] = labelOf (chs, pr, pg, pb);
+		});
+		lut		= table;
 		ttime	= (int) (System.currentTimeMillis () - ctime);
 		System.out.println (ttime + " ms");
 	}
 
+	/**
+	 * A channel changed (its seeds): the table is made again, so that the cells
+	 * it no longer takes are free and the ones it shares go to the first channel,
+	 * as when it is made.
+	 */
 	public void update (Channels chs, int ch)
 	{
-		int 				rgb, hsv;
-		int				r, g, b;
-		int				ttime;
-		long				ctime;
-
-		shiftsR		= 8 - BITS_R;
-		sizeR		= 1 << BITS_R;
-		shiftsG		= 8 - BITS_G;
-		sizeG		= 1 << BITS_G;
-		shiftsB		= 8 - BITS_B;
-		sizeB		= 1 << BITS_B;
-
-		System.out.print ("  [LUTStandard] Updating LUT values (" + BITS_R + ":" + BITS_G + ":" + BITS_B + " bits) ... ");
-		ctime	= System.currentTimeMillis ();
-
-		for (r = 0; r < sizeR; r++)
-			for (g = 0; g < sizeG; g++)
-				for (b = 0; b < sizeB; b++)
-				{
-					rgb = Pixel.mergeComponents (r<<shiftsR, g<<shiftsG, b<<shiftsB);
-					hsv	= Segmentation.rgbToHsv (rgb);
-
-					if (chs.at(ch).insideChannel (hsv))
-						lut[r][g][b] = ch;
-				}
-		ttime	= (int) (System.currentTimeMillis () - ctime);
-		System.out.println (ttime + " ms");
+		initialise (chs);
 	}
 	
 	public boolean configurable ()

@@ -27,7 +27,6 @@ public class LUTGrowing extends LUTStandard
 
 	public void initialise (Channels chs)
 	{
-		int 				rgb, hsv;
 		int				r, g, b;
 		int				ch;
 		int				ttime;
@@ -55,11 +54,9 @@ public class LUTGrowing extends LUTStandard
 				{
 					if (lut[r][g][b] != NO_COLOR)		continue;
 
-					rgb = Pixel.mergeComponents (r<<shiftsR, g<<shiftsG, b<<shiftsB);
-					hsv	= Segmentation.rgbToHsv (rgb);
-
+					// the first channel that takes some colour of the cell grows from it
 					for (ch = 0; ch < chs.getNumChannels(); ch++)
-						if (chs.at(ch).segmented && chs.at(ch).insideChannel (hsv))
+						if (chs.at(ch).segmented && takes (chs.at(ch), r, g, b))
 						{
 							growRGBspace (r, g, b, chs.at (ch));
 							break;
@@ -71,7 +68,6 @@ public class LUTGrowing extends LUTStandard
 
 	public void update (Channels chs, int ch)
 	{
-		int 				rgb, hsv;
 		int				r, g, b;
 		int				ttime;
 		long				ctime;
@@ -84,8 +80,18 @@ public class LUTGrowing extends LUTStandard
 		sizeB		= 1 << BITS_B;
 
 		System.out.print ("  [LUTGrowing] Updating LUT values (" + BITS_R + ":" + BITS_G + ":" + BITS_B + " bits) ... ");
-		lut		= new int[sizeR][sizeG][sizeB];
 		ctime	= System.currentTimeMillis ();
+
+		// the cells of the channel are made again; the ones of the others are kept (a new table lost them)
+		if (lut == null)
+		{
+			initialise (chs);
+			return;
+		}
+		for (r = 0; r < sizeR; r++)
+			for (g = 0; g < sizeG; g++)
+				for (b = 0; b < sizeB; b++)
+					if (lut[r][g][b] == ch)		lut[r][g][b] = NO_COLOR;
 
 		for (r = 0; r < sizeR; r++)
 			for (g = 0; g < sizeG; g++)
@@ -93,10 +99,7 @@ public class LUTGrowing extends LUTStandard
 				{
 //					if (lut[r][g][b] != NO_COLOR)		continue;
 
-					rgb = Pixel.mergeComponents (r<<shiftsR, g<<shiftsG, b<<shiftsB);
-					hsv	= Segmentation.rgbToHsv (rgb);
-
-					if (chs.at(ch).insideChannel (hsv))
+					if ((lut[r][g][b] == NO_COLOR) && takes (chs.at(ch), r, g, b))
 						growRGBspace (r, g, b, chs.at (ch));
 				}
 		ttime	= (int) (System.currentTimeMillis () - ctime);
