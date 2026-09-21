@@ -162,7 +162,7 @@ public class SoccerVision extends Perception
 				{
 					if (win != null)		return;
 					
-					win = new SoccerVisionWindow (null, SoccerVision.this);
+					win = new SoccerVisionWindow (hostFrame (), SoccerVision.this);		// docked on the right of the simulator
 					win.setTitle ("Chaos Vision Monitor [" + robotid + "]");
 					win.setVisible (true);
 				}

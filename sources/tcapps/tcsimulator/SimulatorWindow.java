@@ -146,6 +146,8 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 		buildGUI ();
 		updateTitle ();
+		// the windows the modules open (with local graphics) are placed by this one
+		tc.runtime.thread.StdThread.setHostFrame (this);
 
 		setDefaultCloseOperation (DO_NOTHING_ON_CLOSE);
 		addWindowListener (new WindowAdapter ()

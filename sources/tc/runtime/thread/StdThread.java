@@ -38,6 +38,14 @@ public abstract class StdThread implements Runnable, LindaListener
 	protected boolean			localgfx	= false;
 	
 	protected ModuleConfig		config;					// Configuration of this module in the deployment
+
+	// The window of the application running the modules (the simulator), which their own windows are placed by
+	static private volatile javax.swing.JFrame	hostFrame;
+
+	/** Says which window runs the modules (the simulator does, when it is built); null for none. */
+	static public void setHostFrame (javax.swing.JFrame frame)		{ hostFrame = frame; }
+	/** The window that runs the modules, for a module to place its own windows by it; null when there is none. */
+	static public javax.swing.JFrame hostFrame ()					{ return hostFrame; }
 	
 	// Constructors
 	public StdThread (ModuleConfig config, Linda linda)

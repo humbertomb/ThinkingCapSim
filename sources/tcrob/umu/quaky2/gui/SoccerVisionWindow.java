@@ -34,8 +34,17 @@ public class SoccerVisionWindow extends JFrame
 		setSize (new Dimension (WIN_WIDTH, WIN_HEIGHT));
 		setLocationRelativeTo (frame);
 
+		// docked on the right of the window it goes with, level with its top (and on the screen)
 		if (frame != null)
-			setLocation (frame.getWidth (), 0);
+		{
+			Rectangle	screen = (frame.getGraphicsConfiguration () != null) ? frame.getGraphicsConfiguration ().getBounds ()
+									: new Rectangle (Toolkit.getDefaultToolkit ().getScreenSize ());
+			int			x = frame.getX () + frame.getWidth (), y = frame.getY ();
+
+			x	= Math.max (screen.x, Math.min (x, screen.x + screen.width - getWidth ()));
+			y	= Math.max (screen.y, Math.min (y, screen.y + screen.height - getHeight ()));
+			setLocation (x, y);
+		}
 
 		setVisible (false);
 		
