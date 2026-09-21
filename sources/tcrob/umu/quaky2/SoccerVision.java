@@ -12,6 +12,7 @@ import tclib.vision.chaos.blobs.BlobForming;
 import tclib.vision.chaos.segment.LUT;
 import tclib.vision.chaos.segment.Segmentation;
 import tc.shared.linda.*;
+import tcrob.umu.quaky2.gui.SoccerVisionWindow;
 import tcrob.umu.quaky2.lpo.*;
 
 import wucore.utils.color.*;
@@ -40,6 +41,9 @@ public class SoccerVision extends Perception
 	public Segmentation				segment;
 	public BlobForming				blobbing;
 	public SoccerRecognizer			recognizer;
+
+	// Local graphics: configuration and monitoring of the vision
+	protected SoccerVisionWindow		win;
 
 	// Constructors
 	public SoccerVision (ModuleConfig cfg, Linda linda)
@@ -156,6 +160,25 @@ public class SoccerVision extends Perception
 		instanceBlob ();
 		
 		recognizer	= new SoccerRecognizer ();
+
+		// with local graphics, the window to configure and watch the vision (once the algorithms are there)
+		if (localgfx && (win == null))
+			javax.swing.SwingUtilities.invokeLater (new Runnable ()
+			{
+				public void run ()
+				{
+					if (win != null)		return;
+					win		= new SoccerVisionWindow (null, SoccerVision.this);
+					win.setTitle ("Chaos Vision Monitor [" + robotid + "]");
+					win.setVisible (true);
+				}
+			});
+	}
+
+	protected void close_gfx ()
+	{
+		dispose_window (win);
+		win		= null;
 	}
 	
 	public void notify_camera (String space, ItemCamera item)
@@ -164,6 +187,14 @@ public class SoccerVision extends Perception
 		blobbing.process (segment);
 		blobbing.postProcess ();
 		recognizer.process (item.image, segment.getSegmented(), blobbing.getBlobs (), vconfig.channels, vconfig);
+
+		// what the camera saw, and what came out of it, to the window
+		if (win != null)
+		{
+			final SoccerVisionWindow	w = win;
+			final java.awt.image.BufferedImage	image = item.image;
+			javax.swing.SwingUtilities.invokeLater (new Runnable () { public void run () { w.updateBufferedImage (image); } });
+		}
 
 		
 //		// Add domain specific LPOs to the LPS
