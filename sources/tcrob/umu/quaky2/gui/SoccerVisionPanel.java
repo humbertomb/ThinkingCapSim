@@ -37,7 +37,7 @@ public class SoccerVisionPanel extends JPanel
 	protected CPColorTable				cpcolortable;
 	protected CPZoomCanvas				cpzoom;
 	protected CPImageCanvas				cpimage;
-	protected JPanel					cprecogcfg;
+	protected SoccerRecognitonConfigPanel	cprecogcfg;
 	protected JFileChooser				chooser;
 
 	// Channel monitor and zoom
@@ -86,7 +86,7 @@ public class SoccerVisionPanel extends JPanel
 
 		cpzoom 			= new CPZoomCanvas ();
 		cpimage			= new CPImageCanvas ();
-		cprecogcfg		= new SoccerRecognitonConfigPanel (pam.recognizer);
+		cprecogcfg		= new SoccerRecognitonConfigPanel (pam.recognizer, pam.vconfig.channels);
 		cpcolortable	= new CPColorTable (this, pam);
 
 		setLayout (new BorderLayout ());
@@ -209,6 +209,7 @@ public class SoccerVisionPanel extends JPanel
 		btblobcon.setEnabled (pam.blobbing.configurable ());
 
 		cpcolortable.configChanged ();
+		cprecogcfg.setChannels (cfg.channels);
 		cfgfile		= file;
 		pam.vfile	= file;
 		showConfigFile ();

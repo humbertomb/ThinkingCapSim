@@ -34,6 +34,13 @@ public class SoccerRecognizer
 	static private int				fovea_ymin;
 	static private int				fovea_ymax;
 
+	// The segmented channels each object is looked for in (their index in the channels of the configuration)
+	public int						CARPET_CHANNEL	= 3;				// the floor, which the horizon is found from
+	public int						BALL_CHANNEL	= 0;
+	public int						NET1_CHANNEL	= 1;
+	public int						NET2_CHANNEL	= 2;
+	public int						LM_CHANNEL		= 4;				// the pink of the landmarks
+
 	public int 						BALL_SX_MIN		= 2;				// Minimum reliable size in image (pix)
 	public int 						BALL_SY_MIN		= 2;				// was 5 --AS 020618
 	public int 						BALL_HORIZ_HGT	= 20;
@@ -53,6 +60,8 @@ public class SoccerRecognizer
 	public int 						LM_HORIZ_HGT	= -20;
 	public int 						LM_DENSITY		= 10;
 
+	static private final Blobs		NO_BLOBS	= new Blobs ();		// the blobs of a channel that is not there
+
 	private BufferedImageDrawing	dwg = new BufferedImageDrawing ();
 
 	public SoccerRecognizer ()
@@ -62,11 +71,9 @@ public class SoccerRecognizer
 
 	public BufferedImage process (BufferedImage input, int[] segmented, Blobs[] blobs, Channels channels, SoccerVisionConfig config)
 	{
-		int					i;
 		BufferedImage		output;
-		CircleFitting		ellipse;
-		NetFitting			net;
 		VisualHorizon		horizon;
+		Blobs				pinks;
 		
 		output	= new BufferedImage (input.getWidth(), input.getHeight(), BufferedImage.TYPE_INT_RGB);
 		output.setData (input.getData ());
@@ -74,80 +81,53 @@ public class SoccerRecognizer
 		
 		computeFovea (output, dwg);
 		horizon = new VisualHorizon ();
-		horizon.findHorizon (output, segmented, channels.at (3), channels.at (0));
+		// a channel that is not there (fewer channels than the one chosen) is not looked for
+		if (has (channels, blobs, CARPET_CHANNEL) && has (channels, blobs, BALL_CHANNEL))
+			horizon.findHorizon (output, segmented, channels.at (CARPET_CHANNEL), channels.at (BALL_CHANNEL));
 
-		ellipse	= new CircleFitting ();
-		for (i = 0; i < blobs[0].getBlobNumber (); i++)
+		if (has (channels, blobs, BALL_CHANNEL))
 		{
-			Blob		blob = blobs[0].getBlob (i);
-			if (testValidBall (blob, config, horizon, dwg))
-				ellipse.doFitting (output, segmented, blob, channels.at (0));
+			CircleFitting	ellipse = new CircleFitting ();
+
+			for (int i = 0; i < blobs[BALL_CHANNEL].getBlobNumber (); i++)
+			{
+				Blob		blob = blobs[BALL_CHANNEL].getBlob (i);
+				if (testValidBall (blob, config, horizon, dwg))
+					ellipse.doFitting (output, segmented, blob, channels.at (BALL_CHANNEL));
+			}
 		}
 		
-		net	= new NetFitting ();
-		for (i = 0; i < blobs[1].getBlobNumber (); i++)
+		pinks	= has (channels, blobs, LM_CHANNEL) ? blobs[LM_CHANNEL] : NO_BLOBS;
+		for (int n : new int[] { NET1_CHANNEL, NET2_CHANNEL })
 		{
-			Blob		blob = blobs[1].getBlob (i);
-			if (!testPinkOverlap (blob, blobs[4]) && testValidNet (blob, config, horizon, dwg, Color.YELLOW.getRGB()))
-				net.doFitting (output, segmented, blobs[1], channels.at (1), channels.at (3));
-			else
-				testValidLandmark (blob, blobs[4], config, horizon, dwg, Color.YELLOW.getRGB());
-		}
-		for (i = 0; i < blobs[2].getBlobNumber (); i++)
-		{
-			Blob		blob = blobs[2].getBlob (i);
-			if (!testPinkOverlap (blob, blobs[4]) && testValidNet (blob, config, horizon, dwg, Color.CYAN.getRGB()))
-				net.doFitting (output, segmented, blobs[2], channels.at (2), channels.at (3));
-			else
-				testValidLandmark (blob, blobs[4], config, horizon, dwg, Color.CYAN.getRGB());
+			NetFitting	net = new NetFitting ();
+			int			color;
+
+			if (!has (channels, blobs, n) || !has (channels, blobs, CARPET_CHANNEL))		continue;
+			color	= channels.at (n).color.getRGB ();					// the box of a net in the colour of its channel
+			for (int i = 0; i < blobs[n].getBlobNumber (); i++)
+			{
+				Blob		blob = blobs[n].getBlob (i);
+				if (!testPinkOverlap (blob, pinks) && testValidNet (blob, config, horizon, dwg, color))
+					net.doFitting (output, segmented, blobs[n], channels.at (n), channels.at (CARPET_CHANNEL));
+				else
+					testValidLandmark (blob, pinks, config, horizon, dwg, color);
+			}
 		}
 				
 		return output;
 	}
 
+	/** The same as {@link #process}. */
 	public BufferedImage recognize (BufferedImage input, int[] segmented, Blobs[] blobs, Channels channels, SoccerVisionConfig config)
 	{
-		int					i;
-		BufferedImage		output;
-		CircleFitting		ellipse;
-		NetFitting			net;
-		VisualHorizon		horizon;
-		
-		output	= new BufferedImage (input.getWidth(), input.getHeight(), BufferedImage.TYPE_INT_RGB);
-		output.setData (input.getData ());
-		dwg.updateImage (output);
-		
-		computeFovea (output, dwg);
-		horizon = new VisualHorizon ();
-		horizon.findHorizon (output, segmented, channels.at (3), channels.at (0));
+		return process (input, segmented, blobs, channels, config);
+	}
 
-		ellipse	= new CircleFitting ();
-		for (i = 0; i < blobs[0].getBlobNumber (); i++)
-		{
-			Blob		blob = blobs[0].getBlob (i);
-			if (testValidBall (blob, config, horizon, dwg))
-				ellipse.doFitting (output, segmented, blob, channels.at (0));
-		}
-		
-		net	= new NetFitting ();
-		for (i = 0; i < blobs[1].getBlobNumber (); i++)
-		{
-			Blob		blob = blobs[1].getBlob (i);
-			if (!testPinkOverlap (blob, blobs[4]) && testValidNet (blob, config, horizon, dwg, Color.YELLOW.getRGB()))
-				net.doFitting (output, segmented, blobs[1], channels.at (1), channels.at (3));
-			else
-				testValidLandmark (blob, blobs[4], config, horizon, dwg, Color.YELLOW.getRGB());
-		}
-		for (i = 0; i < blobs[2].getBlobNumber (); i++)
-		{
-			Blob		blob = blobs[2].getBlob (i);
-			if (!testPinkOverlap (blob, blobs[4]) && testValidNet (blob, config, horizon, dwg, Color.CYAN.getRGB()))
-				net.doFitting (output, segmented, blobs[2], channels.at (2), channels.at (3));
-			else
-				testValidLandmark (blob, blobs[4], config, horizon, dwg, Color.CYAN.getRGB());
-		}
-				
-		return output;
+	/** Whether a channel is there, with the blobs of its own. */
+	static protected boolean has (Channels channels, Blobs[] blobs, int ch)
+	{
+		return (ch >= 0) && (ch < channels.size ()) && (blobs != null) && (ch < blobs.length) && (blobs[ch] != null);
 	}
 		
 	protected boolean testValidBall (Blob blob, SoccerVisionConfig config, VisualHorizon horizon, BufferedImageDrawing dwg)
@@ -397,6 +377,12 @@ public class SoccerRecognizer
 			
 			p.load(fd);
 						
+			CARPET_CHANNEL	= Integer.valueOf (p.getProperty ("CARPET_CHANNEL", Integer.toString (CARPET_CHANNEL))).intValue ();
+			BALL_CHANNEL	= Integer.valueOf (p.getProperty ("BALL_CHANNEL", Integer.toString (BALL_CHANNEL))).intValue ();
+			NET1_CHANNEL	= Integer.valueOf (p.getProperty ("NET1_CHANNEL", Integer.toString (NET1_CHANNEL))).intValue ();
+			NET2_CHANNEL	= Integer.valueOf (p.getProperty ("NET2_CHANNEL", Integer.toString (NET2_CHANNEL))).intValue ();
+			LM_CHANNEL		= Integer.valueOf (p.getProperty ("LM_CHANNEL", Integer.toString (LM_CHANNEL))).intValue ();
+
 			BALL_SX_MIN		= Integer.valueOf (p.getProperty ("BALL_SX_MIN", Integer.toString (BALL_SX_MIN))).intValue ();
 			BALL_SY_MIN		= Integer.valueOf (p.getProperty ("BALL_SY_MIN", Integer.toString (BALL_SY_MIN))).intValue ();
 			BALL_HORIZ_HGT	= Integer.valueOf (p.getProperty ("BALL_HORIZ_HGT", Integer.toString (BALL_HORIZ_HGT))).intValue ();
@@ -429,7 +415,13 @@ public class SoccerRecognizer
 		{
 			FileOutputStream fd = new FileOutputStream(new File (name), true);
 			
-			String aux = "BALL_SX_MIN = " + Integer.valueOf (BALL_SX_MIN).toString () + "\n";
+			String aux = "CARPET_CHANNEL = " + CARPET_CHANNEL + "\n";
+			aux = aux + "BALL_CHANNEL = " + BALL_CHANNEL + "\n";
+			aux = aux + "NET1_CHANNEL = " + NET1_CHANNEL + "\n";
+			aux = aux + "NET2_CHANNEL = " + NET2_CHANNEL + "\n";
+			aux = aux + "LM_CHANNEL = " + LM_CHANNEL + "\n";
+
+			aux = aux + "BALL_SX_MIN = " + Integer.valueOf (BALL_SX_MIN).toString () + "\n";
 			aux = aux + "BALL_SY_MIN = " + Integer.valueOf (BALL_SY_MIN).toString () + "\n";
 			aux = aux + "BALL_HORIZ_HGT = " +Integer.valueOf (BALL_HORIZ_HGT).toString () + "\n";
 			aux = aux + "BALL_DENSITY = " + Integer.valueOf (BALL_DENSITY).toString () + "\n";
