@@ -31,7 +31,11 @@ public class EventDesc extends Object
 	{
 		StringTokenizer	st;
 
+		// the symbol, the class of the item it carries and the method it arrives at: all three
 		st		= new StringTokenizer (props, " \t");
+		if (st.countTokens () < 3)
+			throw new IllegalArgumentException ("Event <" + props.trim ().replace ('\t', ' ') + "> of module " + object.tdesc.preffix + ": "
+					+ (st.countTokens () == 2 ? "it has no method" : "it needs a symbol, an item class and a method"));
 		key		= st.nextToken ();
 		classn	= st.nextToken ();
 		methodn	= st.nextToken ();

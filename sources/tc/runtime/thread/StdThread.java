@@ -69,7 +69,13 @@ public abstract class StdThread implements Runnable, LindaListener
 			while (st.hasMoreTokens ())
 			{
 				event	= st.nextToken ();
-				edesc	= new EventDesc (this, linda, event);
+				// an event that cannot be registered is left out, not the module
+				try { edesc = new EventDesc (this, linda, event); }
+				catch (IllegalArgumentException e)
+				{
+					System.out.println ("--[Thread] " + e.getMessage () + ". Ignored.");
+					continue;
+				}
 				
 				System.out.println ("\t>> Registering event " + edesc);
 				recvs.put (edesc.key, edesc);
