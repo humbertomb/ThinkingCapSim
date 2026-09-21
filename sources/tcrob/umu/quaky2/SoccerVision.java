@@ -39,6 +39,7 @@ public class SoccerVision extends Perception
 
 	// Vision processing
 	public SoccerVisionConfig		vconfig;
+	public String					vfile;			// the file the configuration was read from (PARAMS); null if none
 	
 	public LUT						lut;
 	public Segmentation				segment;
@@ -67,7 +68,7 @@ public class SoccerVision extends Perception
 		// Load and parse a BG program
 		name = cfg.get ("PARAMS");
 		if (name != null)
-			try { vconfig.loadFromFilename(name); }	catch (Exception e) { e.printStackTrace(); }
+			try { vconfig.loadFromFilename(name); vfile = name; }	catch (Exception e) { e.printStackTrace(); }
 	}
 	
 	public void instanceLUT ()

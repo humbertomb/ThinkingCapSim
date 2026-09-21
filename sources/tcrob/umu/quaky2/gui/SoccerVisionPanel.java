@@ -119,6 +119,7 @@ public class SoccerVisionPanel extends JPanel
 		bar.add (ToolButtons.flatButton (ToolButtons.action ("Load", ToolIcon.FOLDER, "Load a vision configuration (" + SoccerVisionConfig.EXTENSION + ")...", new Runnable () { public void run () { loadConfig (); } })));
 		bar.add (ToolButtons.flatButton (ToolButtons.action ("Save", ToolIcon.SAVE, "Save the vision configuration (" + SoccerVisionConfig.EXTENSION + ")...", new Runnable () { public void run () { saveConfig (); } })));
 		bar.addSeparator ();
+		cfgfile		= pam.vfile;							// the file the vision is using, if any
 		cfglabel	= new JLabel ();
 		cfglabel.setFont (cfglabel.getFont ().deriveFont (Font.PLAIN, 11f));
 		bar.add (cfglabel);
@@ -129,7 +130,7 @@ public class SoccerVisionPanel extends JPanel
 	/** The name of the file of the configuration, in the toolbar. */
 	protected void showConfigFile ()
 	{
-		cfglabel.setText ((cfgfile == null) ? "(not saved)" : new File (cfgfile).getName ());
+		cfglabel.setText ((cfgfile == null) ? "no parameters file" : new File (cfgfile).getName ());
 		cfglabel.setToolTipText (cfgfile);
 	}
 
@@ -184,7 +185,8 @@ public class SoccerVisionPanel extends JPanel
 			JOptionPane.showMessageDialog (this, "Cannot save <" + name + ">:\n" + e.getMessage (), "Save vision configuration", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		cfgfile	= name;
+		cfgfile		= name;
+		pam.vfile	= name;
 		showConfigFile ();
 	}
 
@@ -207,7 +209,8 @@ public class SoccerVisionPanel extends JPanel
 		btblobcon.setEnabled (pam.blobbing.configurable ());
 
 		cpcolortable.configChanged ();
-		cfgfile	= file;
+		cfgfile		= file;
+		pam.vfile	= file;
 		showConfigFile ();
 		redrawBufferedImage ();
 	}
