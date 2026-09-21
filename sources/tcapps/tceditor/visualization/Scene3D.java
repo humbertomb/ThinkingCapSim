@@ -279,6 +279,10 @@ public class Scene3D extends Object
 	/** Visit all the Shape3D objects in a Group node and 
 	 *	applies them a material with the specified color
 	 */
+	/** A model given a colour of its own (usecolor): how much of it lights its shadows, and how bright its highlights are. */
+	static protected final float	AMBIENT		= 0.35f;
+	static protected final float	SPECULAR	= 0.6f;
+
 	protected void traverse (Group bg, Color3f objcolor) 
 	{
 		Enumeration<Node> e = bg.getAllChildren();		
@@ -289,8 +293,15 @@ public class Scene3D extends Object
 			
 			if (o instanceof Shape3D)
 			{
-				Appearance app = new Appearance();
-				Material mat		= new Material (objcolor, objcolor, objcolor, Color3D.black, 64.0f);
+				// the colour of the object, lit as a painted surface: darker where the light does not
+				// reach, with the highlights and the shininess of the material of the model (it was
+				// emitted, which drew the model as a flat patch of the colour)
+				Appearance	old = ((Shape3D) o).getAppearance ();
+				Material	was = (old != null) ? old.getMaterial () : null;
+				Appearance	app = new Appearance();
+				Color3f		amb = new Color3f (objcolor.x * AMBIENT, objcolor.y * AMBIENT, objcolor.z * AMBIENT);
+				Material	mat	= new Material (amb, Color3D.black, objcolor, new Color3f (SPECULAR, SPECULAR, SPECULAR),
+											(was != null) ? was.getShininess () : 48.0f);
 				mat.setLightingEnable (true);
 				app.setMaterial (mat);
 
