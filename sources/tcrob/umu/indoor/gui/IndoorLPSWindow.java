@@ -1,113 +1,73 @@
 /*
  * Created on 25-oct-2004
- *
- * To change the template for this generated file go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * (c) 2026 Humberto Martinez Barbera
  */
 package tcrob.umu.indoor.gui;
 
 import java.awt.*;
+import java.awt.event.*;
 import javax.swing.*;
 
 import tc.shared.lps.*;
 import tc.gui.visualization.*;
+import devices.pos.Path;
 
 import wucore.gui.*;
-import devices.pos.*;
-import wucore.widgets.*;
 
 /**
- * @author Humberto Martinez Barbera
+ * The window with the Local Perceptual Space of a robot (and the path it
+ * follows), drawn with Swing by an {@link LPSPanel}.
  *
- * To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * @author Humberto Martinez Barbera
  */
 public class IndoorLPSWindow extends JFrame
 {
-	protected ChildWindowListener		parent;
-	
-	protected Component2D 			lpsCO 		= new Component2D ();
-	
-	// Interface widgets
-	protected LPS2D					mlps;
+	private static final long		serialVersionUID	= 1L;
+
+	protected ChildWindowListener	parent;
+	protected LPSPanel				panel;
 
 	public IndoorLPSWindow (String name)
 	{
 		this (name, null);
 	}
-	
-	public IndoorLPSWindow (String name, ChildWindowListener parent)
-	{				
-		// Initialise widgets
-		mlps 		= new LPS2D (lpsCO.getModel ());
-		// zooming out past the fit takes the boundary of the perceptual space out
-		// with it, instead of drawing the same thing smaller in the middle of the
-		// window: what lies beyond the reach of the sensors comes into view
-		lpsCO.setWider (mlps);
 
-		try { initComponents (); } catch (Exception e) { e.printStackTrace (); }
-		
-		setTitle ("[" + name +"] Local Perceptual Space");
+	public IndoorLPSWindow (String name, ChildWindowListener parent)
+	{
+		this.parent	= parent;
+		panel		= new LPSPanel ();
+
+		setTitle ("[" + name + "] Local Perceptual Space");
+		getContentPane ().setLayout (new BorderLayout ());
+		getContentPane ().add (panel, BorderLayout.CENTER);
+		setLocation (new Point (50, 50));
+		setSize (new Dimension (400, 400));
+
+		// Close the window when the close box is clicked
+		setDefaultCloseOperation (DO_NOTHING_ON_CLOSE);
+		addWindowListener (new WindowAdapter ()
+		{
+			public void windowClosing (WindowEvent e)		{ close (); }
+		});
+
 		setVisible (true);
 	}
-	
-	public void initComponents() throws Exception
-	{
-		setLocation (new Point(50, 50));
-		setSize (new Dimension(300, 300));
 
-		getContentPane().setLayout (new GridLayout (1, 1));
-		getContentPane().add (lpsCO);
+	/** The panel it draws with. */
+	public LPSPanel panel ()							{ return panel; }
 
-		// event handling
-		addWindowListener(new java.awt.event.WindowAdapter() {
-			public void windowClosing(java.awt.event.WindowEvent e) {
-				thisWindowClosing(e);
-			}
-		});
-	}
-	
-	private boolean mShown = false;
-  	
-	public void addNotify() 
-	{
-		super.addNotify();
-		
-		if (mShown)
-			return;
-			
-		// resize frame to account for menubar
-		JMenuBar jMenuBar = getJMenuBar();
-		if (jMenuBar != null) {
-			int jMenuBarHeight = jMenuBar.getPreferredSize().height;
-			Dimension dimension = getSize();
-			dimension.height += jMenuBarHeight;
-			setSize(dimension);
-		}
-		mShown = true;
-	}
-	
-	//*****************
-	// Event handling
-	//*****************
-	// Close the window when the close box is clicked
-	protected void thisWindowClosing(java.awt.event.WindowEvent e)
-	{
-		close ();
-	}
-	
 	public void close ()
 	{
 		if (parent != null)
-			parent.childClosed (this); 
+			parent.childClosed (this);
 
 		setVisible (false);
 		dispose ();
 	}
 
+	/** Draws the LPS (and the path) again; it can be called from any thread. */
 	public void update (LPS lps, Path path)
 	{
-		mlps.update (lps, path);
-		lpsCO.repaint ();
+		panel.update (lps, path);
 	}
 }

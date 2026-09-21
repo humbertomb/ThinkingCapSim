@@ -555,7 +555,7 @@ public class Model2D extends Object
 		xx	= xa + radius;
 		yy	= ya + radius;
 			
-		int atndx = addAttr (CIRCLE, null, PLAIN, color);
+		int atndx = addAttr (CIRCLE, null, mode, color);			// the mode it is asked for (FILLED was lost)
 		attr[atndx].attype = Model2DAttr.ATTR_LINE;
 		attr[atndx].vorig = addVertex (x, y);
 		attr[atndx].vdest = addVertex (xx, yy);
