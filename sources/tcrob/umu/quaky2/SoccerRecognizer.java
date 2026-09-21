@@ -62,6 +62,29 @@ public class SoccerRecognizer
 
 	static private final Blobs		NO_BLOBS	= new Blobs ();		// the blobs of a channel that is not there
 
+	/** Where an object was seen in the last frame: the box of its blob and its centre (pixels). */
+	static public class Detection
+	{
+		public int		x, y;						// centre of the blob
+		public int		xmin, xmax, ymin, ymax;		// its box
+		public int		pixels;						// how many pixels it has
+
+		Detection (Blob b)
+		{
+			x		= b.getX ();		y		= b.getY ();
+			xmin	= b.getXMin ();		xmax	= b.getXMax ();
+			ymin	= b.getYMin ();		ymax	= b.getYMax ();
+			pixels	= b.getNumPixels ();
+		}
+
+		public String toString ()	{ return "(" + x + "," + y + ") [" + xmin + ".." + xmax + " x " + ymin + ".." + ymax + "] " + pixels + " px"; }
+	}
+
+	// What was recognised in the last frame (null: not seen): the largest blob taken for each object
+	public Detection				ball;
+	public Detection				net1;
+	public Detection				net2;
+
 	private BufferedImageDrawing	dwg = new BufferedImageDrawing ();
 
 	public SoccerRecognizer ()
@@ -79,6 +102,10 @@ public class SoccerRecognizer
 		output.setData (input.getData ());
 		dwg.updateImage (output);
 		
+		ball	= null;
+		net1	= null;
+		net2	= null;
+
 		computeFovea (output, dwg);
 		horizon = new VisualHorizon ();
 		// a channel that is not there (fewer channels than the one chosen) is not looked for
@@ -93,7 +120,10 @@ public class SoccerRecognizer
 			{
 				Blob		blob = blobs[BALL_CHANNEL].getBlob (i);
 				if (testValidBall (blob, config, horizon, dwg))
+				{
 					ellipse.doFitting (output, segmented, blob, channels.at (BALL_CHANNEL));
+					if ((ball == null) || (blob.getNumPixels () > ball.pixels))		ball = new Detection (blob);
+				}
 			}
 		}
 		
@@ -109,7 +139,14 @@ public class SoccerRecognizer
 			{
 				Blob		blob = blobs[n].getBlob (i);
 				if (!testPinkOverlap (blob, pinks) && testValidNet (blob, config, horizon, dwg, color))
+				{
 					net.doFitting (output, segmented, blobs[n], channels.at (n), channels.at (CARPET_CHANNEL));
+					if (n == NET1_CHANNEL)
+					{
+						if ((net1 == null) || (blob.getNumPixels () > net1.pixels))		net1 = new Detection (blob);
+					}
+					else if ((net2 == null) || (blob.getNumPixels () > net2.pixels))	net2 = new Detection (blob);
+				}
 				else
 					testValidLandmark (blob, pinks, config, horizon, dwg, color);
 			}

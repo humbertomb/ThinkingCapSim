@@ -5,7 +5,10 @@
  
 package tcrob.umu.quaky2;
 
+import java.awt.Color;
 import java.awt.image.*;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 
 import tc.modules.*;
@@ -15,6 +18,7 @@ import tclib.vision.chaos.blobs.BlobForming;
 import tclib.vision.chaos.segment.LUT;
 import tclib.vision.chaos.segment.Segmentation;
 import tc.shared.linda.*;
+import tc.vrobot.SensorPos;
 import tcrob.umu.quaky2.gui.SoccerVisionWindow;
 import tcrob.umu.quaky2.lpo.*;
 
@@ -52,6 +56,10 @@ public class SoccerVision extends Perception
 	
 	private boolean					initialized = false;
 
+	// What is recognised, for the perception module that keeps the LPS of the robot
+	protected Tuple					otuple;
+	protected ItemObject			ostore;
+
 	// Constructors
 	public SoccerVision (ModuleConfig cfg, Linda linda)
 	{
@@ -64,6 +72,9 @@ public class SoccerVision extends Perception
 	protected void initialise (ModuleConfig cfg)
 	{		
 		super.initialise (cfg);
+
+		ostore		= new ItemObject ();
+		otuple		= new Tuple (Tuple.OBJECT, ostore);
 		
 		String			name = null;
 		
@@ -182,6 +193,9 @@ public class SoccerVision extends Perception
 		blobbing.postProcess ();
 		recognized	= recognizer.process (item.image, segment.getSegmented(), blobbing.getBlobs (), vconfig.channels, vconfig);
 
+		// where what was recognised is: into the LPOs of the vision, and out (OBJECT) to the LPS of the robot
+		located (item);
+
 		// what the camera saw, and what came out of it, to the window
 		if (win != null)
 			SwingUtilities.invokeLater(() -> win.updateBufferedImage (item.image));
@@ -205,6 +219,98 @@ public class SoccerVision extends Perception
 		// Update low-level perception & LPS data
 //		lps.update (data, fusion, lodom, pos, null);
 
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* From the image to the floor                                         */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * Places the objects the recognizer found in the frame (ball, nets) around
+	 * the robot, updates their LPOs and writes them as OBJECT, where the
+	 * perception module that keeps the LPS of the robot takes them
+	 * (SoccerPerception). The ball is put where the ray through the centre of its
+	 * blob is at the height of its centre; a net, where the ray through the
+	 * bottom of its blob meets the floor.
+	 */
+	protected void located (ItemCamera item)
+	{
+		List<VisionData>	seen = new ArrayList<VisionData> ();
+		int					w = item.image.getWidth (), h = item.image.getHeight ();
+
+		lps.update_anchors ();
+		see (seen, ball, recognizer.ball, false, BALL_RADIUS, recognizer.BALL_CHANNEL, item.device, w, h);
+		see (seen, net1, recognizer.net1, true, 0.0, recognizer.NET1_CHANNEL, item.device, w, h);
+		see (seen, net2, recognizer.net2, true, 0.0, recognizer.NET2_CHANNEL, item.device, w, h);
+
+		if (seen.isEmpty ())		return;
+		ostore.set (seen.toArray (new VisionData[0]), System.currentTimeMillis ());
+		linda.write (otuple);
+	}
+
+	/** An object seen in the frame, where it is and as what it goes out. */
+	protected void see (List<VisionData> seen, LPO lpo, SoccerRecognizer.Detection d, boolean onFloor, double height,
+						int channel, int dev, int w, int h)
+	{
+		VisionData		vd;
+		double[]		p;
+		Color			c;
+
+		if ((d == null) || (lpo == null))		return;
+		p	= floor (dev, d.x, onFloor ? d.ymax : d.y, w, h, height);
+		if (p == null)							return;			// the ray does not reach that height in front of the camera
+
+		c	= ((channel >= 0) && (channel < vconfig.channels.size ()) && (vconfig.channels.at (channel).color != null))
+				? vconfig.channels.at (channel).color : Color.GRAY;
+		vd	= new VisionData ();
+		vd.set_blob (lpo.label (), d.x, d.y, d.xmax - d.xmin, d.ymax - d.ymin, c);
+		vd.set_dev (dev);
+		vd.rho	= p[0];
+		vd.phi	= p[1];
+		lps.set_lpo (vd);
+		seen.add (vd);
+	}
+
+	/**
+	 * Where the ray through a pixel of the frame reaches a height, around the
+	 * robot: {rho, phi} from its centre, or null when it does not (above the
+	 * camera, or behind it). The camera is the pinhole the simulator renders
+	 * with: its position, orientation and elevation in the robot, and its two
+	 * fields of view spread over the frame.
+	 */
+	protected double[] floor (int dev, double u, double v, int w, int h, double height)
+	{
+		SensorPos		feat;
+		double			hfov, vfov;
+		double			yaw, pitch;
+		double[]		f, r, up, d;
+		double			xn, yn, t;
+		double			x, y;
+
+		if ((rdesc == null) || (rdesc.camfeat == null) || (dev < 0) || (dev >= rdesc.camfeat.length) || (rdesc.camfeat[dev] == null))
+			return null;
+		feat	= rdesc.camfeat[dev];
+		hfov	= ((rdesc.camhfov != null) && (dev < rdesc.camhfov.length) && (rdesc.camhfov[dev] > 0.0)) ? rdesc.camhfov[dev] : rdesc.CONECAM;
+		vfov	= ((rdesc.camvfov != null) && (dev < rdesc.camvfov.length) && (rdesc.camvfov[dev] > 0.0)) ? rdesc.camvfov[dev] : rdesc.VFOVCAM;
+		if ((hfov <= 0.0) || (vfov <= 0.0))		return null;
+
+		// the axes of the camera in the robot: forward, right and up
+		yaw		= feat.orientation ();
+		pitch	= feat.elevation ();
+		f		= new double[] { Math.cos (yaw) * Math.cos (pitch), Math.sin (yaw) * Math.cos (pitch), Math.sin (pitch) };
+		r		= new double[] { Math.sin (yaw), -Math.cos (yaw), 0.0 };
+		up		= new double[] { r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0] };
+
+		// the ray through the pixel (its centre), and where it is at that height
+		xn		= (2.0 * (u + 0.5) / w - 1.0) * Math.tan (hfov / 2.0);
+		yn		= (1.0 - 2.0 * (v + 0.5) / h) * Math.tan (vfov / 2.0);
+		d		= new double[] { f[0] + xn * r[0] + yn * up[0], f[1] + xn * r[1] + yn * up[1], f[2] + xn * r[2] + yn * up[2] };
+		if (Math.abs (d[2]) < 1e-9)				return null;
+		t		= (height - feat.z ()) / d[2];
+		if (t <= 0.0)							return null;
+		x		= feat.rho () * Math.cos (feat.theta ()) + t * d[0];		// the camera is where the simulator puts it
+		y		= feat.rho () * Math.sin (feat.theta ()) + t * d[1];
+		return new double[] { Math.sqrt (x * x + y * y), Math.atan2 (y, x) };
 	}
 }
 
