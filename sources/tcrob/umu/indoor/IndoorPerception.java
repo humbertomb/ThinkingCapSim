@@ -5,7 +5,6 @@
 package tcrob.umu.indoor;
 
 import tc.runtime.thread.ModuleConfig;
-
 import tc.shared.linda.*;
 import tc.shared.lps.*;
 import tc.shared.lps.lpo.*;
@@ -20,8 +19,6 @@ import wucore.utils.geom.*;
 import wucore.utils.math.*;
 import wucore.utils.math.jama.*;
 
-import devices.data.*;
-
 public class IndoorPerception extends Perception
 {
 	// Fuzzy segments map generation mode
@@ -30,9 +27,6 @@ public class IndoorPerception extends Perception
 	// Initial uncertainty parameters
 	static public final double		INIT_VAR_R		= 0.0001218;	// Initial rotation variance (rad2) 	<= 2 deg
 	static public final double		INIT_VAR_T		= 0.00009;		// Initial translation variance (m2)	<= 0.003 m
-	
-	// Robot and perception structures
-	protected VisionData[]			vdata			= null;
 	
 	// Localisation related structures
 	protected Position				pos;							// Current position (corrected)
@@ -46,15 +40,15 @@ public class IndoorPerception extends Perception
 	protected int					count_upd		= 0;
 	
 	// LPS configuration and application LPOs
-	protected double					max_range		= 2.5;			// Range buffer maximum length
+	protected double				max_range		= 2.5;			// Range buffer maximum length
 	protected int					max_buffer		= 200;			// Maximum number of range points
 	
 	protected LPOPoint				l_home;							// Home position
 	protected LPOPoint				l_goal;							// Goal position
 	protected LPOLine				l_looka;						// Look-ahead point
-	protected LPORangeBuffer			l_rbuffer;						// Range buffer
-	protected LPOSensorRange			l_virtual;						// Virtual ranges sensor
-	protected LPOSensorGroup			l_group;						// Group sensor
+	protected LPORangeBuffer		l_rbuffer;						// Range buffer
+	protected LPOSensorRange		l_virtual;						// Virtual ranges sensor
+	protected LPOSensorGroup		l_group;						// Group sensor
 	protected LPOSensorScanner		l_scan;							// Scanner sensor
 	protected LPOSensorFSeg			l_fsegs;						// Fuzzy segments
 	
@@ -143,14 +137,7 @@ public class IndoorPerception extends Perception
 		// Feature-level sensor fusion and LPS update
 		fusion.fuse_feature (lps, data);	
 		l_group.update (fusion.groups, fusion.groups_flg);
-		
-		// Object-level fusion and LPS update
-		if (vdata != null)
-			for (i = 0; i < vdata.length; i++)
-				if (vdata[i].valid)
-					lps.set_lpo (vdata[i]);
-		vdata		= null;
-		
+				
 		// Update low-level perception & LPS data
 		lps.update (data, fusion, lodom, pos, null);
 		
@@ -314,20 +301,7 @@ public class IndoorPerception extends Perception
 		//		lps.dump ();
 		firstime	= true;
 	}
-	
-	public void notify_object (String space, ItemObject item)
-	{
-		// Quit if still processing previous data
-		if (vdata != null)		
-		{
-			System.out.println ("--[Per]: Discarding visual data. Unprocessed event");
-			return;
-		}
 		
-		// Get data structures from Linda space
-		vdata	= item.data;
-	}
-	
 	public void notify_navigation (String space, ItemNavigation item) 
 	{ 
 		// Update corrected robot position and its uncertainty matrix

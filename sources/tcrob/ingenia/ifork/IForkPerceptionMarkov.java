@@ -63,14 +63,7 @@ public class IForkPerceptionMarkov extends IForkPerception
 		// Feature-level sensor fusion and LPS update
 		fusion.fuse_feature (lps, data);	
 		l_group.update (fusion.groups, fusion.groups_flg);
-		
-		// Object-level fusion and LPS update
-		if (vdata != null)
-			for (i = 0; i < vdata.length; i++)
-				if (vdata[i].valid)
-					lps.set_lpo (vdata[i]);
-		vdata		= null;
-		
+				
 		// Update low-level perception & LPS data
 		lps.update (data, fusion, lodom, pos, null);
 	}

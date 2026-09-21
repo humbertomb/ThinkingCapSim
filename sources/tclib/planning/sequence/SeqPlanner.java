@@ -5,8 +5,6 @@
 package tclib.planning.sequence;
 
 import tc.runtime.thread.ModuleConfig;
-import java.util.*;
-
 import tc.modules.*;
 import tc.shared.linda.*;
 import tclib.planning.sequence.gui.*;

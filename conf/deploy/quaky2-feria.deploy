@@ -67,7 +67,7 @@
         {
           "name": "Perception",
           "properties": {
-            "CLASS": "tcrob.umu.quaky2.SoccerPerception",
+            "CLASS": "tcrob.umu.indoor.IndoorPerception",
             "MODE": "shared",
             "PASSIVE": "true",
             "TYPE": "Perception"
@@ -79,14 +79,26 @@
               "method": "notify_sensors"
             },
             {
-              "symbol": "OBJECT",
-              "itemClass": "tc.shared.linda.ItemObject",
-              "method": "notify_object"
-            },
-            {
               "symbol": "NAVIGATION",
               "itemClass": "tc.shared.linda.ItemNavigation",
               "method": "notify_navigation"
+            }
+          ]
+        },
+        {
+          "name": "Vision",
+          "properties": {
+            "TYPE": "Perception",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "GFX": "true",
+            "CLASS": "tcrob.umu.quaky2.SoccerVision"
+          },
+          "events": [
+            {
+              "symbol": "CAMERA",
+              "itemClass": "tc.shared.linda.ItemCamera",
+              "method": "notify_camera"
             }
           ]
         }

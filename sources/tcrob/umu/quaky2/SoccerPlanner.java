@@ -5,8 +5,6 @@
 package tcrob.umu.quaky2;
 
 import tc.runtime.thread.ModuleConfig;
-import java.util.*;
-
 import tc.shared.linda.*;
 import tclib.navigation.pathplanning.GridPath;
 import tclib.planning.sequence.*;
