@@ -230,8 +230,8 @@ public class SoccerVision extends Perception
 	 * the robot, updates their LPOs and writes them as OBJECT, where the
 	 * perception module that keeps the LPS of the robot takes them
 	 * (SoccerPerception). The ball is put where the ray through the centre of its
-	 * blob is at the height of its centre; a net, where the ray through the
-	 * bottom of its blob meets the floor.
+	 * circle (fitted to the edge of its blob) is at the height of its centre; a
+	 * net, where the ray through the bottom of its blob meets the floor.
 	 */
 	protected void located (ItemCamera item)
 	{
@@ -257,7 +257,9 @@ public class SoccerVision extends Perception
 		Color			c;
 
 		if ((d == null) || (lpo == null))		return;
-		p	= floor (dev, d.x, onFloor ? d.ymax : d.y, w, h, height);
+		// a net stands on the floor at the bottom of its blob; the ball's centre is the one of its circle
+		// (the centre of its blob is not, when the ball is cut by the frame)
+		p	= onFloor ? floor (dev, d.x, d.ymax, w, h, height) : floor (dev, d.cx, d.cy, w, h, height);
 		if (p == null)							return;			// the ray does not reach that height in front of the camera
 
 		c	= ((channel >= 0) && (channel < vconfig.channels.size ()) && (vconfig.channels.at (channel).color != null))

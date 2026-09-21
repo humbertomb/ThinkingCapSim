@@ -68,6 +68,8 @@ public class SoccerRecognizer
 		public int		x, y;						// centre of the blob
 		public int		xmin, xmax, ymin, ymax;		// its box
 		public int		pixels;						// how many pixels it has
+		public double	cx, cy, radius;				// the circle of a ball (its centre may be out of the frame)
+		public boolean	round;						// whether that circle was fitted to its edge (or is its box)
 
 		Detection (Blob b)
 		{
@@ -75,9 +77,26 @@ public class SoccerRecognizer
 			xmin	= b.getXMin ();		xmax	= b.getXMax ();
 			ymin	= b.getYMin ();		ymax	= b.getYMax ();
 			pixels	= b.getNumPixels ();
+			cx		= x;
+			cy		= y;
+			radius	= (b.getSizeX () + b.getSizeY ()) / 4.0;
 		}
 
-		public String toString ()	{ return "(" + x + "," + y + ") [" + xmin + ".." + xmax + " x " + ymin + ".." + ymax + "] " + pixels + " px"; }
+		/** The same, with the circle fitted to its edge. */
+		Detection (Blob b, CircleFitting c)
+		{
+			this (b);
+			cx		= c.cx;
+			cy		= c.cy;
+			radius	= c.radius;
+			round	= c.fitted;
+		}
+
+		public String toString ()
+		{
+			return "(" + x + "," + y + ") [" + xmin + ".." + xmax + " x " + ymin + ".." + ymax + "] " + pixels + " px"
+					+ String.format (" circle (%.0f,%.0f) r=%.0f%s", cx, cy, radius, round ? "" : " (box)");
+		}
 	}
 
 	// What was recognised in the last frame (null: not seen): the largest blob taken for each object
@@ -122,7 +141,7 @@ public class SoccerRecognizer
 				if (testValidBall (blob, config, horizon, dwg))
 				{
 					ellipse.doFitting (output, segmented, blob, channels.at (BALL_CHANNEL));
-					if ((ball == null) || (blob.getNumPixels () > ball.pixels))		ball = new Detection (blob);
+					if ((ball == null) || (blob.getNumPixels () > ball.pixels))		ball = new Detection (blob, ellipse);
 				}
 			}
 		}

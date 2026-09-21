@@ -12,248 +12,125 @@ import tclib.vision.chaos.blobs.*;
 import tclib.vision.chaos.channels.*;
 import tcrob.umu.quaky2.gui.images.BufferedImageDrawing;
 
+/**
+ * The circle a ball makes in the image, from the edge of its blob: its centre
+ * and radius, also when part of the ball is out of the frame (a ball close to
+ * the robot is cut by the bottom of the image), which is what the centre of the
+ * blob gets wrong.
+ *
+ * The edge is the first and the last pixel of the channel in each row of the
+ * blob, leaving out the ones against the sides of the frame (where the blob is
+ * cut, not round). The circle is the algebraic least squares one (Kasa):
+ * x^2 + y^2 + D x + E y + F = 0, solved in doubles about the mean of the points
+ * (the sums of cubes of pixel coordinates do not fit in an int, which is what
+ * made the old fit give circles of any size).
+ */
 public class CircleFitting 
 {
-	static public final int	MAXPOINTS	= 1000;
-	static public final int	BORDER		= 10;
+	static public final int		BORDER		= 3;			// pixels from a side of the frame that are not the edge of the ball
+	static public final int		MINPOINTS	= 6;			// fewer points than this are no circle
 	
 	// Segmented source image and sizes
 	protected Channel		channel;
 	protected int[]			segmented;
 	protected int			width, height;
 	
-	// Ellipse fitting computation
-	protected int[][]		A			= new int[3][4];
-	protected double[][]		B			= new double[2][4];
-	protected double[]		res			= new double[3];
-	protected Point[]		pts;
+	// The edge of the blob
+	protected int[]			px		= new int[0];
+	protected int[]			py		= new int[0];
 	protected int			npts;
+
+	// The circle: centre and radius (pixels), and whether it could be fitted
+	public double			cx, cy, radius;
+	public boolean			fitted;
 	
 	public CircleFitting ()
 	{
-		int			i;
-		
-		npts		= 0;		
-		pts		= new Point[MAXPOINTS];
-		for (i = 0; i < MAXPOINTS; i++)
-			pts[i] = new Point ();
 	}
 	
-	/*******************************************************************/
-	/***							Linear equation solver, 3x3		 ***/
-	/*******************************************************************/
-	protected void linearEquation ()
+	/** The edge of a blob: the first and the last pixel of the channel in each of its rows, off the sides of the frame. */
+	protected void perimeter (Blob b)
 	{
-		int i;
-		double cte0, cte1;
-		double x = -1.0, y = -1.0, z = -1.0;
-		
-		
-		if ((A[1][1] != 0) && (A[2][1] != 0) && (A[1][0] != 0) && (A[2][0] != 0))
+		int			n = 2 * (b.getYMax () - b.getYMin () + 1);
+
+		if (px.length < n)		{ px = new int[n]; py = new int[n]; }
+		npts	= 0;
+		for (int y = Math.max (0, b.getYMin ()); y <= Math.min (height - 1, b.getYMax ()); y++)
 		{
-			/*** X ***/
-			cte0 = (A[0][1] / (double) A[1][1]);				// solve X variable by Y and Z equations subtraction
-			cte1 = (A[1][1] / (double) A[2][1]);
-			
-			for (i = 0; i < 4; i++)
-			{
-				B[0][i] = A[0][i] - (A[1][i] * cte0);
-				B[1][i] = A[1][i] - (A[2][i] * cte1);
-			}
-			
-			if (B[1][2] != 0.0)
-			{
-				cte0 = B[0][2] / B[1][2];
-				for (i = 0; i < 4; i++)
-					B[0][i] = B[0][i] - (B[1][i] * cte0);
-				
-				if (B[0][0] == 0.0) x = -1;
-				else x = B[0][3] / B[0][0];
-			}
-			
-			/*** Y ***/
-			cte0 = (A[0][0] / (double) A[1][0]);				// solve Y variable by X and Z equations	subtraction
-			cte1 = (A[1][0] / (double) A[2][0]);
-			
-			for (i = 0; i < 4; i++)
-			{
-				B[0][i] = A[0][i] - (A[1][i] * cte0);
-				B[1][i] = A[1][i] - (A[2][i] * cte1);
-			}
-			
-			if (B[1][2] != 0.0)
-			{
-				cte0 = B[0][2] / B[1][2];
-				for (i = 0; i < 4; i++)
-					B[0][i] = B[0][i] - (B[1][i] * cte0);
-				
-				if (B[0][1] == 0.0) y = -1;
-				else y = B[0][3] / B[0][1];
-			}
-			
-			/*** Z ***/
-			cte0 = (A[0][0] / (double) A[1][0]);				// solve Z variable by X and Y equations subtraction
-			cte1 = (A[1][0] / (double) A[2][0]);	
-			
-			for (i = 0; i < 4; i++)
-			{
-				B[0][i] = A[0][i] - (A[1][i] * cte0);
-				B[1][i] = A[1][i] - (A[2][i] * cte1);
-			}
-			
-			if (B[1][1] != 0.0)		
-			{
-				cte0 = B[0][1] / B[1][1];
-				for (i = 0; i < 4; i++)
-					B[0][i] = B[0][i] - (B[1][i] * cte0);
-				
-				if (B[0][2] == 0.0) z = -1;
-				else z = B[0][3] / B[0][2];
-			}
+			int		left = -1, right = -1;
+
+			for (int x = Math.max (0, b.getXMin ()); x <= Math.min (width - 1, b.getXMax ()); x++)
+				if (segmented[(y * width) + x] == channel.id)		{ left = x; break; }
+			if (left < 0)		continue;
+			for (int x = Math.min (width - 1, b.getXMax ()); x >= left; x--)
+				if (segmented[(y * width) + x] == channel.id)		{ right = x; break; }
+
+			if (left >= BORDER)							{ px[npts] = left;	py[npts] = y;	npts++; }
+			if ((right != left) && (right < width - BORDER))	{ px[npts] = right;	py[npts] = y;	npts++; }
 		}
-		
-		res[0] = x;
-		res[1] = y;
-		res[2] = z;
-	}
-	
-	/********************************************************************/
-	/***						Ball perimeter estimation				  ***/
-	/********************************************************************/
-	protected void perimeter (Blob b, int imgminx, int imgmaxx)
-	{
-		int			x, y;
-		int			xmin, xmax, ymin, ymax;
-		boolean		edge;
-		
-		xmin = b.getXMin();
-		xmax = b.getXMax();
-		ymin = b.getYMin();
-		ymax = b.getYMax();
-		
-		// Do not consider pixels which are close to the horizontal
-		// borders of the image. This usually happens when the ball
-		// is close and do not want to include the boundary of the
-		// shadow into the fitting algorithm.
-		npts = 0;
-		edge = false;
-		for (y = ymin; (y < ymax) && !edge; y++)	// From left to first ORANGE (ball) pixel
-			for (x = xmin; x < xmax; x++)
-				if (segmented[(y * width) + x] == channel.id)
-				{
-					pts[npts].x = x;
-					pts[npts].y = y;
-					npts ++;
-					
-					if ((x < imgminx) || (x > imgmaxx))	edge = true;
-					break;
-				}
-		
-		edge = false;
-		for (y = ymin; (y < ymax) && !edge; y++)	// From left to first ORANGE (ball) pixel
-			for (x = xmax; x >= xmin; x--)
-				if (segmented[(y * width) + x] == channel.id)
-				{
-					pts[npts].x = x;
-					pts[npts].y = y;
-					npts ++;
-					
-					if ((x < imgminx) || (x > imgmaxx))	edge = true;
-					break;
-				}
 	}
 
-	/********************************************************************/
-	/***								Moment estimation			  ***/
-	/********************************************************************/
-	protected void computeMoments ()
+	/** The least squares circle through the edge; false when there is none (too few points, all in a line). */
+	protected boolean fit ()
 	{
-		int i;	
-		int accX = 0, accY = 0, accZ = 0;
-		int accXX = 0, accYY = 0, accXY = 0;
-		int accXZ = 0, accYZ = 0;
-		
-		for (i = 0; i < npts; i++)
+		double		mx = 0.0, my = 0.0;
+		double		suu = 0, svv = 0, suv = 0, suuu = 0, svvv = 0, suvv = 0, svuu = 0;
+		double		det, uc, vc;
+
+		if (npts < MINPOINTS)		return false;
+		for (int i = 0; i < npts; i++)		{ mx += px[i]; my += py[i]; }
+		mx	/= npts;
+		my	/= npts;
+
+		// about the mean, the centre (uc, vc) solves the two equations of the least squares circle
+		for (int i = 0; i < npts; i++)
 		{
-			accXX += (pts[i].x * pts[i].x);
-			accYY += (pts[i].y * pts[i].y);
-			accXY += (pts[i].x * pts[i].y);
-			accX += pts[i].x;
-			accY += pts[i].y;
-			accXZ += (pts[i].x * ((pts[i].x * pts[i].x) + (pts[i].y * pts[i].y)));
-			accYZ += (pts[i].y * ((pts[i].x * pts[i].x) + (pts[i].y * pts[i].y)));
-			accZ += ((pts[i].x * pts[i].x) + (pts[i].y * pts[i].y));
+			double	u = px[i] - mx, v = py[i] - my;
+			suu += u * u;		svv += v * v;		suv += u * v;
+			suuu += u * u * u;	svvv += v * v * v;	suvv += u * v * v;	svuu += v * u * u;
 		}
-		
-		A[0][0] = accXX;
-		A[0][1] = accXY;
-		A[0][2] = accX;
-		A[0][3] = -accXZ;
-		
-		A[1][0] = accXY;
-		A[1][1] = accYY;
-		A[1][2] = accY;
-		A[1][3] = -accYZ;
-		
-		A[2][0] = accX;
-		A[2][1] = accY;
-		A[2][2] = npts;
-		A[2][3] = -accZ;
+		det		= suu * svv - suv * suv;
+		if (Math.abs (det) < 1e-9)		return false;
+		uc		= 0.5 * ((suuu + suvv) * svv - (svvv + svuu) * suv) / det;
+		vc		= 0.5 * ((svvv + svuu) * suu - (suuu + suvv) * suv) / det;
+
+		cx		= uc + mx;
+		cy		= vc + my;
+		radius	= Math.sqrt (uc * uc + vc * vc + (suu + svv) / npts);
+		return true;
 	}
 		
 	public void doFitting (BufferedImage input, int[] segmented, Blob blob, Channel channel)
 	{
-		double			cx = 0.0, cy = 0.0;
-		double			radius = 0.0;
-		boolean			fitted;
-	
 		if (blob == null)			return;
 		
 		this.segmented	= segmented;
-		this.channel		= channel;
+		this.channel	= channel;
 		width			= input.getWidth();
 		height			= input.getHeight();
 
-		fitted = false;
-		perimeter (blob, BORDER, width-BORDER);
-		if (npts > 0)
-		{
-			computeMoments ();
-			linearEquation ();
-			
-			if ((res[0] != -1.0) && (res[1] != -1.0) && (res[2] != -1.0))
-			{
-				double		aux;
-				
-				cx = (res[0] * 0.5);		// a / -2
-				cy = (res[1] * 0.5);		// b / -2
-				
-				aux = ((cx * cx) + (cy * cy) - res[2]);
-				if (aux < 0) aux *= -1;
-				
-				radius	= Math.sqrt (aux);	// x2+y2-d		
-				fitted	= true;
-			}
-		}
-
+		perimeter (blob);
+		fitted	= fit ();
+		// a circle much larger than the blob is not the ball's (a few points nearly in a line)
+		if (fitted && (radius > 2.0 * Math.max (blob.getSizeX (), blob.getSizeY ())))
+			fitted	= false;
 		if (!fitted)
 		{
-			cx		= -blob.getX();
-			cy		= -blob.getY();
-			radius	= (blob.getSizeX() + blob.getSizeY()) / 4;
+			cx		= blob.getX ();
+			cy		= blob.getY ();
+			radius	= (blob.getSizeX () + blob.getSizeY ()) / 4.0;
 		}
 
-		// Put ellipse fitting information into image
-		int			i;
-		int			xx, yy;
+		// Put circle fitting information into image
 		BufferedImageDrawing	dwg;
+		int						xx, yy;
 
-		xx	= -(int) Math.round (cx);
-		yy	= -(int) Math.round (cy);
+		xx	= (int) Math.round (cx);
+		yy	= (int) Math.round (cy);
 		dwg	= new BufferedImageDrawing ();
 		dwg.updateImage (input);
-		for (i = 0; i < npts; i++)
-			dwg.drawPoint (pts[i].x, pts[i].y, Color.white.getRGB());
+		for (int i = 0; i < npts; i++)
+			dwg.drawPoint (px[i], py[i], Color.white.getRGB());
 		dwg.drawCircle (xx, yy, (int) Math.round (radius), Color.black.getRGB());	
 		dwg.drawCross (xx, yy, Color.white.getRGB());
 	}

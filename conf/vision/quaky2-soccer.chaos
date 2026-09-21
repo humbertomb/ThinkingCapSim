@@ -65,7 +65,7 @@
         },
         "segmented": true,
         "blobbed": true,
-        "threshold": 5,
+        "threshold": 35,
         "gap": 3,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
@@ -116,6 +116,6 @@
     ]
   },
   "lutmode": 0,
-  "segmode": 0,
+  "segmode": 1,
   "blobmode": 0
 }
