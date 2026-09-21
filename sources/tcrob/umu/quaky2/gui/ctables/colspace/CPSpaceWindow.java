@@ -16,7 +16,6 @@ import ptolemy.plot.*;
 import tclib.vision.chaos.channels.*;
 import tclib.vision.chaos.segment.*;
 import tcrob.umu.quaky2.gui.images.CPScalableImageCanvas;
-import tclib.vision.chaos.gui.images.*;
 
 public class CPSpaceWindow extends JFrame
 {
@@ -107,7 +106,6 @@ public class CPSpaceWindow extends JFrame
 		try
 		{
 			cpspaceplot		= new CPSpacePlot ();
-			cpspaceplot.setBackground (getBackground ());
 		} catch (Exception e) { cpspaceplot = null; }
 
 		cpproj12 = new CPScalableImageCanvas ();
@@ -208,10 +206,13 @@ public class CPSpaceWindow extends JFrame
 
 		if (cpspaceplot != null)
 		{
+			cpspaceplot.setCylindrical (curspace == HSV);				// before the points: it is where they go
 			cpspaceplot.setLabels (LABELS[curspace][0], LABELS[curspace][1], LABELS[curspace][2]);
 			cpspaceplot.setImage (conv, rgb);
 			if (dchans)
 				cpspaceplot.setChannels (chs);		
+			else
+				cpspaceplot.clearChannels ();						// the prisms of the channels are in HSV
 		}
 		
 		switch (curspace)

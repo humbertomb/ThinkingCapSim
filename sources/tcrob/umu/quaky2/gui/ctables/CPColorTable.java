@@ -102,6 +102,8 @@ public class CPColorTable extends JPanel
 			{
 				if (cpspacewin == null)
 					cpspacewin	= new CPSpaceWindow ();				
+				else
+					cpspacewin.setVisible (true);						// it was closed: closing only hides it
 			}
 		});	
 		btundo.addActionListener(new java.awt.event.ActionListener() {
