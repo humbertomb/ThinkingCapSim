@@ -69,7 +69,6 @@ public class CPColorTable extends JPanel
 				
 		JButton btResetChannels = new JButton("Reset");
 		btResetChannels.setToolTipText("Create new seeds in ALL CHANNELS");
-		JButton btsave = new JButton("Save");
 		JButton btcolspc = new JButton("CSpace");		
 		btcolspc.setToolTipText("Color space analysis in 2D and 3D");
 		btundo = new JButton("Undo");
@@ -92,11 +91,6 @@ public class CPColorTable extends JPanel
 		subSeeds.setSelected(false);
 		subSeeds.setEnabled (viewSeeds.isSelected ());
 
-		btsave.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent e) {
-				guicamera.saveConfig ();						// the configuration of the vision, to its .chaos file
-			}
-		});	
 		btcolspc.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e) 
 			{
@@ -172,7 +166,6 @@ public class CPColorTable extends JPanel
 			}
 		});	
 		
-		panelbuttons.add(btsave);		
 		panelbuttons.add(newSeeds);
 		panelbuttons.add(btResetChannels);
 		panelbuttons.add(btcolspc);
