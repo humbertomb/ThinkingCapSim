@@ -118,7 +118,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	protected Action				undoAction, redoAction, deleteAction, duplicateAction;
 	protected JCheckBoxMenuItem[]	layerItems	= new JCheckBoxMenuItem[WorldItem.NKINDS];
 	protected boolean				collapseTree	= true;		// the tree starts closed (and closes again with every world loaded)
-	protected JCheckBoxMenuItem		gridItem, snapItem, labelsItem;
+	protected JCheckBoxMenuItem		gridItem, snapItem, labelsItem, shapesItem;
 	protected boolean				syncing		= false;	// avoids selection feedback loops
 
 	/* 3D view */
@@ -521,6 +521,12 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			public void actionPerformed (ActionEvent e)		{ canvas.setLabelsVisible (labelsItem.isSelected ()); }
 		});
 		mview.add (labelsItem);
+		shapesItem = new JCheckBoxMenuItem ("Show 3D Models Outline", true);
+		shapesItem.addActionListener (new java.awt.event.ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.setShapesVisible (shapesItem.isSelected ()); }
+		});
+		mview.add (shapesItem);
 		mview.addSeparator ();
 		JMenu		mlayers = new JMenu ("Layers");
 		for (int k = 0; k < WorldItem.ICON; k++)

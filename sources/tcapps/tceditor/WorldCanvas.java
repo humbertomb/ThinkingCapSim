@@ -138,6 +138,7 @@ public class WorldCanvas extends JPanel
 	protected boolean				showGrid	= true;
 	protected boolean				snapGrid	= false;
 	protected boolean				showLabels	= true;
+	protected boolean				showShapes	= true;		// the contour of the 3D models of the objects
 	protected double				gridStep	= 1.0;		// metres, recomputed from the scale
 
 	/* Interaction */
@@ -197,6 +198,7 @@ public class WorldCanvas extends JPanel
 	public boolean isGridVisible ()					{ return showGrid; }
 	public boolean isSnapEnabled ()					{ return snapGrid; }
 	public boolean areLabelsVisible ()				{ return showLabels; }
+	public boolean areShapesVisible ()				{ return showShapes; }
 	public boolean isKindVisible (int kind)			{ return visible[kind]; }
 	public double getScale ()						{ return scale; }
 
@@ -293,6 +295,7 @@ public class WorldCanvas extends JPanel
 	public void setGridVisible (boolean b)			{ showGrid = b; repaint (); }
 	public void setSnapEnabled (boolean b)			{ snapGrid = b; }
 	public void setLabelsVisible (boolean b)		{ showLabels = b; repaint (); }
+	public void setShapesVisible (boolean b)		{ showShapes = b; repaint (); }
 	public void setKindVisible (int kind, boolean b)
 	{
 		visible[kind] = b;
@@ -962,7 +965,7 @@ public class WorldCanvas extends JPanel
 
 	private void drawObject (Graphics2D g, WMObject o, boolean sel)
 	{
-		if (o.shape != null)		drawShape (g, o);					// under the drawing of the object
+		if (showShapes && (o.shape != null))		drawShape (g, o);					// under the drawing of the object
 		Color	c = sel ? C_SEL : ColorTool.fromWColorToColor (o.color);
 		if (!o.visible && !sel)		c = new Color (c.getRed (), c.getGreen (), c.getBlue (), 90);
 		g.setColor (c);
