@@ -223,6 +223,8 @@ public class DeployArch
 				if (m.properties == null)	m.properties = new LinkedHashMap<String, String> ();
 				if (m.events == null)		m.events = new ArrayList<Event> ();
 			}
+			// a robot, simulated or physical, is never passive: it runs on its own cycle
+			r.virtualRobot.set ("PASSIVE", "false");
 		}
 		getWorldFile ();														// leaves it null when it is empty
 	}

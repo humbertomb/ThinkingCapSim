@@ -168,6 +168,7 @@ public class ExecArch extends Thread
 		if (rob.virtualRobot != null)
 		{
 			vrdesc		= new ThreadDesc ("ROB", config (rob, rob.virtualRobot));
+			vrdesc.passive	= false;					// a robot runs on its own cycle, whatever it was told
 			if (world != null)		vrdesc.config.set ("WORLD", world);
 		}
 

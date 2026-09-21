@@ -112,6 +112,8 @@ public class ArchModel
 		public String	fileDir;		// P_FILE: default directory
 		public String	fileDesc;		// P_FILE: filter description
 		public String[]	fileExts;		// P_FILE: filter extensions
+		public String	fixed;			// the one value it can have (shown, not edited); null if it can be edited
+		public String	why;			// and why it cannot be anything else
 
 		public Property (String key, String label)								{ this (key, label, P_TEXT); }
 		public Property (String key, String label, int type)						{ this.key = key; this.label = label; this.type = type; }
@@ -130,6 +132,8 @@ public class ArchModel
 
 		/** The same, which may also be left blank: the first thing offered is no class at all. */
 		public Property orNone ()						{ classBlank = true; return this; }
+		/** A property that can only have one value: it is shown, not edited. */
+		public Property fixedTo (String value, String why)	{ fixed = value; this.why = why; return this; }
 		public String toString ()	{ return label; }
 	}
 
@@ -178,7 +182,8 @@ public class ArchModel
 		new Property ("DESC",	"Robot Definition",	"./conf/robots",	"Robot descriptions (*.robot)",	"robot"),
 		Property.ofClass ("CLASS", "Class", VROBOT_BASE, VROBOT_NOT).orNone (),
 		new Property ("MODE",	"Mode",			MODES),
-		new Property ("PASSIVE","Passive",		P_BOOLEAN),
+		// a robot, simulated or real, runs on its own cycle: nothing else would make it read its sensors
+		new Property ("PASSIVE","Passive",		P_BOOLEAN).fixedTo ("false", "A robot, simulated or physical, is never passive: it runs on its own cycle"),
 		new Property ("EXTIME",	"Exec. time (ms)"),
 		new Property ("GFX",	"Graphics",	P_BOOLEAN),
 	};
@@ -428,6 +433,8 @@ public class ArchModel
 		}
 		Module	m = moduleOf (b);
 		if (m == null)					return;
+		for (Property p : propertiesOf (b))
+			if (p.key.equals (key) && (p.fixed != null))		v = p.fixed;		// what can only be one thing is that thing
 		if (key.equals ("INFO"))		{ if (v.length () > 0) m.name = v; }
 		else							m.set (key, v);
 	}

@@ -124,11 +124,12 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		public int getRowCount ()				{ return rows.size (); }
 		public int getColumnCount ()			{ return 2; }
 		public String getColumnName (int c)		{ return (c == 0) ? "Property" : "Value"; }
-		public boolean isCellEditable (int r, int c)	{ return c == 1; }
+		public boolean isCellEditable (int r, int c)	{ return (c == 1) && (rows.get (r).fixed == null); }
 
 		public Object getValueAt (int r, int c)
 		{
 			Property	p = rows.get (r);
+			if ((c == 1) && (p.fixed != null))		return p.fixed;			// what it can only be, whatever the file said
 			return (c == 0) ? p.label : value (p, model.get (block, p.key));
 		}
 
@@ -518,8 +519,24 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 				return super.getCellEditor (row, column);
 			}
 
+			// a property that can only have one value: shown disabled, on grey
+			private final javax.swing.table.DefaultTableCellRenderer	fixedRenderer = new javax.swing.table.DefaultTableCellRenderer ()
+			{
+				private static final long	serialVersionUID = 1L;
+
+				public java.awt.Component getTableCellRendererComponent (JTable t, Object value, boolean sel, boolean focus, int row, int col)
+				{
+					super.getTableCellRendererComponent (t, value, false, false, row, col);
+					setEnabled (false);
+					setBackground (C_FIXED);
+					setToolTipText (propsModel.propertyAt (row).why);
+					return this;
+				}
+			};
+
 			public TableCellRenderer getCellRenderer (int row, int column)
 			{
+				if ((column == 1) && (propsModel.propertyAt (row).fixed != null))					return fixedRenderer;
 				if ((column == 1) && (propsModel.propertyAt (row).type == ArchModel.P_FILE))		return fileRenderer;
 				return super.getCellRenderer (row, column);
 			}
