@@ -81,6 +81,20 @@ public class SoccerController extends BGController
 		obstacle	= new Position ();
 	}
 	
+	/**
+	 * Where an object of the LPS is, into <code>p</code>, and how sure the LPS is
+	 * of it (its anchor). An object the LPS does not have is not seen (0) and
+	 * <code>p</code> keeps where it was last.
+	 */
+	protected double locate (String name, Position p)
+	{
+		LPO		lpo = lps.find (name);
+
+		if (lpo == null)		return 0.0;
+		p.set_polar (lpo.rho (), lpo.phi ());
+		return lpo.anchor ();
+	}
+
 	protected void controller () 
 	{
 		int				i;
@@ -102,18 +116,11 @@ public class SoccerController extends BGController
 		
 		// Check for new LPOs information
 double banchor;
-		lpo			= lps.find ("Ball");
-		ball.set_polar (lpo.rho (), lpo.phi ());
-		ballSeen	= (lpo.anchor () > 0.6);
-banchor = lpo.anchor ();
-
-		lpo			= lps.find ("Net1");
-		net1.set_polar (lpo.rho (), lpo.phi ());
-		net1Seen 	= (lpo.anchor () > 0.3);
-
-		lpo			= lps.find ("Net2");
-		net2.set_polar (lpo.rho (), lpo.phi ());
-		net2Seen 	= (lpo.anchor () > 0.2);
+		// an object the LPS does not have (no module puts it there) is an object not seen
+		banchor		= locate ("Ball", ball);
+		ballSeen	= (banchor > 0.6);
+		net1Seen 	= (locate ("Net1", net1) > 0.3);
+		net2Seen 	= (locate ("Net2", net2) > 0.2);
 		
 		/* ----------------- */
 		/* COMPUTE POSITIONS */
@@ -145,6 +152,12 @@ banchor = lpo.anchor ();
 			xx		= m * yy + n;
 		}
 		
+		// with the ball on the net (or nowhere yet) there is no line to align on: aim at the ball
+		if (Double.isNaN (xx) || Double.isInfinite (xx) || Double.isNaN (yy) || Double.isInfinite (yy))
+		{
+			xx		= ball.x ();
+			yy		= ball.y ();
+		}
 		alignRho	= Math.sqrt (xx * xx + yy * yy);
 		align.set (xx, yy);
 		
@@ -210,7 +223,7 @@ banchor = lpo.anchor ();
 		// Set state predicates
 		dstBallNet	= Math.sqrt ((ball.x () - net1.x ()) * (ball.x () - net1.x ()) + (ball.y () - net1.y ()) * (ball.y () - net1.y ()));
 		ballAligned	= (Math.abs (ball.phi () - net1.phi ()) < ALG_HEAD) && (alignRho < dstBallNet + ALG_DIST);
-		ballHold	= lps.dsignals[0];
+		ballHold	= (lps.dsignals != null) && (lps.dsignals.length > 0) && lps.dsignals[0];
 		inNet		= net1Seen && (net1.rho () < 0.4);
 
 		if (ballSeen)		lballPhi	= ball.phi ();
@@ -218,9 +231,13 @@ banchor = lpo.anchor ();
 		if (net2Seen)		lnet2Phi	= net2.phi ();
 		
 		// Put perception data into BG interpreter
-		group	= (LPOSensorGroup) lps.find ("Group");
-		for (i = 0; i < fdesc.MAXGROUP; i++)
-			interp.access ("group"+i, group.range[i]);
+		lpo		= lps.find ("Group");
+		if (lpo instanceof LPOSensorGroup)
+		{
+			group	= (LPOSensorGroup) lpo;
+			for (i = 0; (i < fdesc.MAXGROUP) && (i < group.range.length); i++)
+				interp.access ("group"+i, group.range[i]);
+		}
 
 		if (ballSeen)
 		{
