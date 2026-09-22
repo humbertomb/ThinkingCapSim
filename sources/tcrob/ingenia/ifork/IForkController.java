@@ -24,7 +24,6 @@ import tc.shared.lps.lpo.LPORangePoint;
 import tc.vrobot.RobotDataCtrl;
 import tc.vrobot.models.TricycleDrive;
 import tclib.tracking.*;
-import tc.shared.lps.gui.LPSWindow;
 import tcrob.ingenia.ifork.linda.ItemIForkMotion;
 import tcrob.ingenia.ifork.lpo.LPOIForkData;
 import devices.pos.*;
@@ -73,7 +72,6 @@ public class IForkController extends Controller
 	protected LogFile					c_dump;
 	protected double[]					c_buffer;
 	protected String[]					c_labels;
-	protected LPSWindow			win;
 	
 	// Goal representation and completion detection
 	protected boolean					inZone0;
@@ -491,8 +489,6 @@ public class IForkController extends Controller
 				beh_motion (ItemBehResult.T_FINISHED);
 			}
 		}
-		
-		if (win != null)		win.update (lps, path);
 	}
 	
 	protected void sensor_selection () 
@@ -1157,8 +1153,6 @@ public class IForkController extends Controller
 	
 	protected void close_gfx ()
 	{
-		if (win != null)		win.close ();
-		win		= null;
 		if (c_plot != null)		c_plot.close ();
 	}
 
@@ -1203,10 +1197,7 @@ public class IForkController extends Controller
 		fcontrol = new FlatnessControl (dt, model);
 		
 		// File dump
-		fdebug = false;
-		
-		if (localgfx)
-			win		= new LPSWindow (robotid);
+		fdebug = false;		
 	}
 
 	public void notify_execution (String space, ItemExecution item)
