@@ -44,7 +44,7 @@ public class SoccerVision extends Perception
 	public SoccerVisionConfig		vconfig;
 	public String					vfile;			// the file the configuration was read from (PARAMS); null if none
 	
-	public LUT						lut;
+	public volatile LUT				lut;			// replaced from the window while frames arrive
 	public Segmentation				segment;
 	public BlobForming				blobbing;
 	public SoccerRecognizer			recognizer;
@@ -79,17 +79,24 @@ public class SoccerVision extends Perception
 			try { vconfig.loadFromFilename(name); vfile = name; }	catch (Exception e) { e.printStackTrace(); }
 	}
 	
+	/**
+	 * A new LUT, of the method of the configuration. It is built before it takes
+	 * the place of the one in use: the frames that arrive meanwhile (from another
+	 * thread) are segmented with the old one, never with one not yet computed.
+	 */
 	public void instanceLUT ()
 	{
 		Class<?>		sclass;
 		String		pack;
+		LUT				nlut;
 		
 		try 
 		{
 			pack		= LUT.class.getPackage().getName();
 			sclass		= Class.forName (pack + "." + SoccerVisionConfig.LUTMODES[vconfig.lutmode]);
-			lut			= (LUT) sclass.getDeclaredConstructor().newInstance();
-			lut.initialise (vconfig.channels);
+			nlut		= (LUT) sclass.getDeclaredConstructor().newInstance();
+			nlut.initialise (vconfig.channels);
+			lut			= nlut;
 		} catch (Exception ex) { ex.printStackTrace (); }		
 	}
 
@@ -185,7 +192,7 @@ public class SoccerVision extends Perception
 	
 	public void notify_camera (String space, ItemCamera item)
 	{
-		if (!initialized)			return;
+		if (!initialized || (lut == null))			return;
 		
 		segment.process (item.image, lut, vconfig.channels);
 		blobbing.process (segment);

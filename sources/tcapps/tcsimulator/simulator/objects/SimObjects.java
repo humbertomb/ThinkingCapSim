@@ -133,7 +133,7 @@ public class SimObjects
 					else 		// Collision with a robot or a wall
 					{
 						robot	= simul.collisionIcon (wall);
-						if (robot != -1)
+						if ((robot != -1) && (simul.MODEL[robot] != null))		// a robot (once its model is there)
 							mobj.object_pushed (wall, simul.MODEL[robot].vr);
 						else
 							mobj.wall_collision (wall);
