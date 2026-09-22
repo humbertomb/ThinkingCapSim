@@ -17,7 +17,7 @@ public class LPORangeSignat extends LPORange implements Serializable
 	public static final double			RADIUS			= 0.05;
 
 	// Constructor
-	public LPORangeSignat (String label, int source)
+	public LPORangeSignat (String label, LpoSource source)
 	{			
 		super (null, label, source);
 		

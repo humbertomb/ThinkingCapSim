@@ -215,7 +215,7 @@ public class LPS extends Object
 			x	= ll * Math.cos (aa - cur.alpha ());
 			y	= ll * Math.sin (aa - cur.alpha ());
 
-			lpos[i]	= new LPODock (x, y, ra, map.D_LENGHT, map.docks().get(i).label, LPO.MAP);
+			lpos[i]	= new LPODock (x, y, ra, map.D_LENGHT, map.docks().get(i).label, LpoSource.MAP);
 			lpos[i].active (true);
 		}
 		lpos_n += map.docks().size();

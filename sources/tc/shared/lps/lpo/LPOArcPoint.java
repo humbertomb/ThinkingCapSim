@@ -14,17 +14,17 @@ public class LPOArcPoint extends LPORangePoint implements Serializable
 	protected double				speed;				// Object speed (m/s)
 	
 	// Constructors
-	public LPOArcPoint (double side, int source)
+	public LPOArcPoint (double side, LpoSource source)
 	{
 		super (side, source);
 	}
 	
 	// Instance methods
-	public void set (double x, double y, double speed, int source)
+	public void set (double x, double y, double speed, int index)
 	{
 		double			spd;
 		
-		locate (x, y, 0.0, source);
+		locate (x, y, 0.0, index);
 		
 		spd	= Math.log (Math.abs (1.0 + speed));
 		if (speed < 0.0)

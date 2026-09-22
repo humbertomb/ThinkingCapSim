@@ -21,7 +21,7 @@ public class LPOSensorGroup extends LPO implements Serializable
 	public boolean[]					valid;
 
 	// Constructor
-	public LPOSensorGroup (SensorPos[] spos, String label, int source)
+	public LPOSensorGroup (SensorPos[] spos, String label, LpoSource source)
 	{			
 		super (0.0, 0.0, 0.0, label, source);
 			

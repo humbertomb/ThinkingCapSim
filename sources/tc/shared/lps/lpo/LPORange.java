@@ -19,7 +19,7 @@ public abstract class LPORange extends LPO implements Serializable
 	{
 	}
 	
-	protected LPORange (SensorPos spos, String label, int source)
+	protected LPORange (SensorPos spos, String label, LpoSource source)
 	{
 		super (0.0, 0.0, 0.0, label, source);
 		

@@ -29,7 +29,7 @@ public class LPOMate extends LPOPoint implements Serializable
 	protected double				ymax;
 	
 	// Constructor
-	public LPOMate (int source)
+	public LPOMate (LpoSource source)
 	{			
 		super (0.0, 0.0, 0.0, null, source);
 	}

@@ -171,7 +171,7 @@ public class LPSPanel extends JPanel
 		for (int i = 0; i < lps.lpos_n (); i++)
 		{
 			LPO		o = lps.lpos ()[i];
-			if ((o == null) || ((o.source () == LPO.PERCEPT) && o.lost ()))		continue;		// a percept lost is not drawn
+			if ((o == null) || ((o.source () == LpoSource.PERCEPT) && o.lost ()))		continue;		// a percept lost is not drawn
 			int		first = model.nattr;
 			o.draw (model, view);
 			if (o.label () != null)		corner (model, first, o.label (), corn);
@@ -324,11 +324,12 @@ public class LPSPanel extends JPanel
 	 */
 	static protected boolean anchored (LPO o)
 	{
+		if (o.source () == null)		return true;
 		switch (o.source ())
 		{
-		case LPO.ARTIFACT:
-		case LPO.MAP:		return false;
-		case LPO.PERCEPT:	return o.anchor () > 0.0;
+		case ARTIFACT:
+		case MAP:			return false;
+		case PERCEPT:		return o.anchor () > 0.0;
 		default:			return true;
 		}
 	}

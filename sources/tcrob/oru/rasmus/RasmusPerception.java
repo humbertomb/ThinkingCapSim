@@ -6,6 +6,7 @@ package tcrob.oru.rasmus;
 
 import tc.runtime.thread.ModuleConfig;
 import tc.shared.linda.*;
+import tc.shared.lps.lpo.*;
 
 import tcrob.umu.indoor.IndoorPerception;
 		
@@ -48,8 +49,8 @@ public class RasmusPerception extends IndoorPerception
 			max_buffer	= LPS.PPR_BUFFER * fdesc.MAXVIRTU;
 
 		// Add domain specific LPOs to the LPS
-		l_home		= new LPOPoint (0.0, 0.0, 0.0, "Home", LPO.MAP);
-//		l_goal		= new LPOPoint (0.0, 0.0, 0.0, "Goal",  LPO.MAP);	
+		l_home		= new LPOPoint (0.0, 0.0, 0.0, "Home", LpoSource.MAP);
+//		l_goal		= new LPOPoint (0.0, 0.0, 0.0, "Goal",  LpoSource.MAP);	
 
 		wucore.utils.math.Matrix3D rotm = new wucore.utils.math.Matrix3D();
 		
@@ -80,11 +81,11 @@ public class RasmusPerception extends IndoorPerception
 
 		// here we use the coordinates for the real experiment in the corridor
 		// of the aass
-		l_door		= new LPOPoint(x,y,alpha,"Door4", LPO.MAP);
+		l_door		= new LPOPoint(x,y,alpha,"Door4", LpoSource.MAP);
 		
 		// here we use the coordinates for the real experiment in the corridor
 		// of the aass to test only the cross behaviour
-//		l_door = new LPOPoint(1,-0.2,15.0/180*Math.PI,"Door4",LPO.MAP);
+//		l_door = new LPOPoint(1,-0.2,15.0/180*Math.PI,"Door4",LpoSource.MAP);
 		lps.add(l_door);
 		l_door.active(true);
 		
@@ -102,7 +103,7 @@ public class RasmusPerception extends IndoorPerception
 		x		= (rotm.mat[0][0] * xx) + (rotm.mat[0][1] * yy) + rotm.mat[0][2];
 		y		= (rotm.mat[1][0] * xx) + (rotm.mat[1][1] * yy) + rotm.mat[1][2];	
 		alpha	= wucore.utils.math.Angles.radnorm_180 (alpha + rotm.mat[2][2]);
-		l_goal		= new LPOPoint (x,y,alpha, "Goal",  LPO.MAP);	
+		l_goal		= new LPOPoint (x,y,alpha, "Goal",  LpoSource.MAP);	
 
 		//Activate it only if you are using the complexTask behaviour, because
 		//in that case you want to have a predefined goal to achieve
@@ -115,11 +116,11 @@ public class RasmusPerception extends IndoorPerception
 //		x		= (rotm.mat[0][0] * xx) + (rotm.mat[0][1] * yy) + rotm.mat[0][2];
 //		y		= (rotm.mat[1][0] * xx) + (rotm.mat[1][1] * yy) + rotm.mat[1][2];	
 //		alpha	= wucore.utils.math.Angles.radnorm_180 (alpha + rotm.mat[2][2]);
-//		LPOPoint l_room = new LPOPoint(x,y,alpha,"Room1",LPO.MAP);
+//		LPOPoint l_room = new LPOPoint(x,y,alpha,"Room1",LpoSource.MAP);
 //		lps.add(l_room);
 //		l_room.active(true);
 //		
-//		LPOPoint l_corr = new LPOPoint(2.0,0,0.0/180*Math.PI,"Corridor1",LPO.MAP);
+//		LPOPoint l_corr = new LPOPoint(2.0,0,0.0/180*Math.PI,"Corridor1",LpoSource.MAP);
 //		lps.add(l_corr);
 //		l_corr.active(true);
 

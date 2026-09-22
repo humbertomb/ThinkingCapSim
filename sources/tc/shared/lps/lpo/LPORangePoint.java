@@ -24,9 +24,10 @@ public class LPORangePoint extends LPORange implements Serializable
 	
 	protected double					side;			// Quantization cell size (m)
 	protected int					sensor;			// Type of sensor that produced the measurement
+	protected int					index;			// Which of them (its index)
 	
 	// Constructors
-	public LPORangePoint (double side, int source)
+	public LPORangePoint (double side, LpoSource source)
 	{
 		super (null, null, source);
 
@@ -39,12 +40,12 @@ public class LPORangePoint extends LPORange implements Serializable
 	public final int		sensor ()			{ return sensor; }
 	
 	// Instance methods
-	public void set (double x, double y, double len, int sensor, int source)
+	public void set (double x, double y, double len, int sensor, int index)
 	{
 		locate (x, y, 0.0, len);
 		
 		this.sensor	= sensor;	
-		this.source	= source;	
+		this.index	= index;	
 		this.ageing	= 0;
 	}
 	

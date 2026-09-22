@@ -17,7 +17,7 @@ public class Ball extends LPO implements Serializable
 	protected double					radius;						// Radius of the ball (m)
 
 	// Constructor
-	public Ball (double radius, String label, int source)
+	public Ball (double radius, String label, LpoSource source)
 	{			
 		super (0.0, 0.0, 0.0, label, source);
 		

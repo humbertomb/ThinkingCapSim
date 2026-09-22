@@ -150,19 +150,19 @@ public class SoccerVision extends Perception
 		super.notify_config (space, item);
 		
 		// Add domain specific LPOs to the LPS
-		ball	= new Ball (BALL_RADIUS, "Ball", LPO.PERCEPT);
+		ball	= new Ball (BALL_RADIUS, "Ball", LpoSource.PERCEPT);
 		ball.anchor_fade = BALL_FADING;
 		ball.color (WColor.YELLOW.darker());
 		
-		net1	= new Net (NET_SIZE, "Net1", LPO.PERCEPT);
+		net1	= new Net (NET_SIZE, "Net1", LpoSource.PERCEPT);
 		net1.anchor_fade = NET_FADING;
 		net1.color (WColor.RED);
 		
-		net2	= new Net (NET_SIZE, "Net2", LPO.PERCEPT);
+		net2	= new Net (NET_SIZE, "Net2", LpoSource.PERCEPT);
 		net2.anchor_fade = NET_FADING;
 		net2.color (WColor.BLUE);
 		
-		align	= new LPOPoint (0.0, 0.0, 0.0, "Align", LPO.ARTIFACT);
+		align	= new LPOPoint (0.0, 0.0, 0.0, "Align", LpoSource.ARTIFACT);
 		align.anchor_fade = NET_FADING;
 		align.color (WColor.MAGENTA);
 		

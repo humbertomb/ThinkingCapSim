@@ -292,7 +292,7 @@ public class LaserMeasureWindow extends Object implements Runnable
 		senpos = new SensorPos ();
 		senpos.set_xy (0.0, 0.0, 90.0 * Angles.DTOR);
 
-		scanLRF = new LPOSensorScanner (senpos, RAYSCAN, CONESCAN, "Scan", LPO.PERCEPT);
+		scanLRF = new LPOSensorScanner (senpos, RAYSCAN, CONESCAN, "Scan", LpoSource.PERCEPT);
 		scanLRF.setMode (LPOSensorScanner.RAYS);
 		
 		mlaser.update (null, scanLRF, null);

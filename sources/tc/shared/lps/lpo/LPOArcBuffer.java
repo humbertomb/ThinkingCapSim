@@ -34,7 +34,7 @@ public class LPOArcBuffer extends LPO implements Serializable
 	protected int 						buffer_max;	
 
 	// Constructor
-	public LPOArcBuffer (SensorPos pos, int size, double mark, double range, double side, double cone, String label, int source)
+	public LPOArcBuffer (SensorPos pos, int size, double mark, double range, double side, double cone, String label, LpoSource source)
 	{			
 		super (0.0, 0.0, 0.0, label, source);
 		
@@ -71,7 +71,7 @@ public class LPOArcBuffer extends LPO implements Serializable
 
 		// Initialize range sensors buffer
 		for (i = 0; i < size; i++)
-			buffer[i]	= new LPOArcPoint (side, PERCEPT);			
+			buffer[i]	= new LPOArcPoint (side, LpoSource.PERCEPT);			
 			
 		buffer_head	= 0;
 		buffer_tail	= 0;

@@ -19,7 +19,7 @@ public class LPOSensorRange extends LPO implements Serializable
 	public boolean[]					valid;
 
 	// Constructor
-	public LPOSensorRange (SensorPos[] spos, String label, int source)
+	public LPOSensorRange (SensorPos[] spos, String label, LpoSource source)
 	{			
 		super (0.0, 0.0, 0.0, label, source);
 		

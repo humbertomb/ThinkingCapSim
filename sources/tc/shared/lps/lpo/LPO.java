@@ -21,12 +21,6 @@ public abstract class LPO extends Object implements Serializable
 {
 	static public final double		ANCHOR_FADE	= 5.0;		// Time an anchoring takes to run out, from 1 to 0 (s)
 
-	// Object sources
-	static public final int			MAP			= 0;
-	static public final int			CAMERA		= 1;
-	static public final int			PERCEPT		= 2;
-	static public final int			ANCHOR		= 3;
-	static public final int			ARTIFACT	= 4;
 	
 	// Local object location
 	public double 					x;				// local euclidean coordinates (m, m, rad)
@@ -45,7 +39,7 @@ public abstract class LPO extends Object implements Serializable
 	// Object features	
 	public String					label;
 	public WColor					color;
-	public int 						source;			// where the perception came from?
+	public LpoSource				source		= LpoSource.MAP;	// where what it stands for comes from (MAP when not said, as it was)
 	public boolean 					active;
 
 	// Constructor
@@ -53,7 +47,7 @@ public abstract class LPO extends Object implements Serializable
 	{
 	}
 	
-	public LPO (double x, double y, double alpha, String label, int source)
+	public LPO (double x, double y, double alpha, String label, LpoSource source)
 	{			
 		locate (x, y, alpha);
 		
@@ -78,7 +72,7 @@ public abstract class LPO extends Object implements Serializable
 	
 	public double			anchor ()				{ return anchor; }
 	public int				ageing ()				{ return ageing; }
-	public int				source ()				{ return source; }
+	public LpoSource		source ()				{ return source; }
 	public void				label (String label)	{ this.label = label; }
 	public String			label ()				{ return label; }
 	public boolean			active ()				{ return active; }

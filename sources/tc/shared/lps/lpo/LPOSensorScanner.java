@@ -23,7 +23,7 @@ public class LPOSensorScanner extends LPO implements Serializable
 	public double[]						range;
 
 	// Constructor
-	public LPOSensorScanner (SensorPos spos, int size, double cone, String label, int source)
+	public LPOSensorScanner (SensorPos spos, int size, double cone, String label, LpoSource source)
 	{			
 		super (0.0, 0.0, 0.0, label, source);
 			

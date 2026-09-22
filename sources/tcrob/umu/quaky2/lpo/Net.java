@@ -19,7 +19,7 @@ public class Net extends LPO implements Serializable
 	protected double					width;					// Half the width of the net (m)
 
 	// Constructor
-	public Net (double width, String label, int source)
+	public Net (double width, String label, LpoSource source)
 	{			
 		super (0.0, 0.0, 0.0, label, source);
 		

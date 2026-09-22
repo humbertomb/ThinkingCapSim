@@ -29,7 +29,7 @@ public class LPOIForkData extends LPO implements Serializable
 	protected int					pal_switch=-1;	// Lifting motor height (m)
 	
 	// Constructor
-	public LPOIForkData (String label, int source)
+	public LPOIForkData (String label, LpoSource source)
 	{			
 		super (0.0, 0.0, 0.0, label, source);
 	}

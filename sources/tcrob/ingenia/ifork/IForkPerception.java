@@ -176,9 +176,9 @@ public class IForkPerception extends IndoorPerception
 		l_rbuffer.resetBuffer ();
 
 		// Add domain specific LPOs to the LPS
-		l_robot		= new LPOIForkData ("IForkData", LPO.PERCEPT);	
-		l_pbug		= new LPORangePBug (fdesc.RAYSCAN, fdesc.CONESCAN, RBUF_DIST, 0.2, "PolarBug", LPO.PERCEPT, world);
-		l_avoid		= new LPOLine (0.0, 0.0, 0.0, "Avoid", LPO.ARTIFACT);	
+		l_robot		= new LPOIForkData ("IForkData", LpoSource.PERCEPT);	
+		l_pbug		= new LPORangePBug (fdesc.RAYSCAN, fdesc.CONESCAN, RBUF_DIST, 0.2, "PolarBug", LpoSource.PERCEPT, world);
+		l_avoid		= new LPOLine (0.0, 0.0, 0.0, "Avoid", LpoSource.ARTIFACT);	
 		lps.add (l_robot);
 		lps.add (l_pbug);
 		lps.add (l_avoid);
@@ -186,7 +186,7 @@ public class IForkPerception extends IndoorPerception
 		l_mates		= new LPOMate[MAX_MATES];
 		for (i = 0; i < MAX_MATES; i++)
 		{
-			l_mates[i]	= new LPOMate (LPO.ANCHOR);
+			l_mates[i]	= new LPOMate (LpoSource.ANCHOR);
 			lps.add (l_mates[i]);
 		}
 		

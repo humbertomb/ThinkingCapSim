@@ -12,7 +12,7 @@ import wucore.utils.color.*;
 public class LPOArrow extends LPORange implements Serializable
 {
 	// Constructor
-	public LPOArrow (double x, double y, double alpha, String label, int source)
+	public LPOArrow (double x, double y, double alpha, String label, LpoSource source)
 	{			
 		super (null, label, source);
 		
