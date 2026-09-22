@@ -89,6 +89,8 @@ public class ArchCanvas extends JPanel
 	static final int				PREVIEW_W	= 88;
 	static final int				PREVIEW_H	= 88;
 	static final int				PREVIEW_OVER	= 16;					// how much of the block it covers
+	static final int				TH_W		= 18,	TH_H		= 22;		// the mark of a block that runs on a thread of its own
+	static final int				TH_GAP		= 5;						// from the block it is the mark of
 
 	protected ArchModel				model;
 	protected Block					selection;
@@ -626,6 +628,7 @@ public class ArchCanvas extends JPanel
 			break;
 		}
 		case ArchModel.ROUTER:
+			paintThread (g, b, r, selected);
 			g.setColor (C_ROUTER);
 			g.fillRect (r.x, r.y, r.width, r.height);
 			g.setColor (border);
@@ -636,6 +639,7 @@ public class ArchCanvas extends JPanel
 			paintSymbols (g, b, r);
 			break;
 		case ArchModel.MODULE:
+			paintThread (g, b, r, selected);
 			g.setColor (C_MODULE);
 			g.fillRect (r.x, r.y, r.width, r.height);
 			g.setColor (border);
@@ -645,6 +649,7 @@ public class ArchCanvas extends JPanel
 			break;
 		case ArchModel.VROBOT:
 		{
+			paintThread (g, b, r, selected);
 			g.setColor (C_VROBOT);
 			g.fillRoundRect (r.x, r.y, r.width, r.height, 22, 22);
 			g.setColor (border);
@@ -654,6 +659,58 @@ public class ArchCanvas extends JPanel
 			break;
 		}
 		}
+	}
+
+	/**
+	 * Whether a block runs on a thread of its own: it does unless it is passive
+	 * (a module that only reacts to what it is notified of). A module that polls
+	 * the Linda space is never passive, and a robot, simulated or physical, runs
+	 * on its own cycle.
+	 */
+	protected boolean ownThread (Block b)
+	{
+		switch (b.kind)
+		{
+		case ArchModel.MODULE:
+			if (Boolean.parseBoolean (model.get (b, "POLLED")))		return true;
+			return !Boolean.parseBoolean (model.get (b, "PASSIVE"));
+		case ArchModel.ROUTER:
+		case ArchModel.VROBOT:
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	/**
+	 * The mark of a block that runs on a thread of its own, on the left of it: a
+	 * white box with the cycle it runs on (a loop with an arrow). A passive
+	 * block, which runs on the thread of whoever notifies it, has none.
+	 */
+	protected void paintThread (Graphics2D g, Block b, Rectangle r, boolean selected)
+	{
+		int			x, y;
+		Stroke		old = g.getStroke ();
+
+		if (!ownThread (b))		return;
+		x	= r.x - TH_W - TH_GAP;
+		y	= (int) Math.round (r.getCenterY () - TH_H / 2.0);
+
+		g.setColor (Color.WHITE);
+		g.fillRoundRect (x, y, TH_W, TH_H, 6, 6);
+		g.setColor (selected ? C_SELECT : C_LINE);
+		g.setStroke (new BasicStroke (1.2f));
+		g.drawRoundRect (x, y, TH_W, TH_H, 6, 6);
+
+		// the cycle it runs on: a loop open at its top right, with an arrow at the open end
+		int		lx = x + 4, ly = y + 5, lw = TH_W - 9, lh = TH_H - 11;
+		g.setStroke (new BasicStroke (1.6f));
+		g.drawArc (lx, ly, lw, lh, 40, 285);
+		int		ax = lx + lw, ay = ly + lh / 2 - 1;
+		g.drawLine (ax, ay, ax - 4, ay - 3);
+		g.drawLine (ax, ay, ax - 5, ay + 2);
+
+		g.setStroke (old);
 	}
 
 	/**

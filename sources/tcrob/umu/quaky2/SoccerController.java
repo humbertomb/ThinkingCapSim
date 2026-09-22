@@ -25,6 +25,7 @@ public class SoccerController extends BGController
 	static public final double			DEF_DIL			= 1.5;					// Default dilation constant				
 	static public final double			ALG_DIST		= 0.75;					// Aligment distance (m)
 	static public final double			ALG_HEAD		= 35.0 * Angles.DTOR;	// Aligment heading (rad)	
+	static public final double			ALG_TOL			= 0.4;					// How close to the alignment point the robot is taken to be at it (m)
 	static public final int				LOOKA_DIST		= 2;					// Look-ahead distance (cells)
 	
 	// Navigation structures
@@ -187,7 +188,8 @@ double banchor;
 		
 		// Set state predicates
 		dstBallNet	= Math.sqrt ((ball.x () - net1.x ()) * (ball.x () - net1.x ()) + (ball.y () - net1.y ()) * (ball.y () - net1.y ()));
-		ballAligned	= (Math.abs (ball.phi () - net1.phi ()) < ALG_HEAD) && (alignRho < dstBallNet + ALG_DIST);
+		// aligned: at the alignment point, with the ball between the robot and the net, and both in front of it
+		ballAligned	= (Math.abs (ball.phi () - net1.phi ()) < ALG_HEAD) && (alignRho < ALG_TOL) && (net1.rho () > dstBallNet);
 		ballHold	= (lps.dsignals != null) && (lps.dsignals.length > 0) && lps.dsignals[0];
 		inNet		= net1Seen && (net1.rho () < 0.4);
 
