@@ -62,6 +62,7 @@ public class LPSPanel extends JPanel
 	static protected final Font		F_ANCHOR	= new Font ("SansSerif", Font.PLAIN, 10);
 	static protected final Font		F_LABEL		= new Font ("Monospaced", Font.PLAIN, 12);
 	static protected final int		NOTE_MARGIN	= 6;			// of the notes from the corner (pixels)
+	static protected final int		NAME_GAP	= 4;			// of the name of an LPO from its drawing (pixels)
 	static protected final Font		F_SCALE		= new Font ("SansSerif", Font.PLAIN, 9);
 
 	static protected final Stroke	S_PLAIN		= new BasicStroke (1.0f);
@@ -73,6 +74,7 @@ public class LPSPanel extends JPanel
 	protected Model2D				front		= new Model2D ();		// the one painted
 	protected Model2D				back		= new Model2D ();		// the one being built
 	protected Map<String, Double>	anchors		= new HashMap<String, Double> ();	// anchoring of the LPOs drawn, by name
+	protected Map<Integer, double[]>	corners	= new HashMap<Integer, double[]> ();	// name of an LPO (its text) -> top right of its drawing (m)
 	protected String				image;									// the image of the robot (null: its drawing)
 	protected double[]				ibox;									// the box it is drawn over, in the robot
 	protected LPOView				view		= new LPOView ();
@@ -140,6 +142,7 @@ public class LPSPanel extends JPanel
 	{
 		Model2D					model;
 		Map<String, Double>		anch = new HashMap<String, Double> ();
+		Map<Integer, double[]>	corn = new HashMap<Integer, double[]> ();
 		RobotDesc				rdesc;
 		LPORangeBuffer			rbuffer;
 		String					img = null;
@@ -169,7 +172,9 @@ public class LPSPanel extends JPanel
 		{
 			LPO		o = lps.lpos ()[i];
 			if ((o == null) || ((o.source () == LPO.PERCEPT) && o.lost ()))		continue;		// a percept lost is not drawn
+			int		first = model.nattr;
 			o.draw (model, view);
+			if (o.label () != null)		corner (model, first, o.label (), corn);
 			if ((o != null) && o.active () && (o.label () != null) && anchored (o))		anch.put (o.label (), o.anchor ());
 		}
 
@@ -197,10 +202,42 @@ public class LPSPanel extends JPanel
 			back	= front;
 			front	= model;
 			anchors	= anch;
+			corners	= corn;
 			image	= img;
 			ibox	= box;
 		}
 		repaint ();
+	}
+
+	/**
+	 * Where the name of an LPO goes: the top right corner of the box of what it
+	 * drew (from the element first on), kept for the text of its name, which is
+	 * painted to the right of it, its top level with the top of the drawing. An
+	 * LPO that draws nothing but its name keeps it where it put it.
+	 */
+	static protected void corner (Model2D m, int first, String label, Map<Integer, double[]> corn)
+	{
+		double		maxx = -Double.MAX_VALUE, maxy = -Double.MAX_VALUE;
+		boolean		some = false;
+
+		for (int i = first; i < m.nattr; i++)
+		{
+			Model2DAttr		a = m.attr[i];
+			if ((a == null) || (a.type == Model2D.TEXT) || (a.type == Model2D.LABEL) || (a.type == Model2D.NOTE) || (a.type == Model2D.AXIS))
+				continue;
+			int[]			vs = (a.attype == Model2DAttr.ATTR_POLY) ? a.vset
+								: (a.attype == Model2DAttr.ATTR_LINE) ? new int[] { a.vorig, a.vdest } : new int[] { a.vorig };
+			for (int v : vs)
+			{
+				maxx	= Math.max (maxx, m.verts[v].x);
+				maxy	= Math.max (maxy, m.verts[v].y);
+				some	= true;
+			}
+		}
+		if (!some)		return;
+		for (int i = first; i < m.nattr; i++)
+			if ((m.attr[i] != null) && (m.attr[i].type == Model2D.TEXT) && label.equals (m.attr[i].label))
+				corn.put (Integer.valueOf (i), new double[] { maxx, maxy });
 	}
 
 	/** The path, relative to the robot, as the old LPS window drew it. */
@@ -443,7 +480,12 @@ public class LPSPanel extends JPanel
 				}
 				break;
 			case Model2D.TEXT:
-				if (a.label != null)		text (g, a, x1, y1);
+				if (a.label != null)
+				{
+					double[]	c = corners.get (Integer.valueOf (i));
+					if (c != null)		name (g, a, ox + c[0] * s + NAME_GAP, oy - c[1] * s);
+					else				text (g, a, x1, y1);
+				}
 				break;
 			case Model2D.LABEL:
 				if (a.label != null)
@@ -483,6 +525,14 @@ public class LPSPanel extends JPanel
 		}
 	}
 
+	/** The name of an LPO, from a point to the right of its drawing, its top level with the one of the drawing. */
+	protected void name (Graphics2D g, Model2DAttr a, double x, double top)
+	{
+		g.setFont (F_TEXT);
+		g.drawString (a.label, (float) x, (float) (top + g.getFontMetrics ().getAscent ()));
+		anchor (g, a, x, top + g.getFontMetrics ().getAscent ());
+	}
+
 	/**
 	 * A text, justified as it asks; when it is the name of an LPO, its anchoring
 	 * goes under it, from its left, in a smaller letter: red when it is low (the
@@ -492,7 +542,6 @@ public class LPSPanel extends JPanel
 	{
 		FontMetrics		fm;
 		double			ww, hh, xx, yy;
-		Double			anchor;
 
 		g.setFont (F_TEXT);
 		fm	= g.getFontMetrics ();
@@ -506,13 +555,17 @@ public class LPSPanel extends JPanel
 		}
 		yy	= y + hh / 2;
 		g.drawString (a.label, (float) xx, (float) yy);
+		anchor (g, a, xx, yy);
+	}
 
-		anchor	= anchors.get (a.label);
-		if (anchor != null)
-		{
-			g.setFont (F_ANCHOR);
-			g.setColor ((anchor < LOW_ANCHOR) ? C_LOW : C_HIGH);
-			g.drawString (String.format (Locale.ROOT, "%.2f", anchor), (float) xx, (float) (yy + g.getFontMetrics ().getAscent () + 1));
-		}
+	/** The anchoring of the LPO a name is of (if it shows one), under the name, from its left (baseline of the name at y). */
+	protected void anchor (Graphics2D g, Model2DAttr a, double x, double y)
+	{
+		Double			anchor = anchors.get (a.label);
+
+		if (anchor == null)		return;
+		g.setFont (F_ANCHOR);
+		g.setColor ((anchor < LOW_ANCHOR) ? C_LOW : C_HIGH);
+		g.drawString (String.format (Locale.ROOT, "%.2f", anchor), (float) x, (float) (y + g.getFontMetrics ().getAscent () + 1));
 	}
 }
