@@ -109,8 +109,6 @@ public class SimRobot extends VirtualRobot
 
 		// Compute simulation
 		simul.simulate (r_index, data, speed, turn, cycson, cycir, cyclrf, cyclsb, cycvis, dt);    
-		if (rdesc.MAXVISION > 0)
-			odata = simul.getVisionData ();
 		
 		// Take a frame of whichever camera is due for one
 		process_cameras (dtime);

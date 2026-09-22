@@ -29,7 +29,6 @@ import wucore.utils.math.stat.RandomNumberGenerator;
 import devices.data.CompassData;
 import devices.data.GPSData;
 import devices.data.InsData;
-import devices.data.VisionData;
 
 public class Simulator
 {
@@ -78,13 +77,10 @@ public class Simulator
 	public RobotModel[]				MODEL;
 	public RobotDataCtrl[]			DATA_CTRL;
 	public int[]					ROBOINDEX;
-	public VisionData[]			VISDATA;
-	public Position[][]			VISOBJS;
-//	public Hashtable			VISDATA;
-//	public Hashtable[]			VISOBJS;
+	public Position[][]				VISOBJS;
 	public Position[]				VISPOS;
-	public int					numrobots;
-	public RobotData[] 			lastRobotData; // Stores the last 'RobotData' object received from "SimulatedRobot" to allow 3D representation in the "RefreshThread"
+	public int						numrobots;
+	public RobotData[] 				lastRobotData; // Stores the last 'RobotData' object received from "SimulatedRobot" to allow 3D representation in the "RefreshThread"
 	
 	// Simulated world visualization
 	protected SimulatorListener 		win;
@@ -165,18 +161,8 @@ public class Simulator
 	}
 
 	// Accessors
-	public World				getWorld ()												{ return map; }
+	public World			getWorld ()												{ return map; }
 	public String			getWorldName ()											{ return mapfile; }
-	public VisionData[]		getVisionData ()										{ return VISDATA; }
-//	public VisionData[]		getVisionData (){
-//		VisionData vd[];
-//		int i=0;
-//		
-//		vd=new VisionData[VISDATA.size()];
-//		for(Enumeration enum=VISDATA.elements();enum.hasMoreElements();)
-//			vd[i++]=(VisionData)enum.nextElement();
-//		return vd;
-//	}
 	public void				set_data_ctrl (int robotind, RobotDataCtrl datactrl)	{ DATA_CTRL[robotind] = datactrl; }
 	public void				closeVisualization3D ()									{ this.win = null; }	
 
@@ -1173,13 +1159,9 @@ public class Simulator
 			((SimCargo) objects.OBJS[objectPicked[robotind]]).move (data.real_x, data.real_y, data.fork, data.real_a);
 	}
 	
-	synchronized public void simulate (int robotind, RobotData data, int cycson, int cycir, int cyclrf, 
-			int cyclsb, int cycvis)
+	synchronized public void simulate (int robotind, RobotData data, int cycson, int cycir, int cyclrf, int cyclsb, int cycvis)
 	{
 		int			i,j;
-		double		lx, ly;
-		double		ll, aa, na;
-		double		xx1, yy1, aa1;
 		
 		roboindex = robotind;        
 		
@@ -1282,92 +1264,6 @@ public class Simulator
 					k ++;
 				}
 		}     
-		
-		// Compute simulated VISION data
-		SimObjects	objs = objects;
-		if ((VISDATA != null) && (objs != null) && (VISDATA.length == objs.numobjects))
-		{
-			for (j = 0; j < objs.numobjects; j++)
-				VISDATA[j].valid = false;
-//			VisionData vd;
-//			Object obj;
-//			for(Enumeration enum=VISDATA.elements();enum.hasMoreElements();){
-//				
-//				obj=enum.nextElement();
-////				System.out.println("Simulator:simulate obj="+obj.getClass());
-//				vd=(VisionData)obj;
-//				vd.valid = false;
-//			}
-			
-			for (i = 0; i < RDESC[robotind].MAXVISION; i++)
-				if ((RDESC[robotind].visfeat[i].step () == cycvis) && (DATA_CTRL[robotind].vision))
-				{
-					// Store current robot-perceived absolute position of camera (x, y, a)
-					bpos.set (data.odom_x, data.odom_y, data.odom_a);
-					
-					// Compute sensor absolute position (x, y, a)
-					xx1		= data.real_x + RDESC[robotind].visfeat[i].rho () * Math.cos (RDESC[robotind].visfeat[i].theta ());
-					yy1		= data.real_y + RDESC[robotind].visfeat[i].rho () * Math.sin (RDESC[robotind].visfeat[i].theta ());
-					aa1		= data.real_a + RDESC[robotind].visfeat[i].orientation ();
-					
-					// Iterate through all available objects
-					for (j = 0; j < objs.numobjects; j++)
-					{
-						SimObject 	so;
-						so=objs.OBJS[j];
-						
-						
-						// Get the robot relative position of perceived object (previous image)
-						
-//						if((((p=(Position)VISOBJS[robotind].get(key)))!=null)){
-//							ll=p.rho();
-//							aa=p.phi();
-//						}else{
-//							p=new Position();
-//							VISOBJS[robotind].put(key,p);
-//							ll = 0.0;
-//							aa = 0.0;
-//						}
-						ll	= VISOBJS[robotind][j].rho ();
-						aa	= VISOBJS[robotind][j].phi ();
-						
-						// Decide if the object was perceived (previous image)
-						if (Math.abs (aa) < RDESC[robotind].CONEVIS * 0.5)
-						{
-							// Add some gaussian noise to the angular position
-							na	= rndg.nextGaussian (aa, SDESC[robotind].ERRORVIS);
-							
-							lx	= ll * Math.cos (na);
-							ly	= ll * Math.sin (na);
-							
-							// Generate visual perception data (previous image and previous position)
-//							VISDATA[j].set_dev (i);
-//							VISDATA[j]=(VisionData)VISDATA.get(key);
-							VISDATA[j].set_dev(i);
-//							VISDATA[j].set_blob (so.odesc.label, 60, 80, 10, 10, so.odesc.color);
-							VISDATA[j].set_blob (so.odesc.label, 60, 80, 10, 10, wucore.utils.color.ColorTool.fromWColorToColor(so.odesc.color));
-							VISDATA[j].percept_pos (ly, 0.0, lx);
-							VISDATA[j].sensor_pos (RDESC[robotind].visfeat[i].x (), RDESC[robotind].visfeat[i].y (), RDESC[robotind].visfeat[i].orientation ());
-							VISDATA[j].capture_pos (VISPOS[robotind], bpos);
-							VISDATA[j].valid = true;
-						}
-						
-						// Compute the robot relative position of perceived object (new image)
-						lx	= so.odesc.pos.x() - xx1;
-						ly	= so.odesc.pos.y() - yy1;
-						
-						ll	= Math.sqrt (lx * lx + ly * ly);
-						aa	= Angles.radnorm_180 (Math.atan2 (ly, lx) - aa1);
-						
-//						p.set_polar(ll,aa);
-//						VISOBJS[robotind].put(key,p);
-						VISOBJS[robotind][j].set_polar (ll, aa);
-					}
-					
-					// Store the robot-perceived position for the image capture (new position)
-					VISPOS[robotind].set (bpos);		
-				}
-		}
 		
 		moveIcon (ROBOINDEX[robotind], RDESC[robotind].icon,MODEL[robotind].real_x, MODEL[robotind].real_y, MODEL[robotind].real_a);	
 	}

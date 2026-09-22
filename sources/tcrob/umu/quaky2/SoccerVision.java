@@ -33,8 +33,6 @@ public class SoccerVision extends Perception
 	static public final double		BALL_RADIUS	= 0.11;			// Ball radius (m)
 	static public final double		NET_SIZE	= 0.2;			// Net size (m)
 	
-	protected VisionData[]			vision;
-	
 	// Application LPOs
 	protected Ball					ball;
 	protected Net					net1;

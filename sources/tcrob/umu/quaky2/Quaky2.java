@@ -258,12 +258,11 @@ public class Quaky2 extends VirtualRobot
 
 	public void process_sensors (long dtime) 
 	{
-		int				i, j, k;
+		int				i;
 		int				mask;
 		long			ct;
     	double			odomL, odomR;		
     	String			stext, itext;
-    	VisionData[]	vdata;
     	    	 
 		if (driver == null)			return;
 								
@@ -439,37 +438,37 @@ public class Quaky2 extends VirtualRobot
 		if (debug)		System.out.println ("  [Quaky2] Executing phase VISION");
 
 		// Read and process vision data
-		odata	= null;
-		k		= 0;
-		
-		for (i = 0; i < MAX_OBJS; i++)
-			obdata[i].valid = false;
-			
-		for (i = 0; i < rdesc.MAXVISION; i++)
-			if (vision[i].isUpdated ())
-			{				
-				// Store current position
-				cpos.set (data.odom_x, data.odom_y, data.odom_a);
-				
-				// Get vision objects
-				vdata	= vision[i].getData ();
-				
-				// Update objects buffer
-				for (j = 0; j < vdata.length; j++)
-					if (vdata[j].valid && (k < MAX_OBJS))
-					{
-						obdata[k].set (vdata[j]);
-						obdata[k].sensor_pos (rdesc.visfeat[i].x (), rdesc.visfeat[i].y (), rdesc.visfeat[i].orientation ());
-						obdata[k].capture_pos (vpos, cpos);
-						obdata[k].set_dev (i);
-						k ++;
-					}
-
-				odata	= obdata;
-				
-				// Clear update flag
-				vision[i].setUpdated (false);
-			}
+//		odata	= null;
+//		k		= 0;
+//		
+//		for (i = 0; i < MAX_OBJS; i++)
+//			obdata[i].valid = false;
+//			
+//		for (i = 0; i < rdesc.MAXVISION; i++)
+//			if (vision[i].isUpdated ())
+//			{				
+//				// Store current position
+//				cpos.set (data.odom_x, data.odom_y, data.odom_a);
+//				
+//				// Get vision objects
+//				vdata	= vision[i].getData ();
+//				
+//				// Update objects buffer
+//				for (j = 0; j < vdata.length; j++)
+//					if (vdata[j].valid && (k < MAX_OBJS))
+//					{
+//						obdata[k].set (vdata[j]);
+//						obdata[k].sensor_pos (rdesc.visfeat[i].x (), rdesc.visfeat[i].y (), rdesc.visfeat[i].orientation ());
+//						obdata[k].capture_pos (vpos, cpos);
+//						obdata[k].set_dev (i);
+//						k ++;
+//					}
+//
+//				odata	= obdata;
+//				
+//				// Clear update flag
+//				vision[i].setUpdated (false);
+//			}
 			
 		// Fire vision processing
     	if (data_ctrl.vision)						

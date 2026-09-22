@@ -12,7 +12,6 @@ import tc.shared.world.World;
 
 import tcapps.tcsimulator.simulator.Simulator;
 
-import devices.data.VisionData;
 import devices.pos.Position;
 import wucore.utils.geom.Line2;
 
@@ -46,7 +45,6 @@ public class SimObjects
 
 		OBJS		= new SimObject[numobjects];
 		OBJICONS	= new int[numobjects];
-		simul.VISDATA = new VisionData[numobjects];
 		for (i = 0; i < Simulator.MAX_ROBOTS; i++)
 		{
 			simul.VISOBJS[i]	= new Position[numobjects];
@@ -60,7 +58,6 @@ public class SimObjects
 			OBJS[i]		= SimObject.create (ao);
 			OBJICONS[i]	= simul.allocIcon ();
 			simul.moveIcon (OBJICONS[i], ao.getLocalIcon (), ao.pos.x (), ao.pos.y (), ao.a);
-			simul.VISDATA[i]	= new VisionData ();
 			System.out.println ("  [SIM-Objs] " + ao.label + " -> " + OBJS[i].getClass ().getSimpleName () + ((ao.movement == WMAObject.Movement.STATIC) ? "" : " (" + ao.movement.name ().toLowerCase () + ")"));
 		}
 

@@ -26,7 +26,6 @@ import tcrob.ingenia.ifork.*;
 
 import wucore.gui.ChildWindowListener;
 import wucore.gui.PlotWindow;
-import devices.data.VisionData;
 
 public abstract class VirtualRobot extends StdThread implements ChildWindowListener
 {
@@ -57,7 +56,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected RobotData				data;
 	protected Tuple					tobj;
 	protected ItemObject			sobj;
-	protected VisionData[]			odata;
 	protected Tuple					tcam;
 	protected ItemCamera			scam;
 	protected BufferedImage			cdata;			// frame of the current cycle (null: no camera, or nothing taken)
@@ -175,7 +173,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected void close_gfx ()
 	{
 		if (plot != null)		plot.close ();
-		plot		= null;
+		plot = null;
 	}
 
 	public void childClosed (Object window)
@@ -186,9 +184,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	
 	public final void step (long ctime) 
 	{
-		int				i;
-		VisionData[]		vobj;
-    	    	 				
 		cycson++;		if (cycson > rdesc.CYCLESON)	cycson	= 1;
 	   	cycir++;		if (cycir > rdesc.CYCLEIR)		cycir	= 1;
 	   	cyclrf++;		if (cyclrf > rdesc.CYCLELRF)	cyclrf	= 1;
@@ -202,19 +197,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		sdata.set (data, ctime);
 		if(linda==null) return;
 		linda.write (tdata);
-		
-		// Write object data to the Linda space
-		if (odata != null)
-		{
-			vobj	= new VisionData[odata.length];
-			for (i = 0; i < odata.length; i++)
-				vobj[i]	= odata[i].dup ();
 				
-			sobj.set (vobj, ctime);
-			if(linda==null) return;
-			linda.write (tobj);
-		}
-		
 		// Write the frame of the cameras to the Linda space
 		if (cdata != null)
 		{
