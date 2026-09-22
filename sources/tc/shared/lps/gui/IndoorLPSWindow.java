@@ -2,7 +2,7 @@
  * Created on 25-oct-2004
  * (c) 2026 Humberto Martinez Barbera
  */
-package tcrob.umu.indoor.gui;
+package tc.shared.lps.gui;
 
 import java.awt.*;
 import java.awt.event.*;

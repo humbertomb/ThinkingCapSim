@@ -12,7 +12,7 @@ import tc.shared.world.*;
 import tc.modules.*;
 
 import tclib.navigation.mapbuilding.lpo.*;
-import tcrob.umu.indoor.gui.*;
+import tc.shared.lps.gui.IndoorLPSWindow;
 
 import devices.pos.*;
 import wucore.utils.geom.*;

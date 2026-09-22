@@ -24,7 +24,7 @@ import tc.shared.lps.lpo.LPORangePoint;
 import tc.vrobot.RobotDataCtrl;
 import tc.vrobot.models.TricycleDrive;
 import tclib.tracking.*;
-import tcrob.umu.indoor.gui.*;
+import tc.shared.lps.gui.IndoorLPSWindow;
 import tcrob.ingenia.ifork.linda.ItemIForkMotion;
 import tcrob.ingenia.ifork.lpo.LPOIForkData;
 import devices.pos.*;
