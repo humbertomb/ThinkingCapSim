@@ -17,8 +17,10 @@ import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Arc2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Path2D;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -89,7 +91,7 @@ public class ArchCanvas extends JPanel
 	static final int				PREVIEW_W	= 88;
 	static final int				PREVIEW_H	= 88;
 	static final int				PREVIEW_OVER	= 16;					// how much of the block it covers
-	static final int				TH_W		= 18,	TH_H		= 22;		// the mark of a block that runs on a thread of its own
+	static final int				TH_W		= 20,	TH_H		= 22;		// the mark of a block that runs on a thread of its own
 	static final int				TH_GAP		= 5;						// from the block it is the mark of
 	static final int				TH_TIME		= 26;						// room the cycle time written under it takes, left of it
 
@@ -704,13 +706,7 @@ public class ArchCanvas extends JPanel
 		g.setStroke (new BasicStroke (1.2f));
 		g.drawRoundRect (x, y, TH_W, TH_H, 6, 6);
 
-		// the cycle it runs on: a loop open at its top right, with an arrow at the open end
-		int		lx = x + 4, ly = y + 5, lw = TH_W - 9, lh = TH_H - 11;
-		g.setStroke (new BasicStroke (1.6f));
-		g.drawArc (lx, ly, lw, lh, 40, 285);
-		int		ax = lx + lw, ay = ly + lh / 2 - 1;
-		g.drawLine (ax, ay, ax - 4, ay - 3);
-		g.drawLine (ax, ay, ax - 5, ay + 2);
+		cycle (g, x + TH_W / 2.0, y + TH_H / 2.0, 5.5);
 
 		// how long its cycle is, when the deployment says so, under the mark
 		String		extime = model.get (b, "EXTIME").trim ();
@@ -724,6 +720,33 @@ public class ArchCanvas extends JPanel
 			g.setColor (C_SYMBOL);
 			g.drawString (txt, x + TH_W - fm.stringWidth (txt), y + TH_H + fm.getAscent () + 1);		// to its right edge: the block is drawn over what passes it
 		}
+
+		g.setStroke (old);
+	}
+
+	/**
+	 * The cycle a block runs on: a ring of radius rad about (cx, cy), open at its
+	 * top, with a solid arrowhead at the end of it, drawn in the colour the
+	 * graphics is set to.
+	 */
+	static protected void cycle (Graphics2D g, double cx, double cy, double rad)
+	{
+		double		from = 105.0, span = 300.0;					// the ring, from its top left round to its top
+		double		end = Math.toRadians (from + span);
+		double		ex = cx + rad * Math.cos (end), ey = cy - rad * Math.sin (end);
+		double		tx = -Math.sin (end), ty = -Math.cos (end);	// the way it goes at its end (screen)
+		double		head = 2.2 * Math.max (1.6, rad / 3.0);		// length of the arrowhead
+		Path2D.Double	arrow = new Path2D.Double ();
+		Stroke		old = g.getStroke ();
+
+		g.setStroke (new BasicStroke (1.7f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		g.draw (new Arc2D.Double (cx - rad, cy - rad, 2 * rad, 2 * rad, from, span, Arc2D.OPEN));
+
+		arrow.moveTo (ex + tx * head, ey + ty * head);					// the tip, ahead of the ring
+		arrow.lineTo (ex - tx * head * 0.35 - ty * head * 0.5, ey - ty * head * 0.35 + tx * head * 0.5);
+		arrow.lineTo (ex - tx * head * 0.35 + ty * head * 0.5, ey - ty * head * 0.35 - tx * head * 0.5);
+		arrow.closePath ();
+		g.fill (arrow);
 
 		g.setStroke (old);
 	}
