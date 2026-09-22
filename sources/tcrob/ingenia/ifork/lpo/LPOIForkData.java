@@ -66,8 +66,8 @@ public class LPOIForkData extends LPO implements Serializable
 		if (!active)			return;
 					
 		model.addRawArrow (0.0, 0.0, vm * 10.0, view.rotation + del, Color.ORANGE.darker());
-		model.addRawText (2.0, -3.0, "vm = "+format (vm)+" m/s", Color.ORANGE.darker());
-		model.addRawText (2.0, -4.5, "del = "+format (del*Angles.RTOD)+" deg", Color.ORANGE.darker());
-		model.addRawText (2.0, -6.0, "palet = "+pal_switch, Color.ORANGE.darker());
+		model.addRawNote ("vm = "+format (vm)+" m/s", Color.ORANGE.darker());
+		model.addRawNote ("del = "+format (del*Angles.RTOD)+" deg", Color.ORANGE.darker());
+		model.addRawNote ("palet = "+pal_switch, Color.ORANGE.darker());
 	}
 }

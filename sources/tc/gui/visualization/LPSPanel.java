@@ -8,7 +8,9 @@ package tc.gui.visualization;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.swing.*;
@@ -59,6 +61,7 @@ public class LPSPanel extends JPanel
 	static protected final Font		F_TEXT		= new Font ("SansSerif", Font.PLAIN, 12);
 	static protected final Font		F_ANCHOR	= new Font ("SansSerif", Font.PLAIN, 10);
 	static protected final Font		F_LABEL		= new Font ("Monospaced", Font.PLAIN, 12);
+	static protected final int		NOTE_MARGIN	= 6;			// of the notes from the corner (pixels)
 	static protected final Font		F_SCALE		= new Font ("SansSerif", Font.PLAIN, 9);
 
 	static protected final Stroke	S_PLAIN		= new BasicStroke (1.0f);
@@ -332,6 +335,7 @@ public class LPSPanel extends JPanel
 		Model2DCoord[]		v = m.verts;
 		Model2DAttr[]		at = m.attr;
 		int					n = Math.min (m.nattr, at.length);
+		List<Model2DAttr>	notes = new ArrayList<Model2DAttr> ();
 
 		for (int i = 0; i < n; i++)
 		{
@@ -339,6 +343,11 @@ public class LPSPanel extends JPanel
 			double			x1, y1, x2 = 0, y2 = 0;
 
 			if (a == null)		continue;
+			if (a.type == Model2D.NOTE)
+			{
+				if (a.label != null)		notes.add (a);
+				continue;
+			}
 			g.setColor ((a.color != null) ? a.color : Color.BLACK);
 			switch (a.mode)
 			{
@@ -436,6 +445,25 @@ public class LPSPanel extends JPanel
 				break;
 			default:
 			}
+		}
+		notes (g, notes);
+	}
+
+	/** The notes, one line under the other, right-justified in the bottom right corner of the panel. */
+	protected void notes (Graphics2D g, List<Model2DAttr> notes)
+	{
+		FontMetrics		fm;
+		double			y;
+
+		if (notes.isEmpty ())		return;
+		g.setFont (F_TEXT);
+		fm	= g.getFontMetrics ();
+		y	= getHeight () - NOTE_MARGIN - fm.getDescent () - (notes.size () - 1) * fm.getHeight ();
+		for (Model2DAttr a : notes)
+		{
+			g.setColor ((a.color != null) ? a.color : Color.BLACK);
+			g.drawString (a.label, (float) (getWidth () - NOTE_MARGIN - fm.stringWidth (a.label)), (float) y);
+			y	+= fm.getHeight ();
 		}
 	}
 

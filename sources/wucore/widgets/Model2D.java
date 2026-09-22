@@ -33,6 +33,7 @@ public class Model2D extends Object
 	public static final int				DOT			= 10;
 	public static final int				ZSOLID		= 11;
 	public static final int				IMAGE		= 12;
+	public static final int				NOTE		= 13;	// a line of text in a corner of the view, not in the world
 	
 	// Shape/entity modifiers
 	public static final int				PLAIN		= 0;
@@ -219,6 +220,15 @@ public class Model2D extends Object
 	public void addRawText (double x, double y, String text, int mode, Color color) 
 	{		
 		addAttrPoint (TEXT, addVertex (x, y), text, mode, color, null);	
+	}
+	
+	/**
+	 * A line of text that is not placed in the world but in a corner of the
+	 * view (the bottom right), under the notes added before it.
+	 */
+	public void addRawNote (String text, Color color) 
+	{		
+		addAttrPoint (NOTE, addVertexNoBB (0.0, 0.0), text, PLAIN, color, null);	
 	}
 	
 	public void addRawLabel (Point2 pt, String text, int mode, Color color) 
