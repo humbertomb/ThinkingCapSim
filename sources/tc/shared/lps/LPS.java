@@ -36,7 +36,6 @@ public class LPS extends Object
 {
 	static public final int				LPO_BUFFER		= 200;				
 	static public final int				PPR_BUFFER		= 20;		// Point per range data
-	static public final double			ANCHOR_FADE		= 5.0;		// Time an anchoring takes to run out, from 1 to 0 (s)
 	static public final int				ANCHOR_GRACE	= 3;		// Updates an anchoring is kept whole before it starts to fade
 
 	// ----------------------
@@ -70,7 +69,6 @@ public class LPS extends Object
 	// LPS update time 
 	protected double					time;						// Current control cycle time (ms)
 	protected double					tsum;						// Accumulated time updates (ms)
-	protected long						anchor_time;				// When the anchorings were last aged (ms; 0: never)
 	protected int						tcount;						// Number of time updates
 			
 	private Matrix3D					rotm;						// Rotation matrix for clamping
@@ -94,10 +92,10 @@ public class LPS extends Object
 			dsignals_flg	= new boolean [fdesc.MAXDSIG];
 		}		
 
-		cur				= new Position ();
-		odom			= new Position ();
-		real			= new Position ();
-		pose			= new Pose ();
+		cur			= new Position ();
+		odom		= new Position ();
+		real		= new Position ();
+		pose		= new Pose ();
 
 		rotm		= new Matrix3D ();
 		lpos		= new LPO[LPO_BUFFER];
@@ -268,14 +266,13 @@ public class LPS extends Object
 	 */
 	public void update_anchors ()
 	{
-		int			i;
 		long		now = System.currentTimeMillis ();
 		double		fade;
 		
-		fade		= (anchor_time > 0) ? Math.max (0.0, (now - anchor_time) / 1000.0) / ANCHOR_FADE : 0.0;
-		anchor_time	= now;
-		for (i = 0; i < lpos_n; i++)
+		for (int i = 0; i < lpos_n; i++)
 		{
+			fade = (lpos[i].anchor_time > 0) ? Math.max (0.0, (now - lpos[i].anchor_time) / 1000.0) / lpos[i].anchor_fade : 0.0;
+			lpos[i].anchor_time  = now;
 			lpos[i].ageing (lpos[i].ageing () + 1);
 			if (lpos[i].ageing () > ANCHOR_GRACE)
 				lpos[i].anchor (lpos[i].anchor () - fade);

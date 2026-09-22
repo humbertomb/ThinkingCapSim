@@ -39,7 +39,7 @@ public class MetricPredicates {
 		
 		x = -obj.x();
 		y = -obj.y();
-		th = obj.alpha();
+		th = obj.phi();
 		x1 = x*Math.cos(th)+y*Math.sin(th);
 		y1 = y*Math.cos(th)-x*Math.sin(th);
 		
@@ -119,7 +119,7 @@ public class MetricPredicates {
 	 */
 	private double oriented(LPO object) {
 		ramp.type = Ramp.RAMP_DOWN;
-		return ramp.dmember(object.phi(),5*Math.PI/180,20*Math.PI/180);
+		return ramp.dmember(object.theta(),5*Math.PI/180,20*Math.PI/180);
 	}
 	
 	/**

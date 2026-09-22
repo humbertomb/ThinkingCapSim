@@ -27,7 +27,7 @@ public class LPOArrow extends LPORange implements Serializable
 		
 		if (!active)	return;
 
-		aa	= view.rotation + phi;
+		aa	= view.rotation + theta;
 		xx 	= rho * Math.cos (aa);
 		yy 	= rho * Math.sin (aa);
 		

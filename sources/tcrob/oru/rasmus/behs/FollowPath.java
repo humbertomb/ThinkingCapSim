@@ -92,7 +92,7 @@ public class FollowPath extends Behaviour {
 		double x = target.x();
 		double y = target.y();
 		double phi = Math.atan2(looka.y(),looka.x());  
-		phi = Angles.radnorm_180((phi-looka.alpha()))*180/Math.PI;// from rad to deg
+		phi = Angles.radnorm_180((phi-looka.phi()))*180/Math.PI;// from rad to deg
 		double rho = Math.sqrt(x*x+y*y);
 		double targetLeft, targetRight, targetHere;
 		

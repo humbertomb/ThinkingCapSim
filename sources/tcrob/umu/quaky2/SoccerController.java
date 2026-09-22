@@ -91,7 +91,7 @@ public class SoccerController extends BGController
 		LPO		lpo = lps.find (name);
 
 		if (lpo == null)		return 0.0;
-		p.set_polar (lpo.rho (), lpo.phi ());
+		p.set_polar (lpo.rho (), lpo.theta ());
 		return lpo.anchor ();
 	}
 

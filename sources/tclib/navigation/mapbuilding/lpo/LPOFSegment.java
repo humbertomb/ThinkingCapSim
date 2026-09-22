@@ -231,14 +231,14 @@ public class LPOFSegment extends LPO implements Serializable
 	// Instance methods
 	public void set (LPOFSegment other)
 	{
-		set (other.rho, other.phi, other.v0_rho, other.v0_phi, other.v1_rho, other.v1_phi, other.count, other.len);
+		set (other.rho, other.theta, other.v0_rho, other.v0_phi, other.v1_rho, other.v1_phi, other.count, other.len);
 		set_limits (other.xi, other.yi, other.xf, other.yf);
 	}
 	
 	public void set (double rho, double phi, double v0_rho, double v0_phi, double v1_rho, double v1_phi, int count, double len)
 	{
 		this.rho	= rho;
-		this.phi	= phi;
+		this.theta	= phi;
 		
 		this.v0_rho	= v0_rho;
 		this.v0_phi	= v0_phi;
@@ -279,26 +279,26 @@ public class LPOFSegment extends LPO implements Serializable
 		if ((yi - yf) == 0.0)
 		{
 			if (xf >= xi)
-				phi		= 0.0;
+				theta		= 0.0;
 			else
-				phi		= Math.PI;
+				theta		= Math.PI;
 		}
 		else if ((xi - xf) == 0.0)
 		{
 			if (yf >= yi)
-				phi		= Angles.PI05;
+				theta		= Angles.PI05;
 			else
-				phi		= Angles.PI05 * 3.0;
+				theta		= Angles.PI05 * 3.0;
 		}
 		else
-			phi		= Math.atan ((xf - xi) / (yi - yf));		// <= Is it correct?
+			theta		= Math.atan ((xf - xi) / (yi - yf));		// <= Is it correct?
 			
-		phi		= Angles.radnorm_180 (phi);
-		rho		= xf * Math.cos (phi) + yf * Math.sin (phi);
+		theta		= Angles.radnorm_180 (theta);
+		rho		= xf * Math.cos (theta) + yf * Math.sin (theta);
 		
 		// Mantain LPO basic properties
-		x		= rho * Math.cos (phi);
-		y		= rho * Math.sin (phi);
+		x		= rho * Math.cos (theta);
+		y		= rho * Math.sin (theta);
 	}
 	
 	/* Checks if two segments correspond to the same boundary of an object in
@@ -326,8 +326,8 @@ public class LPOFSegment extends LPO implements Serializable
 		 */
 		
 		// Store segments parameters to avoid changing them in the original segments!!
-		s1_phi	= s1.phi;
-		s2_phi	= s2.phi;
+		s1_phi	= s1.theta;
+		s2_phi	= s2.theta;
 		s2_rho	= s2.rho;
 		
 		/* Rotation of the origin of coordinates */
@@ -350,17 +350,17 @@ public class LPOFSegment extends LPO implements Serializable
 		}
 		
 		count	= s1.count + s2.count;
-		phi		= Angles.radnorm_180 ((s1.count*s1_phi + s2.count*s2_phi)/count);
-		s1_phi	= Angles.radnorm_180 (s1_phi - phi);
-		s2_phi	= Angles.radnorm_180 (s2_phi - phi);
+		theta		= Angles.radnorm_180 ((s1.count*s1_phi + s2.count*s2_phi)/count);
+		s1_phi	= Angles.radnorm_180 (s1_phi - theta);
+		s2_phi	= Angles.radnorm_180 (s2_phi - theta);
 		if (matching (s1_phi, s1.v1_phi, s1.v0_phi, s2_phi, s2.v1_phi, s2.v0_phi) < PHI_MATCH)
 			return false;
 
 		/* Checks if the segments have intersection. It studies their projection on
 		 * the Y axis of the rotated coordinate system. 
 		 */
-		aux2 = Math.cos (phi);
-		aux3 = Math.sin (phi);
+		aux2 = Math.cos (theta);
+		aux3 = Math.sin (theta);
 		xi1 = s1.xi*aux2 + s1.yi*aux3;
 		yi1 = s1.yi*aux2 - s1.xi*aux3;
 		xf1 = s1.xf*aux2 + s1.yf*aux3;
@@ -396,10 +396,10 @@ public class LPOFSegment extends LPO implements Serializable
 		if (rho < 0.0) 
 		{
 			rho = -rho;
-			if (phi < 0.0)  
-				phi += Math.PI;
+			if (theta < 0.0)  
+				theta += Math.PI;
 			else  
-				phi -= Math.PI;   
+				theta -= Math.PI;   
 			xi1 = -xi1;    yi1 = -yi1;    xf1 = -xf1;    yf1 = -yf1;
 			xi2 = -xi2;    yi2 = -yi2;    xf2 = -xf2;    yf2 = -yf2;
 			if (yi1 > yf1)
@@ -415,8 +415,8 @@ public class LPOFSegment extends LPO implements Serializable
 		}
 
 		/* Position of the limits of the new segment. */
-		aux2 = Math.cos (phi);
-		aux3 = Math.sin (phi);
+		aux2 = Math.cos (theta);
+		aux3 = Math.sin (theta);
 		miny = Math.min(yi1,yi2);
 		maxy = Math.max(yf1,yf2);
 		minx = maxx = rho;
@@ -473,8 +473,8 @@ public class LPOFSegment extends LPO implements Serializable
 		merge = true;
 
 		// Store segments parameters to avoid changing them in the original segments!!
-		s1_phi	= s1.phi;
-		s2_phi	= s2.phi;
+		s1_phi	= s1.theta;
+		s2_phi	= s2.theta;
 		s2_rho	= s2.rho;
 		
 		/* Rotation of the origin of coordinates */
@@ -497,9 +497,9 @@ public class LPOFSegment extends LPO implements Serializable
 		}
 		
 		count	= s1.count + s2.count;
-		phi		= Angles.radnorm_180 ((s1.count*s1_phi + s2.count*s2_phi)/count);
-		s1_phi	= Angles.radnorm_180 (s1_phi - phi);
-		s2_phi	= Angles.radnorm_180 (s2_phi - phi);
+		theta		= Angles.radnorm_180 ((s1.count*s1_phi + s2.count*s2_phi)/count);
+		s1_phi	= Angles.radnorm_180 (s1_phi - theta);
+		s2_phi	= Angles.radnorm_180 (s2_phi - theta);
 
 		if (Math.abs (s2_phi - s1_phi) > Angles.PI025) 
 			merge = false;
@@ -508,8 +508,8 @@ public class LPOFSegment extends LPO implements Serializable
 			/* Checks if the segments have intersection. It studies their projection on
 			 * the Y axis of the rotated coordinate system.
 			 */
-			aux2 = Math.cos (phi);
-			aux3 = Math.sin (phi);
+			aux2 = Math.cos (theta);
+			aux3 = Math.sin (theta);
 			xi1 = s1.xi*aux2 + s1.yi*aux3;		
 			yi1 = s1.yi*aux2 - s1.xi*aux3;
 			xf1 = s1.xf*aux2 + s1.yf*aux3;		
@@ -564,10 +564,10 @@ public class LPOFSegment extends LPO implements Serializable
 			if (rho < 0.0)
 			{
 				rho = -rho;
-				if (phi < 0.0)
-					phi += Math.PI;
+				if (theta < 0.0)
+					theta += Math.PI;
 				else 
-					phi -= Math.PI;
+					theta -= Math.PI;
 					
 				xi1 = -xi1;    yi1 = -yi1;    xf1 = -xf1;    yf1 = -yf1;
 				xi2 = -xi2;    yi2 = -yi2;    xf2 = -xf2;    yf2 = -yf2;
@@ -585,8 +585,8 @@ public class LPOFSegment extends LPO implements Serializable
 			}
 
 			/* Position of the limits of the new segment. */
-			aux2 = Math.cos (phi);
-			aux3 = Math.sin (phi);
+			aux2 = Math.cos (theta);
+			aux3 = Math.sin (theta);
 			miny = Math.min (yi1,yi2); 			
 			maxy = Math.max (yf1,yf2);
 			minx = maxx = rho;
@@ -622,8 +622,8 @@ public class LPOFSegment extends LPO implements Serializable
 		if (!active)	return;
 		
 		// Update polar coordinates (just in case)
-		x		= rho * Math.cos (phi);
-		y		= rho * Math.sin (phi);
+		x		= rho * Math.cos (theta);
+		y		= rho * Math.sin (theta);
 		
 		super.clamp (rm);
 		
@@ -653,7 +653,7 @@ public class LPOFSegment extends LPO implements Serializable
 
 	public String toString ()
 	{
-		return "LPOFSegment phi="+phi+", rho="+rho+", v0[phi="+v0_phi+",rho="+v0_rho+"], v1[phi="+v1_phi+",rho="+v1_rho+"]\n"
+		return "LPOFSegment phi="+theta+", rho="+rho+", v0[phi="+v0_phi+",rho="+v0_rho+"], v1[phi="+v1_phi+",rho="+v1_rho+"]\n"
 				+ "         xi="+xi+", yi="+yi+", xf="+xf+",yf="+yf+", len="+len;
 	}
 }

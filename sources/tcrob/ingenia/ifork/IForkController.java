@@ -592,8 +592,8 @@ public class IForkController extends Controller
 			if (l_avoid.active ())
 			{
 				//l_avoid.locate_polar (l_pt.rho (), l_pt.phi ());
-				l_avoid.locate_polar (1.0, l_pt.phi ());
-				delta	= Angles.radnorm_180 (l_avoid.phi ());
+				l_avoid.locate_polar (1.0, l_pt.theta ());
+				delta	= Angles.radnorm_180 (l_avoid.theta ());
 				dist = 2;
 			}
 		}
@@ -709,8 +709,8 @@ public class IForkController extends Controller
 			if (l_avoid.active ())
 			{
 				//l_avoid.locate_polar (l_pt.rho (), l_pt.phi ());
-				l_avoid.locate_polar (l_pt.rho (), l_pt.phi ());
-				delta	= Angles.radnorm_180 (l_avoid.phi ());
+				l_avoid.locate_polar (l_pt.rho (), l_pt.theta ());
+				delta	= Angles.radnorm_180 (l_avoid.theta ());
 				dist = l_pt.rho ();
 				if(debug) System.out.println("[IForkController] Avoid. rho="+dist+" delta="+Math.toDegrees(delta));
 			}

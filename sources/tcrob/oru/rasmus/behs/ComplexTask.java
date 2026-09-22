@@ -67,7 +67,7 @@ public class ComplexTask extends Behaviour {
 		
 		x = -obj.x();
 		y = -obj.y();
-		th = obj.alpha();
+		th = obj.phi();
 		x1 = x*Math.cos(th)+y*Math.sin(th);
 		y1 = y*Math.cos(th)-x*Math.sin(th);
 	
@@ -109,7 +109,7 @@ public class ComplexTask extends Behaviour {
 		beforeDoor = ramp.dmember(Math.abs(phi0),90,90);
 		ramp.type = Ramp.RAMP_DOWN;
 		inFrontOfDoor = ramp.dmember(Math.abs(robotPos[1]),0,door_width/2);
-		aligned = ramp.dmember(Math.abs(door.phi()*180/Math.PI),0,20);
+		aligned = ramp.dmember(Math.abs(door.theta()*180/Math.PI),0,20);
 		throughTheDoor = ramp.dmember(robotPos[0],0,0.5);
 		ramp.type = Ramp.RAMP_UP;
 		throughTheDoor = FSet.and(throughTheDoor,ramp.dmember(robotPos[0],0,0));

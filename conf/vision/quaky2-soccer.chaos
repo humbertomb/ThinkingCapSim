@@ -121,8 +121,8 @@
   "recognizer": {
     "carpet": 4,
     "ball": 6,
-    "net1": 3,
-    "net2": 2,
+    "net1": 2,
+    "net2": 3,
     "landmark": -1
   }
 }

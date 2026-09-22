@@ -164,8 +164,8 @@ public class LPORangePBug extends LPORangeBuffer
 		// Detecta una colision con los valores obtenidos del laser
 		for(int i = 0; i<size; i++){
 			if(onlyInZone && zone != null){	// Si un punto esta fuera de la zona actual, colisiona
-				global.x(pos.x()+dist*Math.cos(buffer[i].phi() + pos.alpha()));
-				global.y(pos.y()+dist*Math.sin(buffer[i].phi() + pos.alpha()));
+				global.x(pos.x()+dist*Math.cos(buffer[i].theta() + pos.alpha()));
+				global.y(pos.y()+dist*Math.sin(buffer[i].theta() + pos.alpha()));
 				
 				intersection = false;
 				inters = null;
@@ -179,7 +179,7 @@ public class LPORangePBug extends LPORangeBuffer
 					cindex[cnum++] = i;
 					//colision = true;
 					//System.out.println("Punto "+i+"["+global.x()+","+ global.y()+" ] colisiona con zona");
-					buffer[i].locate_polar(inters.distance(pos.x(),pos.y()), buffer[i].phi());
+					buffer[i].locate_polar(inters.distance(pos.x(),pos.y()), buffer[i].theta());
 					intersection = true;
 					continue;
 				}
@@ -306,8 +306,8 @@ public class LPORangePBug extends LPORangeBuffer
 					
   			// Prioridad direccion mas cercana al goal (mas directo al goal, pero mas inseguro si para ir al goal tiene que girar demasiado)
   			// Si el rayo_i no toca nada se selecciona el que este mas cerca al goal (en funcion del angulo phi)
-			if(colision == false && Math.abs(Angles.radnorm_180(goal.phi() - buffer[i].phi)) < minang){
-				minang = Math.abs(Angles.radnorm_180(goal.phi() - buffer[i].phi));
+			if(colision == false && Math.abs(Angles.radnorm_180(goal.theta() - buffer[i].theta)) < minang){
+				minang = Math.abs(Angles.radnorm_180(goal.theta() - buffer[i].theta));
 				if(col!=null) ptcolis = col;
 				pt = buffer[i];
 				if(debug) System.out.println("MinAng_"+i+" pos["+buffer[i].x+","+buffer[i].y+"] mindist="+min+" rad="+r+" poscol ="+col);
@@ -427,7 +427,7 @@ public class LPORangePBug extends LPORangeBuffer
 		
 		if(pt!=null){
 			if(pt.rho() > dist){
-				ang = pt.phi;
+				ang = pt.theta;
 				pt = new LPORangePoint(0,0);
 				pt.locate_polar(dist, ang);
 				//addBuffer(ptcolis);
@@ -603,8 +603,8 @@ public class LPORangePBug extends LPORangeBuffer
 					
   			// Prioridad direccion mas cercana al goal (mas directo al goal, pero mas inseguro si para ir al goal tiene que girar demasiado)
   			// Si el rayo_i no toca nada se selecciona el que este mas cerca al goal (en funcion del angulo phi)
-			if(colision == false && Math.abs(Angles.radnorm_180(goal.phi() - buffer[i].phi)) < minang){
-				minang = Math.abs(Angles.radnorm_180(goal.phi() - buffer[i].phi));
+			if(colision == false && Math.abs(Angles.radnorm_180(goal.theta() - buffer[i].theta)) < minang){
+				minang = Math.abs(Angles.radnorm_180(goal.theta() - buffer[i].theta));
 				if(col!=null) ptcolis = col;
 				pt = buffer[i];
 				if(debug) System.out.println("MinAng_"+i+" pos["+buffer[i].x+","+buffer[i].y+"] mindist="+min+" rad="+r+" poscol["+col.x+","+col.y+"]");
@@ -653,7 +653,7 @@ public class LPORangePBug extends LPORangeBuffer
 		}
 		
 		if(pt!=null){
-			ang = pt.phi;
+			ang = pt.theta;
 			pt = new LPORangePoint(0,0);
 			pt.locate_polar(dist, ang);
 			//addBuffer(ptcolis);
@@ -748,14 +748,14 @@ public class LPORangePBug extends LPORangeBuffer
 	
 	// minima distancia de un rayo (line) a un punto (point)
 	private double mindist(LPORangePoint line, LPORangePoint point) {
-		double ang = Angles.radnorm_180(line.phi-point.phi);
+		double ang = Angles.radnorm_180(line.theta-point.theta);
 		if(Math.abs(ang)>Math.PI/2) return line.rho(); 
 		return Math.abs(line.rho() * Math.sin(ang));
 	}
 
 	//	 minima distancia del punto que colisiona (line) a un punto (px,py)
 	private double mindist(LPORangePoint line, double px, double py) {
-		double ang = Angles.radnorm_180(Math.abs(line.phi-Math.atan2(py,px)));
+		double ang = Angles.radnorm_180(Math.abs(line.theta-Math.atan2(py,px)));
 		if(ang>Math.PI/2) return line.rho(); 
 		return Math.abs(line.rho() * Math.sin(ang));
 	}
@@ -799,7 +799,7 @@ public class LPORangePBug extends LPORangeBuffer
 		{
 			ci	= cindex[i];
 			
-			a1	= view.rotation + buffer[ci].phi;
+			a1	= view.rotation + buffer[ci].theta;
 			x1 	= buffer[ci].rho * Math.cos (a1);
 			y1 	= buffer[ci].rho * Math.sin (a1);
 
@@ -811,7 +811,7 @@ public class LPORangePBug extends LPORangeBuffer
 		}
 		// Pinta el punto donde debe dirigirse para evitar la colision
 		if(coldraw!=null){
-			a1	= view.rotation + coldraw.phi;
+			a1	= view.rotation + coldraw.theta;
 			x1 	= coldraw.rho * Math.cos (a1);
 			y1 	= coldraw.rho * Math.sin (a1);
 			model.addRawLine(0,0,x1,y1,Model2D.THICK, ColorTool.fromWColorToColor(WColor.BLACK));
@@ -819,7 +819,7 @@ public class LPORangePBug extends LPORangeBuffer
 		//model.addRawCircle(0.8,0,SZONE,Color.RED);
 		// Pinta el circulo tangente
 		if(ptcolis!=null){
-		    a1	= view.rotation + ptcolis.phi;
+		    a1	= view.rotation + ptcolis.theta;
 			x1 	= ptcolis.rho * Math.cos (a1);
 			y1 	= ptcolis.rho * Math.sin (a1);
 		    model.addRawCircle(x1,y1,SZONE,ColorTool.fromWColorToColor(WColor.BLACK));
@@ -835,7 +835,7 @@ public class LPORangePBug extends LPORangeBuffer
 		//if(lastCol!=null)
 		for(i = 0; i<lastCol1.size(); i++){
 		    LPORangePoint p = lastCol1.get(i);
-		    a1	= view.rotation + p.phi();
+		    a1	= view.rotation + p.theta();
 			x1 	= p.rho() * Math.cos (a1);
 			y1 	= p.rho() * Math.sin (a1);
 			model.addRawCircle(x1,y1,SZONE, ColorTool.fromWColorToColor(WColor.GREEN.darker()));
@@ -861,10 +861,10 @@ public class LPORangePBug extends LPORangeBuffer
             cont = 0;
             for(int j = 0; j < l_mates.length; j++){
             	if(l_mates[j] != null && l_mates[j].label != null){
-			        robots[cont][0] = Transform2.rotTrans(new Point2(l_mates[j].xmin, l_mates[j].ymin), l_mates[j].x, l_mates[j].y, l_mates[j].alpha);
-			        robots[cont][1] = Transform2.rotTrans(new Point2(l_mates[j].xmin, l_mates[j].ymax), l_mates[j].x, l_mates[j].y, l_mates[j].alpha);
-			        robots[cont][2] = Transform2.rotTrans(new Point2(l_mates[j].xmax, l_mates[j].ymin), l_mates[j].x, l_mates[j].y, l_mates[j].alpha);
-			        robots[cont][3] = Transform2.rotTrans(new Point2(l_mates[j].xmax, l_mates[j].ymax), l_mates[j].x, l_mates[j].y, l_mates[j].alpha);
+			        robots[cont][0] = Transform2.rotTrans(new Point2(l_mates[j].xmin, l_mates[j].ymin), l_mates[j].x, l_mates[j].y, l_mates[j].phi);
+			        robots[cont][1] = Transform2.rotTrans(new Point2(l_mates[j].xmin, l_mates[j].ymax), l_mates[j].x, l_mates[j].y, l_mates[j].phi);
+			        robots[cont][2] = Transform2.rotTrans(new Point2(l_mates[j].xmax, l_mates[j].ymin), l_mates[j].x, l_mates[j].y, l_mates[j].phi);
+			        robots[cont][3] = Transform2.rotTrans(new Point2(l_mates[j].xmax, l_mates[j].ymax), l_mates[j].x, l_mates[j].y, l_mates[j].phi);
 			        cont++;
             	}
             }

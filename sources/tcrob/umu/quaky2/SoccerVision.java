@@ -28,7 +28,10 @@ public class SoccerVision extends Perception
 	
 	static public final double		BALL_RADIUS	= 0.11;			// Ball radius (m)
 	static public final double		NET_SIZE	= 0.2;			// Net size (m)
-	
+
+	static public final double		BALL_FADING	= 8.0;
+	static public final double		NET_FADING	= 15.0;
+
 	// Application LPOs
 	protected Ball					ball;
 	protected Net					net1;
@@ -175,15 +178,19 @@ public class SoccerVision extends Perception
 		
 		// Add domain specific LPOs to the LPS
 		ball	= new Ball (BALL_RADIUS, "Ball", LPO.PERCEPT);
+		ball.anchor_fade = BALL_FADING;
 		ball.color (WColor.YELLOW.darker());
 		
 		net1	= new Net (NET_SIZE, "Net1", LPO.PERCEPT);
-		net1.color (WColor.BLUE);
+		net1.anchor_fade = NET_FADING;
+		net1.color (WColor.RED);
 		
 		net2	= new Net (NET_SIZE, "Net2", LPO.PERCEPT);
-		net2.color (WColor.RED);
+		net2.anchor_fade = NET_FADING;
+		net2.color (WColor.BLUE);
 		
 		align	= new LPOPoint (0.0, 0.0, 0.0, "Align", LPO.ARTIFACT);
+		align.anchor_fade = NET_FADING;
 		align.color (WColor.MAGENTA);
 		
 		attached	= null;								// they go into the LPS of the robot when there is something to put there

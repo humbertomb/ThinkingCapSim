@@ -247,7 +247,7 @@ public class LPORangeLTG extends LPORangeBuffer
 		if (SZONE > 0.0)
 			for (i = 0; i < size; i++)
 				if (buffer[i].active)
-					buffer[i].locate_polar (Math.max (buffer[i].rho - SZONE, 0.0), buffer[i].phi);
+					buffer[i].locate_polar (Math.max (buffer[i].rho - SZONE, 0.0), buffer[i].theta);
 			
 		// Build connectivity graph (object boundaries)
 		boolean		connected;
@@ -355,11 +355,11 @@ public class LPORangeLTG extends LPORangeBuffer
 			ci	= cfrom[i];
 			cf	= cto[i];
 			
-			a1	= view.rotation + buffer[ci].phi;
+			a1	= view.rotation + buffer[ci].theta;
 			x1 	= buffer[ci].rho * Math.cos (a1);
 			y1 	= buffer[ci].rho * Math.sin (a1);
 
-			a2	= view.rotation + buffer[cf].phi;
+			a2	= view.rotation + buffer[cf].theta;
 			x2 	= buffer[cf].rho * Math.cos (a2);
 			y2 	= buffer[cf].rho * Math.sin (a2);
 

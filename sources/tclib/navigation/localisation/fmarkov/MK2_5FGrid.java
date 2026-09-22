@@ -406,7 +406,7 @@ public class MK2_5FGrid {
 		F2_5Cell f_local_cell; // Local Percepted Fuzzy Set
 		
 		rho_percept	= seglrf.rho();
-		theta_percept = seglrf.phi();
+		theta_percept = seglrf.theta();
 		
 		rho_core = seglrf.v1_rho() + gsize;
 		rho_slope = seglrf.v0_rho() + 2*gsize;

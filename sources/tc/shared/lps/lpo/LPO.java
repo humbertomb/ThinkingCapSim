@@ -19,6 +19,8 @@ import wucore.utils.color.*;
 
 public abstract class LPO extends Object implements Serializable
 {
+	static public final double		ANCHOR_FADE	= 5.0;		// Time an anchoring takes to run out, from 1 to 0 (s)
+
 	// Object sources
 	static public final int			MAP			= 0;
 	static public final int			CAMERA		= 1;
@@ -27,22 +29,24 @@ public abstract class LPO extends Object implements Serializable
 	static public final int			ARTIFACT	= 4;
 	
 	// Local object location
-	protected double 				x;				// local euclidean coordinates (m, m, rad)
-	protected double					y;
-	protected double 				alpha;
-	protected double 				rho;				// local polar coordinates (m, rad) 
-	protected double 				phi;				
+	public double 					x;				// local euclidean coordinates (m, m, rad)
+	public double					y;
+	public double 					phi;
+	public double 					rho;			// local polar coordinates (m, rad) 
+	public double 					theta;				
 	
 	// Perception related information
-	protected double					anchor;			// Anchoring value
-	protected int					ageing;			// How old the perception is
-	protected boolean				anchored;		// Has it ever been anchored (seen)? The sensor percepts never are
+	public double					anchor;			// Anchoring value
+	public double					anchor_time;
+	public double					anchor_fade;
+	public int						ageing;			// How old the perception is
+	public boolean					anchored;		// Has it ever been anchored (seen)? The sensor percepts never are
 	
 	// Object features	
-	protected String					label;
-	protected WColor				color;
-	protected int 					source;			// where the perception came from?
-	protected boolean 				active;
+	public String					label;
+	public WColor					color;
+	public int 						source;			// where the perception came from?
+	public boolean 					active;
 
 	// Constructor
 	protected LPO ()
@@ -53,31 +57,33 @@ public abstract class LPO extends Object implements Serializable
 	{			
 		locate (x, y, alpha);
 		
-		this.label	= label;
-		this.source	= source;
+		this.label		= label;
+		this.source		= source;
 		
-		color	= WColor.BLACK;
+		color			= WColor.BLACK;
 		
-		anchor	= 0.0;
-		ageing	= 0;
-		active	= false;
+		anchor			= 0.0;
+		anchor_time 	= -1.0;
+		anchor_fade 	= ANCHOR_FADE;
+		ageing			= 0;
+		active			= false;
 	}
 
 	// Accessors
-	public double			x ()						{ return x; }
-	public double			y ()						{ return y; }
-	public double			alpha ()					{ return alpha; }
+	public double			x ()					{ return x; }
+	public double			y ()					{ return y; }
 	public double			phi ()					{ return phi; }
+	public double			theta ()				{ return theta; }
 	public double			rho ()					{ return rho; }
 	
 	public double			anchor ()				{ return anchor; }
 	public int				ageing ()				{ return ageing; }
 	public int				source ()				{ return source; }
-	public void				label (String label)		{ this.label = label; }
-	public String			label ()					{ return label; }
+	public void				label (String label)	{ this.label = label; }
+	public String			label ()				{ return label; }
 	public boolean			active ()				{ return active; }
 	public void				active (boolean active)	{ this.active = active; }
-	public WColor		color ()					{ return color; }
+	public WColor			color ()				{ return color; }
 	public void				color (WColor color)	{ this.color = color; }
 	
 	// Instance methods
@@ -85,10 +91,10 @@ public abstract class LPO extends Object implements Serializable
 	{
 		this.x		= x;
 		this.y		= y;
-		this.alpha	= Angles.radnorm_180 (alpha);
+		this.phi	= Angles.radnorm_180 (alpha);
 		
 		rho			= Math.sqrt (x * x + y * y);
-		phi			= Angles.radnorm_180 (Math.atan2 (y, x));	
+		theta		= Angles.radnorm_180 (Math.atan2 (y, x));	
 	}
 
 	public void locate (double x, double y)
@@ -99,8 +105,8 @@ public abstract class LPO extends Object implements Serializable
 	public void locate_polar (double rho, double phi, double alpha)  
 	{
 		this.rho	= rho;
-		this.phi	= phi;
-		this.alpha	= Angles.radnorm_180 (alpha);
+		this.theta	= phi;
+		this.phi	= Angles.radnorm_180 (alpha);
 		
 		x			= rho * Math.cos (phi);
 		y			= rho * Math.sin (phi);	
@@ -146,9 +152,9 @@ public abstract class LPO extends Object implements Serializable
 		yy		= y;				
 		x		= (rm.mat[0][0] * xx) + (rm.mat[0][1] * yy) + rm.mat[0][2];
 		y		= (rm.mat[1][0] * xx) + (rm.mat[1][1] * yy) + rm.mat[1][2];	
-		alpha	= Angles.radnorm_180 (alpha + rm.mat[2][2]);
+		phi	= Angles.radnorm_180 (phi + rm.mat[2][2]);
 		rho		= Math.sqrt (x * x + y * y);
-		phi		= Angles.radnorm_180 (Math.atan2 (y, x));	
+		theta		= Angles.radnorm_180 (Math.atan2 (y, x));	
     }
     
     // Subclasses MUST implement

@@ -69,7 +69,7 @@ public class LPOMate extends LPOPoint implements Serializable
 	{
 		super.update (cur, point);
 		
-		alpha	= point.alpha () - cur.alpha ();
+		phi	= point.alpha () - cur.alpha ();
 	}
 	
 	public void draw (Model2D model, LPOView view)
@@ -79,7 +79,7 @@ public class LPOMate extends LPOPoint implements Serializable
 		
 		if (!active)			return;
 
-		aa	= view.rotation + phi;
+		aa	= view.rotation + theta;
 		xx 	= rho * Math.cos (aa);
 		yy 	= rho * Math.sin (aa);
 		gap	= Math.max (xmax-xmin, ymax-ymin) * 2.0;
@@ -92,7 +92,7 @@ public class LPOMate extends LPOPoint implements Serializable
 		model.addRawCircle (xx, yy, gap, Model2D.DASHED, Color.RED);
 
 		//model.addRawRotBox (xx+xmin, yy+ymin, xx+xmax, yy+ymax, alpha, Model2D.PLAIN, Color.RED);
-		model.addRawRotTransBox (xmin, ymin, xmax, ymax, xx, yy, view.rotation + alpha, Model2D.PLAIN, Color.RED);
-		model.addRawTransRotLine (0.0, 0.0, xmax*1.5, 0.0, xx, yy, view.rotation + alpha, Color.RED.darker());
+		model.addRawRotTransBox (xmin, ymin, xmax, ymax, xx, yy, view.rotation + phi, Model2D.PLAIN, Color.RED);
+		model.addRawTransRotLine (0.0, 0.0, xmax*1.5, 0.0, xx, yy, view.rotation + phi, Color.RED.darker());
 	}
 }

@@ -99,7 +99,7 @@ public class Cross extends Behaviour {
 		f.set_xy(0,0,-60*Math.PI/180);
 		rightClearance = sensors.occupied_arc(f,20*Math.PI/180,CollisionSideMax,false);
 			
-		alpha = door.alpha()*180/Math.PI;
+		alpha = door.phi()*180/Math.PI;
 //		System.out.println("DEBUG: door alpha->"+alpha);
 		ramp.type = Ramp.RAMP_UP;
 		ramp.setPoints(0,30);

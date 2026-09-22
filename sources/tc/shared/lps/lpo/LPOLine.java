@@ -28,7 +28,7 @@ public class LPOLine extends LPO implements Serializable
 		
 		if (!active)	return;
 
-		aa	= view.rotation + phi - alpha;
+		aa	= view.rotation + theta - phi;
 		xx 	= rho * Math.cos (aa);
 		yy 	= rho * Math.sin (aa);
 		

@@ -87,7 +87,7 @@ public class FollowPath extends Behaviour
 		dy		= looka.y ();
 		dist	= Math.sqrt (dx * dx + dy * dy);								// [m]
 		heading	= Math.atan2 (dy, dx);											// [rad]
-		delta	= Angles.radnorm_180 (heading - looka.alpha ()) * Angles.RTOD;	// [deg]
+		delta	= Angles.radnorm_180 (heading - looka.phi ()) * Angles.RTOD;	// [deg]
 
 		/* update the parameters used by this behaviour. This information is used
 		 * by the Debug Window to display the objects used by the behaviour.

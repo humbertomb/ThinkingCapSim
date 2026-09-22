@@ -272,7 +272,7 @@ public class LPORangeBuffer extends LPO implements Serializable
 				a2 = a1 + step;
 				s = buffer[i];
 				if (s.active)
-					if ((a1 <= s.phi) && (s.phi < a2))
+					if ((a1 <= s.theta) && (s.theta < a2))
 					{
 						ndx[ndx_n] = i;
 						ndx_n ++;

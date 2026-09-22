@@ -152,7 +152,7 @@ public class KFSegLoc extends Object
 			} else
 				return false;
 		} else if (((xm < Math.max(xi,xf))&&(xm > Math.min(xi,xf))) && ((ym < Math.max(yi,yf))&&(ym > Math.min(yi,yf)))){
-			phi 	= seg.phi();
+			phi 	= seg.theta();
 			rho		= seg.rho();
 			xc 		= -1. * ym * Math.tan(phi) +  rho / Math.cos(phi);
 			xwin 	= WEI_HEI_WIN_2 + uncert_x;
@@ -293,7 +293,7 @@ public class KFSegLoc extends Object
 				
 				// Get jth-segment from fuzzy map
 				seg		= global.segment (j);
-				phi		= seg.phi ();
+				phi		= seg.theta ();
 				rho		= seg.rho ();
 				
 				// Angle between measure orientation and the perdendicular of the segment
