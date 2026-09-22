@@ -100,10 +100,15 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		setVisible(true);
 	}
 
-	/** The channels to choose from changed (a configuration was made or loaded). */
+	/** The channels to choose from changed (a configuration was made or loaded), and the ones chosen with them. */
 	public void setChannels (Channels channels)
 	{
 		this.channels	= channels;
+		carpetch.current	= recognizer.CARPET_CHANNEL;
+		ballch.current		= recognizer.BALL_CHANNEL;
+		net1ch.current		= recognizer.NET1_CHANNEL;
+		net2ch.current		= recognizer.NET2_CHANNEL;
+		lmch.current		= recognizer.LM_CHANNEL;
 		for (ChannelSelector s : new ChannelSelector[] { carpetch, ballch, net1ch, net2ch, lmch })
 			s.refresh ();
 	}
@@ -161,7 +166,7 @@ public class SoccerRecognitonConfigPanel extends JPanel
 			removeAllItems ();
 			int		n = (channels != null) ? channels.size () : 0;
 			for (int i = 0; i < n; i++)		addItem (i);
-			if (current >= n)				addItem (current);
+			if ((current < 0) || (current >= n))		addItem (current);		// none (-1), or one not there
 			setSelectedItem (current);
 			filling	= false;
 		}

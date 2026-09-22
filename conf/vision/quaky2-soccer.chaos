@@ -117,5 +117,12 @@
   },
   "lutmode": 0,
   "segmode": 0,
-  "blobmode": 0
+  "blobmode": 0,
+  "recognizer": {
+    "carpet": 4,
+    "ball": 6,
+    "net1": 3,
+    "net2": 2,
+    "landmark": -1
+  }
 }

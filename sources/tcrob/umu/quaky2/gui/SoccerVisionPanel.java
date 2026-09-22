@@ -179,6 +179,7 @@ public class SoccerVisionPanel extends JPanel
 		if (new File (name).exists () && !name.equals (cfgfile)
 			&& (JOptionPane.showConfirmDialog (this, "<" + new File (name).getName () + "> already exists. Replace it?", "Save vision configuration", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION))
 			return;
+		pam.storeRecognizer ();
 		try { pam.vconfig.saveToFilename (name); }
 		catch (Exception e)
 		{
@@ -197,6 +198,7 @@ public class SoccerVisionPanel extends JPanel
 	public void setConfig (SoccerVisionConfig cfg, String file)
 	{
 		pam.vconfig	= cfg;
+		pam.applyRecognizer ();
 		pam.instanceLUT ();
 		pam.instanceSegment ();
 		pam.instanceBlob ();

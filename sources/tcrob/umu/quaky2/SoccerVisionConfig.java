@@ -27,6 +27,20 @@ public class SoccerVisionConfig
 	public int							segmode			= 0;	
 	public int							blobmode		= 0;	
 	public String						recogclass;
+	public RecognizerChannels			recognizer		= new RecognizerChannels ();
+
+	/**
+	 * The channels the recognizer looks for each thing in (their index; -1:
+	 * none). A file without them leaves the ones the recognizer has by default.
+	 */
+	static public class RecognizerChannels
+	{
+		public int						carpet			= 3;	// the floor, which the horizon is found from
+		public int						ball			= 0;
+		public int						net1			= 1;
+		public int						net2			= 2;
+		public int						landmark		= 4;
+	}
 	
 	public SoccerVisionConfig ()
 	{
@@ -102,6 +116,7 @@ public class SoccerVisionConfig
 		segmode		= mode (c.segmode, SEGMODES);
 		blobmode	= mode (c.blobmode, BLOBMODES);
 		recogclass	= c.recogclass;
+		recognizer	= (c.recognizer != null) ? c.recognizer : new RecognizerChannels ();
 
 		// the cluster of each channel, from what the file says of it
 		for (int i = 0; i < channels.size (); i++)

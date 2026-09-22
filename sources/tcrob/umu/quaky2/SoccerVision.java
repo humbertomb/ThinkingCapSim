@@ -79,6 +79,33 @@ public class SoccerVision extends Perception
 			try { vconfig.loadFromFilename(name); vfile = name; }	catch (Exception e) { e.printStackTrace(); }
 	}
 	
+	/** The recognizer looks for each thing in the channel the configuration says. */
+	public void applyRecognizer ()
+	{
+		SoccerVisionConfig.RecognizerChannels	rc = vconfig.recognizer;
+
+		if ((recognizer == null) || (rc == null))		return;
+		recognizer.CARPET_CHANNEL	= rc.carpet;
+		recognizer.BALL_CHANNEL		= rc.ball;
+		recognizer.NET1_CHANNEL		= rc.net1;
+		recognizer.NET2_CHANNEL		= rc.net2;
+		recognizer.LM_CHANNEL		= rc.landmark;
+	}
+
+	/** The configuration keeps the channels the recognizer looks in now (chosen in its tab), to be saved with it. */
+	public void storeRecognizer ()
+	{
+		SoccerVisionConfig.RecognizerChannels	rc = new SoccerVisionConfig.RecognizerChannels ();
+
+		if (recognizer == null)		return;
+		rc.carpet	= recognizer.CARPET_CHANNEL;
+		rc.ball		= recognizer.BALL_CHANNEL;
+		rc.net1		= recognizer.NET1_CHANNEL;
+		rc.net2		= recognizer.NET2_CHANNEL;
+		rc.landmark	= recognizer.LM_CHANNEL;
+		vconfig.recognizer	= rc;
+	}
+
 	/**
 	 * A new LUT, of the method of the configuration. It is built before it takes
 	 * the place of the one in use: the frames that arrive meanwhile (from another
@@ -168,6 +195,7 @@ public class SoccerVision extends Perception
 		
 		// Instance vision processing algorithms
 		recognizer	= new SoccerRecognizer ();
+		applyRecognizer ();
 
 		instanceLUT ();
 		instanceSegment ();
