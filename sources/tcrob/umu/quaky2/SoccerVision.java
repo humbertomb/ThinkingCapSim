@@ -5,10 +5,7 @@
  
 package tcrob.umu.quaky2;
 
-import java.awt.Color;
 import java.awt.image.*;
-import java.util.ArrayList;
-import java.util.List;
 import javax.swing.*;
 
 import tc.modules.*;
@@ -24,8 +21,6 @@ import tcrob.umu.quaky2.gui.SoccerVisionWindow;
 import tcrob.umu.quaky2.lpo.*;
 
 import wucore.utils.color.*;
-
-import devices.data.*;
 
 public class SoccerVision extends Perception
 {
@@ -241,26 +236,27 @@ public class SoccerVision extends Perception
 
 	/**
 	 * Places the objects the recognizer found in the frame (ball, nets) around
-	 * the robot, updates their LPOs and writes them as OBJECT, where the
-	 * perception module that keeps the LPS of the robot takes them
-	 * (SoccerPerception). The ball is put where the ray through the centre of its
-	 * circle (fitted to the edge of its blob) is at the height of its centre; a
-	 * net, where the ray through the bottom of its blob meets the floor.
+	 * the robot, in their LPOs, and from them the point to align the ball with
+	 * the net from. The LPOs are in the LPS of the robot (the one of its
+	 * perception module, IndoorPerception), which keeps them (moves them with
+	 * the robot and ages them) while they are not seen. The ball is put where the
+	 * ray through the centre of its circle (fitted to the edge of its blob) is at
+	 * the height of its centre; a net, where the ray through the bottom of its
+	 * blob meets the floor.
 	 */
 	protected void located (ItemCamera item)
 	{
-		List<VisionData>	seen = new ArrayList<VisionData> ();
 		int					w = item.image.getWidth (), h = item.image.getHeight ();
-
 		LPS					l = lps_current ();
 
 		synchronized (l)
 		{
 			attach (l);
 			if (l == lps)		l.update_anchors ();			// a shared LPS is aged by its owner
-			see (l, seen, ball, recognizer.ball, false, BALL_RADIUS, recognizer.BALL_CHANNEL, item.device, w, h);
-			see (l, seen, net1, recognizer.net1, true, 0.0, recognizer.NET1_CHANNEL, item.device, w, h);
-			see (l, seen, net2, recognizer.net2, true, 0.0, recognizer.NET2_CHANNEL, item.device, w, h);
+			see (ball, recognizer.ball, false, BALL_RADIUS, recognizer.BALL_CHANNEL, item.device, w, h);
+			see (net1, recognizer.net1, true, 0.0, recognizer.NET1_CHANNEL, item.device, w, h);
+			see (net2, recognizer.net2, true, 0.0, recognizer.NET2_CHANNEL, item.device, w, h);
+			alignment ();
 		}
 	}
 
@@ -277,13 +273,14 @@ public class SoccerVision extends Perception
 		attached	= l;
 	}
 
-	/** An object seen in the frame, where it is and as what it goes out. */
-	protected void see (LPS l, List<VisionData> seen, LPO lpo, SoccerRecognizer.Detection d, boolean onFloor, double height,
-						int channel, int dev, int w, int h)
+	/**
+	 * An object seen in the frame: its LPO goes where it is, around the robot now
+	 * (the frame has just been taken), in the colour of the channel it was seen
+	 * in, and the LPS is sure of it again (anchor 1, ageing 0).
+	 */
+	protected void see (LPO lpo, SoccerRecognizer.Detection d, boolean onFloor, double height, int channel, int dev, int w, int h)
 	{
-		VisionData		vd;
 		double[]		p;
-		Color			c;
 
 		if ((d == null) || (lpo == null))		return;
 		// a net stands on the floor at the bottom of its blob; the ball's centre is the one of its circle
@@ -291,15 +288,49 @@ public class SoccerVision extends Perception
 		p	= onFloor ? floor (dev, d.x, d.ymax, w, h, height) : floor (dev, d.cx, d.cy, w, h, height);
 		if (p == null)							return;			// the ray does not reach that height in front of the camera
 
-		c	= ((channel >= 0) && (channel < vconfig.channels.size ()) && (vconfig.channels.at (channel).color != null))
-				? vconfig.channels.at (channel).color : Color.GRAY;
-		vd	= new VisionData ();
-		vd.set_blob (lpo.label (), d.x, d.y, d.xmax - d.xmin, d.ymax - d.ymin, c);
-		vd.set_dev (dev);
-		vd.rho	= p[0];
-		vd.phi	= p[1];
-		l.set_lpo (vd);
-		seen.add (vd);
+		lpo.locate_polar (p[0], p[1], 0.0);
+		if ((channel >= 0) && (channel < vconfig.channels.size ()) && (vconfig.channels.at (channel).color != null))
+			lpo.color (ColorTool.fromColorToWColor (vconfig.channels.at (channel).color));
+		lpo.active (true);
+		lpo.anchor (1.0);
+		lpo.ageing (0);
+	}
+
+	/**
+	 * The point to align the ball with the net (Net1) from: on the line from the
+	 * net through the ball, ALG_DIST behind the ball; the ball itself when there
+	 * is no such line (the ball on the net). It is there while the ball is known.
+	 */
+	protected void alignment ()
+	{
+		double		m, n, k;
+		double		xx, yy;
+		double		bx = ball.x (), by = ball.y (), nx = net1.x (), ny = net1.y ();
+
+		m		= (ny - by) / (nx - bx);
+		if (Math.abs (m) <= 0.5)
+		{
+			n		= by - m * bx;
+			k		= (bx < nx) ? -SoccerController.ALG_DIST : SoccerController.ALG_DIST;
+			xx		= bx + k * Math.cos (Math.atan (m));
+			yy		= m * xx + n;
+		}
+		else
+		{
+			m		= (nx - bx) / (ny - by);
+			n		= bx - m * by;
+			k		= (by < ny) ? -SoccerController.ALG_DIST : SoccerController.ALG_DIST;
+			yy		= by + k * Math.cos (Math.atan (m));
+			xx		= m * yy + n;
+		}
+		if (Double.isNaN (xx) || Double.isInfinite (xx) || Double.isNaN (yy) || Double.isInfinite (yy))
+		{
+			xx		= bx;
+			yy		= by;
+		}
+
+		align.locate (xx, yy, 0.0);
+		align.active (ball.active () && !ball.lost ());
 	}
 
 	/**

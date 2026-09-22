@@ -100,9 +100,6 @@ public class SoccerController extends BGController
 		int				i;
 		int				result;
 		double			vr, wr;
-		double			xx, yy;
-		double			m, n;
-		double			k;
 		double			lookaPhi;
 		double			alignRho;
 		double 			dstBallNet;
@@ -126,49 +123,10 @@ double banchor;
 		/* COMPUTE POSITIONS */
 		/* ----------------- */
 		
-		// Compute robot-ball-net geometry and positions (local)
-		m		= (net1.y () - ball.y ()) / (net1.x () - ball.x ());
-		if (Math.abs (m) <= 0.5)
-		{
-			n		= ball.y () - m * ball.x ();
-			
-			k		= ALG_DIST;
-			if (ball.x () < net1.x ())
-				k		= -ALG_DIST;
-			
-			xx		= ball.x () + k * Math.cos (Math.atan (m));
-			yy		= m * xx + n;
-		}
-		else
-		{
-			m		= (net1.x () - ball.x ()) / (net1.y () - ball.y ());
-			n		= ball.x () - m * ball.y ();
-			
-			k		= ALG_DIST;
-			if (ball.y () < net1.y ())
-				k		= -ALG_DIST;
-
-			yy		= ball.y () + k * Math.cos (Math.atan (m));
-			xx		= m * yy + n;
-		}
+		// the point to align the ball with the net from: the vision (SoccerVision) keeps it in the LPS
+		locate ("Align", align);
+		alignRho	= align.rho ();
 		
-		// with the ball on the net (or nowhere yet) there is no line to align on: aim at the ball
-		if (Double.isNaN (xx) || Double.isInfinite (xx) || Double.isNaN (yy) || Double.isInfinite (yy))
-		{
-			xx		= ball.x ();
-			yy		= ball.y ();
-		}
-		alignRho	= Math.sqrt (xx * xx + yy * yy);
-		align.set (xx, yy);
-		
-		// Update current LPS information
-		lpo			= lps.find ("Align");
-		if (lpo != null)
-		{
-			lpo.locate (xx, yy, 0.0);
-			lpo.active (true);
-		}
-			
 		/* ------------------ */
 		/* COMPUTE LOCAL GRID */
 		/* ------------------ */
