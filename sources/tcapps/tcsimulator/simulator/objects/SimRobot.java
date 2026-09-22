@@ -13,6 +13,7 @@ import tc.runtime.thread.ModuleConfig;
 
 import tcapps.tcsimulator.simulator.*;
 import tcapps.tcsimulator.*;
+import tcrob.ingenia.ifork.IForkController;
 import tcrob.ingenia.ifork.linda.*;
 
 import tc.vrobot.*;
@@ -276,6 +277,29 @@ public class SimRobot extends VirtualRobot
 			}
 		}
 	}	  
+	/**
+	 * The status of the robot (iFork): a task that loads the fork puts a pallet
+	 * on it, one that unloads it takes it away, as the switch of the fork would
+	 * tell (pal_switch). The task is in the status as "... <kind>/<task>(<place>)",
+	 * e.g. "OCCUPIED. LOAD/FLOAD(Coutx)"; a status without it changes nothing.
+	 */
+	public void notify_status (String space, ItemStatus item)
+	{
+		String		status = item.toString ();
+		int			from, to;
+		int			task;
+
+		from	= status.indexOf ("/");
+		to		= (from > 0) ? status.indexOf ("(", from) : -1;
+		if (to < 0)		return;
+
+		task	= IForkController.parseTask (status.substring (from + 1, to));
+		if (task == IForkController.FUNLOAD)
+			data.pal_switch	= 0;
+		else if (task == IForkController.FLOAD)
+			data.pal_switch	= 1;
+	}
+
 	public void notify_pallet (String space, ItemPallet item){
 		
 //		System.out.println("  [SimRobot] Recibido tuple PALLET_CTRL space="+space+" "+item);

@@ -17,12 +17,10 @@ import tc.shared.linda.ItemSensorsCtrl;
 import tc.shared.linda.ItemExecution;
 import tc.shared.linda.ItemMotion;
 import tc.shared.linda.ItemObject;
-import tc.shared.linda.ItemStatus;
 import tc.shared.linda.Linda;
 import tc.shared.linda.Tuple;
 import tc.shared.world.World;
 
-import tcrob.ingenia.ifork.*;
 
 import wucore.gui.ChildWindowListener;
 import wucore.gui.PlotWindow;
@@ -272,45 +270,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		data_ctrl.set (item.data_ctrl);
 	}
 
-	public void notify_status (String space, ItemStatus item)
-	{
-		String itemstr;
-
-		String task_mensaje = "";
-
-		itemstr=item.toString();
-
-		if(itemstr.indexOf("/")>0) {
-			task_mensaje=itemstr.substring(itemstr.indexOf("/")+1,itemstr.indexOf("("));
-		}
-		
-		//if(item.toString().indexOf("Unloading fork")!=-1){
-
-		// OCCUPIED. UNLOAD/FUNLOAD(Coutx) 
-
-		if (IForkController.parseTask(task_mensaje) == IForkController.FUNLOAD) {
-			
-			data.pal_switch=0;
-			
-		//}else if(item.toString().indexOf("Loading fork")!=-1){
-
-		//OCCUPIED. LOAD/FLOAD(Coutx) 
-
-		} else if (IForkController.parseTask(task_mensaje) == IForkController.FLOAD) {
-
-			data.pal_switch=1;
-
-		}
-		
-		/*
-		if(item.toString().indexOf("Unloading fork")!=-1){
-			data.pal_switch=0;
-		}else if(item.toString().indexOf("Loading fork")!=-1){
-			data.pal_switch=1;
-		}
-		*/
-	}
-	
 	// Abstract instance methods. Subclasses MUST implement
 	public abstract void reset ();
 	public abstract void process_sensors (long dtime);
