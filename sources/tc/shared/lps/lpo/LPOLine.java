@@ -14,7 +14,7 @@ public class LPOLine extends LPO implements Serializable
 	public static final double			RADIUS			= 0.05;
 
 	// Constructor
-	public LPOLine (double x, double y, double alpha, String label, LpoSource source)
+	public LPOLine (double x, double y, double alpha, String label, LPOSource source)
 	{			
 		super (x, y, alpha, label, source);
 		

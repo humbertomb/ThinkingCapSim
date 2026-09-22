@@ -27,7 +27,7 @@ public class LPORangePoint extends LPORange implements Serializable
 	protected int					index;			// Which of them (its index)
 	
 	// Constructors
-	public LPORangePoint (double side, LpoSource source)
+	public LPORangePoint (double side, LPOSource source)
 	{
 		super (null, null, source);
 

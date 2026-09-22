@@ -14,7 +14,7 @@ public class LPOArcPoint extends LPORangePoint implements Serializable
 	protected double				speed;				// Object speed (m/s)
 	
 	// Constructors
-	public LPOArcPoint (double side, LpoSource source)
+	public LPOArcPoint (double side, LPOSource source)
 	{
 		super (side, source);
 	}

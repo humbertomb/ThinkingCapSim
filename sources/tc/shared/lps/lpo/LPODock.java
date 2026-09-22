@@ -16,7 +16,7 @@ public class LPODock extends LPO implements Serializable
 	protected boolean				occupied;				// Does the dock contains a load?
 
 	// Constructor
-	public LPODock (double x, double y, double alpha, double width, String label, LpoSource source)
+	public LPODock (double x, double y, double alpha, double width, String label, LPOSource source)
 	{			
 		super (x, y, alpha, label, source);
 		

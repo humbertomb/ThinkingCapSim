@@ -18,8 +18,6 @@
 
 package tc.shared.lps;
 
-import java.io.*;
-
 import tc.vrobot.*;
 import tclib.utils.fusion.*;
 import tc.shared.lps.lpo.*;
@@ -77,9 +75,6 @@ public class LPS extends Object
 	private double						last_a;	
 	private boolean						firstime;
 	
-	// Debug
-	private PrintWriter					stream			= null;
-
 	// Constructor
 	public LPS (RobotDesc rdesc, FusionDesc fdesc)
 	{			
@@ -215,7 +210,7 @@ public class LPS extends Object
 			x	= ll * Math.cos (aa - cur.alpha ());
 			y	= ll * Math.sin (aa - cur.alpha ());
 
-			lpos[i]	= new LPODock (x, y, ra, map.D_LENGHT, map.docks().get(i).label, LpoSource.MAP);
+			lpos[i]	= new LPODock (x, y, ra, map.D_LENGHT, map.docks().get(i).label, LPOSource.MAP);
 			lpos[i].active (true);
 		}
 		lpos_n += map.docks().size();

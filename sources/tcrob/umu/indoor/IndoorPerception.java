@@ -226,14 +226,14 @@ public class IndoorPerception extends Perception
 			max_buffer	= LPS.PPR_BUFFER * fdesc.MAXVIRTU;
 		
 		// Add domain specific LPOs to the LPS
-		l_home		= new LPOPoint (0.0, 0.0, 0.0, "Home", LpoSource.MAP);	
-		l_goal		= new LPOPoint (0.0, 0.0, 0.0, "Goal",  LpoSource.ARTIFACT);	
-		l_looka		= new LPOLine (0.0, 0.0, 0.0, "Looka", LpoSource.ARTIFACT);	
-		l_rbuffer	= new LPORangeBuffer (max_buffer, max_range, 0.1, "RBuffer", LpoSource.PERCEPT);
-		l_virtual	= new LPOSensorRange (fdesc.virtufeat, "Virtual", LpoSource.PERCEPT);		
-		l_group		= new LPOSensorGroup (fdesc.groupfeat, "Group", LpoSource.PERCEPT);	
-		l_scan		= new LPOSensorScanner (fdesc.scanfeat, fdesc.RAYSCAN, fdesc.CONESCAN, "Scanner", LpoSource.PERCEPT);	
-		l_fsegs		= new LPOSensorFSeg (max_buffer, fdesc.RAYSCAN, "FSegs", LpoSource.PERCEPT);	
+		l_home		= new LPOPoint (0.0, 0.0, 0.0, "Home", LPOSource.MAP);	
+		l_goal		= new LPOPoint (0.0, 0.0, 0.0, "Goal",  LPOSource.ARTIFACT);	
+		l_looka		= new LPOLine (0.0, 0.0, 0.0, "Looka", LPOSource.ARTIFACT);	
+		l_rbuffer	= new LPORangeBuffer (max_buffer, max_range, 0.1, "RBuffer", LPOSource.PERCEPT);
+		l_virtual	= new LPOSensorRange (fdesc.virtufeat, "Virtual", LPOSource.PERCEPT);		
+		l_group		= new LPOSensorGroup (fdesc.groupfeat, "Group", LPOSource.PERCEPT);	
+		l_scan		= new LPOSensorScanner (fdesc.scanfeat, fdesc.RAYSCAN, fdesc.CONESCAN, "Scanner", LPOSource.PERCEPT);	
+		l_fsegs		= new LPOSensorFSeg (max_buffer, fdesc.RAYSCAN, "FSegs", LPOSource.PERCEPT);	
 		
 		lps.add (l_home);
 		lps.add (l_goal);
@@ -273,7 +273,7 @@ public class IndoorPerception extends Perception
 				y		= (rotm.mat[1][0] * xx) + (rotm.mat[1][1] * yy) + rotm.mat[1][2];	
 				a		= Angles.radnorm_180 (rotm.mat[2][2]);
 				
-				l_door		= new LPOPoint (x, y, a, door.label, LpoSource.MAP);
+				l_door		= new LPOPoint (x, y, a, door.label, LPOSource.MAP);
 				l_door.active (true);
 				
 				lps.add (l_door);
@@ -291,7 +291,7 @@ public class IndoorPerception extends Perception
 				y		= (rotm.mat[1][0] * xx) + (rotm.mat[1][1] * yy) + rotm.mat[1][2];	
 				a		= Angles.radnorm_180 (rotm.mat[2][2]);
 				
-				l_zone		= new LPOPoint (x, y, a, zone.label, LpoSource.MAP);
+				l_zone		= new LPOPoint (x, y, a, zone.label, LPOSource.MAP);
 				l_zone.active (true);
 				
 				lps.add (l_zone);

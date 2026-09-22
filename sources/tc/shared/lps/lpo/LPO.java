@@ -39,7 +39,7 @@ public abstract class LPO extends Object implements Serializable
 	// Object features	
 	public String					label;
 	public WColor					color;
-	public LpoSource				source		= LpoSource.MAP;	// where what it stands for comes from (MAP when not said, as it was)
+	public LPOSource				source		= LPOSource.MAP;	// where what it stands for comes from (MAP when not said, as it was)
 	public boolean 					active;
 
 	// Constructor
@@ -47,7 +47,7 @@ public abstract class LPO extends Object implements Serializable
 	{
 	}
 	
-	public LPO (double x, double y, double alpha, String label, LpoSource source)
+	public LPO (double x, double y, double alpha, String label, LPOSource source)
 	{			
 		locate (x, y, alpha);
 		
@@ -72,7 +72,7 @@ public abstract class LPO extends Object implements Serializable
 	
 	public double			anchor ()				{ return anchor; }
 	public int				ageing ()				{ return ageing; }
-	public LpoSource		source ()				{ return source; }
+	public LPOSource		source ()				{ return source; }
 	public void				label (String label)	{ this.label = label; }
 	public String			label ()				{ return label; }
 	public boolean			active ()				{ return active; }

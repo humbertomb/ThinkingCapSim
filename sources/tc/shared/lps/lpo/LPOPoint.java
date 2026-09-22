@@ -18,7 +18,7 @@ public class LPOPoint extends LPO implements Serializable
 	protected double					last_y;
 	
 	// Constructor
-	public LPOPoint (double x, double y, double alpha, String label, LpoSource source)
+	public LPOPoint (double x, double y, double alpha, String label, LPOSource source)
 	{			
 		super (x, y, alpha, label, source);
 		

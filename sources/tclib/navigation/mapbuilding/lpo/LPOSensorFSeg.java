@@ -39,7 +39,7 @@ public class LPOSensorFSeg  extends LPO implements Serializable
 	private boolean						debug			= false;
 
 	// Constructor
-	public LPOSensorFSeg (int max_sonar, int max_laser, String label, LpoSource source)
+	public LPOSensorFSeg (int max_sonar, int max_laser, String label, LPOSource source)
 	{			
 		super (0.0, 0.0, 0.0, label, source);
 

@@ -179,7 +179,7 @@ public class LPSPanel extends JPanel
 		for (int i = 0; i < lps.lpos_n (); i++)
 		{
 			LPO		o = lps.lpos ()[i];
-			if ((o == null) || ((o.source () == LpoSource.PERCEPT) && o.lost ()))		continue;		// a percept lost is not drawn
+			if ((o == null) || ((o.source () == LPOSource.PERCEPT) && o.lost ()))		continue;		// a percept lost is not drawn
 			int		first = model.nattr;
 			o.draw (model, view);
 			if (o.label () != null)		corner (model, first, o.label (), corn);
@@ -251,7 +251,7 @@ public class LPSPanel extends JPanel
 	}
 
 	/** The colour of the name of an LPO, by where what it stands for comes from (null: the one it drew it with). */
-	static protected Color ink (LpoSource source)
+	static protected Color ink (LPOSource source)
 	{
 		if (source == null)		return null;
 		switch (source)

@@ -6,7 +6,7 @@ package tc.shared.lps.lpo;
 /**
  * Where what an LPO stands for comes from.
  */
-public enum LpoSource
+public enum LPOSource
 {
 	/** The a priori map of the world (doors, rooms, home...). */
 	MAP,

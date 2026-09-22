@@ -37,7 +37,7 @@ public class LPOSensorSignat extends LPO implements Serializable
 		d	= new LPORangeSignat[max];
 		
 		for (i = 0; i < max; i++)
-			d[i]	= new LPORangeSignat (null, LpoSource.PERCEPT);
+			d[i]	= new LPORangeSignat (null, LPOSource.PERCEPT);
 	}
 	
 	public void clamp (Matrix3D rm)

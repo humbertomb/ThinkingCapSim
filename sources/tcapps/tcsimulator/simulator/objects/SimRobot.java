@@ -5,9 +5,14 @@
 
 package tcapps.tcsimulator.simulator.objects;
 
+import java.util.*;
+import java.awt.image.*;
+import javax.swing.*;
+
 import tc.runtime.thread.ModuleConfig;
 
 import tcapps.tcsimulator.simulator.*;
+import tcapps.tcsimulator.*;
 import tcrob.ingenia.ifork.linda.*;
 
 import tc.vrobot.*;
@@ -31,7 +36,7 @@ public class SimRobot extends VirtualRobot
 	// Cameras of the platform, rendered out of the 3D world
 	protected SimCamera[]			cams;					// null: none, or no 3D to render them with
 	protected int					cnext;					// which one has the next turn
-	protected tcapps.tcsimulator.CameraWindow	camwin;		// what they are taking (ROBGFX only)
+	protected CameraWindow			camwin;					// what they are taking (ROBGFX only)
 	
 	// Other local stuff
 	protected String				r_id;
@@ -123,7 +128,7 @@ public class SimRobot extends VirtualRobot
 	 */
 	protected void open_cameras ()
 	{
-		java.util.List<SimCamera>	built = new java.util.ArrayList<SimCamera> ();
+		java.util.List<SimCamera>	built = new ArrayList<SimCamera> ();
 		
 		if (rdesc.MAXCAMERA <= 0)				return;
 		for (int i = 0; i < rdesc.MAXCAMERA; i++)
@@ -145,16 +150,16 @@ public class SimRobot extends VirtualRobot
 		{
 			public void run ()
 			{
-				camwin	= new tcapps.tcsimulator.CameraWindow (SimRobot.this, "Cameras of " + r_id);
+				camwin	= new CameraWindow (SimRobot.this, "Cameras of " + r_id);
 				for (SimCamera c : cams)
 					camwin.add ("camera" + c.device (), c.width (), c.height (), c.framerate ());
 				camwin.open ();
 			}
 		};
-		if (javax.swing.SwingUtilities.isEventDispatchThread ())
+		if (SwingUtilities.isEventDispatchThread ())
 			open.run ();
 		else
-			try { javax.swing.SwingUtilities.invokeAndWait (open); } catch (Exception e) { e.printStackTrace (); }
+			try { SwingUtilities.invokeAndWait (open); } catch (Exception e) { e.printStackTrace (); }
 	}
 	
 	/**
@@ -173,7 +178,7 @@ public class SimRobot extends VirtualRobot
 			SimCamera		c = cams[(cnext + k) % cams.length];
 			
 			if (!c.due (dtime))					continue;
-			java.awt.image.BufferedImage	im = c.take (data);
+			BufferedImage	im = c.take (data);
 			if (im == null)						continue;
 			if (camwin != null)					camwin.show (c.device (), im);
 			// the robot writes the frame of this cycle: it copies it, so the camera
@@ -195,7 +200,7 @@ public class SimRobot extends VirtualRobot
 	public void childClosed (Object window)
 	{
 		super.childClosed (window);
-		if (window instanceof tcapps.tcsimulator.CameraWindow)		camwin = null;
+		if (window instanceof CameraWindow)		camwin = null;
 	}
 	
 	/** Lets go of the scenes the cameras render with. */

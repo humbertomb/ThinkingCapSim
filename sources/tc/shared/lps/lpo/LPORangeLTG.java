@@ -47,7 +47,7 @@ public class LPORangeLTG extends LPORangeBuffer
 	protected boolean				debug;
 	
 	// Constructor
-	public LPORangeLTG (int size, double cone, double range, double side, String label, LpoSource source)
+	public LPORangeLTG (int size, double cone, double range, double side, String label, LPOSource source)
 	{			
 		super (size, range, side, label, source);
 		
@@ -61,7 +61,7 @@ public class LPORangeLTG extends LPORangeBuffer
 		cto		= new int[size];
 		cdanger	= new boolean[size];
 		cnum		= 0;
-		goal		= new LPOLine (0.0, 0.0, 0.0, "LTG_Goal", LpoSource.ARTIFACT);
+		goal		= new LPOLine (0.0, 0.0, 0.0, "LTG_Goal", LPOSource.ARTIFACT);
 		goal.color (WColor.MAGENTA.darker());
 		
 		color (WColor.ORANGE);

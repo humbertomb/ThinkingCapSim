@@ -556,11 +556,11 @@ public class LaserWindow extends Object implements Runnable
 		senpos = new SensorPos ();
 		senpos.set_xy (0.0, 0.0, 90.0 * Angles.DTOR);
 
-		scanLRF = new LPOSensorScanner (senpos, RAYSCAN, CONESCAN, "Scan", LpoSource.PERCEPT);
+		scanLRF = new LPOSensorScanner (senpos, RAYSCAN, CONESCAN, "Scan", LPOSource.PERCEPT);
 		scanLRF.setMode (LPOSensorScanner.RAYS);
 		inviewLRF = new LPOFSegments (LPOSensorFSeg.MAX_SEGS);
 		dataLRF = new LPOSensorSignat(1);
-		ltgLRF = new LPORangeLTG (RAYSCAN, CONESCAN, RANGESCAN, 0.05, "LTG", LpoSource.PERCEPT);
+		ltgLRF = new LPORangeLTG (RAYSCAN, CONESCAN, RANGESCAN, 0.05, "LTG", LPOSource.PERCEPT);
 		
 		mlaser.update (inviewLRF, scanLRF, ltgLRF);
 		laserCO.repaint ();

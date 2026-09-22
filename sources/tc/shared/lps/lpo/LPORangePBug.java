@@ -55,14 +55,14 @@ public class LPORangePBug extends LPORangeBuffer
 	double							radius;
 
 	// Constructor
-	public LPORangePBug (int size, double cone, double range, double side, String label, LpoSource source)
+	public LPORangePBug (int size, double cone, double range, double side, String label, LPOSource source)
 	{			
 		super (size, range, side, label, source);
 		buffindex = 0;
 		this.cone	= cone;	
 		cindex	= new int[size];
 		cnum		= 0;
-		goal		= new LPOLine (0.0, 0.0, 0.0, "PBug_Goal", LpoSource.ARTIFACT);
+		goal		= new LPOLine (0.0, 0.0, 0.0, "PBug_Goal", LPOSource.ARTIFACT);
 		goal.color (WColor.MAGENTA.darker());
 		lastCol1	= new LinkedList<LPORangePoint> ();
 		color (WColor.ORANGE);
@@ -70,14 +70,14 @@ public class LPORangePBug extends LPORangeBuffer
 	}
 	
 	// Constructor
-	public LPORangePBug (int size, double cone, double range, double side, String label, LpoSource source, World world)
+	public LPORangePBug (int size, double cone, double range, double side, String label, LPOSource source, World world)
 	{			
 		super (size, range, side, label, source);
 		buffindex = 0;
 		this.cone	= cone;	
 		cindex	= new int[size];
 		cnum		= 0;
-		goal		= new LPOLine (0.0, 0.0, 0.0, "PBug_Goal", LpoSource.ARTIFACT);
+		goal		= new LPOLine (0.0, 0.0, 0.0, "PBug_Goal", LPOSource.ARTIFACT);
 		goal.color (WColor.MAGENTA.darker());
 		lastCol1	= new LinkedList<LPORangePoint> ();
 		color (WColor.ORANGE);
@@ -209,7 +209,7 @@ public class LPORangePBug extends LPORangeBuffer
 		
 		//	Detecta una colision con otras carretillas
 		if(colision != true && robots != null){
-		    LPORangePoint goalpt = new LPORangePoint(0, LpoSource.MAP);
+		    LPORangePoint goalpt = new LPORangePoint(0, LPOSource.MAP);
 		    goalpt.locate(gx,gy);
 		    for(int j = 0; j<robots.length;j++){
 	    	    for(int n = 0; n<4; n++){
@@ -384,7 +384,7 @@ public class LPORangePBug extends LPORangeBuffer
 				if(colision == false && Math.abs(r) > maxr){
 					maxr = Math.abs(r);
 					if(col!=null) ptcolis = col;
-					pt = new LPORangePoint(0, LpoSource.MAP);
+					pt = new LPORangePoint(0, LPOSource.MAP);
 					pt.locate(0, Math.min(r-0.5,0.5)*2);
 					if(debug) System.out.println("Radio de giro "+r+" pt["+pt.x()+","+pt.y()+"] ");
 					radius = r;
@@ -404,7 +404,7 @@ public class LPORangePBug extends LPORangeBuffer
 		if(pt==null){
 			// Se gira en la direccion donde hay mas espacio para girar
 	    
-		    pt = new LPORangePoint(0, LpoSource.MAP);
+		    pt = new LPORangePoint(0, LPOSource.MAP);
 			double left = Double.MAX_VALUE;  // Distancia minima para girar a la izq
 			double rigth = Double.MAX_VALUE; // Distancia minima para girar a la der
 			int maxray = (int)Math.round((size / 4));
@@ -428,7 +428,7 @@ public class LPORangePBug extends LPORangeBuffer
 		if(pt!=null){
 			if(pt.rho() > dist){
 				ang = pt.theta;
-				pt = new LPORangePoint(0, LpoSource.MAP);
+				pt = new LPORangePoint(0, LPOSource.MAP);
 				pt.locate_polar(dist, ang);
 				//addBuffer(ptcolis);
 			}
@@ -507,7 +507,7 @@ public class LPORangePBug extends LPORangeBuffer
 		
 		//	Detecta una colision con otras carretillas
 		if(colision != true && robots != null){
-		    LPORangePoint goalpt = new LPORangePoint(0, LpoSource.MAP);
+		    LPORangePoint goalpt = new LPORangePoint(0, LPOSource.MAP);
 		    goalpt.locate(gx,gy);
 		    for(int j = 0; j<robots.length;j++){
 	    	    for(int n = 0; n<4; n++){
@@ -633,7 +633,7 @@ public class LPORangePBug extends LPORangeBuffer
 		if(pt==null){
 			// Se gira en la direccion donde hay mas espacio para girar
 	    
-		    pt = new LPORangePoint(0, LpoSource.MAP);
+		    pt = new LPORangePoint(0, LPOSource.MAP);
 			double left = Double.MAX_VALUE;  // Distancia minima para girar a la izq
 			double rigth = Double.MAX_VALUE; // Distancia minima para girar a la der
 			int maxray = (int)Math.round((size / 4));
@@ -654,7 +654,7 @@ public class LPORangePBug extends LPORangeBuffer
 		
 		if(pt!=null){
 			ang = pt.theta;
-			pt = new LPORangePoint(0, LpoSource.MAP);
+			pt = new LPORangePoint(0, LPOSource.MAP);
 			pt.locate_polar(dist, ang);
 			//addBuffer(ptcolis);
 		}	
@@ -671,7 +671,7 @@ public class LPORangePBug extends LPORangeBuffer
 	    for(int i = 0; i<lastCol1.size();i++){
 	        if( lastCol1.get(i).distance(data) < PTDIST) return false;
 	    }
-	    LPORangePoint clone = new LPORangePoint(0, LpoSource.MAP);
+	    LPORangePoint clone = new LPORangePoint(0, LPOSource.MAP);
 	    clone.set(data.x,data.y,data.len,data.sensor,data.index);
 	    clone.active(true);
 	    lastCol1.add(clone);

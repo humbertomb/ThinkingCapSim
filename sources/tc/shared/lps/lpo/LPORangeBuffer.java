@@ -33,7 +33,7 @@ public class LPORangeBuffer extends LPO implements Serializable
 	protected int					ndx_n;			// Number of ordered measures
 
 	// Constructor
-	public LPORangeBuffer (int size, double range, double side, String label, LpoSource source)
+	public LPORangeBuffer (int size, double range, double side, String label, LPOSource source)
 	{			
 		super (0.0, 0.0, 0.0, label, source);
 		
@@ -85,7 +85,7 @@ public class LPORangeBuffer extends LPO implements Serializable
 		// Initialize range sensors buffer
 		for (i = 0; i < size; i++)
 		{
-			buffer[i]	= new LPORangePoint (side, LpoSource.PERCEPT);			
+			buffer[i]	= new LPORangePoint (side, LPOSource.PERCEPT);			
 			ndx[i]		= 0;
 		}
 			
