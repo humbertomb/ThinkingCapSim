@@ -137,6 +137,7 @@ public class VisualHorizon
 			for (i = 0; i < npts; i++)
 				dwg.drawPoint (pts[i].x, pts[i].y, Color.WHITE.getRGB());
 			
+			dwg.setThickness (BufferedImageDrawing.MARK);		// the horizon, thick
 			x1	= 0;
 			x2	= width;
 			y1	= (int) Math.round (top.m * x1 + top.n);

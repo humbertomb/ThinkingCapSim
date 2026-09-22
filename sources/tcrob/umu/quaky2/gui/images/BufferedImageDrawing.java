@@ -11,13 +11,38 @@ import wucore.utils.math.*;
 
 public class BufferedImageDrawing
 {
+	static public final int			MARK		= 3;			// thickness of what the recognizer marks in a frame (pixels)
+
 	static public final double		ARROW_SIZE = 0.25;
 	static public final double		ARROW_ANGLE = 20.0*Angles.DTOR;
 	
 	private BufferedImage			image;
+	private int						thickness	= 1;			// of what is drawn (pixels)
 	
 	public BufferedImageDrawing ()
 	{
+	}
+	
+	/** How thick what is drawn from now on is (pixels; 1: a pixel, as it was). */
+	public void setThickness (int thickness)
+	{
+		this.thickness	= Math.max (1, thickness);
+	}
+	
+	public int getThickness ()
+	{
+		return thickness;
+	}
+	
+	/** A point of what is drawn, as thick as asked for and never out of the image. */
+	protected void plot (int x, int y, int color)
+	{
+		int			half = thickness / 2;
+		
+		for (int dx = -half; dx <= thickness - 1 - half; dx++)
+			for (int dy = -half; dy <= thickness - 1 - half; dy++)
+				if ((x + dx >= 0) && (x + dx < image.getWidth ()) && (y + dy >= 0) && (y + dy < image.getHeight ()))
+					image.setRGB (x + dx, y + dy, color);
 	}
 	
 	public void updateImage (BufferedImage image)
@@ -36,13 +61,13 @@ public class BufferedImageDrawing
 		
 		for (x = xmin; x <= xmax; x++)
 		{
-			image.setRGB (x, ymin, color);
-			image.setRGB (x, ymax, color);
+			plot (x, ymin, color);
+			plot (x, ymax, color);
 		}
 		for (y = ymin; y <= ymax; y++)
 		{
-			image.setRGB (xmin, y, color);
-			image.setRGB (xmax, y, color);
+			plot (xmin, y, color);
+			plot (xmax, y, color);
 		}
 	}
 	
@@ -50,17 +75,17 @@ public class BufferedImageDrawing
 	{
 		if ((x > 0) && (x < image.getWidth ()-1) && (y > 0) && (y < image.getHeight()-1))
 		{
-			image.setRGB (x, y, color);	
-			image.setRGB (x-1, y, color);	
-			image.setRGB (x+1, y, color);	
-			image.setRGB (x, y-1, color);	
-			image.setRGB (x, y+1, color);	
+			plot (x, y, color);	
+			plot (x-1, y, color);	
+			plot (x+1, y, color);	
+			plot (x, y-1, color);	
+			plot (x, y+1, color);	
 		}
 	}
 	
 	public void drawPoint (int x, int y, int color)
 	{
-		image.setRGB (x, y, color);	
+		plot (x, y, color);	
 	}
 	
 	public void drawCircle (int x, int y, int radius, int color)
@@ -78,16 +103,16 @@ public class BufferedImageDrawing
 			if ((x+xx >= 0) && (x+xx < image.getWidth ()))
 			{
 				if ((y+yy >= 0) && (y+yy < image.getHeight()))
-					image.setRGB (x+xx, y+yy, color);
+					plot (x+xx, y+yy, color);
 				if ((y-yy >= 0) && (y-yy < image.getHeight()))
-					image.setRGB (x+xx, y-yy, color);
+					plot (x+xx, y-yy, color);
 			}
 			if ((x-xx >= 0) && (x-xx < image.getWidth ()))
 			{
 				if ((y+yy >= 0) && (y+yy < image.getHeight()))
-					image.setRGB (x-xx, y+yy, color);
+					plot (x-xx, y+yy, color);
 				if ((y-yy >= 0) && (y-yy < image.getHeight()))
-					image.setRGB (x-xx, y-yy, color);
+					plot (x-xx, y-yy, color);
 			}
 		}
 	}
@@ -106,7 +131,7 @@ public class BufferedImageDrawing
 			
 			if ((x+xx >= 0) && (x+xx < image.getWidth ())
 					&& (y+yy >= 0) && (y+yy < image.getHeight()))
-				image.setRGB (x+xx, y+yy, color);
+				plot (x+xx, y+yy, color);
 		}
 	}
 	
@@ -174,7 +199,7 @@ public class BufferedImageDrawing
 					y += m_slopeSign;
 				}
 				if ((x >= 0) && (x < image.getWidth ()) && (y >= 0) && (y < image.getHeight()))
-					image.setRGB (x, y, color);
+					plot (x, y, color);
 				x++;
 			}
 			// Implements algorithm for slope >= 1
@@ -189,7 +214,7 @@ public class BufferedImageDrawing
 					x += m_slopeSign;
 				}
 				if ((x >= 0) && (x < image.getWidth ()) && (y >= 0) && (y < image.getHeight()))
-					image.setRGB (x, y, color);
+					plot (x, y, color);
 				y++;
 			}
 		}

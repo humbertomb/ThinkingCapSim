@@ -100,6 +100,7 @@ public class SoccerRecognizer
 		net2	= null;
 
 		computeFovea (output, dwg);
+		dwg.setThickness (BufferedImageDrawing.MARK);			// what is recognised is marked thick, to be seen at a glance
 		horizon = new VisualHorizon ();
 		// a channel that is not there (fewer channels than the one chosen) is not looked for
 		if (has (channels, blobs, params.carpet_channel) && has (channels, blobs, params.ball_channel))

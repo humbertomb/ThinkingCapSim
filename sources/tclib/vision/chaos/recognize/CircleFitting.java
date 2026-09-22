@@ -131,6 +131,7 @@ public class CircleFitting
 		dwg.updateImage (input);
 		for (int i = 0; i < npts; i++)
 			dwg.drawPoint (px[i], py[i], Color.white.getRGB());
+		dwg.setThickness (BufferedImageDrawing.MARK);			// the circle of the ball, thick
 		dwg.drawCircle (xx, yy, (int) Math.round (radius), Color.black.getRGB());	
 		dwg.drawCross (xx, yy, Color.white.getRGB());
 	}

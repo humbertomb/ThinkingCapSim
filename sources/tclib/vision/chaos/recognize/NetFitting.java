@@ -153,6 +153,7 @@ public class NetFitting
 			for (i = 0; i < ndownpts; i++)
 				dwg.drawPoint (downpts[i].x, downpts[i].y, Color.white.getRGB());
 			
+			dwg.setThickness (BufferedImageDrawing.MARK);		// the lines fitted to the net, thick
 			x1	= blob.getXMin ();
 			x2	= blob.getXMax ();
 			yu1	= (int) Math.round (top.m * x1 + top.n);
