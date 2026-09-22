@@ -206,26 +206,6 @@ public class SoccerVision extends Perception
 		// what the camera saw, and what came out of it, to the window
 		if (win != null)
 			SwingUtilities.invokeLater(() -> win.updateBufferedImage (item.image));
-		
-	    // Object-level fusion and LPS update
-//	    if (vision != null)
-//			for (i = 0; i < vision.length; i++)
-//				if (vision[i].valid)
-//					lps.set_lpo (vision[i]);
-//	    vision		= null;
-
-//		ballSeen	= (ball.anchor () >= 0.1);
-//		net1Seen 	= (net1.anchor () >= 0.1);
-//		net2Seen 	= (net2.anchor () >= 0.1);
-//
-//		ballSeen	= true;
-//		net1Seen 	= true;
-//		net2Seen 	= true;
-	    	
-	    
-		// Update low-level perception & LPS data
-//		lps.update (data, fusion, lodom, pos, null);
-
 	}
 
 	/* ------------------------------------------------------------------ */

@@ -6,6 +6,7 @@ package tc.vrobot;
 
 import java.io.File;
 import java.util.Properties;
+import java.awt.image.*;
 
 import tc.runtime.thread.ModuleConfig;
 import tc.runtime.thread.StdThread;
@@ -52,14 +53,14 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	
 	// Data sent by the robot
 	protected Tuple					tdata;
-	protected ItemSensors				sdata;
+	protected ItemSensors			sdata;
 	protected RobotData				data;
 	protected Tuple					tobj;
 	protected ItemObject			sobj;
 	protected VisionData[]			odata;
 	protected Tuple					tcam;
 	protected ItemCamera			scam;
-	protected java.awt.image.BufferedImage	cdata;			// frame of the current cycle (null: no camera, or nothing taken)
+	protected BufferedImage			cdata;			// frame of the current cycle (null: no camera, or nothing taken)
 	protected int					cdev;					// which camera of the robot took it
 	protected RobotDataCtrl			data_ctrl;
 
@@ -103,14 +104,14 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		// Prepare Linda data structures
 		sdata		= new ItemSensors ();
 		tdata		= new Tuple (Tuple.SENSORS, sdata);
-		sobj			= new ItemObject ();
-		tobj			= new Tuple (Tuple.OBJECT, sobj);
-		scam			= new ItemCamera ();
-		tcam			= new Tuple (Tuple.CAMERA, scam);
+		sobj		= new ItemObject ();
+		tobj		= new Tuple (Tuple.OBJECT, sobj);
+		scam		= new ItemCamera ();
+		tcam		= new Tuple (Tuple.CAMERA, scam);
 		
 		// Setup robot description and data structures		
 		rdesc 		= new RobotDesc (rprops, tdesc.exectime);
-		data			= new RobotData (rdesc);
+		data		= new RobotData (rdesc);
 		data_ctrl	= new RobotDataCtrl ();
 
 		// Additional initialisations
@@ -143,7 +144,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		cycvis		= 1;
 		       	
 		// Initialise time computations
-    		ltime		= System.currentTimeMillis () - rdesc.DTIME;
+    	ltime		= System.currentTimeMillis () - rdesc.DTIME;
 
 		// Run the robot program
 		super.run ();
@@ -188,11 +189,11 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		int				i;
 		VisionData[]		vobj;
     	    	 				
-	    	cycson++;		if (cycson > rdesc.CYCLESON)	cycson	= 1;
-	    	cycir++;			if (cycir > rdesc.CYCLEIR)	cycir	= 1;
-	    	cyclrf++;		if (cyclrf > rdesc.CYCLELRF)	cyclrf	= 1;
-	    	cyclsb++;		if (cyclsb > rdesc.CYCLELSB)	cyclsb	= 1;
-	    	cycvis++;		if (cycvis > rdesc.CYCLEVIS)	cycvis	= 1;
+		cycson++;		if (cycson > rdesc.CYCLESON)	cycson	= 1;
+	   	cycir++;		if (cycir > rdesc.CYCLEIR)		cycir	= 1;
+	   	cyclrf++;		if (cyclrf > rdesc.CYCLELRF)	cyclrf	= 1;
+	   	cyclsb++;		if (cyclsb > rdesc.CYCLELSB)	cyclsb	= 1;
+	    cycvis++;		if (cycvis > rdesc.CYCLEVIS)	cycvis	= 1;
 			
 		process_sensors (ctime - ltime);
 		ltime	= ctime;
@@ -233,7 +234,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	// Template instance methods. Subclasses MAY implement
 	public void notify_motion (String space, ItemMotion item)
 	{
-    		double		speed, turn;
+    	double		speed, turn;
     	
 		speed	= item.speed;
 		turn		= item.turn;
