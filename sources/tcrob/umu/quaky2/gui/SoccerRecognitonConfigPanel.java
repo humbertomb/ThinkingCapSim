@@ -93,7 +93,7 @@ public class SoccerRecognitonConfigPanel extends JPanel
 												netsxmin, netsymin, nethorihgt, netdensity, netinminx, netinminy, netinmina, netinmemo,
 												lmsxmin, lmsymin, lmhorihgt, lmdensity })
 		{
-			f.addActionListener (e -> updateValues ());
+			f.addActionListener (_ -> updateValues ());
 			f.addFocusListener (new FocusAdapter () { public void focusLost (FocusEvent e) { updateValues (); } });
 		}
 		
@@ -145,7 +145,7 @@ public class SoccerRecognitonConfigPanel extends JPanel
 					return this;
 				}
 			});
-			addActionListener (e ->
+			addActionListener (_ ->
 			{
 				if (filling || (getSelectedItem () == null))		return;
 				current	= (Integer) getSelectedItem ();
