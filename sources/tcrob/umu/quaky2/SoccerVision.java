@@ -13,6 +13,7 @@ import javax.swing.*;
 
 import tc.modules.*;
 import tc.runtime.thread.ModuleConfig;
+import tc.shared.lps.*;
 import tc.shared.lps.lpo.*;
 import tclib.vision.chaos.blobs.BlobForming;
 import tclib.vision.chaos.segment.LUT;
@@ -53,6 +54,9 @@ public class SoccerVision extends Perception
 	protected SoccerVisionWindow	win;
 	
 	private boolean					initialized = false;
+
+	// The LPS the LPOs of the vision are in: the one of the perception module of the robot (see lps_guest)
+	protected LPS					attached;
 
 	// What is recognised, for the perception module that keeps the LPS of the robot
 	protected Tuple					otuple;
@@ -160,10 +164,7 @@ public class SoccerVision extends Perception
 		align	= new LPOPoint (0.0, 0.0, 0.0, "Align", LPO.ARTIFACT);
 		align.color (WColor.MAGENTA);
 		
-		lps.add (ball);
-		lps.add (net1);
-		lps.add (net2);
-		lps.add (align);
+		attached	= null;								// they go into the LPS of the robot when there is something to put there
 		
 		// Instance vision processing algorithms
 		recognizer	= new SoccerRecognizer ();
@@ -223,18 +224,37 @@ public class SoccerVision extends Perception
 		List<VisionData>	seen = new ArrayList<VisionData> ();
 		int					w = item.image.getWidth (), h = item.image.getHeight ();
 
-		lps.update_anchors ();
-		see (seen, ball, recognizer.ball, false, BALL_RADIUS, recognizer.BALL_CHANNEL, item.device, w, h);
-		see (seen, net1, recognizer.net1, true, 0.0, recognizer.NET1_CHANNEL, item.device, w, h);
-		see (seen, net2, recognizer.net2, true, 0.0, recognizer.NET2_CHANNEL, item.device, w, h);
+		LPS					l = lps_current ();
+
+		synchronized (l)
+		{
+			attach (l);
+			if (l == lps)		l.update_anchors ();			// a shared LPS is aged by its owner
+			see (l, seen, ball, recognizer.ball, false, BALL_RADIUS, recognizer.BALL_CHANNEL, item.device, w, h);
+			see (l, seen, net1, recognizer.net1, true, 0.0, recognizer.NET1_CHANNEL, item.device, w, h);
+			see (l, seen, net2, recognizer.net2, true, 0.0, recognizer.NET2_CHANNEL, item.device, w, h);
+		}
 
 		if (seen.isEmpty ())		return;
 		ostore.set (seen.toArray (new VisionData[0]), System.currentTimeMillis ());
 		linda.write (otuple);
 	}
 
+	/** The vision works on the LPS of the perception module of the robot (IndoorPerception), not on one of its own. */
+	protected boolean lps_guest ()							{ return true; }
+
+	/** Puts the LPOs of the vision (ball, nets, alignment) into an LPS, once. */
+	protected void attach (LPS l)
+	{
+		if (l == attached)		return;
+		for (LPO o : new LPO[] { ball, net1, net2, align })
+			if ((o != null) && (l.find (o.label ()) == null))
+				l.add (o);
+		attached	= l;
+	}
+
 	/** An object seen in the frame, where it is and as what it goes out. */
-	protected void see (List<VisionData> seen, LPO lpo, SoccerRecognizer.Detection d, boolean onFloor, double height,
+	protected void see (LPS l, List<VisionData> seen, LPO lpo, SoccerRecognizer.Detection d, boolean onFloor, double height,
 						int channel, int dev, int w, int h)
 	{
 		VisionData		vd;
@@ -254,7 +274,7 @@ public class SoccerVision extends Perception
 		vd.set_dev (dev);
 		vd.rho	= p[0];
 		vd.phi	= p[1];
-		lps.set_lpo (vd);
+		l.set_lpo (vd);
 		seen.add (vd);
 	}
 

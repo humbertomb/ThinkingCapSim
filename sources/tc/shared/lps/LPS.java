@@ -160,7 +160,8 @@ public class LPS extends Object
 	}
 
 	/* ---------- LPS objects management ---------- */
-	public void add (LPO lpo)
+	/** Adds an LPO (holding the lock of the LPS, which several modules of a robot may share). */
+	public synchronized void add (LPO lpo)
 	{	
 		if (lpos_n >= LPO_BUFFER)				return;
 		

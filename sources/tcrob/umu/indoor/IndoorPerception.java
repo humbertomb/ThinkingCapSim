@@ -197,18 +197,22 @@ public class IndoorPerception extends Perception
 			return;
 		}
 		
-		// Sensor fusion and LPS update
-		lowlevel_fusion ();
-		
-		// Map-level sensor fusion
-		maplevel_fusion ();
-		
-		lps.add_time ((double) (System.currentTimeMillis () - ctime));
-		
-		// Update the LPS in the Linda space
-		tupd	 = ctime - stime;		
-		lstore.set (lps, tupd);		
-		linda.write (ltuple);
+		// other modules of the robot may work on this LPS too (guests, as SoccerVision)
+		synchronized (lps)
+		{
+			// Sensor fusion and LPS update
+			lowlevel_fusion ();
+			
+			// Map-level sensor fusion
+			maplevel_fusion ();
+			
+			lps.add_time ((double) (System.currentTimeMillis () - ctime));
+			
+			// Update the LPS in the Linda space
+			tupd	 = ctime - stime;		
+			lstore.set (lps, tupd);		
+			linda.write (ltuple);
+		}
 		
 		// Finish processing by clearing flags
 		data		= null;
