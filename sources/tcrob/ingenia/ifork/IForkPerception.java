@@ -186,7 +186,7 @@ public class IForkPerception extends IndoorPerception
 		l_mates		= new LPOMate[MAX_MATES];
 		for (i = 0; i < MAX_MATES; i++)
 		{
-			l_mates[i]	= new LPOMate (LpoSource.ANCHOR);
+			l_mates[i]	= new LPOMate (LpoSource.COORDINATION);
 			lps.add (l_mates[i]);
 		}
 		

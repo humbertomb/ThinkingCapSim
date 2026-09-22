@@ -58,6 +58,12 @@ public class LPSPanel extends JPanel
 	static protected final Color	C_LOW		= new Color (210, 0, 0);
 	static protected final Color	C_HIGH		= new Color (0, 150, 0);
 
+	// The colour of the name of an LPO, by where what it stands for comes from
+	static protected final Color	C_MAP			= new Color (0, 70, 210);		// blue
+	static protected final Color	C_PERCEPT		= new Color (0, 115, 0);		// dark green
+	static protected final Color	C_ARTIFACT		= new Color (190, 0, 190);		// magenta
+	static protected final Color	C_COORDINATION	= new Color (235, 125, 0);		// orange
+
 	static protected final Font		F_TEXT		= new Font ("SansSerif", Font.PLAIN, 12);
 	static protected final Font		F_ANCHOR	= new Font ("SansSerif", Font.PLAIN, 10);
 	static protected final Font		F_LABEL		= new Font ("Monospaced", Font.PLAIN, 12);
@@ -75,6 +81,7 @@ public class LPSPanel extends JPanel
 	protected Model2D				back		= new Model2D ();		// the one being built
 	protected Map<String, Double>	anchors		= new HashMap<String, Double> ();	// anchoring of the LPOs drawn, by name
 	protected Map<Integer, double[]>	corners	= new HashMap<Integer, double[]> ();	// name of an LPO (its text) -> top right of its drawing (m)
+	protected Map<Integer, Color>		inks	= new HashMap<Integer, Color> ();		// name of an LPO (its text) -> its colour (by its source)
 	protected String				image;									// the image of the robot (null: its drawing)
 	protected double[]				ibox;									// the box it is drawn over, in the robot
 	protected LPOView				view		= new LPOView ();
@@ -143,6 +150,7 @@ public class LPSPanel extends JPanel
 		Model2D					model;
 		Map<String, Double>		anch = new HashMap<String, Double> ();
 		Map<Integer, double[]>	corn = new HashMap<Integer, double[]> ();
+		Map<Integer, Color>		ink = new HashMap<Integer, Color> ();
 		RobotDesc				rdesc;
 		LPORangeBuffer			rbuffer;
 		String					img = null;
@@ -175,6 +183,7 @@ public class LPSPanel extends JPanel
 			int		first = model.nattr;
 			o.draw (model, view);
 			if (o.label () != null)		corner (model, first, o.label (), corn);
+			if (o.label () != null)		ink (model, first, o.label (), ink (o.source ()), ink);
 			if ((o != null) && o.active () && (o.label () != null) && anchored (o))		anch.put (o.label (), o.anchor ());
 		}
 
@@ -203,6 +212,7 @@ public class LPSPanel extends JPanel
 			front	= model;
 			anchors	= anch;
 			corners	= corn;
+			inks	= ink;
 			image	= img;
 			ibox	= box;
 		}
@@ -238,6 +248,29 @@ public class LPSPanel extends JPanel
 		for (int i = first; i < m.nattr; i++)
 			if ((m.attr[i] != null) && (m.attr[i].type == Model2D.TEXT) && label.equals (m.attr[i].label))
 				corn.put (Integer.valueOf (i), new double[] { maxx, maxy });
+	}
+
+	/** The colour of the name of an LPO, by where what it stands for comes from (null: the one it drew it with). */
+	static protected Color ink (LpoSource source)
+	{
+		if (source == null)		return null;
+		switch (source)
+		{
+		case MAP:			return C_MAP;
+		case PERCEPT:		return C_PERCEPT;
+		case ARTIFACT:		return C_ARTIFACT;
+		case COORDINATION:	return C_COORDINATION;
+		default:			return null;
+		}
+	}
+
+	/** The texts of the name of an LPO (what it drew from the element first on) get the colour of its source. */
+	static protected void ink (Model2D m, int first, String label, Color c, Map<Integer, Color> ink)
+	{
+		if (c == null)		return;
+		for (int i = first; i < m.nattr; i++)
+			if ((m.attr[i] != null) && (m.attr[i].type == Model2D.TEXT) && label.equals (m.attr[i].label))
+				ink.put (Integer.valueOf (i), c);
 	}
 
 	/** The path, relative to the robot, as the old LPS window drew it. */
@@ -484,6 +517,8 @@ public class LPSPanel extends JPanel
 				if (a.label != null)
 				{
 					double[]	c = corners.get (Integer.valueOf (i));
+					Color		k = inks.get (Integer.valueOf (i));
+					if (k != null)		g.setColor (k);
 					if (c != null)		name (g, a, ox + c[0] * s + NAME_GAP, oy - c[1] * s);
 					else				text (g, a, x1, y1);
 				}

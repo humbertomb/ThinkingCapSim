@@ -12,8 +12,8 @@ public enum LpoSource
 	MAP,
 	/** A perception: the sensors (readings, groups, scans...) or what is recognised from them (ball, nets...). */
 	PERCEPT,
-	/** An object anchored from outside the robot (the other robots of a team). */
-	ANCHOR,
+	/** What comes from the coordination with other robots (the robots of a team). */
+	COORDINATION,
 	/** Something the robot itself puts there (goal, look-ahead point, alignment...). */
 	ARTIFACT
 }
