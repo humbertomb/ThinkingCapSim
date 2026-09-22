@@ -288,16 +288,35 @@ public class LPORangeBuffer extends LPO implements Serializable
 			buffer[i].clamp (rm);
 	}
 	
+	/**
+	 * The measures kept, each darker the newer it is: the newest in a dark shade
+	 * of the colour of the buffer (FRESH of it), the oldest in the colour itself.
+	 */
 	public void draw (Model2D model, LPOView view)
 	{
 		int				i;
+		int				oldest = 0;
 		
 		if (!active)		return;
 
-		// Draw new measures
 		for (i = 0; i < size; i++)
 			if (buffer[i].active)
-				buffer[i].draw (model, view);
+				oldest	= Math.max (oldest, buffer[i].ageing);
+
+		for (i = 0; i < size; i++)
+			if (buffer[i].active)
+				buffer[i].draw (model, view, shade (buffer[i].color (), (oldest > 0) ? (double) buffer[i].ageing / oldest : 0.0));
+	}
+
+	static public final double			FRESH			= 0.25;		// How much of its colour the newest measure is drawn with
+
+	/** A colour, from a dark shade of it (age 0) to itself (age 1). */
+	static protected java.awt.Color shade (WColor c, double age)
+	{
+		double		f = FRESH + (1.0 - FRESH) * Math.max (0.0, Math.min (age, 1.0));
+
+		if (c == null)		c = WColor.LIGHT_GRAY;
+		return new java.awt.Color ((int) (c.getRed () * f), (int) (c.getGreen () * f), (int) (c.getBlue () * f));
 	}
 }
 

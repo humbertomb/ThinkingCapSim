@@ -179,7 +179,7 @@ public class SoccerVisionPanel extends JPanel
 		if (new File (name).exists () && !name.equals (cfgfile)
 			&& (JOptionPane.showConfirmDialog (this, "<" + new File (name).getName () + "> already exists. Replace it?", "Save vision configuration", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION))
 			return;
-		pam.storeRecognizer ();
+		storeRecognizer ();
 		try { pam.vconfig.saveToFilename (name); }
 		catch (Exception e)
 		{
@@ -189,6 +189,20 @@ public class SoccerVisionPanel extends JPanel
 		cfgfile		= name;
 		pam.vfile	= name;
 		showConfigFile ();
+	}
+
+	/** The configuration keeps the channels the recognizer looks in now (chosen in its tab), to be saved with it. */
+	protected void storeRecognizer ()
+	{
+		SoccerVisionConfig.RecognizerChannels	rc = new SoccerVisionConfig.RecognizerChannels ();
+
+		if (pam.recognizer == null)		return;
+		rc.carpet	= pam.recognizer.CARPET_CHANNEL;
+		rc.ball		= pam.recognizer.BALL_CHANNEL;
+		rc.net1		= pam.recognizer.NET1_CHANNEL;
+		rc.net2		= pam.recognizer.NET2_CHANNEL;
+		rc.landmark	= pam.recognizer.LM_CHANNEL;
+		pam.vconfig.recognizer	= rc;
 	}
 
 	/**

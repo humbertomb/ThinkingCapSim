@@ -78,4 +78,20 @@ public class LPORangePoint extends LPORange implements Serializable
 				
 		model.addRawBox (xx - side, yy - side, xx + side, yy + side, Model2D.FILLED, ColorTool.fromWColorToColor(color));
 	}
+
+	/** Drawn in a colour of its own (a shade of its colour, by how old it is). */
+	public void draw (Model2D model, LPOView view, java.awt.Color c)
+	{
+		double			xx, yy, aa;
+
+		if (!active)	return;
+
+		aa	= view.rotation + theta;
+		xx 	= rho * Math.cos (aa);
+		yy 	= rho * Math.sin (aa);
+
+		if ((xx < view.min.x ()) || (xx > view.max.x ()) || (yy < view.min.y ()) || (yy > view.max.y ()))		return;
+
+		model.addRawBox (xx - side, yy - side, xx + side, yy + side, Model2D.FILLED, c);
+	}
 }

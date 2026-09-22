@@ -90,20 +90,6 @@ public class SoccerVision extends Perception
 		recognizer.LM_CHANNEL		= rc.landmark;
 	}
 
-	/** The configuration keeps the channels the recognizer looks in now (chosen in its tab), to be saved with it. */
-	public void storeRecognizer ()
-	{
-		SoccerVisionConfig.RecognizerChannels	rc = new SoccerVisionConfig.RecognizerChannels ();
-
-		if (recognizer == null)		return;
-		rc.carpet	= recognizer.CARPET_CHANNEL;
-		rc.ball		= recognizer.BALL_CHANNEL;
-		rc.net1		= recognizer.NET1_CHANNEL;
-		rc.net2		= recognizer.NET2_CHANNEL;
-		rc.landmark	= recognizer.LM_CHANNEL;
-		vconfig.recognizer	= rc;
-	}
-
 	/**
 	 * A new LUT, of the method of the configuration. It is built before it takes
 	 * the place of the one in use: the frames that arrive meanwhile (from another
