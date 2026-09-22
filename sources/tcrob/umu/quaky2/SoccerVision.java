@@ -58,10 +58,6 @@ public class SoccerVision extends Perception
 	// The LPS the LPOs of the vision are in: the one of the perception module of the robot (see lps_guest)
 	protected LPS					attached;
 
-	// What is recognised, for the perception module that keeps the LPS of the robot
-	protected Tuple					otuple;
-	protected ItemObject			ostore;
-
 	// Constructors
 	public SoccerVision (ModuleConfig cfg, Linda linda)
 	{
@@ -75,9 +71,6 @@ public class SoccerVision extends Perception
 	{		
 		super.initialise (cfg);
 
-		ostore		= new ItemObject ();
-		otuple		= new Tuple (Tuple.OBJECT, ostore);
-		
 		String			name = null;
 		
 		// Load and parse a BG program
@@ -234,10 +227,6 @@ public class SoccerVision extends Perception
 			see (l, seen, net1, recognizer.net1, true, 0.0, recognizer.NET1_CHANNEL, item.device, w, h);
 			see (l, seen, net2, recognizer.net2, true, 0.0, recognizer.NET2_CHANNEL, item.device, w, h);
 		}
-
-		if (seen.isEmpty ())		return;
-		ostore.set (seen.toArray (new VisionData[0]), System.currentTimeMillis ());
-		linda.write (otuple);
 	}
 
 	/** The vision works on the LPS of the perception module of the robot (IndoorPerception), not on one of its own. */
