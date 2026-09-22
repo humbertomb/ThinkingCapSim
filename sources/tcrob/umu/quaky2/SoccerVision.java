@@ -36,7 +36,7 @@ public class SoccerVision extends Perception
 	protected Ball					ball;
 	protected Net					net1;
 	protected Net					net2;
-	protected LPOPoint				align;
+	protected Align					align;
 
 	// Vision processing
 	public SoccerVisionConfig		vconfig;
@@ -154,7 +154,7 @@ public class SoccerVision extends Perception
 		net2.anchor_fade = NET_FADING;
 		net2.color (WColor.BLUE);
 		
-		align	= new LPOPoint (0.0, 0.0, 0.0, "Align", LPOSource.ARTIFACT);
+		align	= new Align ("Align", LPOSource.ARTIFACT);
 		align.anchor_fade = NET_FADING;
 		align.color (WColor.MAGENTA);
 		
@@ -300,7 +300,8 @@ public class SoccerVision extends Perception
 			yy		= by;
 		}
 
-		align.locate (xx, yy, 0.0);
+		// heading: the way the ball has to go, from the point towards the ball (and the net beyond it)
+		align.locate (xx, yy, ((xx == bx) && (yy == by)) ? Math.atan2 (ny - by, nx - bx) : Math.atan2 (by - yy, bx - xx));
 		align.anchor (1.0);
 		align.ageing (0);
 		align.active (ball.active () && !ball.lost ());
