@@ -121,40 +121,49 @@ public class SeqPlanner extends Planner
 	
 	public void notify_plan (String space, ItemPlan item) 
 	{ 
-		int				i;
+		int				i, n;
 		Point3			pos;
 		double			theta;
-		Sequence			seq;
+		Sequence		seq;
+		Task[]			tasks;
 		
 		seq		= item.seq;
 		if ((world == null) || (seq == null))		return;
 		if (seq.size () == 0)						return;
 		
-		task_n	= seq.size () + 1;
-		task_k	= 0;
-		task		= new Task[task_n];
-		for (i = 0; i < task_n-1; i++)
+		// the new plan is built aside: a place the world does not have rejects it, and the planner goes on as it was
+		n		= seq.size () + 1;
+		tasks	= new Task[n];
+		for (i = 0; i < n-1; i++)
 		{
-			task[i]			= new Task ();
-			
 			pos				= world.getPos (seq.place[i]);
+			if (pos == null)
+			{
+				System.out.println ("--[Pla] Plan " + seq + " rejected: the world has no place <" + seq.place[i] + ">");
+				setStatus (ItemStatus.FAILED, "No place " + seq.place[i]);
+				return;
+			}
 			theta			= world.getAngle (seq.place[i]);
-			task[i].tpos.set (pos.x (), pos.y (), pos.z (), theta);
-			task[i].plan		= seq.action[i];
-			task[i].task		= "NAVIGATE";
-			task[i].place	= seq.place[i];
+			tasks[i]		= new Task ();
+			tasks[i].tpos.set (pos.x (), pos.y (), pos.z (), theta);
+			tasks[i].plan	= seq.action[i];
+			tasks[i].task	= "NAVIGATE";
+			tasks[i].place	= seq.place[i];
 		}
 		
-		task[i]			= new Task ();	
-		task[i].tpos		= task[i-1].tpos;
-		task[i].plan		= "STAY";
-		task[i].task		= "STANDBY";
-		task[i].place	= seq.place[i-1];
+		tasks[i]		= new Task ();	
+		tasks[i].tpos	= tasks[i-1].tpos;
+		tasks[i].plan	= "STAY";
+		tasks[i].task	= "STANDBY";
+		tasks[i].place	= seq.place[i-1];
 
 		if (debug)		System.out.println ("  [Pla] Received sequence " + seq);
 
+		task		= tasks;
+		task_n		= n;
+		task_k		= 0;
 		newtask		= true;
-		finished		= false;
+		finished	= false;
 	}	
 
 	public void notify_config (String space, ItemConfig item)

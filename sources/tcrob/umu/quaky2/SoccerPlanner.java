@@ -63,6 +63,7 @@ public class SoccerPlanner extends SeqPlanner
 				setStatus (ItemStatus.IDLE, "Task completed");
 
 				if (debug)		System.out.println (this);
+				if (swin != null)		swin.updatePlan (htmlPlan ());
 			}
 		}
 	}
@@ -78,7 +79,6 @@ public class SoccerPlanner extends SeqPlanner
 				
 				// Find the ball
 				subplan[0].place		= task[task_k].place;				
-				subplan[0].plan			= task[task_k].task;			// TODO esto (la clase completa) hay que apañarlo!!	
 				subplan[0].task			= "SEARCH";
 				subplan[0].tpos			= task[task_k].tpos;
 				subplan[0].tol_pos		= TOL_BALL_DIST;
@@ -148,6 +148,10 @@ public class SoccerPlanner extends SeqPlanner
 				subplan[0].path_src		= GridPath.GRID;
 			}
 			
+			// every subtask is a step of the action of the task (KICK, SCORE, STAY)
+			for (int i = 0; i < subplan_n; i++)
+				subplan[i].plan		= task[task_k].plan;
+
 			newtask		= false;
 			completed	= false;
 			subplan_k	= 0;
@@ -156,6 +160,7 @@ public class SoccerPlanner extends SeqPlanner
 			setStatus (ItemStatus.OCCUPIED, subplan[subplan_k].toString ());
 
 			if (debug)		System.out.println (this);
+			if (swin != null)		swin.updatePlan (htmlPlan ());
 		}
 		else
 		{
@@ -175,6 +180,7 @@ public class SoccerPlanner extends SeqPlanner
 				}
 
 				if (debug)		System.out.println (this);
+				if (swin != null)		swin.updatePlan (htmlPlan ());
 			}
 		}
 	}
@@ -191,6 +197,27 @@ public class SoccerPlanner extends SeqPlanner
 		return KICK;
 	}
 	
+	/** The plan: its tasks (action and place), the current one in red with its steps, the current step marked. */
+	public String htmlPlan ()
+	{
+		StringBuilder	out = new StringBuilder ("<HTML><B>SOCCER PLAN</B><BR><FONT SIZE=3>");
+
+		for (int i = 0; i < task_n; i++)
+		{
+			boolean		cur = (i == task_k) && !finished;
+
+			if (cur)		out.append ("<FONT COLOR=#FF0000>");
+			out.append ("&nbsp;&nbsp;&nbsp;&nbsp;").append (task[i].plan.toUpperCase ()).append (" (").append ((task[i].place != null) ? task[i].place : "").append (")<BR>");
+			if (cur)
+				for (int k = 0; k < subplan_n; k++)
+					out.append ("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;").append ((k == subplan_k) ? "&#9656; " : "&nbsp;&nbsp;&nbsp;")
+					   .append (subplan[k].task).append ("<BR>");
+			if (cur)		out.append ("</FONT>");
+		}
+		if (finished)		out.append ("<BR><I>Task completed</I>");
+		return out.append ("</FONT></HTML>").toString ();
+	}
+
 	public String toString ()
 	{
 		String			str;

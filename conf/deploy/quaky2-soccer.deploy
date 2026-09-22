@@ -43,7 +43,7 @@
           "properties": {
             "CLASS": "tcrob.umu.quaky2.SoccerPlanner",
             "EXTIME": "1000",
-            "GFX": "true;",
+            "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "false",
             "POLLED": "true",
