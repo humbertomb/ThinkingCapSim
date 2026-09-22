@@ -45,8 +45,8 @@ set HIGH	= trapezoid {0.7, 0.8, 1.0, 1.0};				// High
 
 // External Blackboard Variables
 sensor float		group0, group1, group2, group3, group4;
-sensor float		ballSeen, netSeen, ballAligned, ballHold, inNet;
-sensor float 		ballPhi, netPhi, lookaPhi;
+sensor float		ballSeen, netSeen, fieldSeen, ballAligned, ballHold, inNet;
+sensor float 		ballPhi, netPhi, pushPhi, lookaPhi;
 sensor float 		lballPhi, lnetPhi;
 effector float 		turn, speed;
 
@@ -208,19 +208,21 @@ agent ReactiveControl
 		}
 	}
 	
+	// pushes the ball to the net: it aims beyond the ball, along the line to the
+	// net, so that it drives through the ball instead of at it
 	behaviour goToNet priority 0.3
 	{
 		fusion		turn, speed;
 			
 		rules
 		{
-			if (netPhi is GP)		turn is TTL, speed is SNULL;
-			if (netPhi is GMP)		turn is TL, speed is SLOW;
-			if (netPhi is GSP)		turn is TSL, speed is SMEDIUM;
-			if (netPhi is GZ)		turn is TC, speed is SFULL;
-			if (netPhi is GSN)		turn is TSR, speed is SMEDIUM;
-			if (netPhi is GMN)		turn is TR, speed is SLOW;
-			if (netPhi is GN)		turn is TTR, speed is SNULL;
+			if (pushPhi is GP)		turn is TTL, speed is SNULL;
+			if (pushPhi is GMP)		turn is TL, speed is SLOW;
+			if (pushPhi is GSP)		turn is TSL, speed is SMEDIUM;
+			if (pushPhi is GZ)		turn is TC, speed is SFULL;
+			if (pushPhi is GSN)		turn is TSR, speed is SMEDIUM;
+			if (pushPhi is GMN)		turn is TR, speed is SLOW;
+			if (pushPhi is GN)		turn is TTR, speed is SNULL;
 		}
 	}
 	
@@ -251,6 +253,15 @@ agent ReactiveControl
 		speed	= 0.0;
 	}
 
+	// turns on the spot, to look at the whole field
+	behaviour lookAround
+	{
+		fusion		turn, speed;
+		
+		turn	= 60.0;
+		speed	= 0.0;
+	}
+
 	behaviour searchNet
 	{
 		fusion		turn, speed;
@@ -266,6 +277,7 @@ agent ReactiveControl
 	{
 		searchBall	= 0.0;
 		searchNet	= 0.0;
+		lookAround	= 0.0;
 		avoidR		= 0.0;
 		avoidF		= 0.0;
 		avoidL		= 0.0;
@@ -281,11 +293,13 @@ agent ReactiveControl
 				
 				searchBall	= 1.0;
 			}
+			// it turns around until it has seen the ball and both nets, so that it knows
+			// which way the field, and so the net it plays on, looks
 			state INIT_SEARCH_NET:
 			{
-				if (netSeen == TRUE)			shift ALIGN;
+				if ((netSeen == TRUE) && (fieldSeen == TRUE))		shift ALIGN;
 				
-				searchNet	= 1.0;
+				lookAround	= 1.0;
 			}
 			state ALIGN:
 			{

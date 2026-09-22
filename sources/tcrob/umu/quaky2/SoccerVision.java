@@ -227,7 +227,6 @@ public class SoccerVision extends Perception
 			see (ball, recognizer.ball, false, BALL_RADIUS, recognizer.params.ball_channel, item.device, w, h);
 			see (net1, recognizer.net1, true, 0.0, recognizer.params.net1_channel, item.device, w, h);
 			see (net2, recognizer.net2, true, 0.0, recognizer.params.net2_channel, item.device, w, h);
-			alignment ();
 		}
 	}
 
@@ -265,46 +264,6 @@ public class SoccerVision extends Perception
 		lpo.active (true);
 		lpo.anchor (1.0);
 		lpo.ageing (0);
-	}
-
-	/**
-	 * The point to align the ball with the net (Net1) from: on the line from the
-	 * net through the ball, ALG_DIST behind the ball; the ball itself when there
-	 * is no such line (the ball on the net). It is there while the ball is known.
-	 */
-	protected void alignment ()
-	{
-		double		m, n, k;
-		double		xx, yy;
-		double		bx = ball.x (), by = ball.y (), nx = net1.x (), ny = net1.y ();
-
-		m		= (ny - by) / (nx - bx);
-		if (Math.abs (m) <= 0.5)
-		{
-			n		= by - m * bx;
-			k		= (bx < nx) ? -SoccerController.ALG_DIST : SoccerController.ALG_DIST;
-			xx		= bx + k * Math.cos (Math.atan (m));
-			yy		= m * xx + n;
-		}
-		else
-		{
-			m		= (nx - bx) / (ny - by);
-			n		= bx - m * by;
-			k		= (by < ny) ? -SoccerController.ALG_DIST : SoccerController.ALG_DIST;
-			yy		= by + k * Math.cos (Math.atan (m));
-			xx		= m * yy + n;
-		}
-		if (Double.isNaN (xx) || Double.isInfinite (xx) || Double.isNaN (yy) || Double.isInfinite (yy))
-		{
-			xx		= bx;
-			yy		= by;
-		}
-
-		// heading: the way the ball has to go, from the point towards the ball (and the net beyond it)
-		align.locate (xx, yy, ((xx == bx) && (yy == by)) ? Math.atan2 (ny - by, nx - bx) : Math.atan2 (by - yy, bx - xx));
-		align.anchor (1.0);
-		align.ageing (0);
-		align.active (ball.active () && !ball.lost ());
 	}
 
 	/**
