@@ -24,7 +24,7 @@ import wucore.utils.geom.Line2;
  */
 public class SimObjects
 {
-	static private final int		MOVE_TIME	= 200;		// period of the updater (ms)
+	static private final int		MOVE_TIME	= 50;		// period of the updater (ms)
 
 	protected Simulator				simul;
 	protected Updater				updater;
@@ -91,6 +91,28 @@ public class SimObjects
 	{
 		volatile boolean			running;
 
+		// Where each robot was, and how it moves (m, m/s)
+		protected double[]			rx	= new double[Simulator.MAX_ROBOTS];
+		protected double[]			ry	= new double[Simulator.MAX_ROBOTS];
+		protected boolean[]			rknown	= new boolean[Simulator.MAX_ROBOTS];
+		protected double[]			rvx	= new double[Simulator.MAX_ROBOTS];
+		protected double[]			rvy	= new double[Simulator.MAX_ROBOTS];
+
+		/** The velocity of each robot, from where it is now and where it was dt seconds ago. */
+		protected void robots (double dt)
+		{
+			for (int r = 0; (r < simul.numrobots) && (r < rx.length); r++)
+			{
+				if (simul.MODEL[r] == null)		continue;
+				double	x = simul.MODEL[r].real_x, y = simul.MODEL[r].real_y;
+				if (rknown[r] && (dt > 0.0))		{ rvx[r] = (x - rx[r]) / dt; rvy[r] = (y - ry[r]) / dt; }
+				else								{ rvx[r] = 0.0; rvy[r] = 0.0; }
+				rx[r]		= x;
+				ry[r]		= y;
+				rknown[r]	= true;
+			}
+		}
+
 		public Updater ()
 		{
 			running	= true;
@@ -111,12 +133,14 @@ public class SimObjects
 				int				i;
 				Line2			wall;
 				double			dist;
-				int				robot;
 
 				// Compute timing
 				ct		= System.currentTimeMillis ();
 				dt		= ct - lt;
 				lt		= ct;
+
+				// how the robots move (from where they were the last time), which is what they push the objects with
+				robots (dt / 1000.0);
 
 				for (i = 0; i < numobjects; i++)
 				{
@@ -125,19 +149,18 @@ public class SimObjects
 					SimMobileObject		mobj = (SimMobileObject) OBJS[i];
 					mobj.move (dt / 1000.0);
 
-					wall		= simul.closerIcon (OBJS[i], OBJICONS[i]);
-					dist		= (wall != null) ? wall.distance (OBJS[i].odesc.pos.x (), OBJS[i].odesc.pos.y ()) : Double.MAX_VALUE;
+					// the robots: discs (of their radius) the object cannot get into
+					for (int r = 0; r < simul.numrobots; r++)
+						if ((simul.MODEL[r] != null) && (simul.RDESC[r] != null))
+							mobj.robot_collision (simul.MODEL[r].real_x, simul.MODEL[r].real_y, simul.RDESC[r].RADIUS, rvx[r], rvy[r]);
 
-					if (dist > mobj.radius)
-						simul.moveIcon (OBJICONS[i], OBJS[i].odesc.getLocalIcon (), OBJS[i].odesc.pos.x (), OBJS[i].odesc.pos.y (), OBJS[i].odesc.a);
-					else 		// Collision with a robot or a wall
-					{
-						robot	= simul.collisionIcon (wall);
-						if ((robot != -1) && (simul.MODEL[robot] != null))		// a robot (once its model is there)
-							mobj.object_pushed (wall, simul.MODEL[robot].vr);
-						else
-							mobj.wall_collision (wall);
-					}
+					// the walls (and the other objects)
+					wall		= simul.closerObstacle (OBJS[i], OBJICONS[i]);
+					dist		= (wall != null) ? wall.distance (OBJS[i].odesc.pos.x (), OBJS[i].odesc.pos.y ()) : Double.MAX_VALUE;
+					if (dist <= mobj.radius)
+						mobj.wall_collision (wall);
+
+					simul.moveIcon (OBJICONS[i], OBJS[i].odesc.getLocalIcon (), OBJS[i].odesc.pos.x (), OBJS[i].odesc.pos.y (), OBJS[i].odesc.a);
 				}
 
 				try { Thread.sleep (MOVE_TIME); } catch (Exception e) { }

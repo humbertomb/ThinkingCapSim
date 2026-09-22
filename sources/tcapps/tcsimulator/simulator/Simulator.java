@@ -238,24 +238,25 @@ public class Simulator
 		icons[index]	= moved;
 	}
 
-	public Line2 closerIcon (SimObject obj, int index)
+	/**
+	 * The edge closest to an animated object among the walls and the other
+	 * objects (not itself, whose icon is index, nor the robots: an object meets
+	 * a robot as the disc it is, see SimObjects).
+	 */
+	public Line2 closerObstacle (SimObject obj, int index)
 	{
-		return map.closer (obj.odesc.pos.x(),obj.odesc.pos.y(), icons, iconcount, index);
-	}
-	
-	public int collisionIcon (Line2 line)
-	{
-		int			i, j, k;
-		
-		for (i = 0; i < numrobots; i++)
+		Line2[][]	others = new Line2[iconcount][];
+		int			n = 0;
+
+		for (int k = 0; k < iconcount; k++)
 		{
-			k	= ROBOINDEX[i];
-			for (j = 0; j < icons[k].length; j++)
-				if (icons[k][j] == line)
-					return k;
-		}				
-				
-		return -1;
+			boolean		robot = false;
+			for (int i = 0; i < numrobots; i++)
+				if (ROBOINDEX[i] == k)		robot = true;
+			if ((k != index) && !robot && (icons[k] != null))
+				others[n++]	= icons[k];
+		}
+		return map.closer (obj.odesc.pos.x (), obj.odesc.pos.y (), others, n, -1);
 	}
 	
 	public void setVisualization (SimulatorListener win) 
