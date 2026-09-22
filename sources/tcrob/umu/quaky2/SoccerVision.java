@@ -134,14 +134,6 @@ public class SoccerVision extends Perception
 	public void step (long ctime)
 	{
 		if (state != RUN)		return;
-				
-//				
-//		lps.add_time ((double) (System.currentTimeMillis () - ctime));
-//		
-//		// Update the LPS in the Linda space
-//		tupd	 = ctime - stime;		
-//		lstore.set (lps, tupd);		
-//		linda.write (ltuple);
 	}
 	
 
@@ -309,6 +301,8 @@ public class SoccerVision extends Perception
 		}
 
 		align.locate (xx, yy, 0.0);
+		align.anchor (1.0);
+		align.ageing (0);
 		align.active (ball.active () && !ball.lost ());
 	}
 
