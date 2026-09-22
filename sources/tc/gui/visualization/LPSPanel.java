@@ -169,8 +169,7 @@ public class LPSPanel extends JPanel
 		for (int i = 0; i < lps.lpos_n (); i++)
 		{
 			LPO		o = lps.lpos ()[i];
-			// the artifacts (the path, markers...) have no anchoring to show
-			if ((o != null) && o.active () && (o.label () != null) && (o.source () != LPO.ARTIFACT))		anch.put (o.label (), o.anchor ());
+			if ((o != null) && o.active () && (o.label () != null) && anchored (o))		anch.put (o.label (), o.anchor ());
 		}
 
 		// the robot: its image, over the box of its drawing, or its drawing
@@ -278,6 +277,22 @@ public class LPSPanel extends JPanel
 			draw (g, front, s, ox, oy);
 		}
 		g.dispose ();
+	}
+
+	/**
+	 * Whether the anchoring of an LPO is shown: not for the artifacts (the path,
+	 * markers...) nor for what comes from the map, which have none; for a percept,
+	 * only while it still has some.
+	 */
+	static protected boolean anchored (LPO o)
+	{
+		switch (o.source ())
+		{
+		case LPO.ARTIFACT:
+		case LPO.MAP:		return false;
+		case LPO.PERCEPT:	return o.anchor () > 0.0;
+		default:			return true;
+		}
 	}
 
 	/** The two axes through the robot, from side to side of the panel, ruled in tenths of a metre, metres or more. */
