@@ -11,7 +11,7 @@ import tc.shared.lps.lpo.*;
 import wucore.widgets.*;
 import wucore.utils.color.*;
 
-public class Net extends LPO implements Serializable
+public class LPONet extends LPO implements Serializable
 {
 	static public final double			DEPTH		= 0.1;		// How deep it is drawn (m)
 
@@ -19,7 +19,7 @@ public class Net extends LPO implements Serializable
 	protected double					width;					// Half the width of the net (m)
 
 	// Constructor
-	public Net (double width, String label, LPOSource source)
+	public LPONet (double width, String label, LPOSource source)
 	{			
 		super (0.0, 0.0, 0.0, label, source);
 		

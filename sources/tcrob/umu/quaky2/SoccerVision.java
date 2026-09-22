@@ -33,10 +33,10 @@ public class SoccerVision extends Perception
 	static public final double		NET_FADING	= 15.0;
 
 	// Application LPOs
-	protected Ball					ball;
-	protected Net					net1;
-	protected Net					net2;
-	protected Align					align;
+	protected LPOBall					ball;
+	protected LPONet					net1;
+	protected LPONet					net2;
+	protected LPOAlign					align;
 
 	// Vision processing
 	public SoccerVisionConfig		vconfig;
@@ -142,19 +142,19 @@ public class SoccerVision extends Perception
 		super.notify_config (space, item);
 		
 		// Add domain specific LPOs to the LPS
-		ball	= new Ball (BALL_RADIUS, "Ball", LPOSource.PERCEPT);
+		ball	= new LPOBall (BALL_RADIUS, "Ball", LPOSource.PERCEPT);
 		ball.anchor_fade = BALL_FADING;
 		ball.color (WColor.YELLOW.darker());
 		
-		net1	= new Net (NET_SIZE, "Net1", LPOSource.PERCEPT);
+		net1	= new LPONet (NET_SIZE, "Net1", LPOSource.PERCEPT);
 		net1.anchor_fade = NET_FADING;
 		net1.color (WColor.RED);
 		
-		net2	= new Net (NET_SIZE, "Net2", LPOSource.PERCEPT);
+		net2	= new LPONet (NET_SIZE, "Net2", LPOSource.PERCEPT);
 		net2.anchor_fade = NET_FADING;
 		net2.color (WColor.BLUE);
 		
-		align	= new Align ("Align", LPOSource.ARTIFACT);
+		align	= new LPOAlign ("Align", LPOSource.ARTIFACT);
 		align.anchor_fade = NET_FADING;
 		align.color (WColor.MAGENTA);
 		
