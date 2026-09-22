@@ -107,6 +107,13 @@ public class SoccerController extends BGController
 //		LPORangeBuffer	rbuffer;
 		LPO				lpo;
 
+		// without a plan (nobody has said what to do) the robot stays where it is
+		if (!has_plan)
+		{
+			setMotion (0.0, 0.0);
+			return;
+		}
+
 		/* -------------------- */
 		/* READ LPS INFORMATION */
 		/* -------------------- */
@@ -297,12 +304,35 @@ double banchor;
 		gpath.setTimeStep (300);
 	}
 
+	/**
+	 * Whether the step of the plan the robot is at is done, from what it
+	 * perceives: SEARCH, when it sees the ball and the net; ALIGN, when the ball
+	 * is aligned with the net; KICK, when it is in the net (scored); STANDBY at
+	 * once (it stays still). Any other, as any controller: at its place.
+	 */
+	protected int inGoal ()
+	{
+		if (!has_plan)						return ItemBehResult.T_NOTYET;
+
+		switch ((plan.task != null) ? plan.task.toUpperCase () : "")
+		{
+		case "SEARCH":		return (ballSeen && net1Seen) ? ItemBehResult.T_FINISHED : ItemBehResult.T_NOTYET;
+		case "ALIGN":		return ballAligned ? ItemBehResult.T_FINISHED : ItemBehResult.T_NOTYET;
+		case "KICK":		return inNet ? ItemBehResult.T_FINISHED : ItemBehResult.T_NOTYET;
+		case "STANDBY":		return ItemBehResult.T_FINISHED;
+		default:			return super.inGoal ();
+		}
+	}
+
 	public void notify_goal (String space, ItemGoal goal)
 	{
+		String		step = ((goal.task != null) && (goal.task.task != null)) ? goal.task.task.toUpperCase () : "";
+
 		super.notify_goal (space, goal);
 		
-		// Reset current interpreter state
-		interp.reset ();
+		// a plan starts over (SEARCH) or ends (STANDBY): the program starts over; the steps in between go on from where it is
+		if (step.equals ("SEARCH") || step.equals ("STANDBY"))
+			interp.reset ();
 	}
 }
 
