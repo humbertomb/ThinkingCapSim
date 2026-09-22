@@ -15,7 +15,6 @@ import tclib.navigation.mapbuilding.gui.*;
 import tclib.navigation.mapbuilding.lpo.*;
 import tclib.navigation.pathplanning.*;
 
-import tcrob.umu.indoor.linda.*;
 
 import devices.pos.*;
 
@@ -42,12 +41,6 @@ public class IndoorNavigation extends Navigation
 
 	protected Tuple					ptuple;
 	protected ItemPath				pitem;
-
-	protected Tuple					gmtuple;
-	protected ItemGridMap			gmitem;
-
-	protected Tuple					fmtuple;
-	protected ItemFSegMap			fmitem;
 
 	// Additional local variables
 	protected boolean				initialised		= false;
@@ -77,12 +70,6 @@ public class IndoorNavigation extends Navigation
 	
 		pitem		= new ItemPath ();
 		ptuple		= new Tuple (Tuple.PATH, pitem);
-	
-		gmitem		= new ItemGridMap ();
-		gmtuple		= new Tuple ("GRIDMAP", gmitem);
-	
-		fmitem		= new ItemFSegMap ();
-		fmtuple		= new Tuple ("FSEGMAP", fmitem);
 	
 		// Initialise other local stuff
 		pos			= new Position ();
@@ -215,13 +202,6 @@ public class IndoorNavigation extends Navigation
 			if (debug)			System.out.println ("  [Nav] End Replanning. newpath=" + gpath.newPath ());
 		}
 
-		// Update the Linda Space
-		gmitem.set (grid, gpath, pos, System.currentTimeMillis ());
-		linda.write (gmtuple);
-
-		fmitem.set (fmap, paths, pos, System.currentTimeMillis ());
-		linda.write (fmtuple);
-		
 		
 		if (gwin != null) 	gwin.updateGrid (gpath, pos);
 		if (fwin != null) 	fwin.updateMap (paths, pos);
