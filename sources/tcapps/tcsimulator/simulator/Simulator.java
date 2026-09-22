@@ -1117,7 +1117,7 @@ public class Simulator
 			int cycson, int cycir, int cyclrf, int cyclsb, int cycvis, double dt)
 	{
 		int			i;
-		boolean		collision;
+//		boolean		collision;
 		
 		roboindex = robotind;        
 		
@@ -1135,7 +1135,8 @@ public class Simulator
 		// Check for collisions: what it overlaps puts it out of the way
 		for (i = 0; i < RDESC[robotind].MAXBUMPER; i++)
 			data.bumpers[i] = false;
-		collision = collide (robotind, data);
+//		collision = collide (robotind, data);
+		collide (robotind, data);
 		
 		// Update real coordinates
 		MODEL[robotind].update (data);

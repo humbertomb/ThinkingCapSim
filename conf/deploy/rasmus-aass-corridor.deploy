@@ -36,7 +36,7 @@
         {
           "name": "Perception",
           "properties": {
-            "CLASS": "tcrob.oru.rasmus.RasmusPerception",
+            "CLASS": "tcrob.umu.indoor.IndoorPerception",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",

@@ -113,7 +113,7 @@
         "name": "Virtual Robot",
         "properties": {
           "DESC": "./conf/robots/b21.robot",
-          "EXTIME": "175",
+          "EXTIME": "100",
           "GFX": "true",
           "MODE": "shared",
           "PASSIVE": "false"
