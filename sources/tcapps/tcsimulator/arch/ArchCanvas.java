@@ -91,6 +91,7 @@ public class ArchCanvas extends JPanel
 	static final int				PREVIEW_OVER	= 16;					// how much of the block it covers
 	static final int				TH_W		= 18,	TH_H		= 22;		// the mark of a block that runs on a thread of its own
 	static final int				TH_GAP		= 5;						// from the block it is the mark of
+	static final int				TH_TIME		= 26;						// room the cycle time written under it takes, left of it
 
 	protected ArchModel				model;
 	protected Block					selection;
@@ -384,7 +385,8 @@ public class ArchCanvas extends JPanel
 		modw		= mw;
 		// the arrows to the Linda space keep the room they had, whatever the blocks measure
 		coldx		= LINDA_W / 2 + COL_GAP + modw / 2;
-		regionhw	= Math.max (REGION_HW, Math.max (coldx + modw / 2 + REGION_PAD, rw / 2 + REGION_PAD));
+		// the mark of a thread of its own, with its cycle time, goes on the left of the leftmost blocks
+		regionhw	= Math.max (REGION_HW, Math.max (coldx + modw / 2 + REGION_PAD + TH_W + TH_GAP + TH_TIME, rw / 2 + REGION_PAD));
 	}
 
 	/** How wide a block is drawn: as wide as the two columns written under it, and never narrower than its own size. */
@@ -709,6 +711,19 @@ public class ArchCanvas extends JPanel
 		int		ax = lx + lw, ay = ly + lh / 2 - 1;
 		g.drawLine (ax, ay, ax - 4, ay - 3);
 		g.drawLine (ax, ay, ax - 5, ay + 2);
+
+		// how long its cycle is, when the deployment says so, under the mark
+		String		extime = model.get (b, "EXTIME").trim ();
+		if (extime.length () > 0)
+		{
+			String		txt = extime + " ms";
+			FontMetrics	fm;
+
+			g.setFont (getFont ().deriveFont (Font.PLAIN, 9f));
+			fm	= g.getFontMetrics ();
+			g.setColor (C_SYMBOL);
+			g.drawString (txt, x + TH_W - fm.stringWidth (txt), y + TH_H + fm.getAscent () + 1);		// to its right edge: the block is drawn over what passes it
+		}
 
 		g.setStroke (old);
 	}
