@@ -166,7 +166,8 @@ public class LPSPanel extends JPanel
 		for (int i = 0; i < lps.lpos_n (); i++)
 		{
 			LPO		o = lps.lpos ()[i];
-			if ((o != null) && o.active () && (o.label () != null))		anch.put (o.label (), o.anchor ());
+			// the artifacts (the path, markers...) have no anchoring to show
+			if ((o != null) && o.active () && (o.label () != null) && (o.source () != LPO.ARTIFACT))		anch.put (o.label (), o.anchor ());
 		}
 
 		// the robot: its image, over the box of its drawing, or its drawing
