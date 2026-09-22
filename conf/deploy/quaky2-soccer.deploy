@@ -66,7 +66,7 @@
         {
           "name": "Perception",
           "properties": {
-            "CLASS": "tcrob.umu.quaky2.SoccerPerception",
+            "CLASS": "tcrob.umu.indoor.IndoorPerception",
             "MODE": "shared",
             "PASSIVE": "true",
             "TYPE": "Perception",
@@ -82,11 +82,6 @@
               "symbol": "NAVIGATION",
               "itemClass": "tc.shared.linda.ItemNavigation",
               "method": "notify_navigation"
-            },
-            {
-              "symbol": "OBJECT",
-              "itemClass": "tc.shared.linda.ItemObject",
-              "method": "notify_object"
             }
           ]
         },
