@@ -976,76 +976,111 @@ public class Simulator
 		return rdr_measures;
 	}
 	
-	protected boolean bumper (Line2 a1)
+	/**
+	 * What the robots collide with: the walls, the icons of the visible static
+	 * objects of the world (open ones, like a net, which a robot can get into
+	 * through their mouth) and the icons of the other robots.
+	 */
+	protected java.util.List<Line2> obstacles (int robotind)
 	{
-		Line2			wall;
-		double			xx1, yy1;
-		double			xx2, yy2;
-		double          len1, len2;
-		double          rho1, rho2;
-		double			dist;
-		
-		if ((map == null) || (map.walls () == null))	return false;
-		
-		wall	= map.walls().closer (MODEL[roboindex].real_x, MODEL[roboindex].real_y, icons, iconcount, ROBOINDEX[roboindex]);
-		
-		if (wall == null)	return false;
-		
-		dist	= wall.distance (MODEL[roboindex].real_x, MODEL[roboindex].real_y);
-		if (dist > RDESC[roboindex].RADIUS) return false;
-		
-		len1    = Math.sqrt (a1.orig ().x () * a1.orig ().x () + a1.orig ().y () * a1.orig ().y ());
-		len2    = Math.sqrt (a1.dest ().x () * a1.dest ().x () + a1.dest ().y () * a1.dest ().y ());
-		rho1    = Math.atan2 (a1.orig ().y (), a1.orig ().x ());
-		rho2    = Math.atan2 (a1.dest ().y (), a1.dest ().x ());
-		
-		xx1		= MODEL[roboindex].real_x + len1 * Math.cos (MODEL[roboindex].real_a + rho1);
-		yy1		= MODEL[roboindex].real_y + len1 * Math.sin (MODEL[roboindex].real_a + rho1);
-		xx2		= MODEL[roboindex].real_x + len2 * Math.cos (MODEL[roboindex].real_a + rho2);
-		yy2		= MODEL[roboindex].real_y + len2 * Math.sin (MODEL[roboindex].real_a + rho2);
-		
-		if (wall.intersection (xx1, yy1, xx2, yy2) == null) return false;
-		
-		//*** saca al quaky. quizá no se deba hacer aquí sino en el simulate ***/
-		
-		///// COMENTAR LO SIGUIENTE PARA SEGUIR CON EL ANTERIOR MODELO DE CHOQUES /////
-		double xvect, yvect;
-		Point2 intersec;
-		Line2 l1 = new Line2(MODEL[roboindex].real_x,MODEL[roboindex].real_y,xx1,yy1);
-		Line2 l2 = new Line2(MODEL[roboindex].real_x,MODEL[roboindex].real_y,xx2,yy2);
-		
-		intersec=l1.intersection (wall);
-		if (intersec!=null)
+		java.util.List<Line2>	edges = new java.util.ArrayList<Line2> ();
+
+		if (map == null)		return edges;
+		if (map.walls () != null)
+			for (Line2 l : map.walls ().getLines ())		edges.add (l);
+		for (tc.shared.world.WMObject ob : map.objects ())
+			if (ob.visible)
+				for (Line2 l : ob.absIcon ())				edges.add (l);
+		for (int i = 0; i < numrobots; i++)
+			if ((i != robotind) && (icons[ROBOINDEX[i]] != null))
+				for (Line2 l : icons[ROBOINDEX[i]])			edges.add (l);
+		return edges;
+	}
+
+	/** The point of an edge closest to (x, y): {x, y, distance}. */
+	static protected double[] closestOn (Line2 e, double x, double y)
+	{
+		double		ex = e.dest ().x () - e.orig ().x (), ey = e.dest ().y () - e.orig ().y ();
+		double		len2 = ex * ex + ey * ey;
+		double		t = (len2 > 0.0) ? ((x - e.orig ().x ()) * ex + (y - e.orig ().y ()) * ey) / len2 : 0.0;
+		double		px, py;
+
+		t	= Math.max (0.0, Math.min (1.0, t));
+		px	= e.orig ().x () + t * ex;
+		py	= e.orig ().y () + t * ey;
+		return new double[] { px, py, Math.sqrt ((x - px) * (x - px) + (y - py) * (y - py)) };
+	}
+
+	/**
+	 * The robot against what it can hit: it is the disc of its radius, and an
+	 * edge it overlaps puts it out of the way (the deepest one first, a few
+	 * times, so that it comes out of a corner too), which is what lets it slide
+	 * along a wall instead of stopping dead against it. Its bumpers are set from
+	 * where it was touched. Returns whether it touched anything.
+	 */
+	protected boolean collide (int robotind, RobotData data)
+	{
+		double		radius = RDESC[robotind].RADIUS;
+		boolean		hit = false;
+
+		if (map == null)		return false;
+		for (int pass = 0; pass < 4; pass++)
 		{
-			xvect = xx1-intersec.x();
-			yvect = yy1-intersec.y();
+			Line2		deepest = null;
+			double[]	where = null;
+			double		into = 0.0;
+
+			for (Line2 e : obstacles (robotind))
+			{
+				double[]	c = closestOn (e, MODEL[robotind].real_x, MODEL[robotind].real_y);
+				if ((radius - c[2] > into) && (radius - c[2] > 1e-6))		{ into = radius - c[2]; deepest = e; where = c; }
+			}
+			if (deepest == null)		break;
+
+			double		nx = MODEL[robotind].real_x - where[0], ny = MODEL[robotind].real_y - where[1];
+			double		n = Math.sqrt (nx * nx + ny * ny);
+
+			if (n < 1e-9)											// dead on the edge: out the way it came from
+			{
+				nx	= -Math.cos (MODEL[robotind].real_a);
+				ny	= -Math.sin (MODEL[robotind].real_a);
+				n	= 1.0;
+			}
+			nx	/= n;		ny /= n;
+			MODEL[robotind].real_x	+= nx * (into + 0.001);
+			MODEL[robotind].real_y	+= ny * (into + 0.001);
+			MODEL[robotind].odom_x	+= nx * (into + 0.001);
+			MODEL[robotind].odom_y	+= ny * (into + 0.001);
+			bumped (robotind, data, -nx, -ny);
+			hit	= true;
 		}
-		else
+		if (hit)
 		{
-			intersec=l2.intersection(wall);
-			if (intersec!=null)
-			{
-				xvect = xx2-intersec.x();
-				yvect = yy2-intersec.y();
-			}
-			else //¿choca pero no hay intersección?
-			{
-				xvect = 0.0;
-				yvect = 0.0;
-			}
+			data.location (MODEL[robotind].odom_x, MODEL[robotind].odom_y, MODEL[robotind].odom_a);
+			MODEL[robotind].backup (data);
 		}
-		MODEL[roboindex].real_x -= xvect;
-		MODEL[roboindex].real_y -= yvect;
-		MODEL[roboindex].odom_x -= xvect;
-		MODEL[roboindex].odom_y -= yvect;
-		RobotData data = new RobotData(RDESC[roboindex]);
-		data.location(MODEL[roboindex].odom_x,MODEL[roboindex].odom_y,MODEL[roboindex].odom_a);
-		MODEL[roboindex].backup(data);
-		/////  /////
-		
-		return true;
-	}		
-	
+		return hit;
+	}
+
+	/** The bumpers the robot was touched on, from the way the touch came (dx, dy in the world). */
+	protected void bumped (int robotind, RobotData data, double dx, double dy)
+	{
+		double		phi = Angles.radnorm_180 (Math.atan2 (dy, dx) - MODEL[robotind].real_a);
+
+		for (int i = 0; i < RDESC[robotind].MAXBUMPER; i++)
+		{
+			Line2		b = RDESC[robotind].bumfeat[i];
+			double		a1, a2;
+
+			if (b == null)		continue;
+			a1	= Math.atan2 (b.orig ().y (), b.orig ().x ());
+			a2	= Math.atan2 (b.dest ().y (), b.dest ().x ());
+			if (Math.abs (Angles.radnorm_180 (phi - a1)) + Math.abs (Angles.radnorm_180 (phi - a2))
+					<= Math.abs (Angles.radnorm_180 (a2 - a1)) + 1e-6)
+				data.bumpers[i]	= true;
+		}
+	}
+
 	public void reset (int robotind, RobotData data, World map)
 	{
 		if (MODEL[robotind] != null) 
@@ -1097,17 +1132,10 @@ public class Simulator
 			data.del		= ((TricycleDrive) MODEL[robotind]).del;
 		}
 		
-		// Check for collisions
-		collision = false;   
+		// Check for collisions: what it overlaps puts it out of the way
 		for (i = 0; i < RDESC[robotind].MAXBUMPER; i++)
-		{
-			data.bumpers[i] = bumper (RDESC[robotind].bumfeat[i]); 
-			collision = collision || data.bumpers[i];
-		} 
-		
-		// If robot collided restore previous position
-		if (collision)
-			MODEL[robotind].restore (data); 
+			data.bumpers[i] = false;
+		collision = collide (robotind, data);
 		
 		// Update real coordinates
 		MODEL[robotind].update (data);
@@ -1144,7 +1172,8 @@ public class Simulator
 		
 		// Check for collisions
 		for (i = 0; i < RDESC[robotind].MAXBUMPER; i++)
-			data.bumpers[i] = bumper (RDESC[robotind].bumfeat[i]); 
+			data.bumpers[i] = false;
+		collide (robotind, data);
 		
 		// Update real coordinates
 		MODEL[robotind].update (data);
