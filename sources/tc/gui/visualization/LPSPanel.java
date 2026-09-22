@@ -165,10 +165,11 @@ public class LPSPanel extends JPanel
 		if ((path != null) && drawpath)		path (model, lps, path);
 
 		view.verbose	= false;
-		lps.draw (model, view);
 		for (int i = 0; i < lps.lpos_n (); i++)
 		{
 			LPO		o = lps.lpos ()[i];
+			if ((o == null) || ((o.source () == LPO.PERCEPT) && o.lost ()))		continue;		// a percept lost is not drawn
+			o.draw (model, view);
 			if ((o != null) && o.active () && (o.label () != null) && anchored (o))		anch.put (o.label (), o.anchor ());
 		}
 
@@ -282,7 +283,7 @@ public class LPSPanel extends JPanel
 	/**
 	 * Whether the anchoring of an LPO is shown: not for the artifacts (the path,
 	 * markers...) nor for what comes from the map, which have none; for a percept,
-	 * only while it still has some.
+	 * only while it still has some (a percept lost, at zero, is not even drawn).
 	 */
 	static protected boolean anchored (LPO o)
 	{

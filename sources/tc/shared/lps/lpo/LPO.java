@@ -36,6 +36,7 @@ public abstract class LPO extends Object implements Serializable
 	// Perception related information
 	protected double					anchor;			// Anchoring value
 	protected int					ageing;			// How old the perception is
+	protected boolean				anchored;		// Has it ever been anchored (seen)? The sensor percepts never are
 	
 	// Object features	
 	protected String					label;
@@ -113,7 +114,14 @@ public abstract class LPO extends Object implements Serializable
 	public void anchor (double anchor)
 	{
 		this.anchor	= Math.max (Math.min (anchor, 1.0), 0.0);
+		if (this.anchor > 0.0)		anchored = true;
 	}
+
+	/** Whether it has ever been anchored: it is an object the robot perceives, not a sensor reading. */
+	public boolean			anchored ()				{ return anchored; }
+
+	/** An object once anchored whose anchoring has run out: the LPS no longer knows where it is. */
+	public boolean			lost ()					{ return anchored && (anchor <= 0.0); }
 
 	public void ageing (int ageing)
 	{
