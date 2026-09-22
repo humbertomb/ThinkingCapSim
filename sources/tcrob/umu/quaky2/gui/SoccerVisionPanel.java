@@ -179,7 +179,6 @@ public class SoccerVisionPanel extends JPanel
 		if (new File (name).exists () && !name.equals (cfgfile)
 			&& (JOptionPane.showConfirmDialog (this, "<" + new File (name).getName () + "> already exists. Replace it?", "Save vision configuration", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION))
 			return;
-		storeRecognizer ();
 		try { pam.vconfig.saveToFilename (name); }
 		catch (Exception e)
 		{
@@ -191,20 +190,6 @@ public class SoccerVisionPanel extends JPanel
 		showConfigFile ();
 	}
 
-	/** The configuration keeps the channels the recognizer looks in now (chosen in its tab), to be saved with it. */
-	protected void storeRecognizer ()
-	{
-		SoccerVisionConfig.RecognizerParams	rc = new SoccerVisionConfig.RecognizerParams ();
-
-		if (pam.recognizer == null)		return;
-		rc.carpet	= pam.recognizer.CARPET_CHANNEL;
-		rc.ball		= pam.recognizer.BALL_CHANNEL;
-		rc.net1		= pam.recognizer.NET1_CHANNEL;
-		rc.net2		= pam.recognizer.NET2_CHANNEL;
-		rc.landmark	= pam.recognizer.LM_CHANNEL;
-		pam.vconfig.recognizer	= rc;
-	}
-
 	/**
 	 * The vision works with another configuration: its algorithms are made again
 	 * from it, and the panel shows it (channels, methods).
@@ -212,7 +197,7 @@ public class SoccerVisionPanel extends JPanel
 	public void setConfig (SoccerVisionConfig cfg, String file)
 	{
 		pam.vconfig	= cfg;
-		pam.applyRecognizer ();
+		if (pam.recognizer != null)		pam.recognizer.params = cfg.recognizer;		// the recognizer works with the parameters of the configuration
 		pam.instanceLUT ();
 		pam.instanceSegment ();
 		pam.instanceBlob ();

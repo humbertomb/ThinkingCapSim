@@ -7,10 +7,6 @@ package tcrob.umu.quaky2;
 
 import java.awt.*;
 import java.awt.image.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.Properties;
 
 import tclib.vision.chaos.blobs.*;
 import tclib.vision.chaos.channels.*;
@@ -34,31 +30,8 @@ public class SoccerRecognizer
 	static private int				fovea_ymin;
 	static private int				fovea_ymax;
 
-	// The segmented channels each object is looked for in (their index in the channels of the configuration)
-	public int						CARPET_CHANNEL	= 3;				// the floor, which the horizon is found from
-	public int						BALL_CHANNEL	= 0;
-	public int						NET1_CHANNEL	= 1;
-	public int						NET2_CHANNEL	= 2;
-	public int						LM_CHANNEL		= 4;				// the pink of the landmarks
-
-	public int 						BALL_SX_MIN		= 2;				// Minimum reliable size in image (pix)
-	public int 						BALL_SY_MIN		= 2;				// was 5 --AS 020618
-	public int 						BALL_HORIZ_HGT	= 20;
-	public int 						BALL_DENSITY	= 2;
-	public int 						BALL_XDISP		= -8;
-	public int						BALL_YDISP		= -18;
-	public int 						NET_SX_MIN		= 16;				// Minimum reliable size in image (pix)
-	public int 						NET_SY_MIN		= 10;
-	public int 						NET_HORIZ_HGT	= 40;
-	public int 						NET_DENSITY		= 2;
-	public int 						NET_IN_MINX		= 130;				// we are inside net if we see blobs this big
-	public int 						NET_IN_MINY		= 110;				// ...
-	public int 						NET_IN_MINA		= 120;				// all around us at this angle
-	public int 						NET_IN_MEMO		= 2000;				// during this time	
-	public int 						LM_SX_MIN		= 3;				// Minimum reliable size in image (pix)  //-- ZW
-	public int 						LM_SY_MIN		= 3;				// resolution: 10pix~=10cm, 15pix~=5cm
-	public int 						LM_HORIZ_HGT	= -20;
-	public int 						LM_DENSITY		= 10;
+	// What the objects are looked for in, and what their blobs must be like (the ones of the configuration)
+	public SoccerVisionConfig.RecognizerParams	params;
 
 	static private final Blobs		NO_BLOBS	= new Blobs ();		// the blobs of a channel that is not there
 
@@ -106,9 +79,10 @@ public class SoccerRecognizer
 
 	private BufferedImageDrawing	dwg = new BufferedImageDrawing ();
 
-	public SoccerRecognizer ()
+	/** A recognizer that works with some parameters (the ones of a configuration, changed as they change). */
+	public SoccerRecognizer (SoccerVisionConfig.RecognizerParams params)
 	{
-		
+		this.params	= params;
 	}
 
 	public BufferedImage process (BufferedImage input, int[] segmented, Blobs[] blobs, Channels channels, SoccerVisionConfig config)
@@ -128,39 +102,39 @@ public class SoccerRecognizer
 		computeFovea (output, dwg);
 		horizon = new VisualHorizon ();
 		// a channel that is not there (fewer channels than the one chosen) is not looked for
-		if (has (channels, blobs, CARPET_CHANNEL) && has (channels, blobs, BALL_CHANNEL))
-			horizon.findHorizon (output, segmented, channels.at (CARPET_CHANNEL), channels.at (BALL_CHANNEL));
+		if (has (channels, blobs, params.carpet_channel) && has (channels, blobs, params.ball_channel))
+			horizon.findHorizon (output, segmented, channels.at (params.carpet_channel), channels.at (params.ball_channel));
 
-		if (has (channels, blobs, BALL_CHANNEL))
+		if (has (channels, blobs, params.ball_channel))
 		{
 			CircleFitting	ellipse = new CircleFitting ();
 
-			for (int i = 0; i < blobs[BALL_CHANNEL].getBlobNumber (); i++)
+			for (int i = 0; i < blobs[params.ball_channel].getBlobNumber (); i++)
 			{
-				Blob		blob = blobs[BALL_CHANNEL].getBlob (i);
+				Blob		blob = blobs[params.ball_channel].getBlob (i);
 				if (testValidBall (blob, config, horizon, dwg))
 				{
-					ellipse.doFitting (output, segmented, blob, channels.at (BALL_CHANNEL));
+					ellipse.doFitting (output, segmented, blob, channels.at (params.ball_channel));
 					if ((ball == null) || (blob.getNumPixels () > ball.pixels))		ball = new Detection (blob, ellipse);
 				}
 			}
 		}
 		
-		pinks	= has (channels, blobs, LM_CHANNEL) ? blobs[LM_CHANNEL] : NO_BLOBS;
-		for (int n : new int[] { NET1_CHANNEL, NET2_CHANNEL })
+		pinks	= has (channels, blobs, params.lm_channel) ? blobs[params.lm_channel] : NO_BLOBS;
+		for (int n : new int[] { params.net1_channel, params.net2_channel })
 		{
 			NetFitting	net = new NetFitting ();
 			int			color;
 
-			if (!has (channels, blobs, n) || !has (channels, blobs, CARPET_CHANNEL))		continue;
+			if (!has (channels, blobs, n) || !has (channels, blobs, params.carpet_channel))		continue;
 			color	= channels.at (n).color.getRGB ();					// the box of a net in the colour of its channel
 			for (int i = 0; i < blobs[n].getBlobNumber (); i++)
 			{
 				Blob		blob = blobs[n].getBlob (i);
 				if (!testPinkOverlap (blob, pinks) && testValidNet (blob, config, horizon, dwg, color))
 				{
-					net.doFitting (output, segmented, blobs[n], channels.at (n), channels.at (CARPET_CHANNEL));
-					if (n == NET1_CHANNEL)
+					net.doFitting (output, segmented, blobs[n], channels.at (n), channels.at (params.carpet_channel));
+					if (n == params.net1_channel)
 					{
 						if ((net1 == null) || (blob.getNumPixels () > net1.pixels))		net1 = new Detection (blob);
 					}
@@ -188,11 +162,11 @@ public class SoccerRecognizer
 		
 	protected boolean testValidBall (Blob blob, SoccerVisionConfig config, VisualHorizon horizon, BufferedImageDrawing dwg)
 	{
-		if ((blob.getSizeX() < BALL_SX_MIN) || (blob.getSizeY() < BALL_SY_MIN))
+		if ((blob.getSizeX() < params.ball_sx_min) || (blob.getSizeY() < params.ball_sy_min))
 			return false;
-		if (	blob.getArea () / blob.getNumPixels () > BALL_DENSITY)
+		if (	blob.getArea () / blob.getNumPixels () > params.ball_density)
 			return false;
-		if (!horizon.isBelowHorizont (blob, BALL_HORIZ_HGT))
+		if (!horizon.isBelowHorizont (blob, params.ball_horiz_hgt))
 			return false;
 //		if (!checkFovea (blob))
 //			return false;
@@ -203,11 +177,11 @@ public class SoccerRecognizer
 	
 	protected boolean testValidNet (Blob blob, SoccerVisionConfig config, VisualHorizon horizon, BufferedImageDrawing dwg, int color)
 	{
-		if ((blob.getSizeX() < NET_SX_MIN) || (blob.getSizeY() < NET_SY_MIN))
+		if ((blob.getSizeX() < params.net_sx_min) || (blob.getSizeY() < params.net_sy_min))
 			return false;
-		if (	blob.getArea () / blob.getNumPixels () > NET_DENSITY)
+		if (	blob.getArea () / blob.getNumPixels () > params.net_density)
 			return false;
-		if (!horizon.isAboveHorizont (blob, NET_HORIZ_HGT))
+		if (!horizon.isAboveHorizont (blob, params.net_horiz_hgt))
 			return false;
 //		if (!checkFovea (blob))
 //			return false;
@@ -220,11 +194,11 @@ public class SoccerRecognizer
 	{
 		Blob			lmark;
 		
-		if ((blob.getSizeX() < LM_SX_MIN) || (blob.getSizeY() < LM_SY_MIN))
+		if ((blob.getSizeX() < params.lm_sx_min) || (blob.getSizeY() < params.lm_sy_min))
 			return false;
-		if (	blob.getArea () / blob.getNumPixels () > LM_DENSITY)
+		if (	blob.getArea () / blob.getNumPixels () > params.lm_density)
 			return false;
-		if (!horizon.isAboveHorizont (blob, LM_HORIZ_HGT))
+		if (!horizon.isAboveHorizont (blob, params.lm_horiz_hgt))
 			return false;
 	
 		for (int i = 0; i < pinks.getBlobNumber(); ++i)
@@ -277,13 +251,13 @@ public class SoccerRecognizer
 	protected Blob checkBlobPair (Blob blob_color, Blob blob_pink, SoccerVisionConfig config)
 	{
 		// If blob is TOO SMALL for this object, reject it
-		if (((blob_pink.getSizeX()) < LM_SX_MIN) || ((blob_pink.getSizeY()) < LM_SY_MIN ))
+		if (((blob_pink.getSizeX()) < params.lm_sx_min) || ((blob_pink.getSizeY()) < params.lm_sy_min ))
 		{
 			return null;
 		}
 		
 		// If density is too small for this object, reject it
-		if (blob_pink.getArea () / blob_pink.getNumPixels () > LM_DENSITY)
+		if (blob_pink.getArea () / blob_pink.getNumPixels () > params.lm_density)
 		{
 			return null;
 		}
@@ -423,86 +397,5 @@ public class SoccerRecognizer
 	{
 	 	return (blob.getX() >= fovea_xmin) && (blob.getX() <= fovea_xmax) && (blob.getY() >= fovea_ymin) && (blob.getY() <= fovea_ymax);
 	}
-	
-	public void fromFile (String name)
-	{
-		try
-		{
-			FileInputStream fd = new FileInputStream (name);
-			Properties p = new Properties();
-			
-			p.load(fd);
-						
-			CARPET_CHANNEL	= Integer.valueOf (p.getProperty ("CARPET_CHANNEL", Integer.toString (CARPET_CHANNEL))).intValue ();
-			BALL_CHANNEL	= Integer.valueOf (p.getProperty ("BALL_CHANNEL", Integer.toString (BALL_CHANNEL))).intValue ();
-			NET1_CHANNEL	= Integer.valueOf (p.getProperty ("NET1_CHANNEL", Integer.toString (NET1_CHANNEL))).intValue ();
-			NET2_CHANNEL	= Integer.valueOf (p.getProperty ("NET2_CHANNEL", Integer.toString (NET2_CHANNEL))).intValue ();
-			LM_CHANNEL		= Integer.valueOf (p.getProperty ("LM_CHANNEL", Integer.toString (LM_CHANNEL))).intValue ();
 
-			BALL_SX_MIN		= Integer.valueOf (p.getProperty ("BALL_SX_MIN", Integer.toString (BALL_SX_MIN))).intValue ();
-			BALL_SY_MIN		= Integer.valueOf (p.getProperty ("BALL_SY_MIN", Integer.toString (BALL_SY_MIN))).intValue ();
-			BALL_HORIZ_HGT	= Integer.valueOf (p.getProperty ("BALL_HORIZ_HGT", Integer.toString (BALL_HORIZ_HGT))).intValue ();
-			BALL_DENSITY	= Integer.valueOf (p.getProperty ("BALL_DENSITY", Integer.toString (BALL_DENSITY))).intValue ();
-			BALL_XDISP		= Integer.valueOf (p.getProperty ("BALL_XDISP", Integer.toString (BALL_XDISP))).intValue ();
-			BALL_YDISP		= Integer.valueOf (p.getProperty ("BALL_YDISP", Integer.toString (BALL_YDISP))).intValue ();
-
-			NET_SX_MIN		= Integer.valueOf (p.getProperty ("NET_SX_MIN", Integer.toString (NET_SX_MIN))).intValue ();
-			NET_SY_MIN		= Integer.valueOf (p.getProperty ("NET_SY_MIN", Integer.toString (NET_SY_MIN))).intValue ();
-			NET_HORIZ_HGT	= Integer.valueOf (p.getProperty ("NET_HORIZ_HGT", Integer.toString (NET_HORIZ_HGT))).intValue ();
-			NET_DENSITY		= Integer.valueOf (p.getProperty ("NET_DENSITY", Integer.toString (NET_DENSITY))).intValue ();
-			NET_IN_MINX		= Integer.valueOf (p.getProperty ("NET_IN_MINX", Integer.toString (NET_IN_MINX))).intValue ();
-			NET_IN_MINY		= Integer.valueOf (p.getProperty ("NET_IN_MINY", Integer.toString (NET_IN_MINY))).intValue ();
-			NET_IN_MINA		= Integer.valueOf (p.getProperty ("NET_IN_MINA", Integer.toString (NET_IN_MINA))).intValue ();
-			NET_IN_MEMO		= Integer.valueOf (p.getProperty ("NET_IN_MEMO", Integer.toString (NET_IN_MEMO))).intValue ();
-
-			LM_SX_MIN		= Integer.valueOf (p.getProperty ("LM_SX_MIN", Integer.toString (LM_SX_MIN))).intValue ();
-			LM_SY_MIN		= Integer.valueOf (p.getProperty ("LM_SY_MIN", Integer.toString (LM_SY_MIN))).intValue ();
-			LM_HORIZ_HGT	= Integer.valueOf (p.getProperty ("LM_HORIZ_HGT", Integer.toString (LM_HORIZ_HGT))).intValue ();
-			LM_DENSITY		= Integer.valueOf (p.getProperty ("LM_DENSITY", Integer.toString (LM_DENSITY))).intValue ();
-
-			fd.close();
-		}
-		catch (Exception e) { e.printStackTrace (); }
-	}
-	
-	public void toFile (String name)
-	{
-		try
-		{
-			FileOutputStream fd = new FileOutputStream(new File (name), true);
-			
-			String aux = "CARPET_CHANNEL = " + CARPET_CHANNEL + "\n";
-			aux = aux + "BALL_CHANNEL = " + BALL_CHANNEL + "\n";
-			aux = aux + "NET1_CHANNEL = " + NET1_CHANNEL + "\n";
-			aux = aux + "NET2_CHANNEL = " + NET2_CHANNEL + "\n";
-			aux = aux + "LM_CHANNEL = " + LM_CHANNEL + "\n";
-
-			aux = aux + "BALL_SX_MIN = " + Integer.valueOf (BALL_SX_MIN).toString () + "\n";
-			aux = aux + "BALL_SY_MIN = " + Integer.valueOf (BALL_SY_MIN).toString () + "\n";
-			aux = aux + "BALL_HORIZ_HGT = " +Integer.valueOf (BALL_HORIZ_HGT).toString () + "\n";
-			aux = aux + "BALL_DENSITY = " + Integer.valueOf (BALL_DENSITY).toString () + "\n";
-			aux = aux + "BALL_XDISP = " + Integer.valueOf (BALL_XDISP).toString () + "\n";
-			aux = aux + "BALL_YDISP = " + Integer.valueOf (BALL_YDISP).toString () + "\n";
-
-			aux = aux + "NET_SX_MIN = " + Integer.valueOf (NET_SX_MIN).toString () + "\n";
-			aux = aux + "NET_SY_MIN = " + Integer.valueOf (NET_SY_MIN).toString () + "\n";
-			aux = aux + "NET_HORIZ_HGT = " + Integer.valueOf (NET_HORIZ_HGT).toString () + "\n";
-			aux = aux + "NET_DENSITY = " + Integer.valueOf (NET_DENSITY).toString () + "\n";
-			aux = aux + "NET_IN_MINX = " + Integer.valueOf (NET_IN_MINX).toString () + "\n";
-			aux = aux + "NET_IN_MINY = " + Integer.valueOf (NET_IN_MINY).toString () + "\n";
-			aux = aux + "NET_IN_MINA = " + Integer.valueOf (NET_IN_MINA).toString () + "\n";
-			aux = aux + "NET_IN_MEMO = " + Integer.valueOf (NET_IN_MEMO).toString () + "\n";
-
-			aux = aux + "LM_SX_MIN = " + Integer.valueOf (LM_SX_MIN).toString () + "\n";
-			aux = aux + "LM_SY_MIN = " + Integer.valueOf (LM_SY_MIN).toString () + "\n";
-			aux = aux + "LM_HORIZ_HGT = " + Integer.valueOf (LM_HORIZ_HGT).toString () + "\n";
-			aux = aux + "LM_DENSITY = " + Integer.valueOf (LM_DENSITY).toString () + "\n";
-
-			aux = aux + "\n";
-						
-			fd.write (aux.getBytes());
-			fd.close ();
-		}
-		catch (Exception e) { e.printStackTrace (); }
-	}
 }

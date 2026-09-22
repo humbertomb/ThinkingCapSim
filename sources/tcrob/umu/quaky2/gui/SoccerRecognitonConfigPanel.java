@@ -52,30 +52,30 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		this.recognizer = recognizer;
 		this.channels	= channels;
 
-		carpetch	= new ChannelSelector (recognizer.CARPET_CHANNEL, ch -> recognizer.CARPET_CHANNEL = ch);
-		ballch		= new ChannelSelector (recognizer.BALL_CHANNEL, ch -> recognizer.BALL_CHANNEL = ch);
-		net1ch		= new ChannelSelector (recognizer.NET1_CHANNEL, ch -> recognizer.NET1_CHANNEL = ch);
-		net2ch		= new ChannelSelector (recognizer.NET2_CHANNEL, ch -> recognizer.NET2_CHANNEL = ch);
-		lmch		= new ChannelSelector (recognizer.LM_CHANNEL, ch -> recognizer.LM_CHANNEL = ch);
+		carpetch	= new ChannelSelector (recognizer.params.carpet_channel, ch -> recognizer.params.carpet_channel = ch);
+		ballch		= new ChannelSelector (recognizer.params.ball_channel, ch -> recognizer.params.ball_channel = ch);
+		net1ch		= new ChannelSelector (recognizer.params.net1_channel, ch -> recognizer.params.net1_channel = ch);
+		net2ch		= new ChannelSelector (recognizer.params.net2_channel, ch -> recognizer.params.net2_channel = ch);
+		lmch		= new ChannelSelector (recognizer.params.lm_channel, ch -> recognizer.params.lm_channel = ch);
 		
-		ballsxmin 	= new JTextField (Integer.valueOf (recognizer.BALL_SX_MIN).toString ());
-		ballsymin 	= new JTextField (Integer.valueOf (recognizer.BALL_SY_MIN).toString ());
-		ballhorihgt	= new JTextField (Integer.valueOf (recognizer.BALL_HORIZ_HGT).toString ());
-		balldensity	= new JTextField (Integer.valueOf (recognizer.BALL_DENSITY).toString ());
-		ballxdisp 	= new JTextField (Integer.valueOf (recognizer.BALL_XDISP).toString ());
-		ballydisp 	= new JTextField (Integer.valueOf (recognizer.BALL_YDISP).toString ());
-		netsxmin 	= new JTextField (Integer.valueOf (recognizer.NET_SX_MIN).toString ());
-		netsymin 	= new JTextField (Integer.valueOf (recognizer.NET_SY_MIN).toString ());
-		nethorihgt	= new JTextField (Integer.valueOf (recognizer.NET_HORIZ_HGT).toString ());
-		netdensity	= new JTextField (Integer.valueOf (recognizer.NET_DENSITY).toString ());
-		netinminx 	= new JTextField (Integer.valueOf (recognizer.NET_IN_MINX).toString ());
-		netinminy 	= new JTextField (Integer.valueOf (recognizer.NET_IN_MINY).toString ());
-		netinmina	= new JTextField (Integer.valueOf (recognizer.NET_IN_MINA).toString ());
-		netinmemo	= new JTextField (Integer.valueOf (recognizer.NET_IN_MEMO).toString ());
-		lmsxmin 		= new JTextField (Integer.valueOf (recognizer.LM_SX_MIN).toString ());
-		lmsymin 		= new JTextField (Integer.valueOf (recognizer.LM_SY_MIN).toString ());
-		lmhorihgt	= new JTextField (Integer.valueOf (recognizer.LM_HORIZ_HGT).toString ());
-		lmdensity	= new JTextField (Integer.valueOf (recognizer.LM_DENSITY).toString ());
+		ballsxmin 	= new JTextField (Integer.valueOf (recognizer.params.ball_sx_min).toString ());
+		ballsymin 	= new JTextField (Integer.valueOf (recognizer.params.ball_sy_min).toString ());
+		ballhorihgt	= new JTextField (Integer.valueOf (recognizer.params.ball_horiz_hgt).toString ());
+		balldensity	= new JTextField (Integer.valueOf (recognizer.params.ball_density).toString ());
+		ballxdisp 	= new JTextField (Integer.valueOf (recognizer.params.ball_xdisp).toString ());
+		ballydisp 	= new JTextField (Integer.valueOf (recognizer.params.ball_ydisp).toString ());
+		netsxmin 	= new JTextField (Integer.valueOf (recognizer.params.net_sx_min).toString ());
+		netsymin 	= new JTextField (Integer.valueOf (recognizer.params.net_sy_min).toString ());
+		nethorihgt	= new JTextField (Integer.valueOf (recognizer.params.net_horiz_hgt).toString ());
+		netdensity	= new JTextField (Integer.valueOf (recognizer.params.net_density).toString ());
+		netinminx 	= new JTextField (Integer.valueOf (recognizer.params.net_in_minx).toString ());
+		netinminy 	= new JTextField (Integer.valueOf (recognizer.params.net_in_miny).toString ());
+		netinmina	= new JTextField (Integer.valueOf (recognizer.params.net_in_mina).toString ());
+		netinmemo	= new JTextField (Integer.valueOf (recognizer.params.net_in_memo).toString ());
+		lmsxmin 		= new JTextField (Integer.valueOf (recognizer.params.lm_sx_min).toString ());
+		lmsymin 		= new JTextField (Integer.valueOf (recognizer.params.lm_sy_min).toString ());
+		lmhorihgt	= new JTextField (Integer.valueOf (recognizer.params.lm_horiz_hgt).toString ());
+		lmdensity	= new JTextField (Integer.valueOf (recognizer.params.lm_density).toString ());
 		
 		view = new JPanel ();
 		view.setLayout (new BoxLayout (view, BoxLayout.Y_AXIS));
@@ -100,15 +100,19 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		setVisible(true);
 	}
 
-	/** The channels to choose from changed (a configuration was made or loaded), and the ones chosen with them. */
+	/**
+	 * The channels to choose from changed (a configuration was made or loaded),
+	 * and with them the parameters of the recognizer: the panel shows them.
+	 */
 	public void setChannels (Channels channels)
 	{
 		this.channels	= channels;
-		carpetch.current	= recognizer.CARPET_CHANNEL;
-		ballch.current		= recognizer.BALL_CHANNEL;
-		net1ch.current		= recognizer.NET1_CHANNEL;
-		net2ch.current		= recognizer.NET2_CHANNEL;
-		lmch.current		= recognizer.LM_CHANNEL;
+		showValues ();
+		carpetch.current	= recognizer.params.carpet_channel;
+		ballch.current		= recognizer.params.ball_channel;
+		net1ch.current		= recognizer.params.net1_channel;
+		net2ch.current		= recognizer.params.net2_channel;
+		lmch.current		= recognizer.params.lm_channel;
 		for (ChannelSelector s : new ChannelSelector[] { carpetch, ballch, net1ch, net2ch, lmch })
 			s.refresh ();
 	}
@@ -187,6 +191,29 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		};
 	}
 	
+	/** The fields show the parameters the recognizer has. */
+	protected void showValues ()
+	{
+		ballsxmin.setText (Integer.toString (recognizer.params.ball_sx_min));
+		ballsymin.setText (Integer.toString (recognizer.params.ball_sy_min));
+		ballhorihgt.setText (Integer.toString (recognizer.params.ball_horiz_hgt));
+		balldensity.setText (Integer.toString (recognizer.params.ball_density));
+		ballxdisp.setText (Integer.toString (recognizer.params.ball_xdisp));
+		ballydisp.setText (Integer.toString (recognizer.params.ball_ydisp));
+		netsxmin.setText (Integer.toString (recognizer.params.net_sx_min));
+		netsymin.setText (Integer.toString (recognizer.params.net_sy_min));
+		nethorihgt.setText (Integer.toString (recognizer.params.net_horiz_hgt));
+		netdensity.setText (Integer.toString (recognizer.params.net_density));
+		netinminx.setText (Integer.toString (recognizer.params.net_in_minx));
+		netinminy.setText (Integer.toString (recognizer.params.net_in_miny));
+		netinmina.setText (Integer.toString (recognizer.params.net_in_mina));
+		netinmemo.setText (Integer.toString (recognizer.params.net_in_memo));
+		lmsxmin.setText (Integer.toString (recognizer.params.lm_sx_min));
+		lmsymin.setText (Integer.toString (recognizer.params.lm_sy_min));
+		lmhorihgt.setText (Integer.toString (recognizer.params.lm_horiz_hgt));
+		lmdensity.setText (Integer.toString (recognizer.params.lm_density));
+	}
+
 	protected void updateValues ()
 	{
 		try { values (); }
@@ -195,26 +222,26 @@ public class SoccerRecognitonConfigPanel extends JPanel
 
 	protected void values ()
 	{
-		recognizer.BALL_SX_MIN 		= Integer.valueOf (ballsxmin.getText ().trim ()).intValue ();
-		recognizer.BALL_SY_MIN 		= Integer.valueOf (ballsymin.getText ()).intValue ();
-		recognizer.BALL_HORIZ_HGT	= Integer.valueOf (ballhorihgt.getText ()).intValue ();
-		recognizer.BALL_DENSITY 	= Integer.valueOf (balldensity.getText ()).intValue ();
-		recognizer.BALL_XDISP 		= Integer.valueOf (ballxdisp.getText ()).intValue ();
-		recognizer.BALL_YDISP 		= Integer.valueOf (ballydisp.getText ()).intValue ();
+		recognizer.params.ball_sx_min 		= Integer.valueOf (ballsxmin.getText ().trim ()).intValue ();
+		recognizer.params.ball_sy_min 		= Integer.valueOf (ballsymin.getText ()).intValue ();
+		recognizer.params.ball_horiz_hgt	= Integer.valueOf (ballhorihgt.getText ()).intValue ();
+		recognizer.params.ball_density 	= Integer.valueOf (balldensity.getText ()).intValue ();
+		recognizer.params.ball_xdisp 		= Integer.valueOf (ballxdisp.getText ()).intValue ();
+		recognizer.params.ball_ydisp 		= Integer.valueOf (ballydisp.getText ()).intValue ();
 
-		recognizer.NET_SX_MIN 		= Integer.valueOf (netsxmin.getText ()).intValue ();
-		recognizer.NET_SY_MIN 		= Integer.valueOf (netsymin.getText ()).intValue ();
-		recognizer.NET_HORIZ_HGT	= Integer.valueOf (nethorihgt.getText ()).intValue ();
-		recognizer.NET_DENSITY 		= Integer.valueOf (netdensity.getText ()).intValue ();
-		recognizer.NET_IN_MINX 		= Integer.valueOf (netinminx.getText ()).intValue ();
-		recognizer.NET_IN_MINY 		= Integer.valueOf (netinminy.getText ()).intValue ();
-		recognizer.NET_IN_MINA 		= Integer.valueOf (netinmina.getText ()).intValue ();
-		recognizer.NET_IN_MEMO 		= Integer.valueOf (netinmemo.getText ()).intValue ();
+		recognizer.params.net_sx_min 		= Integer.valueOf (netsxmin.getText ()).intValue ();
+		recognizer.params.net_sy_min 		= Integer.valueOf (netsymin.getText ()).intValue ();
+		recognizer.params.net_horiz_hgt	= Integer.valueOf (nethorihgt.getText ()).intValue ();
+		recognizer.params.net_density 		= Integer.valueOf (netdensity.getText ()).intValue ();
+		recognizer.params.net_in_minx 		= Integer.valueOf (netinminx.getText ()).intValue ();
+		recognizer.params.net_in_miny 		= Integer.valueOf (netinminy.getText ()).intValue ();
+		recognizer.params.net_in_mina 		= Integer.valueOf (netinmina.getText ()).intValue ();
+		recognizer.params.net_in_memo 		= Integer.valueOf (netinmemo.getText ()).intValue ();
 
-		recognizer.LM_SX_MIN	 	= Integer.valueOf (lmsxmin.getText ()).intValue ();
-		recognizer.LM_SY_MIN 		= Integer.valueOf (lmsymin.getText ()).intValue ();
-		recognizer.LM_HORIZ_HGT		= Integer.valueOf (lmhorihgt.getText ()).intValue ();
-		recognizer.LM_DENSITY 		= Integer.valueOf (lmdensity.getText ()).intValue ();
+		recognizer.params.lm_sx_min	 	= Integer.valueOf (lmsxmin.getText ()).intValue ();
+		recognizer.params.lm_sy_min 		= Integer.valueOf (lmsymin.getText ()).intValue ();
+		recognizer.params.lm_horiz_hgt		= Integer.valueOf (lmhorihgt.getText ()).intValue ();
+		recognizer.params.lm_density 		= Integer.valueOf (lmdensity.getText ()).intValue ();
 	}
 						
 	/** The floor: the channel the horizon is found from (and the nets are fitted against). */

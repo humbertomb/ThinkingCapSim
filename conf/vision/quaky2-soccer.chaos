@@ -119,10 +119,28 @@
   "segmode": 0,
   "blobmode": 0,
   "recognizer": {
-    "carpet": 4,
-    "ball": 6,
-    "net1": 2,
-    "net2": 3,
-    "landmark": -1
+    "carpet_channel": 4,
+    "ball_channel": 6,
+    "net1_channel": 2,
+    "net2_channel": 3,
+    "lm_channel": -1,
+    "ball_sx_min": 2,
+    "ball_sy_min": 2,
+    "ball_horiz_hgt": 20,
+    "ball_density": 2,
+    "ball_xdisp": -8,
+    "ball_ydisp": -18,
+    "net_sx_min": 16,
+    "net_sy_min": 10,
+    "net_horiz_hgt": 40,
+    "net_density": 2,
+    "net_in_minx": 130,
+    "net_in_miny": 110,
+    "net_in_mina": 120,
+    "net_in_memo": 2000,
+    "lm_sx_min": 3,
+    "lm_sy_min": 3,
+    "lm_horiz_hgt": -20,
+    "lm_density": 10
   }
 }

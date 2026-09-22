@@ -77,19 +77,6 @@ public class SoccerVision extends Perception
 			try { vconfig.loadFromFilename(name); vfile = name; }	catch (Exception e) { e.printStackTrace(); }
 	}
 	
-	/** The recognizer looks for each thing in the channel the configuration says. */
-	public void applyRecognizer ()
-	{
-		SoccerVisionConfig.RecognizerParams	rc = vconfig.recognizer;
-
-		if ((recognizer == null) || (rc == null))		return;
-		recognizer.CARPET_CHANNEL	= rc.carpet;
-		recognizer.BALL_CHANNEL		= rc.ball;
-		recognizer.NET1_CHANNEL		= rc.net1;
-		recognizer.NET2_CHANNEL		= rc.net2;
-		recognizer.LM_CHANNEL		= rc.landmark;
-	}
-
 	/**
 	 * A new LUT, of the method of the configuration. It is built before it takes
 	 * the place of the one in use: the frames that arrive meanwhile (from another
@@ -182,8 +169,7 @@ public class SoccerVision extends Perception
 		attached	= null;								// they go into the LPS of the robot when there is something to put there
 		
 		// Instance vision processing algorithms
-		recognizer	= new SoccerRecognizer ();
-		applyRecognizer ();
+		recognizer	= new SoccerRecognizer (vconfig.recognizer);
 
 		instanceLUT ();
 		instanceSegment ();
@@ -246,9 +232,9 @@ public class SoccerVision extends Perception
 		{
 			attach (l);
 			if (l == lps)		l.update_anchors ();			// a shared LPS is aged by its owner
-			see (ball, recognizer.ball, false, BALL_RADIUS, recognizer.BALL_CHANNEL, item.device, w, h);
-			see (net1, recognizer.net1, true, 0.0, recognizer.NET1_CHANNEL, item.device, w, h);
-			see (net2, recognizer.net2, true, 0.0, recognizer.NET2_CHANNEL, item.device, w, h);
+			see (ball, recognizer.ball, false, BALL_RADIUS, recognizer.params.ball_channel, item.device, w, h);
+			see (net1, recognizer.net1, true, 0.0, recognizer.params.net1_channel, item.device, w, h);
+			see (net2, recognizer.net2, true, 0.0, recognizer.params.net2_channel, item.device, w, h);
 			alignment ();
 		}
 	}

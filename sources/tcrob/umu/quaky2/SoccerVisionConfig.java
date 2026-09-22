@@ -34,16 +34,36 @@ public class SoccerVisionConfig
 	public RecognizerParams				recognizer		= new RecognizerParams ();
 
 	/**
-	 * The channels the recognizer looks for each thing in (their index; -1:
-	 * none). A file without them leaves the ones the recognizer has by default.
+	 * The parameters of the recognizer: the channel each thing is looked for in
+	 * (its index; -1: none) and what a blob must be like to be taken for it. A
+	 * file without some of them leaves those at the values here.
 	 */
 	static public class RecognizerParams
 	{
-		public int						carpet			= 3;	// the floor, which the horizon is found from
-		public int						ball			= 0;
-		public int						net1			= 1;
-		public int						net2			= 2;
-		public int						landmark		= 4;
+		public int						carpet_channel	= 3;				// the floor, which the horizon is found from
+		public int						ball_channel	= 0;
+		public int						net1_channel	= 1;
+		public int						net2_channel	= 2;
+		public int						lm_channel		= 4;				// the pink of the landmarks
+
+		public int 						ball_sx_min		= 2;				// Minimum reliable size in image (pix)
+		public int 						ball_sy_min		= 2;				// was 5 --AS 020618
+		public int 						ball_horiz_hgt	= 20;
+		public int 						ball_density	= 2;
+		public int 						ball_xdisp		= -8;
+		public int						ball_ydisp		= -18;
+		public int 						net_sx_min		= 16;				// Minimum reliable size in image (pix)
+		public int 						net_sy_min		= 10;
+		public int 						net_horiz_hgt	= 40;
+		public int 						net_density		= 2;
+		public int 						net_in_minx		= 130;				// we are inside net if we see blobs this big
+		public int 						net_in_miny		= 110;				// ...
+		public int 						net_in_mina		= 120;				// all around us at this angle
+		public int 						net_in_memo		= 2000;				// during this time
+		public int 						lm_sx_min		= 3;				// Minimum reliable size in image (pix)  //-- ZW
+		public int 						lm_sy_min		= 3;				// resolution: 10pix~=10cm, 15pix~=5cm
+		public int 						lm_horiz_hgt	= -20;
+		public int 						lm_density		= 10;
 	}
 	
 	public SoccerVisionConfig ()
