@@ -24,7 +24,7 @@ import tc.shared.lps.lpo.LPORangePoint;
 import tc.vrobot.RobotDataCtrl;
 import tc.vrobot.models.TricycleDrive;
 import tclib.tracking.*;
-import tc.shared.lps.gui.IndoorLPSWindow;
+import tc.shared.lps.gui.LPSWindow;
 import tcrob.ingenia.ifork.linda.ItemIForkMotion;
 import tcrob.ingenia.ifork.lpo.LPOIForkData;
 import devices.pos.*;
@@ -73,7 +73,7 @@ public class IForkController extends Controller
 	protected LogFile					c_dump;
 	protected double[]					c_buffer;
 	protected String[]					c_labels;
-	protected IndoorLPSWindow			win;
+	protected LPSWindow			win;
 	
 	// Goal representation and completion detection
 	protected boolean					inZone0;
@@ -1206,7 +1206,7 @@ public class IForkController extends Controller
 		fdebug = false;
 		
 		if (localgfx)
-			win		= new IndoorLPSWindow (robotid);
+			win		= new LPSWindow (robotid);
 	}
 
 	public void notify_execution (String space, ItemExecution item)

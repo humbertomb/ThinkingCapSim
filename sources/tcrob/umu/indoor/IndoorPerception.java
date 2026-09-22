@@ -12,7 +12,7 @@ import tc.shared.world.*;
 import tc.modules.*;
 
 import tclib.navigation.mapbuilding.lpo.*;
-import tc.shared.lps.gui.IndoorLPSWindow;
+import tc.shared.lps.gui.LPSWindow;
 
 import devices.pos.*;
 import wucore.utils.geom.*;
@@ -57,7 +57,7 @@ public class IndoorPerception extends Perception
 	protected boolean				firstime		= true;
 	
 	// Debugging tools and windows
-	protected IndoorLPSWindow			win;
+	protected LPSWindow			win;
 	
 	// Constructors
 	public IndoorPerception (ModuleConfig cfg, Linda linda)
@@ -300,7 +300,7 @@ public class IndoorPerception extends Perception
 		
 		
 		if (localgfx)
-			win		= new IndoorLPSWindow (robotid);
+			win		= new LPSWindow (robotid);
 
 		//		lps.dump ();
 		firstime	= true;

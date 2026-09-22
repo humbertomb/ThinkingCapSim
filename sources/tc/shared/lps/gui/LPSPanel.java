@@ -3,7 +3,7 @@
  * (c) 2026 Humberto Martinez
  */
 
-package tc.gui.visualization;
+package tc.shared.lps.gui;
 
 import java.awt.*;
 import java.awt.event.*;

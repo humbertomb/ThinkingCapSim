@@ -9,7 +9,6 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import tc.shared.lps.*;
-import tc.gui.visualization.*;
 import devices.pos.Path;
 
 import wucore.gui.*;
@@ -20,19 +19,19 @@ import wucore.gui.*;
  *
  * @author Humberto Martinez Barbera
  */
-public class IndoorLPSWindow extends JFrame
+public class LPSWindow extends JFrame
 {
 	private static final long		serialVersionUID	= 1L;
 
 	protected ChildWindowListener	parent;
 	protected LPSPanel				panel;
 
-	public IndoorLPSWindow (String name)
+	public LPSWindow (String name)
 	{
 		this (name, null);
 	}
 
-	public IndoorLPSWindow (String name, ChildWindowListener parent)
+	public LPSWindow (String name, ChildWindowListener parent)
 	{
 		this.parent	= parent;
 		panel		= new LPSPanel ();
