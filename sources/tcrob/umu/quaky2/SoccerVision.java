@@ -124,6 +124,13 @@ public class SoccerVision extends Perception
 		} catch (Exception ex) { ex.printStackTrace (); }
 	}
 	
+	/** The Chaos Vision Monitor goes away with the module. */
+	protected void close_gfx ()
+	{
+		dispose_window (win);
+		win		= null;
+	}
+
 	public void step (long ctime)
 	{
 		if (state != RUN)		return;
