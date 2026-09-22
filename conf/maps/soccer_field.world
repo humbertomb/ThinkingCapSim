@@ -49,7 +49,7 @@
     { "icon": "net", "x": 0, "y": -2, "z": 0, "orientation": 90, "color": "blue", "shape": "./conf/3dmodels/net.3ds", "usecolor": true }
   ],
   "aobjects": [
-    { "label": "ball", "icon": "ball", "x": 0, "y": 1.5, "z": 0.11, "orientation": -9.8287, "radius": 0.11, "color": "gray_dark", "shape": "./conf/3dmodels/ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0.2, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0 }
+    { "label": "ball", "icon": "ball", "x": 0, "y": 1.5, "z": 0.11, "orientation": -9.8287, "radius": 0.11, "color": "gray_dark", "shape": "./conf/3dmodels/ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0.2, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.01 }
   ],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },

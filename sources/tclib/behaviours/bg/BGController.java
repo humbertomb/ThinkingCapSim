@@ -95,8 +95,6 @@ public class BGController extends Controller
 		b_dump		= new LogFile (PREFFIX, ".beh");
 		b_plot		= new LogPlot ("Behaviour Fusion", "step", "DoA");
 		b_plot.setImpulses (true);
-		// what each behaviour is worth is written beside the plot: impulses say which
-		// one is winning, not by how much
 		b_plot.setValues ("Behaviour Values");
 		b_plot.setYRange (0.0, 1.0);
 		
