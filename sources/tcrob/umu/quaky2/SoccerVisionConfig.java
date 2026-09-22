@@ -30,7 +30,6 @@ public class SoccerVisionConfig
 	public int							blobmode		= 0;	
 	
 	// Recognizer parameters
-	public String						recogclass;
 	public RecognizerParams				recognizer		= new RecognizerParams ();
 
 	/**
@@ -139,7 +138,6 @@ public class SoccerVisionConfig
 		lutmode		= mode (c.lutmode, LUTMODES);
 		segmode		= mode (c.segmode, SEGMODES);
 		blobmode	= mode (c.blobmode, BLOBMODES);
-		recogclass	= c.recogclass;
 		recognizer	= (c.recognizer != null) ? c.recognizer : new RecognizerParams ();
 
 		// the cluster of each channel, from what the file says of it

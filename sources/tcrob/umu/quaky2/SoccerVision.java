@@ -84,9 +84,9 @@ public class SoccerVision extends Perception
 	 */
 	public void instanceLUT ()
 	{
-		Class<?>		sclass;
+		Class<?>	sclass;
 		String		pack;
-		LUT				nlut;
+		LUT			nlut;
 		
 		try 
 		{
@@ -100,7 +100,7 @@ public class SoccerVision extends Perception
 
 	public void instanceSegment ()
 	{
-		Class<?>		sclass;
+		Class<?>	sclass;
 		String		pack;
 		
 		try 
@@ -113,7 +113,7 @@ public class SoccerVision extends Perception
 
 	public void instanceBlob ()
 	{
-		Class<?>		sclass;
+		Class<?>	sclass;
 		String		pack;
 		
 		try 
