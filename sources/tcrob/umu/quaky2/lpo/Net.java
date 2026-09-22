@@ -13,8 +13,10 @@ import wucore.utils.color.*;
 
 public class Net extends LPO implements Serializable
 {
+	static public final double			DEPTH		= 0.1;		// How deep it is drawn (m)
+
 	// Object specific information
-	protected double					width;					// Width of the docking area (m)
+	protected double					width;					// Half the width of the net (m)
 
 	// Constructor
 	public Net (double width, String label, int source)
@@ -39,15 +41,17 @@ public class Net extends LPO implements Serializable
 			
 		if (label != null)
 			model.addRawText (xx, yy, label, ColorTool.fromWColorToColor(color));
-			//model.addRawText (xx, yy, label, color);
-			
-		model.addRawTransRotLine (-width, 0 , width, 0, xx, yy, phi, ColorTool.fromWColorToColor(color));
-		model.addRawTransRotLine (-width, 0, width, width, xx, yy, phi, ColorTool.fromWColorToColor(color));
-		model.addRawTransRotLine (width, 0 , width, width, xx, yy, phi, ColorTool.fromWColorToColor(color));
-		
-		//model.addRawTransRotLine (-width, 0 , width, 0, xx, yy, phi, color);
-		//model.addRawTransRotLine (-width, 0, width, width, xx, yy, phi, color);
-		//model.addRawTransRotLine (width, 0 , width, width, xx, yy, phi, color);
+
+		// the net: a filled rectangle across the line of sight, from where it stands on the floor backwards
+		double[]		px = new double[4], py = new double[4];
+		double[]		lx = { 0.0, 0.0, DEPTH, DEPTH };			// along the line of sight
+		double[]		ly = { -width, width, width, -width };		// across it
+		for (int i = 0; i < 4; i++)
+		{
+			px[i]	= xx + lx[i] * Math.cos (aa) - ly[i] * Math.sin (aa);
+			py[i]	= yy + lx[i] * Math.sin (aa) + ly[i] * Math.cos (aa);
+		}
+		model.addRawPoly (px, py, Model2D.FILLED, ColorTool.fromWColorToColor(color));
 	}
 }
 
