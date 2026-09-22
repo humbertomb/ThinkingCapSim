@@ -21,19 +21,23 @@ public class SoccerVisionConfig
 	static public final String[]		SEGMODES		= { "Thresholding", "SeedRegionGrowing" };
 	static public final String[]		BLOBMODES		= { "RLEBlobForming", "BlobGrowing",  };
 
+	// Color channels
 	public Channels						channels;	
 
+	// Segmentation algorithms
 	public int							lutmode			= 0;
 	public int							segmode			= 0;	
 	public int							blobmode		= 0;	
+	
+	// Recognizer parameters
 	public String						recogclass;
-	public RecognizerChannels			recognizer		= new RecognizerChannels ();
+	public RecognizerParams				recognizer		= new RecognizerParams ();
 
 	/**
 	 * The channels the recognizer looks for each thing in (their index; -1:
 	 * none). A file without them leaves the ones the recognizer has by default.
 	 */
-	static public class RecognizerChannels
+	static public class RecognizerParams
 	{
 		public int						carpet			= 3;	// the floor, which the horizon is found from
 		public int						ball			= 0;
@@ -116,7 +120,7 @@ public class SoccerVisionConfig
 		segmode		= mode (c.segmode, SEGMODES);
 		blobmode	= mode (c.blobmode, BLOBMODES);
 		recogclass	= c.recogclass;
-		recognizer	= (c.recognizer != null) ? c.recognizer : new RecognizerChannels ();
+		recognizer	= (c.recognizer != null) ? c.recognizer : new RecognizerParams ();
 
 		// the cluster of each channel, from what the file says of it
 		for (int i = 0; i < channels.size (); i++)

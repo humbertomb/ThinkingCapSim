@@ -80,7 +80,7 @@ public class SoccerVision extends Perception
 	/** The recognizer looks for each thing in the channel the configuration says. */
 	public void applyRecognizer ()
 	{
-		SoccerVisionConfig.RecognizerChannels	rc = vconfig.recognizer;
+		SoccerVisionConfig.RecognizerParams	rc = vconfig.recognizer;
 
 		if ((recognizer == null) || (rc == null))		return;
 		recognizer.CARPET_CHANNEL	= rc.carpet;

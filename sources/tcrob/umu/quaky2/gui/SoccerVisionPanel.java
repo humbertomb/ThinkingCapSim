@@ -194,7 +194,7 @@ public class SoccerVisionPanel extends JPanel
 	/** The configuration keeps the channels the recognizer looks in now (chosen in its tab), to be saved with it. */
 	protected void storeRecognizer ()
 	{
-		SoccerVisionConfig.RecognizerChannels	rc = new SoccerVisionConfig.RecognizerChannels ();
+		SoccerVisionConfig.RecognizerParams	rc = new SoccerVisionConfig.RecognizerParams ();
 
 		if (pam.recognizer == null)		return;
 		rc.carpet	= pam.recognizer.CARPET_CHANNEL;
