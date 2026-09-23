@@ -74,10 +74,13 @@ public class LuaMonitorWindow extends JFrame
 	/** The names the library and the bridge take up, which are nobody's variables. */
 	static private final String[]	LIBRARY		= { "math", "io", "string", "table", "os", "chaos", "_VERSION" };
 
-	/** What the monitor asks of whoever runs the program: read it again, it was changed. */
+	/** What the monitor asks of whoever runs the program. */
 	public interface Reload
 	{
+		/** Read the program again: its file was written. */
 		public void reload ();
+		/** Run this program instead, from the next cycle on. */
+		public void load (java.io.File program);
 	}
 
 	protected LuaState				lua;
@@ -85,12 +88,15 @@ public class LuaMonitorWindow extends JFrame
 	protected String				program;
 	protected java.io.File			file;						// the program being run, to write in
 	protected Reload				reload;
+	protected String				robot;
 	protected LuaEditorWindow		editor;						// the one editor of it, while it is open
 
 	protected Vars					vars;
 	protected JTable				table;
 	protected JLabel				status;
 	protected JCheckBox			library;
+	protected javax.swing.JComboBox<String>	programs;			// the programs of the folder of the one running
+	protected boolean				choosing;					// the selector is being filled in, which is nobody's choice
 	protected Timer					timer;
 
 	/** One row of the table. */
@@ -138,6 +144,7 @@ public class LuaMonitorWindow extends JFrame
 		this.file		= file;
 		this.program	= (file != null) ? file.getName () : null;
 		this.reload		= reload;
+		this.robot		= robot;
 
 		if (lua != null)			lua.interpreter ().watch (true);		// the locals are only kept track of when asked for
 
@@ -215,24 +222,121 @@ public class LuaMonitorWindow extends JFrame
 	/* The tool bar                                                        */
 	/* ------------------------------------------------------------------ */
 
-	/** The one thing to do from here: write the program that is running. */
+	/**
+	 * What there is to do from here: write the program that is running, and run
+	 * another of the ones that are kept beside it.
+	 */
 	protected javax.swing.JToolBar buildToolBar ()
 	{
 		javax.swing.JToolBar	tb = new javax.swing.JToolBar ();
-		javax.swing.JButton		edit = new javax.swing.JButton (new EditorIcon ());
 
 		tb.setFloatable (false);
 		tb.setBorder (BorderFactory.createEmptyBorder (2, 4, 2, 4));
+		tb.add (editButton ());
+		tb.add (javax.swing.Box.createHorizontalGlue ());		// the selector goes on the right
+		tb.add (new JLabel ("Program "));
+		tb.add (programsBox ());
+		return tb;
+	}
+
+	/** The button that writes the program: the icon alone, with no border around it. */
+	protected javax.swing.JButton editButton ()
+	{
+		javax.swing.JButton		edit = new javax.swing.JButton (new EditorIcon ());
+
 		edit.setToolTipText ((file != null) ? ("Write " + file.getName () + " (it is read again when saved)")
 										   : "Write the program");
 		edit.setEnabled (file != null);
 		edit.setFocusable (false);
+		edit.setBorderPainted (false);							// the icon says it all
+		edit.setContentAreaFilled (false);
+		edit.setFocusPainted (false);
+		edit.setBorder (BorderFactory.createEmptyBorder (2, 2, 2, 2));
+		edit.setMargin (new java.awt.Insets (0, 0, 0, 0));
 		edit.addActionListener (new ActionListener ()
 		{
 			public void actionPerformed (ActionEvent e)		{ edit (); }
 		});
-		tb.add (edit);
-		return tb;
+		return edit;
+	}
+
+	/** The programs of the folder the one running is kept in, to run another of them. */
+	protected javax.swing.JComboBox<String> programsBox ()
+	{
+		programs	= new javax.swing.JComboBox<String> ();
+		programs.setToolTipText ("The programs beside this one: choosing another runs it");
+		programs.setMaximumSize (new Dimension (220, 24));
+		programs.setPreferredSize (new Dimension (200, 24));
+		programs.setEnabled (file != null);
+		programs.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)
+			{
+				if (choosing)						return;
+				chose ((String) programs.getSelectedItem ());
+			}
+		});
+		fillPrograms ();
+		return programs;
+	}
+
+	/** Every .lua of the folder of the program being run, the one running selected. */
+	protected void fillPrograms ()
+	{
+		if (programs == null)						return;
+
+		java.io.File		dir = (file != null) ? file.getAbsoluteFile ().getParentFile () : null;
+		String[]			names = (dir != null) ? dir.list (new java.io.FilenameFilter ()
+		{
+			public boolean accept (java.io.File d, String name)		{ return name.toLowerCase ().endsWith (".lua"); }
+		}) : null;
+
+		if (names == null)							names = new String[0];
+		java.util.Arrays.sort (names, String.CASE_INSENSITIVE_ORDER);
+
+		choosing	= true;
+		programs.setModel (new javax.swing.DefaultComboBoxModel<String> (names));
+		if (file != null)							programs.setSelectedItem (file.getName ());
+		choosing	= false;
+	}
+
+	/**
+	 * Another program of the folder was chosen: it is the one the robot runs from
+	 * now on, and the one the editor is on, if it is open (what was being written
+	 * there is offered to be saved first).
+	 */
+	protected void chose (String name)
+	{
+		if ((name == null) || (file == null))		return;
+
+		java.io.File		chosen = new java.io.File (file.getAbsoluteFile ().getParentFile (), name);
+
+		if (chosen.getAbsolutePath ().equals (file.getAbsolutePath ()))		return;
+		if ((editor != null) && editor.isDisplayable () && !editor.confirmDiscard ())
+		{
+			fillPrograms ();						// it was not to be: the selector says what is running
+			return;
+		}
+
+		file		= chosen;
+		program		= chosen.getName ();
+		setTitle (title ());
+		if (reload != null)							reload.load (chosen);
+		if ((editor != null) && editor.isDisplayable ())
+		{
+			editor.load (chosen);
+			editor.toFront ();
+		}
+		status.setText (chosen.getName () + " is now the program");
+		fillPrograms ();
+		refresh ();
+	}
+
+	/** What the title bar says. */
+	protected String title ()
+	{
+		return "Lua Monitor" + ((robot != null) ? (" [" + robot + "]") : "")
+			   + ((file != null) ? (": " + file.getName ()) : "");
 	}
 
 	/**

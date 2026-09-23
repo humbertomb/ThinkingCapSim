@@ -185,7 +185,8 @@ public class LuaController extends Controller
 				monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, chaos, file, cfg.robot (),
 																		  new tclib.behaviours.lua.gui.LuaMonitorWindow.Reload ()
 				{
-					public void reload ()		{ LuaController.this.reload (); }
+					public void reload ()					{ LuaController.this.reload (); }
+					public void load (File f)				{ LuaController.this.load (f); }
 				});
 			}
 			if (dump)							c_dump.open (c_labels);
@@ -214,21 +215,35 @@ public class LuaController extends Controller
 	 */
 	public boolean reload ()
 	{
-		if (file == null)						return false;
+		return load (file);
+	}
+
+	/**
+	 * Runs another program from the next cycle on: it is read whole before it takes
+	 * the place of the one in use, and the interpreter is left as it is, so what the
+	 * one before left in the globals the new one finds -- and it starts as a
+	 * behaviour that has just begun (isNew).
+	 */
+	public boolean load (File f)
+	{
+		if (f == null)							return false;
 
 		try
 		{
-			LuaScript	fresh = lua.loadFile (file);
+			LuaScript	fresh = lua.loadFile (f);
+			boolean		other = (file == null) || !file.getAbsolutePath ().equals (f.getAbsolutePath ());
 
+			file	= f;
 			program	= fresh;
 			library.clear ();									// the behaviours may have been changed too
 			missing.clear ();
-			System.out.println ("  [LUA] Program <" + file.getName () + "> read again");
+			if (other)							chaos.behaviour (null);		// another program is another behaviour
+			System.out.println ("  [LUA] Program <" + f.getName () + (other ? "> running" : "> read again"));
 			return true;
 		}
 		catch (Exception e)
 		{
-			System.out.println ("  [LUA] Cannot read <" + file.getName () + "> again: " + e.getMessage () + " (the one running is kept)");
+			System.out.println ("  [LUA] Cannot read <" + f.getName () + ">: " + e.getMessage () + " (the one running is kept)");
 			return false;
 		}
 	}
