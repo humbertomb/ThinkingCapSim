@@ -155,6 +155,18 @@ public class LuaLib
 		one (math, "abs");		one (math, "sqrt");		one (math, "sin");		one (math, "cos");
 		one (math, "tan");		one (math, "asin");		one (math, "acos");		one (math, "exp");
 		one (math, "floor");	one (math, "ceil");		one (math, "deg");		one (math, "rad");
+		// which way a number goes: a script that turns towards something asks for it
+		// every time it writes vrot = k * sign (theta)
+		math.set ("sign", new LuaFunction ("math.sign")
+		{
+			public Object call (Object[] args)
+			{
+				double		v = num (args, 0, 0.0);
+
+				if (Double.isNaN (v))				return Double.valueOf (v);		// no sign to be had
+				return Double.valueOf ((v < 0.0) ? -1.0 : 1.0);
+			}
+		});
 		// an angle in degrees as an angle in radians between -pi and pi, which is the
 		// one thing the scripts do to every angle they are given (math.rad is left as
 		// Lua has it, normalising nothing)

@@ -185,6 +185,10 @@ public class LuaHelp
 		{ "pi", "", "3.14159..." },
 		{ "huge", "", "As big as a number gets." },
 		{ "abs", "x", "Without its sign." },
+		{ "sign", "x", "Which way it goes: -1 when it is negative, 1 when it is positive or zero "
+					+ "(and nothing at all -- not a number -- when it was given nothing at all). "
+					+ "This one is ours, and is what <span class=\"mono\">x / math.abs (x)</span> was meant to be, "
+					+ "which answers nothing when x is zero." },
 		{ "sqrt", "x", "The square root." },
 		{ "sin", "x", "Of an angle in radians." },
 		{ "cos", "x", "Of an angle in radians." },
