@@ -77,6 +77,17 @@ public class Chaos
 	/** The table the scripts see as <code>chaos</code>. */
 	public final LuaTable			table ()					{ return table; }
 
+	/**
+	 * What the scripts left for one another through
+	 * <code>setGlobal</code>/<code>getGlobal</code>, for whoever looks at a program
+	 * while it runs. A name asked for with an index is also kept as
+	 * <code>name#index</code>.
+	 */
+	public Map<String, Object> globals ()
+	{
+		return new java.util.TreeMap<String, Object> (globals);
+	}
+
 	public void lps (LPS lps)									{ this.lps = lps; }
 	public LPS lps ()											{ return lps; }
 

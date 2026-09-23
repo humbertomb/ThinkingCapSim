@@ -112,12 +112,55 @@ public class LuaInterp
 	protected LuaTable				globals;
 	protected String				chunk;
 
+	/* Watching the locals, for whoever looks at a program while it runs */
+	protected boolean				watch;
+	protected Map<String, Map<String, Cell>>	watched = new java.util.LinkedHashMap<String, Map<String, Cell>> ();
+
 	public LuaInterp (LuaTable globals)
 	{
 		this.globals	= (globals != null) ? globals : new LuaTable ();
 	}
 
 	public final LuaTable globals ()			{ return globals; }
+
+	/**
+	 * Whether the locals every script declares are kept track of, which is what a
+	 * monitor of a running program looks at. It costs a note per local declared, so
+	 * nobody pays for it unless they ask.
+	 */
+	public void watch (boolean b)				{ watch = b;	if (!b)		watched.clear (); }
+	public boolean watching ()					{ return watch; }
+
+	/**
+	 * The locals of every script as its last run left them, by script and in the
+	 * order they were declared. Empty unless {@link #watch} was asked for.
+	 */
+	public Map<String, Map<String, Object>> locals ()
+	{
+		Map<String, Map<String, Object>>	all = new java.util.LinkedHashMap<String, Map<String, Object>> ();
+
+		for (Map.Entry<String, Map<String, Cell>> e : watched.entrySet ())
+		{
+			Map<String, Object>		one = new java.util.LinkedHashMap<String, Object> ();
+
+			for (Map.Entry<String, Cell> c : e.getValue ().entrySet ())
+				one.put (c.getKey (), c.getValue ().value);
+			all.put (e.getKey (), one);
+		}
+		return all;
+	}
+
+	/** Takes note of a local that was just declared, while its script is being watched. */
+	protected void noted (String name, Cell cell)
+	{
+		if (!watch || (cell == null))			return;
+
+		String		where = (chunk != null) ? chunk : "?";
+		Map<String, Cell>	one = watched.get (where);
+
+		if (one == null)						watched.put (where, one = new java.util.LinkedHashMap<String, Cell> ());
+		one.put (name, cell);
+	}
 
 	/** Runs a script, reading it first. */
 	public Object run (String src, String chunk)
@@ -131,6 +174,7 @@ public class LuaInterp
 		String		old = this.chunk;
 
 		this.chunk	= chunk;
+		if (watch)						watched.remove ((chunk != null) ? chunk : "?");	// the locals of this run, not of the last
 		try
 		{
 			exec (block, new Scope (null));
@@ -203,7 +247,7 @@ public class LuaInterp
 		Object[]	vals = values (s.values, scope);
 
 		for (int i = 0; i < s.names.size (); i++)
-			scope.declare (s.names.get (i), (i < vals.length) ? vals[i] : null);
+			noted (s.names.get (i), scope.declare (s.names.get (i), (i < vals.length) ? vals[i] : null));
 	}
 
 	private void assign (Assign s, Scope scope)

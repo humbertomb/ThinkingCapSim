@@ -97,6 +97,7 @@ public class LuaController extends Controller
 	protected int					looka_pts;					// Current look-ahead distance (points)
 	protected double				path_dst;					// Current robot to desired path distance (m)
 
+	protected tclib.behaviours.lua.gui.LuaMonitorWindow	monitor;	// the variables of the program while it runs
 	protected boolean				autostart;					// AUTO: run from the first cycle, waiting for nothing
 	protected boolean				dump;
 
@@ -178,7 +179,11 @@ public class LuaController extends Controller
 
 			System.out.println ("  [LUA] Program <" + file.getName () + ">, behaviours from " + behaviours);
 
-			if (localgfx)						c_plot.open (c_labels);
+			if (localgfx)
+			{
+				c_plot.open (c_labels);
+				monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, chaos, file.getName (), cfg.robot ());
+			}
 			if (dump)							c_dump.open (c_labels);
 		}
 		catch (Exception e)
@@ -437,6 +442,7 @@ public class LuaController extends Controller
 	protected void close_gfx ()
 	{
 		if (c_plot != null)		c_plot.close ();
+		if (monitor != null)	{ monitor.close ();		monitor = null; }
 	}
 
 	public void step (long ctime)
