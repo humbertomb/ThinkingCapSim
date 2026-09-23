@@ -124,12 +124,19 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		public int getRowCount ()				{ return rows.size (); }
 		public int getColumnCount ()			{ return 2; }
 		public String getColumnName (int c)		{ return (c == 0) ? "Property" : "Value"; }
-		public boolean isCellEditable (int r, int c)	{ return (c == 1) && (rows.get (r).fixed == null); }
+		public boolean isCellEditable (int r, int c)
+		{
+			return (c == 1) && (rows.get (r).fixed == null) && !model.idle (block, rows.get (r));
+		}
+
+		/** Whether a row is of no use to the block as it stands, and so shown empty and greyed out. */
+		boolean idleAt (int r)					{ return model.idle (block, rows.get (r)); }
 
 		public Object getValueAt (int r, int c)
 		{
 			Property	p = rows.get (r);
 			if ((c == 1) && (p.fixed != null))		return p.fixed;			// what it can only be, whatever the file said
+			if ((c == 1) && model.idle (block, p))	return "";				// nothing to say: the block makes no use of it
 			return (c == 0) ? p.label : value (p, model.get (block, p.key));
 		}
 
@@ -140,6 +147,9 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 			fireTableCellUpdated (r, c);
 			if (p.key.equals ("INFO"))		rebuild (block);				// the label of the block changed
 			else							canvas.repaint ();
+			// what a property is worth may leave another one with nothing to say
+			// (a passive module has no cycle time), so the rest are shown afresh
+			fireTableRowsUpdated (0, Math.max (0, rows.size () - 1));
 		}
 	}
 
@@ -534,8 +544,24 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 				}
 			};
 
+			// a property the block makes no use of: nothing written, on grey
+			private final javax.swing.table.DefaultTableCellRenderer	idleRenderer = new javax.swing.table.DefaultTableCellRenderer ()
+			{
+				private static final long	serialVersionUID = 1L;
+
+				public java.awt.Component getTableCellRendererComponent (JTable t, Object value, boolean sel, boolean focus, int row, int col)
+				{
+					super.getTableCellRendererComponent (t, "", false, false, row, col);
+					setEnabled (false);
+					setBackground (C_FIXED);
+					setToolTipText (model.whyIdle (propsModel.block, propsModel.propertyAt (row)));
+					return this;
+				}
+			};
+
 			public TableCellRenderer getCellRenderer (int row, int column)
 			{
+				if ((column == 1) && propsModel.idleAt (row))										return idleRenderer;
 				if ((column == 1) && (propsModel.propertyAt (row).fixed != null))					return fixedRenderer;
 				if ((column == 1) && (propsModel.propertyAt (row).type == ArchModel.P_FILE))		return fileRenderer;
 				return super.getCellRenderer (row, column);

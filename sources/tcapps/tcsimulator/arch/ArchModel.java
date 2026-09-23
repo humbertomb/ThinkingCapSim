@@ -429,6 +429,41 @@ public class ArchModel
 		return (v == null) ? "" : v;
 	}
 
+	/**
+	 * Whether a property is of no use at all to a block as it stands, so that
+	 * there is nothing to show and nothing to edit: the cycle time of a module
+	 * that waits for an event to run (passive) is one, as the runtime never looks
+	 * at it -- unless the module is queued or polled, which makes it run on its own
+	 * cycle again ({@link tc.runtime.thread.StdThread#start}).
+	 */
+	public boolean idle (Block b, Property p)
+	{
+		if ((b == null) || (p == null) || (moduleOf (b) == null))		return false;
+		if (!p.key.equals ("EXTIME"))									return false;
+		return yes (b, "PASSIVE") && !yes (b, "QUEUED") && !yes (b, "POLLED");
+	}
+
+	/** Why a property is of no use, for whoever shows it greyed out. */
+	public String whyIdle (Block b, Property p)
+	{
+		if (!idle (b, p))			return null;
+		return "A passive module has no cycle of its own: it runs when an event reaches it";
+	}
+
+	/** Whether a property of a block says yes, the ones it can only say included. */
+	protected boolean yes (Block b, String key)
+	{
+		return Boolean.parseBoolean (value (b, key));
+	}
+
+	/** What a property of a block is worth, what it can only be taking precedence over the file. */
+	protected String value (Block b, String key)
+	{
+		for (Property p : propertiesOf (b))
+			if (p.key.equals (key) && (p.fixed != null))		return p.fixed;
+		return get (b, key);
+	}
+
 	public void set (Block b, String key, String value)
 	{
 		String	v = (value == null) ? "" : value.trim ();

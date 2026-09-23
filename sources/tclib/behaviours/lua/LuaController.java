@@ -50,7 +50,10 @@ import wucore.utils.math.*;
  *               (default ./conf/programs/lua)
  *   LPOS        the objects of the LPS the script asks for by number,
  *               separated by commas (default Ball, Net1, Net2, Align, Looka)
- *   AUTO        run from the first cycle, with no plan
+ *   AUTO        run from the first cycle, waiting for nothing: no plan to
+ *               follow, no command to start it and no LPS read yet (a passive
+ *               module still runs when an event reaches it, which is what
+ *               passive means)
  * </pre>
  */
 public class LuaController extends Controller
@@ -94,6 +97,7 @@ public class LuaController extends Controller
 	protected int					looka_pts;					// Current look-ahead distance (points)
 	protected double				path_dst;					// Current robot to desired path distance (m)
 
+	protected boolean				autostart;					// AUTO: run from the first cycle, waiting for nothing
 	protected boolean				dump;
 
 	// Constructors
@@ -140,14 +144,17 @@ public class LuaController extends Controller
 		// Load the program
 		parse (cfg);
 
-		// Autostart the controller without a plan: it runs its program from the
-		// first cycle, and until somebody says where to go there is no goal to have
-		// arrived at (see inGoal)
-		if (cfg.getBoolean ("AUTO", false))
+		// Autostart the controller: it runs its program from the first cycle and
+		// waits for nothing -- no plan to follow (and so nothing to have arrived at,
+		// see inGoal), no command to start it, and not even an LPS to read: a program
+		// that asks for what is not there yet is given nothing and says so itself
+		autostart	= cfg.getBoolean ("AUTO", false);
+		if (autostart)
 		{
 			has_goal	= true;
 			has_plan	= false;
 			need_looka	= false;
+			running		= true;						// nobody has to press Start
 		}
 	}
 
@@ -233,8 +240,8 @@ public class LuaController extends Controller
 		/* LOOK-AHEAD */
 		/* ---------- */
 
-		// Compute look-ahead point
-		pos.set (lps.cur);
+		// Compute look-ahead point (there may be no LPS at all yet, when running on its own)
+		if (lps != null)			pos.set (lps.cur);
 		looka.set (pos);
 		looka.valid (false);
 		if (!new_goal && (path != null))
@@ -249,7 +256,7 @@ public class LuaController extends Controller
 		}
 
 		// Update LPS
-		l_looka = lps.find ("Looka");
+		l_looka = (lps != null) ? lps.find ("Looka") : null;
 		if (l_looka != null)
 		{
 			l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (), pos.alpha ());
@@ -416,7 +423,8 @@ public class LuaController extends Controller
 	{
 		if (state != RUN)												return;
 
-		if (!auto || (program == null) || (lps == null))					return;
+		if (!auto || (program == null))									return;
+		if ((lps == null) && !autostart)								return;		// on its own it waits for no perception
 
 		// Set last goal received as the current one
 		checkplan ();
