@@ -51,7 +51,16 @@ public class SoccerVision extends Perception
 	// Local graphics: configuration and monitoring of the vision
 	protected SoccerVisionWindow	win;
 	
-	private boolean					initialized = false;
+	private volatile boolean		initialized = false;
+
+	/**
+	 * One frame is processed with one set of algorithms. The frames arrive on the
+	 * thread of the robot while the algorithms are replaced on another one (a new
+	 * configuration, which is what a restart of the execution sends, or the window
+	 * of the vision), so segmenting with one and blobbing with the next one -- which
+	 * has never seen a frame and knows of no channels -- was possible.
+	 */
+	protected final Object			vision = new Object ();
 
 	// The LPS the LPOs of the vision are in: the one of the perception module of the robot (see lps_guest)
 	protected LPS					attached;
@@ -94,7 +103,7 @@ public class SoccerVision extends Perception
 			sclass		= Class.forName (pack + "." + SoccerVisionConfig.LUTMODES[vconfig.lutmode]);
 			nlut		= (LUT) sclass.getDeclaredConstructor().newInstance();
 			nlut.initialise (vconfig.channels);
-			lut			= nlut;
+			synchronized (vision)		{ lut = nlut; }				// never in the middle of a frame
 		} catch (Exception ex) { ex.printStackTrace (); }		
 	}
 
@@ -107,7 +116,10 @@ public class SoccerVision extends Perception
 		{
 			pack		= Segmentation.class.getPackage().getName();
 			sclass		= Class.forName(pack + "." + SoccerVisionConfig.SEGMODES[vconfig.segmode]);
-			segment 	= (Segmentation) sclass.getDeclaredConstructor().newInstance();
+
+			Segmentation	nseg = (Segmentation) sclass.getDeclaredConstructor().newInstance();
+
+			synchronized (vision)		{ segment = nseg; }			// never in the middle of a frame
 		} catch (Exception ex) { ex.printStackTrace (); }
 	}
 
@@ -120,7 +132,10 @@ public class SoccerVision extends Perception
 		{
 			pack		= BlobForming.class.getPackage().getName();
 			sclass		= Class.forName(pack + "." + SoccerVisionConfig.BLOBMODES[vconfig.blobmode]);
-			blobbing 	= (BlobForming) sclass.getDeclaredConstructor().newInstance();
+
+			BlobForming		nblob = (BlobForming) sclass.getDeclaredConstructor().newInstance();
+
+			synchronized (vision)		{ blobbing = nblob; }		// never in the middle of a frame
 		} catch (Exception ex) { ex.printStackTrace (); }
 	}
 	
@@ -160,8 +175,11 @@ public class SoccerVision extends Perception
 		
 		attached	= null;								// they go into the LPS of the robot when there is something to put there
 		
-		// Instance vision processing algorithms
-		recognizer	= new SoccerRecognizer (vconfig.recognizer);
+		// Instance vision processing algorithms. A configuration also arrives when an
+		// execution is started again, with frames of the one before still on their
+		// way, so no frame is made sense of while the algorithms are being replaced
+		initialized	= false;
+		synchronized (vision)		{ recognizer = new SoccerRecognizer (vconfig.recognizer); }
 
 		instanceLUT ();
 		instanceSegment ();
@@ -186,19 +204,30 @@ public class SoccerVision extends Perception
 	
 	public void notify_camera (String space, ItemCamera item)
 	{
-		if (!initialized || (lut == null))			return;
-		
-		segment.process (item.image, lut, vconfig.channels);
-		blobbing.process (segment);
-		blobbing.postProcess ();
-		recognized	= recognizer.process (item.image, segment.getSegmented(), blobbing.getBlobs (), vconfig.channels, vconfig);
+		// the frame is segmented, blobbed and recognised with the algorithms as they
+		// are now: they may be replaced from another thread (a new configuration, the
+		// window of the vision), but not while a frame is being made sense of
+		synchronized (vision)
+		{
+			if (!initialized || (lut == null) || (segment == null) || (blobbing == null) || (recognizer == null))
+				return;
+
+			segment.process (item.image, lut, vconfig.channels);
+			blobbing.process (segment);
+			blobbing.postProcess ();
+			recognized	= recognizer.process (item.image, segment.getSegmented(), blobbing.getBlobs (), vconfig.channels, vconfig);
+		}
 
 		// where what was recognised is: into the LPOs of the vision, and out (OBJECT) to the LPS of the robot
 		located (item);
 
-		// what the camera saw, and what came out of it, to the window
-		if (win != null)
-			SwingUtilities.invokeLater(() -> win.updateBufferedImage (item.image));
+		// what the camera saw, and what came out of it, to the window. The window it
+		// is shown in is the one there is now: the module may be stopped (close_gfx)
+		// before the drawing is done, and a window that is gone is drawn on no more
+		final SoccerVisionWindow	shown = win;
+
+		if (shown != null)
+			SwingUtilities.invokeLater (() -> shown.updateBufferedImage (item.image));
 	}
 
 	/* ------------------------------------------------------------------ */
