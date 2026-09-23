@@ -55,10 +55,17 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 	/** Where the scripts of the behaviours are kept. */
 	static public final String		FOLDER		= "./conf/programs/lua";
 
+	/** Told whenever the program was written, for whoever is running it. */
+	public interface Saved
+	{
+		public void saved (File file);
+	}
+
 	protected CodeEditor			code;
 	protected JLabel				status;
 	protected File					file;
 	protected boolean				dirty;
+	protected Saved					onSave;
 
 	public LuaEditorWindow ()
 	{
@@ -97,6 +104,12 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 	}
 
 	public final CodeEditor			getCodeEditor ()	{ return code; }
+
+	/**
+	 * Who to tell when the program was written, so that whoever is running it can
+	 * read it again.
+	 */
+	public void setOnSave (Saved s)						{ onSave = s; }
 	public final File				getFile ()			{ return file; }
 	public boolean					isDirty ()			{ return dirty; }
 
@@ -283,6 +296,7 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 			file	= f;
 			dirty	= false;
 			said ();
+			if (onSave != null)					onSave.saved (f);		// it is running somewhere: it is read again there
 			return true;
 		}
 		catch (Exception e)

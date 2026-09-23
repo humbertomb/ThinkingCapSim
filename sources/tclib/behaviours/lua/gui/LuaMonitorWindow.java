@@ -74,9 +74,18 @@ public class LuaMonitorWindow extends JFrame
 	/** The names the library and the bridge take up, which are nobody's variables. */
 	static private final String[]	LIBRARY		= { "math", "io", "string", "table", "os", "chaos", "_VERSION" };
 
+	/** What the monitor asks of whoever runs the program: read it again, it was changed. */
+	public interface Reload
+	{
+		public void reload ();
+	}
+
 	protected LuaState				lua;
 	protected Chaos					chaos;
 	protected String				program;
+	protected java.io.File			file;						// the program being run, to write in
+	protected Reload				reload;
+	protected LuaEditorWindow		editor;						// the one editor of it, while it is open
 
 	protected Vars					vars;
 	protected JTable				table;
@@ -109,15 +118,26 @@ public class LuaMonitorWindow extends JFrame
 		this (lua, chaos, program, null);
 	}
 
-	/** Watches the variables of a program, the window named after the robot that runs it. */
 	public LuaMonitorWindow (LuaState lua, Chaos chaos, String program, String robot)
 	{
+		this (lua, chaos, (program != null) ? new java.io.File (program) : null, robot, null);
+	}
+
+	/**
+	 * Watches the variables of a program, the window named after the robot that runs
+	 * it. The file is the program being run, which can be written from here, and
+	 * whoever runs it is told to read it again once it was.
+	 */
+	public LuaMonitorWindow (LuaState lua, Chaos chaos, java.io.File file, String robot, Reload reload)
+	{
 		super ("Lua Monitor" + ((robot != null) ? (" [" + robot + "]") : "")
-			   + ((program != null) ? (": " + program) : ""));
+			   + ((file != null) ? (": " + file.getName ()) : ""));
 
 		this.lua		= lua;
 		this.chaos		= chaos;
-		this.program	= program;
+		this.file		= file;
+		this.program	= (file != null) ? file.getName () : null;
+		this.reload		= reload;
 
 		if (lua != null)			lua.interpreter ().watch (true);		// the locals are only kept track of when asked for
 
@@ -167,6 +187,7 @@ public class LuaMonitorWindow extends JFrame
 		bar.add (library, BorderLayout.EAST);
 
 		getContentPane ().setLayout (new BorderLayout ());
+		getContentPane ().add (buildToolBar (), BorderLayout.NORTH);
 		getContentPane ().add (new JScrollPane (table), BorderLayout.CENTER);
 		getContentPane ().add (bar, BorderLayout.SOUTH);
 		setDefaultCloseOperation (DISPOSE_ON_CLOSE);
@@ -185,6 +206,78 @@ public class LuaMonitorWindow extends JFrame
 	public final JTable				getTable ()			{ return table; }
 	/** The variables as the last look at them found them. */
 	public List<Var>				getVars ()			{ return vars.rows (); }
+	/** The program being watched, or null when it is not known where it is kept. */
+	public final java.io.File		getFile ()			{ return file; }
+	/** The editor of the program while it is open, null when it is not. */
+	public final LuaEditorWindow	getEditor ()		{ return editor; }
+
+	/* ------------------------------------------------------------------ */
+	/* The tool bar                                                        */
+	/* ------------------------------------------------------------------ */
+
+	/** The one thing to do from here: write the program that is running. */
+	protected javax.swing.JToolBar buildToolBar ()
+	{
+		javax.swing.JToolBar	tb = new javax.swing.JToolBar ();
+		javax.swing.JButton		edit = new javax.swing.JButton (new EditorIcon ());
+
+		tb.setFloatable (false);
+		tb.setBorder (BorderFactory.createEmptyBorder (2, 4, 2, 4));
+		edit.setToolTipText ((file != null) ? ("Write " + file.getName () + " (it is read again when saved)")
+										   : "Write the program");
+		edit.setEnabled (file != null);
+		edit.setFocusable (false);
+		edit.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ edit (); }
+		});
+		tb.add (edit);
+		return tb;
+	}
+
+	/**
+	 * Opens the editor on the program being run, beside this window (its top left
+	 * against the top right of this one), and has whoever runs the program read it
+	 * again every time it is saved. There is one editor: asking again brings the one
+	 * that is open to the front.
+	 */
+	public LuaEditorWindow edit ()
+	{
+		if (file == null)						return null;
+		if ((editor != null) && editor.isDisplayable ())
+		{
+			editor.toFront ();
+			editor.requestFocus ();
+			return editor;
+		}
+
+		final LuaEditorWindow	w = new LuaEditorWindow (file);
+
+		w.setOnSave (new LuaEditorWindow.Saved ()
+		{
+			public void saved (java.io.File f)
+			{
+				if (reload != null)				reload.reload ();		// what was just written is what runs
+				status.setText (f.getName () + " saved and read again");
+			}
+		});
+		beside (w);
+		w.setVisible (true);
+		editor	= w;
+		return w;
+	}
+
+	/** Puts a window against the top right side of this one, on the screen if it fits. */
+	protected void beside (JFrame w)
+	{
+		java.awt.Rectangle	screen = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment ().getMaximumWindowBounds ();
+		int					x = getX () + getWidth ();
+		int					y = getY ();
+
+		if ((x + w.getWidth ()) > (screen.x + screen.width))			// no room on the right: as far right as it goes
+			x	= Math.max (screen.x, screen.x + screen.width - w.getWidth ());
+		w.setLocation (x, y);
+	}
 
 	/* ------------------------------------------------------------------ */
 	/* Reading the variables                                              */
@@ -352,6 +445,65 @@ public class LuaMonitorWindow extends JFrame
 		}
 	}
 
+	/**
+	 * The icon of the button: a sheet of paper with lines of text on it and a pencil
+	 * across its corner, drawn rather than read from a file, as the icons of the
+	 * editors of the simulator are.
+	 */
+	static public class EditorIcon implements javax.swing.Icon
+	{
+		static public final int			SIZE		= 20;
+
+		static private final Color		C_PAPER		= Color.WHITE;
+		static private final Color		C_EDGE		= new Color (70, 70, 70);
+		static private final Color		C_TEXT		= new Color (120, 120, 120);
+		static private final Color		C_PENCIL	= new Color (230, 170, 40);
+		static private final Color		C_LEAD		= new Color (60, 60, 60);
+
+		public int getIconWidth ()				{ return SIZE; }
+		public int getIconHeight ()				{ return SIZE; }
+
+		public void paintIcon (Component c, java.awt.Graphics g0, int x, int y)
+		{
+			java.awt.Graphics2D		g = (java.awt.Graphics2D) g0.create ();
+
+			g.setRenderingHint (java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+			g.translate (x, y);
+
+			// the sheet, with a folded corner
+			java.awt.geom.Path2D.Double	sheet = new java.awt.geom.Path2D.Double ();
+
+			sheet.moveTo (3, 1);
+			sheet.lineTo (12, 1);
+			sheet.lineTo (16, 5);
+			sheet.lineTo (16, 18);
+			sheet.lineTo (3, 18);
+			sheet.closePath ();
+			g.setColor (C_PAPER);
+			g.fill (sheet);
+			g.setColor (C_EDGE);
+			g.setStroke (new java.awt.BasicStroke (1.2f));
+			g.draw (sheet);
+			g.draw (new java.awt.geom.Line2D.Double (12, 1, 12, 5));
+			g.draw (new java.awt.geom.Line2D.Double (12, 5, 16, 5));
+
+			// the lines of text
+			g.setColor (C_TEXT);
+			g.setStroke (new java.awt.BasicStroke (1f));
+			for (int i = 0; i < 4; i++)
+				g.draw (new java.awt.geom.Line2D.Double (5.5, 8 + i * 2.6, (i == 3) ? 11 : 13.5, 8 + i * 2.6));
+
+			// and the pencil across the corner
+			g.setColor (C_PENCIL);
+			g.setStroke (new java.awt.BasicStroke (3f, java.awt.BasicStroke.CAP_BUTT, java.awt.BasicStroke.JOIN_ROUND));
+			g.draw (new java.awt.geom.Line2D.Double (9.5, 17.5, 17.5, 9.5));
+			g.setColor (C_LEAD);
+			g.setStroke (new java.awt.BasicStroke (3f, java.awt.BasicStroke.CAP_BUTT, java.awt.BasicStroke.JOIN_ROUND));
+			g.draw (new java.awt.geom.Line2D.Double (17.8, 9.2, 18.6, 8.4));
+			g.dispose ();
+		}
+	}
+
 	/** Stops looking at the program and goes away. */
 	public void close ()
 	{
@@ -360,6 +512,7 @@ public class LuaMonitorWindow extends JFrame
 			public void run ()
 			{
 				if (timer != null)			timer.stop ();
+				if (editor != null)			{ editor.dispose ();	editor = null; }
 				setVisible (false);
 				dispose ();
 			}
@@ -374,7 +527,8 @@ public class LuaMonitorWindow extends JFrame
 	}
 
 	/** Watches the variables of a program, as a window of its own. */
-	static public LuaMonitorWindow open (final LuaState lua, final Chaos chaos, final String program, final String robot)
+	static public LuaMonitorWindow open (final LuaState lua, final Chaos chaos, final java.io.File file,
+										 final String robot, final Reload reload)
 	{
 		final LuaMonitorWindow[]	w = new LuaMonitorWindow[1];
 
@@ -384,7 +538,7 @@ public class LuaMonitorWindow extends JFrame
 			{
 				public void run ()
 				{
-					w[0]	= new LuaMonitorWindow (lua, chaos, program, robot);
+					w[0]	= new LuaMonitorWindow (lua, chaos, file, robot, reload);
 					w[0].setVisible (true);
 				}
 			});

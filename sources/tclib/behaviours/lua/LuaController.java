@@ -65,7 +65,7 @@ public class LuaController extends Controller
 
 	// The program and the bridge it speaks through
 	protected LuaState				lua;
-	protected LuaScript				program;
+	protected volatile LuaScript	program;
 	protected File					file;
 	protected Chaos					chaos;
 	protected String				behaviours = BEHAVIOURS;
@@ -182,7 +182,11 @@ public class LuaController extends Controller
 			if (localgfx)
 			{
 				c_plot.open (c_labels);
-				monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, chaos, file.getName (), cfg.robot ());
+				monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, chaos, file, cfg.robot (),
+																		  new tclib.behaviours.lua.gui.LuaMonitorWindow.Reload ()
+				{
+					public void reload ()		{ LuaController.this.reload (); }
+				});
 			}
 			if (dump)							c_dump.open (c_labels);
 		}
@@ -201,6 +205,33 @@ public class LuaController extends Controller
 	/** The behaviours the program named and were nowhere to be found. */
 	public final List<String>		missing ()			{ return missing; }
 	public final long				steps ()			{ return steps; }
+
+	/**
+	 * Reads the program again, as it is in its file now: what somebody just wrote in
+	 * the editor is what the robot runs from the next cycle on. It is read whole
+	 * before it takes the place of the one in use, so a program that does not read
+	 * leaves the robot running the one that does, and said out loud either way.
+	 */
+	public boolean reload ()
+	{
+		if (file == null)						return false;
+
+		try
+		{
+			LuaScript	fresh = lua.loadFile (file);
+
+			program	= fresh;
+			library.clear ();									// the behaviours may have been changed too
+			missing.clear ();
+			System.out.println ("  [LUA] Program <" + file.getName () + "> read again");
+			return true;
+		}
+		catch (Exception e)
+		{
+			System.out.println ("  [LUA] Cannot read <" + file.getName () + "> again: " + e.getMessage () + " (the one running is kept)");
+			return false;
+		}
+	}
 
 	/** Where the behaviours the program names are looked for. */
 	public void behaviours (String path)				{ behaviours = path;	library.clear (); }
