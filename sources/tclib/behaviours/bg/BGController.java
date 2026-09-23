@@ -26,7 +26,6 @@ public class BGController extends Controller
 	
 	// Controller debug
 	protected LogPlot				c_plot;
-	protected LogFile				c_dump;
 	protected double[]				c_buffer;
 	protected String[]				c_labels;
 	
@@ -52,9 +51,7 @@ public class BGController extends Controller
 	protected Position				looka;						// Current look-ahead point
 	protected int					looka_pts;					// Current look-ahead distance (points)
 	protected double				path_dst;					// Current robot to desired path distance (m)
-	
-	protected boolean				dump;
-	
+		
 	// Constructors
 	public BGController (ModuleConfig cfg, Linda linda) 
 	{
@@ -89,7 +86,6 @@ public class BGController extends Controller
 		c_labels	= new String[4];
 		c_labels[0]	= "speed";
 		c_labels[1]	= "turn";
-		c_dump		= new LogFile (PREFFIX, ".log");
 		c_plot		= new LogPlot ("Controller Output", "step", "values");
 		
 		b_dump		= new LogFile (PREFFIX, ".beh");
@@ -98,8 +94,6 @@ public class BGController extends Controller
 		b_plot.setValues ("Behaviour Values");
 		b_plot.setYRange (0.0, 1.0);
 		
-		dump		= false;
-
 		// Parse BG file
 		parse (cfg);		
 		
@@ -119,7 +113,6 @@ public class BGController extends Controller
 		String			name = null;
 	
 		b_dump.close ();
-		c_dump.close ();
 
 		// Load and parse a BG program
 		name = cfg.get ("PRG");
@@ -139,11 +132,6 @@ public class BGController extends Controller
 				{
 					b_plot.open (program.behlabels ());
 					c_plot.open (c_labels);
-				}
-				if (dump)
-				{
-					b_dump.open (program.behlabels ());
-					c_dump.open (c_labels);
 				}
 			}
 		}	
@@ -276,15 +264,11 @@ public class BGController extends Controller
 		setMotion (speed, turn);
 
 		// Plot current control commands
-		if (localgfx || dump)
+		if (localgfx)
 		{
 			c_buffer[0] 	= Math.max (Math.min (speed / rdesc.model.Vmax, 1.0), -1.0);
 			c_buffer[1] 	= Math.max (Math.min (turn / rdesc.model.Rmax, 1.0), -1.0);
-
-			if (localgfx)
-				c_plot.draw (c_buffer);	
-			if (dump)
-				c_dump.write (c_buffer);
+			c_plot.draw (c_buffer);	
 		}
 	}
 	
@@ -327,14 +311,10 @@ public class BGController extends Controller
 		if (debug)
 			System.out.println ("  [BG] Control cycle: " + (System.currentTimeMillis () - ctime) + " ms");
 
-		if ((b_buffer != null) && (localgfx || dump))
+		if ((b_buffer != null) && localgfx)
 		{
-			interp.fusion (program, b_buffer);
-			
-			if (localgfx)
-				b_plot.draw (b_buffer);	
-			if (dump)
-				b_dump.write (b_buffer);
+			interp.fusion (program, b_buffer);			
+			b_plot.draw (b_buffer);	
 		}
 	}
 	

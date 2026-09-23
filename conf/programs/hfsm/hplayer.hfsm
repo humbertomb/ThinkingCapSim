@@ -11,7 +11,7 @@
       {
         "name": "AroundBall",
         "id": 1,
-        "x": 631,
+        "x": 669,
         "y": 206,
         "code": "chaos.setBehavior(\"ngo2ball\")\n",
         "transitions": [
@@ -38,8 +38,8 @@
       {
         "name": "FaceBall",
         "id": 4,
-        "x": 187,
-        "y": 147,
+        "x": 262,
+        "y": 149,
         "code": "chaos.setBehavior(\"faceball\")\n",
         "transitions": [
           {
@@ -65,8 +65,8 @@
       {
         "name": "GoToBall",
         "id": 7,
-        "x": 39,
-        "y": 447,
+        "x": 103,
+        "y": 448,
         "code": "chaos.setBehavior(\"go2ball\")\n",
         "transitions": [
           {
@@ -101,8 +101,8 @@
       {
         "name": "LookForBallAtt",
         "id": 11,
-        "x": 185,
-        "y": 11,
+        "x": 207,
+        "y": -44,
         "code": "--io.write(\"Look4ball - Attacker\\n\")\n\nchaos.setBehavior(\"lookball\")",
         "transitions": [
           {
@@ -119,8 +119,8 @@
       {
         "name": "ChaseBall",
         "id": 13,
-        "x": 631,
-        "y": 395,
+        "x": 708,
+        "y": 398,
         "code": "chaos.setBehavior(\"go2ball\")",
         "transitions": [
           {

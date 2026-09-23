@@ -32,13 +32,11 @@ public class FHBController extends Controller
 		
 	// Controller debug
 	protected LogPlot				c_plot;
-	protected LogFile				c_dump;
 	protected double[]				c_buffer;
 	protected String[]				c_labels;
 	
 	// Behaviour fusion debug
 	private LogPlot					b_plot;
-	private LogFile					b_dump;
 	private double[]				b_buffer;
 	
 	/* Goal and task related variables */
@@ -118,10 +116,8 @@ public class FHBController extends Controller
 		c_labels	= new String[4];
 		c_labels[0]	= "speed";
 		c_labels[1]	= "turn";
-		c_dump		= new LogFile (PREFFIX, ".log");
 		c_plot		= new LogPlot ("Controller Output", "step", "values");
 		
-		b_dump		= new LogFile (PREFFIX, ".beh");
 		b_plot		= new LogPlot ("Behaviour Fusion", "step", "DoA");
 		b_plot.setImpulses (true);
 		b_plot.setYRange (0.0, 1.0);		
@@ -269,8 +265,6 @@ public class FHBController extends Controller
 
 			if (localgfx)
 				c_plot.draw (c_buffer);	
-			else
-				c_dump.write (c_buffer);
 		}
 	}
 	
@@ -330,8 +324,6 @@ public class FHBController extends Controller
 
 			if (localgfx)
 				b_plot.draw (b_buffer);	
-			else if (!localgfx)
-				b_dump.write (b_buffer);
 		}
 	}
 	
@@ -467,17 +459,6 @@ public class FHBController extends Controller
 					b_plot.open (labels);
 				c_plot.open (c_labels);
 			}
-			else
-			{
-				if (labels != null)		
-					b_dump.open (labels);
-				c_dump.open (c_labels);
-			}
-		}
-		else
-		{
-			b_dump.close ();
-			c_dump.close ();
 		}
 	}
 	

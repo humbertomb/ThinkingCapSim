@@ -12,11 +12,11 @@
         {
           "name": "Controller",
           "properties": {
-            "CLASS": "tclib.behaviours.hfsm.HFSMController",
+            "CLASS": "tclib.behaviours.lua.LuaController",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "./conf/programs/hfsm/aplayer.hfsm",
+            "PRG": "./conf/programs/lua/lookForBall.lua",
             "TYPE": "Controller",
             "AUTO": "true"
           },

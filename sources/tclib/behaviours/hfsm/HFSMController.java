@@ -50,7 +50,6 @@ public class HFSMController extends Controller
 	// Controller debug
 	protected tclib.behaviours.hfsm.gui.HFSMMonitorWindow	monitor;	// the diagram, with where the machine is
 	protected LogPlot				c_plot;
-	protected LogFile				c_dump;
 	protected double[]				c_buffer;
 	protected String[]				c_labels;
 
@@ -71,8 +70,6 @@ public class HFSMController extends Controller
 	protected Position				looka;						// Current look-ahead point
 	protected int					looka_pts;					// Current look-ahead distance (points)
 	protected double				path_dst;					// Current robot to desired path distance (m)
-
-	protected boolean				dump;
 
 	// Constructors
 	public HFSMController (ModuleConfig cfg, Linda linda)
@@ -108,10 +105,7 @@ public class HFSMController extends Controller
 		c_labels	= new String[4];
 		c_labels[0]	= "speed";
 		c_labels[1]	= "turn";
-		c_dump		= new LogFile (PREFFIX, ".log");
 		c_plot		= new LogPlot ("Controller Output", "step", "values");
-
-		dump		= false;
 
 		// Load the machine of states
 		parse (cfg);
@@ -134,8 +128,6 @@ public class HFSMController extends Controller
 		String			behs = cfg.get ("BEH");
 		String			lpos = cfg.get ("LPOS");
 
-		c_dump.close ();
-
 		if (name == null)						return;
 
 		try
@@ -154,7 +146,6 @@ public class HFSMController extends Controller
 				c_plot.open (c_labels);
 				monitor	= tclib.behaviours.hfsm.gui.HFSMMonitorWindow.open (machine, cfg.robot ());
 			}
-			if (dump)							c_dump.open (c_labels);
 		}
 		catch (Exception e)
 		{
@@ -278,15 +269,11 @@ public class HFSMController extends Controller
 		setMotion (speed, turn);
 
 		// Plot current control commands
-		if (localgfx || dump)
+		if (localgfx)
 		{
 			c_buffer[0] 	= Math.max (Math.min (speed / rdesc.model.Vmax, 1.0), -1.0);
 			c_buffer[1] 	= Math.max (Math.min (turn / rdesc.model.Rmax, 1.0), -1.0);
-
-			if (localgfx)
-				c_plot.draw (c_buffer);
-			if (dump)
-				c_dump.write (c_buffer);
+			c_plot.draw (c_buffer);
 		}
 	}
 
