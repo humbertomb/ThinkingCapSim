@@ -4,18 +4,18 @@ ball_pos=0
 net1_pos=1
 net2_pos=2
 
-PI05 = 1.5707963268
-PI =  3.1415926536	
-PI2 = 6.2831853072
+PI05 = 90
+PI =  180	
+PI2 = 360
 
-DEG10   = 0.174
-DEG20   = 0.33
-DEG30   = 0.5
-DEG40   = 0.698
-DEG45   = 0.785
-DEG70   = 1.222
+DEG10   = 9.9695
+DEG20   = 18.9076
+DEG30   = 28.6479
+DEG40   = 39.9925
+DEG45   = 44.9772
+DEG70   = 70.0154
 DEG90   = PI05
-DEG120 = 2.07
+DEG120 = 118.6023
 DEG180  = PI
 --
 GOOD_ANCHOR_BALL = 0.95
@@ -54,9 +54,9 @@ vrot = 0
 if math.abs(ball.theta) < DEG10 then
 	vrot = 0
 elseif math.abs(ball.theta) < DEG45 then
-	vrot = 60 * ball.theta
+	vrot = 1.0471975511965976 * ball.theta
 else
-	vrot = 90 * ball.theta
+	vrot = 1.5707963267948966 * ball.theta
 end
 
 if (math.abs (vrot) < 10) and ((math.abs (vrot) > 5)) then

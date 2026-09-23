@@ -6,8 +6,8 @@
 
 -- Constants and parameters
 LPOBALL = 0
-ANGLELARGE = 0.85		-- 50-60 grados
-ANGLESMALL = 0.40		-- 40 grados
+ANGLELARGE = 48.7014		-- degrees, as every angle here
+ANGLESMALL = 22.9183		-- degrees, as every angle here
 SLOWDOWN = 360
 
 -- Implementation
@@ -19,9 +19,9 @@ if (ball.rho < SLOWDOWN) then
 	-- Slow approach to ball
 	vlin = 0.6 * ball.rho -100
 	if (math.abs(ball.theta) < ANGLESMALL) then		-- small angle
-		vrot = 50 * ball.theta
+		vrot = 0.8726646259971648 * ball.theta
 	else				-- large angle
-		vrot = 70 * ball.theta
+		vrot = 1.2217304763960306 * ball.theta
 	end
 
 
@@ -30,7 +30,7 @@ else
 	-- Fast approach to ball
 	if (math.abs(ball.theta) < ANGLESMALL) then		-- small angle
 		vlin = 400
-		vrot = 90 * ball.theta
+		vrot = 1.5707963267948966 * ball.theta
 	elseif (math.abs(ball.theta) < ANGLELARGE) then	-- medium angle
 		vlin = 250
 		vrot = 120 * ball.theta / math.abs(ball.theta)

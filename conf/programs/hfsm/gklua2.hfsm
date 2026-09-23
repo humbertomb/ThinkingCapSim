@@ -61,14 +61,14 @@
       "name": "ANG_LOW",
       "type": "float",
       "elements": "1",
-      "value": "0.5",
+      "value": "28.6479",
       "machine": "gklua2"
     },
     {
       "name": "ANG_HIGH",
       "type": "float",
       "elements": "1",
-      "value": "1.0",
+      "value": "57.2958",
       "machine": "gklua2"
     },
     {
@@ -100,7 +100,7 @@
             "y": 253,
             "to": "KeepInArea",
             "toId": 14,
-            "test": "PI2=3.141592/2.0\ntemp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nnet1=chaos.getLpo(3) -- Net1\n\n-- InPos and (see net1 or myPos.angle is 90)\n\n--if dist < IN_POS and ((net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) or\n--                     (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH)) then\nif dist < IN_POS and (net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) then\n    return true\nelse\n    return false\n\nend\n"
+            "test": "PI2=90\ntemp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nnet1=chaos.getLpo(3) -- Net1\n\n-- InPos and (see net1 or myPos.angle is 90)\n\n--if dist < IN_POS and ((net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) or\n--                     (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH)) then\nif dist < IN_POS and (net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) then\n    return true\nelse\n    return false\n\nend\n"
           },
           {
             "name": "BallVisGoTo",
@@ -165,7 +165,7 @@
             "y": 42,
             "to": "KeepInArea",
             "toId": 14,
-            "test": "PI2=3.141592/2.0\ntemp=chaos.gsGetMyPos()\nnet1=chaos.getLpo(3) -- Net1\n\nif (net1.anchored > ANCHORED_HIGH and math.abs(net1.theta) < ANG_LOW) or\n   (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH) then\n    return true\nelse\n    return false\nend\n"
+            "test": "PI2=90\ntemp=chaos.gsGetMyPos()\nnet1=chaos.getLpo(3) -- Net1\n\nif (net1.anchored > ANCHORED_HIGH and math.abs(net1.theta) < ANG_LOW) or\n   (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH) then\n    return true\nelse\n    return false\nend\n"
           }
         ],
         "meta": true,
@@ -269,7 +269,7 @@
                 "y": 16,
                 "to": "SearchNet1",
                 "toId": 21,
-                "test": "local Pi2=3.141592/2.0\nnet1=3\n-- Lpo object position\nlocal temp_lpo = chaos.getLpo(net1)\nball=0\nchaos.setNeeded(ball, 1.0)\nnet1=3\nchaos.setNeeded(net1, 1.0)\n\nif temp_lpo.anchored < ANCHORED_LOW then \n    return true\nelse\n    -- Check global data\n   -- mypos=chaos.gsGetMyPos()\n   -- if mypos.quality > QUALITY_HIGH and math.abs(mypos.theta - Pi2) > ANG_LOW then\n    --    return true\n   -- else\n        return false\n   -- end\nend\n"
+                "test": "local Pi2=90\nnet1=3\n-- Lpo object position\nlocal temp_lpo = chaos.getLpo(net1)\nball=0\nchaos.setNeeded(ball, 1.0)\nnet1=3\nchaos.setNeeded(net1, 1.0)\n\nif temp_lpo.anchored < ANCHORED_LOW then \n    return true\nelse\n    -- Check global data\n   -- mypos=chaos.gsGetMyPos()\n   -- if mypos.quality > QUALITY_HIGH and math.abs(mypos.theta - Pi2) > ANG_LOW then\n    --    return true\n   -- else\n        return false\n   -- end\nend\n"
               }
             ]
           },
@@ -287,7 +287,7 @@
                 "y": 344,
                 "to": "KeepInArea",
                 "toId": 19,
-                "test": "local Pi2=3.141592/2.0\n\n-- Lpo object position\nnet1=3\nlocal temp_lpo = chaos.getLpo(net1)\nif temp_lpo.anchored > ANCHORED_HIGH and math.abs(temp_lpo.theta) < ANG_LOW then \n    return true\nelse\n    -- Not seen in Lps. Check if my location is good enough\n    --mypos=chaos.gsGetMyPos()\n    --if mypos.quality > QUALITY_HIGH and  math.abs(mypos.theta - Pi2) < ANG_LOW then\n    --    return true\n    --else\n        return false\n    --end\nend"
+                "test": "local Pi2=90\n\n-- Lpo object position\nnet1=3\nlocal temp_lpo = chaos.getLpo(net1)\nif temp_lpo.anchored > ANCHORED_HIGH and math.abs(temp_lpo.theta) < ANG_LOW then \n    return true\nelse\n    -- Not seen in Lps. Check if my location is good enough\n    --mypos=chaos.gsGetMyPos()\n    --if mypos.quality > QUALITY_HIGH and  math.abs(mypos.theta - Pi2) < ANG_LOW then\n    --    return true\n    --else\n        return false\n    --end\nend"
               }
             ]
           }

@@ -60,7 +60,7 @@
                 "y": 164,
                 "to": "GoToBall",
                 "toId": 6,
-                "test": "\tlocal ball = chaos.getLpo(0)\n\t\n\tif math.abs(ball.theta) < 0.3 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
+                "test": "\tlocal ball = chaos.getLpo(0)\n\t\n\tif math.abs(ball.theta) < 17.1887 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
               }
             ]
           },
@@ -124,7 +124,7 @@
                     "y": 169,
                     "to": "Align",
                     "toId": 14,
-                    "test": "--local ball = chaos.getLpo(0)\n--local net1 = chaos.getLpo(3)\n\n--if math.abs(net1.theta) > 0.8 and net1.anchored > 0.4 then \n--\treturn true\n--else\n--\treturn false\n--end\n\nreturn false"
+                    "test": "--local ball = chaos.getLpo(0)\n--local net1 = chaos.getLpo(3)\n\n--if math.abs(net1.theta) > 45.8366 and net1.anchored > 0.4 then \n--\treturn true\n--else\n--\treturn false\n--end\n\nreturn false"
                   },
                   {
                     "name": "Kickable",
@@ -151,7 +151,7 @@
                     "y": 173,
                     "to": "ApproachBall",
                     "toId": 11,
-                    "test": "local ball = chaos.getLpo(0)\nlocal net1 = chaos.getLpo(3)\n\nif math.abs(net1.theta) <= 0.5 then \n\treturn true\nelse\n\treturn false\nend"
+                    "test": "local ball = chaos.getLpo(0)\nlocal net1 = chaos.getLpo(3)\n\nif math.abs(net1.theta) <= 28.6479 then \n\treturn true\nelse\n\treturn false\nend"
                   }
                 ]
               },
@@ -347,7 +347,7 @@
                     "y": 179,
                     "to": "ApproachBall",
                     "toId": 33,
-                    "test": "--local ball = chaos.getLpo(0)\n\n--if math.abs(ball.theta) < 0.3 then \n--\treturn true\n--else \n\treturn false\n--end\n"
+                    "test": "--local ball = chaos.getLpo(0)\n\n--if math.abs(ball.theta) < 17.1887 then \n--\treturn true\n--else \n\treturn false\n--end\n"
                   }
                 ]
               }

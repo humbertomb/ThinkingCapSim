@@ -3,14 +3,14 @@
 
 -- Constants and parameters
 NET1LPO = 1
-ANGLELARGE = 0.85		-- 50-60 grados
-ANGLESMALL = 0.40		-- 40 grados
+ANGLELARGE = 48.7014		-- degrees, as every angle here
+ANGLESMALL = 22.9183		-- degrees, as every angle here
 SLOWDOWN = 300
 GOTTHERE = 100
 
-PI05 = 1.5707963268
-PI =  3.1415926536	
-PI2 = 6.2831853072
+PI05 = 90
+PI =  180	
+PI2 = 360
 
 MAXVEL = 370
 
@@ -25,7 +25,7 @@ local dest = chaos.getDesiredPos()
 local net1 = chaos.getLpo(NET1LPO)
 dx = dest.x - pos.x
 dy = dest.y - pos.y
-dth = math.atan2(dy,dx)
+dth = math.deg(math.atan2(dy,dx))
 rho= math.sqrt(dx*dx+dy*dy)		-- Distance to destination position
 theta = dth - pos.theta		-- Difference with the angle needed for going to destination
 
@@ -36,8 +36,8 @@ elseif (theta < -PI) then
 	theta =  theta + PI2 
 end	
 
-rdestx=-rho*math.sin(theta)
-rdesty=rho*math.cos(theta)
+rdestx=-rho*math.sin(math.rad(theta))
+rdesty=rho*math.cos(math.rad(theta))
 
 
 --io.write(" px = ",pos.x," py = ",pos.y)
@@ -68,18 +68,18 @@ vlin = (rdesty/maxdist)*MAXVEL
 vlat = (rdestx/maxdist)*MAXVEL
 
 if (math.abs(net1.theta) < ANGLESMALL) then		-- small angle
-		vrot = 50 * net1.theta
+		vrot = 0.8726646259971648 * net1.theta
 	else				-- large angle
-		vrot = 70 * net1.theta
+		vrot = 1.2217304763960306 * net1.theta
 	end
 
 --io.write(" ------------------------vlin = ",vlin," vlat = ",vlat,"\n")
 --vrot = 40
 if((net1.anchored < 0.8) and  (rho<GOTTHERE)) then
 if (math.abs(net1.theta) < ANGLESMALL) then		-- small angle
-		vrot = 50 * net1.theta
+		vrot = 0.8726646259971648 * net1.theta
 	else				-- large angle
-		vrot = 70 * net1.theta
+		vrot = 1.2217304763960306 * net1.theta
 	end
 
 --

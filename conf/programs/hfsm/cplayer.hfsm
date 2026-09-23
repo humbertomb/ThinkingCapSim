@@ -105,7 +105,7 @@
                 "y": 284,
                 "to": "GoToBall",
                 "toId": 13,
-                "test": "\tlocal ball = chaos.getLpo(0)\n\t\n\tif math.abs(ball.theta) < 0.3 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
+                "test": "\tlocal ball = chaos.getLpo(0)\n\t\n\tif math.abs(ball.theta) < 17.1887 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
               },
               {
                 "name": "BallLostAtt1",
@@ -132,7 +132,7 @@
                 "y": 455,
                 "to": "AlignBallAndNet1",
                 "toId": 17,
-                "test": "local ball = chaos.getLpo(0)\nlocal net1 = chaos.getLpo(5)\nlocal net2 = chaos.getLpo(6)\n\nif ball.rho < 800 then\n\tif (net1.anchored > 0.5) and (math.abs(net1.theta) > 1.6) then \n\t\treturn true\n\tend\n\tif (net2.anchored > 0.5) and (math.abs(net2.theta) < 1.6) then \n\t\treturn true\n\tend\nend\n\nreturn false"
+                "test": "local ball = chaos.getLpo(0)\nlocal net1 = chaos.getLpo(5)\nlocal net2 = chaos.getLpo(6)\n\nif ball.rho < 800 then\n\tif (net1.anchored > 0.5) and (math.abs(net1.theta) > 91.6732) then \n\t\treturn true\n\tend\n\tif (net2.anchored > 0.5) and (math.abs(net2.theta) < 91.6732) then \n\t\treturn true\n\tend\nend\n\nreturn false"
               },
               {
                 "name": "NoAlignment",
@@ -141,7 +141,7 @@
                 "y": 283,
                 "to": "ApproachBall",
                 "toId": 5,
-                "test": "\nlocal ball = chaos.getLpo(0)\nlocal net1 = chaos.getLpo(5)\nlocal net2 = chaos.getLpo(6)\n\nif ball.rho < 800 then\n\tif (net1.anchored > 0.5) and (math.abs(net1.theta) < 1.6) then \n\t\treturn true\n\tend\n\tif (net2.anchored > 0.5) and (math.abs(net2.theta) > 1.6) then \n\t\treturn true\n\tend\nend\n\nreturn false"
+                "test": "\nlocal ball = chaos.getLpo(0)\nlocal net1 = chaos.getLpo(5)\nlocal net2 = chaos.getLpo(6)\n\nif ball.rho < 800 then\n\tif (net1.anchored > 0.5) and (math.abs(net1.theta) < 91.6732) then \n\t\treturn true\n\tend\n\tif (net2.anchored > 0.5) and (math.abs(net2.theta) > 91.6732) then \n\t\treturn true\n\tend\nend\n\nreturn false"
               },
               {
                 "name": "BallLostAtt2",
@@ -168,7 +168,7 @@
                 "y": 295,
                 "to": "ApproachBall",
                 "toId": 5,
-                "test": "local ball = chaos.getLpo(0)\nlocal net1 = chaos.getLpo(5)\n\nif math.abs(net1.theta) <= 1.6 then \n\treturn true\nelse\n\treturn false\nend"
+                "test": "local ball = chaos.getLpo(0)\nlocal net1 = chaos.getLpo(5)\n\nif math.abs(net1.theta) <= 91.6732 then \n\treturn true\nelse\n\treturn false\nend"
               },
               {
                 "name": "BallLostAtt4",

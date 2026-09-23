@@ -3,16 +3,16 @@ ball_pos=0
 net1_pos=1
 net2_pos=2
 
-PI05 = 1.5707963268
-PI =  3.1415926536	
-PI2 = 6.2831853072
+PI05 = 90
+PI =  180	
+PI2 = 360
 
-DEG05   = 0.08
-DEG10   = 0.174
-DEG20   = 0.35
-DEG30   = 0.5
-DEG40   = 0.698
-DEG45   = 0.785
+DEG05   = 4.5837
+DEG10   = 9.9695
+DEG20   = 20.0535
+DEG30   = 28.6479
+DEG40   = 39.9925
+DEG45   = 44.9772
 DEG90   = PI05
 DEG180  = PI
 
@@ -78,7 +78,7 @@ end
 if math.abs (obj_th) < DEG20 then
 	vrot = 0
 elseif math.abs (obj_th) < DEG45 then
-	vrot = 100 * obj_th
+	vrot = 1.7453292519943295 * obj_th
 elseif obj_th >= DEG45 then
 	vrot = 70
 else
@@ -90,14 +90,14 @@ if math.abs(delta) < HEADING then
 	vlat = 0
 else
 	if delta > 0 then
-		vlat = -400 * delta - 50
-		vrot = vrot + 50 * delta
+		vlat = -6.981317007977318 * delta - 50
+		vrot = vrot + 0.8726646259971648 * delta
 
 		if vlat < -200 then vlat = -200 end
 		if vrot > 70 then vrot = 70 end
 	else
-   		vlat = -400 * delta + 50
-		vrot = vrot + 50 * delta
+   		vlat = -6.981317007977318 * delta + 50
+		vrot = vrot + 0.8726646259971648 * delta
 
 		if vlat > 200 then vlat = 200 end
 		if vrot < -70 then vrot = -70 end

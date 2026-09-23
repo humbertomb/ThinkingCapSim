@@ -4,8 +4,8 @@ ball_pos=0
 net1_pos=3
 net2_pos=4
 
-PI =  3.1415926536	
-PI2 = 6.2831853072
+PI =  180	
+PI2 = 360
 
 DISTANCE	= 450
 
@@ -39,8 +39,8 @@ end
 
 
 --io.write( "net1.anchored =",net1.anchored,", net1.theta =", net1.theta,"\n");
-clin =   ball.rho * math.cos(ball.theta)
-clat =  -ball.rho * math.sin(ball.theta)
+clin =   ball.rho * math.cos(math.rad(ball.theta))
+clat =  -ball.rho * math.sin(math.rad(ball.theta))
 targetRadium = 670;
 sense = -1;
 

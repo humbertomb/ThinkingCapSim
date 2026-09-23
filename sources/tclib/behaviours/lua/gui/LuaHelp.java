@@ -147,7 +147,7 @@ public class LuaHelp
 					+ "The numbers are the ones the module was given in LPOS: 0 the ball, 1 and 2 the nets, 3 the align point, 4 the look-ahead." },
 		{ "setNeeded", "index, weight", "Says that the behaviour needs to keep seeing that object, and how much (0 to 1). "
 					+ "The vision of the simulation looks everywhere at once, so it is taken note of and no more." },
-		{ "getMyPos", "", "Where the robot thinks it is: x and y in mm, theta in radians, in the field." },
+		{ "getMyPos", "", "Where the robot thinks it is: x and y in mm, theta in degrees, in the field." },
 		{ "gsGetMyPos", "", "The same, as the Chaos robots asked for it when the position came of the sight of the landmarks. "
 					+ "<span class=\"mono\">quality</span> says how sure it is (1 in the simulation)." },
 		{ "getBallVel", "", "How fast the ball is going, x and y in mm a second." },
@@ -162,7 +162,7 @@ public class LuaHelp
 					+ "<span class=\"mono\">isNew</span> (1 on its first cycle, 0 afterwards), <span class=\"mono\">timer</span> "
 					+ "and <span class=\"mono\">time</span> (ms since it started), <span class=\"mono\">finished</span> and "
 					+ "<span class=\"mono\">failed</span>. A behaviour that sets itself up does it when isNew is 1." },
-		{ "setDesiredPos", "x, y, theta", "Where the robot is to end up: mm and radians." },
+		{ "setDesiredPos", "x, y, theta", "Where the robot is to end up: mm and degrees." },
 		{ "setTargetPos", "x, y, theta", "The same as setDesiredPos, under the name some scripts use." },
 		{ "getDesiredPos", "", "Where it was told to end up, as a point." },
 		{ "setKick", "", "Kick now." },
@@ -208,8 +208,9 @@ public class LuaHelp
 		{ "min", "x, ...", "The smallest." },
 		{ "deg", "radians", "As degrees." },
 		{ "rad", "degrees", "As radians, as Lua has it: nothing is normalised." },
-		{ "radians", "degrees", "As radians brought into -pi .. pi, which is what an angle of the robot is. "
-					+ "This one is ours, and is the one to use on an angle." },
+		{ "radians", "degrees", "As radians brought into -pi .. pi. This one is ours; it is of no use on an angle of the "
+					+ "bridge, which is in degrees already, but it is what puts an angle of a script right before it goes "
+					+ "into a function of Lua." },
 		{ "random", "[m [, n]]", "A number between 0 and 1, between 1 and m, or between m and n." },
 		{ "randomseed", "x", "There to be called; the numbers are the ones of the machine." },
 	};
@@ -271,9 +272,14 @@ public class LuaHelp
 		h.append ("<p class=\"lead\">A behaviour sees one table of its own, <span class=\"mono\">chaos</span>, which is the robot, ")
 		 .append ("and the part of the standard library of Lua that is there. This page is written out of those tables themselves, ")
 		 .append ("so it says what there is now.</p>");
-		h.append ("<p class=\"lead\">Units, as the Chaos robots had them: <b>distances in millimetres</b>, ")
-		 .append ("<b>angles in radians</b>, <b>speeds in mm a second</b> and <b>turn rates in degrees a second</b>. ")
-		 .append ("ThinkingCap works in metres and radians a second, and the bridge does the changing.</p>");
+		h.append ("<p class=\"lead\">Units: <b>distances in millimetres</b>, <b>angles in degrees</b>, ")
+		 .append ("<b>speeds in mm a second</b> and <b>turn rates in degrees a second</b>. Every angle a script is given or ")
+		 .append ("gives is in degrees and between -180 and 180, the way the turn rates always were. ThinkingCap works in ")
+		 .append ("metres and radians, and the bridge does the changing.</p>");
+		h.append ("<p class=\"lead\">The functions of <span class=\"mono\">math</span> are the ones of Lua and think in ")
+		 .append ("radians, so an angle goes into one through <span class=\"mono\">math.rad</span> and comes out of one ")
+		 .append ("through <span class=\"mono\">math.deg</span>: <span class=\"mono\">math.cos (math.rad (ball.theta))</span>, ")
+		 .append ("<span class=\"mono\">math.deg (math.atan2 (dy, dx))</span>.</p>");
 
 		h.append ("<h2>Contents</h2><p class=\"wire\">");
 		h.append ("<a href=\"#chaos\">chaos</a> &nbsp; <a href=\"#tables\">the tables it answers</a> &nbsp; ");
@@ -293,7 +299,7 @@ public class LuaHelp
 		h.append ("<ul>");
 		h.append ("<li><b>an object</b> (<span class=\"mono\">chaos.getLpo</span>): ")
 		 .append ("<span class=\"mono\">index</span>, <span class=\"mono\">name</span>, ")
-		 .append ("<span class=\"mono\">rho</span> (how far, mm), <span class=\"mono\">theta</span> (which way, radians), ")
+		 .append ("<span class=\"mono\">rho</span> (how far, mm), <span class=\"mono\">theta</span> (which way, degrees), ")
 		 .append ("<span class=\"mono\">x</span> and <span class=\"mono\">y</span> (the same, in front of the robot, mm), ")
 		 .append ("<span class=\"mono\">anchored</span> and <span class=\"mono\">quality</span> (0 to 1: how sure, and 0 when it ")
 		 .append ("has not been seen for a while), <span class=\"mono\">active</span>. ")
@@ -301,14 +307,15 @@ public class LuaHelp
 		h.append ("<li><b>a point</b> (<span class=\"mono\">getMyPos</span>, <span class=\"mono\">getDesiredPos</span>, ")
 		 .append ("<span class=\"mono\">getBallVel</span>, <span class=\"mono\">getOptimalPose</span>, ")
 		 .append ("<span class=\"mono\">getDefPose</span>): <span class=\"mono\">x</span>, <span class=\"mono\">y</span> (mm), ")
-		 .append ("<span class=\"mono\">theta</span> (radians), <span class=\"mono\">quality</span>, <span class=\"mono\">anchored</span>.</li>");
+		 .append ("<span class=\"mono\">theta</span> (degrees), <span class=\"mono\">quality</span>, <span class=\"mono\">anchored</span>.</li>");
 		h.append ("<li><b>the behaviour</b> (<span class=\"mono\">getBehaviorInfo</span>) and <b>the part played</b> ")
 		 .append ("(<span class=\"mono\">getRole</span>), as said above.</li>");
 		h.append ("</ul>");
 
 		card (h, "math", "math", "tclib.behaviours.lua.interpreter.LuaLib",
-			  "The whole of the numbers. Angles are in radians, so an angle of the robot in degrees is put right with "
-			  + "<span class=\"mono\">math.radians</span>.", (LuaTable) lua.get ("math"), MATH_HELP);
+			  "The whole of the numbers. These are the functions of Lua, so they think in radians while everything of the "
+			  + "robot is in degrees: <span class=\"mono\">math.rad</span> going in and <span class=\"mono\">math.deg</span> "
+			  + "coming out.", (LuaTable) lua.get ("math"), MATH_HELP);
 		card (h, "string", "string", "tclib.behaviours.lua.interpreter.LuaLib",
 			  "The part of the text a behaviour needs, which is little: what it writes is for a person to read on the console.",
 			  (LuaTable) lua.get ("string"), STRING_HELP);

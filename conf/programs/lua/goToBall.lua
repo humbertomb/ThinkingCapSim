@@ -8,8 +8,8 @@
 
 -- Constants and parameters
 LPOBALL = 0
-ANGLELARGE = 0.85		-- 50-60 grados
-ANGLESMALL = 0.40		-- 40 grados
+ANGLELARGE = 48.7014		-- 50 degrees
+ANGLESMALL = 22.9183		-- 23 degrees
 SLOWDOWN = 360
 
 -- Implementation
@@ -18,8 +18,8 @@ vrot = 0
 local ball = chaos.getLpo(LPOBALL)
 --io.write(" brho = ",ball.rho," btheta = ",ball.theta)
 
-linPos = ball.rho * math.cos(ball.theta)
-latPos = - ball.rho * math.sin(ball.theta)
+linPos = ball.rho * math.cos(math.rad(ball.theta))
+latPos = - ball.rho * math.sin(math.rad(ball.theta))
 thetaPos = ball.theta
 
 chaos.setTargetPos(linPos, latPos, thetaPos)

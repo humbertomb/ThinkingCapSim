@@ -25,15 +25,37 @@ import wucore.utils.math.Angles;
  * the end of the cycle.
  *
  * The scripts come from the Chaos robots, which said distances in millimetres
- * and angles in radians, and asked for speeds in millimetres a second and turn
- * rates in degrees a second. Everything that crosses this bridge is turned into
- * what ThinkingCap uses (metres, radians a second) and back, so that the scripts
- * need no changing.
+ * and asked for speeds in millimetres a second and turn rates in degrees a
+ * second. Angles are in degrees here as well, so that everything a script reads
+ * and writes about an angle is in the same unit: what ThinkingCap keeps in
+ * metres and radians is turned on this bridge and nowhere else.
  */
 public class Chaos
 {
 	/** How many millimetres a metre has: what the scripts count distances in. */
 	static public final double		MM			= 1000.0;
+
+	/**
+	 * Every angle the scripts are given or give is in degrees, as their turn rates
+	 * always were: what ThinkingCap keeps in radians is turned here and nowhere
+	 * else, and an angle is brought into -180 .. 180.
+	 */
+	static public double degrees (double radians)
+	{
+		if (!Double.isFinite (radians))			return radians;
+
+		double		d = Math.toDegrees (radians) % 360.0;
+
+		if (d > 180.0)							d -= 360.0;
+		else if (d <= -180.0)					d += 360.0;
+		return d;
+	}
+
+	/** An angle of the scripts (degrees) as ThinkingCap keeps it (radians). */
+	static public double radians (double degrees)
+	{
+		return Double.isFinite (degrees) ? Math.toRadians (degrees) : degrees;
+	}
 
 	/** The objects of the LPS the scripts ask for by number (chaos.getLpo). */
 	static public final String[]	LPOS		= { "Ball", "Net1", "Net2", "Align", "Looka" };
@@ -165,7 +187,7 @@ public class Chaos
 	/* The table of functions                                             */
 	/* ------------------------------------------------------------------ */
 
-	/** An object of the LPS as the scripts read it: rho in mm, theta in rad. */
+	/** An object of the LPS as the scripts read it: rho in mm, theta in degrees. */
 	protected LuaTable lpo (int index)
 	{
 		LuaTable		t = new LuaTable ();
@@ -174,7 +196,7 @@ public class Chaos
 		t.set ("index", Double.valueOf (index));
 		t.set ("name", ((index >= 0) && (index < lpos.length)) ? lpos[index] : "?");
 		t.set ("rho", Double.valueOf ((o != null) ? (o.rho () * MM) : 0.0));
-		t.set ("theta", Double.valueOf ((o != null) ? o.theta () : 0.0));
+		t.set ("theta", Double.valueOf ((o != null) ? degrees (o.theta ()) : 0.0));
 		t.set ("anchored", Double.valueOf ((o != null) ? o.anchor () : 0.0));
 		t.set ("quality", Double.valueOf ((o != null) ? o.anchor () : 0.0));
 		t.set ("active", Boolean.valueOf ((o != null) && o.active ()));
@@ -201,7 +223,7 @@ public class Chaos
 
 		t.set ("x", Double.valueOf (x * MM));
 		t.set ("y", Double.valueOf (y * MM));
-		t.set ("theta", Double.valueOf (theta));
+		t.set ("theta", Double.valueOf (degrees (theta)));
 		t.set ("quality", Double.valueOf (1.0));
 		t.set ("anchored", Double.valueOf (1.0));
 		return t;
@@ -311,9 +333,9 @@ public class Chaos
 			{
 				double		x = sane (name, num (args, 0, 0.0), desired.x () * MM);
 				double		y = sane (name, num (args, 1, 0.0), desired.y () * MM);
-				double		a = sane (name, num (args, 2, 0.0), desired.alpha ());
+				double		a = sane (name, num (args, 2, 0.0), degrees (desired.alpha ()));
 
-				desired.set (x / MM, y / MM, a);
+				desired.set (x / MM, y / MM, radians (a));
 				return null;
 			}
 		});
