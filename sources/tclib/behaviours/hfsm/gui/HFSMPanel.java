@@ -41,6 +41,7 @@ import tclib.behaviours.hfsm.State;
 import tclib.behaviours.hfsm.Transition;
 import tclib.behaviours.hfsm.XMLParser;
 import tclib.behaviours.hfsm.XMLWriter;
+import tclib.behaviours.lua.gui.CodeEditor;
 
 /**
  * The editor of a machine of hierarchical states: the diagram of one level in

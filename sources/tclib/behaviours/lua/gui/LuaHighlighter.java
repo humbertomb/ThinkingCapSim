@@ -2,7 +2,7 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tclib.behaviours.hfsm.gui;
+package tclib.behaviours.lua.gui;
 
 import java.awt.Color;
 import java.util.Arrays;

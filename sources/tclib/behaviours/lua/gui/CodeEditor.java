@@ -2,7 +2,7 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tclib.behaviours.hfsm.gui;
+package tclib.behaviours.lua.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -55,6 +55,7 @@ public class CodeEditor extends JPanel
 	protected LuaHighlighter		lua;
 	protected Listener				listener;
 	protected boolean				quiet;						// setting the text from the outside is no change
+	protected javax.swing.undo.UndoManager	undos = new javax.swing.undo.UndoManager ();
 
 	public CodeEditor (String title)
 	{
@@ -82,6 +83,21 @@ public class CodeEditor extends JPanel
 			public void changedUpdate (DocumentEvent e)		{ }
 		});
 
+		// what was typed can be taken back; the colouring, which is a change of
+		// attributes and not of the text, is not something anybody undoes
+		text.getDocument ().addUndoableEditListener (new javax.swing.event.UndoableEditListener ()
+		{
+			public void undoableEditHappened (javax.swing.event.UndoableEditEvent e)
+			{
+				javax.swing.undo.UndoableEdit	ed = e.getEdit ();
+
+				if (ed instanceof javax.swing.text.AbstractDocument.DefaultDocumentEvent)
+					if (((javax.swing.text.AbstractDocument.DefaultDocumentEvent) ed).getType ()
+						== javax.swing.event.DocumentEvent.EventType.CHANGE)		return;
+				undos.addEdit (ed);
+			}
+		});
+
 		gutter	= new Gutter ();
 		scroll	= new JScrollPane (text);
 		scroll.setRowHeaderView (gutter);
@@ -100,6 +116,24 @@ public class CodeEditor extends JPanel
 		catch (BadLocationException e) { return ""; }
 	}
 
+	/** Whether what was typed can be taken back, and put back again. */
+	public boolean canUndo ()							{ return undos.canUndo (); }
+	public boolean canRedo ()							{ return undos.canRedo (); }
+
+	/** Takes back the last thing typed, if there is one. */
+	public void undo ()
+	{
+		try { if (undos.canUndo ())		undos.undo (); }
+		catch (javax.swing.undo.CannotUndoException e) { }
+	}
+
+	/** Puts back what was taken back, if there is any. */
+	public void redo ()
+	{
+		try { if (undos.canRedo ())		undos.redo (); }
+		catch (javax.swing.undo.CannotRedoException e) { }
+	}
+
 	/** Puts a text in without telling the listener it changed. */
 	public void setCode (String code)
 	{
@@ -107,6 +141,7 @@ public class CodeEditor extends JPanel
 		text.setText ((code != null) ? code : "");
 		text.setCaretPosition (0);
 		quiet	= false;
+		undos.discardAllEdits ();					// a text put in is not something that was typed
 		colour ();
 		gutter.refresh ();
 	}
