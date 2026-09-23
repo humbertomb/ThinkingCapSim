@@ -31,6 +31,9 @@ import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.DefaultEditorKit;
 
+import tclib.behaviours.lua.interpreter.LuaError;
+import tclib.behaviours.lua.interpreter.LuaScript;
+
 /**
  * The editor of one Lua script: a {@link CodeEditor} with the file being
  * written in it, and the File and Edit menus of any editor.
@@ -164,6 +167,14 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 		edit.addSeparator ();
 		edit.add (kit ("Select All", DefaultEditorKit.selectAllAction, KeyStroke.getKeyStroke (KeyEvent.VK_A, mask)));
 		bar.add (edit);
+
+		JMenu		what = new JMenu ("Code");
+
+		what.add (item ("Verify Code", KeyStroke.getKeyStroke (KeyEvent.VK_F5, 0), new Runnable ()
+		{
+			public void run ()		{ verify (); }
+		}));
+		bar.add (what);
 
 		return bar;
 	}
@@ -311,6 +322,47 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 	{
 		if (!confirmDiscard ())					return;
 		dispose ();
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* The code itself                                                     */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * Reads what is written with the interpreter that will run it, and says whether
+	 * it makes sense. What went wrong is said with the line it is on, and that line
+	 * is marked in the editor, so there is no counting to do.
+	 *
+	 * It is only read, never run: nothing of the robot is touched by verifying.
+	 */
+	public boolean verify ()
+	{
+		String			name = (file != null) ? file.getName () : ("untitled" + SUFFIX);
+
+		try
+		{
+			LuaScript	script = new LuaScript (code.getCode (), name);
+			String		said = script.isEmpty () ? (name + " does nothing: it is empty or all comments")
+												 : (name + " reads well: " + script.block ().stats.size () + " statements, "
+													+ code.lines () + " lines");
+
+			status.setText (said);
+			JOptionPane.showMessageDialog (this, said, TITLE, JOptionPane.INFORMATION_MESSAGE);
+			return true;
+		}
+		catch (LuaError e)
+		{
+			if (e.line () > 0)					code.goToLine (e.line ());
+			status.setText (e.getMessage ());
+			JOptionPane.showMessageDialog (this, e.getMessage (), TITLE, JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+		catch (RuntimeException e)
+		{
+			status.setText (name + ": " + e);
+			JOptionPane.showMessageDialog (this, name + " cannot be read:\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
 	}
 
 	/* ------------------------------------------------------------------ */

@@ -166,6 +166,29 @@ public class CodeEditor extends JPanel
 		if (!quiet && (listener != null))				listener.codeChanged (this);
 	}
 
+	/**
+	 * Puts the caret on a line (the first one is 1) and marks the whole of it, so
+	 * that whoever found something wrong there can point at it.
+	 */
+	public void goToLine (int line)
+	{
+		javax.swing.text.Element	root = text.getDocument ().getDefaultRootElement ();
+
+		if ((line < 1) || (root.getElementCount () == 0))	return;
+
+		javax.swing.text.Element	el = root.getElement (Math.min (line - 1, root.getElementCount () - 1));
+
+		text.setCaretPosition (el.getStartOffset ());
+		text.moveCaretPosition (Math.max (el.getStartOffset (), el.getEndOffset () - 1));
+		text.requestFocusInWindow ();
+	}
+
+	/** Which line the caret is on (the first one is 1). */
+	public int line ()						{ return caret ()[0]; }
+
+	/** How many lines there are. */
+	public int lines ()						{ return text.getDocument ().getDefaultRootElement ().getElementCount (); }
+
 	/** Colours what is written, the caret left where it was. */
 	public void colour ()
 	{
