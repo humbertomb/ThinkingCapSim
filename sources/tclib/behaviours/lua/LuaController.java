@@ -333,11 +333,31 @@ public class LuaController extends Controller
 	 */
 	protected void step ()
 	{
+		String			mine = name ();
+
 		chaos.clear ();
 		steps++;
 
+		// the program is itself the behaviour being run, so it is named as such
+		// before it runs: a program that asks (getBehaviorInfo) is then told that it
+		// has just started on the first cycle and how long it has been running on
+		// the rest, which is what a behaviour of the library is told
+		if (chaos.behaviour () == null)			chaos.behaviour (mine);
+
 		run (program);
-		behaviour (chaos.behaviour ());
+
+		// and the behaviour it chose for itself, if it chose one other than itself
+		String			chosen = chaos.behaviour ();
+
+		if ((chosen != null) && !chosen.equals (mine))		behaviour (chosen);
+	}
+
+	/** What the program is called: its file, without the suffix. */
+	public String name ()
+	{
+		String			n = (file != null) ? file.getName () : "program";
+
+		return n.toLowerCase ().endsWith (".lua") ? n.substring (0, n.length () - 4) : n;
 	}
 
 	/** Runs the behaviour of the library the program asked for, if it is there. */
@@ -464,6 +484,8 @@ public class LuaController extends Controller
 		new_goal	= true;
 		has_goal	= true;
 		has_plan	= true;										// now there is somewhere to arrive at
+
+		chaos.behaviour (null);									// the program starts afresh with every new task
 	}
 
 	public void notify_path (String space, ItemPath item)

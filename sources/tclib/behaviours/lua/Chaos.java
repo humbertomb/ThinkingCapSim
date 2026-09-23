@@ -259,13 +259,15 @@ public class Chaos
 			public Object call (Object[] args)		{ vlat = sane (name, num (args, 0, 0.0), vlat);	return null; }
 		});
 
+		// the three velocities at once, in the order the scripts write them:
+		// along, across and around (vlin, vlat, vrot), as x, y and heading
 		c.set ("setVelocities", new LuaFunction ("chaos.setVelocities")
 		{
 			public Object call (Object[] args)
 			{
 				vlin	= sane (name, num (args, 0, 0.0), vlin);
-				vrot	= sane (name, num (args, 1, 0.0), vrot);
-				vlat	= sane (name, num (args, 2, 0.0), vlat);
+				vlat	= sane (name, num (args, 1, 0.0), vlat);
+				vrot	= sane (name, num (args, 2, 0.0), vrot);
 				return null;
 			}
 		});
