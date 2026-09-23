@@ -13,6 +13,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -586,9 +587,9 @@ public class HFSMCanvas extends JPanel
 			state (g, s);
 		for (State s : level.getStatesList ())
 			for (Transition t : s.getTransitions ())
-				box (g, t);
+				box (g, t, false);
 		for (Transition t : level.getTransitions ())
-			box (g, t);
+			box (g, t, true);
 
 		rubber (g);
 		breadcrumb (g);
@@ -639,8 +640,13 @@ public class HFSMCanvas extends JPanel
 			label (g, s.getName (), x, y + r + 14 * scale, C_TEXT, 12);
 	}
 
-	/** A transition as a box in light cyan. */
-	private void box (Graphics2D g, Transition t)
+	/**
+	 * A transition as a box in light cyan. One that leaves the whole level -- it is
+	 * the meta state being shown that it leaves, not a state of it -- is drawn with
+	 * a dashed outline and says so, as there is no block of this level to draw its
+	 * arrow from.
+	 */
+	private void box (Graphics2D g, Transition t, boolean ofLevel)
 	{
 		double		x = px (t.getX ()), y = py (t.getY ());
 		double		w = BOX_W * scale, h = BOX_H * scale;
@@ -650,11 +656,17 @@ public class HFSMCanvas extends JPanel
 		g.setColor (C_TRANS);
 		g.fill (new RoundRectangle2D.Double (x, y, w, h, 8 * scale, 8 * scale));
 		g.setColor (sel ? C_SEL : (lost ? C_LOST : C_EDGE));
-		g.setStroke (new BasicStroke (sel ? 3f : 1.2f));
+		g.setStroke (ofLevel ? new BasicStroke (sel ? 3f : 1.2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1f,
+												new float[] { 5f, 4f }, 0f)
+							 : new BasicStroke (sel ? 3f : 1.2f));
 		g.draw (new RoundRectangle2D.Double (x, y, w, h, 8 * scale, 8 * scale));
 		label (g, t.getName (), x + w / 2, y + h / 2 + 4 * scale, C_TEXT, 11);
 		if (t.getPriority () != 1)
 			label (g, Integer.toString (t.getPriority ()), x + 8 * scale, y + h - 3 * scale, C_LEVEL, 9);
+		if (ofLevel)						// where it comes from and where it goes, as neither is a block of this level
+			label (g, "from " + level.getName () + "  ->  "
+					  + ((t.getArrivalState () != null) ? t.getArrivalState ().getName () : "nowhere"),
+				   x + w / 2, y + h + 12 * scale, C_LEVEL, 10);
 	}
 
 	/** The arrows of a transition: from where it leaves to its box, and from the box to where it arrives. */
@@ -663,14 +675,13 @@ public class HFSMCanvas extends JPanel
 		double		bx = px (t.getX () + BOX_W / 2.0), by = py (t.getY () + BOX_H / 2.0);
 
 		g.setStroke (new BasicStroke (1.4f));
-		if (level.getStatesList ().contains (from) || (from == level))
-		{
+		if (level.getStatesList ().contains (from))						// a transition of the level itself has
+		{																// nothing of this level to leave from
 			double	fx = px (from.getX ()), fy = py (from.getY ());
-			double	r = ((from == level) ? 0 : radius (from)) * scale;
+			double	r = radius (from) * scale;
 			double	a = Math.atan2 (by - fy, bx - fx);
 
-			if (from != level)
-				arrow (g, fx + r * Math.cos (a), fy + r * Math.sin (a), bx, by, C_ARROW);
+			arrow (g, fx + r * Math.cos (a), fy + r * Math.sin (a), bx, by, C_ARROW);
 		}
 
 		State		to = t.getArrivalState ();
@@ -683,7 +694,7 @@ public class HFSMCanvas extends JPanel
 
 			arrow (g, bx, by, tx + r * Math.cos (a), ty + r * Math.sin (a), C_ARROW);
 		}
-		else if (to != null)													// it leaves this level
+		else if ((to != null) && (from != level))								// it leaves this level
 			label (g, "-> " + to.getName (), bx, by + (BOX_H / 2.0 + 12) * scale, C_LEVEL, 10);
 	}
 
@@ -764,7 +775,10 @@ public class HFSMCanvas extends JPanel
 		{
 			Transition	t = (Transition) o;
 
-			listener.statusChanged ("Transition " + t.getName () + " [" + t.getId () + "] to "
+			State		from = HFSMEdit.origin (root, t);
+
+			listener.statusChanged ("Transition " + t.getName () + " [" + t.getId () + "] from "
+									+ ((from != null) ? from.getName () : "nowhere") + " to "
 									+ ((t.getArrivalState () != null) ? t.getArrivalState ().getName () : "nowhere")
 									+ ", priority " + t.getPriority ());
 		}
