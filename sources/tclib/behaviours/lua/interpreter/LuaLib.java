@@ -155,6 +155,19 @@ public class LuaLib
 		one (math, "abs");		one (math, "sqrt");		one (math, "sin");		one (math, "cos");
 		one (math, "tan");		one (math, "asin");		one (math, "acos");		one (math, "exp");
 		one (math, "floor");	one (math, "ceil");		one (math, "deg");		one (math, "rad");
+		// an angle in degrees as an angle in radians between -pi and pi, which is the
+		// one thing the scripts do to every angle they are given: they write it plain
+		// (radians (x)), so it is a global as well as one of math
+		LuaFunction		radians = new LuaFunction ("radians")
+		{
+			public Object call (Object[] args)
+			{
+				return Double.valueOf (normalised (Math.toRadians (num (args, 0, 0.0))));
+			}
+		};
+
+		math.set ("radians", radians);
+		g.set ("radians", radians);
 		math.set ("atan", new LuaFunction ("math.atan")
 		{
 			public Object call (Object[] args)
@@ -385,6 +398,23 @@ public class LuaLib
 	 * A one-argument function of Math, by the name Lua gives it. The name is held in
 	 * a variable of its own, as the function itself has one (and it is the long one).
 	 */
+	/**
+	 * An angle in radians brought into -pi .. pi, which is where an angle is read
+	 * from in a robot: half a turn either way and no more. A value that is not a
+	 * number at all (an angle of an object that was never seen) is left as it is,
+	 * as making one up would be worse.
+	 */
+	static public double normalised (double a)
+	{
+		if (!Double.isFinite (a))				return a;
+
+		double		r = a % (2.0 * Math.PI);
+
+		if (r > Math.PI)						r -= 2.0 * Math.PI;
+		else if (r <= -Math.PI)					r += 2.0 * Math.PI;
+		return r;
+	}
+
 	static private void one (LuaTable math, final String which)
 	{
 		math.set (which, new LuaFunction ("math." + which)
