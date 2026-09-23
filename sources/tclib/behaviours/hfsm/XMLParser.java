@@ -1,222 +1,254 @@
+/*
+ * (c) 2005 Daniel Garcia Nebot, Elad Rodriguez Alvaro, Miguel Cazorla
+ * (c) 2026 Humberto Martinez Barbera (ported to ThinkingCap)
+ */
 
 package tclib.behaviours.hfsm;
 
-import java.awt.Point;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
-import chaos.fsm.gui.MetaState;
-import chaos.fsm.gui.State;
-import chaos.fsm.gui.Transition;
-import chaos.fsm.gui.Utils;
+/**
+ * Reads a machine of states from the <code>.xas</code> file the editor writes:
+ *
+ * <pre>
+ *   &lt;strategy stateCount='4' transitionCount='8' ... &gt;
+ *     &lt;metastate name='GoToArea' id='31' x='783' y='831' initial='1' extern='0' &gt;
+ *       &lt;state name='GoToNet2' id='32' x='70' y='262' initial='1' /&gt;
+ *       &lt;transition name='InAreaGoTo' id='34' x='403' y='97' priority='1' to='33' from='32' /&gt;
+ *     &lt;/metastate&gt;
+ *     &lt;privatevariable name='BALL_CLOSE' type='int' numElements='1' initValue='600' msname='gklua2' /&gt;
+ *   &lt;/strategy&gt;
+ * </pre>
+ *
+ * The states of a level are read first and the transitions of that same level
+ * afterwards, so a transition always finds where it comes from and where it goes
+ * by id. What a transition cannot find is said out loud and left null, which the
+ * verification of the machine then reports.
+ */
+public class XMLParser extends DefaultHandler
+{
+	/** How deep a machine may be nested. */
+	static public final int			MAXLEVEL	= 64;
 
+	/** One of the constants the machine declares (name, type, elements, value, machine). */
+	static public class PrivateVar
+	{
+		public String				name;
+		public String				type;
+		public String				numElements;
+		public String				initValue;
+		public String				msname;
 
+		public String toString ()				{ return name + " = " + initValue + " (" + type + ")"; }
+	}
 
-public class XMLParser implements ContentHandler {
+	protected MetaState[]			meta;						// the machine of each level
+	protected int					level;
+
+	protected int					stateCount;
+	protected int					transitionCount;
+	protected List<PrivateVar>		privVars = new ArrayList<PrivateVar> ();
+	protected List<String>			problems = new ArrayList<String> ();
+
+	/** Reads into <code>m</code>, which is the machine the file holds. */
+	public XMLParser (MetaState m)
+	{
+		meta		= new MetaState[MAXLEVEL];
+		meta[0]		= m;
+		level		= 0;
+	}
+
+	/* ---------------- what was read ---------------- */
+
+	public final MetaState			root ()				{ return meta[0]; }
+	public final int				stateCount ()		{ return stateCount; }
+	public final int				transitionCount ()	{ return transitionCount; }
+	public final List<PrivateVar>	privateVars ()		{ return privVars; }
+	/** What could not be made sense of, if anything. */
+	public final List<String>		problems ()			{ return problems; }
+
+	/* ---------------- reading a file ---------------- */
 
 	/**
-	 * array of root MetaStates
+	 * The machine a <code>.xas</code> file holds, its states and transitions
+	 * carrying the Lua scripts of the folder of the file.
 	 */
-	private MetaState[] meta;
-	
-	final static int META = 999;
-	
+	static public MetaState read (File file) throws Exception
+	{
+		XMLParser		p = parse (file);
+		MetaState		root = p.root ();
+
+		root.loadCode (file.getParent ());
+		root.sortAll ();
+		return root;
+	}
+
+	/** The parser that read a file, so that the counters and the constants can be had. */
+	static public XMLParser parse (File file) throws Exception
+	{
+		String			name = file.getName ();
+		int				dot = name.lastIndexOf ('.');
+		MetaState		root = new MetaState ((dot > 0) ? name.substring (0, dot) : name, 0);
+		XMLParser		handler = new XMLParser (root);
+		SAXParserFactory	factory = SAXParserFactory.newInstance ();
+
+		factory.setNamespaceAware (false);
+		factory.setValidating (false);
+		// the files carry no DTD, and none is to be looked for on the network
+		try { factory.setFeature ("http://apache.org/xml/features/nonvalidating/load-external-dtd", false); }
+		catch (Exception e) { }
+
+		SAXParser		parser = factory.newSAXParser ();
+
+		parser.parse (file, handler);
+		return handler;
+	}
+
+	/* ---------------- SAX ---------------- */
+
+	public void startElement (String uri, String localname, String qName, Attributes atts) throws SAXException
+	{
+		String			tag = ((localname != null) && (localname.length () > 0)) ? localname : qName;
+
+		if (tag.equals ("strategy"))			strategy (atts);
+		else if (tag.equals ("metastate"))		metastate (atts);
+		else if (tag.equals ("state"))			state (atts);
+		else if (tag.equals ("transition"))		transition (atts);
+		else if (tag.equals ("privatevariable"))		privateVar (atts);
+	}
+
+	public void endElement (String uri, String localname, String qName) throws SAXException
+	{
+		String			tag = ((localname != null) && (localname.length () > 0)) ? localname : qName;
+
+		if (tag.equals ("metastate") && (level > 0))		level--;
+	}
+
+	/* ---------------- the elements ---------------- */
+
+	private void strategy (Attributes atts)
+	{
+		stateCount		= integer (atts, "stateCount", 0);
+		transitionCount	= integer (atts, "transitionCount", 0);
+		counters (meta[0], atts);
+	}
+
+	private void metastate (Attributes atts)
+	{
+		MetaState		ms = new MetaState (name (atts), integer (atts, "id", 0), integer (atts, "x", 0), integer (atts, "y", 0));
+
+		counters (ms, atts);
+		meta[level].addState (ms);
+		if (integer (atts, "initial", 0) == 1)			meta[level].setInitialState (ms);
+
+		ms.setExtern (integer (atts, "extern", 0) == 1);
+		if (ms.isExtern ())								ms.setPathExtern (atts.getValue ("pathExtern"));
+
+		if (level < (MAXLEVEL - 1))						meta[++level] = ms;
+		else											problems.add ("Meta state '" + ms.getName () + "' is nested too deep");
+	}
+
+	private void state (Attributes atts)
+	{
+		State			s = new State (name (atts), integer (atts, "id", 0), integer (atts, "x", 0), integer (atts, "y", 0));
+
+		meta[level].addState (s);
+		if (integer (atts, "initial", 0) == 1)			meta[level].setInitialState (s);
+	}
+
+	private void transition (Attributes atts)
+	{
+		Transition		t = new Transition (null, name (atts), integer (atts, "id", 0), integer (atts, "x", 0), integer (atts, "y", 0));
+		int				from = integer (atts, "from", -1);
+		int				to = integer (atts, "to", -1);
+		State			origin = findState (from);
+		State			arrival = findState (to);
+
+		t.setPriority (integer (atts, "priority", 1));
+		t.setArrivalState (arrival);
+		if (arrival == null)
+			problems.add ("Transition '" + t.getName () + "' arrives at state " + to + ", which the machine does not have");
+		if (origin == null)
+			problems.add ("Transition '" + t.getName () + "' leaves state " + from + ", which the machine does not have");
+		else
+			origin.addTransition (t);
+	}
+
+	private void privateVar (Attributes atts)
+	{
+		PrivateVar		v = new PrivateVar ();
+
+		v.name			= atts.getValue ("name");
+		v.type			= atts.getValue ("type");
+		v.numElements	= atts.getValue ("numElements");
+		v.initValue		= atts.getValue ("initValue");
+		v.msname		= atts.getValue ("msname");
+		privVars.add (v);
+	}
+
 	/**
-	 * 
+	 * The state of the current level with that id, or, when it is not there, the one
+	 * with that id anywhere in the machine (the editor writes a transition between
+	 * two levels that way).
 	 */
-	private int nivel;
-	
-	/**
-	 * Constructor del miContentHandler que recibe el nodo raiz del arbol que hay que rellenar.
-	 * y crea los ArrayList.
-	 * 
-	 * @param meta
-	 */	
-	public XMLParser(MetaState m) {
-		
-		meta = new MetaState[META];
-		meta[0] = m;
-		nivel = 0;
+	public State findState (int id)
+	{
+		if (id < 0)										return null;
 
+		State			s = meta[level].findState (id);
+
+		if (s != null)									return s;
+		if (meta[level].getId () == id)					return meta[level];
+		return findState (meta[0], id);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.xml.sax.ContentHandler#startDocument()
-	 */
-	public void startDocument() throws SAXException {
-	}
+	static private State findState (MetaState m, int id)
+	{
+		if (m.getId () == id)							return m;
+		for (State s : m.getStatesList ())
+		{
+			if (s.getId () == id)						return s;
+			if (s instanceof MetaState)
+			{
+				State	found = findState ((MetaState) s, id);
 
-	/* (non-Javadoc)
-	 * @see org.xml.sax.ContentHandler#endDocument()
-	 */
-	public void endDocument() throws SAXException {
-	}
-
-	/* (non-Javadoc)
-	 * @see org.xml.sax.ContentHandler#startPrefixMapping(java.lang.String, java.lang.String)
-	 */
-	public void startPrefixMapping(String arg0, String arg1)
-		throws SAXException {
-	}
-
-	/* (non-Javadoc)
-	 * @see org.xml.sax.ContentHandler#endPrefixMapping(java.lang.String)
-	 */
-	public void endPrefixMapping(String arg0) throws SAXException {
-	}
-
-	/* (non-Javadoc)
-	 * @see org.xml.sax.ContentHandler#startElement(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
-	 */
-	public void startElement(String namespaceURI, String localname,
-		String qName, Attributes atributos)
-	
-		throws SAXException {
-		if(localname.equals("strategy")){
-			Utils.stateCount = Integer.parseInt(atributos.getValue("stateCount"));
-			Utils.transitionCount = Integer.parseInt(atributos.getValue("transitionCount"));
-			
-			meta[0].metaStateCountToName=Integer.parseInt(atributos.getValue("metaStateCountName"));
-			meta[0].stateCountToName=Integer.parseInt(atributos.getValue("stateCountName"));
-			meta[0].transitionCountToName=Integer.parseInt(atributos.getValue("transitionCountName"));		
-		}else
-		if(localname.equals("metastate")){
-			MetaState ms = new MetaState(atributos.getValue("name"),Integer.parseInt(atributos.getValue("id")),new Point(Integer.parseInt(atributos.getValue("x")),Integer.parseInt(atributos.getValue("y"))));
-	
-			ms.metaStateCountToName=Integer.parseInt(atributos.getValue("metaStateCountName"));
-			ms.stateCountToName=Integer.parseInt(atributos.getValue("stateCountName"));
-			ms.transitionCountToName=Integer.parseInt(atributos.getValue("transitionCountName"));		
-			
-			meta[nivel].addState(ms);
-			
-			if(Integer.parseInt(atributos.getValue("initial"))==1)
-				meta[nivel].setInitialState(ms);
-			
-			if(Integer.parseInt(atributos.getValue("extern"))==1){
-				ms.setExtern(true);
-				ms.setPathExtern(atributos.getValue("pathExtern"));
-			}else
-				ms.setExtern(false);
-				
-			nivel++;
-			meta[nivel] = ms;
-			
-		}else
-			if(localname.equals("state")){
-				State s= new State(atributos.getValue("name"),Integer.parseInt(atributos.getValue("id")),new Point(Integer.parseInt(atributos.getValue("x")),Integer.parseInt(atributos.getValue("y"))));
-					
-				meta[nivel].addState(s);
-				if(Integer.parseInt(atributos.getValue("initial"))==1)
-					meta[nivel].setInitialState(s);
-			}else
-				if(localname.equals("transition")){
-					Transition t = new Transition(null,atributos.getValue("name"),Integer.parseInt(atributos.getValue("id")),new Point(Integer.parseInt(atributos.getValue("x")),Integer.parseInt(atributos.getValue("y"))));
-					t.setPriority(Integer.parseInt(atributos.getValue("priority")));
-					
-					String fromState = atributos.getValue("from");
-					String toState = atributos.getValue("to");
-
-					Object to = findState(toState);
-					
-					try{
-						t.setArrivalState(to);
-					}catch(Exception e){
-						System.out.println("-> "+ e.getMessage());
-					}
-					
-					Object from = findState(fromState);
-
-					if(State.isState(from))
-						((State)from).addTransition(t);
-					else
-						((MetaState)from).addTransition(t);
-				}
-				else
-					if(localname.equals("privatevariable")){
-						String [] vars=new String[5];
-						vars[0]=atributos.getValue("name");
-						vars[1]=atributos.getValue("type");
-						vars[2]=atributos.getValue("numElements");
-						vars[3]=atributos.getValue("initValue");
-						vars[4]=atributos.getValue("msname");
-						
-						Utils.privVars.add(vars);
-					}
-	}
-
-
-	/* (non-Javadoc)
-	 * @see org.xml.sax.ContentHandler#endElement(java.lang.String, java.lang.String, java.lang.String)
-	 */
-	public void endElement(String namespaceUri, String localname, String qName)
-		throws SAXException{
-		if(localname.equals("metastate"))
-			nivel--;
-	}
-	
-	public Object findState(String id){
-		Object o=null;
-		boolean notFound=true;
-
-		for(int i=0;i<meta[nivel].getStatesSize() && notFound;i++){
-			
-			o= meta[nivel].getState(i);
-			
-			if(!State.isState(o)){ //is MetaState
-				if(((MetaState)o).getId()==(new Integer(id).intValue())){
-					//System.out.println(((MetaState)o).getName());
-					
-					notFound=false;
-				}
-			}else{//is State
-				if(((State)o).getId()==(new Integer(id).intValue())){
-					//System.out.println(((State)o).getName());
-					notFound=false;
-				}
+				if (found != null)						return found;
 			}
 		}
-		
-		return o;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.xml.sax.ContentHandler#characters(char[], int, int)
-	 */
-	public void characters(char[] cadena, int inicio, int longitud)
-		throws SAXException {
-
+		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.xml.sax.ContentHandler#ignorableWhitespace(char[], int, int)
-	 */
-	public void ignorableWhitespace(char[] arg0, int arg1, int arg2)
-		throws SAXException {
-		//System.out.println("Ignorable white space.");
+	/* ---------------- attributes ---------------- */
+
+	static private void counters (MetaState m, Attributes atts)
+	{
+		m.metaStateCountToName	= integer (atts, "metaStateCountName", 0);
+		m.stateCountToName		= integer (atts, "stateCountName", 0);
+		m.transitionCountToName	= integer (atts, "transitionCountName", 0);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.xml.sax.ContentHandler#processingInstruction(java.lang.String, java.lang.String)
-	 */
-	public void processingInstruction(String arg0, String arg1)
-		throws SAXException {
+	static private String name (Attributes atts)
+	{
+		String			n = atts.getValue ("name");
+
+		return (n != null) ? n : "";
 	}
 
-	/* (non-Javadoc)
-	 * @see org.xml.sax.ContentHandler#skippedEntity(java.lang.String)
-	 */
-	public void skippedEntity(String arg0) throws SAXException {
-	}
+	static private int integer (Attributes atts, String key, int def)
+	{
+		String			v = atts.getValue (key);
 
-	/* (non-Javadoc)
-	 * @see org.xml.sax.ContentHandler#setDocumentLocator(org.xml.sax.Locator)
-	 */
-	public void setDocumentLocator(Locator arg0) {
-		
+		if (v == null)									return def;
+		try { return Integer.parseInt (v.trim ()); }
+		catch (NumberFormatException e) { return def; }
 	}
-
 }
