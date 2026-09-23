@@ -2,7 +2,7 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tclib.behaviours.hfsm.lua;
+package tclib.behaviours.lua.interpreter;
 
 /**
  * A Lua script already read: the tree it was read into, kept so that it is read

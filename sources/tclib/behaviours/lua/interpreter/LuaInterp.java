@@ -2,14 +2,14 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tclib.behaviours.hfsm.lua;
+package tclib.behaviours.lua.interpreter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import tclib.behaviours.hfsm.lua.LuaAst.*;
+import tclib.behaviours.lua.interpreter.LuaAst.*;
 
 /**
  * Runs the tree a Lua script was read into, over a table of globals: the same

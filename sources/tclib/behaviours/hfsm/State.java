@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import tclib.behaviours.hfsm.lua.LuaScript;
+import tclib.behaviours.lua.interpreter.LuaScript;
 
 /**
  * One state of a hierarchical machine: what the robot does while it is there

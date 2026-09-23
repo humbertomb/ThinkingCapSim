@@ -2,7 +2,7 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tclib.behaviours.hfsm.lua;
+package tclib.behaviours.lua.interpreter;
 
 /**
  * What a Lua value is on the Java side, and the operations the language does on

@@ -2,12 +2,12 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tclib.behaviours.hfsm.lua;
+package tclib.behaviours.lua.interpreter;
 
 import java.util.List;
 
-import tclib.behaviours.hfsm.lua.LuaAst.*;
-import tclib.behaviours.hfsm.lua.LuaLexer.Token;
+import tclib.behaviours.lua.interpreter.LuaAst.*;
+import tclib.behaviours.lua.interpreter.LuaLexer.Token;
 
 /**
  * Reads a Lua script into the tree of {@link LuaAst}: a recursive descent

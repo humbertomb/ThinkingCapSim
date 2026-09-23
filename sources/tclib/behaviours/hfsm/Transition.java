@@ -9,7 +9,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-import tclib.behaviours.hfsm.lua.LuaScript;
+import tclib.behaviours.lua.interpreter.LuaScript;
 
 /**
  * One transition of a hierarchical machine: when it is taken (its test script,

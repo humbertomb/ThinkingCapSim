@@ -2,7 +2,7 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tclib.behaviours.hfsm.lua;
+package tclib.behaviours.lua.interpreter;
 
 /**
  * Something a Lua script can call: either a function written in Lua (the

@@ -10,10 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import tclib.behaviours.hfsm.lua.Lua;
-import tclib.behaviours.hfsm.lua.LuaError;
-import tclib.behaviours.hfsm.lua.LuaScript;
-import tclib.behaviours.hfsm.lua.LuaState;
+import tclib.behaviours.lua.Chaos;
+import tclib.behaviours.lua.interpreter.Lua;
+import tclib.behaviours.lua.interpreter.LuaError;
+import tclib.behaviours.lua.interpreter.LuaScript;
+import tclib.behaviours.lua.interpreter.LuaState;
 
 /**
  * A machine of hierarchical states, loaded from a <code>.xas</code> file and run

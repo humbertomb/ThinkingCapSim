@@ -2,7 +2,7 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tclib.behaviours.hfsm.lua;
+package tclib.behaviours.lua.interpreter;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;

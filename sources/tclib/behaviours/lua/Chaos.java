@@ -2,7 +2,7 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tclib.behaviours.hfsm;
+package tclib.behaviours.lua;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,9 +12,9 @@ import devices.pos.Position;
 import tc.shared.lps.LPS;
 import tc.shared.lps.lpo.LPO;
 
-import tclib.behaviours.hfsm.lua.Lua;
-import tclib.behaviours.hfsm.lua.LuaFunction;
-import tclib.behaviours.hfsm.lua.LuaTable;
+import tclib.behaviours.lua.interpreter.Lua;
+import tclib.behaviours.lua.interpreter.LuaFunction;
+import tclib.behaviours.lua.interpreter.LuaTable;
 
 import wucore.utils.math.Angles;
 

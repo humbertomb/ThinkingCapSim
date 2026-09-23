@@ -10,6 +10,7 @@ import tc.runtime.thread.ModuleConfig;
 import tc.modules.*;
 import tc.shared.lps.lpo.*;
 import tc.shared.linda.*;
+import tclib.behaviours.lua.Chaos;
 import tclib.planning.sequence.*;
 
 import devices.pos.*;

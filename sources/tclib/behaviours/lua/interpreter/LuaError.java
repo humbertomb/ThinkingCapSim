@@ -2,7 +2,7 @@
  * (c) 2026 Humberto Martinez Barbera
  */
 
-package tclib.behaviours.hfsm.lua;
+package tclib.behaviours.lua.interpreter;
 
 /** What went wrong while a Lua script was read or run, and where. */
 public class LuaError extends RuntimeException
