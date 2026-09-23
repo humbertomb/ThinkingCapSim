@@ -156,18 +156,15 @@ public class LuaLib
 		one (math, "tan");		one (math, "asin");		one (math, "acos");		one (math, "exp");
 		one (math, "floor");	one (math, "ceil");		one (math, "deg");		one (math, "rad");
 		// an angle in degrees as an angle in radians between -pi and pi, which is the
-		// one thing the scripts do to every angle they are given: they write it plain
-		// (radians (x)), so it is a global as well as one of math
-		LuaFunction		radians = new LuaFunction ("radians")
+		// one thing the scripts do to every angle they are given (math.rad is left as
+		// Lua has it, normalising nothing)
+		math.set ("radians", new LuaFunction ("math.radians")
 		{
 			public Object call (Object[] args)
 			{
 				return Double.valueOf (normalised (Math.toRadians (num (args, 0, 0.0))));
 			}
-		};
-
-		math.set ("radians", radians);
-		g.set ("radians", radians);
+		});
 		math.set ("atan", new LuaFunction ("math.atan")
 		{
 			public Object call (Object[] args)
