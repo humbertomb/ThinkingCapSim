@@ -1,5 +1,0 @@
-#ifdef TRACE_GOALKEEPER
-if (CONT % TIMER == 0) 
-    printf("Transition Center-OutOfAstray\n");
-#endif
-return !lps->getAstray();

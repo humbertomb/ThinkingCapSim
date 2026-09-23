@@ -1,5 +1,0 @@
-#ifdef TRACE_GOALKEEPER
-if (CONT++ % TIMER == 0) 
-    printf("          STATE : KeepInArea\n");
-#endif
-my_hbm->RunBehaviorAndKick(BehaviorGKKeepInArea, NULL, NULL,"BlockKick");

@@ -1,2 +1,0 @@
-chaos.setDesiredPos(POS3X, POS3Y, 0)
-chaos.setBehavior("go2gpos")

@@ -1,6 +1,0 @@
-#ifdef TRACE_GOALKEEPER
-if (CONT % TIMER == 0) 
-    printf("Transition Center-IsFacing ang=%f\n",lps->Net1->getTheta());
-#endif
-return (lps->Net1->getAnchored() > ANCHORED_HIGH && lps->Net1->getTheta() < ANG_LOW)
-        || fabs(gs->getPosition()->theta - 3.141592/2.0) < ANG_LOW;

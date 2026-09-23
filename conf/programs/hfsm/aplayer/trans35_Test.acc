@@ -1,7 +1,0 @@
---local ball = chaos.getLpo(0)
-
---if math.abs(ball.theta) < 0.3 then 
---	return true
---else 
-	return false
---end

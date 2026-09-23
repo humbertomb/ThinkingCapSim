@@ -1,8 +1,0 @@
-ball=chaos.getLpo(0) -- Ball
-
-if ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then
-    return true
-else
-    return false
-end
-

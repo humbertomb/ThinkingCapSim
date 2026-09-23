@@ -1,9 +1,0 @@
-ballpos=0
-
-local ball = chaos.getLpo(ballpos)
-
-if (ball.anchored < 0.7) then 
-	return true
-else
-	return false
-end

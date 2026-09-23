@@ -1,7 +1,0 @@
-temp=chaos.gsGetMyPos()
-
-if temp.quality<QUALITY_LOW then
-    return true
-else
-    return false
-end

@@ -1,9 +1,0 @@
--- Lpo object position: My Net
-net2=6
-local temp_lpo = chaos.getLpo(net2)
-
-if temp_lpo.anchored > ANCHORED_HIGH and temp_lpo.rho < NET_CLOSE then 
-    return true
-else 
-    return false
-end

@@ -1,2 +1,0 @@
---io.write("Non atacker\n")
-chaos.setBehavior("faceball")

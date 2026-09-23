@@ -1,7 +1,0 @@
-local pos = chaos.gsGetMyPos()
-
-if pos.quality < 0.6 then
-	return true
-else
-	return false
-end

@@ -1,7 +1,0 @@
-KICK_DONE = chaos.getGlobal("KICK_DONE")
-if (KICK_DONE == "NULL") or (KICK_DONE == "FALSE") then 
-	return false
-else 
-	chaos.setGlobal("KICK_DONE",0,"FALSE")
-	return true
-end

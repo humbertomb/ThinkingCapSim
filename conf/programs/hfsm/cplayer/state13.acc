@@ -1,3 +1,0 @@
-io.write("Look4ball - Attacker\n")
-
-chaos.setBehavior("lookball")
