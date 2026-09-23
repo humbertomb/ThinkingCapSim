@@ -210,6 +210,18 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 		}));
 		bar.add (what);
 
+		JMenu		help = new JMenu ("Help");
+
+		help.add (item ("Language", null, new Runnable ()
+		{
+			public void run ()		{ tcapps.tceditor.HelpWindow.show (LuaEditorWindow.this, LuaHelp.LANGUAGE, LuaHelp.language ()); }
+		}));
+		help.add (item ("Classes", null, new Runnable ()
+		{
+			public void run ()		{ tcapps.tceditor.HelpWindow.show (LuaEditorWindow.this, LuaHelp.CLASSES, LuaHelp.classes ()); }
+		}));
+		bar.add (help);
+
 		return bar;
 	}
 
