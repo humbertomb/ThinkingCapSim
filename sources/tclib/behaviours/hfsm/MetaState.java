@@ -1,4 +1,4 @@
-package chaos.fsm.classes;
+package tclib.behaviours.hfsm;
 
 import java.util.ArrayList;
 

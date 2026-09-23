@@ -1,5 +1,5 @@
 
-package chaos.fsm.xml;
+package tclib.behaviours.hfsm;
 
 import java.awt.Point;
 import java.util.ArrayList;

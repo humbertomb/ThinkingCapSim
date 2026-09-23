@@ -1,5 +1,5 @@
 
-package chaos.fsm.classes;
+package tclib.behaviours.hfsm;
 
 /**
  * @author Daniel Garcia Nebot
