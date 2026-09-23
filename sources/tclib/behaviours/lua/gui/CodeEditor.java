@@ -43,6 +43,11 @@ public class CodeEditor extends JPanel
 
 	static public final Font		FONT		= new Font (Font.MONOSPACED, Font.PLAIN, 12);
 
+	/** How many characters a tab takes, which is how the scripts were written. */
+	static public final int			TABS		= 8;
+	/** How many tab stops are set: a line wider than this is nobody's code. */
+	static private final int		TAB_STOPS	= 40;
+
 	static private final Color		C_BACK		= Color.WHITE;
 	static private final Color		C_GUTTER	= new Color (240, 240, 240);
 	static private final Color		C_GUTTERN	= new Color (130, 130, 130);
@@ -55,6 +60,7 @@ public class CodeEditor extends JPanel
 	protected LuaHighlighter		lua;
 	protected Listener				listener;
 	protected boolean				quiet;						// setting the text from the outside is no change
+	protected int					tabsize = TABS;
 	protected javax.swing.undo.UndoManager	undos = new javax.swing.undo.UndoManager ();
 
 	public CodeEditor (String title)
@@ -99,6 +105,7 @@ public class CodeEditor extends JPanel
 		});
 
 		gutter	= new Gutter ();
+		tabs ();
 		scroll	= new JScrollPane (text);
 		scroll.setRowHeaderView (gutter);
 		scroll.setBorder (BorderFactory.createTitledBorder (title));
@@ -193,7 +200,40 @@ public class CodeEditor extends JPanel
 	public void colour ()
 	{
 		if (!(text.getDocument () instanceof StyledDocument))		return;
+		tabs ();
 		lua.apply ((StyledDocument) text.getDocument (), getCode ());
+	}
+
+	/** How wide a tab is, in characters of the font the code is written in. */
+	public void setTabSize (int chars)
+	{
+		tabsize	= Math.max (1, chars);
+		tabs ();
+		text.repaint ();
+	}
+
+	public int getTabSize ()							{ return tabsize; }
+
+	/**
+	 * Puts the tab stops every {@link #TABS} characters. A pane of styled text has
+	 * no tab size of its own: it has the stops of its paragraphs, which are set here
+	 * for the whole of the text and again whenever it is coloured, so that lines
+	 * written after that have them too.
+	 */
+	protected void tabs ()
+	{
+		if (!(text.getDocument () instanceof StyledDocument))		return;
+
+		double						w = tabsize * (double) text.getFontMetrics (FONT).charWidth ('0');
+		javax.swing.text.TabStop[]	stops = new javax.swing.text.TabStop[TAB_STOPS];
+
+		for (int i = 0; i < stops.length; i++)
+			stops[i]	= new javax.swing.text.TabStop ((float) ((i + 1) * w));
+
+		javax.swing.text.SimpleAttributeSet	a = new javax.swing.text.SimpleAttributeSet ();
+
+		javax.swing.text.StyleConstants.setTabSet (a, new javax.swing.text.TabSet (stops));
+		((StyledDocument) text.getDocument ()).setParagraphAttributes (0, text.getDocument ().getLength () + 1, a, false);
 	}
 
 	/* ------------------------------------------------------------------ */
