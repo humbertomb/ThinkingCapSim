@@ -161,6 +161,16 @@ public class HFSM
 		active.add (s);
 	}
 
+	/**
+	 * Where the machine is, as the state of every level, outermost first: the last
+	 * one is the state it is really in, and the ones before it the meta states that
+	 * hold it. It is a copy, safe to look at while the machine runs.
+	 */
+	public List<State> active ()
+	{
+		return new ArrayList<State> (active);
+	}
+
 	/** The state the machine is in, the innermost one. */
 	public State state ()
 	{

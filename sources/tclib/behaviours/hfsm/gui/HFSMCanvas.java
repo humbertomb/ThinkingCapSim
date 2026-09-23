@@ -76,6 +76,9 @@ public class HFSMCanvas extends JPanel
 	static private final Color		C_RUBBER	= new Color (0, 120, 215);
 	static private final Color		C_LEVEL		= new Color (120, 120, 120);
 	static private final Color		C_LOST		= new Color (200, 60, 60);		// a transition that arrives nowhere
+	static private final Color		C_LIVE		= new Color (230, 60, 60);		// where the machine is now
+	static private final Color		C_LIVEF		= new Color (255, 205, 205);	// and what it is filled with
+	static private final Color		C_LIVEM		= new Color (240, 170, 170);	// a meta state it is inside of
 
 	/** What the editor around the canvas is told. */
 	public interface Listener
@@ -96,6 +99,10 @@ public class HFSMCanvas extends JPanel
 	protected MetaState				root;
 	protected MetaState				level;						// the machine being shown
 	protected Object				selection;					// a State or a Transition
+
+	/* Watching a machine run: where it is, and nothing of it can be changed */
+	protected List<State>			live = new ArrayList<State> ();
+	protected boolean				watch;
 
 	/* View */
 	protected double				scale		= 1.0;
@@ -180,9 +187,36 @@ public class HFSMCanvas extends JPanel
 		repaint ();
 	}
 
+	/**
+	 * Where a machine that is running is, as the state of every level (see
+	 * {@link tclib.behaviours.hfsm.HFSM#active}): those states are drawn in red.
+	 */
+	public void setLive (List<State> states)
+	{
+		live.clear ();
+		if (states != null)				live.addAll (states);
+		repaint ();
+	}
+
+	public List<State> getLive ()		{ return new ArrayList<State> (live); }
+
+	/**
+	 * Whether the machine is only being watched: nothing of it can then be moved,
+	 * renamed, added or deleted, and all that is left is looking, selecting, and
+	 * going in and out of the levels.
+	 */
+	public void setWatching (boolean b)
+	{
+		watch	= b;
+		if (watch)						setTool (T_SELECT);
+		showUsage ();
+	}
+
+	public boolean isWatching ()		{ return watch; }
+
 	public void setTool (int t)
 	{
-		tool	= t;
+		tool	= (watch && (t != T_PAN)) ? T_SELECT : t;
 		dragMode	= 0;
 		dragging	= null;
 		setCursor ((tool == T_PAN) ? Cursor.getPredefinedCursor (Cursor.MOVE_CURSOR)
@@ -311,7 +345,7 @@ public class HFSMCanvas extends JPanel
 			Object	hit = pick (x, y);
 
 			setSelection (hit);
-			if (hit != null)
+			if ((hit != null) && !watch)								// watching it, nothing is moved
 			{
 				dragMode	= 1;
 				dragging	= hit;
@@ -391,6 +425,7 @@ public class HFSMCanvas extends JPanel
 		Object		hit = pick (wx (e.getX ()), wy (e.getY ()));
 
 		if (hit instanceof MetaState)			setLevel ((MetaState) hit);			// into it
+		else if (watch)							{ if ((hit == null) && canGoUp ())	levelUp (); }	// nothing is renamed
 		else if (hit != null)					rename (hit);
 		else if (canGoUp ())					levelUp ();
 	}
@@ -402,6 +437,14 @@ public class HFSMCanvas extends JPanel
 
 	private void onKey (KeyEvent e)
 	{
+		if (watch)												// only looking around
+			switch (e.getKeyCode ())
+			{
+			case KeyEvent.VK_UP:	if (e.isAltDown ())		levelUp ();		return;
+			case KeyEvent.VK_ESCAPE:						setSelection (null);
+			default:										return;
+			}
+
 		switch (e.getKeyCode ())
 		{
 		case KeyEvent.VK_DELETE:
@@ -593,18 +636,24 @@ public class HFSMCanvas extends JPanel
 			g.draw (new Line2D.Double (0, py (y), getWidth (), py (y)));
 	}
 
-	/** A state as a circle: a light grey one, or a darker one when it is a machine of its own. */
+	/**
+	 * A state as a circle: a light grey one, or a darker one when it is a machine of
+	 * its own. A machine that is running has the state it is in, and the meta states
+	 * that hold it, drawn in red.
+	 */
 	private void state (Graphics2D g, State s)
 	{
 		double		r = radius (s) * scale;
 		double		x = px (s.getX ()), y = py (s.getY ());
 		boolean		sel = (selection == s);
 		boolean		initial = (level.getInitialState () == s);
+		boolean		here = live.contains (s);								// the machine is in it, or inside it
+		boolean		now = here && (live.indexOf (s) == (live.size () - 1));	// and this is the state it is really in
 
-		g.setColor ((s instanceof MetaState) ? C_META : C_STATE);
+		g.setColor (here ? (now ? C_LIVEF : C_LIVEM) : (s instanceof MetaState) ? C_META : C_STATE);
 		g.fill (new Ellipse2D.Double (x - r, y - r, 2 * r, 2 * r));
-		g.setColor (sel ? C_SEL : C_EDGE);
-		g.setStroke (new BasicStroke (sel ? 3f : 1.4f));
+		g.setColor (sel ? C_SEL : here ? C_LIVE : C_EDGE);
+		g.setStroke (new BasicStroke (sel ? 3f : here ? (now ? 3f : 2f) : 1.4f));
 		g.draw (new Ellipse2D.Double (x - r, y - r, 2 * r, 2 * r));
 
 		if (initial)															// a ring inside, and the arrow of the start
@@ -622,9 +671,9 @@ public class HFSMCanvas extends JPanel
 		}
 		// a name that does not fit inside the circle goes under it
 		if (width (g, s.getName (), 12) < (2 * r - 8))
-			label (g, s.getName (), x, y + 4 * scale, C_TEXT, 12);
+			label (g, s.getName (), x, y + 4 * scale, now ? C_LIVE : C_TEXT, 12);
 		else
-			label (g, s.getName (), x, y + r + 14 * scale, C_TEXT, 12);
+			label (g, s.getName (), x, y + r + 14 * scale, now ? C_LIVE : C_TEXT, 12);
 	}
 
 	/** A transition as a box in light cyan. */
@@ -769,6 +818,9 @@ public class HFSMCanvas extends JPanel
 	/** How the tool in hand is used. */
 	public String usage ()
 	{
+		if (watch && (tool != T_PAN))
+			return "Double click: a meta state opens, the background goes up a level. Wheel: zoom";
+
 		switch (tool)
 		{
 		case T_PAN:		return "Drag to move the diagram. Wheel: zoom";

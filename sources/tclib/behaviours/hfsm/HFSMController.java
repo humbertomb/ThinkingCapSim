@@ -47,6 +47,7 @@ public class HFSMController extends Controller
 	protected Chaos					chaos;
 
 	// Controller debug
+	protected tclib.behaviours.hfsm.gui.HFSMMonitorWindow	monitor;	// the diagram, with where the machine is
 	protected LogPlot				c_plot;
 	protected LogFile				c_dump;
 	protected double[]				c_buffer;
@@ -147,7 +148,11 @@ public class HFSMController extends Controller
 			for (String p : machine.problems ())
 				System.out.println ("  [HFSM] " + p);
 
-			if (localgfx)						c_plot.open (c_labels);
+			if (localgfx)
+			{
+				c_plot.open (c_labels);
+				monitor	= tclib.behaviours.hfsm.gui.HFSMMonitorWindow.open (machine, cfg.robot ());
+			}
 			if (dump)							c_dump.open (c_labels);
 		}
 		catch (Exception e)
@@ -304,6 +309,7 @@ public class HFSMController extends Controller
 	protected void close_gfx ()
 	{
 		if (c_plot != null)		c_plot.close ();
+		if (monitor != null)	{ monitor.close ();		monitor = null; }
 	}
 
 	public void step (long ctime)
