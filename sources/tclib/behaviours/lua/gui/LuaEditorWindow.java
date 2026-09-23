@@ -66,6 +66,8 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 	protected File					file;
 	protected boolean				dirty;
 	protected Saved					onSave;
+	protected JMenuItem				newItem, loadItem;
+	protected boolean				onefile;					// one program and no other: the one that is running
 
 	public LuaEditorWindow ()
 	{
@@ -110,6 +112,21 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 	 * read it again.
 	 */
 	public void setOnSave (Saved s)						{ onSave = s; }
+
+	/**
+	 * Whether this editor is of one program and no other, which is how it is opened
+	 * on the program a robot is running: there is nothing to start afresh and
+	 * nothing else to read in, so New and Load are not to be had. It can still be
+	 * written, and written somewhere else as a copy (Save as).
+	 */
+	public void setOneFile (boolean b)
+	{
+		onefile	= b;
+		if (newItem != null)				newItem.setEnabled (!b);
+		if (loadItem != null)				loadItem.setEnabled (!b);
+	}
+
+	public boolean isOneFile ()							{ return onefile; }
 	public final File				getFile ()			{ return file; }
 	public boolean					isDirty ()			{ return dirty; }
 
@@ -139,14 +156,18 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 
 		JMenu		menu = new JMenu ("File");
 
-		menu.add (item ("New Program", KeyStroke.getKeyStroke (KeyEvent.VK_N, mask), new Runnable ()
+		newItem		= item ("New Program", KeyStroke.getKeyStroke (KeyEvent.VK_N, mask), new Runnable ()
 		{
 			public void run ()		{ newFile (); }
-		}));
-		menu.add (item ("Load Program", KeyStroke.getKeyStroke (KeyEvent.VK_O, mask), new Runnable ()
+		});
+		loadItem	= item ("Load Program", KeyStroke.getKeyStroke (KeyEvent.VK_O, mask), new Runnable ()
 		{
 			public void run ()		{ load (); }
-		}));
+		});
+		newItem.setEnabled (!onefile);
+		loadItem.setEnabled (!onefile);
+		menu.add (newItem);
+		menu.add (loadItem);
 		menu.addSeparator ();
 		menu.add (item ("Save Program", KeyStroke.getKeyStroke (KeyEvent.VK_S, mask), new Runnable ()
 		{
@@ -223,6 +244,7 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 	/** An empty program, the work in hand asked about when it was changed. */
 	public void newFile ()
 	{
+		if (onefile)							return;			// this editor is of one program and no other
 		if (!confirmDiscard ())					return;
 
 		file	= null;
@@ -235,6 +257,7 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 	/** Asks which program to write in, and reads it. */
 	public void load ()
 	{
+		if (onefile)							return;			// this editor is of one program and no other
 		if (!confirmDiscard ())					return;
 
 		JFileChooser	fc = chooser ();
@@ -288,13 +311,23 @@ public class LuaEditorWindow extends JFrame implements CodeEditor.Listener
 		return write (f);
 	}
 
+	/** Writes what is in the editor into a file, as Save as does once one is chosen. */
+	public boolean saveTo (File f)						{ return write (f); }
+
 	protected boolean write (File f)
 	{
+		// an editor of one program that writes somewhere else has written a copy: it
+		// goes on being the editor of the program, which is still to be saved
+		boolean			copy = onefile && (file != null) && !file.getAbsolutePath ().equals (f.getAbsolutePath ());
+
 		try
 		{
 			Files.write (f.toPath (), code.getCode ().getBytes (StandardCharsets.UTF_8));
-			file	= f;
-			dirty	= false;
+			if (!copy)
+			{
+				file	= f;
+				dirty	= false;
+			}
 			said ();
 			if (onSave != null)					onSave.saved (f);		// it is running somewhere: it is read again there
 			return true;

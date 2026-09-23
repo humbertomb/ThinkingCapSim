@@ -253,12 +253,16 @@ public class LuaMonitorWindow extends JFrame
 
 		final LuaEditorWindow	w = new LuaEditorWindow (file);
 
+		w.setOneFile (true);						// the program that is running, and no other
 		w.setOnSave (new LuaEditorWindow.Saved ()
 		{
 			public void saved (java.io.File f)
 			{
-				if (reload != null)				reload.reload ();		// what was just written is what runs
-				status.setText (f.getName () + " saved and read again");
+				boolean		same = (file != null) && file.getAbsolutePath ().equals (f.getAbsolutePath ());
+
+				if (same && (reload != null))		reload.reload ();	// what was just written is what runs
+				status.setText (f.getName () + (same ? " saved and read again" : " saved (a copy: the robot goes on with "
+																				 + file.getName () + ")"));
 			}
 		});
 		beside (w);
