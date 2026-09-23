@@ -63,6 +63,7 @@ public class Chaos
 	protected Map<Integer, Double>	needed		= new HashMap<Integer, Double> ();
 
 	protected LuaTable				table;
+	protected java.util.Set<String>	warned		= new java.util.HashSet<String> ();
 
 	public Chaos ()
 	{
@@ -132,6 +133,21 @@ public class Chaos
 		kick	= false;
 		surround	= false;
 		needed.clear ();
+	}
+
+	/**
+	 * A value a script commanded, or the one it had when the script did not command
+	 * a number at all: a script that divides by zero (which they do, dividing an
+	 * angle by its own size to take its sign) asks for a speed that is not a number,
+	 * and a robot commanded with one loses its pose for good.
+	 */
+	protected double sane (String what, double value, double old)
+	{
+		if (Double.isFinite (value))			return value;
+
+		if (warned.add (what))
+			System.out.println ("  [HFSM] " + what + " was given " + value + " and ignored");
+		return old;
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -230,26 +246,26 @@ public class Chaos
 
 		c.set ("setVlin", new LuaFunction ("chaos.setVlin")
 		{
-			public Object call (Object[] args)		{ vlin = num (args, 0, 0.0);	return null; }
+			public Object call (Object[] args)		{ vlin = sane (name, num (args, 0, 0.0), vlin);	return null; }
 		});
 
 		c.set ("setVrot", new LuaFunction ("chaos.setVrot")
 		{
-			public Object call (Object[] args)		{ vrot = num (args, 0, 0.0);	return null; }
+			public Object call (Object[] args)		{ vrot = sane (name, num (args, 0, 0.0), vrot);	return null; }
 		});
 
 		c.set ("setVlat", new LuaFunction ("chaos.setVlat")
 		{
-			public Object call (Object[] args)		{ vlat = num (args, 0, 0.0);	return null; }
+			public Object call (Object[] args)		{ vlat = sane (name, num (args, 0, 0.0), vlat);	return null; }
 		});
 
 		c.set ("setVelocities", new LuaFunction ("chaos.setVelocities")
 		{
 			public Object call (Object[] args)
 			{
-				vlin	= num (args, 0, 0.0);
-				vrot	= num (args, 1, 0.0);
-				vlat	= num (args, 2, 0.0);
+				vlin	= sane (name, num (args, 0, 0.0), vlin);
+				vrot	= sane (name, num (args, 1, 0.0), vrot);
+				vlat	= sane (name, num (args, 2, 0.0), vlat);
 				return null;
 			}
 		});
@@ -280,7 +296,11 @@ public class Chaos
 		{
 			public Object call (Object[] args)
 			{
-				desired.set (num (args, 0, 0.0) / MM, num (args, 1, 0.0) / MM, num (args, 2, 0.0));
+				double		x = sane (name, num (args, 0, 0.0), desired.x () * MM);
+				double		y = sane (name, num (args, 1, 0.0), desired.y () * MM);
+				double		a = sane (name, num (args, 2, 0.0), desired.alpha ());
+
+				desired.set (x / MM, y / MM, a);
 				return null;
 			}
 		});

@@ -43,6 +43,7 @@ public abstract class Controller extends StdThread
 	public void setMotion (double speed, double turn)
 	{
 		if (mitem == null)		return;
+		if (!sane (speed, turn))	{ speed = 0.0;	turn = 0.0; }
 		
 		mitem.set (speed, turn, System.currentTimeMillis ());
 		linda.write (mtuple);
@@ -51,10 +52,34 @@ public abstract class Controller extends StdThread
 	public void setMotion (int mode, double speed, double turn)
 	{
 		if (mitem == null)		return;
+		if (!sane (speed, turn))	{ speed = 0.0;	turn = 0.0; }
 		
 		mitem.set (mode, speed, turn, System.currentTimeMillis ());
 		linda.write (mtuple);
 	}
+	
+	/**
+	 * Whether a command can be carried out at all: a controller that has divided by
+	 * zero somewhere asks for a speed that is not a number, and a robot commanded
+	 * with one has no pose from then on, which stops the whole simulation (the
+	 * camera of a robot is the first thing to refuse it). Such a command is dropped
+	 * and the robot stands still, said out loud the first few times.
+	 */
+	protected boolean sane (double speed, double turn)
+	{
+		if (Double.isFinite (speed) && Double.isFinite (turn))		return true;
+		
+		if (insane < INSANE_SAID)
+			System.out.println ("  [CNTL] " + getClass ().getSimpleName () + " asked for speed " + speed + " and turn " + turn
+								+ ": no motion commanded");
+		insane++;
+		return false;
+	}
+	
+	/** How many times a command that is not a number is said out loud before it is only counted. */
+	static protected final int		INSANE_SAID		= 5;
+	
+	protected int					insane;					// how many such commands there have been
 		
 	public void setResult (int result, int reason, long serial)
 	{
