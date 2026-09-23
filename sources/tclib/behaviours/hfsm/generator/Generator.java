@@ -1,5 +1,5 @@
 
-package chaos.fsm.generator;
+package tclib.behaviours.hfsm.generator;
 
 /**
  * @author Daniel Garcia Nebot

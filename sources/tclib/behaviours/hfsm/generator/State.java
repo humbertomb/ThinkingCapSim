@@ -1,5 +1,5 @@
 
-package chaos.fsm.generator;
+package tclib.behaviours.hfsm.generator;
 
 import java.io.BufferedReader;
 import java.io.File;

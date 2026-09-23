@@ -1,5 +1,5 @@
 
-package chaos.fsm.generator;
+package tclib.behaviours.hfsm.generator;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -10,8 +10,8 @@ import chaos.fsm.gui.Utils;
 
 
 /**
- * @author Daniel García Nebot
- * @author Elad Rodriguez Álvaro
+ * @author Daniel Garcï¿½a Nebot
+ * @author Elad Rodriguez ï¿½lvaro
  * @author Miguel Cazorla
  * @version 1.0
  * @date 2-2006

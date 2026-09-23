@@ -1,4 +1,4 @@
-package chaos.fsm.generator;
+package tclib.behaviours.hfsm.generator;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -6,8 +6,8 @@ import java.io.FileReader;
 
 
 /**
- * @author Daniel García Nebot
- * @author Elad Rodriguez Álvaro
+ * @author Daniel Garcï¿½a Nebot
+ * @author Elad Rodriguez ï¿½lvaro
  * @author Miguel Cazorla
  * @version 1.0
  * @date 2-2006
