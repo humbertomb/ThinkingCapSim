@@ -61,18 +61,33 @@ public class HFSM
 		this (new File (path), new Chaos ());
 	}
 
+	/**
+	 * Loads a machine, either the one file of it (<code>.hfsm</code>, which holds
+	 * everything) or the <code>.xas</code> of the Chaos editor, whose scripts are
+	 * the <code>.acc</code> files beside it.
+	 */
 	public HFSM (File file, Chaos chaos) throws Exception
 	{
 		this.file	= file;
 		this.chaos	= (chaos != null) ? chaos : new Chaos ();
 
-		XMLParser	parser = XMLParser.parse (file);
+		if (file.getName ().toLowerCase ().endsWith (HFSMJson.SUFFIX))
+		{
+			HFSMJson.Machine	machine = HFSMJson.read (file);
 
-		this.root		= parser.root ();
-		this.vars		= parser.privateVars ();
-		this.problems	= parser.problems ();
+			this.root		= machine.root;
+			this.vars		= machine.vars;
+			this.problems	= machine.problems;
+		}
+		else
+		{
+			XMLParser	parser = XMLParser.parse (file);
 
-		this.root.loadCode (file.getParent ());
+			this.root		= parser.root ();
+			this.vars		= parser.privateVars ();
+			this.problems	= parser.problems ();
+			this.root.loadCode (file.getParent ());
+		}
 		this.root.sortAll ();
 		this.root.compileAll (this.problems);
 

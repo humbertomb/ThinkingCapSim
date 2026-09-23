@@ -1,0 +1,460 @@
+{
+  "name": "aplayer",
+  "vars": [
+    {
+      "name": "ZONE_SCORABLE",
+      "type": "int",
+      "elements": "1",
+      "value": "2300",
+      "machine": "aplayer"
+    }
+  ],
+  "machine": {
+    "name": "aplayer",
+    "id": 0,
+    "x": 0,
+    "y": 0,
+    "meta": true,
+    "initial": "LookForBall",
+    "states": [
+      {
+        "name": "Attacker",
+        "id": 1,
+        "x": 742,
+        "y": 7,
+        "transitions": [
+          {
+            "name": "BallLostAtt",
+            "id": 2,
+            "x": 483,
+            "y": 162,
+            "to": "LookForBall",
+            "toId": 37,
+            "test": "\n\tlocal ball = chaos.getLpo(0)\n\t\n\tif ball.anchored < 0.8 then \n\t    return true\n\telse \n\t    return false\n\tend\n",
+            "action": "chaos.releaseBookedBall ()"
+          },
+          {
+            "name": "att2nonAtt",
+            "id": 3,
+            "x": 695,
+            "y": 170,
+            "to": "NonAttacker",
+            "toId": 18,
+            "test": "local role = chaos.getRole ()\n\nif (role.role == 1) or (role.role == 2) then\n\treturn true\nelse\n\treturn false\nend"
+          }
+        ],
+        "meta": true,
+        "initial": "FaceBall",
+        "states": [
+          {
+            "name": "FaceBall",
+            "id": 4,
+            "x": 12,
+            "y": 21,
+            "code": "--io.write(\"attacker\\n\")\nchaos.setBehavior(\"faceball\")\n",
+            "transitions": [
+              {
+                "name": "HeadingBall",
+                "id": 5,
+                "x": 16,
+                "y": 164,
+                "to": "GoToBall",
+                "toId": 6,
+                "test": "\tlocal ball = chaos.getLpo(0)\n\t\n\tif math.abs(ball.theta) < 0.3 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
+              }
+            ]
+          },
+          {
+            "name": "GoToBall",
+            "id": 6,
+            "x": 173,
+            "y": 187,
+            "code": "local gs     = chaos.gsGetMyPos()\nlocal ball   = chaos.getLpo(0)\nlocal net1   = chaos.getLpo(3) \nlocal net2   = chaos.getLpo(4) \n\n--if (gs.quality < 0.6) and (ball.rho > 1000) then\n--\tchaos.trackLandMarks()\n--end\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"go2ball\")\n",
+            "transitions": [
+              {
+                "name": "CanScore",
+                "id": 7,
+                "x": 449,
+                "y": 286,
+                "to": "Score",
+                "toId": 8,
+                "test": "local ball = chaos.getLpo(0)\n\nif ball.rho < 1000 then\n\treturn true\nelse\n\treturn false\nend\n"
+              }
+            ]
+          },
+          {
+            "name": "Score",
+            "id": 8,
+            "x": 600,
+            "y": 187,
+            "transitions": [
+              {
+                "name": "KickDone",
+                "id": 9,
+                "x": 383,
+                "y": 16,
+                "to": "GoToBall",
+                "toId": 6,
+                "test": "KICK_DONE = chaos.getGlobal(\"KICK_DONE\")\nif (KICK_DONE == \"NULL\") or (KICK_DONE == \"FALSE\") then \n\treturn false\nelse \n\tchaos.setGlobal(\"KICK_DONE\",0,\"FALSE\")\n\treturn true\nend"
+              },
+              {
+                "name": "ScoreAborted",
+                "id": 10,
+                "x": 591,
+                "y": 27,
+                "to": "GoToBall",
+                "toId": 6,
+                "test": "local ball = chaos.getLpo(0)\n\nif ball.rho > 1200 then\n\treturn true\nend\n\nreturn false"
+              }
+            ],
+            "meta": true,
+            "initial": "ApproachBall",
+            "states": [
+              {
+                "name": "ApproachBall",
+                "id": 11,
+                "x": 92,
+                "y": 11,
+                "code": "chaos.setBehavior(\"go2ball\")\n",
+                "transitions": [
+                  {
+                    "name": "NeedAlignment",
+                    "id": 12,
+                    "x": 42,
+                    "y": 169,
+                    "to": "Align",
+                    "toId": 14,
+                    "test": "--local ball = chaos.getLpo(0)\n--local net1 = chaos.getLpo(3)\n\n--if math.abs(net1.theta) > 0.8 and net1.anchored > 0.4 then \n--\treturn true\n--else\n--\treturn false\n--end\n\nreturn false"
+                  },
+                  {
+                    "name": "Kickable",
+                    "id": 13,
+                    "x": 376,
+                    "y": 10,
+                    "to": "DoKick",
+                    "toId": 16,
+                    "test": "local ball = chaos.getLpo(0)\n\nif ball.rho < 600 then \n    return true\nelse \n    return false\nend\n"
+                  }
+                ]
+              },
+              {
+                "name": "Align",
+                "id": 14,
+                "x": 70,
+                "y": 347,
+                "code": "chaos.setBehavior(\"alibnet1\")",
+                "transitions": [
+                  {
+                    "name": "Aligned",
+                    "id": 15,
+                    "x": 201,
+                    "y": 173,
+                    "to": "ApproachBall",
+                    "toId": 11,
+                    "test": "local ball = chaos.getLpo(0)\nlocal net1 = chaos.getLpo(3)\n\nif math.abs(net1.theta) <= 0.5 then \n\treturn true\nelse\n\treturn false\nend"
+                  }
+                ]
+              },
+              {
+                "name": "DoKick",
+                "id": 16,
+                "x": 554,
+                "y": 15,
+                "code": "chaos.setBehavior(\"dokick\")\n--chaos.setBehavior(\"still\")",
+                "transitions": [
+                  {
+                    "name": "NotKickable",
+                    "id": 17,
+                    "x": 375,
+                    "y": 166,
+                    "to": "ApproachBall",
+                    "toId": 11,
+                    "test": "local ball = chaos.getLpo(0)\n\t\nif ball.rho > 800 then \n\treturn true\nelse \n\treturn false\nend\n"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "NonAttacker",
+        "id": 18,
+        "x": 745,
+        "y": 395,
+        "transitions": [
+          {
+            "name": "BallLostSup",
+            "id": 19,
+            "x": 485,
+            "y": 364,
+            "to": "LookForBall",
+            "toId": 37,
+            "test": "\n\tlocal ball = chaos.getLpo(0)\n\t\n\tif ball.anchored < 0.7 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
+          },
+          {
+            "name": "nonAtt2att",
+            "id": 20,
+            "x": 852,
+            "y": 166,
+            "to": "Attacker",
+            "toId": 1,
+            "test": "local role = chaos.getRole ()\n\nif role.role == 0 then\n\treturn true\nelse\n\treturn false\nend"
+          }
+        ],
+        "meta": true,
+        "initial": "FaceBall",
+        "states": [
+          {
+            "name": "FaceBall",
+            "id": 21,
+            "x": 62,
+            "y": 175,
+            "code": "--io.write(\"Non atacker\\n\")\nchaos.setBehavior(\"faceball\")\n",
+            "transitions": [
+              {
+                "name": "RoleDef1",
+                "id": 22,
+                "x": 308,
+                "y": 10,
+                "to": "Defender",
+                "toId": 24,
+                "test": "local role = chaos.getRole ()\n\nif role.role == 1 then\n\treturn true\nelse\n\treturn false\nend\n"
+              },
+              {
+                "name": "RoleSup1",
+                "id": 23,
+                "x": 316,
+                "y": 289,
+                "to": "Supporter",
+                "toId": 29,
+                "test": "local role = chaos.getRole ()\n\nif role.role == 2 then\n\treturn true\nelse\n\treturn false\nend\n"
+              }
+            ]
+          },
+          {
+            "name": "Defender",
+            "id": 24,
+            "x": 511,
+            "y": 15,
+            "transitions": [
+              {
+                "name": "RoleSup2",
+                "id": 25,
+                "x": 475,
+                "y": 174,
+                "to": "Supporter",
+                "toId": 29,
+                "test": "local role = chaos.getRole ()\n\nif role.role  == 2 then\n\treturn true\nelse\n\treturn false\nend"
+              }
+            ],
+            "meta": true,
+            "initial": "GotoDefencePos",
+            "states": [
+              {
+                "name": "FaceBall",
+                "id": 26,
+                "x": 505,
+                "y": 27,
+                "code": "chaos.setBehavior(\"faceball\")"
+              },
+              {
+                "name": "GotoDefencePos",
+                "id": 27,
+                "x": 55,
+                "y": 287,
+                "code": "--local gs   = chaos.gsGetMyPos()\n\n--if gs.quality < 0.6 then\n--\tchaos.trackLandMarks()\n--end\n\n--io.write(\"defender\\n\")\nlocal trgPos = chaos.getDefPose()\nchaos.setDesiredPos(trgPos.x, trgPos.y, 0)\nchaos.setBehavior(\"go2gposf\")\n--chaos.setBehavior(\"still\")",
+                "transitions": [
+                  {
+                    "name": "OnPlace",
+                    "id": 28,
+                    "x": 211,
+                    "y": 21,
+                    "to": "FaceBall",
+                    "toId": 26,
+                    "test": "--local gs   = chaos.gsGetMyPos()\n\n--if gs.quality < 0.6 then\n--\treturn false\n--end\n\n--if (math.abs(gs.x) < 300) and (gs.y > -1500) and (gs.y < -1200) then\n--\treturn true\n--else\n--\treturn false\n--end\n\nreturn false"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Supporter",
+            "id": 29,
+            "x": 508,
+            "y": 361,
+            "transitions": [
+              {
+                "name": "RoleDef2",
+                "id": 30,
+                "x": 611,
+                "y": 175,
+                "to": "Defender",
+                "toId": 24,
+                "test": "local role = chaos.getRole ()\n\nif role.role  == 1 then\n\treturn true\nelse\n\treturn false\nend\n"
+              }
+            ],
+            "meta": true,
+            "initial": "FaceBall1",
+            "states": [
+              {
+                "name": "FaceBall2",
+                "id": 31,
+                "x": 511,
+                "y": 23,
+                "code": "chaos.setBehavior(\"faceball\")",
+                "transitions": [
+                  {
+                    "name": "OutOfDistance",
+                    "id": 32,
+                    "x": 331,
+                    "y": 101,
+                    "to": "ApproachBall",
+                    "toId": 33,
+                    "test": "local ball = chaos.getLpo(0)\n\nif ball.rho > 1300 then \n\treturn true\nelse \n\treturn false\nend\n"
+                  }
+                ]
+              },
+              {
+                "name": "ApproachBall",
+                "id": 33,
+                "x": 276,
+                "y": 347,
+                "code": "local net1   = chaos.getLpo(3) \nlocal net2   = chaos.getLpo(4) \n\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"go2ball\")\n",
+                "transitions": [
+                  {
+                    "name": "AtDistance",
+                    "id": 34,
+                    "x": 550,
+                    "y": 233,
+                    "to": "FaceBall2",
+                    "toId": 31,
+                    "test": "local ball = chaos.getLpo(0)\n\nif ball.rho < 1200 then \n\treturn true\nelse \n\treturn false\nend\n"
+                  }
+                ]
+              },
+              {
+                "name": "FaceBall1",
+                "id": 35,
+                "x": 50,
+                "y": 34,
+                "code": "--io.write(\"supporter\\n\")\n--chaos.setBehavior(\"faceball\")\n\n--local gs   = chaos.gsGetMyPos()\n\n--if gs.quality < 0.6 then\n--\tchaos.trackLandMarks()\n--end\n\nlocal trgPos = chaos.getOptimalPose(2)\nchaos.setDesiredPos(trgPos.x, trgPos.y, 0)\nchaos.setBehavior(\"go2gposf\")",
+                "transitions": [
+                  {
+                    "name": "HeadingBall",
+                    "id": 36,
+                    "x": 109,
+                    "y": 179,
+                    "to": "ApproachBall",
+                    "toId": 33,
+                    "test": "--local ball = chaos.getLpo(0)\n\n--if math.abs(ball.theta) < 0.3 then \n--\treturn true\n--else \n\treturn false\n--end\n"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "LookForBall",
+        "id": 37,
+        "x": 201,
+        "y": 379,
+        "code": "chaos.setBehavior(\"lookball\")\n\n",
+        "transitions": [
+          {
+            "name": "BallSeen",
+            "id": 38,
+            "x": 271,
+            "y": 185,
+            "to": "Attacker",
+            "toId": 1,
+            "test": "\n\tlocal ball = chaos.getLpo(0)\n\t\n\tif ball.anchored > 0.9 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
+          },
+          {
+            "name": "LookTimeout",
+            "id": 39,
+            "x": 36,
+            "y": 288,
+            "to": "GoToZone",
+            "toId": 40,
+            "test": "fin_inic = chaos.getGlobal(\"LOOK_TIMEOUT\")\n\nif (fin_inic == 1) then\n\treturn true\nelse\n\treturn false\nend"
+          }
+        ]
+      },
+      {
+        "name": "GoToZone",
+        "id": 40,
+        "x": 15,
+        "y": 124,
+        "transitions": [
+          {
+            "name": "BallSeen2",
+            "id": 41,
+            "x": 271,
+            "y": 32,
+            "to": "Attacker",
+            "toId": 1,
+            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored > 0.9 then \n    return true\nelse \n    return false\nend"
+          }
+        ],
+        "meta": true,
+        "initial": "Go2DefZone",
+        "states": [
+          {
+            "name": "Go2DefZone",
+            "id": 42,
+            "x": 7,
+            "y": 9,
+            "code": "--Constant\nBALL = 0\n\nchaos.setNeeded(BALL,1.0)\nchaos.setDesiredPos(0, -1300, 0)\nchaos.setBehavior(\"go2gpos\")",
+            "transitions": [
+              {
+                "name": "IsOnPlace",
+                "id": 43,
+                "x": 52,
+                "y": 168,
+                "to": "LookFromDef",
+                "toId": 45,
+                "test": "local gs   = chaos.gsGetMyPos()\n\nif gs.quality < 0.6 then\n\treturn false\nend\n\nif (math.abs(gs.x) < 300) and (gs.y > -1500) and (gs.y < -1100) then\n\treturn true\nelse\n\treturn false\nend"
+              },
+              {
+                "name": "isBadLocation",
+                "id": 44,
+                "x": 297,
+                "y": 8,
+                "to": "DefLookBall",
+                "toId": 46,
+                "test": "local pos = chaos.gsGetMyPos()\n\nif pos.quality < 0.6 then\n\treturn true\nelse\n\treturn false\nend"
+              }
+            ]
+          },
+          {
+            "name": "LookFromDef",
+            "id": 45,
+            "x": 7,
+            "y": 348,
+            "code": "chaos.setBehavior(\"lookball\")"
+          },
+          {
+            "name": "DefLookBall",
+            "id": 46,
+            "x": 469,
+            "y": 10,
+            "code": "chaos.setBehavior(\"lookball\")",
+            "transitions": [
+              {
+                "name": "lookTimeout",
+                "id": 47,
+                "x": 300,
+                "y": 152,
+                "to": "Go2DefZone",
+                "toId": 42,
+                "test": "fin_inic = chaos.getGlobal(\"LOOK_TIMEOUT\")\n\nif (fin_inic == 1) then\n\treturn true\nelse\n\treturn false\nend"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

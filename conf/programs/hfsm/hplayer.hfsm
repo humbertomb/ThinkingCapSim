@@ -1,0 +1,148 @@
+{
+  "name": "hplayer",
+  "machine": {
+    "name": "hplayer",
+    "id": 0,
+    "x": 0,
+    "y": 0,
+    "meta": true,
+    "initial": "LookForBallAtt",
+    "states": [
+      {
+        "name": "AroundBall",
+        "id": 1,
+        "x": 631,
+        "y": 206,
+        "code": "chaos.setBehavior(\"ngo2ball\")\n",
+        "transitions": [
+          {
+            "name": "BallLost3",
+            "id": 2,
+            "x": 645,
+            "y": 6,
+            "to": "LookForBallAtt",
+            "toId": 11,
+            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored < 0.5 then \n    return true\nelse \n    return false\nend"
+          },
+          {
+            "name": "ToTheirNet1",
+            "id": 3,
+            "x": 460,
+            "y": 290,
+            "to": "ChaseBall",
+            "toId": 13,
+            "test": "local ball = chaos.getLpo(0)\nlocal net2 = chaos.getLpo(2)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.5) and (math.abs(net2.theta) < 1.6) then \n\t\treturn false\n\tend\nend\n\nreturn true"
+          }
+        ]
+      },
+      {
+        "name": "FaceBall",
+        "id": 4,
+        "x": 187,
+        "y": 147,
+        "code": "chaos.setBehavior(\"faceball\")\n",
+        "transitions": [
+          {
+            "name": "HeadingBall",
+            "id": 5,
+            "x": 169,
+            "y": 284,
+            "to": "GoToBall",
+            "toId": 7,
+            "test": "\tlocal ball = chaos.getLpo(0)\n\t\n\tif math.abs(ball.theta) < 0.3 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
+          },
+          {
+            "name": "BallLost1",
+            "id": 6,
+            "x": 1,
+            "y": 42,
+            "to": "LookForBallAtt",
+            "toId": 11,
+            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored < 0.8 then \n    return true\nelse \n    return false\nend"
+          }
+        ]
+      },
+      {
+        "name": "GoToBall",
+        "id": 7,
+        "x": 39,
+        "y": 447,
+        "code": "chaos.setBehavior(\"go2ball\")\n",
+        "transitions": [
+          {
+            "name": "ToOurNet1",
+            "id": 8,
+            "x": 461,
+            "y": 133,
+            "to": "AroundBall",
+            "toId": 1,
+            "test": "\nlocal ball = chaos.getLpo(0)\nlocal net2 = chaos.getLpo(2)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.6) and (math.abs(net2.theta) < 1.6) then \n\t\treturn true\n\tend\nend\n\nreturn false"
+          },
+          {
+            "name": "BallLost2",
+            "id": 9,
+            "x": 8,
+            "y": 279,
+            "to": "LookForBallAtt",
+            "toId": 11,
+            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored < 0.8 then \n    return true\nelse \n    return false\nend"
+          },
+          {
+            "name": "ToTheirNet2",
+            "id": 10,
+            "x": 461,
+            "y": 446,
+            "to": "ChaseBall",
+            "toId": 13,
+            "test": "local ball = chaos.getLpo(0)\nlocal net2 = chaos.getLpo(2)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.5) and (math.abs(net2.theta) < 1.6) then \n\t\treturn false\n\tend\nend\n\nreturn true"
+          }
+        ]
+      },
+      {
+        "name": "LookForBallAtt",
+        "id": 11,
+        "x": 185,
+        "y": 11,
+        "code": "--io.write(\"Look4ball - Attacker\\n\")\n\nchaos.setBehavior(\"lookball\")",
+        "transitions": [
+          {
+            "name": "BallSeen",
+            "id": 12,
+            "x": 462,
+            "y": 2,
+            "to": "FaceBall",
+            "toId": 4,
+            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored > 0.9 then \n    return true\nelse \n    return false\nend"
+          }
+        ]
+      },
+      {
+        "name": "ChaseBall",
+        "id": 13,
+        "x": 631,
+        "y": 395,
+        "code": "chaos.setBehavior(\"go2ball\")",
+        "transitions": [
+          {
+            "name": "ToOurNet2",
+            "id": 14,
+            "x": 880,
+            "y": 295,
+            "to": "AroundBall",
+            "toId": 1,
+            "test": "local ball = chaos.getLpo(0)\nlocal net2 = chaos.getLpo(2)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.6) and (math.abs(net2.theta) < 1.6) then \n\t\treturn true\n\tend\nend\n\nreturn false"
+          },
+          {
+            "name": "BallLost4",
+            "id": 15,
+            "x": 818,
+            "y": 5,
+            "to": "LookForBallAtt",
+            "toId": 11,
+            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored < 0.65 then \n    return true\nelse \n    return false\nend"
+          }
+        ]
+      }
+    ]
+  }
+}

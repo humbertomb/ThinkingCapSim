@@ -126,10 +126,14 @@ public class MetaState extends State
 
 	/* ---------------- the scripts of the whole machine ---------------- */
 
-	/** Reads the scripts of every state and transition under this one. */
+	/**
+	 * Reads the scripts of every state and transition under this one. A meta state
+	 * has no script of its own -- what it does is what its states do -- so none is
+	 * looked for (its id may well be the id of one of its states, as the files of
+	 * the Chaos editor number the states of each level on their own).
+	 */
 	public void loadCode (String path)
 	{
-		super.loadCode (path);
 		for (State s : this.states)
 		{
 			if (s instanceof MetaState)			((MetaState) s).loadCode (path);

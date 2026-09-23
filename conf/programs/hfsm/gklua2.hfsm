@@ -1,0 +1,427 @@
+{
+  "name": "gklua2",
+  "vars": [
+    {
+      "name": "BALL_CLOSE",
+      "type": "int",
+      "elements": "1",
+      "value": "600",
+      "machine": "gklua2"
+    },
+    {
+      "name": "QUALITY_LOW",
+      "type": "float",
+      "elements": "1",
+      "value": "0.6",
+      "machine": "gklua2"
+    },
+    {
+      "name": "QUALITY_HIGH",
+      "type": "float",
+      "elements": "1",
+      "value": "0.8",
+      "machine": "gklua2"
+    },
+    {
+      "name": "ANCHORED_LOW",
+      "type": "float",
+      "elements": "1",
+      "value": "0.6",
+      "machine": "gklua2"
+    },
+    {
+      "name": "ANCHORED_HIGH",
+      "type": "float",
+      "elements": "1",
+      "value": "0.8",
+      "machine": "gklua2"
+    },
+    {
+      "name": "BALL_IN_AREA",
+      "type": "int",
+      "elements": "1",
+      "value": "2500",
+      "machine": "gklua2"
+    },
+    {
+      "name": "IN_POS",
+      "type": "int",
+      "elements": "1",
+      "value": "400",
+      "machine": "gklua2"
+    },
+    {
+      "name": "OUT_POS",
+      "type": "int",
+      "elements": "1",
+      "value": "700",
+      "machine": "gklua2"
+    },
+    {
+      "name": "ANG_LOW",
+      "type": "float",
+      "elements": "1",
+      "value": "0.5",
+      "machine": "gklua2"
+    },
+    {
+      "name": "ANG_HIGH",
+      "type": "float",
+      "elements": "1",
+      "value": "1.0",
+      "machine": "gklua2"
+    },
+    {
+      "name": "NET_CLOSE",
+      "type": "int",
+      "elements": "1",
+      "value": "500",
+      "machine": "gklua2"
+    }
+  ],
+  "machine": {
+    "name": "gklua2",
+    "id": 0,
+    "x": 0,
+    "y": 0,
+    "meta": true,
+    "initial": "GoToArea",
+    "states": [
+      {
+        "name": "GoToArea",
+        "id": 1,
+        "x": 783,
+        "y": 831,
+        "transitions": [
+          {
+            "name": "InArea",
+            "id": 2,
+            "x": 853,
+            "y": 253,
+            "to": "KeepInArea",
+            "toId": 14,
+            "test": "PI2=3.141592/2.0\ntemp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nnet1=chaos.getLpo(3) -- Net1\n\n-- InPos and (see net1 or myPos.angle is 90)\n\n--if dist < IN_POS and ((net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) or\n--                     (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH)) then\nif dist < IN_POS and (net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) then\n    return true\nelse\n    return false\n\nend\n"
+          },
+          {
+            "name": "BallVisGoTo",
+            "id": 3,
+            "x": 437,
+            "y": 696,
+            "to": "Defender",
+            "toId": 23,
+            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\nball=chaos.getLpo(0) -- Ball\n\nif temp.quality > QUALITY_HIGH and dist < OUT_POS and \n   ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then\n    return true\nelse\n    return false\nend"
+          },
+          {
+            "name": "InAstrayGoTo",
+            "id": 4,
+            "x": 1128,
+            "y": 726,
+            "priority": 2,
+            "to": "EscapeFromNet2",
+            "toId": 8,
+            "test": "lps=chaos.lps_getAstray()\n\nif lps.astray > 0 then\n    return true\nelse\n    return false\nend\n"
+          }
+        ],
+        "meta": true,
+        "initial": "GoToNet2",
+        "states": [
+          {
+            "name": "GoToNet2",
+            "id": 5,
+            "x": 70,
+            "y": 262,
+            "code": "chaos.setBehavior(\"gkgo2nt2\")\n\n--io.write(\"GoToArea: GoToNet2\\n\")",
+            "transitions": [
+              {
+                "name": "InAreaGoTo",
+                "id": 6,
+                "x": 403,
+                "y": 97,
+                "to": "SearchNet1",
+                "toId": 7,
+                "test": "-- Lpo object position: My Net\nnet2=6\nlocal temp_lpo = chaos.getLpo(net2)\n\nif temp_lpo.anchored > ANCHORED_HIGH and temp_lpo.rho < NET_CLOSE then \n    return true\nelse \n    return false\nend"
+              }
+            ]
+          },
+          {
+            "name": "SearchNet1",
+            "id": 7,
+            "x": 657,
+            "y": 218,
+            "code": "chaos.setBehavior(\"gkshnet1\")\n\n--io.write(\"GoToArea: SearchNet1\\n\")"
+          }
+        ]
+      },
+      {
+        "name": "EscapeFromNet2",
+        "id": 8,
+        "x": 1233,
+        "y": 327,
+        "transitions": [
+          {
+            "name": "OutNet2",
+            "id": 9,
+            "x": 1217,
+            "y": 42,
+            "to": "KeepInArea",
+            "toId": 14,
+            "test": "PI2=3.141592/2.0\ntemp=chaos.gsGetMyPos()\nnet1=chaos.getLpo(3) -- Net1\n\nif (net1.anchored > ANCHORED_HIGH and math.abs(net1.theta) < ANG_LOW) or\n   (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH) then\n    return true\nelse\n    return false\nend\n"
+          }
+        ],
+        "meta": true,
+        "initial": "EscapeFromNet2",
+        "states": [
+          {
+            "name": "EscapeFromNet2",
+            "id": 10,
+            "x": 45,
+            "y": 51,
+            "code": "chaos.setBehavior(\"gkscape\")\n--io.write(\"EscapeFromNet: escape\\n\")",
+            "transitions": [
+              {
+                "name": "OutAstray",
+                "id": 11,
+                "x": 611,
+                "y": 43,
+                "to": "SearchNet1",
+                "toId": 12,
+                "test": "lps=chaos.lps_getAstray()\n\nif lps.astray == 0 then\n    return true\nelse\n    return false\nend\n"
+              }
+            ]
+          },
+          {
+            "name": "SearchNet1",
+            "id": 12,
+            "x": 444,
+            "y": 382,
+            "code": "chaos.setBehavior(\"gkshnet1\")\n--io.write(\"EscapeFromNet: SearchNet1\\n\")",
+            "transitions": [
+              {
+                "name": "InAstray",
+                "id": 13,
+                "x": 35,
+                "y": 385,
+                "to": "EscapeFromNet2",
+                "toId": 10,
+                "test": "lps=chaos.lps_getAstray()\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "KeepInArea",
+        "id": 14,
+        "x": 731,
+        "y": 31,
+        "transitions": [
+          {
+            "name": "OutOfAreaCenter",
+            "id": 15,
+            "x": 635,
+            "y": 406,
+            "to": "GoToArea",
+            "toId": 1,
+            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\nif temp.quality > QUALITY_HIGH and dist > OUT_POS  then\n    return true\nelse\n    return false\nend\n"
+          },
+          {
+            "name": "InAstrayKeep",
+            "id": 16,
+            "x": 1049,
+            "y": 164,
+            "to": "EscapeFromNet2",
+            "toId": 8,
+            "test": "lps=chaos.lps_getAstray()\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
+          },
+          {
+            "name": "BallVisMyArea",
+            "id": 17,
+            "x": 391,
+            "y": 385,
+            "to": "Defender",
+            "toId": 23,
+            "test": "ball=chaos.getLpo(0) -- Ball\n\nif ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then\n    return true\nelse\n    return false\nend\n\n"
+          },
+          {
+            "name": "LostCenter",
+            "id": 18,
+            "x": 300,
+            "y": 0,
+            "to": "Localize",
+            "toId": 32,
+            "test": "temp=chaos.gsGetMyPos()\n\nif temp.quality<QUALITY_LOW then\n    return true\nelse\n    return false\nend"
+          }
+        ],
+        "meta": true,
+        "initial": "KeepInArea",
+        "states": [
+          {
+            "name": "KeepInArea",
+            "id": 19,
+            "x": 100,
+            "y": 43,
+            "code": "ball=0\nchaos.setNeeded(ball, 1.0) -- We do need the ball\n\nchaos.setKick(\"BombFrontKick\")\nchaos.setBehavior(\"gkkeepa\")\n--io.write(\"KeepInArea: KeepArea\\n\")\n",
+            "transitions": [
+              {
+                "name": "NotSeenNet1",
+                "id": 20,
+                "x": 597,
+                "y": 16,
+                "to": "SearchNet1",
+                "toId": 21,
+                "test": "local Pi2=3.141592/2.0\nnet1=3\n-- Lpo object position\nlocal temp_lpo = chaos.getLpo(net1)\nball=0\nchaos.setNeeded(ball, 1.0)\nnet1=3\nchaos.setNeeded(net1, 1.0)\n\nif temp_lpo.anchored < ANCHORED_LOW then \n    return true\nelse\n    -- Check global data\n   -- mypos=chaos.gsGetMyPos()\n   -- if mypos.quality > QUALITY_HIGH and math.abs(mypos.theta - Pi2) > ANG_LOW then\n    --    return true\n   -- else\n        return false\n   -- end\nend\n"
+              }
+            ]
+          },
+          {
+            "name": "SearchNet1",
+            "id": 21,
+            "x": 558,
+            "y": 372,
+            "code": "net1=3\nchaos.setNeeded(net1, 1.0) \nchaos.setKick(\"BombFrontKick\")\nchaos.setBehavior(\"gkshnet1\")\n--io.write(\"KeepArea: SearchNet1\\n\")",
+            "transitions": [
+              {
+                "name": "SeenNet1",
+                "id": 22,
+                "x": 147,
+                "y": 344,
+                "to": "KeepInArea",
+                "toId": 19,
+                "test": "local Pi2=3.141592/2.0\n\n-- Lpo object position\nnet1=3\nlocal temp_lpo = chaos.getLpo(net1)\nif temp_lpo.anchored > ANCHORED_HIGH and math.abs(temp_lpo.theta) < ANG_LOW then \n    return true\nelse\n    -- Not seen in Lps. Check if my location is good enough\n    --mypos=chaos.gsGetMyPos()\n    --if mypos.quality > QUALITY_HIGH and  math.abs(mypos.theta - Pi2) < ANG_LOW then\n    --    return true\n    --else\n        return false\n    --end\nend"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Defender",
+        "id": 23,
+        "x": 42,
+        "y": 705,
+        "transitions": [
+          {
+            "name": "OutOfAreaDefender",
+            "id": 24,
+            "x": 408,
+            "y": 858,
+            "to": "GoToArea",
+            "toId": 1,
+            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nball=chaos.getLpo(0) -- Ball\n\nif temp.quality>QUALITY_HIGH and dist > OUT_POS and \n   (ball.anchored < ANCHORED_LOW or ball.rho > BALL_IN_AREA) then\n    return true\nelse\n    return false\nend\n"
+          },
+          {
+            "name": "InAstrayDefender",
+            "id": 25,
+            "x": 502,
+            "y": 538,
+            "to": "EscapeFromNet2",
+            "toId": 8,
+            "test": "lps=chaos.lps_getAstray()\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
+          },
+          {
+            "name": "BallNotVisOrOutOfArea",
+            "id": 26,
+            "x": 195,
+            "y": 367,
+            "to": "KeepInArea",
+            "toId": 14,
+            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nball=chaos.getLpo(0) -- Ball\n\nif ball.anchored < ANCHORED_HIGH or ball.rho > BALL_IN_AREA then\n    return true\nelse\n    return false\nend\n"
+          },
+          {
+            "name": "Transition_41",
+            "id": 27,
+            "x": 7,
+            "y": 207,
+            "to": "Localize",
+            "toId": 32,
+            "test": "temp=chaos.gsGetMyPos()\n\nif temp.quality<QUALITY_LOW then\n    return true\nelse\n    return false\nend"
+          }
+        ],
+        "meta": true,
+        "initial": "CutBall",
+        "states": [
+          {
+            "name": "CutBall",
+            "id": 28,
+            "x": 167,
+            "y": 114,
+            "code": "ball=0\nchaos.setNeeded(ball,1.0)\nchaos.setKick(\"BombFrontKick\")\nchaos.setBehavior(\"gkcutb\")\n--io.write(\"cutball\\n\")",
+            "transitions": [
+              {
+                "name": "BallClose",
+                "id": 29,
+                "x": 262,
+                "y": 328,
+                "to": "ClearBall",
+                "toId": 30,
+                "test": "-- Lpo object position\nball=0\nlocal temp_lpo = chaos.getLpo(ball)\nif temp_lpo.anchored > ANCHORED_HIGH and temp_lpo.rho < BALL_CLOSE then \n    return true\nelse \n    return false\nend"
+              }
+            ]
+          },
+          {
+            "name": "ClearBall",
+            "id": 30,
+            "x": 638,
+            "y": 381,
+            "code": "ball=0\nchaos.setNeeded(ball,1.0)\nchaos.setBehavior(\"gkclearb\")\n--io.write(\"clearBall\\n\")",
+            "transitions": [
+              {
+                "name": "BallFar",
+                "id": 31,
+                "x": 542,
+                "y": 113,
+                "to": "CutBall",
+                "toId": 28,
+                "test": "-- Lpo object position\nball=0\nlocal temp_lpo = chaos.getLpo(ball)\nif temp_lpo.rho > BALL_CLOSE then \n    return true\nelse \n    return false\nend"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Localize",
+        "id": 32,
+        "x": 26,
+        "y": 61,
+        "code": "ball=0\nchaos.setNeeded(ball, 1.0) -- We do need the ball\nchaos.setKick(\"BombFrontKick\")\nchaos.setBehavior(\"gklocal\")\n--io.write(\"localize\\n\")",
+        "transitions": [
+          {
+            "name": "BallVisLoc",
+            "id": 33,
+            "x": 20,
+            "y": 377,
+            "to": "Defender",
+            "toId": 23,
+            "test": "ball=chaos.getLpo(0) -- Ball\n\nif ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then\n    return true\nelse\n    return false\nend\n\n"
+          },
+          {
+            "name": "InAstrayLoc",
+            "id": 34,
+            "x": 412,
+            "y": 195,
+            "to": "EscapeFromNet2",
+            "toId": 8,
+            "test": "lps=chaos.lps_getAstray()\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
+          },
+          {
+            "name": "OutOfAreaLocalize",
+            "id": 35,
+            "x": 488,
+            "y": 38,
+            "to": "GoToArea",
+            "toId": 1,
+            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\n--io.write(temp.quality,\"\\n\")\nif temp.quality>QUALITY_HIGH and dist > OUT_POS then\n    return true\nelse\n    return false\nend\n"
+          },
+          {
+            "name": "InAreaLoc",
+            "id": 36,
+            "x": 696,
+            "y": 191,
+            "to": "KeepInArea",
+            "toId": 14,
+            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\nif temp.quality>QUALITY_HIGH and dist < OUT_POS then\n    return true\nelse\n    return false\nend\n"
+          }
+        ]
+      }
+    ]
+  }
+}

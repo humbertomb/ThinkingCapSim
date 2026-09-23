@@ -1,0 +1,121 @@
+{
+  "name": "gk",
+  "machine": {
+    "name": "gk",
+    "id": 0,
+    "x": 0,
+    "y": 0,
+    "meta": true,
+    "initial": "InitialGK",
+    "states": [
+      {
+        "name": "GoGkPos",
+        "id": 1,
+        "x": 63,
+        "y": 442,
+        "code": "local trgPos = chaos.getOptimalPose(3)\nchaos.setDesiredPos(trgPos.x, trgPos.y, 0)\nchaos.setBehavior(\"gk2gposf\")\n--io.write(\"goGkPos \")",
+        "transitions": [
+          {
+            "name": "ballNear",
+            "id": 2,
+            "x": 420,
+            "y": 8,
+            "to": "Clear",
+            "toId": 5,
+            "test": "ballpos=0\nvelmin=2000\nlocal ball = chaos.getLpo(ballpos)\nlocal ballVel = chaos.getBallVel()\n\nif ((ball.rho < 600) and (ball.anchored > 0.9) and ((math.abs(ballVel.x) < velmin) and (math.abs(ballVel.y) < velmin)) ) then \n\treturn true\nelse\n\treturn false\nend\n\n"
+          },
+          {
+            "name": "ballLost",
+            "id": 3,
+            "x": 214,
+            "y": 175,
+            "to": "InitialGK",
+            "toId": 8,
+            "test": "ballpos=0\n\nlocal ball = chaos.getLpo(ballpos)\n\nif (ball.anchored < 0.7) then \n\treturn true\nelse\n\treturn false\nend\n"
+          },
+          {
+            "name": "goCut",
+            "id": 4,
+            "x": 425,
+            "y": 512,
+            "to": "CutBall",
+            "toId": 10,
+            "test": "ballpos=0\nvelmin=2000\nlocal ball = chaos.getLpo(ballpos)\nlocal ballVel = chaos.getBallVel()\n\n--io.write(\"vx = \", ballVel.x, \"  vy = \", ballVel.y)\n\nif ((ball.rho < 800) and (ball.anchored > 0.9) and ((math.abs(ballVel.x) > velmin) or (math.abs(ballVel.y) > velmin)) ) then \n\treturn true\nelse\n\treturn false\nend\n\n"
+          }
+        ]
+      },
+      {
+        "name": "Clear",
+        "id": 5,
+        "x": 717,
+        "y": 38,
+        "code": "chaos.setBehavior(\"dokick\")\n--io.write(\"clear \")",
+        "transitions": [
+          {
+            "name": "ballFar",
+            "id": 6,
+            "x": 763,
+            "y": 407,
+            "to": "GoGkPos",
+            "toId": 1,
+            "test": "ballpos=0\nvelmin=2000\nlocal ball = chaos.getLpo(ballpos)\nlocal ballVel = chaos.getBallVel()\n\n\nif ((ball.rho > 600) or (ball.anchored < 0.9) or ((math.abs(ballVel.x) > velmin) or (math.abs(ballVel.y) > velmin))) then \n\treturn true\nelse\n\treturn false\nend\n"
+          },
+          {
+            "name": "balLost2",
+            "id": 7,
+            "x": 459,
+            "y": 178,
+            "to": "InitialGK",
+            "toId": 8,
+            "test": "ballpos=0\n\nlocal ball = chaos.getLpo(ballpos)\n\nif ((ball.anchored < 0.7) or (ball.anchored < 0.9))then \n\treturn true\nelse\n\treturn false\nend\n"
+          }
+        ]
+      },
+      {
+        "name": "InitialGK",
+        "id": 8,
+        "x": 83,
+        "y": 20,
+        "code": "local trgPos = chaos.getOptimalPose(3)\n\ntrgPos.x = 0;\ntrgPos.y = -2650;\n\nchaos.setDesiredPos(trgPos.x, trgPos.y, 0)\nchaos.setBehavior(\"gk2gposf\")\n--io.write(\"initial \")",
+        "transitions": [
+          {
+            "name": "ballSeen",
+            "id": 9,
+            "x": 28,
+            "y": 180,
+            "to": "GoGkPos",
+            "toId": 1,
+            "test": "ballpos=0\n\nlocal ball = chaos.getLpo(ballpos)\n\nif (ball.anchored > 0.9) then \n\treturn true\nelse\n\treturn false\nend\n\n"
+          }
+        ]
+      },
+      {
+        "name": "CutBall",
+        "id": 10,
+        "x": 599,
+        "y": 653,
+        "code": "local ball=0\n\nchaos.setNeeded(ball, 1.0)\nchaos.setSynchroKick(\"BombFrontKick\", 3)\n\nio.write(\"ball \")",
+        "transitions": [
+          {
+            "name": "retCut",
+            "id": 11,
+            "x": 95,
+            "y": 642,
+            "to": "GoGkPos",
+            "toId": 1,
+            "test": "ballpos=0\n\nlocal ball = chaos.getLpo(ballpos)\nlocal ballVel = chaos.getBallVel()\n\nif ((ball.rho > 700) or (ball.anchored < 0.9)) then \n\treturn true\nelse\n\treturn false\nend\n\n"
+          },
+          {
+            "name": "goClear",
+            "id": 12,
+            "x": 1007,
+            "y": 519,
+            "to": "Clear",
+            "toId": 5,
+            "test": "ballpos=0\nvelmin=2000\n\nlocal ball = chaos.getLpo(ballpos)\nlocal ballVel = chaos.getBallVel()\n\nif ((ball.rho < 600) and (ball.anchored > 0.9) and ((math.abs(ballVel.x) < velmin) and (math.abs(ballVel.y) < velmin)) ) then \n\treturn true\nelse\n\treturn false\nend\n\n"
+          }
+        ]
+      }
+    ]
+  }
+}

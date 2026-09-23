@@ -1,0 +1,168 @@
+{
+  "name": "localise",
+  "vars": [
+    {
+      "name": "POS1X",
+      "type": "int",
+      "elements": "1",
+      "value": "1000",
+      "machine": "localise"
+    },
+    {
+      "name": "POS1Y",
+      "type": "int",
+      "elements": "1",
+      "value": "1000",
+      "machine": "localise"
+    },
+    {
+      "name": "POS2X",
+      "type": "int",
+      "elements": "1",
+      "value": "1000",
+      "machine": "localise"
+    },
+    {
+      "name": "POS2Y",
+      "type": "int",
+      "elements": "1",
+      "value": "-1000",
+      "machine": "localise"
+    },
+    {
+      "name": "POS3X",
+      "type": "int",
+      "elements": "1",
+      "value": "-1000",
+      "machine": "localise"
+    },
+    {
+      "name": "POS3Y",
+      "type": "int",
+      "elements": "1",
+      "value": "-1000",
+      "machine": "localise"
+    },
+    {
+      "name": "POS4X",
+      "type": "int",
+      "elements": "1",
+      "value": "-1000",
+      "machine": "localise"
+    },
+    {
+      "name": "POS4Y",
+      "type": "int",
+      "elements": "1",
+      "value": "1000",
+      "machine": "localise"
+    },
+    {
+      "name": "THRES",
+      "type": "int",
+      "elements": "1",
+      "value": "300",
+      "machine": "localise"
+    },
+    {
+      "name": "QPOS",
+      "type": "double",
+      "elements": "1",
+      "value": "0.7",
+      "machine": "localise"
+    },
+    {
+      "name": "STAY",
+      "type": "int",
+      "elements": "1",
+      "value": "100",
+      "machine": "localise"
+    }
+  ],
+  "machine": {
+    "name": "localise",
+    "id": 0,
+    "x": 0,
+    "y": 0,
+    "meta": true,
+    "initial": "Position1",
+    "states": [
+      {
+        "name": "Position1",
+        "id": 1,
+        "x": 52,
+        "y": 65,
+        "code": "chaos.setDesiredPos(POS1X, POS1Y, 0)\nchaos.setBehavior(\"go2gpos\")",
+        "transitions": [
+          {
+            "name": "InPosition1",
+            "id": 2,
+            "x": 418,
+            "y": 33,
+            "to": "Position2",
+            "toId": 3,
+            "test": "-- Geometrical computations\nlocal pos = chaos.gsGetMyPos()\n\ndx = POS1X - pos.x\ndy = POS1Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
+            "action": "chaos.setSynchroKick(\"HappyKick\")\n"
+          }
+        ]
+      },
+      {
+        "name": "Position2",
+        "id": 3,
+        "x": 704,
+        "y": 63,
+        "code": "chaos.setDesiredPos(POS2X, POS2Y, 0)\nchaos.setBehavior(\"go2gpos\")",
+        "transitions": [
+          {
+            "name": "InPosition2",
+            "id": 4,
+            "x": 749,
+            "y": 284,
+            "to": "Position3",
+            "toId": 5,
+            "test": "-- Geometrical computations\nlocal pos = chaos.gsGetMyPos()\n\ndx = POS2X - pos.x\ndy = POS2Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
+            "action": "chaos.setSynchroKick(\"HappyKick\")\n"
+          }
+        ]
+      },
+      {
+        "name": "Position3",
+        "id": 5,
+        "x": 703,
+        "y": 528,
+        "code": "chaos.setDesiredPos(POS3X, POS3Y, 0)\nchaos.setBehavior(\"go2gpos\")",
+        "transitions": [
+          {
+            "name": "InPosition3",
+            "id": 6,
+            "x": 417,
+            "y": 496,
+            "to": "Position4",
+            "toId": 7,
+            "test": "-- Geometrical computations\nlocal pos = chaos.gsGetMyPos()\n\ndx = POS3X - pos.x\ndy = POS3Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
+            "action": "chaos.setSynchroKick(\"HappyKick\")\n"
+          }
+        ]
+      },
+      {
+        "name": "Position4",
+        "id": 7,
+        "x": 58,
+        "y": 526,
+        "code": "chaos.setDesiredPos(POS4X, POS4Y, 0)\nchaos.setBehavior(\"go2gpos\")",
+        "transitions": [
+          {
+            "name": "InPosition4",
+            "id": 8,
+            "x": 65,
+            "y": 271,
+            "to": "Position1",
+            "toId": 1,
+            "test": "-- Geometrical computations\nlocal pos = chaos.gsGetMyPos()\n\ndx = POS4X - pos.x\ndy = POS4Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
+            "action": "chaos.setSynchroKick(\"HappyKick\")\n"
+          }
+        ]
+      }
+    ]
+  }
+}

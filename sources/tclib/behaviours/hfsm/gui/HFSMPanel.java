@@ -35,6 +35,7 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import tclib.behaviours.hfsm.HFSMJson;
 import tclib.behaviours.hfsm.MetaState;
 import tclib.behaviours.hfsm.State;
 import tclib.behaviours.hfsm.Transition;
@@ -55,7 +56,13 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	private static final long		serialVersionUID = 1L;
 
 	static public final String		TITLE		= "HFSM Editor";
-	static public final String		SUFFIX		= ".xas";
+
+	/** What a machine is kept as, and where. */
+	static public final String		SUFFIX		= HFSMJson.SUFFIX;
+	static public final String		FOLDER		= HFSMJson.FOLDER;
+
+	/** What the machines of the Chaos editor are kept as. */
+	static public final String		CHAOS_SUFFIX	= ".xas";
 
 	/** What the window hosting the editor needs to know. */
 	public interface Host
@@ -66,7 +73,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 
 	/* Model */
 	protected MetaState				root;
-	protected File					file;						// the .xas it came from, or null
+	protected File					file;						// the .hfsm it came from, or null
 	protected List<XMLParser.PrivateVar>	vars = new ArrayList<XMLParser.PrivateVar> ();
 	protected boolean				dirty;
 
@@ -298,22 +305,27 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 
 		JMenu		file = new JMenu ("File");
 
-		file.add (item ("New", KeyStroke.getKeyStroke (KeyEvent.VK_N, mask), new Runnable ()
+		file.add (item ("New State Machine", KeyStroke.getKeyStroke (KeyEvent.VK_N, mask), new Runnable ()
 		{
 			public void run ()		{ newFile (); }
 		}));
-		file.add (item ("Load", KeyStroke.getKeyStroke (KeyEvent.VK_O, mask), new Runnable ()
+		file.add (item ("Load State Machine", KeyStroke.getKeyStroke (KeyEvent.VK_O, mask), new Runnable ()
 		{
 			public void run ()		{ load (); }
 		}));
 		file.addSeparator ();
-		file.add (item ("Save", KeyStroke.getKeyStroke (KeyEvent.VK_S, mask), new Runnable ()
+		file.add (item ("Save State Machine", KeyStroke.getKeyStroke (KeyEvent.VK_S, mask), new Runnable ()
 		{
 			public void run ()		{ save (); }
 		}));
 		file.add (item ("Save as State Machine", KeyStroke.getKeyStroke (KeyEvent.VK_S, mask | InputEvent.SHIFT_DOWN_MASK), new Runnable ()
 		{
 			public void run ()		{ saveAs (); }
+		}));
+		file.addSeparator ();
+		file.add (item ("Import Chaos HFSM", null, new Runnable ()
+		{
+			public void run ()		{ importChaos (); }
 		}));
 		file.addSeparator ();
 		file.add (item ("Close", null, new Runnable ()
@@ -383,37 +395,80 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	{
 		if (!confirmDiscard ())					return;
 
-		JFileChooser	fc = chooser ();
+		JFileChooser	fc = chooser (SUFFIX, "State machines (*" + SUFFIX + ")", "hfsm");
 
 		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
 		load (fc.getSelectedFile ());
 	}
 
-	/** Loads a machine from a file, with the scripts of the folder of the file. */
+	/**
+	 * Loads a machine from a file: the one file of a machine (<code>.hfsm</code>),
+	 * or the <code>.xas</code> of the Chaos editor when that is what it is given.
+	 */
 	public void load (File f)
 	{
+		if (f.getName ().toLowerCase ().endsWith (CHAOS_SUFFIX))		{ importChaos (f); return; }
 		try
 		{
-			XMLParser	parser = XMLParser.parse (f);
+			HFSMJson.Machine	machine = HFSMJson.read (f);
 
-			root	= parser.root ();
-			vars	= parser.privateVars ();
-			root.loadCode (f.getParent ());
-			root.sortAll ();
-			file	= f;
-			dirty	= false;
-			canvas.setMachine (root);
-			refresh ();
-
-			status ("Loaded " + f.getName () + ": " + XMLWriter.count (root, true) + " states, " + transitions ()
-					+ " transitions" + (parser.problems ().isEmpty () ? "" : (", " + parser.problems ().size () + " problems")));
-			if (!parser.problems ().isEmpty ())
-				JOptionPane.showMessageDialog (this, join (parser.problems ()), "What the file says", JOptionPane.WARNING_MESSAGE);
+			took (machine, f, "Loaded");
 		}
 		catch (Exception e)
 		{
 			JOptionPane.showMessageDialog (this, "Cannot load " + f + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	/** Reads a machine as the Chaos editor left it, asking which .xas. */
+	public void importChaos ()
+	{
+		if (!confirmDiscard ())					return;
+
+		JFileChooser	fc = chooser (CHAOS_SUFFIX, "Chaos state machines (*" + CHAOS_SUFFIX + ")", "xas");
+
+		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+		importChaos (fc.getSelectedFile ());
+	}
+
+	/**
+	 * Reads a machine of the Chaos editor: the <code>.xas</code> and the
+	 * <code>.acc</code> scripts beside it. It comes in as a machine with no file of
+	 * its own yet, so that saving it writes one <code>.hfsm</code> instead of
+	 * writing over what was imported.
+	 */
+	public void importChaos (File f)
+	{
+		try
+		{
+			HFSMJson.Machine	machine = HFSMJson.importChaos (f);
+
+			took (machine, null, "Imported " + f.getName () + " as");
+			file	= new File (FOLDER, machine.root.getName () + SUFFIX);		// where Save will put it
+			dirty	= true;
+			refresh ();
+		}
+		catch (Exception e)
+		{
+			JOptionPane.showMessageDialog (this, "Cannot import " + f + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	/** Takes a machine that was just read as the one being edited. */
+	protected void took (HFSMJson.Machine machine, File f, String what)
+	{
+		root	= machine.root;
+		vars	= machine.vars;
+		file	= f;
+		dirty	= false;
+		canvas.setMachine (root);
+		refresh ();
+
+		status (what + " " + ((f != null) ? f.getName () : root.getName ()) + ": " + XMLWriter.count (root, true) + " states, "
+				+ transitions () + " transitions"
+				+ (machine.problems.isEmpty () ? "" : (", " + machine.problems.size () + " problems")));
+		if (!machine.problems.isEmpty ())
+			JOptionPane.showMessageDialog (this, join (machine.problems), "What the file says", JOptionPane.WARNING_MESSAGE);
 	}
 
 	/** How many transitions the whole machine holds. */
@@ -432,9 +487,9 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	/** Writes the machine as another state machine, asking for the file. */
 	public boolean saveAs ()
 	{
-		JFileChooser	fc = chooser ();
+		JFileChooser	fc = chooser (SUFFIX, "State machines (*" + SUFFIX + ")", "hfsm");
 
-		fc.setSelectedFile (new File ((file != null) ? file.getName () : (root.getName () + SUFFIX)));
+		fc.setSelectedFile (new File ((file != null) ? file.getName () : (root.getName () + SUFFIX)));		// its own name
 		if (fc.showSaveDialog (this) != JFileChooser.APPROVE_OPTION)		return false;
 
 		File		f = fc.getSelectedFile ();
@@ -455,11 +510,11 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 			int		dot = name.lastIndexOf ('.');
 
 			root.setName ((dot > 0) ? name.substring (0, dot) : name);
-			XMLWriter.write (root, f, vars);
+			HFSMJson.write (root, f, vars);
 			file	= f;
 			dirty	= false;
 			refresh ();
-			status ("Saved " + f.getName () + " and the scripts of its states in " + f.getParent ());
+			status ("Saved " + f.getName () + " in " + f.getParent ());
 			return true;
 		}
 		catch (Exception e)
@@ -469,18 +524,15 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		}
 	}
 
-	private JFileChooser chooser ()
+	/** A file chooser that starts where the machines are kept. */
+	private JFileChooser chooser (String suffix, String what, String extension)
 	{
 		JFileChooser	fc = new JFileChooser ();
+		File			dir = ((file != null) && (file.getParentFile () != null)) ? file.getParentFile () : new File (FOLDER);
 
-		fc.setFileFilter (new FileNameExtensionFilter ("State machines (*" + SUFFIX + ")", "xas"));
-		if (file != null)						fc.setCurrentDirectory (file.getParentFile ());
-		else
-		{
-			File	def = new File ("./conf/programs/hfsm");
-
-			if (def.exists ())					fc.setCurrentDirectory (def);
-		}
+		fc.setFileFilter (new FileNameExtensionFilter (what, extension));
+		if (dir.exists ())						fc.setCurrentDirectory (dir);
+		else									fc.setCurrentDirectory (new File ("."));
 		return fc;
 	}
 
