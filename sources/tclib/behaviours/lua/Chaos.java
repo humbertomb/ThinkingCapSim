@@ -146,7 +146,7 @@ public class Chaos
 		if (Double.isFinite (value))			return value;
 
 		if (warned.add (what))
-			System.out.println ("  [HFSM] " + what + " was given " + value + " and ignored");
+			System.out.println ("  [CHAOS] " + what + " was given " + value + " and ignored");
 		return old;
 	}
 
