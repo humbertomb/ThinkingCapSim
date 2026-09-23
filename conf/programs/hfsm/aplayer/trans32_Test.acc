@@ -1,0 +1,13 @@
+--local gs   = chaos.gsGetMyPos()
+
+--if gs.quality < 0.6 then
+--	return false
+--end
+
+--if (math.abs(gs.x) < 300) and (gs.y > -1500) and (gs.y < -1200) then
+--	return true
+--else
+--	return false
+--end
+
+return false

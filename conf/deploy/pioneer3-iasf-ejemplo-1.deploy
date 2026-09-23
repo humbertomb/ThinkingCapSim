@@ -16,7 +16,7 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "./conf/programs/iasf-ejemplo-1.b",
+            "PRG": "./conf/programs/bg/iasf-ejemplo-1.b",
             "QUEUED": "true",
             "TYPE": "Controller",
             "AUTO": "true"

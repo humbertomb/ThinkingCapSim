@@ -1,0 +1,8 @@
+local ball = chaos.getLpo(0)
+local net1 = chaos.getLpo(3)
+
+if math.abs(net1.theta) <= 0.5 then 
+	return true
+else
+	return false
+end

@@ -1,0 +1,3 @@
+if (CONT++ % 10 == 0) 
+    printf("Transition Center-BallFar Ball=%f\n",(float)lps->Ball_l->getRho());
+return lps->Ball_l->getRho()>BALL_CLOSE;

@@ -1,0 +1,4 @@
+ball=0
+chaos.setNeeded(ball, 1.0) -- We do need the ball
+chaos.setKick("BombFrontKick")
+chaos.setBehavior("still")

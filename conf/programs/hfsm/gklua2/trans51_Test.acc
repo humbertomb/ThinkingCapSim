@@ -1,0 +1,20 @@
+local Pi2=3.141592/2.0
+
+-- Lpo object position
+net1=5
+local temp_lpo = chaos.getLpo(net1)
+if temp_lpo.anchored < ANCHORED_LOW or math.abs(temp_lpo.theta) > ANG_LOW then 
+    return true
+else
+    -- Check global data
+    mypos=chaos.gsGetMyPos()
+    if mypos.quality > QUALITY_HIGH and math.abs(mypos.theta - Pi2) > ANG_LOW then
+        return true
+    else
+        return false
+    end
+end
+ball=0
+chaos.setNeeded(ball, 1.0)
+net1=5
+chaos.setNeeded(net1, 1.0)

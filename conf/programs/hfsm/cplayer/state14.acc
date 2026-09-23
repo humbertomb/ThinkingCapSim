@@ -1,0 +1,3 @@
+io.write("look4Ball - Supporter\n")
+
+chaos.setBehavior("lookball")

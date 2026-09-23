@@ -1,0 +1,4 @@
+local trgPos = chaos.getOptimalPose(3)
+chaos.setDesiredPos(trgPos.x, trgPos.y, 0)
+chaos.setBehavior("gk2gposf")
+--io.write("goGkPos ")

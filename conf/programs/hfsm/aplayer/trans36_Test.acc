@@ -1,0 +1,7 @@
+local ball = chaos.getLpo(0)
+
+if ball.rho < 1200 then 
+	return true
+else 
+	return false
+end

@@ -1,0 +1,62 @@
+<strategy stateCount='51' transitionCount='76' metaStateCountName='11' stateCountName='7' transitionCountName='43' >
+<metastate name='GoToArea' id='31' x='783' y='831' metaStateCountName='1' stateCountName='4' transitionCountName='4' initial='1' extern='0' >
+<state name='GoToNet2' id='32' x='70' y='262' initial='1' >
+</state>
+<state name='SearchNet1' id='33' x='657' y='218' initial='0' >
+</state>
+<transition name='InAreaGoTo' id='34' x='403' y='97' priority='1' to='33' from='32' ></transition>
+</metastate>
+<metastate name='EscapeFromNet2' id='36' x='1233' y='327' metaStateCountName='1' stateCountName='3' transitionCountName='3' initial='0' extern='0' >
+<state name='EscapeFromNet2' id='39' x='45' y='51' initial='1' >
+</state>
+<state name='SearchNet1' id='40' x='444' y='382' initial='0' >
+</state>
+<transition name='OutAstray' id='47' x='611' y='43' priority='1' to='40' from='39' ></transition>
+<transition name='InAstray' id='48' x='35' y='385' priority='1' to='39' from='40' ></transition>
+</metastate>
+<metastate name='KeepInArea' id='43' x='731' y='31' metaStateCountName='1' stateCountName='3' transitionCountName='3' initial='0' extern='0' >
+<state name='KeepInArea' id='44' x='100' y='43' initial='1' >
+</state>
+<state name='SearchNet1' id='45' x='558' y='372' initial='0' >
+</state>
+<transition name='NotSeenNet1' id='60' x='597' y='16' priority='1' to='45' from='44' ></transition>
+<transition name='SeenNet1' id='61' x='147' y='344' priority='1' to='44' from='45' ></transition>
+</metastate>
+<metastate name='Defender' id='46' x='42' y='705' metaStateCountName='1' stateCountName='3' transitionCountName='3' initial='0' extern='0' >
+<state name='CutBall' id='47' x='167' y='114' initial='1' >
+</state>
+<state name='ClearBall' id='48' x='638' y='381' initial='0' >
+</state>
+<transition name='BallClose' id='67' x='262' y='328' priority='1' to='48' from='47' ></transition>
+<transition name='BallFar' id='68' x='542' y='113' priority='1' to='47' from='48' ></transition>
+</metastate>
+<state name='Localize' id='49' x='26' y='61' initial='0' >
+</state>
+<transition name='InArea' id='56' x='853' y='253' priority='1' to='43' from='31' ></transition>
+<transition name='BallVisGoTo' id='64' x='437' y='696' priority='1' to='46' from='31' ></transition>
+<transition name='InAstrayGoTo' id='40' x='1128' y='726' priority='2' to='36' from='31' ></transition>
+<transition name='OutNet2' id='57' x='1217' y='42' priority='1' to='43' from='36' ></transition>
+<transition name='OutOfAreaCenter' id='58' x='635' y='406' priority='1' to='31' from='43' ></transition>
+<transition name='InAstrayKeep' id='59' x='1049' y='164' priority='1' to='36' from='43' ></transition>
+<transition name='BallVisMyArea' id='63' x='391' y='385' priority='1' to='46' from='43' ></transition>
+<transition name='LostCenter' id='72' x='300' y='0' priority='1' to='49' from='43' ></transition>
+<transition name='OutOfAreaDefender' id='62' x='408' y='858' priority='1' to='31' from='46' ></transition>
+<transition name='InAstrayDefender' id='65' x='502' y='538' priority='1' to='36' from='46' ></transition>
+<transition name='BallNotVisOrOutOfArea' id='66' x='195' y='367' priority='1' to='43' from='46' ></transition>
+<transition name='Transition_41' id='74' x='7' y='207' priority='1' to='49' from='46' ></transition>
+<transition name='BallVisLoc' id='69' x='20' y='377' priority='1' to='46' from='49' ></transition>
+<transition name='InAstrayLoc' id='70' x='412' y='195' priority='1' to='36' from='49' ></transition>
+<transition name='OutOfAreaLocalize' id='71' x='488' y='38' priority='1' to='31' from='49' ></transition>
+<transition name='InAreaLoc' id='75' x='696' y='191' priority='1' to='43' from='49' ></transition>
+<privatevariable name='BALL_CLOSE' type='int' numElements='1' initValue='600' msname='gklua2' ></privatevariable>
+<privatevariable name='QUALITY_LOW' type='float' numElements='1' initValue='0.6' msname='gklua2' ></privatevariable>
+<privatevariable name='QUALITY_HIGH' type='float' numElements='1' initValue='0.8' msname='gklua2' ></privatevariable>
+<privatevariable name='ANCHORED_LOW' type='float' numElements='1' initValue='0.6' msname='gklua2' ></privatevariable>
+<privatevariable name='ANCHORED_HIGH' type='float' numElements='1' initValue='0.8' msname='gklua2' ></privatevariable>
+<privatevariable name='BALL_IN_AREA' type='int' numElements='1' initValue='2500' msname='gklua2' ></privatevariable>
+<privatevariable name='IN_POS' type='int' numElements='1' initValue='400' msname='gklua2' ></privatevariable>
+<privatevariable name='OUT_POS' type='int' numElements='1' initValue='700' msname='gklua2' ></privatevariable>
+<privatevariable name='ANG_LOW' type='float' numElements='1' initValue='0.5' msname='gklua2' ></privatevariable>
+<privatevariable name='ANG_HIGH' type='float' numElements='1' initValue='1.0' msname='gklua2' ></privatevariable>
+<privatevariable name='NET_CLOSE' type='int' numElements='1' initValue='500' msname='gklua2' ></privatevariable>
+</strategy>

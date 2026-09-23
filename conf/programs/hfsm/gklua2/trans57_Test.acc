@@ -1,0 +1,10 @@
+PI2=3.141592/2.0
+temp=chaos.gsGetMyPos()
+net1=chaos.getLpo(3) -- Net1
+
+if (net1.anchored > ANCHORED_HIGH and math.abs(net1.theta) < ANG_LOW) or
+   (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH) then
+    return true
+else
+    return false
+end

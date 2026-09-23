@@ -1,0 +1,13 @@
+local gs     = chaos.gsGetMyPos()
+local ball   = chaos.getLpo(0)
+local net1   = chaos.getLpo(3) 
+local net2   = chaos.getLpo(4) 
+
+--if (gs.quality < 0.6) and (ball.rho > 1000) then
+--	chaos.trackLandMarks()
+--end
+if (net1.anchored < 0.5) and (net2.anchored < 0.5) then
+        chaos.setNeeded (3, 1.0)
+end
+
+chaos.setBehavior("go2ball")

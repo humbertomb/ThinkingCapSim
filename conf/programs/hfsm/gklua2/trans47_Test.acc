@@ -1,0 +1,7 @@
+lps=chaos.lps_getAstray()
+
+if lps.astray == 0 then
+    return true
+else
+    return false
+end

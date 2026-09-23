@@ -1,0 +1,8 @@
+-- Lpo object position
+ball=0
+local temp_lpo = chaos.getLpo(ball)
+if temp_lpo.anchored > ANCHORED_HIGH and temp_lpo.rho < BALL_CLOSE then 
+    return true
+else 
+    return false
+end

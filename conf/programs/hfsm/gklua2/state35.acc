@@ -1,0 +1,5 @@
+#ifdef TRACE_GOALKEEPER
+if (CONT++ % TIMER == 0) 
+    printf("          STATE : Center-EscapeFromAstray\n");
+#endif
+my_hbm->RunBehaviorAndKick(BehaviorGKKeepOutNet2, NULL, NULL,"BlockKick");

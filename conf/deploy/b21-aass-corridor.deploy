@@ -41,7 +41,7 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "TYPE": "Controller",
-            "PRG": "./conf/programs/b21-corridor.b"
+            "PRG": "./conf/programs/bg/b21-corridor.b"
           },
           "events": [
             {

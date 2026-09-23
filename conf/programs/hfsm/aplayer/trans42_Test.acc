@@ -1,0 +1,7 @@
+fin_inic = chaos.getGlobal("LOOK_TIMEOUT")
+
+if (fin_inic == 1) then
+	return true
+else
+	return false
+end

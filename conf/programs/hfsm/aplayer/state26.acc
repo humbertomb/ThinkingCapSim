@@ -1,0 +1,6 @@
+--Constant
+BALL = 0
+
+chaos.setNeeded(BALL,1.0)
+chaos.setDesiredPos(0, -1300, 0)
+chaos.setBehavior("go2gpos")

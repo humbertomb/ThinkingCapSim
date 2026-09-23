@@ -1,0 +1,11 @@
+ballpos=0
+velmin=2000
+local ball = chaos.getLpo(ballpos)
+local ballVel = chaos.getBallVel()
+
+
+if ((ball.rho > 600) or (ball.anchored < 0.9) or ((math.abs(ballVel.x) > velmin) or (math.abs(ballVel.y) > velmin))) then 
+	return true
+else
+	return false
+end

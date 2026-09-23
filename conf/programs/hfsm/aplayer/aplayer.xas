@@ -1,0 +1,71 @@
+<strategy stateCount='29' transitionCount='45' metaStateCountName='4' stateCountName='3' transitionCountName='10' >
+<metastate name='Attacker' id='0' x='742' y='7' metaStateCountName='3' stateCountName='7' transitionCountName='18' initial='0' extern='0' >
+<state name='FaceBall' id='7' x='12' y='21' initial='1' >
+</state>
+<state name='GoToBall' id='8' x='173' y='187' initial='0' >
+</state>
+<metastate name='Score' id='10' x='600' y='187' metaStateCountName='1' stateCountName='4' transitionCountName='6' initial='0' extern='0' >
+<state name='ApproachBall' id='14' x='92' y='11' initial='1' >
+</state>
+<state name='Align' id='15' x='70' y='347' initial='0' >
+</state>
+<state name='DoKick' id='16' x='554' y='15' initial='0' >
+</state>
+<transition name='NeedAlignment' id='20' x='42' y='169' priority='1' to='15' from='14' ></transition>
+<transition name='Kickable' id='22' x='376' y='10' priority='1' to='16' from='14' ></transition>
+<transition name='Aligned' id='21' x='201' y='173' priority='1' to='14' from='15' ></transition>
+<transition name='NotKickable' id='33' x='375' y='166' priority='1' to='14' from='16' ></transition>
+</metastate>
+<transition name='HeadingBall' id='12' x='16' y='164' priority='1' to='8' from='7' ></transition>
+<transition name='CanScore' id='17' x='449' y='286' priority='1' to='10' from='8' ></transition>
+<transition name='KickDone' id='25' x='383' y='16' priority='1' to='8' from='10' ></transition>
+<transition name='ScoreAborted' id='27' x='591' y='27' priority='1' to='8' from='10' ></transition>
+</metastate>
+<metastate name='NonAttacker' id='1' x='745' y='395' metaStateCountName='3' stateCountName='3' transitionCountName='5' initial='0' extern='0' >
+<state name='FaceBall' id='17' x='62' y='175' initial='1' >
+</state>
+<metastate name='Defender' id='18' x='511' y='15' metaStateCountName='1' stateCountName='3' transitionCountName='2' initial='0' extern='0' >
+<state name='FaceBall' id='20' x='505' y='27' initial='0' >
+</state>
+<state name='GotoDefencePos' id='22' x='55' y='287' initial='1' >
+</state>
+<transition name='OnPlace' id='32' x='211' y='21' priority='1' to='20' from='22' ></transition>
+</metastate>
+<metastate name='Supporter' id='19' x='508' y='361' metaStateCountName='1' stateCountName='4' transitionCountName='4' initial='0' extern='0' >
+<state name='FaceBall2' id='21' x='511' y='23' initial='0' >
+</state>
+<state name='ApproachBall' id='23' x='276' y='347' initial='0' >
+</state>
+<state name='FaceBall1' id='24' x='50' y='34' initial='1' >
+</state>
+<transition name='OutOfDistance' id='37' x='331' y='101' priority='1' to='23' from='21' ></transition>
+<transition name='AtDistance' id='36' x='550' y='233' priority='1' to='21' from='23' ></transition>
+<transition name='HeadingBall' id='35' x='109' y='179' priority='1' to='23' from='24' ></transition>
+</metastate>
+<transition name='RoleDef1' id='28' x='308' y='10' priority='1' to='18' from='17' ></transition>
+<transition name='RoleSup1' id='29' x='316' y='289' priority='1' to='19' from='17' ></transition>
+<transition name='RoleSup2' id='30' x='475' y='174' priority='1' to='19' from='18' ></transition>
+<transition name='RoleDef2' id='31' x='611' y='175' priority='1' to='18' from='19' ></transition>
+</metastate>
+<state name='LookForBall' id='2' x='201' y='379' initial='1' >
+</state>
+<metastate name='GoToZone' id='25' x='15' y='124' metaStateCountName='1' stateCountName='4' transitionCountName='4' initial='0' extern='0' >
+<state name='Go2DefZone' id='26' x='7' y='9' initial='1' >
+</state>
+<state name='LookFromDef' id='27' x='7' y='348' initial='0' >
+</state>
+<state name='DefLookBall' id='28' x='469' y='10' initial='0' >
+</state>
+<transition name='IsOnPlace' id='40' x='52' y='168' priority='1' to='27' from='26' ></transition>
+<transition name='isBadLocation' id='41' x='297' y='8' priority='1' to='28' from='26' ></transition>
+<transition name='lookTimeout' id='42' x='300' y='152' priority='1' to='26' from='28' ></transition>
+</metastate>
+<transition name='BallLostAtt' id='1' x='483' y='162' priority='1' to='2' from='0' ></transition>
+<transition name='att2nonAtt' id='43' x='695' y='170' priority='1' to='1' from='0' ></transition>
+<transition name='BallLostSup' id='2' x='485' y='364' priority='1' to='2' from='1' ></transition>
+<transition name='nonAtt2att' id='44' x='852' y='166' priority='1' to='0' from='1' ></transition>
+<transition name='BallSeen' id='0' x='271' y='185' priority='1' to='0' from='2' ></transition>
+<transition name='LookTimeout' id='38' x='36' y='288' priority='1' to='25' from='2' ></transition>
+<transition name='BallSeen2' id='39' x='271' y='32' priority='1' to='0' from='25' ></transition>
+<privatevariable name='ZONE_SCORABLE' type='int' numElements='1' initValue='2300' msname='aplayer' ></privatevariable>
+</strategy>

@@ -1,5 +1,5 @@
 {
-  "world": "./conf/maps/soccer_field.world",
+  "world": "./conf/maps/soccer_field_mini.world",
   "robots": [
     {
       "name": "QUAKY2-1",
@@ -16,7 +16,7 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "./conf/programs/quaky2.soccer.b",
+            "PRG": "./conf/programs/bg/quaky2.soccer.b",
             "TYPE": "Controller",
             "AUTO": "true"
           },
@@ -30,11 +30,6 @@
               "symbol": "GOAL",
               "itemClass": "tc.shared.linda.ItemGoal",
               "method": "notify_goal"
-            },
-            {
-              "symbol": "PATH",
-              "itemClass": "tc.shared.linda.ItemPath",
-              "method": "notify_path"
             }
           ]
         },

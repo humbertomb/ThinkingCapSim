@@ -41,7 +41,7 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "./conf/programs/satant.b",
+            "PRG": "./conf/programs/bg/satant.b",
             "TYPE": "Controller"
           },
           "events": []

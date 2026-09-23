@@ -1,0 +1,12 @@
+--io.write("supporter\n")
+--chaos.setBehavior("faceball")
+
+--local gs   = chaos.gsGetMyPos()
+
+--if gs.quality < 0.6 then
+--	chaos.trackLandMarks()
+--end
+
+local trgPos = chaos.getOptimalPose(2)
+chaos.setDesiredPos(trgPos.x, trgPos.y, 0)
+chaos.setBehavior("go2gposf")

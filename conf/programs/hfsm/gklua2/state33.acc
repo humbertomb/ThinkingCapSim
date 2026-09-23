@@ -1,0 +1,3 @@
+chaos.setBehavior("gkshnet1")
+
+--io.write("GoToArea: SearchNet1\n")

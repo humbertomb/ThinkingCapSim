@@ -1,0 +1,7 @@
+local role = chaos.getRole ()
+
+if role.role == 2 then
+	return true
+else
+	return false
+end

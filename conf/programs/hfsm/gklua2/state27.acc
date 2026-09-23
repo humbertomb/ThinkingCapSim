@@ -1,0 +1,3 @@
+ball=0
+chaos.setNeeded(ball,1.0)
+chaos.setBehavior("gkclearb")

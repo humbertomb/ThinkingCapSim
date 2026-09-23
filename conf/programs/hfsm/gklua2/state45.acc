@@ -1,0 +1,5 @@
+net1=3
+chaos.setNeeded(net1, 1.0) 
+chaos.setKick("BombFrontKick")
+chaos.setBehavior("gkshnet1")
+--io.write("KeepArea: SearchNet1\n")

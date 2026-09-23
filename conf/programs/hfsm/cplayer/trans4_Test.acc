@@ -1,0 +1,9 @@
+	--chaos.bookBall()
+	--local booking = chaos.haveBookedBall()
+	
+	--if (booking.booked == 1)
+	--then   
+	--	return true
+	--else
+		return false
+	--end

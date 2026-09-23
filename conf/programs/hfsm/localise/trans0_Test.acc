@@ -1,0 +1,12 @@
+-- Geometrical computations
+local pos = chaos.gsGetMyPos()
+
+dx = POS1X - pos.x
+dy = POS1Y - pos.y
+rho= math.sqrt(dx*dx+dy*dy)
+
+if (rho < THRES) and (pos.quality > QPOS) then
+	return true
+else
+	return false
+end

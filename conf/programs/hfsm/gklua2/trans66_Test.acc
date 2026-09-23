@@ -1,0 +1,12 @@
+temp=chaos.gsGetMyPos()
+initialPos=chaos.getDesiredPos()
+dx=initialPos.x - temp.x
+dy=initialPos.y - temp.y
+dist=math.sqrt(dx*dx + dy*dy)
+ball=chaos.getLpo(0) -- Ball
+
+if ball.anchored < ANCHORED_HIGH or ball.rho > BALL_IN_AREA then
+    return true
+else
+    return false
+end

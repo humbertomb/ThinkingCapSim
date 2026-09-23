@@ -1,0 +1,7 @@
+local ball = chaos.getLpo(0)
+	
+if ball.anchored < 0.5 then 
+    return true
+else 
+    return false
+end

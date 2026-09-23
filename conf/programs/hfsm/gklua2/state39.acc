@@ -1,0 +1,2 @@
+chaos.setBehavior("gkscape")
+--io.write("EscapeFromNet: escape\n")

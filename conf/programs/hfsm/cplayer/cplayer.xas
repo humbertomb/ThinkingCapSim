@@ -1,0 +1,51 @@
+<strategy stateCount='15' transitionCount='31' metaStateCountName='4' stateCountName='3' transitionCountName='12' >
+<metastate name='Attacker' id='0' x='442' y='8' metaStateCountName='1' stateCountName='8' transitionCountName='17' initial='0' extern='0' >
+<state name='ApproachBall' id='3' x='474' y='160' initial='0' >
+</state>
+<state name='Kick' id='4' x='894' y='213' initial='0' >
+</state>
+<state name='FaceBall' id='7' x='187' y='147' initial='0' >
+</state>
+<state name='GoToBall' id='8' x='32' y='475' initial='0' >
+</state>
+<state name='AlignBallAndNet1' id='9' x='534' y='472' initial='0' >
+</state>
+<state name='LookForBallAtt' id='13' x='185' y='11' initial='1' >
+</state>
+<transition name='Kickable' id='5' x='715' y='317' priority='1' to='4' from='3' ></transition>
+<transition name='BallLostAtt3' id='27' x='645' y='6' priority='1' to='13' from='3' ></transition>
+<transition name='KickDone' id='10' x='742' y='143' priority='1' to='3' from='4' ></transition>
+<transition name='HeadingBall' id='12' x='169' y='284' priority='1' to='8' from='7' ></transition>
+<transition name='BallLostAtt1' id='25' x='2' y='42' priority='1' to='13' from='7' ></transition>
+<transition name='NeedAlignment' id='13' x='329' y='455' priority='1' to='9' from='8' ></transition>
+<transition name='NoAlignment' id='14' x='335' y='283' priority='1' to='3' from='8' ></transition>
+<transition name='BallLostAtt2' id='26' x='8' y='279' priority='1' to='13' from='8' ></transition>
+<transition name='Aligned' id='15' x='525' y='295' priority='1' to='3' from='9' ></transition>
+<transition name='BallLostAtt4' id='28' x='832' y='454' priority='1' to='13' from='9' ></transition>
+<transition name='BallSeenAtt' id='24' x='462' y='2' priority='1' to='7' from='13' ></transition>
+</metastate>
+<metastate name='Supporter' id='1' x='810' y='281' metaStateCountName='1' stateCountName='3' transitionCountName='3' initial='0' extern='0' >
+<state name='Stay' id='5' x='357' y='85' initial='0' >
+</state>
+<state name='LoofForBallSup' id='14' x='365' y='366' initial='1' >
+</state>
+<transition name='ball_lost_sup' id='30' x='119' y='208' priority='1' to='14' from='5' ></transition>
+<transition name='ball_found_sup' id='29' x='645' y='207' priority='1' to='5' from='14' ></transition>
+</metastate>
+<metastate name='Deffender' id='10' x='151' y='446' metaStateCountName='1' stateCountName='3' transitionCountName='3' initial='1' extern='0' >
+<state name='Look4BallDef' id='11' x='383' y='379' initial='1' >
+</state>
+<state name='FaceBallDef' id='12' x='366' y='38' initial='0' >
+</state>
+<transition name='ball_found_def' id='22' x='710' y='201' priority='1' to='12' from='11' ></transition>
+<transition name='ball_lost_def' id='23' x='88' y='174' priority='1' to='11' from='12' ></transition>
+</metastate>
+<transition name='LostBooking' id='3' x='398' y='265' priority='1' to='1' from='0' ></transition>
+<transition name='att2def' id='17' x='261' y='130' priority='1' to='11' from='0' ></transition>
+<transition name='att2sup' id='21' x='876' y='11' priority='1' to='1' from='0' ></transition>
+<transition name='GotBooking' id='4' x='534' y='159' priority='1' to='0' from='1' ></transition>
+<transition name='sup2def' id='18' x='561' y='406' priority='1' to='11' from='1' ></transition>
+<transition name='sup2att' id='20' x='718' y='117' priority='1' to='0' from='1' ></transition>
+<transition name='def2att' id='16' x='94' y='4' priority='1' to='0' from='10' ></transition>
+<transition name='def2sup' id='19' x='773' y='438' priority='1' to='1' from='10' ></transition>
+</strategy>

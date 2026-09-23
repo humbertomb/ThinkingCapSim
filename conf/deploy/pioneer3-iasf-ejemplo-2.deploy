@@ -40,7 +40,7 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "./conf/programs/iasf-ejemplo-2.b",
+            "PRG": "./conf/programs/bg/iasf-ejemplo-2.b",
             "TYPE": "Controller"
           },
           "events": [

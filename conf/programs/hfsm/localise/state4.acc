@@ -1,0 +1,2 @@
+chaos.setDesiredPos(POS4X, POS4Y, 0)
+chaos.setBehavior("go2gpos")

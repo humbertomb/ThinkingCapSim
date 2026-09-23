@@ -1,0 +1,5 @@
+#ifdef TRACE_GOALKEEPER
+if (CONT++ % TIMER == 0) 
+    printf("          STATE : Center-SearchNet1\n");
+#endif
+my_hbm->RunBehaviorAndKick(BehaviorSearchNet1, NULL, NULL,"BlockKick");

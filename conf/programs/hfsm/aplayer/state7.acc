@@ -1,0 +1,2 @@
+--io.write("attacker\n")
+chaos.setBehavior("faceball")

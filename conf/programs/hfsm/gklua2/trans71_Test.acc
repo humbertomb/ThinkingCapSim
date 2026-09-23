@@ -1,0 +1,12 @@
+temp=chaos.gsGetMyPos()
+initialPos=chaos.getDesiredPos()
+dx=initialPos.x - temp.x
+dy=initialPos.y - temp.y
+dist=math.sqrt(dx*dx + dy*dy)
+
+--io.write(temp.quality,"\n")
+if temp.quality>QUALITY_HIGH and dist > OUT_POS then
+    return true
+else
+    return false
+end
