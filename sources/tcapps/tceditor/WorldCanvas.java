@@ -37,6 +37,7 @@ import tc.shared.world.WMDock;
 import tc.shared.world.WMConnector;
 import tc.shared.world.WMFArea;
 import tc.shared.world.WMIcon;
+import tc.shared.world.WMMarking;
 import tc.shared.world.WMObject;
 import tc.shared.world.WMWall;
 import tc.shared.world.WMWaypoint;
@@ -76,7 +77,8 @@ public class WorldCanvas extends JPanel
 	static public final int		T_PATH		= 12;
 	static public final int		T_ICON		= 13;		// edit the icon (segments) of the selected object
 	static public final int		T_AOBJECT	= 14;
-	static public final int		NTOOLS		= 15;
+	static public final int		T_MARKING	= 15;		// lines drawn on the floor
+	static public final int		NTOOLS		= 16;
 
 	/** Receives notifications from the canvas. */
 	/** Extra layer painted over the world (e.g. the simulated robots); coordinates via toPixelX/Y and getScale. */
@@ -493,6 +495,7 @@ public class WorldCanvas extends JPanel
 			onIconPress (e, tol);
 			break;
 		case T_WALL:
+		case T_MARKING:
 		case T_CONNECTOR:
 		case T_ZONE:
 			dragMode = 4;
@@ -639,6 +642,7 @@ public class WorldCanvas extends JPanel
 				WorldItem	it = null;
 				String		what = null;
 				if (tool == T_WALL)			{ it = WorldEditor.addWall (world, anchorX, anchorY, nx, ny);		what = "Add wall"; }
+				else if (tool == T_MARKING)	{ it = WorldEditor.addMarking (world, anchorX, anchorY, nx, ny);	what = "Add marking"; }
 				else if (tool == T_CONNECTOR)	{ it = WorldEditor.addConnector (world, anchorX, anchorY, nx, ny);		what = "Add connector"; }
 				else if ((tool == T_ZONE) && (Math.abs (nx - anchorX) > 1e-6) && (Math.abs (ny - anchorY) > 1e-6))
 											{ it = WorldEditor.addZone (world, anchorX, anchorY, nx, ny);		what = "Add zone"; }
@@ -748,6 +752,7 @@ public class WorldCanvas extends JPanel
 			return "Drag the element or its handles (round handle: orientation). Del: delete, arrows: nudge, Esc: deselect";
 		case T_PAN:			return "Drag to pan the view. Wheel: zoom";
 		case T_WALL:		return "Drag from one end of the wall to the other. Right click / Esc: back to Select";
+		case T_MARKING:		return "Drag from one end of the marking to the other (colour and width in Properties). Right click / Esc: back to Select";
 		case T_CONNECTOR:		return "Drag along the connector opening (the crossing path can be adjusted afterwards). Right click / Esc: back to Select";
 		case T_ZONE:		return "Drag a rectangle. Right click / Esc: back to Select";
 		case T_FAREA:		return "Click the vertices, double-click / Enter to close the area, Esc to cancel";
@@ -789,6 +794,7 @@ public class WorldCanvas extends JPanel
 		if (visible[WorldItem.ZONE])		for (int i = 0; i < world.zones ().n (); i++)		drawZone (g, world.zones ().at (i), isSel (WorldItem.ZONE, i));
 		if (visible[WorldItem.FAREA])		for (int i = 0; i < world.fareas ().n (); i++)		drawFArea (g, world.fareas ().at (i), isSel (WorldItem.FAREA, i));
 		if (visible[WorldItem.PATH])		drawPath (g);
+		if (visible[WorldItem.MARKING])		for (int i = 0; i < world.markings ().n (); i++)		drawMarking (g, world.markings ().at (i), isSel (WorldItem.MARKING, i));
 		if (visible[WorldItem.WALL])		for (int i = 0; i < world.walls ().n (); i++)		drawWall (g, world.walls ().at (i), isSel (WorldItem.WALL, i));
 		if (visible[WorldItem.OBJECT])		for (int i = 0; i < world.objects ().size (); i++)		drawObject (g, world.objects ().get (i), isSel (WorldItem.OBJECT, i));
 		if (visible[WorldItem.AOBJECT])		for (int i = 0; i < world.aobjects ().size (); i++)		drawAObject (g, world.aobjects ().get (i), isSel (WorldItem.AOBJECT, i));
@@ -938,6 +944,24 @@ public class WorldCanvas extends JPanel
 		g.setColor (sel ? C_SEL : C_WALL);
 		g.setStroke (stroke (sel ? thick + 1.5f : thick));
 		g.draw (new Line2D.Double (px (l.orig ().x ()), py (l.orig ().y ()), px (l.dest ().x ()), py (l.dest ().y ())));
+	}
+
+	/** A marking: the line on the floor, in its own colour and as wide as it is. */
+	private void drawMarking (Graphics2D g, WMMarking m, boolean sel)
+	{
+		Line2		l = m.edge;
+		float		thick = (float) Math.max (1.0, m.width * scale);
+		Line2D.Double	seg = new Line2D.Double (px (l.orig ().x ()), py (l.orig ().y ()), px (l.dest ().x ()), py (l.dest ().y ()));
+
+		if (sel)				// the selection goes around it, so that its own colour is still seen
+		{
+			g.setColor (C_SEL);
+			g.setStroke (stroke (thick + 3f));
+			g.draw (seg);
+		}
+		g.setColor (ColorTool.fromWColorToColor (m.color));
+		g.setStroke (stroke (thick));
+		g.draw (seg);
 	}
 
 	/**

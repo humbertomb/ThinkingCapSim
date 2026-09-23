@@ -60,6 +60,7 @@ public class World extends Object
 	protected ArrayList<WMAObject>	aobjects	= new ArrayList<WMAObject> ();	// Animated objects
 	protected WMFAreas				fareas;
 	protected WMWalls				walls;
+	protected WMMarkings			markings;									// Lines drawn on the floor (visual guides)
 	protected WMZones				zones;
 	protected WMConnectors			connectors;	
 	protected ArrayList<WMCBeacon>	cbeacons	= new ArrayList<WMCBeacon> ();
@@ -106,6 +107,7 @@ public class World extends Object
 	// World components
 	public final List<Point2>	path ()				{ return path; }
 	public final WMWalls 		walls ()			{ return walls; }
+	public final WMMarkings		markings ()			{ return markings; }
 	public final List<WMObject>	objects ()			{ return objects; }
 	public final List<WMAObject> aobjects ()		{ return aobjects; }
 
@@ -351,6 +353,7 @@ public class World extends Object
 		path.clear ();
 		for (JsonElement e : getArray (o, "path"))			path.add (toPoint (e.getAsJsonObject ()));
 		walls		= new WMWalls (o.get ("walls"));
+		markings	= new WMMarkings (o.get ("markings"));
 		icons.clear ();
 		for (JsonElement e : getArray (o, "icons"))			icons.add (new WMIcon (e.getAsJsonObject ()));
 		objects.clear ();
@@ -382,6 +385,7 @@ public class World extends Object
 		for (Point2 p : path)			pa.add (point (p));
 		o.add ("path", pa);
 		o.add ("walls", walls.toJson ());
+		o.add ("markings", markings.toJson ());
 		JsonArray	ia = new JsonArray ();
 		for (WMIcon x : icons)			ia.add (x.toJson ());
 		o.add ("icons", ia);
@@ -502,6 +506,7 @@ public class World extends Object
 
 		if (walls.n () > 0)
 			for (int i = 0; i < walls.n (); i++)		extend (b, walls.at (i).edge);
+		for (int i = 0; i < markings.n (); i++)			extend (b, markings.at (i).edge);
 		for (int i = 0; i < zones.n (); i++)
 		{
 			java.awt.geom.Rectangle2D	r = zones.at (i).area;

@@ -15,6 +15,7 @@ import com.sun.j3d.utils.geometry.*;
 
 import tc.shared.world.*;
 
+import wucore.utils.color.*;
 import wucore.utils.geom.*;
 
 /**
@@ -29,6 +30,13 @@ public class World3D extends BranchGroup
 	//	 the vehicle center when docked. So, this value must contain
 	//  the distance between center of the vehicle and it load extreme
 	protected static final double 	DOCKOFFSET = -1.2425;
+
+	// How a marking of the floor is drawn: how much it is lifted over the floor so
+	// that the two do not fight for the same pixels, how thick the band is and how
+	// narrow it may be and still be seen (m)
+	protected static final double	MARK_LIFT	= 0.015;
+	protected static final float	MARK_THICK	= 0.004f;
+	protected static final double	MARK_MINW	= 0.01;
 
 	protected boolean				showFloor = false;
 	protected Scene3D				scene;
@@ -84,6 +92,10 @@ public class World3D extends BranchGroup
 		// Add specific zone textures
 		for ( i = 0;i<map.zones().n();i++)
 			addChild (createZone (map.zones().at(i)));
+		
+		// Add the markings of the floor (over the zones: a camera of a robot sees them)
+		for (i = 0; i < map.markings ().n (); i++)
+			addChild (createMarking (map.markings ().at (i)));
 		
 		// What is drawn for whoever edits the world rather than being in it
 		if (showDecor)
@@ -150,6 +162,57 @@ public class World3D extends BranchGroup
 		
 		gwall.addChild (surf);
 		return gwall;
+	}
+	
+	/**
+	 * Adds a marking of the floor to the universe: a flat band of its colour and
+	 * width, lying a little over the floor so that it does not fight with it.
+	 */
+	protected TransformGroup createMarking (WMMarking mark)
+	{
+		double				xi, yi, xf, yf;
+		double				len, af;
+		float				width;
+		Line2				line;
+		Transform3D			pos;
+		TransformGroup		gmark;
+		Box					surf;
+		
+		line	= mark.edge;
+		xi		= line.orig ().x ();
+		yi		= line.orig ().y ();
+		xf		= line.dest ().x ();
+		yf		= line.dest ().y ();
+		width	= (float) Math.max (mark.width, MARK_MINW);
+		len		= Math.sqrt ((xi - xf) * (xi - xf) + (yi - yf) * (yi - yf));
+		af		= Math.atan2 ((yf - yi), (xf - xi));
+		
+		gmark	= new TransformGroup ();
+		pos		= new Transform3D ();
+		pos.rotZ (af);
+		pos.setTranslation (new Vector3d ((xi + xf) / 2.0, (yi + yf) / 2.0, Math.min (line.z1 (), line.z2 ()) + MARK_LIFT));
+		pos.setScale (1.0);
+		gmark.setTransform (pos);
+		
+		surf	= new Box ((float) len / 2.0f, width / 2.0f, MARK_THICK, Box.GENERATE_NORMALS, colorAppearance (mark.color));
+		
+		gmark.addChild (surf);
+		return gmark;
+	}
+	
+	/** A plain coloured surface (no texture), for what is drawn in the colour the map says. */
+	static protected Appearance colorAppearance (WColor color)
+	{
+		Color			c = ColorTool.fromWColorToColor ((color != null) ? color : WColor.WHITE);
+		Color3f			c3 = new Color3f ((float) (c.getRed () / 255.0), (float) (c.getGreen () / 255.0), (float) (c.getBlue () / 255.0));
+		Appearance		app = new Appearance ();
+		Material		mat = new Material (new Color3f (c3.x * 0.5f, c3.y * 0.5f, c3.z * 0.5f), new Color3f (0f, 0f, 0f),
+											c3, new Color3f (0.1f, 0.1f, 0.1f), 16f);
+		
+		mat.setLightingEnable (true);
+		app.setMaterial (mat);
+		app.setColoringAttributes (new ColoringAttributes (c3, ColoringAttributes.SHADE_GOURAUD));
+		return app;
 	}
 	
 	/** Adds a floor object to the universe */

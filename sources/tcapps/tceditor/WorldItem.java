@@ -15,32 +15,33 @@ public class WorldItem
 	static public final int		ZONE		= 0;
 	static public final int		FAREA		= 1;
 	static public final int		PATH		= 2;
-	static public final int		WALL		= 3;
-	static public final int		OBJECT		= 4;
-	static public final int		AOBJECT		= 5;		// animated objects
-	static public final int		CONNECTOR		= 6;
-	static public final int		BEACON		= 7;
-	static public final int		CBEACON		= 8;
-	static public final int		WAYPOINT	= 9;
-	static public final int		DOCK		= 10;
-	static public final int		START		= 11;
-	static public final int		ICON		= 12;		// icon definitions (local coordinates, no position in the world)
-	static public final int		GEOMETRY	= 13;		// default sizes and textures of the geometric elements
-	static public final int		BEHAVIOUR	= 14;		// settings of the world as used by the simulation
+	static public final int		MARKING		= 3;		// lines drawn on the floor (visual guides)
+	static public final int		WALL		= 4;
+	static public final int		OBJECT		= 5;
+	static public final int		AOBJECT		= 6;		// animated objects
+	static public final int		CONNECTOR		= 7;
+	static public final int		BEACON		= 8;
+	static public final int		CBEACON		= 9;
+	static public final int		WAYPOINT	= 10;
+	static public final int		DOCK		= 11;
+	static public final int		START		= 12;
+	static public final int		ICON		= 13;		// icon definitions (local coordinates, no position in the world)
+	static public final int		GEOMETRY	= 14;		// default sizes and textures of the geometric elements
+	static public final int		BEHAVIOUR	= 15;		// settings of the world as used by the simulation
 
-	static public final int		NKINDS		= 15;
+	static public final int		NKINDS		= 16;
 
 	/** First of the setting kinds: the kinds below this one are drawable elements. */
 	static public final int		DEFAULTS	= GEOMETRY;
 
 	static public final String[]	NAMES	= {
-		"Zone", "Forbidden area", "Path point", "Wall", "Object", "Animated object", "Connector",
+		"Zone", "Forbidden area", "Path point", "Marking", "Wall", "Object", "Animated object", "Connector",
 		"Strip beacon", "Cylindrical beacon", "Waypoint", "Dock", "Start point", "Icon",
 		"Default values", "Default values"
 	};
 
 	static public final String[]	PLURALS	= {
-		"Zones", "Forbidden areas", "Path points", "Walls", "Objects", "Animated objects", "Connectors",
+		"Zones", "Forbidden areas", "Path points", "Markings", "Walls", "Objects", "Animated objects", "Connectors",
 		"Strip beacons", "Cylindrical beacons", "Waypoints", "Docks", "Start points", "Icons",
 		"Default values", "Behaviours"
 	};

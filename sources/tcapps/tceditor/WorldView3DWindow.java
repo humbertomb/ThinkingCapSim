@@ -489,6 +489,12 @@ public class WorldView3DWindow extends JFrame
 			bg.addChild (segment (hs[2].x (), hs[2].y (), d.path.z1 () + 0.03, hs[3].x (), hs[3].y (), d.path.z2 () + 0.03, C_SEL, 3f));
 			break;
 		}
+		case WorldItem.MARKING:
+		{
+			tc.shared.world.WMMarking	m = world.markings ().at (selection.index);
+			bg.addChild (segment (hs[0].x (), hs[0].y (), m.edge.z1 () + 0.03, hs[1].x (), hs[1].y (), m.edge.z2 () + 0.03, C_SEL, 4f));
+			break;
+		}
 		case WorldItem.ZONE:
 			bg.addChild (polyline (hs, true, base + 0.04, C_SEL, 4f));
 			break;

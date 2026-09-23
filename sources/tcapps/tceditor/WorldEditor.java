@@ -56,6 +56,7 @@ import tc.shared.world.WMConnector;
 import tc.shared.world.WMDock;
 import tc.shared.world.WMFArea;
 import tc.shared.world.WMIcon;
+import tc.shared.world.WMMarking;
 import tc.shared.world.WMObject;
 import tc.shared.world.WMStart;
 import tc.shared.world.WMWall;
@@ -216,7 +217,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 					if (name.equals ("shape"))			return FileCellEditor.SHAPE;
 					if (name.equals ("image"))			return FileCellEditor.IMAGE;
 					if (isTextureProperty (name))		return FileCellEditor.TEXTURE;
-					if (name.equals ("color"))			return ColorCellEditor.INSTANCE;
+					if (isColorProperty (name))			return ColorCellEditor.INSTANCE;
 					if (isBooleanProperty (name))	return boolEditor;
 					if (name.equals ("flow") && (propModel.item != null) && (propModel.item.kind == WorldItem.DOCK))
 						return new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (flowNames ()));
@@ -296,6 +297,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		addTool (tb, group, WorldCanvas.T_PAN,		ToolIcon.PAN,		"Pan",					"H");
 		tb.addSeparator ();
 		addTool (tb, group, WorldCanvas.T_WALL,		ToolIcon.WALL,		"Wall",					"W");
+		addTool (tb, group, WorldCanvas.T_MARKING,	ToolIcon.MARKING,	"Marking",				"M");
 		addTool (tb, group, WorldCanvas.T_ZONE,		ToolIcon.ZONE,		"Zone",					"Z");
 		addTool (tb, group, WorldCanvas.T_FAREA,	ToolIcon.FAREA,		"Forbidden area",		"F");
 		// icons: create a new one (action) and edit the selected object's / icon's (tool)
@@ -599,7 +601,9 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			"  S  Select / move: click an element, drag it, or drag its handles.\n" +
 			"       Circular handle of waypoints, docks, objects and start = orientation.\n" +
 			"  H  Pan. Also middle button, Alt+drag or Space+drag with any tool.\n" +
-			"  W  Wall, D  Connector, Z  Zone: drag on the map.\n" +
+			"  W  Wall, M  Marking, D  Connector, Z  Zone: drag on the map.\n" +
+			"       A marking is a line drawn on the floor (its colour and width in Properties): no robot\n" +
+			"       bumps into it, but every camera sees it.\n" +
 			"  F  Forbidden area: click the vertices, double-click / Enter to close.\n" +
 			"  O  Object, P  Waypoint, K  Dock, B  Strip beacon, C  Cylindrical beacon,\n" +
 			"  T  Path point, R  Start point: click to place.\n" +
@@ -614,7 +618,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			"  follows every change and highlights the selection.\n\n" +
 			"Properties: edit any value in the table and press Enter. Labels of zones, connectors,\n" +
 			"  waypoints and docks must be unique. 'Defaults' (Edit menu) holds the default\n" +
-			"  wall/connector sizes and textures written to the file.";
+			"  wall/connector sizes and textures, and the colour and width of the markings,\n" +
+			"  written to the file.";
 		JOptionPane.showMessageDialog (this, msg, "Mouse and Keyboard", JOptionPane.INFORMATION_MESSAGE);
 	}
 
@@ -1107,6 +1112,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.FAREA:		return w.fareas ().n ();
 		case WorldItem.PATH:		return w.path ().size ();
 		case WorldItem.WALL:		return w.walls ().n ();
+		case WorldItem.MARKING:		return w.markings ().n ();
 		case WorldItem.OBJECT:		return w.objects ().size ();
 		case WorldItem.AOBJECT:		return w.aobjects ().size ();
 		case WorldItem.CONNECTOR:		return w.connectors ().n ();
@@ -1137,7 +1143,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.ZONE:		return w.zones ().at (it.index).label;
 		case WorldItem.FAREA:		return w.fareas ().at (it.index).label;
 		case WorldItem.PATH:		return "P" + it.index;		// the coordinates are shown in the property table
-		case WorldItem.WALL:		return "LINE_" + it.index;
+		case WorldItem.WALL:		return "WALL_" + it.index;
+		case WorldItem.MARKING:		return "MARKING_" + it.index;
 		case WorldItem.OBJECT:
 		{
 			WMObject	o = w.objects ().get (it.index);
@@ -1294,9 +1301,20 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		wall.width		= w.walls ().defaultWidth ();
 		wall.height		= w.walls ().defaultHeight ();
 		wall.texture	= w.walls ().defaultTexture ();
-		wall.label		= "LINE_" + w.walls ().n ();
+		wall.label		= "WALL_" + w.walls ().n ();
 		w.walls ().add (wall);
 		return new WorldItem (WorldItem.WALL, w.walls ().n () - 1);
+	}
+
+	static public WorldItem addMarking (World w, double x1, double y1, double x2, double y2)
+	{
+		WMMarking	mark = new WMMarking ();
+		mark.edge		= new Line2 (x1, y1, x2, y2);
+		mark.color		= w.markings ().defaultColor ();
+		mark.width		= w.markings ().defaultWidth ();
+		mark.label		= "MARKING_" + w.markings ().n ();
+		w.markings ().add (mark);
+		return new WorldItem (WorldItem.MARKING, w.markings ().n () - 1);
 	}
 
 	static public WorldItem addConnector (World w, double x1, double y1, double x2, double y2)
@@ -1433,6 +1451,14 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			n = new WorldItem (WorldItem.FAREA, w.fareas ().n () - 1);
 			break;
 		}
+		case WorldItem.MARKING:
+		{
+			WColor	dc = w.markings ().defaultColor ();
+			double	dw = w.markings ().defaultWidth ();
+			w.markings ().add (new WMMarking (w.markings ().at (it.index).toJson (dc, dw), dc, dw));
+			n = new WorldItem (WorldItem.MARKING, w.markings ().n () - 1);
+			break;
+		}
 		case WorldItem.WALL:
 		{
 			double	dw = w.walls ().defaultWidth (), dh = w.walls ().defaultHeight ();
@@ -1564,6 +1590,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.FAREA:		w.fareas ().remove (it.index);		return true;
 		case WorldItem.PATH:		w.path ().remove (it.index);		return true;
 		case WorldItem.WALL:		w.walls ().remove (it.index);		return true;
+		case WorldItem.MARKING:		w.markings ().remove (it.index);	return true;
 		case WorldItem.OBJECT:		w.objects ().remove (it.index);		return true;
 		case WorldItem.AOBJECT:		w.aobjects ().remove (it.index);	return true;
 		case WorldItem.CONNECTOR:		w.connectors ().remove (it.index);		return true;
@@ -1632,6 +1659,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.PATH:		return w.path ().get (it.index).distance (x, y);
 		case WorldItem.WALL:		return segDist (w.walls ().at (it.index).edge, x, y);
+		case WorldItem.MARKING:		return segDist (w.markings ().at (it.index).edge, x, y);
 		case WorldItem.OBJECT:
 		case WorldItem.AOBJECT:
 		{
@@ -1665,7 +1693,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	/** Kinds in picking priority (small things first, areas last). */
 	static public final int[]	PICK_ORDER	= {
 		WorldItem.START, WorldItem.WAYPOINT, WorldItem.DOCK, WorldItem.PATH, WorldItem.CBEACON, WorldItem.BEACON,
-		WorldItem.CONNECTOR, WorldItem.WALL, WorldItem.AOBJECT, WorldItem.OBJECT, WorldItem.FAREA, WorldItem.ZONE
+		WorldItem.CONNECTOR, WorldItem.WALL, WorldItem.AOBJECT, WorldItem.OBJECT, WorldItem.MARKING, WorldItem.FAREA, WorldItem.ZONE
 	};
 
 	/**
@@ -1714,6 +1742,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.FAREA:		w.fareas ().at (it.index).polygon.translate (dx, dy);	break;
 		case WorldItem.PATH:		w.path ().get (it.index).add (dx, dy);					break;
 		case WorldItem.WALL:		moveLine (w.walls ().at (it.index).edge, dx, dy);	w.walls ().recomputeBounds ();	break;
+		case WorldItem.MARKING:		moveLine (w.markings ().at (it.index).edge, dx, dy);	break;
 		case WorldItem.OBJECT:
 		case WorldItem.AOBJECT:
 		{
@@ -1789,6 +1818,11 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.WALL:
 		{
 			Line2	l = w.walls ().at (it.index).edge;
+			return new Point2[] { new Point2 (l.orig ()), new Point2 (l.dest ()) };
+		}
+		case WorldItem.MARKING:
+		{
+			Line2	l = w.markings ().at (it.index).edge;
 			return new Point2[] { new Point2 (l.orig ()), new Point2 (l.dest ()) };
 		}
 		case WorldItem.OBJECT:
@@ -1873,6 +1907,13 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (h == 0)		l.set (x, y, l.dest ().x (), l.dest ().y ());
 			else			l.set (l.orig ().x (), l.orig ().y (), x, y);
 			w.walls ().recomputeBounds ();
+			break;
+		}
+		case WorldItem.MARKING:
+		{
+			Line2	l = w.markings ().at (it.index).edge;
+			if (h == 0)		l.set (x, y, l.dest ().x (), l.dest ().y ());
+			else			l.set (l.orig ().x (), l.orig ().y (), x, y);
 			break;
 		}
 		case WorldItem.OBJECT:
@@ -2007,6 +2048,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		}
 		case WorldItem.PATH:		return World.z (w.path ().get (it.index));
 		case WorldItem.WALL:		return Math.min (w.walls ().at (it.index).edge.z1 (), w.walls ().at (it.index).edge.z2 ());
+		case WorldItem.MARKING:		return Math.min (w.markings ().at (it.index).edge.z1 (), w.markings ().at (it.index).edge.z2 ());
 		case WorldItem.OBJECT:
 		case WorldItem.AOBJECT:		return object (w, it).pos.z ();
 		case WorldItem.CONNECTOR:		return Math.min (w.connectors ().at (it.index).edge.z1 (), w.connectors ().at (it.index).edge.z2 ());
@@ -2033,6 +2075,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.FAREA:		return new String[] { "label", "texture", "points" };
 		case WorldItem.PATH:		return new String[] { "x", "y", "z" };
 		case WorldItem.WALL:		return new String[] { "x1", "y1", "z1", "x2", "y2", "z2", "width", "height", "texture" };
+		case WorldItem.MARKING:		return new String[] { "x1", "y1", "z1", "x2", "y2", "z2", "color", "width" };
 		case WorldItem.OBJECT:		return new String[] { "x", "y", "z", "orientation", "icon", "image", "shape", "color", "usecolor" };
 		case WorldItem.AOBJECT:		return new String[] { "label", "x", "y", "z", "orientation", "radius", "icon", "image", "shape", "color", "usecolor", "dynamics",
 														  "movement", "speed", "acceleration", "mass", "coef_res", "coef_fric" };
@@ -2043,7 +2086,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.WAYPOINT:	return new String[] { "label", "x", "y", "z", "orientation" };
 		case WorldItem.DOCK:		return new String[] { "label", "x", "y", "z", "orientation", "flow" };
 		case WorldItem.START:		return new String[] { "x", "y", "z", "orientation" };
-		case WorldItem.GEOMETRY:	return new String[] { "wall width", "wall height", "wall texture", "connector width", "connector height", "connector texture", "zone texture", "farea texture" };
+		case WorldItem.GEOMETRY:	return new String[] { "wall width", "wall height", "wall texture", "connector width", "connector height", "connector texture", "zone texture", "farea texture",
+														  "marking color", "marking width" };
 		case WorldItem.BEHAVIOUR:	return new String[] { "robot knowledge" };
 		}
 		return new String[0];
@@ -2101,6 +2145,19 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (name.equals ("width"))		return fmt (wl.width);
 			if (name.equals ("height"))		return fmt (wl.height);
 			if (name.equals ("texture"))	return wl.texture;
+			break;
+		}
+		case WorldItem.MARKING:
+		{
+			WMMarking	mk = w.markings ().at (it.index);
+			if (name.equals ("x1"))			return fmt (mk.edge.orig ().x ());
+			if (name.equals ("y1"))			return fmt (mk.edge.orig ().y ());
+			if (name.equals ("z1"))			return fmt (mk.edge.z1 ());
+			if (name.equals ("x2"))			return fmt (mk.edge.dest ().x ());
+			if (name.equals ("y2"))			return fmt (mk.edge.dest ().y ());
+			if (name.equals ("z2"))			return fmt (mk.edge.z2 ());
+			if (name.equals ("color"))		return toHex (mk.color);
+			if (name.equals ("width"))		return fmt (mk.width);
 			break;
 		}
 		case WorldItem.OBJECT:
@@ -2220,6 +2277,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (name.equals ("robot knowledge"))	return Boolean.toString (w.apw);
 			break;
 		case WorldItem.GEOMETRY:
+			if (name.equals ("marking color"))	return toHex (w.markings ().defaultColor ());
+			if (name.equals ("marking width"))	return fmt (w.markings ().defaultWidth ());
 			if (name.equals ("wall width"))		return fmt (w.walls ().defaultWidth ());
 			if (name.equals ("wall height"))	return fmt (w.walls ().defaultHeight ());
 			if (name.equals ("wall texture"))	return w.walls ().defaultTexture ();
@@ -2294,6 +2353,20 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			else if (name.equals ("height"))	wl.height = num (value);
 			else if (name.equals ("texture"))	wl.texture = token (value);
 			w.walls ().recomputeBounds ();
+			return;
+		}
+		case WorldItem.MARKING:
+		{
+			WMMarking	mk = w.markings ().at (it.index);
+			Line2	l = mk.edge;
+			if (name.equals ("x1"))				l.set (num (value), l.orig ().y (), l.dest ().x (), l.dest ().y ());
+			else if (name.equals ("y1"))		l.set (l.orig ().x (), num (value), l.dest ().x (), l.dest ().y ());
+			else if (name.equals ("x2"))		l.set (l.orig ().x (), l.orig ().y (), num (value), l.dest ().y ());
+			else if (name.equals ("y2"))		l.set (l.orig ().x (), l.orig ().y (), l.dest ().x (), num (value));
+			else if (name.equals ("z1"))		l.setZ (num (value), l.z2 ());
+			else if (name.equals ("z2"))		l.setZ (l.z1 (), num (value));
+			else if (name.equals ("color"))		mk.color = parseColor (value);
+			else if (name.equals ("width"))		mk.width = Math.max (0.0, num (value));
 			return;
 		}
 		case WorldItem.OBJECT:
@@ -2433,7 +2506,9 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (name.equals ("robot knowledge"))	w.apw = bool (value);
 			return;
 		case WorldItem.GEOMETRY:
-			if (name.equals ("wall width"))			w.walls ().setDefaults (num (value), w.walls ().defaultHeight (), w.walls ().defaultTexture ());
+			if (name.equals ("marking color"))		w.markings ().setDefaults (parseColor (value), w.markings ().defaultWidth ());
+			else if (name.equals ("marking width"))	w.markings ().setDefaults (w.markings ().defaultColor (), Math.max (0.0, num (value)));
+			else if (name.equals ("wall width"))	w.walls ().setDefaults (num (value), w.walls ().defaultHeight (), w.walls ().defaultTexture ());
 			else if (name.equals ("wall height"))	w.walls ().setDefaults (w.walls ().defaultWidth (), num (value), w.walls ().defaultTexture ());
 			else if (name.equals ("wall texture"))	w.walls ().setDefaults (w.walls ().defaultWidth (), w.walls ().defaultHeight (), token (value));
 			else if (name.equals ("connector width"))	w.connectors ().setDefaults (num (value), w.connectors ().defaultHeight (), w.connectors ().defaultTexture ());
@@ -2791,6 +2866,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 
 	/** Whether a property of an element names a file (and so is written as "./conf/..."). */
 	static public boolean isTextureProperty (String name)	{ return name.endsWith ("texture"); }
+	static public boolean isColorProperty (String name)		{ return name.equals ("color") || name.endsWith (" color"); }
 	static public boolean isFileProperty (String name)		{ return name.equals ("shape") || name.equals ("image") || isTextureProperty (name); }
 
 	/** The value of a property as it is shown and stored: paths always as "./conf/...". */

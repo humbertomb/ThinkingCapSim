@@ -67,6 +67,7 @@ public class ToolIcon implements Icon
 	static public final int		SCAN		= 52;		// a wide fan of rays (add a reduced laser scan)
 	static public final int		NEW_FILE	= 53;		// a blank page with a folded corner and a plus (a new file)
 	static public final int		SAVE		= 54;		// a floppy disk (save to a file)
+	static public final int		MARKING		= 55;		// a wide coloured line lying on the floor (a marking)
 
 	protected int				type;
 	protected int				size;
@@ -112,6 +113,15 @@ public class ToolIcon implements Icon
 		case WALL:
 			g.setStroke (new BasicStroke (3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 			g.drawLine (4, 17, 18, 5);
+			break;
+		case MARKING:		// a wide line on the floor, in colour
+			g.setColor (new Color (215, 215, 215));
+			g.fillRect (3, 13, 16, 6);
+			g.setColor (new Color (150, 150, 150));
+			g.drawRect (3, 13, 16, 6);
+			g.setColor (new Color (235, 150, 20));
+			g.setStroke (new BasicStroke (4f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND));
+			g.drawLine (2, 9, 20, 4);
 			break;
 		case OBJECT:
 			g.setColor (new Color (90, 90, 90));
