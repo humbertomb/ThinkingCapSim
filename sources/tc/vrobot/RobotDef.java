@@ -317,6 +317,12 @@ public class RobotDef
 	static public class Kinematics
 	{
 		public String	drive		= "tc.vrobot.models.DifferentialDrive";	// DRIVEMODEL
+		// How fast the platform goes each way, for a platform whose drive train cannot
+		// say it (one with no wheels at all): what the wheels say comes before these,
+		// and zero is nothing said
+		public double	vmax;						// VMAX (m/s) forward
+		public double	umax;						// UMAX (m/s) sideways
+		public double	rmax;						// RMAX (deg/s) turning
 		public double	lamax;						// maximum acceleration (m/s2)
 		public double	ldmax;						// maximum deceleration (m/s2)
 		public double	rwheel;						// RWHEEL (m): the trail of the steering wheel
@@ -329,6 +335,7 @@ public class RobotDef
 		{
 			Kinematics	k = new Kinematics ();
 			k.drive = drive;	k.lamax = lamax;	k.ldmax = ldmax;
+			k.vmax = vmax;		k.umax = umax;		k.rmax = rmax;
 			k.rwheel = rwheel;	k.skid = skid;		k.gear = gear;		k.pulses = pulses;
 			k.odomET = odomET;	k.odomER = odomER;	k.odomBias = odomBias;
 			return k;
@@ -447,6 +454,9 @@ public class RobotDef
 	/** The class every kinematics model of a platform derives from. */
 	static public final String		DRIVE_BASE		= "tc.vrobot.RobotModel";
 
+	/** The model that goes sideways as fast as it goes forward. */
+	static private final String		SYNCHRO			= "tc.vrobot.models.SynchroDrive";
+
 	/** What every model reads, whichever it is, and what the platform itself says. */
 	static private final String[]	KIN_COMMON		= { "drive", "drivetype", "vmax", "rmax",
 														"odomet", "odomer", "odombias" };
@@ -464,6 +474,7 @@ public class RobotDef
 		m.put ("tc.vrobot.models.AckermanDrive",		new String[] { "samax", "length" });
 		m.put ("tc.vrobot.models.TricycleDrive",		new String[] { "samax", "lamax", "ldmax",
 																	   "length", "base", "rwheel" });
+		m.put ("tc.vrobot.models.LeggedOmniDrive",	new String[] { "umax" });
 		return m;
 	}
 
@@ -475,6 +486,35 @@ public class RobotDef
 	 * wheels' to say and stays as it is given.
 	 */
 	static private final String[]	KIN_DERIVED		= { "length", "base", "wheeldiameter", "vmax", "umax", "rmax", "samax" };
+
+	/**
+	 * How fast the platform goes one way: what its drive train says, and what it was
+	 * given when the drive train cannot say it -- a platform with no wheels at all
+	 * (a legged one) is given the three velocities and nothing else.
+	 */
+	public double given (String name)
+	{
+		Double		v = derived (name);
+
+		if (v != null)								return v.doubleValue ();
+
+		name	= name.replace (" ", "").toLowerCase ();
+		if (name.equals ("vmax"))					return kinematics.vmax;
+		if (name.equals ("umax"))					return kinematics.umax;
+		if (name.equals ("rmax"))					return kinematics.rmax;
+		return 0.0;
+	}
+
+	/**
+	 * Whether the wheels of THIS platform work a kinematics property out: one that
+	 * has none works nothing out and is given what it can do, and the editor lets it
+	 * be typed in ({@link #isCalculated} says which ones are the wheels' to say at
+	 * all).
+	 */
+	public boolean isDerived (String name)
+	{
+		return isCalculated (name) && (derived (name) != null);
+	}
 
 	/** True for a kinematics property the wheels of the platform work out. */
 	static public boolean isCalculated (String name)
@@ -512,6 +552,12 @@ public class RobotDef
 	public Double derived (String name)
 	{
 		List<Wheel>		turning, fixed, driving;
+
+		// A synchro drive goes sideways as fast as it goes forward, which is its model
+		// and not its drive train: it is the one thing here that is worked out for a
+		// platform with no wheels at all
+		if ("umax".equals (name.replace (" ", "").toLowerCase ()) && SYNCHRO.equals (kinematics.drive))
+			return Double.valueOf (given ("vmax"));
 
 		if ((wheels == null) || wheels.isEmpty ())		return null;
 		turning	= steerables ();
@@ -1384,8 +1430,10 @@ public class RobotDef
 		}
 
 		if (kinematics.drive != null)		p.setProperty ("DRIVEMODEL", kinematics.drive);
-		// what the drive train says is asked for, not stored
-		setNZ (p, "VMAX", value (derived ("vmax")));	setNZ (p, "RMAX", value (derived ("rmax")));
+		// what the drive train says is asked for, not stored, and what it cannot say
+		// is what the platform was given (a platform with no wheels)
+		setNZ (p, "VMAX", given ("vmax"));			setNZ (p, "RMAX", given ("rmax"));
+		setNZ (p, "UMAX", given ("umax"));
 		setNZ (p, "LENGHT", value (derived ("length")));	setNZ (p, "BASE", value (derived ("base")));
 		setNZ (p, "WHEEL", value (derived ("wheel diameter")));	setNZ (p, "SAMAX", value (derived ("samax")));
 		setNZ (p, "LAMAX", kinematics.lamax);		setNZ (p, "LDMAX", kinematics.ldmax);

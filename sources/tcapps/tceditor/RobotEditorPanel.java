@@ -1176,11 +1176,13 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			String	key = kinKey (name);					// what the description calls it
 
 			if (name.equals (DRIVE))		return (k.drive != null) ? k.drive : "";
-			if (RobotDef.isCalculated (key))						// the drive train says these
-			{
-				Double	v = robot.derived (key);
-				return (v != null) ? RobotDef.fmt (v.doubleValue ()) : "";
-			}
+			if (robot.isDerived (key))								// the drive train says these
+				return RobotDef.fmt (robot.derived (key).doubleValue ());
+			if (key.equals ("vmax"))		return RobotDef.fmt (k.vmax);
+			if (key.equals ("umax"))		return RobotDef.fmt (k.umax);
+			if (key.equals ("rmax"))		return RobotDef.fmt (k.rmax);
+			if (RobotDef.isCalculated (key))						// the wheels' to say, and they cannot
+				return "";
 			if (key.equals ("lamax"))		return RobotDef.fmt (k.lamax);
 			if (key.equals ("ldmax"))		return RobotDef.fmt (k.ldmax);
 			if (key.equals ("rwheel"))		return RobotDef.fmt (k.rwheel);
@@ -1582,7 +1584,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	public boolean isCalculated (RobotItem it, String name)
 	{
 		if ((it == null) || (it.kind != RobotItem.KINEMATICS))		return false;
-		return RobotDef.isCalculated (kinKey (name));
+		return robot.isDerived (kinKey (name));
 	}
 
 	public void setProperty (RobotItem it, String name, String value)
@@ -1618,6 +1620,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			String	key = kinKey (name);					// what the description calls it
 
 			if (name.equals (DRIVE))			k.drive = token (value);
+			else if (key.equals ("vmax"))		k.vmax = num (value);
+			else if (key.equals ("umax"))		k.umax = num (value);
+			else if (key.equals ("rmax"))		k.rmax = num (value);
 			else if (key.equals ("lamax"))		k.lamax = num (value);
 			else if (key.equals ("ldmax"))		k.ldmax = num (value);
 			else if (key.equals ("rwheel"))		k.rwheel = num (value);
