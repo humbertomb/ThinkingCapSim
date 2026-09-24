@@ -175,17 +175,45 @@ public class IForkController extends Controller
 
 		// Initialise debug modules
 		c_dump		= new LogFile (PREFFIX, ".log");
-		c_plot		= new LogPlot ("Controller Output", "step", "values");
+		// What the controller commands and how far it is off the path, in the units it
+		// is commanded in and not as a share of the most the platform does: the metres
+		// against the left scale and the degrees against the right one. The scales are
+		// left to the values themselves, because the errors of the path are no velocity
+		// and have no limit of the platform to be read against
+		c_plot		= new LogPlot ("Controller Output", "step", "m/s, m");
+		c_plot.setRightAxis (2, "deg/s, deg");
+		c_plot.setYRange (0.0, 0.0);
+		c_plot.setRightRange (0.0, 0.0);
 
-		// Initialise debug variables
+		// Initialise debug variables: the metres first and the degrees after, which is
+		// what says which scale every line is read against
 		c_buffer		= new double[4];
 		c_labels		= new String[4];
 		c_labels[0]		= "vlin";
-		c_labels[1]		= "vrot";
-		c_labels[2]		= "e_ang";
-		c_labels[3]		= "e_pos";
+		c_labels[1]		= "e_pos";
+		c_labels[2]		= "vrot";
+		c_labels[3]		= "e_ang";
 	}
 	
+	/**
+	 * One cycle of the plot of the controller: what it commands and how far it is
+	 * off the path, each as it is and in its own unit. The order is the one the
+	 * legend was given -- the metres first and the degrees after -- so that the
+	 * lines fall on the scale they are read against.
+	 *
+	 * @param vlin		commanded linear velocity (m/s)
+	 * @param vrot		commanded turn rate (rad/s)
+	 * @param epos		how far the robot is from the path it should be on (m)
+	 * @param eang		how far its heading is off (rad)
+	 */
+	private void plotValues (double vlin, double vrot, double epos, double eang)
+	{
+		c_buffer[0]		= vlin;										// [m/s]
+		c_buffer[1]		= epos;										// [m]
+		c_buffer[2]		= Math.toDegrees (vrot);					// [deg/s]
+		c_buffer[3]		= Math.toDegrees (eang);					// [deg]
+	}
+
 	protected boolean inRestrictedArea ()
 	{
 		if (world == null)		{	return false;	}
@@ -649,10 +677,7 @@ public class IForkController extends Controller
 		{
 		    System.out.println("Controller INPUT  -  dist: "+dist+" delta: "+Math.toDegrees(delta)+" PlanVmax: "+iplan.spd_vmax+" looka: "+looka_dst);
 		    System.out.println("Controller OUTPUT -  vm: "+vm+" del: "+Math.toDegrees(del)+" vr: "+vr+" wr: "+Math.toDegrees(wr));
-			c_buffer[0] 	= Math.max (Math.min (vr, 1.0), -1.0);
-			c_buffer[1] 	= Math.max (Math.min (wr / rdesc.model.Rmax, 1.0), -1.0);
-			c_buffer[2] 	= delta * Angles.RTOD;
-			c_buffer[3] 	= Math.max (Math.min (path_dst, 1.0), -1.0);
+			plotValues (vr, wr, path_dst, delta);
 			
 			if (localgfx)
 				c_plot.draw (c_buffer);	
@@ -795,10 +820,7 @@ public class IForkController extends Controller
 		{
 		    System.out.println("Controller INPUT  -  dist: "+dist+" delta: "+Math.toDegrees(delta)+" PlanVmax: "+iplan.spd_vmax+" looka: "+looka_dst);
 		    System.out.println("Controller OUTPUT -  vm: "+vm+" del: "+Math.toDegrees(del)+" vr: "+vr+" wr: "+Math.toDegrees(wr)+" d["+dx+","+dy+"] dyl="+dyl);
-			c_buffer[0] 	= Math.max (Math.min (vr, 1.0), -1.0);
-			c_buffer[1] 	= Math.max (Math.min (wr / rdesc.model.Rmax, 1.0), -1.0);
-			c_buffer[2] 	= delta * Angles.RTOD;
-			c_buffer[3] 	= Math.max (Math.min (path_dst, 1.0), -1.0);
+			plotValues (vr, wr, path_dst, delta);
 			
 			if (localgfx)
 				c_plot.draw (c_buffer);	
@@ -877,9 +899,9 @@ public class IForkController extends Controller
 		{
 		    //System.out.println("Controller INPUT  -  dist: " + dist + " delta: " + Math.toDegrees(delta) + " PlanVmax: " + iplan.spd_vmax + " looka: " + looka_dst);
 		    //System.out.println("Controller OUTPUT -  vm: " + vm + " del: " + Math.toDegrees(del) + " vr: " + vr + " wr: " + Math.toDegrees(wr));
-			c_buffer[0] 	= Math.max (Math.min (vr, 1.0), -1.0);
-			c_buffer[1] 	= Math.max (Math.min (wr / model.Rmax, 1.0), -1.0);
-			c_buffer[2] 	= Math.max (Math.min (path_dst, 1.0), -1.0);
+			// no heading error is worked out here, and it used to be written where the
+			// heading error goes, which is what made the line read wrong
+			plotValues (vr, wr, path_dst, 0.0);
 			
 			if (localgfx)
 				c_plot.draw (c_buffer);	
@@ -896,8 +918,7 @@ public class IForkController extends Controller
 		// Plot current motion commands
 		if (debug)
 		{
-			c_buffer[0] 	= vr;
-			c_buffer[1] 	= wr;
+			plotValues (vr, wr, path_dst, 0.0);
 
 			if (localgfx)
 				c_plot.draw (c_buffer);	
