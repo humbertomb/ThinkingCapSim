@@ -1,6 +1,6 @@
 {
   "name": "robot",
-  "radius": 0.25,
+  "radius": 0.11,
   "icon": [
     {
       "xi": 0.07,
@@ -1207,8 +1207,8 @@
   "shapeRobot": "./conf/3dmodels/aibo.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.LeggedOmniDrive",
-    "vmax": 500.0,
-    "umax": 200.0,
+    "vmax": 200.0,
+    "umax": 100.0,
     "rmax": 90.0,
     "lamax": 0.0,
     "ldmax": 0.0,
@@ -1246,11 +1246,13 @@
     "camera": {
       "sensors": [
         {
-          "rho": 0.10274653123418377,
-          "theta": 0.49179718794591293,
-          "height": 0.15,
+          "rho": 0.11156535188942737,
+          "theta": 0.45292162896120114,
+          "height": 0.2883954685204706,
           "orientation": 0.0,
+          "elevation": -24.110106930580727,
           "step": 0,
+          "rangemax": 5.0,
           "hfov": 43.6,
           "vfov": 33.4,
           "framerate": 5.0,

@@ -1,5 +1,5 @@
 {
-  "world": "./conf/maps/soccer_field_mini.world",
+  "world": "./conf/maps/soccer_field_aibo_2007.world",
   "robots": [
     {
       "name": "QUAKY2-1",
@@ -12,11 +12,11 @@
         {
           "name": "Controller",
           "properties": {
-            "CLASS": "tclib.behaviours.hfsm.HFSMController",
+            "CLASS": "tclib.behaviours.lua.LuaController",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "./conf/programs/hfsm/aplayer.hfsm",
+            "PRG": "./conf/programs/lua/lookForBall.lua",
             "TYPE": "Controller",
             "AUTO": "true"
           },
@@ -53,7 +53,7 @@
             "PASSIVE": "true",
             "GFX": "true",
             "CLASS": "tcrob.umu.quaky2.SoccerVision",
-            "PARAMS": "./conf/vision/quaky2-soccer.chaos"
+            "PARAMS": "./conf/vision/aibo-soccer-2007.chaos"
           },
           "events": [
             {
@@ -67,8 +67,7 @@
       "virtualRobot": {
         "name": "Virtual Robot",
         "properties": {
-          "CLASS": "tcrob.umu.quaky2.Quaky2",
-          "DESC": "./conf/robots/quaky2.robot",
+          "DESC": "./conf/robots/aibo.robot",
           "EXTIME": "75",
           "GFX": "true",
           "MODE": "shared",

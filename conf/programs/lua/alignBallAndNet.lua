@@ -54,7 +54,7 @@ end
 if math.abs(delta_theta) < MIN_THETA then
 	vlat = 0
 else
-	vlat = math.limit (7 * delta_theta + 50*math.sign(delta_theta), -MAX_VLAT, MAX_VLAT)
+	vlat = -math.limit (7 * delta_theta + 50*math.sign(delta_theta), -MAX_VLAT, MAX_VLAT)
 	vrot = math.limit (vrot + 0.9 * delta_theta, -MAX_VROT, MAX_VROT)
 end
 

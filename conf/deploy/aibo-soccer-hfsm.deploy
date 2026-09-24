@@ -1,0 +1,87 @@
+{
+  "world": "./conf/maps/soccer_field_mini.world",
+  "robots": [
+    {
+      "name": "QUAKY2-1",
+      "linda": {
+        "address": "localhost",
+        "port": 3000,
+        "instantiate": true
+      },
+      "modules": [
+        {
+          "name": "Controller",
+          "properties": {
+            "CLASS": "tclib.behaviours.hfsm.HFSMController",
+            "GFX": "true",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "PRG": "./conf/programs/hfsm/aplayer.hfsm",
+            "TYPE": "Controller",
+            "AUTO": "true"
+          },
+          "events": [
+            {
+              "symbol": "LPS",
+              "itemClass": "tc.shared.linda.ItemLPS",
+              "method": "notify_lps"
+            }
+          ]
+        },
+        {
+          "name": "Perception",
+          "properties": {
+            "CLASS": "tcrob.umu.indoor.IndoorPerception",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "TYPE": "Perception",
+            "GFX": "true"
+          },
+          "events": [
+            {
+              "symbol": "SENSORS",
+              "itemClass": "tc.shared.linda.ItemSensors",
+              "method": "notify_sensors"
+            }
+          ]
+        },
+        {
+          "name": "Vision",
+          "properties": {
+            "TYPE": "Perception",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "GFX": "true",
+            "CLASS": "tcrob.umu.quaky2.SoccerVision",
+            "PARAMS": "./conf/vision/aibo-soccer-2007.chaos"
+          },
+          "events": [
+            {
+              "symbol": "CAMERA",
+              "itemClass": "tc.shared.linda.ItemCamera",
+              "method": "notify_camera"
+            }
+          ]
+        }
+      ],
+      "virtualRobot": {
+        "name": "Virtual Robot",
+        "properties": {
+          "DESC": "./conf/robots/aibo.robot",
+          "EXTIME": "75",
+          "GFX": "true",
+          "MODE": "shared",
+          "PASSIVE": "false"
+        },
+        "events": [
+          {
+            "symbol": "MOTION",
+            "itemClass": "tc.shared.linda.ItemMotion",
+            "method": "notify_motion"
+          }
+        ]
+      },
+      "properties": {}
+    }
+  ]
+}
