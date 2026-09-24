@@ -107,7 +107,7 @@ public class HFSMController extends Controller
 		c_labels[0]	= "vlin";
 		c_labels[1]	= "vlat";
 		c_labels[2]	= "vrot";
-		c_plot		= new LogPlot ("Controller Output", "step", "values");
+		c_plot		= new LogPlot ("Controller Output", "step", "m/s");
 
 		// Load the machine of states
 		parse (cfg);
@@ -146,7 +146,7 @@ public class HFSMController extends Controller
 
 			if (localgfx)
 			{
-				c_plot.open (c_labels);
+				openMotionPlot (c_plot, c_labels);
 				monitor	= tclib.behaviours.hfsm.gui.HFSMMonitorWindow.open (machine, cfg.robot ());
 			}
 		}
@@ -297,9 +297,7 @@ public class HFSMController extends Controller
 		// Plot current control commands
 		if (localgfx)
 		{
-			c_buffer[0] 	= tc.vrobot.RobotModel.share (vlin, rdesc.model.Vmax);
-			c_buffer[1] 	= rdesc.model.shareLat (vlat);
-			c_buffer[2] 	= tc.vrobot.RobotModel.share (vrot, rdesc.model.Rmax);
+			motionValues (c_buffer, vlin, vlat, vrot);
 			c_plot.draw (c_buffer);
 		}
 	}

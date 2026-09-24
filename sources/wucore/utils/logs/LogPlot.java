@@ -16,6 +16,10 @@ public class LogPlot implements ChildWindowListener
 	protected double				ymax;
 	protected boolean				impulses;
 	protected String				values;						// title of the panel of values, when one is asked for
+	protected int					rfirst;						// the first line of the right scale, -1 for none
+	protected String				rlabel;						// ... what it is measured in
+	protected double				rmin;
+	protected double				rmax;
 
 	// Constructors
 	protected LogPlot ()
@@ -33,6 +37,10 @@ public class LogPlot implements ChildWindowListener
 		ymax			= 1.0;
 		impulses		= false;
 		values			= null;
+		rfirst			= -1;
+		rlabel			= null;
+		rmin			= -1.0;
+		rmax			= 1.0;
 		
 	}
 	
@@ -41,6 +49,10 @@ public class LogPlot implements ChildWindowListener
 	public final void		setYRange (double ymin, double ymax)	{ this.ymin = ymin; this.ymax = ymax; }
 	/** Asks for what every line is worth to be written beside the plot, under this title (null: none). */
 	public final void		setValues (String title)				{ this.values = title; }
+	/** Draws the lines from this one on against a second scale on the right, of its own unit (-1: none). */
+	public final void		setRightAxis (int first, String label)	{ this.rfirst = first; this.rlabel = label; }
+	/** What that second scale covers. */
+	public final void		setRightRange (double ymin, double ymax){ this.rmin = ymin; this.rmax = ymax; }
 	
 	// Instance methods
 
@@ -61,12 +73,36 @@ public class LogPlot implements ChildWindowListener
 				plot.setLegend (labels);
 				plot.setLabels (xlabel, ylabel);
 				plot.setYRange (ymin, ymax);
+				plot.setRightAxis (rfirst, rlabel);				// after the legend: it splits the lines
+				plot.setRightRange (rmin, rmax);
 				plot.setImpulses (impulses);
 				plot.open ();
 			}
 		});
 	}
 	
+	/**
+	 * What the scales cover, said again once it is known: a plot may be opened
+	 * before whoever draws on it knows how far its values go (a controller opens
+	 * its windows before the description of the platform has arrived), and this is
+	 * how the scales are put right without the window being built again. A range of
+	 * nothing at all is left to the values themselves.
+	 */
+	public void rescale (double ymin, double ymax, double rmin, double rmax)
+	{
+		this.ymin	= ymin;		this.ymax	= ymax;
+		this.rmin	= rmin;		this.rmax	= rmax;
+
+		if (plot == null)				return;
+
+		final PlotWindow	p = plot;
+		final double		y0 = ymin, y1 = ymax, r0 = rmin, r1 = rmax;
+		onEventThread (new Runnable ()
+		{
+			public void run ()			{ p.setYRange (y0, y1);		p.setRightRange (r0, r1); }
+		});
+	}
+
 	public void close ()
 	{
 		if (plot == null)				return;

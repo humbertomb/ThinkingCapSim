@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import tc.runtime.thread.ModuleConfig;
-import tclib.behaviours.lua.gui.*;
+
 import tc.modules.*;
 import tc.shared.lps.lpo.*;
 import tc.shared.linda.*;
@@ -97,7 +97,7 @@ public class LuaController extends Controller
 	protected int					looka_pts;					// Current look-ahead distance (points)
 	protected double				path_dst;					// Current robot to desired path distance (m)
 
-	protected LuaMonitorWindow		monitor;					// the variables of the program while it runs
+	protected tclib.behaviours.lua.gui.LuaMonitorWindow	monitor;	// the variables of the program while it runs
 	protected boolean				autostart;					// AUTO: run from the first cycle, waiting for nothing
 	protected boolean				dump;
 
@@ -139,7 +139,7 @@ public class LuaController extends Controller
 		c_labels[1]	= "vlat";
 		c_labels[2]	= "vrot";
 		c_dump		= new LogFile (PREFFIX, ".log");
-		c_plot		= new LogPlot ("Controller Output", "step", "values");
+		c_plot		= new LogPlot ("Controller Output", "step", "m/s");
 
 		dump		= false;
 
@@ -194,8 +194,9 @@ public class LuaController extends Controller
 
 		if (localgfx)
 		{
-			c_plot.open (c_labels);
-			monitor	= LuaMonitorWindow.open (lua, chaos, file, cfg.robot (), new LuaMonitorWindow.Reload ()
+			openMotionPlot (c_plot, c_labels);
+			monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, chaos, file, cfg.robot (),
+																	  new tclib.behaviours.lua.gui.LuaMonitorWindow.Reload ()
 			{
 				public void reload ()					{ LuaController.this.reload (); }
 				public void load (File f)				{ LuaController.this.load (f); }
@@ -412,9 +413,7 @@ public class LuaController extends Controller
 		// Plot current control commands
 		if (localgfx || dump)
 		{
-			c_buffer[0] 	= tc.vrobot.RobotModel.share (vlin, rdesc.model.Vmax);
-			c_buffer[1] 	= rdesc.model.shareLat (vlat);
-			c_buffer[2] 	= tc.vrobot.RobotModel.share (vrot, rdesc.model.Rmax);
+			motionValues (c_buffer, vlin, vlat, vrot);
 
 			if (localgfx)
 				c_plot.draw (c_buffer);

@@ -229,8 +229,8 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	// Template instance methods. Subclasses MAY implement
 	public void notify_motion (String space, ItemMotion item)
 	{
-		// Plot current motion command: the three velocities it was asked for, each as
-		// a share of the most the platform does that way
+		// Plot current motion command: the three velocities it was asked for, as they
+		// were asked for, each in its own unit
 		if (plot != null)
 		{
 			buffer[0] 	= item.vlin;								// [m/s]

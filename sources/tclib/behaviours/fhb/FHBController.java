@@ -120,7 +120,7 @@ public class FHBController extends Controller
 		c_labels[1]	= "vlat";
 		c_labels[2]	= "vrot";
 		c_dump		= new LogFile (PREFFIX, ".log");
-		c_plot		= new LogPlot ("Controller Output", "step", "values");
+		c_plot		= new LogPlot ("Controller Output", "step", "m/s");
 		
 		b_dump		= new LogFile (PREFFIX, ".beh");
 		b_plot		= new LogPlot ("Behaviour Fusion", "step", "DoA");
@@ -269,9 +269,7 @@ public class FHBController extends Controller
 		// Plot current control commands
 		if (debug)
 		{
-			c_buffer[0] 	= tc.vrobot.RobotModel.share (vlin, rdesc.model.Vmax);
-			c_buffer[1] 	= rdesc.model.shareLat (vlat);
-			c_buffer[2] 	= tc.vrobot.RobotModel.share (vrot, rdesc.model.Rmax);
+			motionValues (c_buffer, vlin, vlat, vrot);
 
 			if (localgfx)
 				c_plot.draw (c_buffer);	
@@ -471,7 +469,7 @@ public class FHBController extends Controller
 			{
 				if (labels != null)		
 					b_plot.open (labels);
-				c_plot.open (c_labels);
+				openMotionPlot (c_plot, c_labels);
 			}
 			else
 			{

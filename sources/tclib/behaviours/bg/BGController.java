@@ -88,7 +88,7 @@ public class BGController extends Controller
 		c_labels[0]	= "vlin";
 		c_labels[1]	= "vlat";
 		c_labels[2]	= "vrot";
-		c_plot		= new LogPlot ("Controller Output", "step", "values");
+		c_plot		= new LogPlot ("Controller Output", "step", "m/s");
 		
 		b_dump		= new LogFile (PREFFIX, ".beh");
 		b_plot		= new LogPlot ("Behaviour Fusion", "step", "DoA");
@@ -134,7 +134,7 @@ public class BGController extends Controller
 				if (localgfx)
 				{
 					b_plot.open (program.behlabels ());
-					c_plot.open (c_labels);
+					openMotionPlot (c_plot, c_labels);
 				}
 			}
 		}	
@@ -301,9 +301,7 @@ public class BGController extends Controller
 		// Plot current control commands
 		if (localgfx)
 		{
-			c_buffer[0] 	= tc.vrobot.RobotModel.share (vlin, rdesc.model.Vmax);
-			c_buffer[1] 	= rdesc.model.shareLat (vlat);
-			c_buffer[2] 	= tc.vrobot.RobotModel.share (vrot, rdesc.model.Rmax);
+			motionValues (c_buffer, vlin, vlat, vrot);
 			c_plot.draw (c_buffer);	
 		}
 	}

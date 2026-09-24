@@ -10,6 +10,7 @@ import tc.shared.lps.*;
 import tc.shared.world.World;
 import tc.vrobot.*;
 import tclib.utils.fusion.*;
+import wucore.utils.logs.LogPlot;
 
 public abstract class Controller extends StdThread
 {
@@ -82,10 +83,66 @@ public abstract class Controller extends StdThread
 		return false;
 	}
 	
+	/**
+	 * Opens the plot of what the controller commands, in the units it is commanded
+	 * in: the two velocities against the left scale in metres a second and the turn
+	 * rate against the right one in degrees a second, each as far as this platform
+	 * goes that way. It is the very same command the virtual robot plots, and it is
+	 * read off the picture the same way, without anybody having to know what the
+	 * most the platform does is to make sense of a share of it.
+	 *
+	 * The ranges come from the platform, so this is opened once its description has
+	 * arrived (notify_config), which is where a controller opens its windows.
+	 *
+	 * @param plot		the plot to open
+	 * @param labels	what the lines are called, vlin, vlat and vrot in that order
+	 */
+	protected void openMotionPlot (LogPlot plot, String[] labels)
+	{
+		if (plot == null)					return;
+
+		mplot	= plot;
+		plot.setRightAxis (2, "deg/s");
+		scaleMotionPlot ();
+		plot.open (labels);
+	}
+
+	/**
+	 * What the scales of that plot cover: as far as this platform goes each way. A
+	 * controller opens its windows before the description of the platform has
+	 * arrived, so until it does the scales are left to the values themselves, and
+	 * they are put right the moment it comes (notify_config).
+	 */
+	protected void scaleMotionPlot ()
+	{
+		if (mplot == null)					return;
+		if ((rdesc == null) || (rdesc.model == null))
+		{
+			mplot.rescale (0.0, 0.0, 0.0, 0.0);
+			return;
+		}
+
+		double		vmax = Math.max (rdesc.model.Vmax, rdesc.model.Umax);
+		double		rmax = Math.toDegrees (rdesc.model.Rmax);
+
+		mplot.rescale (-vmax, vmax, -rmax, rmax);
+	}
+
+	/** One cycle of that plot: the command as it was given, the turn rate in degrees. */
+	protected void motionValues (double[] buffer, double vlin, double vlat, double vrot)
+	{
+		if ((buffer == null) || (buffer.length < 3))		return;
+
+		buffer[0]	= vlin;										// [m/s]
+		buffer[1]	= vlat;										// [m/s]
+		buffer[2]	= Math.toDegrees (vrot);					// [deg/s]
+	}
+
 	/** How many times a command that is not a number is said out loud before it is only counted. */
 	static protected final int		INSANE_SAID		= 5;
 	
 	protected int					insane;					// how many such commands there have been
+	protected LogPlot				mplot;					// the plot of what is commanded, if anybody asked for one
 		
 	public void setResult (int result, int reason, long serial)
 	{
@@ -108,6 +165,7 @@ public abstract class Controller extends StdThread
 		{
 			rdesc		= new RobotDesc (item.props_robot);
 			fdesc		= new FusionDesc (item.props_robot);
+			scaleMotionPlot ();							// now it is known how far the platform goes
 		    
 		    state 		= RUN;
 	    }
