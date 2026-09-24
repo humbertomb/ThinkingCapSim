@@ -207,6 +207,10 @@ public class LuaHelp
 		{ "modf", "x", "Two values: the whole part and what is left." },
 		{ "max", "x, ...", "The biggest." },
 		{ "min", "x, ...", "The smallest." },
+		{ "limit", "x, minx, maxx", "x kept between minx and maxx: minx when it is below, maxx when it is above, "
+					+ "and x itself in between (the bounds the wrong way round are taken as they were meant). "
+					+ "Ours, and what to do with a speed or a turn rate before commanding it: "
+					+ "<span class=\"mono\">chaos.setVrot (math.limit (5.5 * ball.theta, -90, 90))</span>." },
 		{ "deg", "radians", "As degrees." },
 		{ "rad", "degrees", "As radians, as Lua has it: nothing is normalised." },
 		{ "normdeg", "degrees", "The same angle brought into -180 .. 180, which is where an angle of the robot is read "

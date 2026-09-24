@@ -243,6 +243,20 @@ public class LuaLib
 				return Double.valueOf (v);
 			}
 		});
+		// a value kept within bounds: what a script does to a speed or a turn rate
+		// before commanding it, which is min and max one inside the other
+		math.set ("limit", new LuaFunction ("math.limit")
+		{
+			public Object call (Object[] args)
+			{
+				double		v = num (args, 0, 0.0);
+				double		lo = num (args, 1, v), hi = num (args, 2, v);
+
+				if (lo > hi)						{ double t = lo;	lo = hi;	hi = t; }
+				if (Double.isNaN (v))				return Double.valueOf (v);		// nothing to keep within
+				return Double.valueOf (Math.max (lo, Math.min (hi, v)));
+			}
+		});
 		math.set ("random", new LuaFunction ("math.random")
 		{
 			public Object call (Object[] args)
