@@ -1,5 +1,6 @@
--- Behaviour: GoToGlobalPositionFacing
--- 20070402 Francisco mart’n
+-- Behaviour: GoToPos
+-- 20070402 Francisco martï¿½n
+-- 20260924 Humberto Martinez
 
 -- Constants and parameters
 NET1LPO = chaos.NET1_LPO
