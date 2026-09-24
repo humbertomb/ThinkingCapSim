@@ -650,7 +650,7 @@
       "z": 0,
       "orientation": -90,
       "color": "red",
-      "shape": "./conf/3dmodels/net.3ds",
+      "shape": "./conf/3dmodels/aibo-net.3ds",
       "usecolor": true
     },
     {
@@ -660,7 +660,7 @@
       "z": 0,
       "orientation": 90,
       "color": "blue",
-      "shape": "./conf/3dmodels/net.3ds",
+      "shape": "./conf/3dmodels/aibo-net.3ds",
       "usecolor": true
     }
   ],
@@ -675,7 +675,7 @@
       "orientation": 0,
       "radius": 0.04,
       "color": "gray_dark",
-      "shape": "./conf/3dmodels/ball.3ds",
+      "shape": "./conf/3dmodels/aibo-ball.3ds",
       "usecolor": false,
       "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject",
       "movement": "ACCELERATED",
