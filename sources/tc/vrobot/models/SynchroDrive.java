@@ -38,6 +38,9 @@ import wucore.utils.math.Angles;
  * (vlin, vlat) -- and the two of them together are what its driving motor has to
  * cover, which is what limits them. Going sideways costs it nothing in turning
  * and nothing in speed but what the other direction takes.
+ *
+ * How fast it goes sideways is its UMAX (max lat speed), and a platform that
+ * says nothing of it does not go sideways at all.
  */
 public class SynchroDrive extends RobotModel
 {
