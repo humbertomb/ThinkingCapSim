@@ -1181,12 +1181,27 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 
 	static public String fmt (double v)
 	{
-		if (Math.abs (v - Math.rint (v)) < 1e-9)
+		return fmt (v, 3);
+	}
+
+	/**
+	 * A number as the property table shows it, with as many decimals as it is worth
+	 * showing: three for the sizes and the places of the world, which are metres,
+	 * and more for what is small by nature (the friction of an animated object,
+	 * which is thousandths and is worked out to millionths).
+	 */
+	static public String fmt (double v, int decimals)
+	{
+		if (Math.abs (v - Math.rint (v)) < Math.pow (10.0, -(decimals + 1)))
 			return Long.toString (Math.round (v));
-		String s = String.format (Locale.US, "%.3f", v);
+
+		String	s = String.format (Locale.US, "%." + Math.max (0, decimals) + "f", v);
+
 		while (s.endsWith ("0"))		s = s.substring (0, s.length () - 1);
+		if (s.endsWith ("."))			s = s.substring (0, s.length () - 1);	// a value too small to show is 0, not "0."
 		return s;
 	}
+
 
 	/* ------------------------------------------------------------------ */
 	/* Creation and deletion                                               */
@@ -2184,7 +2199,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 				if (name.equals ("acceleration"))	return fmt (ao.acceleration);
 				if (name.equals ("mass"))			return fmt (ao.mass);
 				if (name.equals ("coef_res"))		return fmt (ao.coef_res);
-				if (name.equals ("coef_fric"))		return fmt (ao.coef_fric);
+				if (name.equals ("coef_fric"))		return fmt (ao.coef_fric, WMAObject.FRIC_DECIMALS);
 			}
 			break;
 		}

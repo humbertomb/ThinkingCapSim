@@ -29,6 +29,9 @@ public class WMAObject extends WMObject
 	static public final double		DEF_COEF_RES		= 0.75;		// restitution coefficient
 	static public final double		DEF_COEF_FRIC		= 0.001;	// friction coefficient
 
+	/** Decimals kept of the friction, which is a small number worked out to millionths. */
+	static public final int			FRIC_DECIMALS		= 6;
+
 	public String				dynamics;						// Class implementing the dynamic behaviour (may be null)
 	public double				radius		= DEF_RADIUS;		// Virtual radius for the simulation (m)
 	public Movement				movement	= DEFAULT_MOVEMENT;
@@ -94,7 +97,7 @@ public class WMAObject extends WMObject
 		o.addProperty ("acceleration", World.num (acceleration));
 		o.addProperty ("mass", World.num (mass));
 		o.addProperty ("coef_res", World.num (coef_res));
-		o.addProperty ("coef_fric", World.num (coef_fric));
+		o.addProperty ("coef_fric", World.num (coef_fric, FRIC_DECIMALS));
 		return o;
 	}
 }

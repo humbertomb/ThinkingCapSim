@@ -655,7 +655,17 @@ public class World extends Object
 	/** Rounds a value to {@link #DECIMALS} decimals (integral values are written as integers). */
 	static public Number num (double v)
 	{
-		double	f = Math.pow (10.0, DECIMALS);
+		return num (v, DECIMALS);
+	}
+
+	/**
+	 * The same with as many decimals as a value is worth writing: four for the sizes
+	 * and the places of the world, which are metres, and more for what is small by
+	 * nature (the friction of an animated object, which is thousandths).
+	 */
+	static public Number num (double v, int decimals)
+	{
+		double	f = Math.pow (10.0, Math.max (0, decimals));
 		double	r = Math.round (v * f) / f;
 		if (Double.isNaN (v) || Double.isInfinite (v))		return Double.valueOf (v);
 		if ((r == Math.rint (r)) && (Math.abs (r) < 1e15))	return Long.valueOf ((long) r);
