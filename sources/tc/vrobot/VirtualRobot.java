@@ -226,7 +226,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		if (plot != null)
 		{
 			buffer[0] 	= RobotModel.share (item.vlin, rdesc.model.Vmax);
-			buffer[1] 	= RobotModel.share (item.vlat, rdesc.model.Umax);
+			buffer[1] 	= rdesc.model.shareLat (item.vlat);
 			buffer[2] 	= RobotModel.share (item.vrot, rdesc.model.Rmax);
 			plot.updateData (buffer);	
 		}

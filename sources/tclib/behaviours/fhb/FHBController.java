@@ -270,7 +270,7 @@ public class FHBController extends Controller
 		if (debug)
 		{
 			c_buffer[0] 	= tc.vrobot.RobotModel.share (vlin, rdesc.model.Vmax);
-			c_buffer[1] 	= tc.vrobot.RobotModel.share (vlat, rdesc.model.Umax);
+			c_buffer[1] 	= rdesc.model.shareLat (vlat);
 			c_buffer[2] 	= tc.vrobot.RobotModel.share (vrot, rdesc.model.Rmax);
 
 			if (localgfx)

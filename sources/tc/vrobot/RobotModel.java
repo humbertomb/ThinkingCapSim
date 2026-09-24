@@ -124,6 +124,17 @@ public abstract class RobotModel extends Object
 		return Math.max (Math.min (v / max, 1.0), -1.0);
 	}
 
+	/**
+	 * A lateral velocity as a share, for whoever draws what was commanded: of the
+	 * most the platform goes sideways when it goes sideways at all, and of the most
+	 * it goes forward when it does not, so that a vlat the platform makes nothing of
+	 * is seen as what it was asked for and not as nothing at all.
+	 */
+	public double shareLat (double vlat)
+	{
+		return share (vlat, (Umax > 0.0) ? Umax : Vmax);
+	}
+
 	/** How many times a lateral velocity nobody can carry out is said out loud before it is only counted. */
 	static protected final int					LAT_SAID	= 5;
 
