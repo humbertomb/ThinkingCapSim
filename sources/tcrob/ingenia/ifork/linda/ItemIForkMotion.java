@@ -35,7 +35,7 @@ public class ItemIForkMotion extends ItemMotion implements Serializable
 		this.horn			= TS_NONE;
 		this.lgt_coord		= TS_NONE;
 		this.frk_height		= 0.0;
-		this.set (0.0, 0.0, 0);
+		this.set (0.0, 0.0, 0.0, 0);
 	}	
 	
 	// Class methods

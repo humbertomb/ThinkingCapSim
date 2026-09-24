@@ -21,8 +21,10 @@ public abstract class RobotModel extends Object
 	public transient double						Vmax;			// Maximum linear velocity (m/s)
 	public transient double						Rmax;			// Maximum angular velocity (rad/s)
 
-	// Kynematics outputs
+	// Kynematics outputs: the velocities of the platform itself, whatever it is built
+	// with (the lateral one is zero on a platform that cannot be driven sideways)
     public transient double						vr, wr;			// Desired de-normalised velocities (translation, rotation)		[INPUT]
+    public transient double						ur;				// Desired de-normalised lateral velocity (m/s), to the left
 
 	// Robot position data (including simulated one)
 	public transient double						odom_x;			// Odometry-based position (m, m, rad)
@@ -88,9 +90,46 @@ public abstract class RobotModel extends Object
 	}
 	
 	// Abstract methdos
+	/** What the platform does with what it is built with: the wheels say it, each model in its own terms. */
 	public abstract void kynematics_direct (double inp1, double inp2);
-	public abstract void kynematics_inverse (double speed, double turn);
-	protected abstract void kynematics_simulation (double speed, double turn);
+
+	/**
+	 * What the platform is built with has to do to carry out a control action: the
+	 * three velocities of the platform ([m/s], [m/s], [rad/s]), of which the lateral
+	 * one is nothing to a platform that cannot be driven sideways
+	 * ({@link #lateral}).
+	 */
+	public abstract void kynematics_inverse (double vlin, double vlat, double vrot);
+	protected abstract void kynematics_simulation (double vlin, double vlat, double vrot);
+
+	/**
+	 * Whether the platform can be driven sideways, which is to say whether a lateral
+	 * velocity (vlat) means anything to it: a synchro drive steers every wheel
+	 * together and can, and a platform whose wheels point where they are built
+	 * cannot. Only the models that can say so.
+	 */
+	public boolean lateral ()								{ return false; }
+
+	/** How many times a lateral velocity nobody can carry out is said out loud before it is only counted. */
+	static protected final int					LAT_SAID	= 5;
+
+	private transient int						latsaid;		// how many such commands there have been
+
+	/**
+	 * What a platform that cannot be driven sideways makes of a lateral velocity:
+	 * nothing, said out loud the first few times so that whoever commanded it knows
+	 * why the robot is not doing it.
+	 */
+	protected double noLateral (double vlat)
+	{
+		if ((vlat != 0.0) && (latsaid < LAT_SAID))
+		{
+			System.out.println ("  [Model] " + getClass ().getSimpleName () + " cannot be driven sideways: vlat="
+								+ vlat + " m/s ignored");
+			latsaid++;
+		}
+		return 0.0;
+	}
 
 	// Instance methods
 	public void update (Properties props)
@@ -142,36 +181,56 @@ public abstract class RobotModel extends Object
 		data.odom_a		= Angles.radnorm_180 (data.odom_a + wr);
 	}
 
-	public void simulation (RobotData data, double speed, double turn, double dt)
+	public void simulation (RobotData data, double vlin, double vlat, double vrot, double dt)
 	{
-		double		rg_rho, rg_phi;				// Random gaussian variables (translation, totation)
-		double		rho, phi;					// Local polar-coordinates (translation, rotation)				[OUTPUT]		
+		double		rg_rho, rg_phi, rg_lat;		// Random gaussian variables (translation, rotation, lateral)
+		double		rho, phi, lat;				// Local coordinates (forward, rotation, sideways)				[OUTPUT]		
  				    	    	 		
 		// Compute robot command (inverse+direct kynematics)
-		kynematics_simulation (speed, turn);
+		kynematics_simulation (vlin, vlat, vrot);
 		
 		// Compute new position (local reference)
 		rho				= vr * dt;
+		lat				= ur * dt;
 		phi				= wr * dt;	
 
-		// Calculate real robot displacement
+		// Calculate real robot displacement: where it points it goes forward, and to
+		// the left of that it goes sideways (nowhere at all on a platform that cannot)
 		real_a			= Angles.radnorm_180 (real_a + phi);
 		real_x			+= rho * Math.cos (real_a);
 		real_y			+= rho * Math.sin (real_a);
+		if (lat != 0.0)
+		{
+			real_x		-= lat * Math.sin (real_a);
+			real_y		+= lat * Math.cos (real_a);
+		}
 		
-		// Calculate odometry based displacement (depending on robot velocity)
+		// Calculate odometry based displacement (depending on robot velocity). A
+		// platform that is not going sideways draws no random number for it, so that
+		// what it does is the same to the last decimal as it was before it could
 		rg_rho			= rho + rnd.nextGaussian (0.0, Math.pow (odom_et * rho, 2.0));
 		rg_phi			= phi + rnd.nextGaussian (odom_bias * phi, Math.pow (odom_er * phi, 2.0));
+		rg_lat			= (lat != 0.0) ? (lat + rnd.nextGaussian (0.0, Math.pow (odom_et * lat, 2.0))) : 0.0;
 			
 		odom_a			= Angles.radnorm_180 (odom_a + rg_phi);
 		odom_x			+= rg_rho * Math.cos (odom_a);
 		odom_y			+= rg_rho * Math.sin (odom_a);
+		if (rg_lat != 0.0)
+		{
+			odom_x		-= rg_lat * Math.sin (odom_a);
+			odom_y		+= rg_lat * Math.cos (odom_a);
+		}
 
 		// Calculate corrected odometry-based position
 		data.odom_a		= Angles.radnorm_180 (data.odom_a + rg_phi);
 		data.odom_rho	= rg_rho;
 		data.odom_x		+= rg_rho * Math.cos (data.odom_a);
 		data.odom_y		+= rg_rho * Math.sin (data.odom_a);
+		if (rg_lat != 0.0)
+		{
+			data.odom_x	-= rg_lat * Math.sin (data.odom_a);
+			data.odom_y	+= rg_lat * Math.cos (data.odom_a);
+		}
 	}
 	
 	public String toString ()

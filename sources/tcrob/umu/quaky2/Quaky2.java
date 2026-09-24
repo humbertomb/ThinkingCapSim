@@ -81,8 +81,8 @@ public class Quaky2 extends VirtualRobot
 	
 	// Motor control
 	protected DifferentialDrive				model;
-	protected double							speed;
-	protected double							turn;
+	protected double							vlin;					// what the platform was asked for (m/s, rad/s)
+	protected double							vrot;
 	protected int							ctrlmode;
     	
 	// Other local stuff
@@ -211,12 +211,12 @@ public class Quaky2 extends VirtualRobot
 		return (0.01376 * value - 4.9375) / 100.0;
 	}
 
-	protected void set_motors (double speed, double turn)
+	protected void set_motors (double vlin, double vrot)
 	{
     	int			ileft, iright;
 		
-		// Compute desired target wheels speed (m/s, m/s)
-		model.kynematics_inverse (speed, turn);
+		// Compute desired target wheels speed (m/s, m/s): it does not go sideways
+		model.kynematics_inverse (vlin, 0.0, vrot);
 		
 		// Convert commands to driver specific format
 		ileft	= (int) Math.round (model.dVl * KMOT);							// [pulses/s] 
@@ -231,17 +231,17 @@ public class Quaky2 extends VirtualRobot
 		if (driver != null)				driver.setMotors (ileft, iright);
 	}
 
-	protected void set_motors_raw (double speed, double turn)
+	protected void set_motors_raw (double vlin, double vrot)
 	{
-		double		tspeed, tturn;
+		double		tvlin, tvrot;
     	int			ileft, iright;
 		
 		// Scale joystick command to maximum velocities
-		tspeed	= speed * model.Vmax;											// [m/s]
-		tturn	= turn * model.Rmax;											// [rad/s]
+		tvlin	= vlin * model.Vmax;											// [m/s]
+		tvrot	= vrot * model.Rmax;											// [rad/s]
 
-		// Compute desired target wheels speed (m/s, m/s)
-		model.kynematics_inverse (tspeed, tturn);
+		// Compute desired target wheels speed (m/s, m/s): it does not go sideways
+		model.kynematics_inverse (tvlin, 0.0, tvrot);
 		
 		// Adapt commands to driver specific format 
 		ileft	= (int) Math.round (model.dVl * KMOT);							// [pulses/s] 
@@ -251,7 +251,7 @@ public class Quaky2 extends VirtualRobot
 		ileft	= Math.min (Math.max (ileft, -KOUTMAX), KOUTMAX);
 		iright	= Math.min (Math.max (iright, -KOUTMAX), KOUTMAX);
 		
-		if (debug)	System.out.println ("  [Quaky2] MANUAL <speed="+tspeed+" m/s, turn="+tturn+" rad/s> motL="+ileft+", motR="+iright);
+		if (debug)	System.out.println ("  [Quaky2] MANUAL <vlin="+tvlin+" m/s, vrot="+tvrot+" rad/s> motL="+ileft+", motR="+iright);
 
 		if (driver != null)				driver.setMotors (ileft, iright);
 	}
@@ -283,10 +283,10 @@ public class Quaky2 extends VirtualRobot
  			switch (ctrlmode)
 			{
 			case ItemMotion.CTRL_MANUAL:
-				set_motors_raw (speed, turn);
+				set_motors_raw (vlin, vrot);
 				break;
 			case ItemMotion.CTRL_AUTO:
-				set_motors (speed, turn);
+				set_motors (vlin, vrot);
 				break;
 			default:
 				System.out.println ("--[Quaky2] Unrecognised control-mode command");
@@ -500,8 +500,8 @@ public class Quaky2 extends VirtualRobot
 	{
     	super.notify_motion (space, item);
     	
-		speed		= item.speed;
-		turn		= item.turn;
+		vlin		= item.vlin;
+		vrot		= item.vrot;
 		ctrlmode	= item.ctrlmode;		
 	}
 }

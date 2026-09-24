@@ -267,7 +267,7 @@ public class RasmusControl_with_Planner extends Controller
 //		System.out.println("DEBUG: VEL = "+vel+" ROT = "+rot);
 		
 		/* Sends the values of the control variables to the robot motion engine */
-		setMotion(vel,rot*Math.PI/180);
+		setMotion(vel,0.0,rot*Math.PI/180);
 		
 		// updates the behaviour information in the linda space
 		if (sendDebugInformation) {

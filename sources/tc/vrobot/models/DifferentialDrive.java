@@ -67,11 +67,13 @@ public class DifferentialDrive extends RobotModel
 		wr			= (dVr - dVl) / b;
 	}
 	
-	public void kynematics_inverse (double speed, double turn)
+	public void kynematics_inverse (double vlin, double vlat, double vrot)
 	{
-		// Set motion commands into the correct range
-		vr	= Math.min (Math.max (speed, -Vmax), Vmax);
-		wr	= Math.min (Math.max (turn, -Rmax), Rmax);
+		// Set motion commands into the correct range: its wheels point where they are
+		// built, so there is no going sideways
+		vr	= Math.min (Math.max (vlin, -Vmax), Vmax);
+		ur	= noLateral (vlat);
+		wr	= Math.min (Math.max (vrot, -Rmax), Rmax);
 
 		// Compute robot command (inverse kynematics)
 		dVr	= (vr + b * wr * 0.5);
@@ -82,10 +84,10 @@ public class DifferentialDrive extends RobotModel
 		dVl	= Math.min (Math.max (dVl, -Vmax), Vmax);
 	}
 
-	public void kynematics_simulation (double speed, double turn)
+	public void kynematics_simulation (double vlin, double vlat, double vrot)
 	{
 		// Compute robot command (inverse kynematics)
-		kynematics_inverse (speed, turn);
+		kynematics_inverse (vlin, vlat, vrot);
 		
 		// Compute robot displacement (direct kynematics)
 		kynematics_direct (dVl, dVr);

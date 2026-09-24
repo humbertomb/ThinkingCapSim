@@ -154,7 +154,10 @@ public class LuaHelp
 		{ "getBallVel", "", "How fast the ball is going, x and y in mm a second." },
 		{ "lps_getAstray", "", "Whether the robot is lost: <span class=\"mono\">astray</span> is always 0, as the simulation knows where it is." },
 		{ "setVlin", "mm/s", "How fast to go forward. Backwards is negative." },
-		{ "setVlat", "mm/s", "How fast to go sideways, for a robot that can (a wheeled one cannot, and it is ignored)." },
+		{ "setVlat", "mm/s", "How fast to go sideways, to the left of the robot. It is commanded like the other two and it is "
+					+ "the platform that carries it out or not: a synchro drive steers every wheel together and goes sideways, "
+					+ "and a platform whose wheels point where they are built (a differential drive, a tricycle) says so and "
+					+ "makes nothing of it." },
 		{ "setVrot", "deg/s", "How fast to turn. To the left is positive." },
 		{ "setVelocities", "vlin, vlat, vrot", "The three at once: along, across and around, in mm/s and deg/s." },
 		{ "setBehavior", "name", "The behaviour to run: the file <span class=\"mono\">&lt;name&gt;.lua</span> of the folder of the "

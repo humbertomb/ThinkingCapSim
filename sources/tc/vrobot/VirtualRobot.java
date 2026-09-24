@@ -28,7 +28,7 @@ import wucore.gui.PlotWindow;
 public abstract class VirtualRobot extends StdThread implements ChildWindowListener
 {
 	// General constants
-	static protected final String[]	labels		= {"speed", "turn"};
+	static protected final String[]	labels		= {"vlin", "vlat", "vrot"};
 	
 	protected RobotDesc				rdesc;				// Robot description
 	protected PlotWindow			plot;				// Window to plot current motion command
@@ -117,7 +117,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		data_ctrl	= new RobotDataCtrl ();
 
 		// Additional initialisations
-		buffer		= new double[2];
+		buffer		= new double[3];
 	}
 	
 	protected void configure ()
@@ -221,18 +221,23 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	// Template instance methods. Subclasses MAY implement
 	public void notify_motion (String space, ItemMotion item)
 	{
-    	double		speed, turn;
-    	
-		speed	= item.speed;
-		turn		= item.turn;
-		
-		// Plot current motion command
+		// Plot current motion command: the three velocities it was asked for, each as
+		// a share of the most the platform does that way
 		if (plot != null)
 		{
-			buffer[0] 	= Math.max (Math.min (speed, 1.0), -1.0);
-			buffer[1] 	= Math.max (Math.min (turn / rdesc.model.Rmax, 1.0), -1.0);
+			buffer[0] 	= normalised (item.vlin, rdesc.model.Vmax);
+			buffer[1] 	= normalised (item.vlat, rdesc.model.Vmax);
+			buffer[2] 	= normalised (item.vrot, rdesc.model.Rmax);
 			plot.updateData (buffer);	
 		}
+	}
+
+	/** A velocity as a share of the most the platform does, within -1 .. 1. */
+	static private double normalised (double v, double max)
+	{
+		if (!Double.isFinite (v))			return 0.0;
+		if (!(max > 0.0))					return Math.max (Math.min (v, 1.0), -1.0);
+		return Math.max (Math.min (v / max, 1.0), -1.0);
 	}
 
 	public void notify_execution (String space, ItemExecution item) 

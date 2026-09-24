@@ -103,12 +103,12 @@ public class Rasmus extends VirtualRobot
 	public synchronized void notify_motion (String space, ItemMotion item)
 	{
     	int	 ctrlmode;
-    	double speed, turn;
+    	double vlin, vrot;
     	super.notify_motion (space, item);
     	
     	
-		speed		= item.speed;
-		turn		= item.turn;
+		vlin		= item.vlin;
+		vrot		= item.vrot;
 		ctrlmode	= item.ctrlmode;
 		
 				
@@ -120,19 +120,19 @@ public class Rasmus extends VirtualRobot
 			{
 				case ItemMotion.CTRL_MANUAL:
 				// Motor control stuff
-						driver.motor( speed, turn);//((turn*180)/Math.PI) );
+						driver.motor( vlin, vrot);//((vrot*180)/Math.PI) );
 				break;
 				case ItemMotion.CTRL_AUTO:
 				// Motor control stuff
-					//driver.motor( speed, ((turn*180)/Math.PI) );
-					driver.motor( speed, turn/2);
+					//driver.motor( vlin, ((vrot*180)/Math.PI) );
+					driver.motor( vlin, vrot/2);
 				break;
 				default:
 					System.out.println ("--[Rasmus] Unrecognised control-mode command");
 			}
 		}
-		old_speed = speed;
-		old_turn = turn;
+		old_speed = vlin;
+		old_turn = vrot;
 	}
 	
 	

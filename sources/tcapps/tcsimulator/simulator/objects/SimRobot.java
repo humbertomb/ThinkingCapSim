@@ -26,8 +26,9 @@ import wucore.utils.geom.*;
 public class SimRobot extends VirtualRobot
 {
 	// Robot status internal data
-	protected double				speed;					// Current motion control commands
-	protected double				turn;
+	protected double				vlin;					// Current motion control commands
+	protected double				vlat;
+	protected double				vrot;
 	
 	// Simulation parameters
 	protected Simulator				simul;
@@ -89,8 +90,9 @@ public class SimRobot extends VirtualRobot
 	public void reset ()
 	{
 		// Initialise default motion commands		
-		turn	= 0.0;
-		speed	= 0.0;
+		vlin	= 0.0;
+		vlat	= 0.0;
+		vrot	= 0.0;
 		
 		simul.reset (r_index, data, map);
 	}
@@ -98,8 +100,9 @@ public class SimRobot extends VirtualRobot
 	/** Places the robot at a given pose (x, y, angle) instead of the START of the world; the world START is left untouched. */
 	public void reset (Point3 start)
 	{
-		turn	= 0.0;
-		speed	= 0.0;
+		vlin	= 0.0;
+		vlat	= 0.0;
+		vrot	= 0.0;
 		simul.reset (r_index, data, start.x (), start.y (), start.z ());
 		data.location (start.x (), start.y (), start.z ());
 	}
@@ -114,7 +117,7 @@ public class SimRobot extends VirtualRobot
 			dt = rdesc.DTIME / 1000.0;							// Non real-time simulation
 
 		// Compute simulation
-		simul.simulate (r_index, data, speed, turn, cycson, cycir, cyclrf, cyclsb, cycvis, dt);    
+		simul.simulate (r_index, data, vlin, vlat, vrot, cycson, cycir, cyclrf, cyclsb, cycvis, dt);    
 		
 		// Take a frame of whichever camera is due for one
 		process_cameras (dtime);
@@ -231,13 +234,14 @@ public class SimRobot extends VirtualRobot
 	
 	public void notify_motion (String space, ItemMotion item)
 	{
-		double		kspeed, kturn;
+		double		kvlin, kvlat, kvrot;
 		int			ctrlmode;
 		
 		super.notify_motion (space, item);
 		
-		kspeed		= item.speed;
-		kturn		= item.turn;
+		kvlin		= item.vlin;
+		kvlat		= item.vlat;
+		kvrot		= item.vrot;
 		ctrlmode		= item.ctrlmode;		
 		
 		// Movement commands
@@ -246,12 +250,14 @@ public class SimRobot extends VirtualRobot
 			switch (ctrlmode)
 			{
 			case ItemMotion.CTRL_MANUAL:
-				speed	= kspeed * model.Vmax;
-				turn		= kturn * model.Rmax;
+				vlin	= kvlin * model.Vmax;
+				vlat	= kvlat * model.Vmax;
+				vrot	= kvrot * model.Rmax;
 				break;
 			case ItemMotion.CTRL_AUTO:
-				speed	= kspeed;
-				turn		= kturn;
+				vlin	= kvlin;
+				vlat	= kvlat;
+				vrot	= kvrot;
 				break;
 			default:
 				System.out.println ("--[Sim] Unrecognised control-mode command");

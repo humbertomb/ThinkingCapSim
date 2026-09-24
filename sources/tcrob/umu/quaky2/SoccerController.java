@@ -307,7 +307,7 @@ public class SoccerController extends BGController
 		// without a plan (nobody has said what to do) the robot stays where it is
 		if (!has_plan)
 		{
-			setMotion (0.0, 0.0);
+			setMotion (0.0, 0.0, 0.0);
 			return;
 		}
 
@@ -521,7 +521,7 @@ double n1anchor, n2anchor;
 		}
 		
 		// Apply the specified action
-		setMotion (vr, wr);
+		setMotion (vr, 0.0, wr);				// a differential drive does not go sideways
 	}
 
 	public void notify_config (String space, ItemConfig item)

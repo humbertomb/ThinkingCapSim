@@ -33,8 +33,8 @@ import wucore.utils.math.*;
  *
  * The script reaches the robot through the table it knows as
  * <code>chaos</code> ({@link Chaos}): it reads the objects of the LPS and where
- * the robot is, and it commands a speed, a turn rate and a behaviour, which the
- * controller then carries out. A behaviour the script chooses
+ * the robot is, and it commands the three velocities of the platform (vlin,
+ * vlat, vrot) and a behaviour, which the controller then carries out. A behaviour the script chooses
  * (<code>chaos.setBehavior</code>) is another script of the library, read from
  * <code>BEH</code> and run right after the program, so a program can be no more
  * than the choosing of behaviours if that is all it wants to be.
@@ -133,10 +133,11 @@ public class LuaController extends Controller
 		lua.set ("chaos", chaos.table ());
 
 		// Initialize debug modules
-		c_buffer	= new double[2];
-		c_labels	= new String[4];
-		c_labels[0]	= "speed";
-		c_labels[1]	= "turn";
+		c_buffer	= new double[3];
+		c_labels	= new String[3];			// the three velocities of the control action
+		c_labels[0]	= "vlin";
+		c_labels[1]	= "vlat";
+		c_labels[2]	= "vrot";
 		c_dump		= new LogFile (PREFFIX, ".log");
 		c_plot		= new LogPlot ("Controller Output", "step", "values");
 
@@ -323,11 +324,11 @@ public class LuaController extends Controller
 	{
 		int					result;
 		LPO					l_looka;
-		double				speed, turn;
+		double				vlin, vlat, vrot;
 
 		if (!has_goal)
 		{
-			setMotion (0.0, 0.0);
+			setMotion (0.0, 0.0, 0.0);
 			return;
 		}
 
@@ -372,24 +373,27 @@ public class LuaController extends Controller
 		step ();
 
 		// What the program commanded
-		speed	= chaos.speed ();
-		turn	= chaos.turn ();
+		vlin	= chaos.linear ();
+		vlat	= chaos.lateral ();
+		vrot	= chaos.rotation ();
 
 		// Set action
 		result	= inGoal ();
 		switch (result)
 		{
 		case ItemBehResult.T_FINISHED:
-			speed 	= 0.0;
-			turn	= 0.0;
+			vlin 	= 0.0;
+			vlat	= 0.0;
+			vrot	= 0.0;
 
 			// Notify Linda Space the task has been finished
 			setResult (result, ItemBehResult.F_OK, idtask);
 			break;
 
 		case ItemBehResult.T_FAILED:
-			speed 	= 0.0;
-			turn	= 0.0;
+			vlin 	= 0.0;
+			vlat	= 0.0;
+			vrot	= 0.0;
 
 			// Notify Linda Space the task has failed
 			setResult (result, ItemBehResult.F_BEHIND, idtask);
@@ -399,17 +403,19 @@ public class LuaController extends Controller
 		default:
 			if (need_looka && !looka.valid ())
 			{
-				speed 	= 0.0;
-				turn	= 0.0;
+				vlin 	= 0.0;
+				vlat	= 0.0;
+				vrot	= 0.0;
 			}
 		}
-		setMotion (speed, turn);
+		setMotion (vlin, vlat, vrot);
 
 		// Plot current control commands
 		if (localgfx || dump)
 		{
-			c_buffer[0] 	= Math.max (Math.min (speed / rdesc.model.Vmax, 1.0), -1.0);
-			c_buffer[1] 	= Math.max (Math.min (turn / rdesc.model.Rmax, 1.0), -1.0);
+			c_buffer[0] 	= Math.max (Math.min (vlin / rdesc.model.Vmax, 1.0), -1.0);
+			c_buffer[1] 	= Math.max (Math.min (vlat / rdesc.model.Vmax, 1.0), -1.0);
+			c_buffer[2] 	= Math.max (Math.min (vrot / rdesc.model.Rmax, 1.0), -1.0);
 
 			if (localgfx)
 				c_plot.draw (c_buffer);

@@ -394,7 +394,7 @@ public class IForkKLoc extends Object
 		}
 
 		// cinematica inversa
-		model.kynematics_inverse(v,w);
+		model.kynematics_inverse(v,0.0,w);
 		delta 	= model.del;
 		vm 		= model.vm;
 		velAng 	= w;

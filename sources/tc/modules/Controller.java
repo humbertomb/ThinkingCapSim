@@ -40,38 +40,44 @@ public abstract class Controller extends StdThread
 		btuple	= new Tuple (Tuple.BEHRESULT, bitem);
 	}
 
-	public void setMotion (double speed, double turn)
+	/**
+	 * Commands the platform: how fast it is to go forward, how fast sideways and how
+	 * fast it is to turn ([m/s], [m/s], [rad/s]). A platform that cannot be driven
+	 * sideways makes nothing of the lateral velocity, which is a matter of its
+	 * kinematics model.
+	 */
+	public void setMotion (double vlin, double vlat, double vrot)
 	{
 		if (mitem == null)		return;
-		if (!sane (speed, turn))	{ speed = 0.0;	turn = 0.0; }
+		if (!sane (vlin, vlat, vrot))	{ vlin = 0.0;	vlat = 0.0;	vrot = 0.0; }
 		
-		mitem.set (speed, turn, System.currentTimeMillis ());
+		mitem.set (vlin, vlat, vrot, System.currentTimeMillis ());
 		linda.write (mtuple);
 	}
 	
-	public void setMotion (int mode, double speed, double turn)
+	public void setMotion (int mode, double vlin, double vlat, double vrot)
 	{
 		if (mitem == null)		return;
-		if (!sane (speed, turn))	{ speed = 0.0;	turn = 0.0; }
+		if (!sane (vlin, vlat, vrot))	{ vlin = 0.0;	vlat = 0.0;	vrot = 0.0; }
 		
-		mitem.set (mode, speed, turn, System.currentTimeMillis ());
+		mitem.set (mode, vlin, vlat, vrot, System.currentTimeMillis ());
 		linda.write (mtuple);
 	}
 	
 	/**
 	 * Whether a command can be carried out at all: a controller that has divided by
-	 * zero somewhere asks for a speed that is not a number, and a robot commanded
+	 * zero somewhere asks for a velocity that is not a number, and a robot commanded
 	 * with one has no pose from then on, which stops the whole simulation (the
 	 * camera of a robot is the first thing to refuse it). Such a command is dropped
 	 * and the robot stands still, said out loud the first few times.
 	 */
-	protected boolean sane (double speed, double turn)
+	protected boolean sane (double vlin, double vlat, double vrot)
 	{
-		if (Double.isFinite (speed) && Double.isFinite (turn))		return true;
+		if (Double.isFinite (vlin) && Double.isFinite (vlat) && Double.isFinite (vrot))		return true;
 		
 		if (insane < INSANE_SAID)
-			System.out.println ("  [CNTL] " + getClass ().getSimpleName () + " asked for speed " + speed + " and turn " + turn
-								+ ": no motion commanded");
+			System.out.println ("  [CNTL] " + getClass ().getSimpleName () + " asked for vlin " + vlin + ", vlat " + vlat
+								+ " and vrot " + vrot + ": no motion commanded");
 		insane++;
 		return false;
 	}
@@ -93,7 +99,7 @@ public abstract class Controller extends StdThread
 	protected void reset ()
 	{
 		insane	= 0;
-		setMotion (0.0, 0.0);
+		setMotion (0.0, 0.0, 0.0);
 	}
 
 	public void notify_config (String space, ItemConfig item)

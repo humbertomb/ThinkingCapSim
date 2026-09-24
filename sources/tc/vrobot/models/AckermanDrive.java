@@ -83,11 +83,13 @@ public class AckermanDrive extends RobotModel
 		lvm		= vm;
 	}
 	
-	public void kynematics_inverse (double speed, double turn)
+	public void kynematics_inverse (double vlin, double vlat, double vrot)
 	{
-		// Set motion commands into the correct range
-		vr	= Math.min (Math.max (speed, -Vmax), Vmax);
-		wr	= Math.min (Math.max (turn, -Rmax), Rmax);
+		// Set motion commands into the correct range: a steered axle points the
+		// platform, it does not take it sideways
+		vr	= Math.min (Math.max (vlin, -Vmax), Vmax);
+		ur	= noLateral (vlat);
+		wr	= Math.min (Math.max (vrot, -Rmax), Rmax);
 
 		// Compute robot command (inverse kynematics)
 		if( (vr == 0.0))
@@ -106,10 +108,10 @@ public class AckermanDrive extends RobotModel
 		del	= Math.min (Math.max (del, -STRmax), STRmax);
 	}
 	
-	public void kynematics_simulation (double speed, double turn)
+	public void kynematics_simulation (double vlin, double vlat, double vrot)
 	{
 		// Compute robot command (inverse kynematics)
-		kynematics_inverse (speed, turn);
+		kynematics_inverse (vlin, vlat, vrot);
 		
 		// Compute robot displacement (direct kynematics)
 		kynematics_direct (vm, del);

@@ -32,11 +32,13 @@ public class FHBController extends Controller
 		
 	// Controller debug
 	protected LogPlot				c_plot;
+	protected LogFile				c_dump;
 	protected double[]				c_buffer;
 	protected String[]				c_labels;
 	
 	// Behaviour fusion debug
 	private LogPlot					b_plot;
+	private LogFile					b_dump;
 	private double[]				b_buffer;
 	
 	/* Goal and task related variables */
@@ -112,12 +114,15 @@ public class FHBController extends Controller
 		looka_dst	= 0.75;
 		
 		// Initialise debug modules
-		c_buffer	= new double[2];
-		c_labels	= new String[4];
-		c_labels[0]	= "speed";
-		c_labels[1]	= "turn";
+		c_buffer	= new double[3];
+		c_labels	= new String[3];			// the three velocities of the control action
+		c_labels[0]	= "vlin";
+		c_labels[1]	= "vlat";
+		c_labels[2]	= "vrot";
+		c_dump		= new LogFile (PREFFIX, ".log");
 		c_plot		= new LogPlot ("Controller Output", "step", "values");
 		
+		b_dump		= new LogFile (PREFFIX, ".beh");
 		b_plot		= new LogPlot ("Behaviour Fusion", "step", "DoA");
 		b_plot.setImpulses (true);
 		b_plot.setYRange (0.0, 1.0);		
@@ -167,7 +172,7 @@ public class FHBController extends Controller
 		LPOSensorGroup		group;
 		LPO[]				lpos;
 		LPO					l_looka;
-		double				speed, turn;
+		double				vlin, vlat, vrot;
 
 		// Compute look-ahead point
 		pos.set (lps.cur);
@@ -224,24 +229,27 @@ public class FHBController extends Controller
 		output.defuzzify();
 		
 		// Read the specified action from FHB executor
-		speed	= output.getCrispValue(ControlVariables.SPEED);
-		turn	= output.getCrispValue(ControlVariables.ROTATION) * Angles.DTOR;
+		vlin	= output.getCrispValue(ControlVariables.SPEED);
+		vlat	= 0.0;										// the fusion of behaviours commands no lateral velocity
+		vrot	= output.getCrispValue(ControlVariables.ROTATION) * Angles.DTOR;
 
 		// Set action
 		result	= inGoal ();
 		switch (result)
 		{
 		case ItemBehResult.T_FINISHED:
-			speed 	= 0.0;
-			turn	= 0.0;
+			vlin 	= 0.0;
+			vlat	= 0.0;
+			vrot	= 0.0;
 			
 			// Notify Linda Space the task has been finished
 			setResult (result, ItemBehResult.F_OK, idtask);
 			break;
 			
 		case ItemBehResult.T_FAILED:
-			speed 	= 0.0;
-			turn	= 0.0;
+			vlin 	= 0.0;
+			vlat	= 0.0;
+			vrot	= 0.0;
 			
 			// Notify Linda Space the task has failed
 			setResult (result, ItemBehResult.F_BEHIND, idtask);			// or ItemBehResult.F_SIDE
@@ -251,20 +259,24 @@ public class FHBController extends Controller
 		default:
 			if (!looka.valid ())
 			{
-				speed 	= 0.0;
-				turn	= 0.0;
+				vlin 	= 0.0;
+				vlat	= 0.0;
+				vrot	= 0.0;
 			}
 		}
-		setMotion (speed, turn);
+		setMotion (vlin, vlat, vrot);
 
 		// Plot current control commands
 		if (debug)
 		{
-			c_buffer[0] 	= Math.max (Math.min (speed / rdesc.model.Vmax, 1.0), -1.0);
-			c_buffer[1] 	= Math.max (Math.min (turn / rdesc.model.Rmax, 1.0), -1.0);
+			c_buffer[0] 	= Math.max (Math.min (vlin / rdesc.model.Vmax, 1.0), -1.0);
+			c_buffer[1] 	= Math.max (Math.min (vlat / rdesc.model.Vmax, 1.0), -1.0);
+			c_buffer[2] 	= Math.max (Math.min (vrot / rdesc.model.Rmax, 1.0), -1.0);
 
 			if (localgfx)
 				c_plot.draw (c_buffer);	
+			else
+				c_dump.write (c_buffer);
 		}
 	}
 	
@@ -324,6 +336,8 @@ public class FHBController extends Controller
 
 			if (localgfx)
 				b_plot.draw (b_buffer);	
+			else if (!localgfx)
+				b_dump.write (b_buffer);
 		}
 	}
 	
@@ -459,6 +473,17 @@ public class FHBController extends Controller
 					b_plot.open (labels);
 				c_plot.open (c_labels);
 			}
+			else
+			{
+				if (labels != null)		
+					b_dump.open (labels);
+				c_dump.open (c_labels);
+			}
+		}
+		else
+		{
+			b_dump.close ();
+			c_dump.close ();
 		}
 	}
 	

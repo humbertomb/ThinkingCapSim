@@ -26,8 +26,8 @@ import wucore.utils.math.*;
  *
  * The scripts reach the robot through the table they know as
  * <code>chaos</code> ({@link Chaos}): they read the objects of the LPS and
- * where the robot is, and they command a speed, a turn rate and a behaviour,
- * which the controller then carries out.
+ * where the robot is, and they command the three velocities of the platform
+ * (vlin, vlat, vrot) and a behaviour, which the controller then carries out.
  *
  * Settings:
  * <pre>
@@ -102,10 +102,11 @@ public class HFSMController extends Controller
 		chaos		= new Chaos ();
 
 		// Initialize debug modules
-		c_buffer	= new double[2];
-		c_labels	= new String[4];
-		c_labels[0]	= "speed";
-		c_labels[1]	= "turn";
+		c_buffer	= new double[3];
+		c_labels	= new String[3];			// the three velocities of the control action
+		c_labels[0]	= "vlin";
+		c_labels[1]	= "vlat";
+		c_labels[2]	= "vrot";
 		c_plot		= new LogPlot ("Controller Output", "step", "values");
 
 		// Load the machine of states
@@ -206,11 +207,11 @@ public class HFSMController extends Controller
 	{
 		int					result;
 		LPO					l_looka;
-		double				speed, turn;
+		double				vlin, vlat, vrot;
 
 		if (!has_goal)
 		{
-			setMotion (0.0, 0.0);
+			setMotion (0.0, 0.0, 0.0);
 			return;
 		}
 
@@ -256,24 +257,27 @@ public class HFSMController extends Controller
 		machine.step ();
 
 		// What the scripts commanded
-		speed	= chaos.speed ();
-		turn	= chaos.turn ();
+		vlin	= chaos.linear ();
+		vlat	= chaos.lateral ();
+		vrot	= chaos.rotation ();
 
 		// Set action
 		result	= inGoal ();
 		switch (result)
 		{
 		case ItemBehResult.T_FINISHED:
-			speed 	= 0.0;
-			turn	= 0.0;
+			vlin 	= 0.0;
+			vlat	= 0.0;
+			vrot	= 0.0;
 
 			// Notify Linda Space the task has been finished
 			setResult (result, ItemBehResult.F_OK, idtask);
 			break;
 
 		case ItemBehResult.T_FAILED:
-			speed 	= 0.0;
-			turn	= 0.0;
+			vlin 	= 0.0;
+			vlat	= 0.0;
+			vrot	= 0.0;
 
 			// Notify Linda Space the task has failed
 			setResult (result, ItemBehResult.F_BEHIND, idtask);
@@ -283,17 +287,19 @@ public class HFSMController extends Controller
 		default:
 			if (need_looka && !looka.valid ())
 			{
-				speed 	= 0.0;
-				turn	= 0.0;
+				vlin 	= 0.0;
+				vlat	= 0.0;
+				vrot	= 0.0;
 			}
 		}
-		setMotion (speed, turn);
+		setMotion (vlin, vlat, vrot);
 
 		// Plot current control commands
 		if (localgfx)
 		{
-			c_buffer[0] 	= Math.max (Math.min (speed / rdesc.model.Vmax, 1.0), -1.0);
-			c_buffer[1] 	= Math.max (Math.min (turn / rdesc.model.Rmax, 1.0), -1.0);
+			c_buffer[0] 	= Math.max (Math.min (vlin / rdesc.model.Vmax, 1.0), -1.0);
+			c_buffer[1] 	= Math.max (Math.min (vlat / rdesc.model.Vmax, 1.0), -1.0);
+			c_buffer[2] 	= Math.max (Math.min (vrot / rdesc.model.Rmax, 1.0), -1.0);
 			c_plot.draw (c_buffer);
 		}
 	}

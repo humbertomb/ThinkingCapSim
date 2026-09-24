@@ -159,15 +159,23 @@ public class Chaos
 	public void ballVelocity (double vx, double vy)				{ ballvel.set (vx, vy); }
 	public void role (String r)									{ role = r; }
 
-	/** What the scripts asked for, in what ThinkingCap uses: metres a second. */
-	public double speed ()										{ return vlin / MM; }
-	/** What the scripts asked for, in radians a second. */
-	public double turn ()										{ return vrot * Angles.DTOR; }
+	/*
+	 * What the scripts asked for, the three velocities of the control action, in what
+	 * ThinkingCap works in: the scripts say millimetres a second and degrees a
+	 * second, and these are metres a second and radians a second, which is what the
+	 * controller commands and the kinematics carry out.
+	 */
+	/** How fast the scripts asked to go forward [m/s]. */
+	public double linear ()										{ return vlin / MM; }
+	/** How fast the scripts asked to go sideways, to the left of the robot [m/s]. */
 	public double lateral ()									{ return vlat / MM; }
+	/** How fast the scripts asked to turn [rad/s]. */
+	public double rotation ()									{ return vrot * Angles.DTOR; }
 
+	/* The same three as the scripts themselves said them: mm/s, mm/s and deg/s. */
 	public double vlin ()										{ return vlin; }
-	public double vrot ()										{ return vrot; }
 	public double vlat ()										{ return vlat; }
+	public double vrot ()										{ return vrot; }
 
 	/** The behaviour the machine chose, or null when it has chosen none. */
 	public String behaviour ()									{ return behaviour; }

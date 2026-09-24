@@ -83,10 +83,11 @@ public class BGController extends Controller
 		interp	= new Interpreter ();	
 		
 		// Initialize debug modules
-		c_buffer	= new double[2];
-		c_labels	= new String[4];
-		c_labels[0]	= "speed";
-		c_labels[1]	= "turn";
+		c_buffer	= new double[3];
+		c_labels	= new String[3];			// the three velocities of the control action
+		c_labels[0]	= "vlin";
+		c_labels[1]	= "vlat";
+		c_labels[2]	= "vrot";
 		c_plot		= new LogPlot ("Controller Output", "step", "values");
 		
 		b_dump		= new LogFile (PREFFIX, ".beh");
@@ -193,11 +194,11 @@ public class BGController extends Controller
 		LPOSensorRange		virtual;
 		LPOSensorGroup		group;
 		LPO					l_looka;
-		double				speed, turn;
+		double				vlin, vlat, vrot;
 
 		if (!has_goal)
 		{
-			setMotion (0.0, 0.0);
+			setMotion (0.0, 0.0, 0.0);
 			return;
 		}
 		
@@ -250,24 +251,27 @@ public class BGController extends Controller
 		interp.agents (program);
 
 		// Read the specified action from BG interpreter
-		speed	= interp.access ("speed");
-		turn	= interp.access ("turn") * Angles.DTOR;
+		vlin	= interp.access ("speed");
+		vlat	= 0.0;										// a BG program commands no lateral velocity
+		vrot	= interp.access ("turn") * Angles.DTOR;
 
 		// Set action
 		result	= inGoal ();
 		switch (result)
 		{
 		case ItemBehResult.T_FINISHED:
-			speed 	= 0.0;
-			turn	= 0.0;
+			vlin 	= 0.0;
+			vlat	= 0.0;
+			vrot	= 0.0;
 			
 			// Notify Linda Space the task has been finished
 			setResult (result, ItemBehResult.F_OK, idtask);
 			break;
 			
 		case ItemBehResult.T_FAILED:
-			speed 	= 0.0;
-			turn	= 0.0;
+			vlin 	= 0.0;
+			vlat	= 0.0;
+			vrot	= 0.0;
 			
 			// Notify Linda Space the task has failed
 			setResult (result, ItemBehResult.F_BEHIND, idtask);			// or ItemBehResult.F_SIDE
@@ -277,17 +281,19 @@ public class BGController extends Controller
 		default:
 			if (need_looka && !looka.valid ())
 			{
-				speed 	= 0.0;
-				turn	= 0.0;
+				vlin 	= 0.0;
+				vlat	= 0.0;
+				vrot	= 0.0;
 			}
 		}
-		setMotion (speed, turn);
+		setMotion (vlin, vlat, vrot);
 
 		// Plot current control commands
 		if (localgfx)
 		{
-			c_buffer[0] 	= Math.max (Math.min (speed / rdesc.model.Vmax, 1.0), -1.0);
-			c_buffer[1] 	= Math.max (Math.min (turn / rdesc.model.Rmax, 1.0), -1.0);
+			c_buffer[0] 	= Math.max (Math.min (vlin / rdesc.model.Vmax, 1.0), -1.0);
+			c_buffer[1] 	= Math.max (Math.min (vlat / rdesc.model.Vmax, 1.0), -1.0);
+			c_buffer[2] 	= Math.max (Math.min (vrot / rdesc.model.Rmax, 1.0), -1.0);
 			c_plot.draw (c_buffer);	
 		}
 	}

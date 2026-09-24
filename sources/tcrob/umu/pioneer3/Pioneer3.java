@@ -94,8 +94,8 @@ public class Pioneer3 extends VirtualRobot
 	protected Laser[]					lasers;
 	
 	// Motor control
-	protected double						speed;
-	protected double						turn;
+	protected double						vlin;					// what the platform was asked for (m/s, rad/s)
+	protected double						vrot;
 	protected int						ctrlmode;
 	
 	// Other local stuff
@@ -256,20 +256,20 @@ public class Pioneer3 extends VirtualRobot
 			switch (ctrlmode)
 			{
 			case ItemMotion.CTRL_MANUAL:
-				double		tspeed, tturn;
+				double		tvlin, tvrot;
 				
 				// Scale joystick command to maximum velocities
-				tspeed	= speed * model.Vmax;								// [m/s]
-				tturn	= turn * model.Rmax * 0.2;						// [rad/s]
+				tvlin	= vlin * model.Vmax;								// [m/s]
+				tvrot	= vrot * model.Rmax * 0.2;						// [rad/s]
 				
-				// Compute desired target wheels speed (m/s, m/s)
-				model.kynematics_inverse (tspeed, tturn);	
+				// Compute desired target wheels speed (m/s, m/s): it does not go sideways
+				model.kynematics_inverse (tvlin, 0.0, tvrot);	
 				driver.setMotors (model.dVl, model.dVr);
 				break;
 				
 			case ItemMotion.CTRL_AUTO:
 				// Compute desired target wheels speed (m/s, m/s)
-				model.kynematics_inverse (speed, turn);
+				model.kynematics_inverse (vlin, 0.0, vrot);
 				driver.setMotors (model.dVl, model.dVr);
 				break;
 				
@@ -286,8 +286,8 @@ public class Pioneer3 extends VirtualRobot
 	{
 		super.notify_motion (space, item);
 		
-		speed		= item.speed;
-		turn		= item.turn;
+		vlin		= item.vlin;
+		vrot		= item.vrot;
 		ctrlmode	= item.ctrlmode;		
 	}
 }

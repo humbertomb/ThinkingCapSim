@@ -1113,7 +1113,7 @@ public class Simulator
 	}
 	
 	
-	synchronized public void simulate (int robotind, RobotData data, double speed, double turn, 
+	synchronized public void simulate (int robotind, RobotData data, double vlin, double vlat, double vrot, 
 			int cycson, int cycir, int cyclrf, int cyclsb, int cycvis, double dt)
 	{
 		int			i;
@@ -1123,7 +1123,7 @@ public class Simulator
 		
 		// Compute model based displacement        
 		MODEL[robotind].backup (data);
-		MODEL[robotind].simulation (data, speed, turn, dt);		
+		MODEL[robotind].simulation (data, vlin, vlat, vrot, dt);		
 		
 		// Send internal data up to LPS
 		if (MODEL[robotind] instanceof TricycleDrive)

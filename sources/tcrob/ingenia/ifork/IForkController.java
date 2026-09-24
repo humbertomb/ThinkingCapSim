@@ -180,8 +180,8 @@ public class IForkController extends Controller
 		// Initialise debug variables
 		c_buffer		= new double[4];
 		c_labels		= new String[4];
-		c_labels[0]		= "speed";
-		c_labels[1]		= "turn";
+		c_labels[0]		= "vlin";
+		c_labels[1]		= "vrot";
 		c_labels[2]		= "e_ang";
 		c_labels[3]		= "e_pos";
 	}
@@ -1141,7 +1141,7 @@ public class IForkController extends Controller
 			lcoord	= coord;*/
 		
 		// Send current control values
-		mifitem.set (vr, wr, brk, System.currentTimeMillis ());
+		mifitem.set (vr, 0.0, wr, brk, System.currentTimeMillis ());	// a tricycle does not go sideways
 		mifitem.setFork (frk_hgt, frk_act);
 		mifitem.setHorn (horn);
 		mifitem.setCoordLight (coord);
