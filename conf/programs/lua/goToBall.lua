@@ -1,10 +1,7 @@
 -- Behaviour: GoToBall
 --
 -- 20060406 Humberto Martinez
-
---io.write("  [Beh] GoToBall  ")
-
---io.write("GoToBall\n")
+-- 20260924 Humberto Martinez
 
 -- Constants and parameters
 LPOBALL = chaos.BALL_LPO

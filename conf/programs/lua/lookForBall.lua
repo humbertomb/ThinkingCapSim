@@ -1,4 +1,8 @@
--- Program
+-- Behaviour: LookForBall
+--
+-- 20060406 Humberto Martinez
+-- 20260924 Humberto Martinez
+
 local ball = chaos.getLpo(chaos.BALL_LPO)
 local info = chaos.getBehaviorInfo ()
 
