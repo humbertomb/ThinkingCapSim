@@ -167,6 +167,22 @@ public class LuaLib
 				return Double.valueOf ((v < 0.0) ? -1.0 : 1.0);
 			}
 		});
+		// an angle brought into half a turn either way, whichever unit it is written in:
+		// what to do with the difference of two angles before comparing it with anything
+		math.set ("normalizeRad", new LuaFunction ("math.normalizeRad")
+		{
+			public Object call (Object[] args)
+			{
+				return Double.valueOf (normalised (num (args, 0, 0.0)));
+			}
+		});
+		math.set ("normalizeDeg", new LuaFunction ("math.normalizeDeg")
+		{
+			public Object call (Object[] args)
+			{
+				return Double.valueOf (normalisedDegrees (num (args, 0, 0.0)));
+			}
+		});
 		// an angle in degrees as an angle in radians between -pi and pi, which is the
 		// one thing the scripts do to every angle they are given (math.rad is left as
 		// Lua has it, normalising nothing)
@@ -421,6 +437,22 @@ public class LuaLib
 
 		if (r > Math.PI)						r -= 2.0 * Math.PI;
 		else if (r <= -Math.PI)					r += 2.0 * Math.PI;
+		return r;
+	}
+
+	/**
+	 * An angle in degrees brought into -180 .. 180, which is where an angle of the
+	 * robot is read from. A value that is not a number at all is left as it is, as
+	 * with the radians.
+	 */
+	static public double normalisedDegrees (double a)
+	{
+		if (!Double.isFinite (a))				return a;
+
+		double		r = a % 360.0;
+
+		if (r > 180.0)							r -= 360.0;
+		else if (r <= -180.0)					r += 360.0;
 		return r;
 	}
 

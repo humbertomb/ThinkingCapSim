@@ -212,6 +212,9 @@ public class LuaHelp
 		{ "radians", "degrees", "As radians brought into -pi .. pi. This one is ours; it is of no use on an angle of the "
 					+ "bridge, which is in degrees already, but it is what puts an angle of a script right before it goes "
 					+ "into a function of Lua." },
+		{ "normalizeDeg", "degrees", "The same angle brought into -180 .. 180, which is where an angle of the robot is "
+					+ "read from: what to do with the difference of two angles before comparing it with anything. Ours." },
+		{ "normalizeRad", "radians", "The same, for an angle in radians: into -pi .. pi. Ours." },
 		{ "random", "[m [, n]]", "A number between 0 and 1, between 1 and m, or between m and n." },
 		{ "randomseed", "x", "There to be called; the numbers are the ones of the machine." },
 	};
