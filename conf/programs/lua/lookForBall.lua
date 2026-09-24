@@ -1,5 +1,5 @@
 -- Lpo object position
-ball_pos=0
+ball_pos=chaos.BALL_LPO
 
 -- Some constants
 slowTime = 400

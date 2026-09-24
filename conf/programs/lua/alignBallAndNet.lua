@@ -1,6 +1,6 @@
 --io.write("\nalignBallAndNet\n")
 
-ball_pos=0
+ball_pos=chaos.BALL_LPO
 net1_pos=3
 net2_pos=4
 

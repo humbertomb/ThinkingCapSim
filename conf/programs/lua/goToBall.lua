@@ -7,7 +7,7 @@
 --io.write("GoToBall\n")
 
 -- Constants and parameters
-LPOBALL = 0
+LPOBALL = chaos.BALL_LPO
 ANGLELARGE = 48.7014		-- 50 degrees
 ANGLESMALL = 22.9183		-- 23 degrees
 SLOWDOWN = 360

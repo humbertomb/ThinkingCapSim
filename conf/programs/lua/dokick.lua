@@ -1,8 +1,8 @@
 
 -- Lpo object position
-ball_pos=0
-net1_pos=1
-net2_pos=2
+ball_pos=chaos.BALL_LPO
+net1_pos=chaos.NET1_LPO
+net2_pos=chaos.NET2_LPO
 
 PI05 = 90
 PI =  180	

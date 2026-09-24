@@ -109,7 +109,7 @@
             "y": 696,
             "to": "Defender",
             "toId": 23,
-            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\nball=chaos.getLpo(0) -- Ball\n\nif temp.quality > QUALITY_HIGH and dist < OUT_POS and \n   ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then\n    return true\nelse\n    return false\nend"
+            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\nball=chaos.getLpo(chaos.BALL_LPO) -- Ball\n\nif temp.quality > QUALITY_HIGH and dist < OUT_POS and \n   ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then\n    return true\nelse\n    return false\nend"
           },
           {
             "name": "InAstrayGoTo",
@@ -240,7 +240,7 @@
             "y": 385,
             "to": "Defender",
             "toId": 23,
-            "test": "ball=chaos.getLpo(0) -- Ball\n\nif ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then\n    return true\nelse\n    return false\nend\n\n"
+            "test": "ball=chaos.getLpo(chaos.BALL_LPO) -- Ball\n\nif ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then\n    return true\nelse\n    return false\nend\n\n"
           },
           {
             "name": "LostCenter",
@@ -306,7 +306,7 @@
             "y": 858,
             "to": "GoToArea",
             "toId": 1,
-            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nball=chaos.getLpo(0) -- Ball\n\nif temp.quality>QUALITY_HIGH and dist > OUT_POS and \n   (ball.anchored < ANCHORED_LOW or ball.rho > BALL_IN_AREA) then\n    return true\nelse\n    return false\nend\n"
+            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nball=chaos.getLpo(chaos.BALL_LPO) -- Ball\n\nif temp.quality>QUALITY_HIGH and dist > OUT_POS and \n   (ball.anchored < ANCHORED_LOW or ball.rho > BALL_IN_AREA) then\n    return true\nelse\n    return false\nend\n"
           },
           {
             "name": "InAstrayDefender",
@@ -324,7 +324,7 @@
             "y": 367,
             "to": "KeepInArea",
             "toId": 14,
-            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nball=chaos.getLpo(0) -- Ball\n\nif ball.anchored < ANCHORED_HIGH or ball.rho > BALL_IN_AREA then\n    return true\nelse\n    return false\nend\n"
+            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nball=chaos.getLpo(chaos.BALL_LPO) -- Ball\n\nif ball.anchored < ANCHORED_HIGH or ball.rho > BALL_IN_AREA then\n    return true\nelse\n    return false\nend\n"
           },
           {
             "name": "Transition_41",
@@ -391,7 +391,7 @@
             "y": 377,
             "to": "Defender",
             "toId": 23,
-            "test": "ball=chaos.getLpo(0) -- Ball\n\nif ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then\n    return true\nelse\n    return false\nend\n\n"
+            "test": "ball=chaos.getLpo(chaos.BALL_LPO) -- Ball\n\nif ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then\n    return true\nelse\n    return false\nend\n\n"
           },
           {
             "name": "InAstrayLoc",

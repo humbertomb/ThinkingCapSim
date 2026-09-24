@@ -2,7 +2,7 @@
 -- 20070402 Francisco mart’n
 
 -- Constants and parameters
-NET1LPO = 1
+NET1LPO = chaos.NET1_LPO
 ANGLELARGE = 48.7014		-- degrees, as every angle here
 ANGLESMALL = 22.9183		-- degrees, as every angle here
 SLOWDOWN = 300

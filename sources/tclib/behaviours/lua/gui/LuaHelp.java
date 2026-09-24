@@ -143,8 +143,9 @@ public class LuaHelp
 	/** What every function of a table is for, as <code>name</code>, <code>arguments</code>, <code>what it does</code>. */
 	static private final String[][]	CHAOS_HELP	=
 	{
-		{ "getLpo", "index", "The object of the LPS of that number, as a table (see <i>an object</i> below). "
-					+ "The numbers are the ones the module was given in LPOS: 0 the ball, 1 and 2 the nets, 3 the align point, 4 the look-ahead." },
+		{ "getLpo", "index", "The object of the LPS of that number, as a table (see <i>an object</i> below). The number is "
+					+ "not to be written out: every object has a constant of its own (see <i>the constants</i> below), so it is "
+					+ "<span class=\"mono\">chaos.getLpo (chaos.BALL_LPO)</span>." },
 		{ "setNeeded", "index, weight", "Says that the behaviour needs to keep seeing that object, and how much (0 to 1). "
 					+ "The vision of the simulation looks everywhere at once, so it is taken note of and no more." },
 		{ "getMyPos", "", "Where the robot thinks it is: x and y in mm, theta in degrees, in the field." },
@@ -282,7 +283,8 @@ public class LuaHelp
 		 .append ("<span class=\"mono\">math.deg (math.atan2 (dy, dx))</span>.</p>");
 
 		h.append ("<h2>Contents</h2><p class=\"wire\">");
-		h.append ("<a href=\"#chaos\">chaos</a> &nbsp; <a href=\"#tables\">the tables it answers</a> &nbsp; ");
+		h.append ("<a href=\"#chaos\">chaos</a> &nbsp; <a href=\"#constants\">the constants</a> &nbsp; ")
+		 .append ("<a href=\"#tables\">the tables it answers</a> &nbsp; ");
 		h.append ("<a href=\"#math\">math</a> &nbsp; <a href=\"#string\">string</a> &nbsp; <a href=\"#table\">table</a> &nbsp; ");
 		h.append ("<a href=\"#io\">io</a> &nbsp; <a href=\"#os\">os</a> &nbsp; <a href=\"#base\">the basic ones</a>");
 		h.append ("</p>");
@@ -292,6 +294,22 @@ public class LuaHelp
 			  + "and what it asks for (a speed, a turn, a behaviour). The controller fills it in before every cycle and reads out "
 			  + "of it afterwards.",
 			  chaos.table (), CHAOS_HELP);
+
+		// the constants of the objects of the LPS, as they are now
+		h.append ("<a name=\"constants\"></a><h2>The constants</h2>");
+		h.append ("<p>The objects of the LPS are asked for by number, and every one of them has its number as a constant of ")
+		 .append ("the table, named after it: a script says <span class=\"mono\">chaos.getLpo (chaos.BALL_LPO)</span> and never ")
+		 .append ("a number of its own, so that a program cannot fall out of step with what the module was given in LPOS. ")
+		 .append ("They are put in again on every cycle, so writing over one changes nothing for long.</p>");
+		h.append ("<table width=\"100%\" cellpadding=\"4\" cellspacing=\"0\">");
+		for (int i = 0; i < chaos.lpoNames ().length; i++)
+			h.append ("<tr valign=\"top\"><td width=\"38%\"><span class=\"mono\"><b>")
+			 .append (Chaos.constant (chaos.lpoNames ()[i])).append ("</b></span></td><td>")
+			 .append (i).append (" &mdash; the object the LPS calls <span class=\"mono\">")
+			 .append (esc (chaos.lpoNames ()[i])).append ("</span></td></tr>");
+		h.append ("</table>");
+		h.append ("<p class=\"none\">These are the ones of the objects a module is given by default; a module with an LPOS of ")
+		 .append ("its own has a constant for each of the objects it names.</p><br>");
 
 		// the tables the bridge answers with
 		h.append ("<a name=\"tables\"></a><h2>The tables it answers</h2>");

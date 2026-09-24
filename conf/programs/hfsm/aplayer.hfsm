@@ -30,7 +30,7 @@
             "y": 162,
             "to": "LookForBall",
             "toId": 37,
-            "test": "\n\tlocal ball = chaos.getLpo(0)\n\t\n\tif ball.anchored < 0.8 then \n\t    return true\n\telse \n\t    return false\n\tend\n",
+            "test": "\n\tlocal ball = chaos.getLpo(chaos.BALL_LPO)\n\t\n\tif ball.anchored < 0.8 then \n\t    return true\n\telse \n\t    return false\n\tend\n",
             "action": "chaos.releaseBookedBall ()"
           },
           {
@@ -60,7 +60,7 @@
                 "y": 164,
                 "to": "GoToBall",
                 "toId": 6,
-                "test": "\tlocal ball = chaos.getLpo(0)\n\t\n\tif math.abs(ball.theta) < 17.1887 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
+                "test": "\tlocal ball = chaos.getLpo(chaos.BALL_LPO)\n\t\n\tif math.abs(ball.theta) < 17.1887 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
               }
             ]
           },
@@ -69,7 +69,7 @@
             "id": 6,
             "x": 173,
             "y": 187,
-            "code": "local gs     = chaos.gsGetMyPos()\nlocal ball   = chaos.getLpo(0)\nlocal net1   = chaos.getLpo(3) \nlocal net2   = chaos.getLpo(4) \n\n--if (gs.quality < 0.6) and (ball.rho > 1000) then\n--\tchaos.trackLandMarks()\n--end\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"go2ball\")\n",
+            "code": "local gs     = chaos.gsGetMyPos()\nlocal ball   = chaos.getLpo(chaos.BALL_LPO)\nlocal net1   = chaos.getLpo(3) \nlocal net2   = chaos.getLpo(4) \n\n--if (gs.quality < 0.6) and (ball.rho > 1000) then\n--\tchaos.trackLandMarks()\n--end\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"go2ball\")\n",
             "transitions": [
               {
                 "name": "CanScore",
@@ -78,7 +78,7 @@
                 "y": 286,
                 "to": "Score",
                 "toId": 8,
-                "test": "local ball = chaos.getLpo(0)\n\nif ball.rho < 1000 then\n\treturn true\nelse\n\treturn false\nend\n"
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\nif ball.rho < 1000 then\n\treturn true\nelse\n\treturn false\nend\n"
               }
             ]
           },
@@ -104,7 +104,7 @@
                 "y": 27,
                 "to": "GoToBall",
                 "toId": 6,
-                "test": "local ball = chaos.getLpo(0)\n\nif ball.rho > 1200 then\n\treturn true\nend\n\nreturn false"
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\nif ball.rho > 1200 then\n\treturn true\nend\n\nreturn false"
               }
             ],
             "meta": true,
@@ -124,7 +124,7 @@
                     "y": 169,
                     "to": "Align",
                     "toId": 14,
-                    "test": "--local ball = chaos.getLpo(0)\n--local net1 = chaos.getLpo(3)\n\n--if math.abs(net1.theta) > 45.8366 and net1.anchored > 0.4 then \n--\treturn true\n--else\n--\treturn false\n--end\n\nreturn false"
+                    "test": "--local ball = chaos.getLpo(chaos.BALL_LPO)\n--local net1 = chaos.getLpo(3)\n\n--if math.abs(net1.theta) > 45.8366 and net1.anchored > 0.4 then \n--\treturn true\n--else\n--\treturn false\n--end\n\nreturn false"
                   },
                   {
                     "name": "Kickable",
@@ -133,7 +133,7 @@
                     "y": 10,
                     "to": "DoKick",
                     "toId": 16,
-                    "test": "local ball = chaos.getLpo(0)\n\nif ball.rho < 600 then \n    return true\nelse \n    return false\nend\n"
+                    "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\nif ball.rho < 600 then \n    return true\nelse \n    return false\nend\n"
                   }
                 ]
               },
@@ -151,7 +151,7 @@
                     "y": 173,
                     "to": "ApproachBall",
                     "toId": 11,
-                    "test": "local ball = chaos.getLpo(0)\nlocal net1 = chaos.getLpo(3)\n\nif math.abs(net1.theta) <= 28.6479 then \n\treturn true\nelse\n\treturn false\nend"
+                    "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(3)\n\nif math.abs(net1.theta) <= 28.6479 then \n\treturn true\nelse\n\treturn false\nend"
                   }
                 ]
               },
@@ -169,7 +169,7 @@
                     "y": 166,
                     "to": "ApproachBall",
                     "toId": 11,
-                    "test": "local ball = chaos.getLpo(0)\n\t\nif ball.rho > 800 then \n\treturn true\nelse \n\treturn false\nend\n"
+                    "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\t\nif ball.rho > 800 then \n\treturn true\nelse \n\treturn false\nend\n"
                   }
                 ]
               }
@@ -190,7 +190,7 @@
             "y": 364,
             "to": "LookForBall",
             "toId": 37,
-            "test": "\n\tlocal ball = chaos.getLpo(0)\n\t\n\tif ball.anchored < 0.7 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
+            "test": "\n\tlocal ball = chaos.getLpo(chaos.BALL_LPO)\n\t\n\tif ball.anchored < 0.7 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
           },
           {
             "name": "nonAtt2att",
@@ -311,7 +311,7 @@
                     "y": 101,
                     "to": "ApproachBall",
                     "toId": 33,
-                    "test": "local ball = chaos.getLpo(0)\n\nif ball.rho > 1300 then \n\treturn true\nelse \n\treturn false\nend\n"
+                    "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\nif ball.rho > 1300 then \n\treturn true\nelse \n\treturn false\nend\n"
                   }
                 ]
               },
@@ -329,7 +329,7 @@
                     "y": 233,
                     "to": "FaceBall2",
                     "toId": 31,
-                    "test": "local ball = chaos.getLpo(0)\n\nif ball.rho < 1200 then \n\treturn true\nelse \n\treturn false\nend\n"
+                    "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\nif ball.rho < 1200 then \n\treturn true\nelse \n\treturn false\nend\n"
                   }
                 ]
               },
@@ -347,7 +347,7 @@
                     "y": 179,
                     "to": "ApproachBall",
                     "toId": 33,
-                    "test": "--local ball = chaos.getLpo(0)\n\n--if math.abs(ball.theta) < 17.1887 then \n--\treturn true\n--else \n\treturn false\n--end\n"
+                    "test": "--local ball = chaos.getLpo(chaos.BALL_LPO)\n\n--if math.abs(ball.theta) < 17.1887 then \n--\treturn true\n--else \n\treturn false\n--end\n"
                   }
                 ]
               }
@@ -369,7 +369,7 @@
             "y": 185,
             "to": "Attacker",
             "toId": 1,
-            "test": "\n\tlocal ball = chaos.getLpo(0)\n\t\n\tif ball.anchored > 0.9 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
+            "test": "\n\tlocal ball = chaos.getLpo(chaos.BALL_LPO)\n\t\n\tif ball.anchored > 0.9 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
           },
           {
             "name": "LookTimeout",
@@ -395,7 +395,7 @@
             "y": 32,
             "to": "Attacker",
             "toId": 1,
-            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored > 0.9 then \n    return true\nelse \n    return false\nend"
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\t\nif ball.anchored > 0.9 then \n    return true\nelse \n    return false\nend"
           }
         ],
         "meta": true,

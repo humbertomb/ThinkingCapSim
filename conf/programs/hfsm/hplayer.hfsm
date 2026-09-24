@@ -22,7 +22,7 @@
             "y": 6,
             "to": "LookForBallAtt",
             "toId": 11,
-            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored < 0.5 then \n    return true\nelse \n    return false\nend"
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\t\nif ball.anchored < 0.5 then \n    return true\nelse \n    return false\nend"
           },
           {
             "name": "ToTheirNet1",
@@ -31,7 +31,7 @@
             "y": 290,
             "to": "ChaseBall",
             "toId": 13,
-            "test": "local ball = chaos.getLpo(0)\nlocal net2 = chaos.getLpo(2)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.5) and (math.abs(net2.theta) < 91.6732) then \n\t\treturn false\n\tend\nend\n\nreturn true"
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net2 = chaos.getLpo(chaos.NET2_LPO)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.5) and (math.abs(net2.theta) < 91.6732) then \n\t\treturn false\n\tend\nend\n\nreturn true"
           }
         ]
       },
@@ -49,7 +49,7 @@
             "y": 284,
             "to": "GoToBall",
             "toId": 7,
-            "test": "\tlocal ball = chaos.getLpo(0)\n\t\n\tif math.abs(ball.theta) < 17.1887 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
+            "test": "\tlocal ball = chaos.getLpo(chaos.BALL_LPO)\n\t\n\tif math.abs(ball.theta) < 17.1887 then \n\t    return true\n\telse \n\t    return false\n\tend\n"
           },
           {
             "name": "BallLost1",
@@ -58,7 +58,7 @@
             "y": 42,
             "to": "LookForBallAtt",
             "toId": 11,
-            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored < 0.8 then \n    return true\nelse \n    return false\nend"
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\t\nif ball.anchored < 0.8 then \n    return true\nelse \n    return false\nend"
           }
         ]
       },
@@ -76,7 +76,7 @@
             "y": 133,
             "to": "AroundBall",
             "toId": 1,
-            "test": "\nlocal ball = chaos.getLpo(0)\nlocal net2 = chaos.getLpo(2)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.6) and (math.abs(net2.theta) < 91.6732) then \n\t\treturn true\n\tend\nend\n\nreturn false"
+            "test": "\nlocal ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net2 = chaos.getLpo(chaos.NET2_LPO)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.6) and (math.abs(net2.theta) < 91.6732) then \n\t\treturn true\n\tend\nend\n\nreturn false"
           },
           {
             "name": "BallLost2",
@@ -85,7 +85,7 @@
             "y": 279,
             "to": "LookForBallAtt",
             "toId": 11,
-            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored < 0.8 then \n    return true\nelse \n    return false\nend"
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\t\nif ball.anchored < 0.8 then \n    return true\nelse \n    return false\nend"
           },
           {
             "name": "ToTheirNet2",
@@ -94,7 +94,7 @@
             "y": 446,
             "to": "ChaseBall",
             "toId": 13,
-            "test": "local ball = chaos.getLpo(0)\nlocal net2 = chaos.getLpo(2)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.5) and (math.abs(net2.theta) < 91.6732) then \n\t\treturn false\n\tend\nend\n\nreturn true"
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net2 = chaos.getLpo(chaos.NET2_LPO)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.5) and (math.abs(net2.theta) < 91.6732) then \n\t\treturn false\n\tend\nend\n\nreturn true"
           }
         ]
       },
@@ -112,7 +112,7 @@
             "y": 2,
             "to": "FaceBall",
             "toId": 4,
-            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored > 0.9 then \n    return true\nelse \n    return false\nend"
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\t\nif ball.anchored > 0.9 then \n    return true\nelse \n    return false\nend"
           }
         ]
       },
@@ -130,7 +130,7 @@
             "y": 295,
             "to": "AroundBall",
             "toId": 1,
-            "test": "local ball = chaos.getLpo(0)\nlocal net2 = chaos.getLpo(2)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.6) and (math.abs(net2.theta) < 91.6732) then \n\t\treturn true\n\tend\nend\n\nreturn false"
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net2 = chaos.getLpo(chaos.NET2_LPO)\n\nif ball.rho < 2000 then\n\tif (net2.anchored > 0.6) and (math.abs(net2.theta) < 91.6732) then \n\t\treturn true\n\tend\nend\n\nreturn false"
           },
           {
             "name": "BallLost4",
@@ -139,7 +139,7 @@
             "y": 5,
             "to": "LookForBallAtt",
             "toId": 11,
-            "test": "local ball = chaos.getLpo(0)\n\t\nif ball.anchored < 0.65 then \n    return true\nelse \n    return false\nend"
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\n\t\nif ball.anchored < 0.65 then \n    return true\nelse \n    return false\nend"
           }
         ]
       }

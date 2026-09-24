@@ -86,10 +86,12 @@ public class Chaos
 
 	protected LuaTable				table;
 	protected java.util.Set<String>	warned		= new java.util.HashSet<String> ();
+	protected java.util.List<String>	named	= new java.util.ArrayList<String> ();	// the constants of the objects of the LPS
 
 	public Chaos ()
 	{
 		table	= build ();
+		constants ();
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -114,8 +116,42 @@ public class Chaos
 	public LPS lps ()											{ return lps; }
 
 	/** The objects of the LPS the scripts ask for by number. */
-	public void lpoNames (String[] names)						{ this.lpos = (names != null) ? names : LPOS; }
+	public void lpoNames (String[] names)
+	{
+		this.lpos	= (names != null) ? names : LPOS;
+		constants ();
+	}
+
 	public String[] lpoNames ()									{ return lpos; }
+
+	/**
+	 * The number of every object of the LPS as a constant of the table, so that a
+	 * script says <code>chaos.getLpo (chaos.BALL_LPO)</code> and never a number of
+	 * its own: <code>BALL_LPO</code>, <code>NET1_LPO</code> and so on, the name of
+	 * the object in capitals with <code>_LPO</code> after it.
+	 *
+	 * They are put in again on every cycle ({@link #clear}), so a script that wrote
+	 * over one does not leave it changed for the next cycle or for another script.
+	 */
+	protected void constants ()
+	{
+		if (table == null)						return;					// while the table is being built
+
+		for (String name : named)											// the ones of the objects there were
+			table.set (name, null);
+		named.clear ();
+		for (int i = 0; i < lpos.length; i++)
+		{
+			named.add (constant (lpos[i]));
+			table.set (constant (lpos[i]), Double.valueOf (i));
+		}
+	}
+
+	/** What the constant of an object of the LPS is called: Net1 is NET1_LPO. */
+	static public String constant (String name)
+	{
+		return ((name != null) ? name.toUpperCase () : "?") + "_LPO";
+	}
 
 	public void pose (Position p)								{ if (p != null) pose.set (p); }
 	public Position pose ()										{ return pose; }
@@ -159,6 +195,7 @@ public class Chaos
 	/** Forgets what the scripts commanded, before a new cycle. */
 	public void clear ()
 	{
+		constants ();									// what a script wrote over is put back
 		behaviournew	= false;
 		vlin	= 0.0;
 		vrot	= 0.0;
