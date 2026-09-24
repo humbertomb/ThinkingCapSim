@@ -61,6 +61,10 @@ public class PlotWindow extends JFrame
 	protected ChartPanel			panel;
 	protected XYSeriesCollection	left		= new XYSeriesCollection ();		// the lines of the left axis
 	protected XYSeriesCollection	right		= new XYSeriesCollection ();		// ... and of the right one
+	// the very same lines again, which is what the curve over a plot of impulses is
+	// drawn from: a dataset of its own, because a plot draws one dataset once
+	protected XYSeriesCollection	ljoin		= new XYSeriesCollection ();
+	protected XYSeriesCollection	rjoin		= new XYSeriesCollection ();
 	protected String[]				legends		= new String[0];
 	protected int					onright		= -1;						// the first line of the right axis, -1 for none
 	protected boolean				impulses;
@@ -150,6 +154,52 @@ public class PlotWindow extends JFrame
 		return r;
 	}
 
+	/**
+	 * How the curve over a plot of impulses is drawn: a thinner line, of the colour
+	 * of the impulses it joins, and not named again in the legend, which already
+	 * names them once.
+	 */
+	protected XYItemRenderer join ()
+	{
+		XYLineAndShapeRenderer	r = new XYLineAndShapeRenderer (true, false);
+
+		r.setDefaultStroke (new BasicStroke (1.0f));
+		r.setAutoPopulateSeriesStroke (false);
+		r.setDefaultSeriesVisibleInLegend (false);
+		return r;
+	}
+
+	/**
+	 * The curve that joins the tops of the impulses: the very same lines, drawn a
+	 * second time as a line, and over the impulses rather than under them. An
+	 * impulse says what a value is worth at that cycle, and the curve says where it
+	 * is going, which one impulse beside another does not tell.
+	 *
+	 * With no impulses there is nothing to join, and the lines are the curve.
+	 */
+	protected void joins ()
+	{
+		plot.setRenderer (2, null);		plot.setDataset (2, null);
+		plot.setRenderer (3, null);		plot.setDataset (3, null);
+		if (!impulses)
+		{
+			plot.setDatasetRenderingOrder (org.jfree.chart.plot.DatasetRenderingOrder.REVERSE);
+			return;
+		}
+
+		plot.setRenderer (2, join ());
+		plot.setDataset (2, ljoin);
+		plot.mapDatasetToRangeAxis (2, 0);
+		if (plot.getRangeAxis (1) != null)
+		{
+			plot.setRenderer (3, join ());
+			plot.setDataset (3, rjoin);
+			plot.mapDatasetToRangeAxis (3, 1);
+		}
+		// the impulses first and the curve over them, and not the other way about
+		plot.setDatasetRenderingOrder (org.jfree.chart.plot.DatasetRenderingOrder.FORWARD);
+	}
+
 	/** Gives every line of a dataset its colour, the first line of the plot being the first colour. */
 	protected void colours (XYItemRenderer r, int from, int n)
 	{
@@ -230,6 +280,7 @@ public class PlotWindow extends JFrame
 		{
 			plot.setRangeAxis (1, null);
 			plot.setDataset (1, null);
+			joins ();
 			series ();
 			return;
 		}
@@ -242,6 +293,7 @@ public class PlotWindow extends JFrame
 		plot.setDataset (1, right);
 		plot.setRenderer (1, lines ());
 		plot.mapDatasetToRangeAxis (1, 1);
+		joins ();
 		series ();
 	}
 
@@ -252,16 +304,22 @@ public class PlotWindow extends JFrame
 
 		left.removeAllSeries ();
 		right.removeAllSeries ();
+		ljoin.removeAllSeries ();
+		rjoin.removeAllSeries ();
 		for (int i = 0; i < legends.length; i++)
 		{
 			XYSeries	s = new XYSeries ((legends[i] != null) ? legends[i] : ("y" + i), false, true);
 
 			s.setMaximumItemCount (POINTS);
-			if (i < split)				left.addSeries (s);
-			else						right.addSeries (s);
+			// the same line in both datasets: whoever draws writes it once
+			if (i < split)				{ left.addSeries (s);	ljoin.addSeries (s); }
+			else						{ right.addSeries (s);	rjoin.addSeries (s); }
 		}
 		if (plot.getRenderer (0) != null)		colours (plot.getRenderer (0), 0, left.getSeriesCount ());
 		if (plot.getRenderer (1) != null)		colours (plot.getRenderer (1), split, right.getSeriesCount ());
+		// the curve over the impulses is of the colour of the impulses it joins
+		if (plot.getRenderer (2) != null)		colours (plot.getRenderer (2), 0, left.getSeriesCount ());
+		if (plot.getRenderer (3) != null)		colours (plot.getRenderer (3), split, right.getSeriesCount ());
 	}
 
 	/** One row per line of the plot: what it is called, and a field for its value. */
@@ -334,6 +392,7 @@ public class PlotWindow extends JFrame
 		impulses	= stems;
 		plot.setRenderer (0, lines ());
 		if (plot.getRangeAxis (1) != null)		plot.setRenderer (1, lines ());
+		joins ();
 		series ();
 	}
 
