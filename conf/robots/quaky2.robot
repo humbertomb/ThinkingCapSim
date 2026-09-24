@@ -156,7 +156,6 @@
     "skid": 1.0,
     "gear": 71.0,
     "pulses": 2000.0,
-    "dtime": 100,
     "odomET": 0.0,
     "odomER": 0.0,
     "odomBias": 0.0

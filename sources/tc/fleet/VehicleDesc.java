@@ -13,7 +13,7 @@ import wucore.utils.geom.*;
 public class VehicleDesc extends Object implements Serializable
 {
 	// Vehicle parameters
-	public long					DTIME;					// Current update cycle (ms)
+	public long					DTIME		= 100;		// Current update cycle (ms): the module running the robot says it
 	
 	// Vehicle additional data
 	public PayloadDesc			pldesc;					// Payload description

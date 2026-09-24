@@ -97,13 +97,6 @@ public class RobotDesc extends VehicleDesc implements Serializable
 		super (props);
 	}
 
-	public RobotDesc (Properties props, long dtime)
-	{
-		super (props);
-		
-		DTIME	= dtime;
-	}
-
 	/* Instance methods */
 	protected void update (Properties props)
 	{

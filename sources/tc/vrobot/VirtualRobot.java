@@ -85,6 +85,12 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 			rprops		= RobotDef.load (new File (rname)).toProperties ();
 		} catch (Exception e) { e.printStackTrace (); }
 
+		// The control cycle of the platform is the one this module is run at, and
+		// not a time of its own written in the description: it is said here, in the
+		// properties everybody else is given, so that the modules of the robot and
+		// its kinematics reckon with the same cycle the robot is actually run at
+		rprops.setProperty ("DTIME", String.valueOf (tdesc.exectime));
+
 		// Load world description and parameters (only when the world grants "a priori" knowledge to the robots)
 		wtext			= null;
 		if (wname != null)
@@ -106,7 +112,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		tcam		= new Tuple (Tuple.CAMERA, scam);
 		
 		// Setup robot description and data structures		
-		rdesc 		= new RobotDesc (rprops, tdesc.exectime);
+		rdesc 		= new RobotDesc (rprops);
 		data		= new RobotData (rdesc);
 		data_ctrl	= new RobotDataCtrl ();
 

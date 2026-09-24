@@ -1036,7 +1036,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	{
 		String[]		all = { DRIVE, MAX_SPEED, MAX_TURN_RATE, MAX_STEER_RATE, MAX_ACCEL, MAX_DECEL,
 								WHEEL_BASE, baseLabel (), STEER_OFFSET, SKID_FACTOR, WHEEL_DIAM,
-								GEAR_RATIO, ENCODER_PULSES, CYCLE_TIME,
+								GEAR_RATIO, ENCODER_PULSES,
 								"odom et", "odom er", "odom bias" };
 		List<String>	out = new ArrayList<String> ();
 
@@ -1187,7 +1187,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (key.equals ("skid"))		return RobotDef.fmt (k.skid);
 			if (key.equals ("gear"))		return RobotDef.fmt (k.gear);
 			if (key.equals ("pulses"))		return RobotDef.fmt (k.pulses);
-			if (key.equals ("dtime"))		return String.valueOf (k.dtime);
 			if (key.equals ("odom et"))		return RobotDef.fmt (k.odomET);
 			if (key.equals ("odom er"))		return RobotDef.fmt (k.odomER);
 			if (key.equals ("odom bias"))	return RobotDef.fmt (k.odomBias);
@@ -1361,7 +1360,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		SKID_FACTOR				= "skid factor";			// skid
 	static public final String		GEAR_RATIO				= "gear ratio";				// gear
 	static public final String		ENCODER_PULSES			= "encoder pulses";			// pulses
-	static public final String		CYCLE_TIME				= "cycle time";				// dtime
 
 	/** The kinematics model whose BASE is not a track but the distance from its axle to the centre. */
 	static private final String		TRICYCLE				= "tc.vrobot.models.TricycleDrive";
@@ -1378,7 +1376,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		m.put (TRACK, "base");					m.put (AXLE_OFFSET, "base");
 		m.put (STEER_OFFSET, "rwheel");			m.put (SKID_FACTOR, "skid");
 		m.put (GEAR_RATIO, "gear");				m.put (ENCODER_PULSES, "pulses");
-		m.put (CYCLE_TIME, "dtime");
 		return m;
 	}
 
@@ -1624,7 +1621,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (key.equals ("skid"))		k.skid = num (value);
 			else if (key.equals ("gear"))		k.gear = num (value);
 			else if (key.equals ("pulses"))		k.pulses = num (value);
-			else if (key.equals ("dtime"))		k.dtime = (long) num (value);
 			else if (key.equals ("odom et"))	k.odomET = num (value);
 			else if (key.equals ("odom er"))	k.odomER = num (value);
 			else if (key.equals ("odom bias"))	k.odomBias = num (value);

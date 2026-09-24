@@ -323,14 +323,13 @@ public class RobotDef
 		public double	skid		= 1.0;			// SKID: effective track over the geometric one (skid steer)
 		public double	gear;						// GEAR
 		public double	pulses;						// PULSES
-		public long		dtime	= 100;				// control cycle (ms)
 		public double	odomET, odomER, odomBias;	// odometry errors of the simulation
 
 		public Kinematics copy ()
 		{
 			Kinematics	k = new Kinematics ();
 			k.drive = drive;	k.lamax = lamax;	k.ldmax = ldmax;
-			k.rwheel = rwheel;	k.skid = skid;		k.gear = gear;		k.pulses = pulses;		k.dtime = dtime;
+			k.rwheel = rwheel;	k.skid = skid;		k.gear = gear;		k.pulses = pulses;
 			k.odomET = odomET;	k.odomER = odomER;	k.odomBias = odomBias;
 			return k;
 		}
@@ -449,7 +448,7 @@ public class RobotDef
 	static public final String		DRIVE_BASE		= "tc.vrobot.RobotModel";
 
 	/** What every model reads, whichever it is, and what the platform itself says. */
-	static private final String[]	KIN_COMMON		= { "drive", "drivetype", "vmax", "rmax", "dtime",
+	static private final String[]	KIN_COMMON		= { "drive", "drivetype", "vmax", "rmax",
 														"odomet", "odomer", "odombias" };
 
 	/** What each model reads beyond that: a differential drive knows nothing of a steering wheel. */
@@ -1389,7 +1388,6 @@ public class RobotDef
 		setNZ (p, "RWHEEL", kinematics.rwheel);		setNZ (p, "SKID", kinematics.skid);
 		setNZ (p, "GEAR", kinematics.gear);
 		setNZ (p, "PULSES", kinematics.pulses);
-		p.setProperty ("DTIME", String.valueOf (kinematics.dtime));
 		setNZ (p, "ODOM_ET", kinematics.odomET);	setNZ (p, "ODOM_ER", kinematics.odomER);
 		setNZ (p, "ODOM_BIAS", kinematics.odomBias);
 

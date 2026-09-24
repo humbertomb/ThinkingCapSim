@@ -44,7 +44,6 @@ public class Units
 		put ("%", "simulation error");
 
 		// the rest
-		put ("ms", "dtime");
 		put ("m/s", "odom et");					// the odometry errors of the simulation, as standard deviations
 		put ("deg/s", "odom er");
 		put ("kg", "mass");
@@ -57,7 +56,6 @@ public class Units
 		put ("deg/s", "max turn rate", "max steering rate");
 		put ("m/s2", "max acceleration", "max deceleration");
 		metres ("wheel base", "track width", "rear axle offset", "steering wheel offset");
-		put ("ms", "cycle time");
 
 		// how many frames a camera takes in a second, and how large one is
 		put ("fps", "frame rate");
