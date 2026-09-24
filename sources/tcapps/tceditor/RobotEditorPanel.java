@@ -1034,7 +1034,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	 */
 	private String[] kinematicsNames ()
 	{
-		String[]		all = { DRIVE, MAX_SPEED, MAX_TURN_RATE, MAX_STEER_RATE, MAX_ACCEL, MAX_DECEL,
+		String[]		all = { DRIVE, MAX_SPEED, MAX_LAT_SPEED, MAX_TURN_RATE, MAX_STEER_RATE, MAX_ACCEL, MAX_DECEL,
 								WHEEL_BASE, baseLabel (), STEER_OFFSET, SKID_FACTOR, WHEEL_DIAM,
 								GEAR_RATIO, ENCODER_PULSES,
 								"odom et", "odom er", "odom bias" };
@@ -1181,6 +1181,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				Double	v = robot.derived (key);
 				return (v != null) ? RobotDef.fmt (v.doubleValue ()) : "";
 			}
+			if (key.equals ("umax"))		return RobotDef.fmt (k.umax);
 			if (key.equals ("lamax"))		return RobotDef.fmt (k.lamax);
 			if (key.equals ("ldmax"))		return RobotDef.fmt (k.ldmax);
 			if (key.equals ("rwheel"))		return RobotDef.fmt (k.rwheel);
@@ -1348,7 +1349,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	 * one stands for is in KIN_KEYS, and kinKey () is what turns one into the other,
 	 * so that the editor can be read without the manual of the models at hand.
 	 */
-	static public final String		MAX_SPEED				= "max speed";				// vmax
+	static public final String		MAX_SPEED				= "max lin speed";			// vmax
+	static public final String		MAX_LAT_SPEED			= "max lat speed";			// umax: only the models that
+																						// go sideways read it
 	static public final String		MAX_TURN_RATE			= "max turn rate";			// rmax
 	static public final String		MAX_STEER_RATE			= "max steering rate";		// samax: how fast it steers, not how far
 	static public final String		MAX_ACCEL				= "max acceleration";		// lamax
@@ -1370,7 +1373,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	{
 		java.util.Map<String, String>	m = new java.util.HashMap<String, String> ();
 
-		m.put (MAX_SPEED, "vmax");				m.put (MAX_TURN_RATE, "rmax");
+		m.put (MAX_SPEED, "vmax");				m.put (MAX_LAT_SPEED, "umax");
+		m.put (MAX_TURN_RATE, "rmax");
 		m.put (MAX_STEER_RATE, "samax");		m.put (MAX_ACCEL, "lamax");
 		m.put (MAX_DECEL, "ldmax");				m.put (WHEEL_BASE, "length");
 		m.put (TRACK, "base");					m.put (AXLE_OFFSET, "base");
@@ -1615,6 +1619,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			String	key = kinKey (name);					// what the description calls it
 
 			if (name.equals (DRIVE))			k.drive = token (value);
+			else if (key.equals ("umax"))		k.umax = num (value);
 			else if (key.equals ("lamax"))		k.lamax = num (value);
 			else if (key.equals ("ldmax"))		k.ldmax = num (value);
 			else if (key.equals ("rwheel"))		k.rwheel = num (value);

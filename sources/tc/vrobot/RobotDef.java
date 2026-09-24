@@ -317,6 +317,8 @@ public class RobotDef
 	static public class Kinematics
 	{
 		public String	drive		= "tc.vrobot.models.DifferentialDrive";	// DRIVEMODEL
+		public double	umax;						// UMAX (m/s): how fast it goes sideways, for a platform
+													// that can; nothing said is as fast as it goes forward
 		public double	lamax;						// maximum acceleration (m/s2)
 		public double	ldmax;						// maximum deceleration (m/s2)
 		public double	rwheel;						// RWHEEL (m): the trail of the steering wheel
@@ -328,7 +330,7 @@ public class RobotDef
 		public Kinematics copy ()
 		{
 			Kinematics	k = new Kinematics ();
-			k.drive = drive;	k.lamax = lamax;	k.ldmax = ldmax;
+			k.drive = drive;	k.umax = umax;		k.lamax = lamax;	k.ldmax = ldmax;
 			k.rwheel = rwheel;	k.skid = skid;		k.gear = gear;		k.pulses = pulses;
 			k.odomET = odomET;	k.odomER = odomER;	k.odomBias = odomBias;
 			return k;
@@ -458,7 +460,7 @@ public class RobotDef
 	{
 		Map<String, String[]>	m = new LinkedHashMap<String, String[]> ();
 
-		m.put ("tc.vrobot.models.SynchroDrive",		new String[] { "samax", "lamax", "ldmax" });
+		m.put ("tc.vrobot.models.SynchroDrive",		new String[] { "umax", "samax", "lamax", "ldmax" });
 		m.put ("tc.vrobot.models.DifferentialDrive",	new String[] { "base", "wheeldiameter", "gear", "pulses" });
 		m.put ("tc.vrobot.models.SkidSteerDrive",		new String[] { "base", "wheeldiameter", "gear", "pulses", "skid" });
 		m.put ("tc.vrobot.models.AckermanDrive",		new String[] { "samax", "length" });
@@ -1384,6 +1386,9 @@ public class RobotDef
 		setNZ (p, "VMAX", value (derived ("vmax")));	setNZ (p, "RMAX", value (derived ("rmax")));
 		setNZ (p, "LENGHT", value (derived ("length")));	setNZ (p, "BASE", value (derived ("base")));
 		setNZ (p, "WHEEL", value (derived ("wheel diameter")));	setNZ (p, "SAMAX", value (derived ("samax")));
+		// a platform that says nothing of how fast it goes sideways goes as fast as it
+		// does forward, which is what the model makes of no UMAX at all
+		setNZ (p, "UMAX", kinematics.umax);
 		setNZ (p, "LAMAX", kinematics.lamax);		setNZ (p, "LDMAX", kinematics.ldmax);
 		setNZ (p, "RWHEEL", kinematics.rwheel);		setNZ (p, "SKID", kinematics.skid);
 		setNZ (p, "GEAR", kinematics.gear);

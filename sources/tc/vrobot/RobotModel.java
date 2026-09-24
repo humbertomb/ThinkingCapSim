@@ -77,9 +77,9 @@ public abstract class RobotModel extends Object
 		{
 			mclass		= Class.forName (name);
 			types		= new Class<?>[2];
-			types[0]		= Class.forName ("tc.vrobot.RobotDesc");
-			types[1]		= Class.forName ("java.util.Properties");
-			cons			= mclass.getConstructor (types);
+			types[0]	= Class.forName ("tc.vrobot.RobotDesc");
+			types[1]	= Class.forName ("java.util.Properties");
+			cons		= mclass.getConstructor (types);
 			params		= new Object[2];
 			params[0]	= rdesc;
 			params[1]	= props;
@@ -148,19 +148,13 @@ public abstract class RobotModel extends Object
 	// Instance methods
 	public void update (Properties props)
 	{
-		try { Vmax	 	= Double.valueOf (props.getProperty ("VMAX")).doubleValue (); } 				catch (Exception e) 		{ }
-		try { Rmax	 	= Double.valueOf (props.getProperty ("RMAX")).doubleValue () * Angles.DTOR; } 	catch (Exception e) 		{ }
-
-		// How fast it may go sideways: nothing at all on a platform that cannot be
-		// driven that way, and, on one that can and says nothing, as fast as it goes
-		// forward -- a synchro drive drives its wheels with one motor, whichever way
-		// they point
-		Umax	= lateral () ? Vmax : 0.0;
-		try { Umax	 	= Double.valueOf (props.getProperty ("UMAX")).doubleValue (); } 				catch (Exception e) 		{ }
+		try { Vmax	 	= Double.valueOf (props.getProperty ("VMAX")).doubleValue (); } 				catch (Exception e) 	{ }
+		try { Rmax	 	= Double.valueOf (props.getProperty ("RMAX")).doubleValue () * Angles.DTOR; } 	catch (Exception e) 	{ }
+		try { Umax	 	= Double.valueOf (props.getProperty ("UMAX")).doubleValue (); } 				catch (Exception e) 	{ }
 
 		try { odom_et 	= Double.valueOf (props.getProperty ("ODOM_ET")).doubleValue (); }				catch (Exception e)		{ }
 		try { odom_er 	= Double.valueOf (props.getProperty ("ODOM_ER")).doubleValue (); }				catch (Exception e)		{ }
-		try { odom_bias 	= Double.valueOf (props.getProperty ("ODOM_BIAS")).doubleValue (); } 			catch (Exception e)		{ }
+		try { odom_bias = Double.valueOf (props.getProperty ("ODOM_BIAS")).doubleValue (); } 			catch (Exception e)		{ }
 	}
 	
 	public void position (RobotData data, double x, double y, double alpha)

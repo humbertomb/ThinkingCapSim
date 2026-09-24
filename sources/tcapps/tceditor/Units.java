@@ -35,7 +35,7 @@ public class Units
 		metres ("rho", "range max", "range min");
 
 		// how fast it goes
-		put ("m/s", "vmax", "speed");
+		put ("m/s", "vmax", "umax", "speed");
 		put ("deg/s", "rmax", "samax");
 		put ("m/s2", "lamax", "ldmax", "acceleration");
 
@@ -52,7 +52,7 @@ public class Units
 		put ("deg/s", "max turning");
 
 		// the kinematics of the platform, as the robot editor names it
-		put ("m/s", "max speed");
+		put ("m/s", "max lin speed", "max lat speed");
 		put ("deg/s", "max turn rate", "max steering rate");
 		put ("m/s2", "max acceleration", "max deceleration");
 		metres ("wheel base", "track width", "rear axle offset", "steering wheel offset");
