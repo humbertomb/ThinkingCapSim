@@ -1,8 +1,8 @@
 --io.write("\nalignBallAndNet\n")
 
 ball_pos=chaos.BALL_LPO
-net1_pos=3
-net2_pos=4
+net1_pos=chaos.NET1_LPO
+net2_pos=chaos.NET2_LPO
 
 PI =  180	
 PI2 = 360

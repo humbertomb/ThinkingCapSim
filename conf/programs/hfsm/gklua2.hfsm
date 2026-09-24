@@ -100,7 +100,7 @@
             "y": 253,
             "to": "KeepInArea",
             "toId": 14,
-            "test": "PI2=90\ntemp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nnet1=chaos.getLpo(3) -- Net1\n\n-- InPos and (see net1 or myPos.angle is 90)\n\n--if dist < IN_POS and ((net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) or\n--                     (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH)) then\nif dist < IN_POS and (net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) then\n    return true\nelse\n    return false\n\nend\n"
+            "test": "PI2=90\ntemp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nnet1=chaos.getLpo(chaos.NET1_LPO) -- Net1\n\n-- InPos and (see net1 or myPos.angle is 90)\n\n--if dist < IN_POS and ((net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) or\n--                     (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH)) then\nif dist < IN_POS and (net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) then\n    return true\nelse\n    return false\n\nend\n"
           },
           {
             "name": "BallVisGoTo",
@@ -165,7 +165,7 @@
             "y": 42,
             "to": "KeepInArea",
             "toId": 14,
-            "test": "PI2=90\ntemp=chaos.gsGetMyPos()\nnet1=chaos.getLpo(3) -- Net1\n\nif (net1.anchored > ANCHORED_HIGH and math.abs(net1.theta) < ANG_LOW) or\n   (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH) then\n    return true\nelse\n    return false\nend\n"
+            "test": "PI2=90\ntemp=chaos.gsGetMyPos()\nnet1=chaos.getLpo(chaos.NET1_LPO) -- Net1\n\nif (net1.anchored > ANCHORED_HIGH and math.abs(net1.theta) < ANG_LOW) or\n   (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH) then\n    return true\nelse\n    return false\nend\n"
           }
         ],
         "meta": true,

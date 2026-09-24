@@ -69,7 +69,7 @@
             "id": 6,
             "x": 173,
             "y": 187,
-            "code": "local gs     = chaos.gsGetMyPos()\nlocal ball   = chaos.getLpo(chaos.BALL_LPO)\nlocal net1   = chaos.getLpo(3) \nlocal net2   = chaos.getLpo(4) \n\n--if (gs.quality < 0.6) and (ball.rho > 1000) then\n--\tchaos.trackLandMarks()\n--end\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"go2ball\")\n",
+            "code": "local gs     = chaos.gsGetMyPos()\nlocal ball   = chaos.getLpo(chaos.BALL_LPO)\nlocal net1   = chaos.getLpo(chaos.NET1_LPO) \nlocal net2   = chaos.getLpo(chaos.NET2_LPO) \n\n--if (gs.quality < 0.6) and (ball.rho > 1000) then\n--\tchaos.trackLandMarks()\n--end\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"go2ball\")\n",
             "transitions": [
               {
                 "name": "CanScore",
@@ -124,7 +124,7 @@
                     "y": 169,
                     "to": "Align",
                     "toId": 14,
-                    "test": "--local ball = chaos.getLpo(chaos.BALL_LPO)\n--local net1 = chaos.getLpo(3)\n\n--if math.abs(net1.theta) > 45.8366 and net1.anchored > 0.4 then \n--\treturn true\n--else\n--\treturn false\n--end\n\nreturn false"
+                    "test": "--local ball = chaos.getLpo(chaos.BALL_LPO)\n--local net1 = chaos.getLpo(chaos.NET1_LPO)\n\n--if math.abs(net1.theta) > 45.8366 and net1.anchored > 0.4 then \n--\treturn true\n--else\n--\treturn false\n--end\n\nreturn false"
                   },
                   {
                     "name": "Kickable",
@@ -151,7 +151,7 @@
                     "y": 173,
                     "to": "ApproachBall",
                     "toId": 11,
-                    "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(3)\n\nif math.abs(net1.theta) <= 28.6479 then \n\treturn true\nelse\n\treturn false\nend"
+                    "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\n\nif math.abs(net1.theta) <= 28.6479 then \n\treturn true\nelse\n\treturn false\nend"
                   }
                 ]
               },
@@ -320,7 +320,7 @@
                 "id": 33,
                 "x": 276,
                 "y": 347,
-                "code": "local net1   = chaos.getLpo(3) \nlocal net2   = chaos.getLpo(4) \n\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"go2ball\")\n",
+                "code": "local net1   = chaos.getLpo(chaos.NET1_LPO) \nlocal net2   = chaos.getLpo(chaos.NET2_LPO) \n\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"go2ball\")\n",
                 "transitions": [
                   {
                     "name": "AtDistance",
