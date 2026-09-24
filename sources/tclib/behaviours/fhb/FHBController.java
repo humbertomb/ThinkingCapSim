@@ -269,9 +269,9 @@ public class FHBController extends Controller
 		// Plot current control commands
 		if (debug)
 		{
-			c_buffer[0] 	= Math.max (Math.min (vlin / rdesc.model.Vmax, 1.0), -1.0);
-			c_buffer[1] 	= Math.max (Math.min (vlat / rdesc.model.Vmax, 1.0), -1.0);
-			c_buffer[2] 	= Math.max (Math.min (vrot / rdesc.model.Rmax, 1.0), -1.0);
+			c_buffer[0] 	= tc.vrobot.RobotModel.share (vlin, rdesc.model.Vmax);
+			c_buffer[1] 	= tc.vrobot.RobotModel.share (vlat, rdesc.model.Umax);
+			c_buffer[2] 	= tc.vrobot.RobotModel.share (vrot, rdesc.model.Rmax);
 
 			if (localgfx)
 				c_plot.draw (c_buffer);	

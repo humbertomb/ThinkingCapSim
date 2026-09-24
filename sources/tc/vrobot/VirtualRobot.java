@@ -225,20 +225,13 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		// a share of the most the platform does that way
 		if (plot != null)
 		{
-			buffer[0] 	= normalised (item.vlin, rdesc.model.Vmax);
-			buffer[1] 	= normalised (item.vlat, rdesc.model.Vmax);
-			buffer[2] 	= normalised (item.vrot, rdesc.model.Rmax);
+			buffer[0] 	= RobotModel.share (item.vlin, rdesc.model.Vmax);
+			buffer[1] 	= RobotModel.share (item.vlat, rdesc.model.Umax);
+			buffer[2] 	= RobotModel.share (item.vrot, rdesc.model.Rmax);
 			plot.updateData (buffer);	
 		}
 	}
 
-	/** A velocity as a share of the most the platform does, within -1 .. 1. */
-	static private double normalised (double v, double max)
-	{
-		if (!Double.isFinite (v))			return 0.0;
-		if (!(max > 0.0))					return Math.max (Math.min (v, 1.0), -1.0);
-		return Math.max (Math.min (v / max, 1.0), -1.0);
-	}
 
 	public void notify_execution (String space, ItemExecution item) 
 	{		

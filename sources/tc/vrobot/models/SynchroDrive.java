@@ -179,19 +179,22 @@ public class SynchroDrive extends RobotModel
 		double			dt = rdesc.DTIME / 1000.0;
 		double			v;
 
-		// Set motion commands into the correct range
+		// Set motion commands into the correct range, each way as fast as it goes
+		// that way
 		vr	= Math.min (Math.max (vlin, -Vmax), Vmax);
-		ur	= Math.min (Math.max (vlat, -Vmax), Vmax);
+		ur	= Math.min (Math.max (vlat, -Umax), Umax);
 		wr	= Math.min (Math.max (vrot, -Rmax), Rmax);
 
 		// The two directions are one velocity of the wheels, and it is that one the
-		// driving motor has to cover: asked for more than it goes, the platform keeps
-		// the direction it was asked to go in and goes as fast as it can that way
-		v	= Math.hypot (vr, ur);
-		if (v > Vmax)
+		// platform has to cover: asked for more than it goes, it keeps the direction
+		// it was asked to go in and goes as fast as it can that way. What it may do
+		// of each is what it is measured against, so the whole of Vmax forward and
+		// the whole of Umax sideways are each of them all it has
+		v	= Math.hypot (share (vr, Vmax), share (ur, Umax));
+		if (v > 1.0)
 		{
-			vr	*= Vmax / v;
-			ur	*= Vmax / v;
+			vr	/= v;
+			ur	/= v;
 		}
 
 		// Compute robot command (inverse kynematics): the driving motor answers the
@@ -202,7 +205,7 @@ public class SynchroDrive extends RobotModel
 
 		// Check for kynematics constraints
 		vm	= Math.min (Math.max (vm, -Vmax), Vmax);
-		um	= Math.min (Math.max (um, -Vmax), Vmax);
+		um	= Math.min (Math.max (um, -Umax), Umax);
 		del	= Math.min (Math.max (del, -SAmax * dt), SAmax * dt);
 	}
 

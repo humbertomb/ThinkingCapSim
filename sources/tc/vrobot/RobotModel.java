@@ -19,6 +19,7 @@ public abstract class RobotModel extends Object
 
     // Maximum values of kynematics parameters
 	public transient double						Vmax;			// Maximum linear velocity (m/s)
+	public transient double						Umax;			// Maximum lateral velocity (m/s)
 	public transient double						Rmax;			// Maximum angular velocity (rad/s)
 
 	// Kynematics outputs: the velocities of the platform itself, whatever it is built
@@ -110,6 +111,19 @@ public abstract class RobotModel extends Object
 	 */
 	public boolean lateral ()								{ return false; }
 
+	/**
+	 * A velocity as a share of the most the platform does that way, within -1 .. 1:
+	 * what a plot of the control action draws, and what a command given as a share
+	 * (CTRL_MANUAL) is worth. A platform that does nothing at all that way is asked
+	 * for nothing, and not for something that is not a number.
+	 */
+	static public double share (double v, double max)
+	{
+		if (!Double.isFinite (v))				return 0.0;
+		if (!(max > 0.0))						return 0.0;
+		return Math.max (Math.min (v / max, 1.0), -1.0);
+	}
+
 	/** How many times a lateral velocity nobody can carry out is said out loud before it is only counted. */
 	static protected final int					LAT_SAID	= 5;
 
@@ -136,6 +150,13 @@ public abstract class RobotModel extends Object
 	{
 		try { Vmax	 	= Double.valueOf (props.getProperty ("VMAX")).doubleValue (); } 				catch (Exception e) 		{ }
 		try { Rmax	 	= Double.valueOf (props.getProperty ("RMAX")).doubleValue () * Angles.DTOR; } 	catch (Exception e) 		{ }
+
+		// How fast it may go sideways: nothing at all on a platform that cannot be
+		// driven that way, and, on one that can and says nothing, as fast as it goes
+		// forward -- a synchro drive drives its wheels with one motor, whichever way
+		// they point
+		Umax	= lateral () ? Vmax : 0.0;
+		try { Umax	 	= Double.valueOf (props.getProperty ("UMAX")).doubleValue (); } 				catch (Exception e) 		{ }
 
 		try { odom_et 	= Double.valueOf (props.getProperty ("ODOM_ET")).doubleValue (); }				catch (Exception e)		{ }
 		try { odom_er 	= Double.valueOf (props.getProperty ("ODOM_ER")).doubleValue (); }				catch (Exception e)		{ }

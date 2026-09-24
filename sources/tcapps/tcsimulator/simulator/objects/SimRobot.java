@@ -251,7 +251,7 @@ public class SimRobot extends VirtualRobot
 			{
 			case ItemMotion.CTRL_MANUAL:
 				vlin	= kvlin * model.Vmax;
-				vlat	= kvlat * model.Vmax;
+				vlat	= kvlat * model.Umax;
 				vrot	= kvrot * model.Rmax;
 				break;
 			case ItemMotion.CTRL_AUTO:
