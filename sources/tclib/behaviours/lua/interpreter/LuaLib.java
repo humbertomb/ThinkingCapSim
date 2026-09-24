@@ -169,28 +169,18 @@ public class LuaLib
 		});
 		// an angle brought into half a turn either way, whichever unit it is written in:
 		// what to do with the difference of two angles before comparing it with anything
-		math.set ("normalizeRad", new LuaFunction ("math.normalizeRad")
+		math.set ("normrad", new LuaFunction ("math.normrad")
 		{
 			public Object call (Object[] args)
 			{
 				return Double.valueOf (normalised (num (args, 0, 0.0)));
 			}
 		});
-		math.set ("normalizeDeg", new LuaFunction ("math.normalizeDeg")
+		math.set ("normdeg", new LuaFunction ("math.normdeg")
 		{
 			public Object call (Object[] args)
 			{
 				return Double.valueOf (normalisedDegrees (num (args, 0, 0.0)));
-			}
-		});
-		// an angle in degrees as an angle in radians between -pi and pi, which is the
-		// one thing the scripts do to every angle they are given (math.rad is left as
-		// Lua has it, normalising nothing)
-		math.set ("radians", new LuaFunction ("math.radians")
-		{
-			public Object call (Object[] args)
-			{
-				return Double.valueOf (normalised (Math.toRadians (num (args, 0, 0.0))));
 			}
 		});
 		math.set ("atan", new LuaFunction ("math.atan")

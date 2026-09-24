@@ -209,12 +209,9 @@ public class LuaHelp
 		{ "min", "x, ...", "The smallest." },
 		{ "deg", "radians", "As degrees." },
 		{ "rad", "degrees", "As radians, as Lua has it: nothing is normalised." },
-		{ "radians", "degrees", "As radians brought into -pi .. pi. This one is ours; it is of no use on an angle of the "
-					+ "bridge, which is in degrees already, but it is what puts an angle of a script right before it goes "
-					+ "into a function of Lua." },
-		{ "normalizeDeg", "degrees", "The same angle brought into -180 .. 180, which is where an angle of the robot is "
-					+ "read from: what to do with the difference of two angles before comparing it with anything. Ours." },
-		{ "normalizeRad", "radians", "The same, for an angle in radians: into -pi .. pi. Ours." },
+		{ "normdeg", "degrees", "The same angle brought into -180 .. 180, which is where an angle of the robot is read "
+					+ "from: what to do with the difference of two angles before comparing it with anything. Ours." },
+		{ "normrad", "radians", "The same, for an angle in radians: into -pi .. pi. Ours." },
 		{ "random", "[m [, n]]", "A number between 0 and 1, between 1 and m, or between m and n." },
 		{ "randomseed", "x", "There to be called; the numbers are the ones of the machine." },
 	};
@@ -283,7 +280,7 @@ public class LuaHelp
 		h.append ("<p class=\"lead\">The functions of <span class=\"mono\">math</span> are the ones of Lua and think in ")
 		 .append ("radians, so an angle goes into one through <span class=\"mono\">math.rad</span> and comes out of one ")
 		 .append ("through <span class=\"mono\">math.deg</span>: <span class=\"mono\">math.cos (math.rad (ball.theta))</span>, ")
-		 .append ("<span class=\"mono\">math.deg (math.atan2 (dy, dx))</span>.</p>");
+		 .append ("<span class=\"mono\">math.normdeg (math.deg (math.atan2 (dy, dx)))</span>.</p>");
 
 		h.append ("<h2>Contents</h2><p class=\"wire\">");
 		h.append ("<a href=\"#chaos\">chaos</a> &nbsp; <a href=\"#constants\">the constants</a> &nbsp; ")
@@ -335,8 +332,8 @@ public class LuaHelp
 
 		card (h, "math", "math", "tclib.behaviours.lua.interpreter.LuaLib",
 			  "The whole of the numbers. These are the functions of Lua, so they think in radians while everything of the "
-			  + "robot is in degrees: <span class=\"mono\">math.rad</span> going in and <span class=\"mono\">math.deg</span> "
-			  + "coming out.", (LuaTable) lua.get ("math"), MATH_HELP);
+			  + "robot is in degrees: <span class=\"mono\">math.rad</span> going in, <span class=\"mono\">math.deg</span> "
+			  + "coming out, and <span class=\"mono\">math.normdeg</span> on whatever comes of adding or subtracting angles.", (LuaTable) lua.get ("math"), MATH_HELP);
 		card (h, "string", "string", "tclib.behaviours.lua.interpreter.LuaLib",
 			  "The part of the text a behaviour needs, which is little: what it writes is for a person to read on the console.",
 			  (LuaTable) lua.get ("string"), STRING_HELP);
