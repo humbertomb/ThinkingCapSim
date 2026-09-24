@@ -3,23 +3,40 @@
 -- 20060406 Humberto Martinez
 -- 20260924 Humberto Martinez
 
--- Constants and parameters
-LPOBALL = chaos.BALL_LPO
-ANGLELARGE = 48.7014		-- 50 degrees
-ANGLESMALL = 22.9183		-- 23 degrees
-SLOWDOWN = 360
+ANGLE_LARGE = 50
+ANGLE_SMALL = 25
+SLOWDOWN = 600
 
--- Implementation
+-- PID-like controllers
 vlin = 0
 vrot = 0
-local ball = chaos.getLpo(LPOBALL)
---io.write(" brho = ",ball.rho," btheta = ",ball.theta)
-
-linPos = ball.rho * math.cos(math.rad(ball.theta))
-latPos = - ball.rho * math.sin(math.rad(ball.theta))
-thetaPos = ball.theta
-
-chaos.setTargetPos(linPos, latPos, thetaPos)
-chaos.setNeeded(LPOBALL,1.0)
-
+local ball = chaos.getLpo(chaos.BALL_LPO)
+if (ball.rho < SLOWDOWN) then
+	-- ***************************
+	-- Slow approach to ball
+	vlin = 0.6 * ball.rho -100
+	if (math.abs(ball.theta) < ANGLE_SMALL) then	
+		vrot = 0.9 * ball.theta
+	else			
+		vrot = 1.23 * ball.theta
+	end
+else
+	-- ***************************
+	-- Fast approach to ball
+	if (math.abs(ball.theta) < ANGLE_SMALL) then
+		vlin = 400
+		vrot = 1.6 * ball.theta
+	elseif (math.abs(ball.theta) < ANGLE_LARGE) then
+		vlin = 250
+		vrot = 120 * math.sign(ball.theta)
+	else
+		vlin = 0
+		vrot = 150 * math.sign(ball.theta)
+	end
+end
+	
+chaos.setNeeded(chaos.BALL_LPO,1.0)
+chaos.setVlin(vlin)
+chaos.setVrot(vrot)
+chaos.setVlat(0)
 

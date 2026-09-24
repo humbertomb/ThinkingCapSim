@@ -7,11 +7,11 @@ local ball = chaos.getLpo(chaos.BALL_LPO)
 local info = chaos.getBehaviorInfo ()
 
 if info.isNew > 0 or ball.anchored > 0.8 then
-	sgn = math.sign (ball.theta)
-	chaos.setGlobal("BALL_DIRECTION",1,sgn)
+	chaos.setGlobal("BALL_DIRECTION",1,math.sign (ball.theta)
 end
 sgn = chaos.getGlobal("BALL_DIRECTION")
 
+-- PID-like controller
 vrot = 0
 if ball.anchored > 0.8 and math.abs (ball.theta) < 30 then
 	vrot = 5.5 * ball.theta
