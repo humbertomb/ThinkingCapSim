@@ -7,7 +7,7 @@ set DANGER	= trapezoid {0.0, 0.0, 1.0, 1.5};
 set CLOSE	= trapezoid {1.0, 1.5, 2.5, 3.0};
 set FAR		= trapezoid {2.5, 3.0, 10000.0, 10000.0};
 
-// Sets for steering (deg/s)
+// Sets for vrot, the turn rate (deg/s)
 set TTR		= trapezoid {-150.0, -150.0, -16.0, -15.0};		// Tight Right
 set TR		= trapezoid {-16.0, -15.0, -6.5, -5.5};			// Right
 set TSR		= trapezoid {-6.5, -5.5, -3.5, -2.5};			// Small Right
@@ -46,7 +46,7 @@ set GP		= trapezoid {0.52, 0.87, 3.5, 3.5};				// Positive
 // External Blackboard Variables
 sensor float		group0, target, self;
 sensor float 		alpha, heading;
-effector float 		turn, speed, brake;
+effector float 		vlin, vlat, vrot, brake;		// the control action: m/s, m/s and deg/s
 
 // State and Control Variables
 float 				front; 									// Radar sensor
@@ -64,8 +64,9 @@ float				FALSE	= 0.0;
 
 initialization
 {
-	turn	= 0.0;
-	speed	= 0.0;	
+	vlin	= 0.0;
+	vlat	= 0.0;
+	vrot	= 0.0;	
 }
 
 
@@ -84,7 +85,7 @@ agent ReactiveControl
 
 	behaviour avoidF priority 1.0
 	{
-		fusion		speed, brake;
+		fusion		vlin, brake;
 		float		vel;
 		
 		rules
@@ -97,33 +98,33 @@ agent ReactiveControl
 			if (front is FAR)				vel is SFULL;
 		}
 
-		speed	= target * vel;
+		vlin	= target * vel;
 	}
 
 	behaviour toGoal priority 0.3
 	{
-		fusion		turn, speed;
+		fusion		vlin, vrot;
 		float		diff, vel;
 
 		diff	= heading - alpha;
 			
 		rules
 		{
-			if (diff is GP)			turn is TTL,	vel is SHALF;
-			if (diff is GSP)		turn is TL,		vel is SFULL;
-			if (diff is GZ)			turn is TC,		vel is SFULL;
-			if (diff is GSN)		turn is TR,		vel is SFULL;
-			if (diff is GN)			turn is TTR,	vel is SHALF;
+			if (diff is GP)			vrot is TTL,	vel is SHALF;
+			if (diff is GSP)		vrot is TL,		vel is SFULL;
+			if (diff is GZ)			vrot is TC,		vel is SFULL;
+			if (diff is GSN)		vrot is TR,		vel is SFULL;
+			if (diff is GN)			vrot is TTR,	vel is SHALF;
 		}
 
-		speed	= target * vel;
+		vlin	= target * vel;
 	}
 	
 	behaviour keepSpd priority 0.3
 	{
-		fusion		speed;
+		fusion		vlin;
 
-		speed	= target;
+		vlin	= target;
 	}
 	
 	// OJO: no se pueden usar ORs en las reglas del blender, y SOLO conjuntos trapezoidales

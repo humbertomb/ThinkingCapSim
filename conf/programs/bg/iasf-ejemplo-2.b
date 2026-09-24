@@ -9,7 +9,7 @@ set MED		= trapezoid {0.4, 0.5, 0.6, 0.7};			// Medium
 set FAR		= trapezoid {0.6, 0.7, 1.3, 1.4};			// Far
 set VFAR	= trapezoid {1.3, 1.4, 10.0, 10.0};			// Very Far
 
-// Sets for steering [-10 .. 10]
+// Sets for vrot, the turn rate (deg/s)
 set TTR		= trapezoid {-150.0, -150.0, -100.0, -90.0};	// Tight Right
 set TR		= trapezoid {-100.0, -90.0, -60.0, -50.0};		// Right
 set TSR		= trapezoid {-60.0, -50.0, -20.0, -10.0};		// Small Right
@@ -18,7 +18,7 @@ set TSL		= trapezoid {10.0, 20.0, 50.0, 60.0};			// Small Left
 set TL		= trapezoid {50.0, 60.0, 90.0, 100.0};			// Left
 set TTL		= trapezoid {90.0, 100.0, 150.0, 150.0};		// Tight Left
 
-// Sets for speed [0 .. 1] (percentage)
+// Sets for vlin, the forward velocity (m/s)
 set SFULL	= trapezoid {0.25, 0.3, 0.5, 0.5};				// Full speed
 set SMEDIUM	= trapezoid {0.15, 0.2, 0.25, 0.3};				// Medium speed
 set SLOW	= trapezoid {0.0, 0.0, 0.15, 0.2};				// Stop
@@ -49,7 +49,7 @@ set GP		= trapezoid {0.52, 0.87, 3.5, 3.5};			// Positive
 sensor float		group0, group1, group2, group3, group4;
 sensor float 		bumper0, bumper1, bumper2, bumper3;
 sensor float 		alpha, heading;
-effector float 		turn, speed;
+effector float 		vlin, vlat, vrot;		// the control action: m/s, m/s and deg/s
 
 // State and Control Variables
 float 				collision = 0.0;
@@ -92,8 +92,9 @@ function sgn (a)
 
 initialization
 {
-	turn = 0.0;
-	speed = 0.0;
+	vlin = 0.0;
+	vlat = 0.0;
+	vrot = 0.0;
 }
 
 
@@ -119,118 +120,118 @@ agent ReactiveControl
 
 	behaviour avoidL priority 1.0
 	{
-		fusion	turn, speed;
+		fusion	vlin, vrot;
 
 		rules
 		{
-			background (0.01)								speed is SFULL;
-			background (0.01)								turn is TC;
+			background (0.01)								vlin is SFULL;
+			background (0.01)								vrot is TC;
 
 			// Left and Front sensors
-			if ((leftd is CLOSE) && (front is CLOSE))		turn is TTR;
-			if ((leftd is CLOSE) && (front is NEAR))		turn is TTR;
-			if ((leftd is CLOSE) && (front is MED))			turn is TTR;
-			if ((leftd is CLOSE) && (front is FAR))			turn is TTR;
-			if ((leftd is CLOSE) && (front is VFAR))		turn is TTR;
+			if ((leftd is CLOSE) && (front is CLOSE))		vrot is TTR;
+			if ((leftd is CLOSE) && (front is NEAR))		vrot is TTR;
+			if ((leftd is CLOSE) && (front is MED))			vrot is TTR;
+			if ((leftd is CLOSE) && (front is FAR))			vrot is TTR;
+			if ((leftd is CLOSE) && (front is VFAR))		vrot is TTR;
 
-			if ((leftd is NEAR) && (front is CLOSE))		turn is TR;
-			if ((leftd is NEAR) && (front is NEAR))			turn is TR;
-			if ((leftd is NEAR) && (front is MED))			turn is TR;
-			if ((leftd is NEAR) && (front is FAR))			turn is TSR;
-			if ((leftd is NEAR) && (front is VFAR))			turn is TSR;
+			if ((leftd is NEAR) && (front is CLOSE))		vrot is TR;
+			if ((leftd is NEAR) && (front is NEAR))			vrot is TR;
+			if ((leftd is NEAR) && (front is MED))			vrot is TR;
+			if ((leftd is NEAR) && (front is FAR))			vrot is TSR;
+			if ((leftd is NEAR) && (front is VFAR))			vrot is TSR;
 
-			if ((leftd is MED) && (front is CLOSE))			turn is TR;
-			if ((leftd is MED) && (front is NEAR))			turn is TR;
-			if ((leftd is MED) && (front is MED))			turn is TSR;
-			if ((leftd is MED) && (front is FAR))			turn is TC;
-			if ((leftd is MED) && (front is VFAR))			turn is TC;
+			if ((leftd is MED) && (front is CLOSE))			vrot is TR;
+			if ((leftd is MED) && (front is NEAR))			vrot is TR;
+			if ((leftd is MED) && (front is MED))			vrot is TSR;
+			if ((leftd is MED) && (front is FAR))			vrot is TC;
+			if ((leftd is MED) && (front is VFAR))			vrot is TC;
 
 			// Speed controller
-			if ((leftd is CLOSE) || (front is CLOSE))		speed is SLOW;
-			if ((leftd is NEAR) || (front is NEAR))			speed is SLOW;
-			if ((leftd is MED) || (front is MED))			speed is SMEDIUM;
+			if ((leftd is CLOSE) || (front is CLOSE))		vlin is SLOW;
+			if ((leftd is NEAR) || (front is NEAR))			vlin is SLOW;
+			if ((leftd is MED) || (front is MED))			vlin is SMEDIUM;
 		}
 		
-		turn = turn * 1.5;
+		vrot = vrot * 1.5;
 	}
 
 	behaviour avoidR priority 1.0
 	{
-		fusion	turn, speed;
+		fusion	vlin, vrot;
 
 		rules
 		{
-			background (0.01)								speed is SFULL;
-			background (0.01)								turn is TC;
+			background (0.01)								vlin is SFULL;
+			background (0.01)								vrot is TC;
 
 			// Right and Front sensors
-			if ((rightd is CLOSE) && (front is CLOSE))		turn is TTL;
-			if ((rightd is CLOSE) && (front is NEAR))		turn is TTL;
-			if ((rightd is CLOSE) && (front is MED))		turn is TTL;
-			if ((rightd is CLOSE) && (front is FAR))		turn is TTL;
-			if ((rightd is CLOSE) && (front is VFAR))		turn is TTL;
+			if ((rightd is CLOSE) && (front is CLOSE))		vrot is TTL;
+			if ((rightd is CLOSE) && (front is NEAR))		vrot is TTL;
+			if ((rightd is CLOSE) && (front is MED))		vrot is TTL;
+			if ((rightd is CLOSE) && (front is FAR))		vrot is TTL;
+			if ((rightd is CLOSE) && (front is VFAR))		vrot is TTL;
 
-			if ((rightd is NEAR) && (front is CLOSE))		turn is TL;
-			if ((rightd is NEAR) && (front is NEAR))		turn is TL;
-			if ((rightd is NEAR) && (front is MED))			turn is TL;
-			if ((rightd is NEAR) && (front is FAR))			turn is TSL;
-			if ((rightd is NEAR) && (front is VFAR))		turn is TSL;
+			if ((rightd is NEAR) && (front is CLOSE))		vrot is TL;
+			if ((rightd is NEAR) && (front is NEAR))		vrot is TL;
+			if ((rightd is NEAR) && (front is MED))			vrot is TL;
+			if ((rightd is NEAR) && (front is FAR))			vrot is TSL;
+			if ((rightd is NEAR) && (front is VFAR))		vrot is TSL;
 
-			if ((rightd is MED) && (front is CLOSE))		turn is TL;
-			if ((rightd is MED) && (front is NEAR))			turn is TL;
-			if ((rightd is MED) && (front is MED))			turn is TSL;
-			if ((rightd is MED) && (front is FAR))			turn is TC;
-			if ((rightd is MED) && (front is VFAR))			turn is TC;
+			if ((rightd is MED) && (front is CLOSE))		vrot is TL;
+			if ((rightd is MED) && (front is NEAR))			vrot is TL;
+			if ((rightd is MED) && (front is MED))			vrot is TSL;
+			if ((rightd is MED) && (front is FAR))			vrot is TC;
+			if ((rightd is MED) && (front is VFAR))			vrot is TC;
 
 			// Speed controller
-			if ((rightd is CLOSE) || (front is CLOSE))		speed is SLOW;
-			if ((rightd is NEAR) || (front is NEAR))		speed is SLOW;
-			if ((rightd is MED) || (front is MED))			speed is SMEDIUM;
+			if ((rightd is CLOSE) || (front is CLOSE))		vlin is SLOW;
+			if ((rightd is NEAR) || (front is NEAR))		vlin is SLOW;
+			if ((rightd is MED) || (front is MED))			vlin is SMEDIUM;
 		}
 		
-		turn = turn * 1.5;
+		vrot = vrot * 1.5;
 	}
 
 	behaviour avoidF priority 1.0
 	{
-		fusion	turn, speed;
+		fusion	vlin, vrot;
 
 		rules
 		{
-			background (0.01)													turn is TC;
-			background (0.01)													speed is SFULL;
+			background (0.01)													vrot is TC;
+			background (0.01)													vlin is SFULL;
 
 			// Right, Left and Front sensors
-			if ((rightd is CLOSE) && (front is CLOSE) && !(leftd is CLOSE))		turn is TTL;
-			if ((left is CLOSE) && (front is CLOSE) && !(right is CLOSE))		turn is TTR;
+			if ((rightd is CLOSE) && (front is CLOSE) && !(leftd is CLOSE))		vrot is TTL;
+			if ((left is CLOSE) && (front is CLOSE) && !(right is CLOSE))		vrot is TTR;
 			
-			if ((rightd is NEAR) && (front is CLOSE) && !(leftd is NEAR))		turn is TTL;
-			if ((left is NEAR) && (front is CLOSE) && !(right is NEAR))			turn is TTR;
+			if ((rightd is NEAR) && (front is CLOSE) && !(leftd is NEAR))		vrot is TTL;
+			if ((left is NEAR) && (front is CLOSE) && !(right is NEAR))			vrot is TTR;
 			
-			if ((rightd is CLOSE) && (front is NEAR) && !(leftd is CLOSE))		turn is TL;
-			if ((left is CLOSE) && (front is NEAR) && !(right is CLOSE))		turn is TR;
+			if ((rightd is CLOSE) && (front is NEAR) && !(leftd is CLOSE))		vrot is TL;
+			if ((left is CLOSE) && (front is NEAR) && !(right is CLOSE))		vrot is TR;
 			
-			if ((rightd is NEAR) && (front is NEAR) && !(leftd is NEAR))		turn is TL;
-			if ((left is NEAR) && (front is NEAR) && !(right is NEAR))			turn is TR;
+			if ((rightd is NEAR) && (front is NEAR) && !(leftd is NEAR))		vrot is TL;
+			if ((left is NEAR) && (front is NEAR) && !(right is NEAR))			vrot is TR;
 			
-			if ((front is CLOSE) || (front is NEAR))							speed is SLOW;
+			if ((front is CLOSE) || (front is NEAR))							vlin is SLOW;
 		}
 	}
 
 	behaviour toGoal priority 0.7
 	{
-		fusion		turn, speed;
+		fusion		vlin, vrot;
 		float		diff;
 
 		diff = heading - alpha;
 			
 		rules
 		{
-			if (diff is GP)			turn is TTL, speed is SLOW;
-			if (diff is GSP)		turn is TL, speed is SMEDIUM;		// TSL
-			if (diff is GZ)			turn is TC, speed is SFULL;
-			if (diff is GSN)		turn is TR, speed is SMEDIUM;		// TSR
-			if (diff is GN)			turn is TTR, speed is SLOW;
+			if (diff is GP)			vrot is TTL, vlin is SLOW;
+			if (diff is GSP)		vrot is TL, vlin is SMEDIUM;		// TSL
+			if (diff is GZ)			vrot is TC, vlin is SFULL;
+			if (diff is GSN)		vrot is TR, vlin is SMEDIUM;		// TSR
+			if (diff is GN)			vrot is TTR, vlin is SLOW;
 		}
 	}
 

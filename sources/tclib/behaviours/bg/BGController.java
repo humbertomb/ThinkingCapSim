@@ -250,10 +250,20 @@ public class BGController extends Controller
 		// Run the whole BG program		
 		interp.agents (program);
 
-		// Read the specified action from BG interpreter
-		vlin	= interp.access ("speed");
-		vlat	= 0.0;										// a BG program commands no lateral velocity
-		vrot	= interp.access ("turn") * Angles.DTOR;
+		// Read the specified action from BG interpreter: the three velocities of the
+		// control action, as the program has them -- vlin and vlat in m/s, and vrot
+		// in deg/s, which is what a BG program reckons a turn in
+		vlin	= interp.defined ("vlin") ? interp.access ("vlin") : 0.0;
+		vlat	= interp.defined ("vlat") ? interp.access ("vlat") : 0.0;
+		vrot	= interp.defined ("vrot") ? interp.access ("vrot") * Angles.DTOR : 0.0;
+
+		// A program that says nothing of them is one written before the control
+		// action was the three velocities: it is read the way it was written, and it
+		// commands nothing sideways, which is all such a program ever did
+		if (!interp.defined ("vlin") && interp.defined ("speed"))
+			vlin	= interp.access ("speed");
+		if (!interp.defined ("vrot") && interp.defined ("turn"))
+			vrot	= interp.access ("turn") * Angles.DTOR;
 
 		// Set action
 		result	= inGoal ();

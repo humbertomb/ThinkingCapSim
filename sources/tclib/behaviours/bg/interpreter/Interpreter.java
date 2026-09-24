@@ -965,11 +965,21 @@ public class Interpreter extends Object
 		return value;
 	}
 	
+	/**
+	 * Whether the program declares a variable of this name, which is asked before
+	 * reading one that a program may or may not have -- reading a variable that is
+	 * not there is an error of the program, and is reported as one
+	 */
+	public boolean defined (String name)
+	{
+		return globals.get (name) != null;
+	}
+
 	public double access (String name)
 	{
 		double			value;
 		Store			sto 		= null;
-		
+
 		sto = globals.get (name);
 		if (sto == null)
 		{
