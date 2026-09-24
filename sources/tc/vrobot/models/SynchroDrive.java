@@ -39,8 +39,9 @@ import wucore.utils.math.Angles;
  * cover, which is what limits them. Going sideways costs it nothing in turning
  * and nothing in speed but what the other direction takes.
  *
- * How fast it goes sideways is its UMAX (max lat speed), and a platform that
- * says nothing of it does not go sideways at all.
+ * How fast it goes sideways is how fast it goes forward, and not a figure of its
+ * own: it is one motor driving its wheels, and they are pointed wherever the
+ * platform is to go.
  */
 public class SynchroDrive extends RobotModel
 {
@@ -94,6 +95,10 @@ public class SynchroDrive extends RobotModel
 		// Nothing is asked of the drive train: how fast it turns is how fast its
 		// steering moves, and neither that nor its speed depends on its geometry
 		if (SAmax <= 0.0)		SAmax = Rmax;			// it says nothing: as fast as the platform may turn
+
+		// It goes sideways as fast as it goes forward: the same motor drives the same
+		// wheels, whichever way they have been pointed
+		Umax	= Vmax;
 	}
 
 	public void kynematics_direct (double vm, double del)

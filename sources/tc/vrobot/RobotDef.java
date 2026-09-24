@@ -317,8 +317,6 @@ public class RobotDef
 	static public class Kinematics
 	{
 		public String	drive		= "tc.vrobot.models.DifferentialDrive";	// DRIVEMODEL
-		public double	umax;						// UMAX (m/s): how fast it goes sideways, for a platform
-													// that can; nothing said is not going sideways at all
 		public double	lamax;						// maximum acceleration (m/s2)
 		public double	ldmax;						// maximum deceleration (m/s2)
 		public double	rwheel;						// RWHEEL (m): the trail of the steering wheel
@@ -330,7 +328,7 @@ public class RobotDef
 		public Kinematics copy ()
 		{
 			Kinematics	k = new Kinematics ();
-			k.drive = drive;	k.umax = umax;		k.lamax = lamax;	k.ldmax = ldmax;
+			k.drive = drive;	k.lamax = lamax;	k.ldmax = ldmax;
 			k.rwheel = rwheel;	k.skid = skid;		k.gear = gear;		k.pulses = pulses;
 			k.odomET = odomET;	k.odomER = odomER;	k.odomBias = odomBias;
 			return k;
@@ -476,7 +474,7 @@ public class RobotDef
 	 * speeds of the platform, the accelerations, the encoders -- is not the
 	 * wheels' to say and stays as it is given.
 	 */
-	static private final String[]	KIN_DERIVED		= { "length", "base", "wheeldiameter", "vmax", "rmax", "samax" };
+	static private final String[]	KIN_DERIVED		= { "length", "base", "wheeldiameter", "vmax", "umax", "rmax", "samax" };
 
 	/** True for a kinematics property the wheels of the platform work out. */
 	static public boolean isCalculated (String name)
@@ -534,6 +532,10 @@ public class RobotDef
 			return Double.valueOf (Math.abs (meanX (turning) - meanX (fixed)));
 		}
 		if (name.equals ("vmax"))		return speed (driving);
+		// a platform that can be driven sideways is driven by the same wheels either
+		// way, so it goes sideways as fast as it goes forward (the models that cannot
+		// are not shown it at all: see usesKinematics)
+		if (name.equals ("umax"))		return speed (driving);
 		if (name.equals ("samax"))		return steerRate (turning);
 		if (name.equals ("rmax"))
 		{
@@ -1386,9 +1388,6 @@ public class RobotDef
 		setNZ (p, "VMAX", value (derived ("vmax")));	setNZ (p, "RMAX", value (derived ("rmax")));
 		setNZ (p, "LENGHT", value (derived ("length")));	setNZ (p, "BASE", value (derived ("base")));
 		setNZ (p, "WHEEL", value (derived ("wheel diameter")));	setNZ (p, "SAMAX", value (derived ("samax")));
-		// a platform that says nothing of how fast it goes sideways does not go
-		// sideways: the model is given no UMAX, and makes nothing of a vlat
-		setNZ (p, "UMAX", kinematics.umax);
 		setNZ (p, "LAMAX", kinematics.lamax);		setNZ (p, "LDMAX", kinematics.ldmax);
 		setNZ (p, "RWHEEL", kinematics.rwheel);		setNZ (p, "SKID", kinematics.skid);
 		setNZ (p, "GEAR", kinematics.gear);

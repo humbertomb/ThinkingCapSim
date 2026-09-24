@@ -1181,7 +1181,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				Double	v = robot.derived (key);
 				return (v != null) ? RobotDef.fmt (v.doubleValue ()) : "";
 			}
-			if (key.equals ("umax"))		return RobotDef.fmt (k.umax);
 			if (key.equals ("lamax"))		return RobotDef.fmt (k.lamax);
 			if (key.equals ("ldmax"))		return RobotDef.fmt (k.ldmax);
 			if (key.equals ("rwheel"))		return RobotDef.fmt (k.rwheel);
@@ -1351,7 +1350,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	 */
 	static public final String		MAX_SPEED				= "max lin speed";			// vmax
 	static public final String		MAX_LAT_SPEED			= "max lat speed";			// umax: only the models that
-																						// go sideways read it
+																						// go sideways are shown it
 	static public final String		MAX_TURN_RATE			= "max turn rate";			// rmax
 	static public final String		MAX_STEER_RATE			= "max steering rate";		// samax: how fast it steers, not how far
 	static public final String		MAX_ACCEL				= "max acceleration";		// lamax
@@ -1619,7 +1618,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			String	key = kinKey (name);					// what the description calls it
 
 			if (name.equals (DRIVE))			k.drive = token (value);
-			else if (key.equals ("umax"))		k.umax = num (value);
 			else if (key.equals ("lamax"))		k.lamax = num (value);
 			else if (key.equals ("ldmax"))		k.ldmax = num (value);
 			else if (key.equals ("rwheel"))		k.rwheel = num (value);
