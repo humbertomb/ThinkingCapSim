@@ -71,6 +71,19 @@ public class SeqPlanner extends Planner
 		do_plan ();
 	}
 	
+	/**
+	 * The task set starts from its first task again, and a planner that had finished
+	 * one has something to do once more (RESET). A planner with no plan at all has
+	 * nothing to start over.
+	 */
+	protected void reset ()
+	{
+		task_k		= 0;
+		finished	= false;
+		newtask		= (task != null) && (task_n > 0);
+		if (debug)		System.out.println ("  [Pla] Reset: " + (newtask ? "the plan starts over" : "there is no plan to start over"));
+	}
+
 	protected void do_plan ()
 	{
 		if (newtask)

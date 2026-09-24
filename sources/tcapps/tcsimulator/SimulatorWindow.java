@@ -136,7 +136,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	protected JSplitPane			splitPane;
 	protected StatusBar				statusBar;
 	protected View3DController		view3d;
-	protected Action				executeAction, startAction, stepAction, stopAction, tasksAction;
+	protected Action				executeAction, resetAction, startAction, stepAction, stopAction, tasksAction;
 
 	public SimulatorWindow ()
 	{
@@ -223,10 +223,12 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		tb.add (ToolButtons.flatButton (ToolButtons.zoomOut (canvas)));
 		tb.addSeparator ();
 		executeAction	= ToolButtons.action ("Execute", ToolIcon.EXECUTE, "Execute the architecture (restarts it if running)  [F5]", new Runnable () { public void run () { execute (); } });
-		startAction		= ToolButtons.action ("Start", ToolIcon.RUN, "Start  [F6]", new Runnable () { public void run () { command (ItemExecution.START); } });
-		stepAction		= ToolButtons.action ("Step", ToolIcon.STEP, "Step  [F7]", new Runnable () { public void run () { command (ItemExecution.STEP); } });
-		stopAction		= ToolButtons.action ("Stop", ToolIcon.STOP, "Stop  [F8]", new Runnable () { public void run () { command (ItemExecution.STOP); } });
+		resetAction		= ToolButtons.action ("Reset", ToolIcon.RESET, "Reset: the modules start afresh, without being taken out of execution  [F6]", new Runnable () { public void run () { command (ItemExecution.RESET); } });
+		startAction		= ToolButtons.action ("Start", ToolIcon.RUN, "Start  [F7]", new Runnable () { public void run () { command (ItemExecution.START); } });
+		stepAction		= ToolButtons.action ("Step", ToolIcon.STEP, "Step  [F8]", new Runnable () { public void run () { command (ItemExecution.STEP); } });
+		stopAction		= ToolButtons.action ("Stop", ToolIcon.STOP, "Stop  [F9]", new Runnable () { public void run () { command (ItemExecution.STOP); } });
 		tb.add (ToolButtons.flatButton (executeAction));
+		tb.add (ToolButtons.flatButton (resetAction));
 		tb.add (ToolButtons.flatButton (startAction));
 		tb.add (ToolButtons.flatButton (stepAction));
 		tb.add (ToolButtons.flatButton (stopAction));
@@ -295,9 +297,10 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		JMenu		mexec = new JMenu ("Execution");
 		mexec.add (accel (new JMenuItem (executeAction), KeyEvent.VK_F5, 0));
 		mexec.addSeparator ();
-		mexec.add (accel (new JMenuItem (startAction), KeyEvent.VK_F6, 0));
-		mexec.add (accel (new JMenuItem (stepAction), KeyEvent.VK_F7, 0));
-		mexec.add (accel (new JMenuItem (stopAction), KeyEvent.VK_F8, 0));
+		mexec.add (accel (new JMenuItem (resetAction), KeyEvent.VK_F6, 0));
+		mexec.add (accel (new JMenuItem (startAction), KeyEvent.VK_F7, 0));
+		mexec.add (accel (new JMenuItem (stepAction), KeyEvent.VK_F8, 0));
+		mexec.add (accel (new JMenuItem (stopAction), KeyEvent.VK_F9, 0));
 		mexec.addSeparator ();
 		JMenuItem	tasks = new JMenuItem (tasksAction);
 		tasks.setAccelerator (KeyStroke.getKeyStroke (KeyEvent.VK_T, mask));
@@ -648,6 +651,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	private void updateExecutionState ()
 	{
 		boolean	on = (running != null);
+		resetAction.setEnabled (on);
 		startAction.setEnabled (on);
 		stepAction.setEnabled (on);
 		stopAction.setEnabled (on);

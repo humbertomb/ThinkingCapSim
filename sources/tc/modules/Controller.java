@@ -89,6 +89,13 @@ public abstract class Controller extends StdThread
 		linda.write (btuple);
 	}
 
+	/** Nothing is commanded and nothing has been complained about yet (RESET). */
+	protected void reset ()
+	{
+		insane	= 0;
+		setMotion (0.0, 0.0);
+	}
+
 	public void notify_config (String space, ItemConfig item)
 	{
 		if (item.props_robot != null)

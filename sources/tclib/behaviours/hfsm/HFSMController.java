@@ -54,6 +54,7 @@ public class HFSMController extends Controller
 	protected String[]				c_labels;
 
 	// Goal and task related variables
+	protected boolean				autostart;					// AUTO: it runs with no plan of anybody's
 	protected boolean				has_goal;					// Is any goal available?
 	protected boolean				has_plan;					// Has anybody said where to go? (a plan was received)
 	protected boolean				new_goal;					// New goal received
@@ -113,7 +114,8 @@ public class HFSMController extends Controller
 		// Autostart the controller without a plan: it runs its machine from the
 		// first cycle, and until somebody says where to go there is no goal to have
 		// arrived at (see inGoal)
-		if (cfg.getBoolean ("AUTO", false))
+		autostart	= cfg.getBoolean ("AUTO", false);
+		if (autostart)
 		{
 			has_goal	= true;
 			has_plan	= false;
@@ -179,6 +181,25 @@ public class HFSMController extends Controller
 			return ItemBehResult.T_FINISHED;
 
 		return ItemBehResult.T_NOTYET;
+	}
+
+	/**
+	 * The machine starts afresh, at the initial state of every level, and there is no
+	 * goal, no plan and no path any more (RESET). Whether it runs from the first
+	 * cycle again is what AUTO says, as when the module was set up.
+	 */
+	protected void reset ()
+	{
+		super.reset ();
+
+		if (machine != null)				machine.reset ();
+		chaos.clear ();
+		has_goal	= autostart;
+		has_plan	= false;
+		new_goal	= false;
+		path		= null;
+		idtask		= 0;
+		new_id		= 0;
 	}
 
 	protected void controller ()

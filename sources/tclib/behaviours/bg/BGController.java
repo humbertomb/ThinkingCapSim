@@ -35,6 +35,7 @@ public class BGController extends Controller
 	private double[]				b_buffer;
 	
 	// Goal and task related variables
+	protected boolean				autostart;					// AUTO: it runs with no plan of anybody's
 	protected boolean				has_goal;					// Is any goal available?
 	protected boolean				has_plan;					// Has anybody said where to go? (a plan was received)
 	protected boolean				new_goal;					// New goal received
@@ -100,7 +101,8 @@ public class BGController extends Controller
 		// Autostart the controller without a plan: it runs its program from the
 		// first cycle, and until somebody says where to go there is no goal to have
 		// arrived at (see inGoal)
-		if (cfg.getBoolean ("AUTO", false))
+		autostart	= cfg.getBoolean ("AUTO", false);
+		if (autostart)
 		{
 			has_goal	= true;
 			has_plan	= false;
@@ -167,6 +169,24 @@ public class BGController extends Controller
 		return ItemBehResult.T_NOTYET;
 	}
 	
+	/**
+	 * The program starts afresh: the interpreter forgets what it had worked out and
+	 * there is no goal, no plan and no path any more (RESET). Whether it runs from
+	 * the first cycle again is what AUTO says, as when the module was set up.
+	 */
+	protected void reset ()
+	{
+		super.reset ();
+
+		if ((interp != null) && (BGParser.isparsed ()))		interp.initialize (BGParser.program ());
+		has_goal	= autostart;
+		has_plan	= false;
+		new_goal	= false;
+		path		= null;
+		idtask		= 0;
+		new_id		= 0;
+	}
+
 	protected void controller () 
 	{
 		int					result;

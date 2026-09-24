@@ -261,9 +261,13 @@ public abstract class StdThread implements Runnable, LindaListener
 				step	= false;
 				break;
 			case ItemExecution.STOP:
+				running	= false;
+				step	= false;
+				break;
 			case ItemExecution.RESET:
 				running	= false;
 				step	= false;
+				reset ();									// and whatever the module was in the middle of
 				break;
 			case ItemExecution.STEP:
 				running	= true;
@@ -285,6 +289,15 @@ public abstract class StdThread implements Runnable, LindaListener
 	
 	// Template instance methods. Subclasses COULD implement
 	public void poll ()										{ }
+
+	/**
+	 * Starts the module afresh, without it being taken out of the execution: it is
+	 * stopped, whatever it was in the middle of is forgotten, and it goes on being
+	 * there, registered for its events and ready to be started again (RESET).
+	 *
+	 * Whoever has something to forget says how; the default is that there is nothing.
+	 */
+	protected void reset ()									{ }
 
 	/**
 	 * Closes the windows the module opened when running with local graphics

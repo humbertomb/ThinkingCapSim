@@ -275,6 +275,35 @@ public class LuaController extends Controller
 		return ItemBehResult.T_NOTYET;
 	}
 
+	/**
+	 * The program starts afresh: it is read again, and the interpreter it runs in is
+	 * a new one, so nothing of what it left in a global is there any more -- which is
+	 * what a program that remembers on its own is to be reset of. There is no goal,
+	 * no plan and no path either; whether it runs from the first cycle again is what
+	 * AUTO says, as when the module was set up (RESET).
+	 */
+	protected void reset ()
+	{
+		super.reset ();
+
+		lua			= new LuaState ();
+		lua.set ("chaos", chaos.table ());
+		library.clear ();
+		missing.clear ();
+		steps		= 0;
+		program		= null;
+		if (file != null)					load (file);
+
+		chaos.clear ();
+		chaos.behaviour (null);								// the program begins again, as a behaviour just chosen
+		has_goal	= autostart;
+		has_plan	= false;
+		new_goal	= false;
+		path		= null;
+		idtask		= 0;
+		new_id		= 0;
+	}
+
 	protected void controller ()
 	{
 		int					result;

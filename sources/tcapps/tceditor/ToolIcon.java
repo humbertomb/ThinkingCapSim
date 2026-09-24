@@ -68,6 +68,7 @@ public class ToolIcon implements Icon
 	static public final int		NEW_FILE	= 53;		// a blank page with a folded corner and a plus (a new file)
 	static public final int		SAVE		= 54;		// a floppy disk (save to a file)
 	static public final int		MARKING		= 55;		// a wide coloured line lying on the floor (a marking)
+	static public final int		RESET		= 56;		// an arrow going round (start the modules afresh)
 
 	protected int				type;
 	protected int				size;
@@ -241,6 +242,12 @@ public class ToolIcon implements Icon
 			}
 			g.setColor (new Color (30, 140, 40));
 			g.fillPolygon (new int[] { 9, 9, 15 }, new int[] { 7, 15, 11 }, 3);
+			break;
+		case RESET:			// an arrow going round, back to where it started
+			g.setColor (new Color (200, 120, 30));
+			g.setStroke (new BasicStroke (2.4f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND));
+			g.draw (new java.awt.geom.Arc2D.Double (4.5, 4.5, 13, 13, 120, 300, java.awt.geom.Arc2D.OPEN));
+			g.fillPolygon (new int[] { 8, 15, 11 }, new int[] { 3, 5, 10 }, 3);
 			break;
 		case RUN:			// play
 			g.setColor (new Color (30, 140, 40));
