@@ -11,6 +11,7 @@
 	<classpathentry kind="lib" path="jarlibs/plot.jar"/>
 	<classpathentry kind="lib" path="jarlibs/jsdn_java3d.jar"/>
 	<classpathentry kind="lib" path="jarlibs/gson-2.13.1.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jfreechart/jfreechart-1.5.4.jar"/>
 	<classpathentry kind="lib" path="jarlibs/jogl/gluegen-rt.jar"/>
 	<classpathentry kind="lib" path="jarlibs/jogl/gluegen-rt-natives-macosx-universal.jar"/>
 	<classpathentry kind="lib" path="jarlibs/jogl/jogl-all.jar"/>

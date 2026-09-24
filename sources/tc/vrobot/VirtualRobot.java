@@ -162,9 +162,17 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 			{
 				if (plot == null)			plot	= new PlotWindow (VirtualRobot.this, "Motion Commands");
 				
+				// what it was asked for, as it was asked for: the two speeds against the
+				// left scale in metres a second and the turn rate against the right one in
+				// degrees a second, each as far as the platform goes that way
+				double		vmax = Math.max (rdesc.model.Vmax, rdesc.model.Umax);
+				double		rmax = Math.toDegrees (rdesc.model.Rmax);
+
 				plot.setLegend (labels);
-				plot.setLabels ("time", "values");
-				plot.setYRange (-1.0, 1.0);
+				plot.setLabels ("time", "m/s");
+				plot.setRightAxis (2, "deg/s");
+				plot.setYRange (-vmax, vmax);
+				plot.setRightRange (-rmax, rmax);
 				plot.open ();
 			}
 		};
@@ -225,9 +233,9 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		// a share of the most the platform does that way
 		if (plot != null)
 		{
-			buffer[0] 	= RobotModel.share (item.vlin, rdesc.model.Vmax);
-			buffer[1] 	= rdesc.model.shareLat (item.vlat);
-			buffer[2] 	= RobotModel.share (item.vrot, rdesc.model.Rmax);
+			buffer[0] 	= item.vlin;								// [m/s]
+			buffer[1] 	= item.vlat;								// [m/s]
+			buffer[2] 	= Math.toDegrees (item.vrot);				// [deg/s]
 			plot.updateData (buffer);	
 		}
 	}
