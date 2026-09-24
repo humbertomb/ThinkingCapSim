@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import tc.runtime.thread.ModuleConfig;
-
+import tclib.behaviours.lua.gui.*;
 import tc.modules.*;
 import tc.shared.lps.lpo.*;
 import tc.shared.linda.*;
@@ -97,7 +97,7 @@ public class LuaController extends Controller
 	protected int					looka_pts;					// Current look-ahead distance (points)
 	protected double				path_dst;					// Current robot to desired path distance (m)
 
-	protected tclib.behaviours.lua.gui.LuaMonitorWindow	monitor;	// the variables of the program while it runs
+	protected LuaMonitorWindow		monitor;					// the variables of the program while it runs
 	protected boolean				autostart;					// AUTO: run from the first cycle, waiting for nothing
 	protected boolean				dump;
 
@@ -195,8 +195,7 @@ public class LuaController extends Controller
 		if (localgfx)
 		{
 			c_plot.open (c_labels);
-			monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, chaos, file, cfg.robot (),
-																	  new tclib.behaviours.lua.gui.LuaMonitorWindow.Reload ()
+			monitor	= LuaMonitorWindow.open (lua, chaos, file, cfg.robot (), new LuaMonitorWindow.Reload ()
 			{
 				public void reload ()					{ LuaController.this.reload (); }
 				public void load (File f)				{ LuaController.this.load (f); }
