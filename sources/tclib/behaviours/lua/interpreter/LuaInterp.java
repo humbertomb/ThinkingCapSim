@@ -131,6 +131,9 @@ public class LuaInterp
 	public void watch (boolean b)				{ watch = b;	if (!b)		watched.clear (); }
 	public boolean watching ()					{ return watch; }
 
+	/** Nothing is remembered of the locals of the runs so far, watched or not. */
+	public void forget ()						{ watched.clear (); }
+
 	/**
 	 * The locals of every script as its last run left them, by script and in the
 	 * order they were declared. Empty unless {@link #watch} was asked for.

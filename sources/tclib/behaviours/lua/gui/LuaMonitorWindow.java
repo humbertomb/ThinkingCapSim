@@ -70,6 +70,7 @@ public class LuaMonitorWindow extends JFrame
 
 	static private final Color		C_CHANGED	= new Color (255, 246, 200);	// what has just changed
 	static private final Color		C_SCOPE		= new Color (100, 100, 100);
+	static private final Color		C_WRONG		= new Color (180, 0, 0);		// what is the matter with the program
 
 	/** The names the library and the bridge take up, which are nobody's variables. */
 	static private final String[]	LIBRARY		= { "math", "io", "string", "table", "os", "chaos", "_VERSION" };
@@ -88,6 +89,7 @@ public class LuaMonitorWindow extends JFrame
 	protected String				program;
 	protected java.io.File			file;						// the program being run, to write in
 	protected Reload				reload;
+	protected volatile String		wrong;						// what is the matter with the program, null for nothing
 	protected String				robot;
 	protected LuaEditorWindow		editor;						// the one editor of it, while it is open
 
@@ -398,11 +400,33 @@ public class LuaMonitorWindow extends JFrame
 
 		vars.set (now);
 		status.setText (said ());
+		status.setForeground ((wrong != null) ? C_WRONG : Color.BLACK);
 	}
+
+	/**
+	 * What is the matter with the program, when it is not being run at all: whoever
+	 * tried to read it says so here, and the status bar has it instead of what a
+	 * program that runs is doing. Null for nothing the matter.
+	 */
+	public void problem (String text)
+	{
+		wrong	= ((text != null) && (text.trim ().length () > 0)) ? text.trim () : null;
+		SwingUtilities.invokeLater (new Runnable ()
+		{
+			public void run ()		{ refresh (); }
+		});
+	}
+
+	/** What is the matter with the program, null when there is nothing. */
+	public final String				problem ()			{ return wrong; }
 
 	protected String said ()
 	{
 		String			beh = (chaos != null) ? chaos.behaviour () : null;
+
+		// the error of a program says which one and where already
+		if (wrong != null)
+			return ((program == null) || wrong.startsWith (program)) ? wrong : (program + ": " + wrong);
 
 		return vars.getRowCount () + " variables"
 			   + ((program != null) ? ("   program " + program) : "")

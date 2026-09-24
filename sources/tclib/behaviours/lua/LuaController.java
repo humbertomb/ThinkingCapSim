@@ -165,37 +165,44 @@ public class LuaController extends Controller
 		String			name = cfg.get ("PRG");
 		String			behs = cfg.get ("BEH");
 		String			lpos = cfg.get ("LPOS");
+		String			wrong = null;						// what is the matter with the program, when something is
 
 		c_dump.close ();
 
 		if (name == null)						return;
 
+		file	= new File (name);
+		if (behs != null)						behaviours (behs);
+		if (lpos != null)						chaos.lpoNames (lpos.split ("[,;\\s]+"));
+
+		// A program that does not read leaves the module with nothing to run, which
+		// is said out loud and is no reason for the windows of the debugging not to
+		// be there: it is the monitor the editor is opened from, and the editor is
+		// where whatever is the matter with the program gets put right
 		try
 		{
-			file	= new File (name);
 			program	= lua.loadFile (file);
-			if (behs != null)					behaviours (behs);
-			if (lpos != null)					chaos.lpoNames (lpos.split ("[,;\\s]+"));
-
 			System.out.println ("  [LUA] Program <" + file.getName () + ">, behaviours from " + behaviours);
-
-			if (localgfx)
-			{
-				c_plot.open (c_labels);
-				monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, chaos, file, cfg.robot (),
-																		  new tclib.behaviours.lua.gui.LuaMonitorWindow.Reload ()
-				{
-					public void reload ()					{ LuaController.this.reload (); }
-					public void load (File f)				{ LuaController.this.load (f); }
-				});
-			}
-			if (dump)							c_dump.open (c_labels);
 		}
 		catch (Exception e)
 		{
 			program	= null;
-			System.out.println ("  [LUA] Cannot load <" + name + ">: " + e);
+			wrong	= (e instanceof LuaError) ? e.getMessage () : e.toString ();
+			System.out.println ("  [LUA] Cannot read <" + name + ">: " + wrong + " (nothing to run)");
 		}
+
+		if (localgfx)
+		{
+			c_plot.open (c_labels);
+			monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, chaos, file, cfg.robot (),
+																	  new tclib.behaviours.lua.gui.LuaMonitorWindow.Reload ()
+			{
+				public void reload ()					{ LuaController.this.reload (); }
+				public void load (File f)				{ LuaController.this.load (f); }
+			});
+			if ((monitor != null) && (wrong != null))	monitor.problem (wrong);
+		}
+		if (dump)								c_dump.open (c_labels);
 	}
 
 	/** The program being run, or null when none could be loaded. */
@@ -239,11 +246,17 @@ public class LuaController extends Controller
 			missing.clear ();
 			if (other)							chaos.behaviour (null);		// another program is another behaviour
 			System.out.println ("  [LUA] Program <" + f.getName () + (other ? "> running" : "> read again"));
+			if (monitor != null)				monitor.problem (null);
 			return true;
 		}
 		catch (Exception e)
 		{
-			System.out.println ("  [LUA] Cannot read <" + f.getName () + ">: " + e.getMessage () + " (the one running is kept)");
+			String		wrong = (e instanceof LuaError) ? e.getMessage () : e.toString ();
+			boolean		none = (program == null);					// there was nothing running to keep
+
+			System.out.println ("  [LUA] Cannot read <" + f.getName () + ">: " + wrong
+								+ (none ? " (nothing to run)" : " (the one running is kept)"));
+			if (monitor != null)				monitor.problem (wrong);
 			return false;
 		}
 	}
@@ -277,16 +290,18 @@ public class LuaController extends Controller
 
 	/**
 	 * The program starts afresh: it is read again, and the interpreter it runs in is
-	 * a new one, so nothing of what it left in a global is there any more -- which is
-	 * what a program that remembers on its own is to be reset of. There is no goal,
-	 * no plan and no path either; whether it runs from the first cycle again is what
-	 * AUTO says, as when the module was set up (RESET).
+	 * emptied of everything the runs so far left in it, so nothing of what the
+	 * program left in a global is there any more -- which is what a program that
+	 * remembers on its own is to be reset of. It is the same interpreter, so whoever
+	 * is looking at it (the monitor) goes on looking at the one that runs. There is
+	 * no goal, no plan and no path either; whether it runs from the first cycle again
+	 * is what AUTO says, as when the module was set up (RESET).
 	 */
 	protected void reset ()
 	{
 		super.reset ();
 
-		lua			= new LuaState ();
+		lua.clear ();
 		lua.set ("chaos", chaos.table ());
 		library.clear ();
 		missing.clear ();

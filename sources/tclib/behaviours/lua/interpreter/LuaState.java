@@ -32,6 +32,19 @@ public class LuaState
 	public final LuaTable			globals ()					{ return globals; }
 	public final LuaInterp			interpreter ()				{ return interp; }
 
+	/**
+	 * Everything the scripts left behind goes: the globals hold the library and
+	 * nothing else, and nothing is remembered of the locals of the last run. The
+	 * interpreter and its table of globals are the same ones, so whoever is looking
+	 * at them (the monitor of a program) goes on looking at the one that runs.
+	 */
+	public void clear ()
+	{
+		globals.clear ();
+		LuaLib.open (globals);
+		interp.forget ();											// the locals noted down were of the runs before
+	}
+
 	/** Puts a value (a table, a function, a number) where the scripts can see it. */
 	public void set (String name, Object value)					{ globals.set (name, value); }
 	public Object get (String name)								{ return globals.get (name); }
