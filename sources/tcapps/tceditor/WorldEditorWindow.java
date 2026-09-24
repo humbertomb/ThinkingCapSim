@@ -51,7 +51,7 @@ public class WorldEditorWindow extends JFrame implements WorldEditor.Host
 			public void windowClosing (WindowEvent e)		{ quit (); }
 		});
 		pack ();
-		setSize (1200, 900);
+		setSize (1200, 950);
 		setLocationRelativeTo (null);
 	}
 

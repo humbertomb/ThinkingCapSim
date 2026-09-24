@@ -65,7 +65,7 @@ public class WorldEditorDialog extends JDialog implements WorldEditor.Host
 		{
 			public void windowClosing (WindowEvent e)		{ cancel (); }
 		});
-		setSize (1200, 900);
+		setSize (1200, 950);
 		setLocationRelativeTo (owner);
 		SwingUtilities.invokeLater (new Runnable ()
 		{
