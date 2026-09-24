@@ -423,10 +423,11 @@ public class HFSMCanvas extends JPanel
 
 		Object		hit = pick (wx (e.getX ()), wy (e.getY ()));
 
-		if (hit instanceof MetaState)			setLevel ((MetaState) hit);			// into it
-		else if (watch)							{ if ((hit == null) && canGoUp ())	levelUp (); }	// nothing is renamed
-		else if (hit != null)					rename (hit);
-		else if (canGoUp ())					levelUp ();
+		// the background goes out of the level, a meta state goes into it, and anything
+		// else is renamed -- but not while the machine is only being watched
+		if (hit == null)						{ if (canGoUp ())	levelUp ();		return; }
+		if (hit instanceof MetaState)			{ setLevel ((MetaState) hit);		return; }
+		if (!watch)								rename (hit);
 	}
 
 	private void onMove (MouseEvent e)
