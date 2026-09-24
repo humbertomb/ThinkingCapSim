@@ -43,8 +43,8 @@ public class CodeEditor extends JPanel
 
 	static public final Font		FONT		= new Font (Font.MONOSPACED, Font.PLAIN, 12);
 
-	/** How many characters a tab takes, which is how the scripts were written. */
-	static public final int			TABS		= 8;
+	/** How many characters a tab takes. */
+	static public final int			TABS		= 4;
 	/** How many tab stops are set: a line wider than this is nobody's code. */
 	static private final int		TAB_STOPS	= 40;
 
