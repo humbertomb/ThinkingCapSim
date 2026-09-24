@@ -103,9 +103,17 @@ public abstract class BehaviourFactory {
 			if(!factories.containsKey(id))
 				System.out.println("--[BehFactory] Error loading class");
 		}
-		/* returns the behaviour object requested */
-		return ((BehaviourFactory)factories.get(id)).create();
+		/* returns the behaviour object requested, or nothing when it never loaded:
+		 * whoever asked for it runs without it (FHBController does nothing at all
+		 * until it has one) instead of being brought down by it */
+		BehaviourFactory		factory = factories.get(id);
 
+		if (factory == null)
+		{
+			System.out.println("--[BehFactory] Behaviour <" + behPackage + "." + id + "> is not there: nothing to run");
+			return null;
+		}
+		return factory.create();
 	}
 
 	/* This method works in this way:
@@ -118,21 +126,12 @@ public abstract class BehaviourFactory {
 	*/
 	private static void load(String id, boolean recompile) throws ClassNotFoundException {
 
-		/* Creates the personalized loader */
-		SimpleClassLoader loader = new SimpleClassLoader(outputPath);
+		/* Creates the personalized loader: what was just compiled is what is loaded */
+		SimpleClassLoader loader = new SimpleClassLoader(outputPath, recompile);
 
 
-		if (recompile) {
-			
-			/* Compiles the source code storing the result in the outputPath folder */
-			int compileReturnCode =	com.sun.tools.javac.Main.compile(
-										new String[] {"-d",outputPath,sourcePath+id + ".java"});
-			
-			if (compileReturnCode == 0)
-				System.out.println("  [BehFactory] "+id+" class compiled correctly");
-			else
-				System.out.println("--[BehFactory] Error in the "+id+" class compiling");
-		}
+		if (recompile)
+			compile(id);
 
 		try {
 			/* load class through the personalized loader */
@@ -140,19 +139,58 @@ public abstract class BehaviourFactory {
 		}
 		catch (ClassNotFoundException e) {
 //			System.out.println("DEBUG: classNotFoundExcpetion: "+e.toString());
-			
-			/* Compiles the source code storing the result in the outputPath folder */
-			int compileReturnCode = com.sun.tools.javac.Main.compile(
-										new String[] {"-d",outputPath,sourcePath+id + ".java"});
 
-			if (compileReturnCode == 0)
-				System.out.println("  [BehFactory] "+id+" class compiled correctly");
-			else
-				System.out.println("--[BehFactory] Error in the "+id+" class compiling");
+			/* the source may be there without its class: compile it and look again */
+			compile(id);
 
 			/* load class through the personalized loader */
 			Class.forName(behPackage+"."+id,true,loader);
 		}
+	}
+
+	/**
+	 * Compiles the source of a behaviour into the outputPath folder, with the
+	 * compiler of the runtime the modules are running in
+	 * ({@link javax.tools.ToolProvider#getSystemJavaCompiler}) and against their own
+	 * classpath, so that what is compiled here is the same code, of the same
+	 * version, as everything that is already loaded.
+	 *
+	 * Whatever the compiler has to say is said here, prefixed as everything else, and
+	 * a source that is not there or a runtime with no compiler in it (a JRE) is said
+	 * out loud too: it is not for this to bring down whoever asked for a behaviour.
+	 *
+	 * @param id the name of the class, as the behaviour is named in the deployment
+	 * @return whether it compiled
+	 */
+	private static boolean compile(String id) {
+
+		javax.tools.JavaCompiler	javac = javax.tools.ToolProvider.getSystemJavaCompiler();
+		java.io.File				src = new java.io.File(sourcePath, id + ".java");
+
+		if (javac == null) {
+			System.out.println("--[BehFactory] No compiler in this runtime: " + id + " has to be compiled with the project");
+			return false;
+		}
+		if (!src.isFile()) {
+			System.out.println("--[BehFactory] Cannot find the source of " + id + " at <" + src.getPath() + ">");
+			return false;
+		}
+		new java.io.File(outputPath).mkdirs();
+
+		java.io.ByteArrayOutputStream	said = new java.io.ByteArrayOutputStream();
+		int								code = javac.run(null, said, said,
+										  "-d", outputPath,
+										  "-classpath", System.getProperty("java.class.path"),
+										  src.getPath());
+
+		for (String line : said.toString().split("\\r?\\n"))
+			if (line.trim().length() > 0)		System.out.println("  [BehFactory] " + line);
+
+		if (code == 0)
+			System.out.println("  [BehFactory] "+id+" class compiled correctly");
+		else
+			System.out.println("--[BehFactory] Error in the "+id+" class compiling");
+		return code == 0;
 	}
 
 	/*

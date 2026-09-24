@@ -26,13 +26,28 @@ public class SimpleClassLoader extends ClassLoader {
 	private Hashtable<String, Class<?>> classes = new Hashtable<String, Class<?>>();
 	/* folder where the class loader can find the class files */
 	private String classImplementationPath;
+	/* whether that folder comes before the classpath: a class just compiled there is
+	 * the one to load, and not the one the application was built with */
+	private boolean repositoryFirst;
 
 	/**
 	 * Constructs a simple class loader
 	 * @param classImplementationPath folder where the class loader can find the class files
 	 */
 	public SimpleClassLoader(String classImplementationPath) {
+		this(classImplementationPath, false);
+	}
+
+	/**
+	 * Constructs a simple class loader
+	 * @param classImplementationPath folder where the class loader can find the class files
+	 * @param repositoryFirst if true a class of that folder is loaded even when there is
+	 * 					one of the same name in the classpath, which is what makes a class
+	 * 					just compiled there the one that runs (a behaviour being reloaded)
+	 */
+	public SimpleClassLoader(String classImplementationPath, boolean repositoryFirst) {
 		this.classImplementationPath = classImplementationPath;
+		this.repositoryFirst = repositoryFirst;
 	}
 
 	/* Reads the class from the file stored in the repository */
@@ -92,6 +107,24 @@ public class SimpleClassLoader extends ClassLoader {
 		if (result != null) {
 //			System.out.println("DEBUG: Returning cached result.");
 			return result;
+		}
+
+		/* A class of the repository comes first when it was asked for: the one in the
+		 * classpath was loaded once and for all, and its registering in the factory
+		 * happened then, so loading it again would tell nobody anything
+		 */
+		if (repositoryFirst) {
+			classData = getClassImplFromFileSystem(className);
+			if (classData != null) {
+				result = defineClass(null,classData, 0, classData.length);
+				if (result == null)
+					throw new ClassFormatError();
+				if (resolveIt)
+					resolveClass(result);
+				classes.put(className, result);
+				System.out.println("  [ClassLoader] Returning newly loaded class "+className);
+				return result;
+			}
 		}
 
 		/* Check with the primordial class loader */
