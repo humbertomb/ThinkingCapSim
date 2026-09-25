@@ -2,7 +2,7 @@
 --
 -- 20260925 Humberto Martinez
 
-local net2 = chaos.getLpo(chaos.BALL_NET2)
+local net2 = chaos.getLpo(chaos.NET2_LPO)
 local info = chaos.getBehaviorInfo ()
 local sgn = 0
 local vlin = 0

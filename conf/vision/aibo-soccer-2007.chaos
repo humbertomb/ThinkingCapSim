@@ -21,13 +21,13 @@
         "color": {
           "value": -1
         },
-        "segmented": false,
+        "segmented": true,
         "blobbed": false,
         "threshold": 0,
         "gap": 0,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "seeds": "EMPTY"
+        "seeds": " 0,0,255"
       },
       {
         "id": 2,
@@ -64,7 +64,7 @@
           "value": -16711936
         },
         "segmented": true,
-        "blobbed": true,
+        "blobbed": false,
         "threshold": 35,
         "gap": 5,
         "minpix": 4,
