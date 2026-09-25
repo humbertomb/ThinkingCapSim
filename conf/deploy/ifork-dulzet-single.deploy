@@ -42,7 +42,7 @@
           "name": "Controller",
           "properties": {
             "CLASS": "tcrob.ingenia.ifork.IForkController",
-            "GFX": "false",
+            "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
             "TYPE": "Controller"

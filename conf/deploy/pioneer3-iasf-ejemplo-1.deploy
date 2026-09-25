@@ -53,7 +53,7 @@
           "CLASS": "tcrob.umu.pioneer3.Pioneer3",
           "DESC": "./conf/robots/pioneer3.robot",
           "EXTIME": "100",
-          "GFX": "false",
+          "GFX": "true",
           "MODE": "shared",
           "PASSIVE": "false"
         },

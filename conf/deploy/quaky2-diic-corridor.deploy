@@ -53,12 +53,13 @@
           "name": "Controller",
           "properties": {
             "BEH": "MainBehaviour",
-            "CLASS": "tclib.behaviours.fhb.FHBController",
+            "CLASS": "tclib.behaviours.bg.BGController",
             "FACT": "tcrob.umu.indoor.behs, ./sources/tcrob/umu/indoor/behs/, ./runtime",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "TYPE": "Controller"
+            "TYPE": "Controller",
+            "PRG": "./conf/programs/bg/quaky2.indoor.b"
           },
           "events": [
             {
@@ -75,21 +76,6 @@
               "symbol": "PATH",
               "itemClass": "tc.shared.linda.ItemPath",
               "method": "notify_path"
-            },
-            {
-              "symbol": "BEHNAME",
-              "itemClass": "tc.shared.linda.ItemBehName",
-              "method": "notify_beh_name"
-            },
-            {
-              "symbol": "BEHRULES",
-              "itemClass": "tc.shared.linda.ItemBehRules",
-              "method": "notify_beh_rules"
-            },
-            {
-              "symbol": "BEHDEBUG",
-              "itemClass": "tc.shared.linda.ItemBehDebug",
-              "method": "notify_beh_debug"
             }
           ]
         },

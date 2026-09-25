@@ -49,7 +49,7 @@ set GP		= trapezoid {0.52, 0.87, 3.5, 3.5};			// Positive
 sensor float		group0, group1, group2, group3, group4;
 sensor float 		bumper0, bumper1, bumper2, bumper3;
 sensor float 		alpha, heading;
-effector float 		vlin, vlat, vrot;		// the control action: m/s, m/s and deg/s
+effector float 		vlin, vrot;		// the control action: m/s, m/s and deg/s
 
 // State and Control Variables
 float 				collision = 0.0;

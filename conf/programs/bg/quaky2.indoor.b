@@ -10,16 +10,16 @@ set FAR		= trapezoid {0.6, 0.7, 1.3, 1.4};			// Far
 set VFAR	= trapezoid {1.3, 1.4, 10.0, 10.0};			// Very Far
 
 // Sets for vrot, the turn rate (deg/s)
-set TTR		= trapezoid {-150.0, -150.0, -100.0, -90.0};	// Tight Right
+set TTR		= trapezoid {-130.0, -130.0, -100.0, -90.0};	// Tight Right
 set TR		= trapezoid {-100.0, -90.0, -60.0, -50.0};		// Right
 set TSR		= trapezoid {-60.0, -50.0, -20.0, -10.0};		// Small Right
 set TC		= trapezoid {-20.0, -10.0, 10.0, 20.0};			// Center
 set TSL		= trapezoid {10.0, 20.0, 50.0, 60.0};			// Small Left
 set TL		= trapezoid {50.0, 60.0, 90.0, 100.0};			// Left
-set TTL		= trapezoid {90.0, 100.0, 150.0, 150.0};		// Tight Left
+set TTL		= trapezoid {90.0, 100.0, 130.0, 130.0};		// Tight Left
 
 // Sets for vlin, the forward velocity (m/s)
-set SFULL	= trapezoid {0.25, 0.3, 0.5, 0.5};				// Full speed
+set SFULL	= trapezoid {0.25, 0.3, 0.4, 0.4};				// Full speed
 set SMEDIUM	= trapezoid {0.15, 0.2, 0.25, 0.3};				// Medium speed
 set SLOW	= trapezoid {0.0, 0.0, 0.15, 0.2};				// Stop
 
