@@ -179,9 +179,8 @@ public class LuaHelp
 		{ "bookBall", "", "Asks the team for the ball, and says whether it was given." },
 		{ "haveBookedBall", "", "Whether this robot has the ball booked." },
 		{ "releaseBookedBall", "", "Gives the ball back to the team." },
-		{ "setGlobal", "name, index, value", "Keeps a value in the bridge, where every script finds it. With two arguments "
-					+ "(<span class=\"mono\">name, value</span>) there is no index." },
-		{ "getGlobal", "name [, index]", "What was kept under that name, or nil. Without an index, the last value written." },
+		{ "setGlobal", "name, value", "Keeps a value in the bridge under that name, where every script finds it." },
+		{ "getGlobal", "name", "What was kept under that name, or nil." },
 	};
 
 	static private final String[][]	MATH_HELP	=

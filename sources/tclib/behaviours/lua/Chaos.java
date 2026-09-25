@@ -104,8 +104,7 @@ public class Chaos
 	/**
 	 * What the scripts left for one another through
 	 * <code>setGlobal</code>/<code>getGlobal</code>, for whoever looks at a program
-	 * while it runs. A name asked for with an index is also kept as
-	 * <code>name#index</code>.
+	 * while it runs: one value to a name.
 	 */
 	public Map<String, Object> globals ()
 	{
@@ -452,22 +451,14 @@ public class Chaos
 
 		/* ---- what the scripts leave for one another ---- */
 
-		// the scripts say setGlobal (name, index, value) and getGlobal (name [, index]):
-		// the value is the last argument, and the index a slot of that name
+		// the scripts say setGlobal (name, value) and getGlobal (name): one value to a
+		// name, and nothing else -- the index of before made a second entry (name#index)
+		// of every value, which the monitor then showed twice
 		c.set ("setGlobal", new LuaFunction ("chaos.setGlobal")
 		{
 			public Object call (Object[] args)
 			{
-				String		name = str (args, 0);
-				int			n = (args != null) ? args.length : 0;
-
-				if (n >= 3)
-				{
-					globals.put (name + "#" + Lua.tostring (arg (args, 1)), arg (args, 2));
-					globals.put (name, arg (args, 2));
-				}
-				else
-					globals.put (name, arg (args, 1));
+				globals.put (str (args, 0), arg (args, 1));
 				return null;
 			}
 		});
@@ -476,15 +467,7 @@ public class Chaos
 		{
 			public Object call (Object[] args)
 			{
-				String		name = str (args, 0);
-
-				if ((args != null) && (args.length > 1) && (args[1] != null))
-				{
-					Object	v = globals.get (name + "#" + Lua.tostring (args[1]));
-
-					if (v != null)					return v;
-				}
-				return globals.get (name);
+				return globals.get (str (args, 0));
 			}
 		});
 
