@@ -16,8 +16,8 @@ public class LogPlot implements ChildWindowListener
 	protected double				ymax;
 	protected boolean				impulses;
 	protected String				values;						// title of the panel of values, when one is asked for
-	protected double				yspan;						// the least a scale left to its values spans (0: no least)
-	protected double				rspan;
+	protected int[]					rwhich;						// or the very lines of the right scale, when they are not the last ones
+	protected java.util.HashMap<Integer, java.awt.Color>	tints = new java.util.HashMap<Integer, java.awt.Color> ();
 	protected int					rfirst;						// the first line of the right scale, -1 for none
 	protected String				rlabel;						// ... what it is measured in
 	protected double				rmin;
@@ -39,8 +39,7 @@ public class LogPlot implements ChildWindowListener
 		ymax			= 1.0;
 		impulses		= false;
 		values			= null;
-		yspan			= 0.0;
-		rspan			= 0.0;
+		rwhich			= null;
 		rfirst			= -1;
 		rlabel			= null;
 		rmin			= -1.0;
@@ -55,19 +54,10 @@ public class LogPlot implements ChildWindowListener
 	public final void		setValues (String title)				{ this.values = title; }
 	/** Draws the lines from this one on against a second scale on the right, of its own unit (-1: none). */
 	public final void		setRightAxis (int first, String label)	{ this.rfirst = first; this.rlabel = label; }
-	/** The least a scale left to its own values spans, so that values that are all nothing are still read against something. */
-	public void setSpans (double left, double right)
-	{
-		this.yspan	= left;		this.rspan	= right;
-		if (plot == null)				return;
-
-		final PlotWindow	p = plot;
-		final double		l = left, r = right;
-		onEventThread (new Runnable ()
-		{
-			public void run ()			{ p.setSpans (l, r); }
-		});
-	}
+	/** The same, for lines of the right scale that are not the last ones: which lines they are. */
+	public final void		setRightAxis (int[] which, String label)	{ this.rwhich = (which != null) ? which.clone () : null; this.rlabel = label; }
+	/** Asks for a line to be drawn in a colour of its own (null: the colour of its place). */
+	public final void		setColour (int line, java.awt.Color tint)	{ if (tint != null) tints.put (Integer.valueOf (line), tint); else tints.remove (Integer.valueOf (line)); }
 	/** What that second scale covers. */
 	public final void		setRightRange (double ymin, double ymax){ this.rmin = ymin; this.rmax = ymax; }
 	
@@ -90,10 +80,13 @@ public class LogPlot implements ChildWindowListener
 				plot.setLegend (labels);
 				plot.setLabels (xlabel, ylabel);
 				plot.setYRange (ymin, ymax);
-				plot.setRightAxis (rfirst, rlabel);				// after the legend: it splits the lines
+				// after the legend: it says which of the lines go to the right scale
+				if (rwhich != null)		plot.setRightAxis (rwhich, rlabel);
+				else					plot.setRightAxis (rfirst, rlabel);
+				for (java.util.Map.Entry<Integer, java.awt.Color> e : tints.entrySet ())
+					plot.setColour (e.getKey ().intValue (), e.getValue ());
 				plot.setRightRange (rmin, rmax);
 				plot.setImpulses (impulses);
-				plot.setSpans (yspan, rspan);
 				plot.open ();
 			}
 		});

@@ -67,6 +67,12 @@ public class PlotWindow extends JFrame
 	protected XYSeriesCollection	rjoin		= new XYSeriesCollection ();
 	protected String[]				legends		= new String[0];
 	protected int					onright		= -1;						// the first line of the right axis, -1 for none
+	protected int[]					rlines		= new int[0];				// or the very lines of it, when they are not the last ones
+	protected int[]					place		= new int[0];				// where every line sits in the dataset it went to
+	protected int[]					lmap		= new int[0];				// and which line every place of each dataset is
+	protected int[]					rmap		= new int[0];
+	// the colour a line is asked to be drawn in, when it is not the one of its place
+	protected java.util.HashMap<Integer, Color>	tints = new java.util.HashMap<Integer, Color> ();
 	protected boolean				impulses;
 	protected ChildWindowListener	parent		= null;
 
@@ -86,6 +92,7 @@ public class PlotWindow extends JFrame
 
 		chart.setBackgroundPaint (Color.WHITE);
 		chart.getLegend ().setPosition (RectangleEdge.RIGHT);
+		legendOrder ();
 		plot.setBackgroundPaint (Color.WHITE);
 		plot.setDomainGridlinePaint (new Color (200, 200, 200));
 		plot.setRangeGridlinePaint (new Color (200, 200, 200));
@@ -131,6 +138,41 @@ public class PlotWindow extends JFrame
 
 		SymWindow aSymWindow = new SymWindow();
 		this.addWindowListener(aSymWindow);
+	}
+
+	/**
+	 * Names the lines in the legend in the order they were given, and not in the
+	 * order of the scales they are read against: a plot draws the lines of the left
+	 * scale and then the ones of the right one, and with the two units coming one
+	 * after the other in the legend that would name them out of order.
+	 */
+	private void legendOrder ()
+	{
+		if (chart.getLegend () == null)			return;
+
+		chart.getLegend ().setSources (new org.jfree.chart.LegendItemSource[]
+		{
+			new org.jfree.chart.LegendItemSource ()
+			{
+				public org.jfree.chart.LegendItemCollection getLegendItems ()
+				{
+					org.jfree.chart.LegendItemCollection	all = new org.jfree.chart.LegendItemCollection ();
+
+					for (int i = 0; i < legends.length; i++)
+					{
+						int					ds = isRight (i) ? 1 : 0;
+						XYItemRenderer		r = plot.getRenderer (ds);
+
+						if ((r == null) || (i >= place.length))		continue;
+
+						org.jfree.chart.LegendItem	item = r.getLegendItem (ds, place[i]);
+
+						if (item != null)		all.add (item);
+					}
+					return all;
+				}
+			}
+		});
 	}
 
 	/** How the lines are drawn: as lines, or as stems from zero when they are impulses. */
@@ -200,11 +242,12 @@ public class PlotWindow extends JFrame
 		plot.setDatasetRenderingOrder (org.jfree.chart.plot.DatasetRenderingOrder.FORWARD);
 	}
 
-	/** Gives every line of a dataset its colour, the first line of the plot being the first colour. */
-	protected void colours (XYItemRenderer r, int from, int n)
+	/** Gives every line of a dataset its colour, which is the colour of the line and not of its place in the dataset. */
+	protected void colours (XYItemRenderer r, int[] map)
 	{
-		for (int i = 0; i < n; i++)
-			r.setSeriesPaint (i, COLOURS[(from + i) % COLOURS.length]);
+		if ((r == null) || (map == null))		return;
+		for (int i = 0; i < map.length; i++)
+			r.setSeriesPaint (i, colour (map[i]));
 	}
 
 	public void open ()
@@ -275,8 +318,32 @@ public class PlotWindow extends JFrame
 	 */
 	public void setRightAxis (int first, String label)
 	{
+		rlines	= new int[0];
 		onright	= first;
-		if ((first < 0) || (label == null))
+		rightAxis (label);
+	}
+
+	/**
+	 * The same, for lines that are not the last ones: which lines of the legend are
+	 * read against the right scale, whichever they are. That is what a plot of two
+	 * units needs when they come one after the other -- a velocity and a distance
+	 * against the left scale, a turn rate and an angle against the right one -- and
+	 * the legend is still read in the order it was given.
+	 *
+	 * @param which		the lines of the right axis, by their place in the legend (none: no right axis)
+	 * @param label		the unit of that axis
+	 */
+	public void setRightAxis (int[] which, String label)
+	{
+		rlines	= (which != null) ? which.clone () : new int[0];
+		onright	= -1;
+		rightAxis (label);
+	}
+
+	/** Builds the second scale and the dataset that is drawn against it, or takes them away. */
+	private void rightAxis (String label)
+	{
+		if (!anyRight () || (label == null))
 		{
 			plot.setRangeAxis (1, null);
 			plot.setDataset (1, null);
@@ -297,29 +364,88 @@ public class PlotWindow extends JFrame
 		series ();
 	}
 
+	/** Whether there is a right scale at all. */
+	protected boolean anyRight ()
+	{
+		return (rlines.length > 0) || (onright >= 0);
+	}
+
+	/** Whether this line of the legend is read against the right scale. */
+	protected boolean isRight (int i)
+	{
+		if (rlines.length > 0)
+		{
+			for (int k = 0; k < rlines.length; k++)		if (rlines[k] == i)		return true;
+			return false;
+		}
+		return (onright >= 0) && (i >= onright);
+	}
+
+	/**
+	 * Asks for a line to be drawn in a colour of its own, whatever the colour of its
+	 * place would be (null: the one of its place again).
+	 *
+	 * @param line		the line, by its place in the legend
+	 * @param tint		the colour to draw it in
+	 */
+	public void setColour (int line, Color tint)
+	{
+		if (tint != null)		tints.put (Integer.valueOf (line), tint);
+		else					tints.remove (Integer.valueOf (line));
+		paints ();
+	}
+
+	/** The colour a line is drawn in: the one it was asked for, or the one of its place. */
+	protected Color colour (int line)
+	{
+		Color		tint = tints.get (Integer.valueOf (line));
+
+		return (tint != null) ? tint : COLOURS[((line >= 0) ? line : 0) % COLOURS.length];
+	}
+
 	/** Builds a line of the right dataset for every label, in the order they were given. */
 	protected void series ()
 	{
-		int			split = (onright >= 0) ? Math.min (onright, legends.length) : legends.length;
+		int			nl = 0, nr = 0;
 
 		left.removeAllSeries ();
 		right.removeAllSeries ();
 		ljoin.removeAllSeries ();
 		rjoin.removeAllSeries ();
+
+		place	= new int[legends.length];
+		lmap	= new int[legends.length];
+		rmap	= new int[legends.length];
 		for (int i = 0; i < legends.length; i++)
 		{
 			XYSeries	s = new XYSeries ((legends[i] != null) ? legends[i] : ("y" + i), false, true);
 
 			s.setMaximumItemCount (POINTS);
 			// the same line in both datasets: whoever draws writes it once
-			if (i < split)				{ left.addSeries (s);	ljoin.addSeries (s); }
-			else						{ right.addSeries (s);	rjoin.addSeries (s); }
+			if (isRight (i))
+			{
+				right.addSeries (s);	rjoin.addSeries (s);
+				place[i] = nr;			rmap[nr] = i;			nr++;
+			}
+			else
+			{
+				left.addSeries (s);		ljoin.addSeries (s);
+				place[i] = nl;			lmap[nl] = i;			nl++;
+			}
 		}
-		if (plot.getRenderer (0) != null)		colours (plot.getRenderer (0), 0, left.getSeriesCount ());
-		if (plot.getRenderer (1) != null)		colours (plot.getRenderer (1), split, right.getSeriesCount ());
+		lmap	= java.util.Arrays.copyOf (lmap, nl);
+		rmap	= java.util.Arrays.copyOf (rmap, nr);
+		paints ();
+	}
+
+	/** Gives every line its colour, whichever dataset it went to. */
+	protected void paints ()
+	{
 		// the curve over the impulses is of the colour of the impulses it joins
-		if (plot.getRenderer (2) != null)		colours (plot.getRenderer (2), 0, left.getSeriesCount ());
-		if (plot.getRenderer (3) != null)		colours (plot.getRenderer (3), split, right.getSeriesCount ());
+		colours (plot.getRenderer (0), lmap);
+		colours (plot.getRenderer (1), rmap);
+		colours (plot.getRenderer (2), lmap);
+		colours (plot.getRenderer (3), rmap);
 	}
 
 	/** One row per line of the plot: what it is called, and a field for its value. */
@@ -415,26 +541,6 @@ public class PlotWindow extends JFrame
 		else									axis.setAutoRange (true);
 	}
 
-	/**
-	 * The least a scale left to its own values may shrink to: a plot of values that
-	 * are all nothing has nothing to scale to, and is drawn against billionths of a
-	 * unit unless it is told what a sensible height is. Nothing at all leaves it as
-	 * it was, and a scale of a given range is not touched by this.
-	 *
-	 * @param left		the least the left scale spans, top to bottom
-	 * @param right		the same for the right one
-	 */
-	public void setSpans (double left, double right)
-	{
-		span (plot.getRangeAxis (), left);
-		span (plot.getRangeAxis (1), right);
-	}
-
-	static private void span (org.jfree.chart.axis.ValueAxis axis, double span)
-	{
-		if ((axis == null) || !(axis instanceof NumberAxis) || !(span > 0.0))		return;
-		((NumberAxis) axis).setAutoRangeMinimumSize (span);
-	}
 
 	/** One cycle of every line, in the order the legend named them. */
 	public void updateData (double[] data)
@@ -491,13 +597,13 @@ public class PlotWindow extends JFrame
 	 */
 	protected XYSeries line (int i)
 	{
-		int			split = (onright >= 0) ? Math.min (onright, legends.length) : legends.length;
+		XYSeriesCollection	c;
+		int					p;
 
-		if (i < 0)									return null;
-		if (i < split)
-			return (i < left.getSeriesCount ()) ? left.getSeries (i) : null;
-		i	-= split;
-		return (i < right.getSeriesCount ()) ? right.getSeries (i) : null;
+		if ((i < 0) || (i >= place.length))			return null;
+		c	= isRight (i) ? right : left;
+		p	= place[i];
+		return (p < c.getSeriesCount ()) ? c.getSeries (p) : null;
 	}
 
 	/** How many points of every line are kept, from now on. */

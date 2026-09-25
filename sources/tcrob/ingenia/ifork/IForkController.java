@@ -177,29 +177,30 @@ public class IForkController extends Controller
 		c_dump		= new LogFile (PREFFIX, ".log");
 		// What the controller commands and how far it is off the path, in the units it
 		// is commanded in and not as a share of the most the platform does: the metres
-		// against the left scale and the degrees against the right one. The scales are
-		// left to the values themselves, because the errors of the path are no velocity
-		// and have no limit of the platform to be read against
-		c_plot		= new LogPlot ("Controller Output", "step", "m/s, m");
-		c_plot.setRightAxis (2, "deg/s, deg");
-		c_plot.setYRange (0.0, 0.0);
-		c_plot.setRightRange (0.0, 0.0);
-
-		// Initialise debug variables: the metres first and the degrees after, which is
-		// what says which scale every line is read against
-		c_buffer		= new double[4];
+		// against the left scale and the degrees against the right one, each as far as
+		// the platform goes that way, as in every other controller.
+		//
+		// The errors go on those very scales, ten times over: a path error is a few
+		// centimetres and a few degrees against a scale of metres a second and degrees
+		// a second, and drawn as it is it would be a line lying on the zero. Ten times
+		// over it is read off the same picture, and that is what its name says
+		c_plot		= new LogPlot ("Controller Output", "step", "m/s");
 		c_labels		= new String[4];
 		c_labels[0]		= "vlin";
-		c_labels[1]		= "e_pos";
-		c_labels[2]		= "vrot";
-		c_labels[3]		= "e_ang";
+		c_labels[1]		= "vrot";
+		c_labels[2]		= "e_pos (x10)";
+		c_labels[3]		= "e_ang (x10)";
+		c_plot.setRightAxis (new int[] { 1, 3 }, "deg/s");		// the turn rate and the angle
+		c_plot.setColour (3, new java.awt.Color (128, 128, 128));
+
+		// Initialise debug variables
+		c_buffer		= new double[4];
 	}
 	
 	/**
 	 * One cycle of the plot of the controller: what it commands and how far it is
-	 * off the path, each as it is and in its own unit. The order is the one the
-	 * legend was given -- the metres first and the degrees after -- so that the
-	 * lines fall on the scale they are read against.
+	 * off the path, in the order the legend was given, each in its own unit and the
+	 * two errors ten times over, which is what their names say.
 	 *
 	 * @param vlin		commanded linear velocity (m/s)
 	 * @param vrot		commanded turn rate (rad/s)
@@ -209,9 +210,9 @@ public class IForkController extends Controller
 	private void plotValues (double vlin, double vrot, double epos, double eang)
 	{
 		c_buffer[0]		= vlin;										// [m/s]
-		c_buffer[1]		= epos;										// [m]
-		c_buffer[2]		= Math.toDegrees (vrot);					// [deg/s]
-		c_buffer[3]		= Math.toDegrees (eang);					// [deg]
+		c_buffer[1]		= Math.toDegrees (vrot);					// [deg/s]
+		c_buffer[2]		= 10.0 * epos;								// [m x10]
+		c_buffer[3]		= 10.0 * Math.toDegrees (eang);				// [deg x10]
 	}
 
 	protected boolean inRestrictedArea ()
@@ -1236,11 +1237,10 @@ public class IForkController extends Controller
 		// The dump is what the debug asks for when there are no graphics to draw on
 		if (localgfx)
 		{
-			// the scales are left to the values, but never shrink below what the
-			// platform does: standing still, every value is nothing, and a scale with
-			// nothing to scale to would be drawn against billionths of a metre
+			// the scales are the ones of the platform, as in the other controllers
 			if ((rdesc != null) && (rdesc.model != null))
-				c_plot.setSpans (2.0 * rdesc.model.Vmax, 2.0 * Math.toDegrees (rdesc.model.Rmax));
+				c_plot.rescale (-rdesc.model.Vmax, rdesc.model.Vmax,
+								-Math.toDegrees (rdesc.model.Rmax), Math.toDegrees (rdesc.model.Rmax));
 			c_plot.open (c_labels);
 		}
 		if (debug && !localgfx)			c_dump.open (c_labels);
