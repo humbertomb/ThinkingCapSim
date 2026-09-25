@@ -113,11 +113,24 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		return ((f != null) ? f.getName () : "untitled." + RobotDef.EXTENSION) + (isDirty () ? " *" : "");
 	}
 
-	/** Commits whatever the user is typing in the property table. */
+	/**
+	 * Commits whatever the user is typing in the property table.
+	 *
+	 * Committing is what tells the model of the table that a value changed, and
+	 * changing a value may take the editor round to here again (setting the name of
+	 * the platform rebuilds the tree, which lands on the properties again) while the
+	 * table still says it is being edited. It is committed once and the round ends
+	 * here, rather than going on until the stack is spent.
+	 */
 	public void stopEditing ()
 	{
-		if (propsTB.isEditing ())		propsTB.getCellEditor ().stopCellEditing ();
+		if (stopping || !propsTB.isEditing ())		return;
+
+		stopping	= true;
+		try { propsTB.getCellEditor ().stopCellEditing (); } finally { stopping = false; }
 	}
+
+	private boolean					stopping;				// it is being committed right now
 
 	/* ------------------------------------------------------------------ */
 	/* GUI                                                                 */
@@ -867,8 +880,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			DefaultMutableTreeNode	n = (DefaultMutableTreeNode) treeRoot.getChildAt (i);
 			if (expanded.contains (n.toString ()))		tree.expandPath (new TreePath (n.getPath ()));
 		}
-		syncing	= false;
-		selectInTree (canvas.getSelection ());
+		// putting the selection back is part of rebuilding the tree, and not the user
+		// choosing anything: told otherwise, the tree would answer it as a choice and
+		// the whole round of selection, properties and table would start again
+		try { selectInTree (canvas.getSelection ()); } finally { syncing = false; }
 	}
 
 	/** A value that is not typed in -- worked out, or of no meaning here: shown on a grey ground. */
