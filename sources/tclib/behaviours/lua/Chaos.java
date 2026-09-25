@@ -227,6 +227,33 @@ public class Chaos
 		return old;
 	}
 
+	/**
+	 * The object of the LPS a script asks for, as the number of it, or -1 when the
+	 * script asked for no such object: nothing at all (a constant that does not exist,
+	 * <code>chaos.BALL_NET2</code> say, is nil in Lua), something that is not a
+	 * number, or a number of no object. It used to be read as 0, and the script went
+	 * on with the ball in place of what it had misspelt and nobody knew; it is said
+	 * once now, with the constants there are, so that the script can be put right.
+	 */
+	protected int index (String what, Object[] args)
+	{
+		Object		a = LuaFunction.arg (args, 0);
+		Double		d = Lua.tonumber (a);
+		int			i = (d != null) ? d.intValue () : -1;
+
+		if ((d != null) && (i >= 0) && (i < lpos.length))		return i;
+
+		if (warned.add (what + "/" + Lua.tostring (a)))
+		{
+			StringBuilder	sb = new StringBuilder ();
+
+			for (int k = 0; k < lpos.length; k++)
+				sb.append ((k > 0) ? ", " : "").append ("chaos.").append (constant (lpos[k])).append (" (").append (k).append (")");
+			System.out.println ("  [CHAOS] " + what + " was given " + Lua.tostring (a) + " and ignored: it wants one of " + sb);
+		}
+		return -1;
+	}
+
 	/* ------------------------------------------------------------------ */
 	/* The table of functions                                             */
 	/* ------------------------------------------------------------------ */
@@ -281,14 +308,21 @@ public class Chaos
 
 		c.set ("getLpo", new LuaFunction ("chaos.getLpo")
 		{
-			public Object call (Object[] args)		{ return lpo ((int) num (args, 0, 0.0)); }
+			public Object call (Object[] args)
+			{
+				int		i = index (name, args);
+
+				return (i >= 0) ? lpo (i) : null;
+			}
 		});
 
 		c.set ("setNeeded", new LuaFunction ("chaos.setNeeded")
 		{
 			public Object call (Object[] args)
 			{
-				needed.put (Integer.valueOf ((int) num (args, 0, 0.0)), Double.valueOf (num (args, 1, 1.0)));
+				int		i = index (name, args);
+
+				if (i >= 0)			needed.put (Integer.valueOf (i), Double.valueOf (num (args, 1, 1.0)));
 				return null;
 			}
 		});

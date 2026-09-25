@@ -145,7 +145,8 @@ public class LuaHelp
 	{
 		{ "getLpo", "index", "The object of the LPS of that number, as a table (see <i>an object</i> below). The number is "
 					+ "not to be written out: every object has a constant of its own (see <i>the constants</i> below), so it is "
-					+ "<span class=\"mono\">chaos.getLpo (chaos.BALL_LPO)</span>." },
+					+ "<span class=\"mono\">chaos.getLpo (chaos.BALL_LPO)</span>. A constant that does not exist is nil, and "
+					+ "then this gives nil and says so once on the console, with the constants there are." },
 		{ "setNeeded", "index, weight", "Says that the behaviour needs to keep seeing that object, and how much (0 to 1). "
 					+ "The vision of the simulation looks everywhere at once, so it is taken note of and no more." },
 		{ "getMyPos", "", "Where the robot thinks it is: x and y in mm, theta in degrees, in the field." },
