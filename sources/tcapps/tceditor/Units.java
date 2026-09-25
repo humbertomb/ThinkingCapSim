@@ -30,7 +30,7 @@ public class Units
 				"path x1", "path y1", "path z1", "path x2", "path y2", "path z2",
 				"wall width", "wall height", "connector width", "connector height");
 		// where something looks at and how wide it sees
-		degrees ("theta", "orientation", "elevation", "cone", "hfov", "vfov", "reflect");
+		degrees ("theta", "orientation", "elevation", "cone", "hfov", "vfov", "reflect", "pan max", "tilt max");
 		// what a sensor reaches
 		metres ("rho", "range max", "range min");
 

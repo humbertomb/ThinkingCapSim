@@ -68,6 +68,8 @@ public class RobotDef
 		public double	vfov;						// vis, camera: vertical field of view (deg)
 		public double	framerate;					// camera: frames it takes in a second (fps)
 		public String	resolution;					// camera: how large a frame is ("640x480"); null: as wide as the simulator draws
+		public double	panmax;						// camera: how far it can be panned either way from where it points (deg; 0: it is fixed)
+		public double	tiltmax;					// camera: how far it can be tilted either way from where it points (deg; 0: it is fixed)
 
 		public Sensor ()							{ }
 		public Sensor copy ()
@@ -79,6 +81,7 @@ public class RobotDef
 			s.rangemax = rangemax;	s.rangemin = rangemin;	s.cone = cone;	s.rays = rays;
 			s.reflect = reflect;	s.beacons = beacons;	s.objects = objects;
 			s.hfov = hfov;			s.vfov = vfov;		s.framerate = framerate;		s.resolution = resolution;
+			s.panmax = panmax;		s.tiltmax = tiltmax;
 			return s;
 		}
 
@@ -87,7 +90,8 @@ public class RobotDef
 		{
 			return (driver == null) && (driverParams == null) && (rangemax == 0.0) && (rangemin == 0.0) && (cone == 0.0)
 				&& (rays == 0) && (reflect == 0.0) && (beacons == 0) && (objects == 0)
-				&& (hfov == 0.0) && (vfov == 0.0) && (framerate == 0.0) && (resolution == null);
+				&& (hfov == 0.0) && (vfov == 0.0) && (framerate == 0.0) && (resolution == null)
+				&& (panmax == 0.0) && (tiltmax == 0.0);
 		}
 	}
 
@@ -758,6 +762,13 @@ public class RobotDef
 	static public boolean hasResolution (String fam)		{ return "camera".equals (fam); }
 
 	/**
+	 * True for a family whose sensors can be turned on their mount: a camera on a
+	 * pan-tilt head says how far it goes either way (panmax, tiltmax), and a zero
+	 * says it is fixed where the description points it.
+	 */
+	static public boolean hasPanTilt (String fam)			{ return "camera".equals (fam); }
+
+	/**
 	 * True for a family whose readings are taken on the cycle of the runtime: how
 	 * often the family is fired (cycle) and, within that, which cycles every sensor
 	 * of it is read on (step).
@@ -904,6 +915,8 @@ public class RobotDef
 			if (s.driver != null)		o.addProperty ("driver", s.driver);
 			if (s.driverParams != null)	o.addProperty ("driverParams", s.driverParams);
 			if (s.rangemax != 0.0)		o.addProperty ("rangemax", s.rangemax);
+			if (s.panmax != 0.0)		o.addProperty ("panmax", s.panmax);
+			if (s.tiltmax != 0.0)		o.addProperty ("tiltmax", s.tiltmax);
 			if (s.rangemin != 0.0)		o.addProperty ("rangemin", s.rangemin);
 			if (s.cone != 0.0)			o.addProperty ("cone", s.cone);
 			if (s.rays != 0)			o.addProperty ("rays", s.rays);
@@ -1109,6 +1122,11 @@ public class RobotDef
 					s.vfov	= number (take ("VFOV" + key + i), 0.0);
 				}
 				if (hasFrameRate (fam))		s.framerate = number (take ("FPS" + key + i), 0.0);
+				if (hasPanTilt (fam))
+				{
+					s.panmax	= number (take ("PANMAX" + key + i), 0.0);
+					s.tiltmax	= number (take ("TILTMAX" + key + i), 0.0);
+				}
 				if (hasResolution (fam))		s.resolution = take ("RES" + key + i);
 				else
 				{
@@ -1127,10 +1145,16 @@ public class RobotDef
 			double	v = number (take ("VFOV" + key), 0.0), h = number (take ("HFOV" + key), 0.0);
 			double	m = number (take ("MINIM" + key), 0.0);
 			double	fps = number (take ("FPS" + key), 0.0);
+			double	pmax = number (take ("PANMAX" + key), 0.0), tmax = number (take ("TILTMAX" + key), 0.0);
 			String	res = take ("RES" + key);
 
 			if (s0.rangemax == 0.0)		s0.rangemax = r;
 			if (hasFrameRate (fam) && (s0.framerate == 0.0))		s0.framerate = fps;
+			if (hasPanTilt (fam))
+			{
+				if (s0.panmax == 0.0)	s0.panmax = pmax;
+				if (s0.tiltmax == 0.0)	s0.tiltmax = tmax;
+			}
 			if (hasResolution (fam) && (s0.resolution == null))		s0.resolution = res;
 			if (hasFov (fam))
 			{
@@ -1506,6 +1530,7 @@ public class RobotDef
 				setNZ (p, "CONE" + key, hasFov (fam) ? s0.hfov : s0.cone);
 				if (hasFov (fam))		{ setNZ (p, "HFOV" + key, s0.hfov);		setNZ (p, "VFOV" + key, s0.vfov); }
 				if (hasFrameRate (fam))	setNZ (p, "FPS" + key, s0.framerate);
+				if (hasPanTilt (fam))	{ setNZ (p, "PANMAX" + key, s0.panmax);	setNZ (p, "TILTMAX" + key, s0.tiltmax); }
 				if (hasResolution (fam) && (s0.resolution != null))		p.setProperty ("RES" + key, s0.resolution.trim ());
 				// what a radar casts is read as RAYRAD, and nothing reads a RAYTRK
 				if (s0.rays > 0)		p.setProperty (rayKey (fam, key), String.valueOf (s0.rays));
@@ -1538,6 +1563,7 @@ public class RobotDef
 					setNZ (p, "CONE" + key + i, hasFov (fam) ? s.hfov : s.cone);
 					if (hasFov (fam))	{ setNZ (p, "HFOV" + key + i, s.hfov);		setNZ (p, "VFOV" + key + i, s.vfov); }
 					if (hasFrameRate (fam))		setNZ (p, "FPS" + key + i, s.framerate);
+					if (hasPanTilt (fam))		{ setNZ (p, "PANMAX" + key + i, s.panmax);	setNZ (p, "TILTMAX" + key + i, s.tiltmax); }
 					if (hasResolution (fam) && (s.resolution != null))		p.setProperty ("RES" + key + i, s.resolution.trim ());
 					// the radar says what it casts once, for the family, and not one by one
 					if ((s.rays > 0) && !fam.equals ("trk"))	p.setProperty ("RAY" + key + i, String.valueOf (s.rays));

@@ -64,6 +64,8 @@ public class RobotDesc extends VehicleDesc implements Serializable
 	public double				CONECAM; 		// Camera horizontal field of view (rad)
 	public double				VFOVCAM; 		// Camera vertical field of view (rad)
 	public double				FPSCAM; 			// Camera frame rate (fps)
+	public double				PANMAXCAM; 		// Camera pan range, either way (rad; 0: fixed)
+	public double				TILTMAXCAM; 		// Camera tilt range, either way (rad; 0: fixed)
 
 	public RobotModel			model;			// Kynematics model of the robot platform
 	public SensorPos[]			trkfeat; 		// Tracking sensors robot-local position
@@ -76,6 +78,8 @@ public class RobotDesc extends VehicleDesc implements Serializable
 	public double[]				camfps; 		// Cameras frame rate (fps)
 	public double[]				camhfov; 		// Cameras horizontal field of view (rad)
 	public double[]				camvfov; 		// Cameras vertical field of view (rad)
+	public double[]				campanmax; 		// Cameras pan range, either way (rad; 0: fixed)
+	public double[]				camtiltmax; 	// Cameras tilt range, either way (rad; 0: fixed)
 	public int[]				camwidth; 		// Cameras frame width (pixels; 0: not stated)
 	public int[]				camheight; 		// Cameras frame height (pixels; 0: not stated)
 	public Line2[]			    bumfeat;			// Bumper sensors detection robot-local line
@@ -166,6 +170,8 @@ public class RobotDesc extends VehicleDesc implements Serializable
 		try { CONECAM	 	= Double.valueOf (props.getProperty ("CONECAM")).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 		try { VFOVCAM	 	= Double.valueOf (props.getProperty ("VFOVCAM")).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 		try { FPSCAM	 	= Double.valueOf (props.getProperty ("FPSCAM")).doubleValue (); }				catch (Exception e) 	{ }
+		try { PANMAXCAM 	= Double.valueOf (props.getProperty ("PANMAXCAM")).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
+		try { TILTMAXCAM 	= Double.valueOf (props.getProperty ("TILTMAXCAM")).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 
 		try { MAXGPS 		= Integer.valueOf (props.getProperty ("MAXGPS")).intValue (); } 				catch (Exception e) 	{ }
 		try { MAXCOMPASS 	= Integer.valueOf (props.getProperty ("MAXCOMPASS")).intValue (); } 			catch (Exception e) 	{ }
@@ -191,6 +197,8 @@ public class RobotDesc extends VehicleDesc implements Serializable
 		camfps		= new double [MAXCAMERA];
 		camhfov		= new double [MAXCAMERA];
 		camvfov		= new double [MAXCAMERA];
+		campanmax	= new double [MAXCAMERA];
+		camtiltmax	= new double [MAXCAMERA];
 		camwidth	= new int [MAXCAMERA];
 		camheight	= new int [MAXCAMERA];
 		bumfeat		= new Line2 [MAXBUMPER];
@@ -304,6 +312,10 @@ public class RobotDesc extends VehicleDesc implements Serializable
 			try { camhfov[i]	= Double.valueOf (props.getProperty ("CONECAM" + i)).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 			try { camhfov[i]	= Double.valueOf (props.getProperty ("HFOVCAM" + i)).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 			try { camvfov[i]	= Double.valueOf (props.getProperty ("VFOVCAM" + i)).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
+			campanmax[i]	= PANMAXCAM;
+			camtiltmax[i]	= TILTMAXCAM;
+			try { campanmax[i]	= Double.valueOf (props.getProperty ("PANMAXCAM" + i)).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
+			try { camtiltmax[i]	= Double.valueOf (props.getProperty ("TILTMAXCAM" + i)).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 			int[]	res = RobotDef.resolutionOf (props.getProperty ("RESCAM" + i));
 			if (res == null)	res = RobotDef.resolutionOf (props.getProperty ("RESCAM"));
 			if (res != null)	{ camwidth[i] = res[0];		camheight[i] = res[1]; }

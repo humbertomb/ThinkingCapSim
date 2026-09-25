@@ -1140,7 +1140,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				if (RobotDef.hasFrameRate (it.family))
 					return new String[] { DRIVER, DRIVER_PARAMS,
 										  "rho", "theta", "height", "orientation", "elevation",
-										  "range max", "hfov", "vfov", FRAME_RATE, RESOLUTION };
+										  "range max", "pan max", "tilt max", "hfov", "vfov", FRAME_RATE, RESOLUTION };
 				return new String[] { DRIVER, DRIVER_PARAMS, "step",
 									  "rho", "theta", "height", "orientation", "elevation",
 									  "range max", "hfov", "vfov" };
@@ -1302,6 +1302,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("objects"))		return String.valueOf (s.objects);
 			if (name.equals ("hfov"))			return RobotDef.fmt (s.hfov);
 			if (name.equals ("vfov"))			return RobotDef.fmt (s.vfov);
+			if (name.equals ("pan max"))		return RobotDef.fmt (s.panmax);
+			if (name.equals ("tilt max"))		return RobotDef.fmt (s.tiltmax);
 			if (name.equals (FRAME_RATE))		return RobotDef.fmt (s.framerate);
 			if (name.equals (RESOLUTION))		return (s.resolution != null) ? s.resolution : "";
 			break;
@@ -1743,6 +1745,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (name.equals ("objects"))		s.objects = (int) num (value);
 			else if (name.equals ("hfov"))			s.hfov = num (value);
 			else if (name.equals ("vfov"))			s.vfov = num (value);
+			else if (name.equals ("pan max"))		s.panmax = Math.abs (num (value));		// a range either way: its size, whatever the sign
+			else if (name.equals ("tilt max"))		s.tiltmax = Math.abs (num (value));
 			else if (name.equals (FRAME_RATE))		s.framerate = num (value);
 			else if (name.equals (RESOLUTION))		s.resolution = resolution (value);
 			break;
