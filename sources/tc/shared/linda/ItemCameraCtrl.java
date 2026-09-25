@@ -8,13 +8,13 @@ import java.io.*;
 
 import tc.vrobot.*;
 
-public class ItemCameraControl extends Item implements Serializable
+public class ItemCameraCtrl extends Item implements Serializable
 {
 	// Camera control
 	public CameraCtrl				camera_ctrl;
 
 	// Constructors
-	public ItemCameraControl () 
+	public ItemCameraCtrl () 
 	{
 		set (0);
 	}	

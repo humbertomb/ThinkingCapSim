@@ -14,7 +14,7 @@ import tc.shared.linda.ItemCamera;
 import tc.shared.linda.ItemConfig;
 import tc.shared.linda.ItemSensors;
 import tc.shared.linda.ItemSensorsCtrl;
-import tc.shared.linda.ItemCameraControl;
+import tc.shared.linda.ItemCameraCtrl;
 import tc.shared.linda.ItemExecution;
 import tc.shared.linda.ItemMotion;
 import tc.shared.linda.ItemObject;
@@ -284,7 +284,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		data_ctrl.set (item.data_ctrl);
 	}
 
-	public void notify_camera_ctrl (String space, ItemCameraControl item)
+	public void notify_camera_ctrl (String space, ItemCameraCtrl item)
 	{
 		camera_ctrl.set (item.camera_ctrl);
 	}

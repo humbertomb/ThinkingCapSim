@@ -81,7 +81,7 @@
           },
           {
             "symbol": "CAMERA_CTRL",
-            "itemClass": "tc.shared.linda.ItemCameraControl",
+            "itemClass": "tc.shared.linda.ItemCameraCtrl",
             "method": "notify_camera_ctrl"
           }
         ]
