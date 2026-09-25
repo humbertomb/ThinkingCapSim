@@ -188,6 +188,30 @@ public class BGController extends Controller
 		new_id		= 0;
 	}
 
+	/**
+	 * The control action the BG program asks for, read from the interpreter: the
+	 * three velocities of it as the program has them -- vlin and vlat in metres a
+	 * second and vrot in degrees a second, which is what a BG program reckons a turn
+	 * in -- given back as everything else here has them, the turn rate in radians a
+	 * second. A velocity the program says nothing of is one it does not command.
+	 *
+	 * It is read here, and not where the cycle of the controller is, so that a
+	 * controller of a robot of its own that runs a BG program of its own reads the
+	 * action the same way this one does.
+	 *
+	 * @return the three velocities, {vlin, vlat, vrot} (m/s, m/s, rad/s)
+	 */
+	protected double[] action ()
+	{
+		u_action[0]	= interp.defined ("vlin") ? interp.access ("vlin") : 0.0;
+		u_action[1]	= interp.defined ("vlat") ? interp.access ("vlat") : 0.0;
+		u_action[2]	= interp.defined ("vrot") ? interp.access ("vrot") * Angles.DTOR : 0.0;
+
+		return u_action;
+	}
+
+	private double[]				u_action	= new double[3];		// what action () gives back
+
 	protected void controller () 
 	{
 		int					result;
@@ -195,6 +219,7 @@ public class BGController extends Controller
 		LPOSensorGroup		group;
 		LPO					l_looka;
 		double				vlin, vlat, vrot;
+		double[]			u;
 
 		if (!has_goal)
 		{
@@ -250,20 +275,11 @@ public class BGController extends Controller
 		// Run the whole BG program		
 		interp.agents (program);
 
-		// Read the specified action from BG interpreter: the three velocities of the
-		// control action, as the program has them -- vlin and vlat in m/s, and vrot
-		// in deg/s, which is what a BG program reckons a turn in
-		vlin	= interp.defined ("vlin") ? interp.access ("vlin") : 0.0;
-		vlat	= interp.defined ("vlat") ? interp.access ("vlat") : 0.0;
-		vrot	= interp.defined ("vrot") ? interp.access ("vrot") * Angles.DTOR : 0.0;
-
-		// A program that says nothing of them is one written before the control
-		// action was the three velocities: it is read the way it was written, and it
-		// commands nothing sideways, which is all such a program ever did
-		if (!interp.defined ("vlin") && interp.defined ("speed"))
-			vlin	= interp.access ("speed");
-		if (!interp.defined ("vrot") && interp.defined ("turn"))
-			vrot	= interp.access ("turn") * Angles.DTOR;
+		// Read the specified action from BG interpreter
+		u		= action ();
+		vlin	= u[0];
+		vlat	= u[1];
+		vrot	= u[2];
 
 		// Set action
 		result	= inGoal ();

@@ -293,7 +293,8 @@ public class SoccerController extends BGController
 	{
 		int				i;
 		int				result;
-		double			vr, wr;
+		double			vr, ur, wr;
+		double[]		u;
 		double			lookaPhi;
 		double 			dstBallNet;
 		double			lateral;
@@ -481,9 +482,12 @@ double n1anchor, n2anchor;
 		// Run the whole BG program	
 		interp.agents (program);
 
-		// Read the specified action from BG interpreter
-		vr	= interp.access ("speed");
-		wr	= interp.access ("turn") * Angles.DTOR;
+		// Read the specified action from BG interpreter: the three velocities, read the
+		// same way the controller this one is a kind of reads them
+		u	= action ();
+		vr	= u[0];
+		ur	= u[1];
+		wr	= u[2];
 		
 		/* ------------ */
 		/* SEND RESULTS */
@@ -495,6 +499,7 @@ double n1anchor, n2anchor;
 		{
 		case ItemBehResult.T_FINISHED:
 			vr 	= 0.0;
+			ur	= 0.0;
 			wr	= 0.0;
 			
 			// Notify Linda Space the task has been finished
@@ -503,6 +508,7 @@ double n1anchor, n2anchor;
 			
 		case ItemBehResult.T_FAILED:
 			vr 	= 0.0;
+			ur	= 0.0;
 			wr	= 0.0;
 			
 			// Notify Linda Space the task has failed
@@ -520,8 +526,17 @@ double n1anchor, n2anchor;
 */
 		}
 		
-		// Apply the specified action
-		setMotion (vr, 0.0, wr);				// a differential drive does not go sideways
+		// Apply the specified action: the three velocities as the program asked for
+		// them, and it is for the platform to say what it can do with them (a
+		// differential drive does not go sideways, and says so itself)
+		setMotion (vr, ur, wr);
+
+		// Plot current control commands
+		if (localgfx)
+		{
+			motionValues (c_buffer, vr, ur, wr);
+			c_plot.draw (c_buffer);
+		}
 	}
 
 	public void notify_config (String space, ItemConfig item)
