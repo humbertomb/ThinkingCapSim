@@ -53,7 +53,9 @@ import tclib.behaviours.lua.interpreter.LuaTable;
  * library puts in the globals (math, string, io, table, os) and the bridge
  * itself, are shown when all the variables are asked for ("Show all variables").
  * A variable whose value is not what it was on the cycle before is marked, so
- * that what moves can be seen at a glance.
+ * that what moves can be seen at a glance. A local that got a nil from the bridge
+ * because it asked for what there is not (<code>chaos.getLpo</code> of a constant
+ * that does not exist) is written in red, and pointed at says why.
  *
  * It only reads, and reads on its own every {@link #PERIOD} milliseconds, so the
  * module that runs the program has nothing to tell it.
@@ -112,6 +114,7 @@ public class LuaMonitorWindow extends JFrame
 		public String				type;
 		public String				scope;
 		public boolean				changed;
+		public String				wrong;				// why it is not what the script meant (a nil of chaos.getLpo given no object), or null
 
 		Var (String name, String value, String type, String scope)
 		{
@@ -168,9 +171,12 @@ public class LuaMonitorWindow extends JFrame
 
 					Var		v = vars.at (row);
 
+					boolean	wrong = (v != null) && (v.wrong != null);
+
 					if (!sel)			setBackground ((v != null) && v.changed ? C_CHANGED : Color.WHITE);
-					setForeground ((col == 3) ? C_SCOPE : Color.BLACK);
+					setForeground (wrong ? C_WRONG : (col == 3) ? C_SCOPE : Color.BLACK);
 					setFont (getFont ().deriveFont ((col == 0) ? Font.BOLD : Font.PLAIN));
+					setToolTipText (wrong ? v.wrong : null);
 					return this;
 				}
 			};
@@ -448,11 +454,25 @@ public class LuaMonitorWindow extends JFrame
 			// every other script only when all the variables are asked for: a behaviour
 			// or a program run before has locals of the same names, and side by side
 			// they would not be told apart
+			// A local declared from a call that could not answer (chaos.getLpo of a
+			// constant there is not) is nil and to blame for what follows: its row is red,
+			// and says why when pointed at.
+			Map<String, Map<String, String>>	wrongs = lua.interpreter ().complaints ();
+
 			for (Map.Entry<String, Map<String, Object>> e : lua.interpreter ().locals ().entrySet ())
 			{
 				if (!library.isSelected () && !isCurrent (e.getKey ()))		continue;
+
+				Map<String, String>		bad = wrongs.get (e.getKey ());
+
 				for (Map.Entry<String, Object> v : e.getValue ().entrySet ())
+				{
+					int		at = rows.size ();
+
 					add (rows, v.getKey (), v.getValue (), S_LOCAL + " " + e.getKey ());
+					if ((bad != null) && bad.containsKey (v.getKey ()) && (rows.size () > at))
+						rows.get (at).wrong	= bad.get (v.getKey ());
+				}
 			}
 
 			// the globals every script shares

@@ -25,6 +25,27 @@ public abstract class LuaFunction
 
 	public abstract Object call (Object[] args);
 
+	/*
+	 * A function that was asked for something it cannot give (an object of the LPS
+	 * of a number there is not) answers nil and says why here, so that whoever looks
+	 * at the program while it runs sees which variable it was that got the nil: the
+	 * interpreter takes the complaint when the call comes back and hangs it on the
+	 * local the value was declared into.
+	 */
+	private String					complaint;
+
+	/** Says what was the matter with the call being answered. */
+	public void complain (String what)		{ complaint = what; }
+
+	/** What the last call complained of, or null when nothing was; it is forgotten once taken. */
+	public String complained ()
+	{
+		String		c = complaint;
+
+		complaint	= null;
+		return c;
+	}
+
 	/** The i-th argument, or nil when it was not given. */
 	static public Object arg (Object[] args, int i)
 	{

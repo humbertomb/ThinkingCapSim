@@ -233,9 +233,11 @@ public class Chaos
 	 * <code>chaos.BALL_NET2</code> say, is nil in Lua), something that is not a
 	 * number, or a number of no object. It used to be read as 0, and the script went
 	 * on with the ball in place of what it had misspelt and nobody knew; it is said
-	 * once now, with the constants there are, so that the script can be put right.
+	 * once now on the console, with the constants there are, so that the script can
+	 * be put right -- and the function is told every time ({@link LuaFunction#complain}),
+	 * so that the monitor of the program marks the variable that got the nil.
 	 */
-	protected int index (String what, Object[] args)
+	protected int index (LuaFunction f, Object[] args)
 	{
 		Object		a = LuaFunction.arg (args, 0);
 		Double		d = Lua.tonumber (a);
@@ -243,14 +245,16 @@ public class Chaos
 
 		if ((d != null) && (i >= 0) && (i < lpos.length))		return i;
 
-		if (warned.add (what + "/" + Lua.tostring (a)))
-		{
-			StringBuilder	sb = new StringBuilder ();
+		StringBuilder	sb = new StringBuilder ();
 
-			for (int k = 0; k < lpos.length; k++)
-				sb.append ((k > 0) ? ", " : "").append ("chaos.").append (constant (lpos[k])).append (" (").append (k).append (")");
-			System.out.println ("  [CHAOS] " + what + " was given " + Lua.tostring (a) + " and ignored: it wants one of " + sb);
-		}
+		for (int k = 0; k < lpos.length; k++)
+			sb.append ((k > 0) ? ", " : "").append ("chaos.").append (constant (lpos[k])).append (" (").append (k).append (")");
+
+		String		what = f.name () + " was given " + Lua.tostring (a) + " and ignored: it wants one of " + sb;
+
+		f.complain (what);
+		if (warned.add (f.name () + "/" + Lua.tostring (a)))
+			System.out.println ("  [CHAOS] " + what);
 		return -1;
 	}
 
@@ -310,7 +314,7 @@ public class Chaos
 		{
 			public Object call (Object[] args)
 			{
-				int		i = index (name, args);
+				int		i = index (this, args);
 
 				return (i >= 0) ? lpo (i) : null;
 			}
@@ -320,7 +324,7 @@ public class Chaos
 		{
 			public Object call (Object[] args)
 			{
-				int		i = index (name, args);
+				int		i = index (this, args);
 
 				if (i >= 0)			needed.put (Integer.valueOf (i), Double.valueOf (num (args, 1, 1.0)));
 				return null;

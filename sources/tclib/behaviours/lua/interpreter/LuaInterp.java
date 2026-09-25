@@ -25,6 +25,7 @@ public class LuaInterp
 	static protected class Cell
 	{
 		Object						value;
+		String						wrong;						// what the call it was declared from complained of, if it did
 
 		Cell (Object v)							{ value = v; }
 	}
@@ -115,6 +116,7 @@ public class LuaInterp
 	/* Watching the locals, for whoever looks at a program while it runs */
 	protected boolean				watch;
 	protected Map<String, Map<String, Cell>>	watched = new java.util.LinkedHashMap<String, Map<String, Cell>> ();
+	protected String				complaint;					// what a call of the statement being run complained of
 
 	public LuaInterp (LuaTable globals)
 	{
@@ -150,6 +152,28 @@ public class LuaInterp
 				one.put (c.getKey (), c.getValue ().value);
 			all.put (e.getKey (), one);
 		}
+		return all;
+	}
+
+	/**
+	 * The locals of every script that were declared from a call that complained (see
+	 * {@link LuaFunction#complain}), by script and name, and what the complaint was:
+	 * a local declared as <code>chaos.getLpo (chaos.BALL_NET1)</code>, of a constant
+	 * there is not, is nil, and this says why. Empty unless {@link #watch} was asked for.
+	 */
+	public Map<String, Map<String, String>> complaints ()
+	{
+		Map<String, Map<String, String>>	all = new java.util.LinkedHashMap<String, Map<String, String>> ();
+
+		for (Map.Entry<String, Map<String, Cell>> e : watched.entrySet ())
+			for (Map.Entry<String, Cell> c : e.getValue ().entrySet ())
+				if (c.getValue ().wrong != null)
+				{
+					Map<String, String>		one = all.get (e.getKey ());
+
+					if (one == null)			all.put (e.getKey (), one = new java.util.LinkedHashMap<String, String> ());
+					one.put (c.getKey (), c.getValue ().wrong);
+				}
 		return all;
 	}
 
@@ -216,6 +240,7 @@ public class LuaInterp
 
 	protected void exec (Stat s, Scope scope)
 	{
+		complaint	= null;											// of this statement's calls, not of the last one's
 		try
 		{
 			if (s instanceof Local)					{ local ((Local) s, scope);			return; }
@@ -248,9 +273,20 @@ public class LuaInterp
 	private void local (Local s, Scope scope)
 	{
 		Object[]	vals = values (s.values, scope);
+		boolean		anynil = false;
 
 		for (int i = 0; i < s.names.size (); i++)
-			noted (s.names.get (i), scope.declare (s.names.get (i), (i < vals.length) ? vals[i] : null));
+			anynil	|= (i >= vals.length) || (vals[i] == null);
+		for (int i = 0; i < s.names.size (); i++)
+		{
+			Object	v = (i < vals.length) ? vals[i] : null;
+			Cell	c = scope.declare (s.names.get (i), v);
+
+			// a call of the statement complained: it is the nil it answered that is to
+			// blame, or every local of the statement when none of them is nil
+			if ((complaint != null) && ((v == null) || !anynil))	c.wrong = complaint;
+			noted (s.names.get (i), c);
+		}
 	}
 
 	private void assign (Assign s, Scope scope)
@@ -503,7 +539,14 @@ public class LuaInterp
 		if (!(fn instanceof LuaFunction))
 			throw new LuaError (chunk, e.line, "attempt to call a " + Lua.type (fn) + " value" + named (e));
 
-		try { return ((LuaFunction) fn).call (args); }
+		try
+		{
+			Object		r = ((LuaFunction) fn).call (args);
+			String		c = ((LuaFunction) fn).complained ();
+
+			if (c != null)						complaint = c;
+			return r;
+		}
 		catch (LuaError err)		{ throw err; }
 		catch (ReturnSignal err)	{ throw err; }
 		catch (RuntimeException err)
