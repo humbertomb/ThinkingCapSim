@@ -430,7 +430,6 @@
           "height": 0.3623064919283577,
           "orientation": 0.0,
           "elevation": -18.408692469621943,
-          "step": 0,
           "rangemax": 10.0,
           "hfov": 43.6,
           "vfov": 33.4,

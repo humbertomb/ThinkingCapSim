@@ -1121,8 +1121,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			// and one that hands over its frames says how many it takes in a second
 			if (RobotDef.hasFov (it.family))
 			{
+				// a camera is not read on the cycle of the runtime, so it says no step
 				if (RobotDef.hasFrameRate (it.family))
-					return new String[] { DRIVER, DRIVER_PARAMS, "step",
+					return new String[] { DRIVER, DRIVER_PARAMS,
 										  "rho", "theta", "height", "orientation", "elevation",
 										  "range max", "hfov", "vfov", FRAME_RATE, RESOLUTION };
 				return new String[] { DRIVER, DRIVER_PARAMS, "step",
@@ -1139,8 +1140,12 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 			if (SimModes.has (it.family))		names.add (SIM_MODE);
 			if (RobotDef.hasSimError (it.family))	names.add (SIM_ERROR);
-			// only the firing cycle is of the whole family when its sensors say the rest
-			if (RobotDef.hasOwnDetection (it.family))		names.add ("cycle");
+			// only the firing cycle is of the whole family when its sensors say the rest,
+			// and the cameras have none: each one takes its frames at its own rate
+			if (RobotDef.hasOwnDetection (it.family))
+			{
+				if (RobotDef.hasFiring (it.family))			names.add ("cycle");
+			}
 			else
 			{
 				// the sonars and the infrared: what they all reach, and nothing of what only a scanner or a tracker says

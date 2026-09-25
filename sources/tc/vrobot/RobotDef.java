@@ -758,6 +758,17 @@ public class RobotDef
 	static public boolean hasResolution (String fam)		{ return "camera".equals (fam); }
 
 	/**
+	 * True for a family whose readings are taken on the cycle of the runtime: how
+	 * often the family is fired (cycle) and, within that, which cycles every sensor
+	 * of it is read on (step).
+	 *
+	 * A camera has neither. It takes its frames at its own rate, which is what says
+	 * how often it has anything to hand over (framerate), and nothing in the runtime
+	 * ever read a cycle or a step of a camera.
+	 */
+	static public boolean hasFiring (String fam)			{ return !hasFrameRate (fam); }
+
+	/**
 	 * The sizes of a frame that are usual, for an editor to offer. A camera may be
 	 * given any size; these are the ones worth having at hand, from the smallest a
 	 * camera of a robot ever had to the ones of today.
@@ -845,12 +856,17 @@ public class RobotDef
 				if (f.beacons != 0)			o.addProperty ("beacons", f.beacons);
 				if (f.objects != 0)			o.addProperty ("objects", f.objects);
 			}
-			if (f.cycle != 0)				o.addProperty ("cycle", f.cycle);
+			if ((f.cycle != 0) && hasFiring (f.prefix))		o.addProperty ("cycle", f.cycle);
 			if (f.simmode != 0)				o.addProperty ("simmode", f.simmode);
 			// what the simulator puts on top of a reading is always written, so that
 			// asking for none of it is not read back as not having said anything
 			if (hasSimError (f.prefix))		o.addProperty ("simerror", f.simerror);
-			o.add ("sensors", ctx.serialize (f.sensors));
+			// its sensors are written knowing which family they are of, because what a
+			// sensor says depends on it (a camera says no step)
+			com.google.gson.JsonArray	arr = new com.google.gson.JsonArray ();
+
+			for (Sensor s : f.sensors)		arr.add (sensorJson (s, f.prefix));
+			o.add ("sensors", arr);
 			return o;
 		}
 	}
@@ -864,6 +880,19 @@ public class RobotDef
 	{
 		public com.google.gson.JsonElement serialize (Sensor s, java.lang.reflect.Type type, com.google.gson.JsonSerializationContext ctx)
 		{
+			return sensorJson (s, null);
+		}
+	}
+
+	/**
+	 * A sensor as it is written, leaving out what its family does not have: a
+	 * camera says no step, because it is not read on the cycle of the runtime.
+	 *
+	 * @param fam	which family it is of (null: one that has everything)
+	 */
+	static private com.google.gson.JsonObject sensorJson (Sensor s, String fam)
+	{
+		{
 			com.google.gson.JsonObject	o = new com.google.gson.JsonObject ();
 
 			o.addProperty ("rho", s.rho);
@@ -871,7 +900,7 @@ public class RobotDef
 			o.addProperty ("height", s.height);
 			o.addProperty ("orientation", s.orientation);
 			if (s.elevation != 0.0)		o.addProperty ("elevation", s.elevation);
-			o.addProperty ("step", s.step);
+			if ((fam == null) || hasFiring (fam))		o.addProperty ("step", s.step);
 			if (s.driver != null)		o.addProperty ("driver", s.driver);
 			if (s.driverParams != null)	o.addProperty ("driverParams", s.driverParams);
 			if (s.rangemax != 0.0)		o.addProperty ("rangemax", s.rangemax);
@@ -1056,7 +1085,8 @@ public class RobotDef
 		n		= (int) number (take (FAMILY_COUNTS[fi]), 0.0);
 		if (n <= 0)											return;
 		key		= FAMILY_KEYS[fi];
-		f.cycle	= (int) number (take ("CYCLE" + key), 0.0);
+		// a camera has no firing cycle: an older description that said one said nothing
+		if (hasFiring (fam))		f.cycle = (int) number (take ("CYCLE" + key), 0.0);
 		for (int i = 0; i < n; i++)
 		{
 			Sensor	s = new Sensor ();
@@ -1066,7 +1096,7 @@ public class RobotDef
 			s.height		= number (take (fam + "hgt" + i), 0.0);
 			s.orientation	= number (take (fam + "feat" + i), s.theta);
 			s.elevation		= number (take (fam + "elev" + i), 0.0);
-			s.step			= (int) number (take (fam + "step" + i), 0.0);
+			if (hasFiring (fam))		s.step = (int) number (take (fam + "step" + i), 0.0);
 			if (FAMILY_OWN[fi])
 			{
 				String[]	d = split (take (FAMILY_DRIVERS[fi] + i), null);
@@ -1463,7 +1493,7 @@ public class RobotDef
 			p.setProperty (FAMILY_COUNTS[fi], String.valueOf (f.n ()));
 			if (FAMILY_ALIAS[fi] != null)		p.setProperty (FAMILY_ALIAS[fi], String.valueOf (f.n ()));
 
-			if (f.cycle > 0)		p.setProperty ("CYCLE" + key, String.valueOf (f.cycle));
+			if ((f.cycle > 0) && hasFiring (fam))		p.setProperty ("CYCLE" + key, String.valueOf (f.cycle));
 			if (FAMILY_MODES[fi] != null)		p.setProperty (FAMILY_MODES[fi], String.valueOf (f.simmode));
 			if (FAMILY_ERRORS[fi] != null)		set (p, FAMILY_ERRORS[fi], f.simerror);
 			if (FAMILY_OWN[fi])
@@ -1498,7 +1528,7 @@ public class RobotDef
 				set (p, fam + "len" + i, s.rho);		set (p, fam + "rho" + i, s.theta);
 				setNZ (p, fam + "hgt" + i, s.height);	set (p, fam + "feat" + i, s.orientation);
 				setNZ (p, fam + "elev" + i, s.elevation);
-				if (s.step > 0)		p.setProperty (fam + "step" + i, String.valueOf (s.step));
+				if ((s.step > 0) && hasFiring (fam))		p.setProperty (fam + "step" + i, String.valueOf (s.step));
 				if (FAMILY_OWN[fi])
 				{
 					// this sensor is a device of its own: its driver and what it detects
