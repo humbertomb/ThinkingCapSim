@@ -84,7 +84,12 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	protected Simulator				simulator;				// Simulation engine of the running architecture
 	protected List<RobotView>		robots	= new ArrayList<RobotView> ();		// simulated robots being displayed
 	protected List<ObjectView>		objects	= new ArrayList<ObjectView> ();		// simulated animated objects being displayed (null entries: removed)
-	protected boolean				aobjectsLayer	= true;					// AOBJECT layer state before the execution hid it
+	/**
+	 * Where the animated objects of the world were before the execution, to put
+	 * them back afterwards: while it runs, the objects of the canvas stand for
+	 * where the simulation has them, and a hand may move them there.
+	 */
+	protected List<double[]>		aobjectsPoses	= new ArrayList<double[]> ();
 	protected Sequence				lastTasks;				// last task set edited (shown again when the dialog reopens)
 
 	protected boolean				showPath;				// draw the route every robot has taken
@@ -171,6 +176,9 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		// it faces, and turning it is how one is tried out. The world of a simulation
 		// is never written back, so what is turned here is lost with the execution
 		canvas.setOrientable (true);
+		// the lines of the floor are there to be seen and not to be picked: a click
+		// on the field goes through them to the ball, the robot or the floor
+		canvas.setKindSelectable (WorldItem.MARKING, false);
 		canvas.setListener (this);
 		canvas.setOverlay (this);
 
@@ -552,9 +560,13 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			execs.add (new ExecArch (deploy, i, simulator));		// loads the world into the simulator and takes the start point of the robot
 		}
 		running		= execs;
-		// while simulating, the animated objects are drawn live (overlay / 3D) instead of at their initial pose
-		aobjectsLayer	= canvas.isKindVisible (WorldItem.AOBJECT);
-		canvas.setKindVisible (WorldItem.AOBJECT, false);
+		// while simulating, the animated objects are live: drawn (overlay / 3D) where
+		// the simulation has them and not at their initial pose, and moved by hand
+		// there to see what the modules make of it. The objects of the canvas follow
+		// the simulation meanwhile, and are put back where the world has them after
+		aobjectsPoses.clear ();
+		for (WMAObject o : world.aobjects ())		aobjectsPoses.add (new double[] { o.pos.x (), o.pos.y (), o.pos.z (), o.a });
+		canvas.setKindLive (WorldItem.AOBJECT, true);
 		view3d.setAnimatedVisible (false);
 		simulator.setVisualization (this);							// robots and objects are reported to this window
 		monitorPanel.clear ();
@@ -597,7 +609,16 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		view3d.clearRobots ();
 		view3d.clearObjects ();
 		view3d.setAnimatedVisible (true);
-		canvas.setKindVisible (WorldItem.AOBJECT, aobjectsLayer);
+		canvas.setKindLive (WorldItem.AOBJECT, false);
+		// back where the world has them: what the simulation did to them is over
+		for (int i = 0; (i < aobjectsPoses.size ()) && (i < world.aobjects ().size ()); i++)
+		{
+			double[]	q = aobjectsPoses.get (i);
+
+			WorldEditor.setObjectPose (world.aobjects ().get (i), q[0], q[1], q[2], q[3]);
+		}
+		aobjectsPoses.clear ();
+		canvas.repaint ();
 		canvas.repaint ();
 		statusBar.setStatus ("Execution terminated");
 		updateExecutionState ();
@@ -775,6 +796,53 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			ov.pos	= new Point3 (pt);
 			ov.a	= a;
 		}
+		// the object of the canvas stands for where the simulation has it, so that it
+		// is picked and dragged there
+		WMAObject	o = liveObject (objindex);
+
+		if (o != null)		WorldEditor.setObjectPose (o, pt.x (), pt.y (), pt.z (), a);
+	}
+
+	/**
+	 * The object of the world in the canvas that stands for a live object of the
+	 * simulation: the same one, in the same place of the same file, read twice.
+	 */
+	private WMAObject liveObject (int objindex)
+	{
+		ObjectView	ov;
+
+		synchronized (objects)
+		{
+			if ((objindex < 0) || (objindex >= objects.size ()))		return null;
+			ov	= objects.get (objindex);
+		}
+		if ((ov == null) || (objindex >= world.aobjects ().size ()))	return null;
+
+		WMAObject	o = world.aobjects ().get (objindex);
+
+		// the same object of the same world, or nothing: names that do not agree say the lists do not either
+		if ((o.label != null) && (ov.obj.odesc.label != null) && !o.label.equals (ov.obj.odesc.label))		return null;
+		return o;
+	}
+
+	/** A live object was moved or turned by hand on the canvas: the simulation takes it from there. */
+	public void liveChanged (WorldItem item)
+	{
+		if ((item == null) || (item.kind != WorldItem.AOBJECT) || (simulator == null))		return;
+
+		WMAObject	o = liveObject (item.index);
+
+		if (o == null)		return;
+		simulator.placeObject (item.index, o.pos.x (), o.pos.y (), o.a);
+		// and the overlay draws it there at once, without waiting for the simulation to say so
+		synchronized (objects)
+		{
+			ObjectView	ov = objects.get (item.index);
+
+			ov.pos	= new Point3 (o.pos);
+			ov.a	= o.a;
+		}
+		canvas.repaint ();
 	}
 
 	/** End of a simulator refresh cycle: redraw the 2D view and move the 3D robots (on the event thread). */
@@ -854,6 +922,10 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		WMAObject	o = ov.obj.odesc;
 		Color		col = wucore.utils.color.ColorTool.fromWColorToColor (o.color);
 		double		x = ov.pos.x (), y = ov.pos.y ();
+		WorldItem	sel = c.getSelection ();
+
+		// the one picked on the canvas is drawn as picked, as the canvas draws its own
+		if ((sel != null) && (sel.kind == WorldItem.AOBJECT) && (objects.indexOf (ov) == sel.index))		col = WorldCanvas.C_SEL;
 
 		g.setStroke (new BasicStroke (1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		g.setColor (col);

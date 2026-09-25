@@ -274,6 +274,14 @@ public class Simulator
 		new Thread (refreshThread).start ();
 	}
 
+	/** Puts an animated object where a hand on the visualisation left it (see SimObjects.place). */
+	public void placeObject (int i, double x, double y, double a)
+	{
+		SimObjects	objs = objects;
+
+		if (objs != null)		objs.place (i, x, y, a);
+	}
+
 	/** Gives the animated objects to the visualisation (all of them, replacing the previous ones). */
 	protected void reportObjects ()
 	{

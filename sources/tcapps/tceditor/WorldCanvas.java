@@ -100,6 +100,13 @@ public class WorldCanvas extends JPanel
 		public void toolRequested (int tool);
 		/** How to use the current tool (shown right-aligned in the status bar). */
 		public void usageChanged (String text);
+		/**
+		 * A live element was moved or turned by hand (see {@link #setKindLive}): it
+		 * is where the world in this canvas now has it, and whoever owns the live
+		 * state -- a simulation -- is to take it from there. The world itself is
+		 * not taken as changed by this.
+		 */
+		default public void liveChanged (WorldItem item)		{ }
 	}
 
 	/* Colours */
@@ -121,7 +128,7 @@ public class WorldCanvas extends JPanel
 	static private final Color		C_START		= new Color (220, 30, 30);
 	/** How far the heading line of a start point or a robot goes on past its circle, as a share of the radius: 30% of the diameter. */
 	static public final double		HEADING		= 0.6;
-	static private final Color		C_SEL		= new Color (255, 140, 0);
+	static public final Color		C_SEL		= new Color (255, 140, 0);		// what is picked, here and in whoever draws over the canvas
 	static private final Color		C_SHAPE		= new Color (170, 175, 185);		// contour of the 3D model of an object, as the robot editor draws a model
 	static private final Color		C_HANDLE	= new Color (255, 255, 255);
 	static private final Color		C_RUBBER	= new Color (0, 120, 215);
@@ -133,6 +140,8 @@ public class WorldCanvas extends JPanel
 	protected World					world;
 	protected WorldItem				selection;
 	protected boolean[]				visible		= new boolean[WorldItem.NKINDS];
+	protected boolean[]				selectable	= new boolean[WorldItem.NKINDS];	// what a click may pick, of what is drawn
+	protected boolean[]				live		= new boolean[WorldItem.NKINDS];	// what is drawn by whoever owns the overlay, where a simulation has it
 	protected Listener				listener;
 
 	/* View */
@@ -164,7 +173,7 @@ public class WorldCanvas extends JPanel
 	public WorldCanvas (World world)
 	{
 		this.world	= world;
-		for (int i = 0; i < visible.length; i++)		visible[i] = true;
+		for (int i = 0; i < visible.length; i++)		{ visible[i] = true;	selectable[i] = true; }
 
 		setBackground (C_BACK);
 		setPreferredSize (new Dimension (800, 600));
@@ -272,12 +281,24 @@ public class WorldCanvas extends JPanel
 				|| (selection.kind == WorldItem.DOCK) || (selection.kind == WorldItem.START));
 	}
 
-	/** True when a handle of the selection can be dragged: all of them while editing, the orientation alone in viewer mode. */
+	/**
+	 * True when a handle of the selection can be dragged: all of them while editing
+	 * or when the selection is live, the orientation alone in viewer mode otherwise.
+	 */
 	protected boolean canDrag (int handle, int handles)
 	{
-		if (editable)				return true;
+		if (editable || isLive (selection))		return true;
 		if (handles < 2)			return false;
 		return (handle == handles - 1) && canTurn ();
+	}
+
+	/** The kinds a click may land on: what is drawn (by the canvas or live) and is there to be picked. */
+	private boolean[] pickable ()
+	{
+		boolean[]	m = new boolean[visible.length];
+
+		for (int i = 0; i < m.length; i++)		m[i] = visible[i] && selectable[i];
+		return m;
 	}
 
 	public void setOverlay (Overlay overlay)		{ this.overlay = overlay; repaint (); }
@@ -305,6 +326,48 @@ public class WorldCanvas extends JPanel
 		visible[kind] = b;
 		if ((selection != null) && (selection.kind == kind) && !b)		setSelection (null);
 		repaint ();
+	}
+
+	/**
+	 * Whether a click may pick the elements of a kind: they are drawn all the same,
+	 * but the mouse goes through them to what is under. A viewer that shows the
+	 * lines of a field has no use for selecting one of them, and every click on
+	 * the field would land on a line.
+	 */
+	public void setKindSelectable (int kind, boolean b)
+	{
+		selectable[kind] = b;
+		if ((selection != null) && (selection.kind == kind) && !b)		setSelection (null);
+	}
+
+	/**
+	 * A live kind is one whose elements a simulation has somewhere of its own,
+	 * which whoever owns the overlay draws there: the canvas does not draw them
+	 * itself, but they are still picked, and -- in viewer mode too -- moved and
+	 * turned by hand, the world in this canvas standing for where the simulation
+	 * has them. Moving one is not changing the world: it is telling the simulation
+	 * ({@link Listener#liveChanged}), which is how what a module does with a ball
+	 * put in front of the robot is looked into while it runs.
+	 */
+	public void setKindLive (int kind, boolean b)
+	{
+		live[kind] = b;
+		if ((selection != null) && (selection.kind == kind))		showUsage ();
+		repaint ();
+	}
+
+	public boolean isKindLive (int kind)			{ return live[kind]; }
+
+	/** True when the selection is a live element: moved and turned by hand, whatever mode the canvas is in. */
+	protected boolean isLive (WorldItem it)
+	{
+		return (it != null) && live[it.kind];
+	}
+
+	/** What the canvas draws of a kind: what is visible and not drawn live by somebody else. */
+	private boolean drawn (int kind)
+	{
+		return visible[kind] && !live[kind];
 	}
 
 	public void zoom (double factor)
@@ -432,6 +495,32 @@ public class WorldCanvas extends JPanel
 		if (listener != null)		listener.worldChanged (what);
 	}
 
+	/**
+	 * A handle of a live element dragged to (x, y): only its pose is for the hand
+	 * to change -- where it is and the way it faces -- and nothing else of it. An
+	 * object of the world has the handle of its heading say how wide it is as
+	 * well, and that is of the world, not of where the simulation has the object.
+	 */
+	private void liveHandle (int h, double x, double y)
+	{
+		Point2[]	hs = WorldEditor.handles (world, selection);
+
+		if (h == 0)
+		{
+			// the centre: the element goes where the hand is
+			WorldEditor.translate (world, selection, x - hs[0].x (), y - hs[0].y ());
+			return;
+		}
+		if (WorldItem.isObject (selection.kind) && (h == hs.length - 1))
+		{
+			WMObject	o = WorldEditor.object (world, selection);
+
+			WorldEditor.setObjectPose (o, o.pos.x (), o.pos.y (), o.pos.z (), Math.atan2 (y - o.pos.y (), x - o.pos.x ()));
+			return;
+		}
+		WorldEditor.setHandle (world, selection, h, x, y);
+	}
+
 	private void status (String s)
 	{
 		if (listener != null)		listener.statusChanged (s);
@@ -480,13 +569,17 @@ public class WorldCanvas extends JPanel
 					return;
 				}
 			}
-			WorldItem	hit = WorldEditor.pick (world, curX, curY, tol, visible);
-			// keep the current selection if it is also under the cursor (areas would steal it)
+			WorldItem	hit = WorldEditor.pick (world, curX, curY, tol, pickable ());
+			// keep the current selection if it is also under the cursor (areas would steal
+			// it) -- unless it is an area itself, which is under everything inside it
+			// and would swallow every click on the field
 			if ((selection != null) && (hit != null) && !hit.equals (selection)
+					&& (selection.kind != WorldItem.ZONE) && (selection.kind != WorldItem.FAREA)
 					&& (WorldEditor.distance (world, selection, curX, curY) < tol))
 				hit = selection;
 			setSelection (hit);
-			if ((hit != null) && editable)
+			// what is dragged as a whole: anything while editing, a live element always
+			if ((hit != null) && (editable || isLive (hit)))
 			{
 				dragMode = 1;
 				anchorX	= curX;	anchorY = curY;			// unsnapped: movement is relative
@@ -575,15 +668,16 @@ public class WorldCanvas extends JPanel
 				WorldEditor.translate (world, selection, dx, dy);
 				dragged = true;
 				repaint ();
-				if (listener != null)		listener.worldPreview ();
+				if (listener != null)		{ if (isLive (selection)) listener.liveChanged (selection); else listener.worldPreview (); }
 			}
 			break;
 		}
 		case 2:		// drag handle
-			WorldEditor.setHandle (world, selection, dragHandle, snap (nx), snap (ny));
+			if (isLive (selection))		liveHandle (dragHandle, snap (nx), snap (ny));
+			else						WorldEditor.setHandle (world, selection, dragHandle, snap (nx), snap (ny));
 			dragged = true;
 			repaint ();
-			if (listener != null)		listener.worldPreview ();
+			if (listener != null)		{ if (isLive (selection)) listener.liveChanged (selection); else listener.worldPreview (); }
 			break;
 		case 4:		// rubber band for new element
 		case 6:		// rubber band for a new icon segment
@@ -608,10 +702,13 @@ public class WorldCanvas extends JPanel
 		switch (dragMode)
 		{
 		case 1:
-			if (dragged)		changed ("Move " + WorldItem.NAMES[selection.kind].toLowerCase ());
+			// a live element moved is the simulation told, not the world changed
+			if (dragged && isLive (selection))		{ repaint (); if (listener != null) listener.liveChanged (selection); }
+			else if (dragged)		changed ("Move " + WorldItem.NAMES[selection.kind].toLowerCase ());
 			break;
 		case 2:
-			if (dragged)		changed ("Edit " + WorldItem.NAMES[selection.kind].toLowerCase ());
+			if (dragged && isLive (selection))		{ repaint (); if (listener != null) listener.liveChanged (selection); }
+			else if (dragged)		changed ("Edit " + WorldItem.NAMES[selection.kind].toLowerCase ());
 			break;
 		case 5:
 			if (dragged)
@@ -747,6 +844,8 @@ public class WorldCanvas extends JPanel
 		switch (tool)
 		{
 		case T_SELECT:
+			if (!editable && isLive (selection))
+										return "Drag the element or its handles to put it where the simulation is to have it (the world is not changed). Esc: deselect";
 			if (!editable && canTurn ())
 										return "Drag the round handle to turn the element (the world is not changed). Wheel: zoom, middle button / Space+drag: pan, Esc: deselect";
 			if (!editable)				return "Click an element to select it. Wheel: zoom, middle button / Space+drag: pan, Esc: deselect";
@@ -793,19 +892,19 @@ public class WorldCanvas extends JPanel
 		updateGridStep ();
 		if (showGrid)		drawGrid (g);
 
-		if (visible[WorldItem.ZONE])		for (int i = 0; i < world.zones ().n (); i++)		drawZone (g, world.zones ().at (i), isSel (WorldItem.ZONE, i));
-		if (visible[WorldItem.FAREA])		for (int i = 0; i < world.fareas ().n (); i++)		drawFArea (g, world.fareas ().at (i), isSel (WorldItem.FAREA, i));
-		if (visible[WorldItem.PATH])		drawPath (g);
-		if (visible[WorldItem.MARKING])		for (int i = 0; i < world.markings ().n (); i++)		drawMarking (g, world.markings ().at (i), isSel (WorldItem.MARKING, i));
-		if (visible[WorldItem.WALL])		for (int i = 0; i < world.walls ().n (); i++)		drawWall (g, world.walls ().at (i), isSel (WorldItem.WALL, i));
-		if (visible[WorldItem.OBJECT])		for (int i = 0; i < world.objects ().size (); i++)		drawObject (g, world.objects ().get (i), isSel (WorldItem.OBJECT, i));
-		if (visible[WorldItem.AOBJECT])		for (int i = 0; i < world.aobjects ().size (); i++)		drawAObject (g, world.aobjects ().get (i), isSel (WorldItem.AOBJECT, i));
-		if (visible[WorldItem.CONNECTOR])		for (int i = 0; i < world.connectors ().n (); i++)		drawConnector (g, world.connectors ().at (i), isSel (WorldItem.CONNECTOR, i));
-		if (visible[WorldItem.BEACON])		for (int i = 0; i < world.beacons ().size (); i++)		drawBeacon (g, world.beacons ().get (i), isSel (WorldItem.BEACON, i));
-		if (visible[WorldItem.CBEACON])		for (int i = 0; i < world.cbeacons ().size (); i++)	drawCBeacon (g, world.cbeacons ().get (i), isSel (WorldItem.CBEACON, i));
-		if (visible[WorldItem.WAYPOINT])	for (int i = 0; i < world.wps ().size (); i++)			drawWaypoint (g, world.wps ().get (i), isSel (WorldItem.WAYPOINT, i));
-		if (visible[WorldItem.DOCK])		for (int i = 0; i < world.docks ().size (); i++)		drawDock (g, world.docks ().get (i), isSel (WorldItem.DOCK, i));
-		if (visible[WorldItem.START])		for (int i = 0; i < world.n_starts (); i++)		drawStart (g, i, isSel (WorldItem.START, i));
+		if (drawn (WorldItem.ZONE))		for (int i = 0; i < world.zones ().n (); i++)		drawZone (g, world.zones ().at (i), isSel (WorldItem.ZONE, i));
+		if (drawn (WorldItem.FAREA))		for (int i = 0; i < world.fareas ().n (); i++)		drawFArea (g, world.fareas ().at (i), isSel (WorldItem.FAREA, i));
+		if (drawn (WorldItem.PATH))		drawPath (g);
+		if (drawn (WorldItem.MARKING))		for (int i = 0; i < world.markings ().n (); i++)		drawMarking (g, world.markings ().at (i), isSel (WorldItem.MARKING, i));
+		if (drawn (WorldItem.WALL))		for (int i = 0; i < world.walls ().n (); i++)		drawWall (g, world.walls ().at (i), isSel (WorldItem.WALL, i));
+		if (drawn (WorldItem.OBJECT))		for (int i = 0; i < world.objects ().size (); i++)		drawObject (g, world.objects ().get (i), isSel (WorldItem.OBJECT, i));
+		if (drawn (WorldItem.AOBJECT))		for (int i = 0; i < world.aobjects ().size (); i++)		drawAObject (g, world.aobjects ().get (i), isSel (WorldItem.AOBJECT, i));
+		if (drawn (WorldItem.CONNECTOR))		for (int i = 0; i < world.connectors ().n (); i++)		drawConnector (g, world.connectors ().at (i), isSel (WorldItem.CONNECTOR, i));
+		if (drawn (WorldItem.BEACON))		for (int i = 0; i < world.beacons ().size (); i++)		drawBeacon (g, world.beacons ().get (i), isSel (WorldItem.BEACON, i));
+		if (drawn (WorldItem.CBEACON))		for (int i = 0; i < world.cbeacons ().size (); i++)	drawCBeacon (g, world.cbeacons ().get (i), isSel (WorldItem.CBEACON, i));
+		if (drawn (WorldItem.WAYPOINT))	for (int i = 0; i < world.wps ().size (); i++)			drawWaypoint (g, world.wps ().get (i), isSel (WorldItem.WAYPOINT, i));
+		if (drawn (WorldItem.DOCK))		for (int i = 0; i < world.docks ().size (); i++)		drawDock (g, world.docks ().get (i), isSel (WorldItem.DOCK, i));
+		if (drawn (WorldItem.START))		for (int i = 0; i < world.n_starts (); i++)		drawStart (g, i, isSel (WorldItem.START, i));
 
 		if ((selection != null) && (selection.kind == WorldItem.WAYPOINT))		drawDockingPaths (g, selection.index);
 		if (overlay != null)				overlay.paint (g, this);

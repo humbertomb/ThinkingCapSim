@@ -80,6 +80,26 @@ public class SimObjects
 		simul.moveIcon (OBJICONS[i], OBJS[i].odesc.getLocalIcon (), OBJS[i].odesc.pos.x (), OBJS[i].odesc.pos.y (), OBJS[i].odesc.a);
 	}
 
+	/**
+	 * Puts an object where it is told, as it is: at a pose, facing a way and, if it
+	 * was moving, stopped. It is what a hand on the visualisation does to the
+	 * simulation while it runs -- to see what a module makes of a ball put in
+	 * front of the robot, say -- and it changes nothing of the world the object
+	 * came from, only where the simulation has it now.
+	 */
+	public void place (int i, double x, double y, double a)
+	{
+		if ((i < 0) || (i >= numobjects))		return;
+
+		WMAObject	o = OBJS[i].odesc;
+
+		o.pos.set (x, y, o.pos.z ());
+		o.a		= a;
+		o.invalidate ();
+		if (OBJS[i] instanceof SimMobileObject)		((SimMobileObject) OBJS[i]).v = 0.0;
+		updateIcon (i);
+	}
+
 	/** Removes the collision outline of an object (a load carried by a robot is not an obstacle). */
 	public void clearIcon (int i)
 	{
