@@ -3,21 +3,25 @@
 -- 20260924 Humberto Martinez
 
 -- Constants and parameters
-NET1LPO = chaos.NET1_LPO
-ANGLELARGE = 48.7014		-- degrees, as every angle here
-ANGLESMALL = 22.9183		-- degrees, as every angle here
-SLOWDOWN = 300
-GOTTHERE = 100
+local NET1LPO = chaos.NET1_LPO
+local ANGLELARGE = 48.7014		-- degrees, as every angle here
+local ANGLESMALL = 22.9183		-- degrees, as every angle here
+local SLOWDOWN = 300
+local GOTTHERE = 100
 
-PI05 = 90
-PI =  180	
-PI2 = 360
+local PI05 = 90
+local PI =  180	
+local PI2 = 360
 
-MAXVEL = 370
+local MAXVEL = 370
 
 -- Geometrical computations
 local pos = chaos.gsGetMyPos()
 local dest = chaos.getDesiredPos()
+
+local vlin = 0
+local vlat = 0
+local vrot = 0
 
 --dest.x = 0
 --dest.y = 0

@@ -1,5 +1,5 @@
 {
-  "name": "pioneer3",
+  "name": "Pioneer-3 AT",
   "radius": 0.25,
   "icon": [
     {
@@ -193,6 +193,9 @@
   "shapeRobot": "./conf/3dmodels/pioneer3at.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.SkidSteerDrive",
+    "vmax": 0.0,
+    "umax": 0.0,
+    "rmax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,
@@ -358,6 +361,9 @@
       "sensors": []
     },
     "vis": {
+      "sensors": []
+    },
+    "camera": {
       "sensors": []
     }
   },

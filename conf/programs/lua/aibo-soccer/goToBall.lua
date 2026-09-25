@@ -3,18 +3,24 @@
 -- 20060406 Humberto Martinez
 -- 20260924 Humberto Martinez
 
-ANGLE_LARGE = 50
-ANGLE_SMALL = 25
-SLOWDOWN = 600
+local ANGLE_LARGE = 50
+local ANGLE_SMALL = 25
+
+local RHO_MIN = 100
+local RHO_SLOWDOWN = 600
+
+local vlin = 0
+local vlat = 0
+local vrot = 0
 
 -- PID-like controllers
-vlin = 0
-vrot = 0
 local ball = chaos.getLpo(chaos.BALL_LPO)
-if (ball.rho < SLOWDOWN) then
+if (ball.rho < RHO_SLOWDOWN) then
 	-- ***************************
 	-- Slow approach to ball
-	vlin = 0.6 * ball.rho -100
+	if ball.rho > RHO_MIN then
+		vlin = 0.6 * ball.rho + 50
+	end
 	if (math.abs(ball.theta) < ANGLE_SMALL) then	
 		vrot = 0.9 * ball.theta
 	else			
@@ -38,5 +44,5 @@ end
 chaos.setNeeded(chaos.BALL_LPO,1.0)
 chaos.setVlin(vlin)
 chaos.setVrot(vrot)
-chaos.setVlat(0)
+chaos.setVlat(vlat)
 

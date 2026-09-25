@@ -1,5 +1,5 @@
 {
-  "name": "satant2",
+  "name": "Satant",
   "radius": 2.0,
   "icon": [
     {
@@ -143,6 +143,9 @@
   ],
   "kinematics": {
     "drive": "tc.vrobot.models.AckermanDrive",
+    "vmax": 0.0,
+    "umax": 0.0,
+    "rmax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,
@@ -155,15 +158,19 @@
   },
   "sensors": {
     "son": {
+      "simerror": 0.05,
       "sensors": []
     },
     "ir": {
+      "simerror": 0.05,
       "sensors": []
     },
     "lrf": {
+      "simerror": 0.05,
       "sensors": []
     },
     "lsb": {
+      "simerror": 0.05,
       "sensors": []
     },
     "trk": {
@@ -171,9 +178,13 @@
     },
     "vis": {
       "sensors": []
+    },
+    "camera": {
+      "sensors": []
     }
   },
   "bumpers": [],
+  "fusionmode": 0,
   "extra": {
     "COMPASS0_OFFSET": "-180.0",
     "MAXCOMPASS": "1",

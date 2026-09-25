@@ -1,5 +1,5 @@
 {
-  "name": "quaky2",
+  "name": "Quaky2",
   "radius": 0.25,
   "icon": [
     {
@@ -150,6 +150,9 @@
   "shapeRobot": "./conf/3dmodels/quaky2.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.DifferentialDrive",
+    "vmax": 0.0,
+    "umax": 0.0,
+    "rmax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,

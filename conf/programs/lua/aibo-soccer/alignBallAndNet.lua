@@ -3,46 +3,53 @@
 -- 20060406 Humberto Martinez
 -- 20260924 Humberto Martinez
 
-MAX_RHO = 800
-MIN_RHO = 300
-MIN_THETA = 5
+local MIN_DRHO = 50
+local MIN_DTHETA = 1
+local MAX_VROT = 70
 
-MAX_VROT = 70
-MAX_VLAT = 200
+local MAX_VLIN = 150
+local MAX_VLAT = 100
 
 local ball	= chaos.getLpo(chaos.BALL_LPO)
 local net1	= chaos.getLpo(chaos.NET1_LPO)
 local net2	= chaos.getLpo(chaos.NET2_LPO)
 local info	= chaos.getBehaviorInfo ()
 
+local vlin = 0
+local vlat = 0
+local vrot = 0
+
+local delta_rho, delta_theta
+local align_rho, align_theta
+
 -- Compute distance at invocation
 if info.isNew > 0 then
-     chaos.setGlobal("ALIGN_RHO",1,ball.rho)
+     chaos.setGlobal("ALIGN_RHO",ball.rho)
 end
-ALIGN_RHO = chaos.getGlobal("ALIGN_RHO")
+align_rho = chaos.getGlobal("ALIGN_RHO")
 
 -- Use direction of the most recently detected net
 if net1.anchored > net2.anchored then
-	ALIGN_THETA = net1.theta
+	align_theta = net1.theta
 else
-	ALIGN_THETA = math.normdeg (net2.theta + PI)
+	align_theta = math.normdeg (net2.theta + 180)
 end
 
 -- Compute distance error, and limit control actions
-delta_rho = math.limit (ball.rho - ALIGN_RHO, -MAX_RHO, MAX_RHO)
+delta_rho = align_rho - ball.rho
 
 -- Compute heading error and normalise
-delta_theta = math.normdeg (ALIGN_THETA - ball.theta);
+delta_theta = math.normdeg (align_theta - ball.theta)
 
 -- Keep distance to ball	
-if delta_rho > MIN_RHO then
-	vlin = 0.75 * delta_rho
+if math.abs (delta_rho) > MIN_DRHO then
+	vlin = math.limit (-0.75 * delta_rho, -MAX_VLIN, MAX_VLIN)
 else
 	vlin = 0
 end
 
 -- Keep heading to ball
-if math.abs (ball.theta) < 20 then
+if math.abs (ball.theta) < 3 then
 	vrot = 0
 elseif math.abs (ball.theta) < 45 then
 	vrot = math.limit (1.75 * ball.theta, -MAX_VROT, MAX_VROT)
@@ -51,11 +58,11 @@ elseif math.abs (ball.theta) >= 45 then
 end
 
 -- Align ball and net
-if math.abs(delta_theta) < MIN_THETA then
+if math.abs(delta_theta) < MIN_DTHETA then
 	vlat = 0
 else
-	vlat = -math.limit (7 * delta_theta + 50*math.sign(delta_theta), -MAX_VLAT, MAX_VLAT)
-	vrot = math.limit (vrot + 0.9 * delta_theta, -MAX_VROT, MAX_VROT)
+	vlat = -math.limit (10 * delta_theta, -MAX_VLAT, MAX_VLAT)
+	vrot = math.limit (vrot - 0.9 * delta_theta, -MAX_VROT, MAX_VROT)
 end
 
 chaos.setNeeded(chaos.BALL_LPO,1.0)

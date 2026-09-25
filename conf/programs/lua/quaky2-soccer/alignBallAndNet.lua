@@ -25,7 +25,7 @@ ALIGN_RHO = chaos.getGlobal("ALIGN_RHO")
 if net1.anchored > net2.anchored then
 	ALIGN_THETA = net1.theta
 else
-	ALIGN_THETA = math.normdeg (net2.theta + PI)
+	ALIGN_THETA = math.normdeg (net2.theta + 180)
 end
 
 -- Compute distance error, and limit control actions

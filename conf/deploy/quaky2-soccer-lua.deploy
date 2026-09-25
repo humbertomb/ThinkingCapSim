@@ -16,7 +16,7 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "./conf/programs/lua/lookForBall.lua",
+            "PRG": "./conf/programs/lua/quaky2-soccer/lookForBall.lua",
             "TYPE": "Controller",
             "AUTO": "true"
           },

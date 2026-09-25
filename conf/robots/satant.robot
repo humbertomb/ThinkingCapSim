@@ -1,5 +1,5 @@
 {
-  "name": "satant",
+  "name": "Satant",
   "radius": 2.0,
   "icon": [
     {
@@ -143,6 +143,9 @@
   ],
   "kinematics": {
     "drive": "tc.vrobot.models.AckermanDrive",
+    "vmax": 0.0,
+    "umax": 0.0,
+    "rmax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,
@@ -189,6 +192,9 @@
       ]
     },
     "vis": {
+      "sensors": []
+    },
+    "camera": {
       "sensors": []
     }
   },

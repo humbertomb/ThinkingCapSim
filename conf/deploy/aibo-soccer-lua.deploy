@@ -16,7 +16,7 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "./conf/programs/lua/lookForBall.lua",
+            "PRG": "./conf/programs/lua/aibo-soccer/lookForBall.lua",
             "TYPE": "Controller",
             "AUTO": "true"
           },

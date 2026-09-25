@@ -1,5 +1,5 @@
 {
-  "name": "rasmus",
+  "name": "ATVR",
   "radius": 0.55,
   "icon": [
     {
@@ -179,6 +179,9 @@
   ],
   "kinematics": {
     "drive": "tc.vrobot.models.SkidSteerDrive",
+    "vmax": 0.0,
+    "umax": 0.0,
+    "rmax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,

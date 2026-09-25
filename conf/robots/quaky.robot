@@ -1,5 +1,5 @@
 {
-  "name": "quaky",
+  "name": "Quaky",
   "radius": 0.3,
   "icon": [
     {
@@ -71,6 +71,9 @@
   ],
   "kinematics": {
     "drive": "tc.vrobot.models.DifferentialDrive",
+    "vmax": 0.0,
+    "umax": 0.0,
+    "rmax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,
@@ -231,6 +234,9 @@
       "sensors": []
     },
     "vis": {
+      "sensors": []
+    },
+    "camera": {
       "sensors": []
     }
   },

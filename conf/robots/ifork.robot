@@ -1,5 +1,5 @@
 {
-  "name": "ifork",
+  "name": "iFork",
   "radius": 1.0,
   "icon": [
     {
@@ -188,6 +188,9 @@
   "shapeActuator": "./conf/3dmodels/ifork.lift.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.TricycleDrive",
+    "vmax": 0.0,
+    "umax": 0.0,
+    "rmax": 0.0,
     "lamax": 0.5,
     "ldmax": 0.2,
     "rwheel": 0.0,
@@ -253,6 +256,9 @@
       "sensors": []
     },
     "vis": {
+      "sensors": []
+    },
+    "camera": {
       "sensors": []
     }
   },

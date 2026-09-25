@@ -36,6 +36,10 @@ RIGHTHEADKICK = 2
 GRABNTURNLEFT = 3
 GRABNTURNRIGHT = 4
 
+local vlin = 0
+local vlat = 0
+local vrot = 0
+
 -- Get object values
 local myPos = chaos.gsGetMyPos()
 local ball = chaos.getLpo(ball_pos)

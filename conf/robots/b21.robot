@@ -1,5 +1,5 @@
 {
-  "name": "nomad",
+  "name": "B21",
   "radius": 0.3,
   "icon": [
     {
@@ -169,6 +169,9 @@
   "shapeRobot": "./conf/3dmodels/b21.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.SynchroDrive",
+    "vmax": 0.0,
+    "umax": 0.0,
+    "rmax": 0.0,
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,
@@ -450,6 +453,9 @@
       "sensors": []
     },
     "vis": {
+      "sensors": []
+    },
+    "camera": {
       "sensors": []
     }
   },
