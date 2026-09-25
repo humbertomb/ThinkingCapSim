@@ -912,8 +912,8 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		double		ca = Math.cos (a), sa = Math.sin (a);
 
 		drawBody (g, c, rv, x, y, a);
-		// heading
-		double	len = Math.max (0.5, rv.rdesc.RADIUS * 1.5);
+		// heading: on past the circle of the robot 30% of its diameter
+		double	len = rv.rdesc.RADIUS * (1.0 + WorldCanvas.HEADING);
 		g.setColor (C_ROBOT);
 		g.draw (new Line2D.Double (c.toPixelX (x), c.toPixelY (y), c.toPixelX (x + len * ca), c.toPixelY (y + len * sa)));
 		g.fillOval (c.toPixelX (x) - 3, c.toPixelY (y) - 3, 6, 6);

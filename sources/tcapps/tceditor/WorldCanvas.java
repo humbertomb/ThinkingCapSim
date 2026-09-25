@@ -119,6 +119,8 @@ public class WorldCanvas extends JPanel
 	static private final Color		C_WP		= new Color (30, 80, 220);
 	static private final Color		C_DOCK		= new Color (0, 140, 60);
 	static private final Color		C_START		= new Color (220, 30, 30);
+	/** How far the heading line of a start point or a robot goes on past its circle, as a share of the radius: 30% of the diameter. */
+	static public final double		HEADING		= 0.6;
 	static private final Color		C_SEL		= new Color (255, 140, 0);
 	static private final Color		C_SHAPE		= new Color (170, 175, 185);		// contour of the 3D model of an object, as the robot editor draws a model
 	static private final Color		C_HANDLE	= new Color (255, 255, 255);
@@ -1109,6 +1111,18 @@ public class WorldCanvas extends JPanel
 
 	private void drawPose (Graphics2D g, double x, double y, double a, double r, Color c, boolean sel, boolean square)
 	{
+		drawPose (g, x, y, a, r, c, sel, square, Double.NaN);
+	}
+
+	/**
+	 * A pose: its circle (or square) of radius r and the arrow of its heading.
+	 *
+	 * @param stick	how far the arrow goes on past the circle, as a share of the
+	 *				radius (0.6 is 30% of the diameter); NaN leaves it as long as the
+	 *				view finds it readable, whatever the radius
+	 */
+	private void drawPose (Graphics2D g, double x, double y, double a, double r, Color c, boolean sel, boolean square, double stick)
+	{
 		double	cxp = px (x), cyp = py (y);
 		double	rp = Math.max (5.0, r * scale);
 		g.setColor (sel ? C_SEL : c);
@@ -1116,7 +1130,7 @@ public class WorldCanvas extends JPanel
 		if (square)		g.draw (new Rectangle2D.Double (cxp - rp, cyp - rp, 2 * rp, 2 * rp));
 		else			g.draw (new Ellipse2D.Double (cxp - rp, cyp - rp, 2 * rp, 2 * rp));
 		// heading arrow
-		double	len = Math.max (rp * 1.8, 0.35 * scale);
+		double	len = Double.isNaN (stick) ? Math.max (rp * 1.8, 0.35 * scale) : rp * (1.0 + stick);
 		double	ax = cxp + len * Math.cos (a), ay = cyp - len * Math.sin (a);
 		g.draw (new Line2D.Double (cxp, cyp, ax, ay));
 		double	hx1 = ax - 7 * Math.cos (a - 0.5), hy1 = ay + 7 * Math.sin (a - 0.5);
@@ -1206,7 +1220,8 @@ public class WorldCanvas extends JPanel
 		g.setColor (new Color (220, 30, 30, 60));
 		double	rp = Math.max (6.0, r * scale);
 		g.fill (new Ellipse2D.Double (px (x) - rp, py (y) - rp, 2 * rp, 2 * rp));
-		drawPose (g, x, y, st.orientation, r, C_START, sel, false);
+		// the heading sticks out past the circle 30% of its diameter
+		drawPose (g, x, y, st.orientation, r, C_START, sel, false, HEADING);
 		label (g, "START_" + (i + 1), x, y, sel ? C_SEL : C_START);
 	}
 

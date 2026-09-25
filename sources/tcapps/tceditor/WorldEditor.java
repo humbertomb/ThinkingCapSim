@@ -1888,9 +1888,9 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			WMStart	st = w.start (it.index);
 			// how wide it is, taken hold of across its heading so that the two handles
 			// never fall on each other, and the heading the last one, as everywhere
-			// else, out past the circle however wide it is
+			// else, at the tip of the heading line the view draws
 			double	r = st.radius (), ra = st.orientation + Math.PI / 2.0;
-			double	ha = Math.max (ARROW, r + 0.25);
+			double	ha = r * (1.0 + WorldCanvas.HEADING);
 
 			return new Point2[] { new Point2 (st.x (), st.y ()),
 								  new Point2 (st.x () + r * Math.cos (ra), st.y () + r * Math.sin (ra)),
