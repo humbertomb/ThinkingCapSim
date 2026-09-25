@@ -15,7 +15,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.chart.renderer.xy.XYAreaRenderer2;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.ui.RectangleEdge;
@@ -47,6 +47,8 @@ public class PlotWindow extends JFrame
 	static public final int			HEIGHT		= 300;
 	static public final int			VALUES_W	= 175;						// and what a panel of values adds to it (a third)
 	static public final Color		C_VALUE		= new Color (226, 226, 226);	// the ground a value is read off
+	/** How much of its colour the ground covered by a line of impulses is filled with, 255 being all of it. */
+	static public final int			FILL		= 60;
 
 	/** The colours of the lines, in the order they are given. */
 	static public final Color[]		COLOURS		= { new Color (204, 0, 0), new Color (0, 0, 204), new Color (0, 153, 153),
@@ -145,6 +147,10 @@ public class PlotWindow extends JFrame
 	 * order of the scales they are read against: a plot draws the lines of the left
 	 * scale and then the ones of the right one, and with the two units coming one
 	 * after the other in the legend that would name them out of order.
+	 *
+	 * Every line is named once, by whichever of the two ways of drawing it is the
+	 * line itself: the ground covered by a line of impulses is not named, the curve
+	 * over it is.
 	 */
 	private void legendOrder ()
 	{
@@ -161,13 +167,20 @@ public class PlotWindow extends JFrame
 					for (int i = 0; i < legends.length; i++)
 					{
 						int					ds = isRight (i) ? 1 : 0;
-						XYItemRenderer		r = plot.getRenderer (ds);
 
-						if ((r == null) || (i >= place.length))		continue;
+						if (i >= place.length)						continue;
+						// the curve first when there is one, because the ground under it
+						// is not what the legend is naming
+						for (int k = 0; k < 2; k++)
+						{
+							XYItemRenderer	r = plot.getRenderer (impulses ? (ds + 2 - 2 * k) : (ds + 2 * k));
 
-						org.jfree.chart.LegendItem	item = r.getLegendItem (ds, place[i]);
+							if (r == null)							continue;
 
-						if (item != null)		all.add (item);
+							org.jfree.chart.LegendItem	item = r.getLegendItem (impulses ? (ds + 2 - 2 * k) : (ds + 2 * k), place[i]);
+
+							if (item != null)			{ all.add (item);	break; }
+						}
 					}
 					return all;
 				}
@@ -175,17 +188,19 @@ public class PlotWindow extends JFrame
 		});
 	}
 
-	/** How the lines are drawn: as lines, or as stems from zero when they are impulses. */
+	/**
+	 * How the lines are drawn: as lines, or, when they are impulses, as the ground
+	 * they cover down to the zero, filled see-through so that a line behind another
+	 * is still there to be seen. The line itself is drawn over it ({@link #joins}).
+	 */
 	protected XYItemRenderer lines ()
 	{
 		if (impulses)
 		{
-			XYBarRenderer	r = new XYBarRenderer (0.0);
+			XYAreaRenderer2	r = new XYAreaRenderer2 ();
 
-			r.setShadowVisible (false);
-			r.setBarPainter (new org.jfree.chart.renderer.xy.StandardXYBarPainter ());
-			r.setMargin (0.85);									// a stem, and not a bar as wide as the step
-			r.setDrawBarOutline (false);
+			r.setOutline (false);								// the line over it is the outline
+			r.setDefaultSeriesVisibleInLegend (false);			// the legend names the line, not its ground
 			return r;
 		}
 
@@ -207,7 +222,6 @@ public class PlotWindow extends JFrame
 
 		r.setDefaultStroke (new BasicStroke (1.0f));
 		r.setAutoPopulateSeriesStroke (false);
-		r.setDefaultSeriesVisibleInLegend (false);
 		return r;
 	}
 
@@ -242,12 +256,22 @@ public class PlotWindow extends JFrame
 		plot.setDatasetRenderingOrder (org.jfree.chart.plot.DatasetRenderingOrder.FORWARD);
 	}
 
-	/** Gives every line of a dataset its colour, which is the colour of the line and not of its place in the dataset. */
-	protected void colours (XYItemRenderer r, int[] map)
+	/**
+	 * Gives every line of a dataset its colour, which is the colour of the line and
+	 * not of its place in the dataset, as much of it as is asked for.
+	 *
+	 * @param alpha		how much of the colour is seen, 255 being all of it
+	 */
+	protected void colours (XYItemRenderer r, int[] map, int alpha)
 	{
 		if ((r == null) || (map == null))		return;
 		for (int i = 0; i < map.length; i++)
-			r.setSeriesPaint (i, colour (map[i]));
+		{
+			Color	c = colour (map[i]);
+
+			if (alpha < 255)		c = new Color (c.getRed (), c.getGreen (), c.getBlue (), alpha);
+			r.setSeriesPaint (i, c);
+		}
 	}
 
 	public void open ()
@@ -441,11 +465,14 @@ public class PlotWindow extends JFrame
 	/** Gives every line its colour, whichever dataset it went to. */
 	protected void paints ()
 	{
-		// the curve over the impulses is of the colour of the impulses it joins
-		colours (plot.getRenderer (0), lmap);
-		colours (plot.getRenderer (1), rmap);
-		colours (plot.getRenderer (2), lmap);
-		colours (plot.getRenderer (3), rmap);
+		// the ground covered by a line is of its colour, seen through; the line over
+		// it, which is the curve that joins the impulses, is of its colour outright
+		int			alpha = impulses ? FILL : 255;
+
+		colours (plot.getRenderer (0), lmap, alpha);
+		colours (plot.getRenderer (1), rmap, alpha);
+		colours (plot.getRenderer (2), lmap, 255);
+		colours (plot.getRenderer (3), rmap, 255);
 	}
 
 	/** One row per line of the plot: what it is called, and a field for its value. */
@@ -513,9 +540,14 @@ public class PlotWindow extends JFrame
 		plot.getRangeAxis ().setLabel (vert);
 	}
 
-	public void setImpulses (boolean stems)
+	/**
+	 * Whether the lines are impulses -- a value at a cycle, and nothing between one
+	 * cycle and the next -- which are drawn as the ground they cover down to the
+	 * zero, filled see-through, with the line that joins them over it.
+	 */
+	public void setImpulses (boolean filled)
 	{
-		impulses	= stems;
+		impulses	= filled;
 		plot.setRenderer (0, lines ());
 		if (plot.getRangeAxis (1) != null)		plot.setRenderer (1, lines ());
 		joins ();
