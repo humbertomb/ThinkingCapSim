@@ -47,10 +47,13 @@ import tclib.behaviours.lua.interpreter.LuaTable;
  *   command           what the program asked the robot for on this cycle
  * </pre>
  *
- * What the library puts in the globals (math, string, io, table, os) and the
- * bridge itself are left out unless they are asked for. A variable whose value
- * is not what it was on the cycle before is marked, so that what moves can be
- * seen at a glance.
+ * Of the locals, only the ones of the program being run are shown: the scripts
+ * of the behaviours and the programs run before leave locals of their own, and
+ * under the same names they would be read as the program's. Those, and what the
+ * library puts in the globals (math, string, io, table, os) and the bridge
+ * itself, are shown when all the variables are asked for ("Show all variables").
+ * A variable whose value is not what it was on the cycle before is marked, so
+ * that what moves can be seen at a glance.
  *
  * It only reads, and reads on its own every {@link #PERIOD} milliseconds, so the
  * module that runs the program has nothing to tell it.
@@ -96,7 +99,7 @@ public class LuaMonitorWindow extends JFrame
 	protected Vars					vars;
 	protected JTable				table;
 	protected JLabel				status;
-	protected JCheckBox			library;
+	protected JCheckBox			library;			// "Show all variables": the other scripts' locals and the library's globals too
 	protected javax.swing.JComboBox<String>	programs;			// the programs of the folder of the one running
 	protected boolean				choosing;					// the selector is being filled in, which is nobody's choice
 	protected Timer					timer;
@@ -183,7 +186,8 @@ public class LuaMonitorWindow extends JFrame
 		table.getColumnModel ().getColumn (3).setPreferredWidth (150);
 
 		status	= new JLabel (" ");
-		library	= new JCheckBox ("What the library puts in", false);
+		library	= new JCheckBox ("Show all variables", false);
+		library.setToolTipText ("The locals of the other scripts (behaviours, programs run before) and what the library and the bridge put in the globals");
 		library.addActionListener (new ActionListener ()
 		{
 			public void actionPerformed (ActionEvent e)		{ refresh (); }
@@ -440,10 +444,16 @@ public class LuaMonitorWindow extends JFrame
 
 		if (lua != null)
 		{
-			// the locals of every script, as its last run left them
+			// the locals of the program being run, as its last run left them -- and of
+			// every other script only when all the variables are asked for: a behaviour
+			// or a program run before has locals of the same names, and side by side
+			// they would not be told apart
 			for (Map.Entry<String, Map<String, Object>> e : lua.interpreter ().locals ().entrySet ())
+			{
+				if (!library.isSelected () && !isCurrent (e.getKey ()))		continue;
 				for (Map.Entry<String, Object> v : e.getValue ().entrySet ())
 					add (rows, v.getKey (), v.getValue (), S_LOCAL + " " + e.getKey ());
+			}
 
 			// the globals every script shares
 			LuaTable	g = lua.globals ();
@@ -501,6 +511,12 @@ public class LuaMonitorWindow extends JFrame
 
 	/** How many fields of a table are written out one by one. */
 	static public final int			FIELDS		= 16;
+
+	/** Whether a script is the program being run, by the name the interpreter knows it by (its file). */
+	protected boolean isCurrent (String chunk)
+	{
+		return (program != null) && program.equals (chunk);
+	}
 
 	/** Whether a global is the library's or the bridge itself, and so nobody's variable. */
 	static protected boolean isLibrary (String name, Object value)
