@@ -6,41 +6,28 @@ package tc.shared.linda;
 
 import java.io.*;
 
+import tc.vrobot.*;
+
 public class ItemCameraControl extends Item implements Serializable
 {
-	// Traction and steering control mode
-	public static final int		 	CTRL_NONE		= 0;
-	public static final int		 	CTRL_AUTO		= 1;
-	public static final int		 	CTRL_MANUAL		= 2;	
-	
 	// Camera control
-	public double					pan;				// Pan movement control
-	public double					tilt;				// Tilt movement control
-	public double					zoom;				// Zoom aperture control
+	public CameraCtrl				camera_ctrl;
 
 	// Constructors
 	public ItemCameraControl () 
 	{
-		this.set (0.0, 0.0, 0.0, 0);
+		set (0);
 	}	
 	
-	public ItemCameraControl (double pan, double tilt, double zoom, long tstamp) 
-	{
-		this.set (pan, tilt, zoom, tstamp);
-	}	
-	
-	// Initialisers
-	public void set (double pan, double tilt, double zoom, long tstamp)
+	public void set (CameraCtrl camera_ctrl, long tstamp)
 	{
 		set (tstamp);
 		
-		this.pan		= pan;
-		this.tilt		= tilt;
-		this.zoom		= zoom;
+		this.camera_ctrl	= camera_ctrl;
 	}
-	
+
 	public String toString ()
 	{
-		return "pan=" + pan + ", tilt=" + tilt + ", zoom=" + zoom;
+		return camera_ctrl.toString ();
 	}	
 }

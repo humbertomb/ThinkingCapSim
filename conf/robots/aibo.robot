@@ -595,9 +595,9 @@
   "shapeRobot": "./conf/3dmodels/aibo.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.LeggedOmniDrive",
-    "vmax": 0.2,
-    "umax": 0.1,
-    "rmax": 90.0,
+    "vmax": 0.451,
+    "umax": 0.344,
+    "rmax": 200.0,
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,

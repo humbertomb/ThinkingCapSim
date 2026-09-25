@@ -78,6 +78,11 @@
             "symbol": "MOTION",
             "itemClass": "tc.shared.linda.ItemMotion",
             "method": "notify_motion"
+          },
+          {
+            "symbol": "CAMERA_CTRL",
+            "itemClass": "tc.shared.linda.ItemCameraControl",
+            "method": "notify_camera_ctrl"
           }
         ]
       },

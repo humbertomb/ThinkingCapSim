@@ -14,6 +14,7 @@ import tc.shared.linda.ItemCamera;
 import tc.shared.linda.ItemConfig;
 import tc.shared.linda.ItemSensors;
 import tc.shared.linda.ItemSensorsCtrl;
+import tc.shared.linda.ItemCameraControl;
 import tc.shared.linda.ItemExecution;
 import tc.shared.linda.ItemMotion;
 import tc.shared.linda.ItemObject;
@@ -59,6 +60,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected BufferedImage			cdata;			// frame of the current cycle (null: no camera, or nothing taken)
 	protected int					cdev;					// which camera of the robot took it
 	protected RobotDataCtrl			data_ctrl;
+	protected CameraCtrl			camera_ctrl;
 
 	private double[]				buffer;				// Buffer to store curve points
 
@@ -280,6 +282,11 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	public void notify_sensors_ctrl (String space, ItemSensorsCtrl item)
 	{
 		data_ctrl.set (item.data_ctrl);
+	}
+
+	public void notify_camera_ctrl (String space, ItemCameraControl item)
+	{
+		camera_ctrl.set (item.camera_ctrl);
 	}
 
 	// Abstract instance methods. Subclasses MUST implement
