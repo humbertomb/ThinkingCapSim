@@ -201,9 +201,12 @@ public class SimRobot extends VirtualRobot
 			if (im == null)						continue;
 			if (camwin != null)					camwin.show (c.device (), im);
 			// the robot writes the frame of this cycle: it copies it, so the camera
-			// may draw over its own again
-			cdata	= im;
-			cdev	= c.device ();
+			// may draw over its own again -- and says how the camera was turned when
+			// it took it, for whoever places what is seen in it
+			cdata		= im;
+			cdev		= c.device ();
+			scam.pan	= c.pan ();
+			scam.tilt	= c.tilt ();
 			cnext	= (cnext + k + 1) % cams.length;
 			return;								// one frame a cycle
 		}

@@ -38,6 +38,8 @@ public class ItemCamera extends Item implements Serializable
 
 	public transient BufferedImage	image;					// the frame itself (null: none taken yet)
 	public int						device;					// which camera of the robot took it
+	public double					pan;					// how the camera was turned on its mount when it took it (rad; 0: as the description points it)
+	public double					tilt;					// ... and how far up or down (rad)
 
 	// Constructors
 	public ItemCamera () 
@@ -64,6 +66,15 @@ public class ItemCamera extends Item implements Serializable
 		this.device	= device;
 	}
 
+	/** A frame of a camera turned on its mount (CAMERA_CTRL): the pan and tilt it was taken with, so that what is seen in it is placed where it is. */
+	public void set (BufferedImage image, int device, double pan, double tilt, long tstamp)
+	{
+		set (image, device, tstamp);
+		
+		this.pan	= pan;
+		this.tilt	= tilt;
+	}
+
 	public int	width ()		{ return (image != null) ? image.getWidth () : 0; }
 	public int	height ()		{ return (image != null) ? image.getHeight () : 0; }
 
@@ -76,6 +87,8 @@ public class ItemCamera extends Item implements Serializable
 	{
 		ItemCamera		item = new ItemCamera (copy (image), device, timestamp.longValue ());
 		
+		item.pan	= pan;
+		item.tilt	= tilt;
 		return item;
 	}
 
