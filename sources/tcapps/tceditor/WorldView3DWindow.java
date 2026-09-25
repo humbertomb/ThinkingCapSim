@@ -434,8 +434,12 @@ public class WorldView3DWindow extends JFrame
 		for (tc.shared.world.WMStart st : world.starts ())
 		{
 			double	sx = st.x (), sy = st.y (), sz = st.z (), sa = st.orientation;
-			bg.addChild (cylinder (sx, sy, sz, 0.25, 0.04, C_START, 0.3f));
-			bg.addChild (segment (sx, sy, sz + 0.05, sx + 0.5 * Math.cos (sa), sy + 0.5 * Math.sin (sa), sz + 0.05, C_START, 3f));
+			// as wide as the start point says it is, with the heading bar reaching past
+			// the disc whatever that width is
+			double	sr = st.radius (), sl = Math.max (2.0 * sr, 0.5);
+
+			bg.addChild (cylinder (sx, sy, sz, sr, 0.04, C_START, 0.3f));
+			bg.addChild (segment (sx, sy, sz + 0.05, sx + sl * Math.cos (sa), sy + sl * Math.sin (sa), sz + 0.05, C_START, 3f));
 		}
 
 		return bg;

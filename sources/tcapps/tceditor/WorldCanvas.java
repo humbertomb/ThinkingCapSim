@@ -1202,11 +1202,11 @@ public class WorldCanvas extends JPanel
 	private void drawStart (Graphics2D g, int i, boolean sel)
 	{
 		tc.shared.world.WMStart	st = world.start (i);
-		double	x = st.x (), y = st.y ();
+		double	x = st.x (), y = st.y (), r = st.radius ();
 		g.setColor (new Color (220, 30, 30, 60));
-		double	rp = Math.max (6.0, 0.25 * scale);
+		double	rp = Math.max (6.0, r * scale);
 		g.fill (new Ellipse2D.Double (px (x) - rp, py (y) - rp, 2 * rp, 2 * rp));
-		drawPose (g, x, y, st.orientation, 0.25, C_START, sel, false);
+		drawPose (g, x, y, st.orientation, r, C_START, sel, false);
 		label (g, "START_" + (i + 1), x, y, sel ? C_SEL : C_START);
 	}
 

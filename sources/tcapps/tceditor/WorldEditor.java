@@ -1397,11 +1397,11 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		obj.setIcon ((w.icons ().size () > 0) ? w.icons ().get (0) : defaultIcon (w));
 	}
 
-	/** Adds a start point (START_n) with the orientation of the last one. */
+	/** Adds a start point (START_n) with the orientation and the width of the last one. */
 	static public WorldItem addStart (World w, double x, double y)
 	{
 		WMStart	last = w.start (w.n_starts () - 1);
-		w.addStart (x, y, last.z (), last.orientation);
+		w.addStart (x, y, last.z (), last.orientation).radius = last.radius;
 		return new WorldItem (WorldItem.START, w.n_starts () - 1);
 	}
 
@@ -1883,7 +1883,19 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			Position	p = w.docks ().get (it.index).pos;
 			return new Point2[] { new Point2 (p.x (), p.y ()), arrow (p.x (), p.y (), p.alpha ()) };
 		}
-		case WorldItem.START:		{ WMStart st = w.start (it.index); return new Point2[] { new Point2 (st.x (), st.y ()), arrow (st.x (), st.y (), st.orientation) }; }
+		case WorldItem.START:
+		{
+			WMStart	st = w.start (it.index);
+			// how wide it is, taken hold of across its heading so that the two handles
+			// never fall on each other, and the heading the last one, as everywhere
+			// else, out past the circle however wide it is
+			double	r = st.radius (), ra = st.orientation + Math.PI / 2.0;
+			double	ha = Math.max (ARROW, r + 0.25);
+
+			return new Point2[] { new Point2 (st.x (), st.y ()),
+								  new Point2 (st.x () + r * Math.cos (ra), st.y () + r * Math.sin (ra)),
+								  new Point2 (st.x () + ha * Math.cos (st.orientation), st.y () + ha * Math.sin (st.orientation)) };
+		}
 		}
 		return new Point2[0];
 	}
@@ -1994,8 +2006,9 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.START:
 		{
 			WMStart	st = w.start (it.index);
-			if (h == 0)		st.set (x, y, st.z (), st.orientation);
-			else			st.orientation = Math.atan2 (y - st.y (), x - st.x ());
+			if (h == 0)			st.set (x, y, st.z (), st.orientation);
+			else if (h == 1)	st.radius = Math.max (MIN_RADIUS, Math.hypot (x - st.x (), y - st.y ()));
+			else				st.orientation = Math.atan2 (y - st.y (), x - st.x ());
 			break;
 		}
 		}
@@ -2100,7 +2113,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.CBEACON:		return new String[] { "label", "x", "y", "z", "diameter", "height" };
 		case WorldItem.WAYPOINT:	return new String[] { "label", "x", "y", "z", "orientation" };
 		case WorldItem.DOCK:		return new String[] { "label", "x", "y", "z", "orientation", "flow" };
-		case WorldItem.START:		return new String[] { "x", "y", "z", "orientation" };
+		case WorldItem.START:		return new String[] { "x", "y", "z", "orientation", "radius" };
 		case WorldItem.GEOMETRY:	return new String[] { "wall width", "wall height", "wall texture", "connector width", "connector height", "connector texture", "zone texture", "farea texture",
 														  "marking color", "marking width" };
 		case WorldItem.BEHAVIOUR:	return new String[] { "robot knowledge" };
@@ -2286,6 +2299,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (name.equals ("y"))			return fmt (st.y ());
 			if (name.equals ("z"))			return fmt (st.z ());
 			if (name.equals ("orientation"))		return fmt (Math.toDegrees (st.orientation));
+			// what it is drawn as, which is what it says or what one that says nothing is
+			if (name.equals ("radius"))		return fmt (st.radius ());
 			break;
 		}
 		case WorldItem.BEHAVIOUR:
@@ -2515,6 +2530,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			else if (name.equals ("y"))			st.set (st.x (), num (value), st.z (), st.orientation);
 			else if (name.equals ("z"))			st.set (st.x (), st.y (), num (value), st.orientation);
 			else if (name.equals ("orientation"))		st.orientation = Math.toRadians (num (value));
+			// nothing at all takes it back to what one that says nothing is drawn as
+			else if (name.equals ("radius"))	st.radius = Math.max (0.0, num (value));
 			return;
 		}
 		case WorldItem.BEHAVIOUR:
