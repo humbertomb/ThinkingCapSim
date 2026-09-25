@@ -22,6 +22,7 @@ import javax.vecmath.Matrix3d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
+import tc.vrobot.CameraCtrl;
 import tc.vrobot.RobotData;
 import tc.vrobot.RobotDesc;
 import tc.vrobot.SensorPos;
@@ -86,6 +87,7 @@ public class SimCamera extends Scene3D
 	protected int					robot;						// the robot the camera is mounted on
 	protected int					dev;						// which camera of that robot it is
 	protected SensorPos				feat;						// where it sits and where it looks
+	protected double				pan, tilt;					// how it was turned from there (rad): about its vertical, then its horizontal
 	protected double				hfov, vfov;					// how wide it sees (rad)
 	protected double				period;						// between one frame and the next (ms)
 	protected double				waited;						// since the last one (ms)
@@ -231,6 +233,26 @@ public class SimCamera extends Scene3D
 
 	/* Accessor methods */
 	public final int				device ()		{ return dev; }
+	/** How far it has been panned from where the description points it, to the left (rad). */
+	public final double			pan ()			{ return pan; }
+	/** How far it has been tilted from where the description points it, upwards (rad). */
+	public final double			tilt ()			{ return tilt; }
+
+	/**
+	 * Turns the camera on its mount, as a pan-tilt head does: the pan turns it about
+	 * the vertical of the mount (to the left when positive, as every angle here),
+	 * the tilt about the horizontal it is left with after the pan (upwards when
+	 * positive, as the elevation of the description). Both are on top of where the
+	 * description points the camera, which is where it is with none; null puts it
+	 * back there. The frames taken from then on are of the turned camera.
+	 *
+	 * @param ctrl the pan and tilt asked for (rad), or null for the fixed position
+	 */
+	public void control (CameraCtrl ctrl)
+	{
+		pan		= ((ctrl != null) && Double.isFinite (ctrl.pan)) ? ctrl.pan : 0.0;
+		tilt	= ((ctrl != null) && Double.isFinite (ctrl.tilt)) ? ctrl.tilt : 0.0;
+	}
 	public final BufferedImage		last ()			{ return frame; }
 	public final double			framerate ()	{ return 1000.0 / period; }
 	public final int				width ()		{ return frame.getWidth (); }
@@ -382,7 +404,10 @@ public class SimCamera extends Scene3D
 	 * Puts the eye of the view where the camera is and points it where the camera
 	 * looks: the robot carries it, so the pose of the robot is added to the one of
 	 * the sensor -- the camera turns with the robot and sits where the description
-	 * puts it, at its distance and angle from the centre and at its height.
+	 * puts it, at its distance and angle from the centre and at its height. On top
+	 * of that goes what the camera was turned on its mount ({@link #control}): the
+	 * pan with the orientation, the tilt with the elevation, which is what a head
+	 * that pans first and tilts then comes to.
 	 *
 	 * The frame of the view is built here rather than by {@link Transform3D#lookAt}
 	 * and an inversion, which come to the same thing: said outright it is one
@@ -401,8 +426,8 @@ public class SimCamera extends Scene3D
 	 */
 	protected void aim (RobotData data)
 	{
-		double			yaw = data.real_a + feat.orientation ();
-		double			pitch = Math.max (-MAX_PITCH, Math.min (MAX_PITCH, feat.elevation ()));
+		double			yaw = data.real_a + feat.orientation () + pan;
+		double			pitch = Math.max (-MAX_PITCH, Math.min (MAX_PITCH, feat.elevation () + tilt));
 		double			cx = data.real_x + feat.rho () * Math.cos (data.real_a + feat.theta ());
 		double			cy = data.real_y + feat.rho () * Math.sin (data.real_a + feat.theta ());
 		double			cz = feat.z ();
@@ -450,6 +475,7 @@ public class SimCamera extends Scene3D
 	{
 		return "camera" + dev + " of robot " + robot + " [" + width () + "x" + height ()
 				+ " hfov=" + (int) Math.toDegrees (hfov) + " vfov=" + (int) Math.toDegrees (vfov)
-				+ " " + (float) framerate () + "fps]";
+				+ " " + (float) framerate () + "fps"
+				+ (((pan != 0.0) || (tilt != 0.0)) ? (" pan=" + (int) Math.toDegrees (pan) + " tilt=" + (int) Math.toDegrees (tilt)) : "") + "]";
 	}
 }

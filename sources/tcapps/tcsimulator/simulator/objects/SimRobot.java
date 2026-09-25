@@ -95,6 +95,15 @@ public class SimRobot extends VirtualRobot
 		vrot	= 0.0;
 		
 		simul.reset (r_index, data, map);
+		reset_cameras ();
+	}
+
+	/** The cameras back where the description points them: what they were told (CAMERA_CTRL) is forgotten. */
+	protected void reset_cameras ()
+	{
+		camera_ctrl.clear ();
+		if (cams != null)
+			for (SimCamera c : cams)			c.control (null);
 	}
 	
 	/** Places the robot at a given pose (x, y, angle) instead of the START of the world; the world START is left untouched. */
@@ -170,6 +179,11 @@ public class SimRobot extends VirtualRobot
 	 * Takes a frame of one camera, when one is due for it, and leaves it where
 	 * the virtual robot writes it to the Linda space (CAMERA).
 	 *
+	 * Before the frame, the camera is turned as it was last told to (CAMERA_CTRL,
+	 * kept by camera): the pan and tilt of the command go on top of the fixed
+	 * position of the sensor in the description, so the frame is of the camera
+	 * pointing where it was asked to.
+	 *
 	 * One frame a cycle, since that is what the robot writes; with more than one
 	 * camera due at once they take turns, so none of them is starved by the
 	 * first.
@@ -182,6 +196,7 @@ public class SimRobot extends VirtualRobot
 			SimCamera		c = cams[(cnext + k) % cams.length];
 			
 			if (!c.due (dtime))					continue;
+			c.control (control (c.device ()));
 			BufferedImage	im = c.take (data);
 			if (im == null)						continue;
 			if (camwin != null)					camwin.show (c.device (), im);
@@ -194,6 +209,12 @@ public class SimRobot extends VirtualRobot
 		}
 	}
 	
+	/** What a camera was last told (pan, tilt), or null when it was told nothing. */
+	protected CameraCtrl control (int dev)
+	{
+		return ((camera_ctrl != null) && (dev >= 0) && (dev < camera_ctrl.size ())) ? camera_ctrl.get (dev) : null;
+	}
+
 	protected void close_gfx ()
 	{
 		super.close_gfx ();
