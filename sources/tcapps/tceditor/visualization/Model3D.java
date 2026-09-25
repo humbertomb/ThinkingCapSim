@@ -123,6 +123,19 @@ public class Model3D extends Scene3D
 		int			index;
 		Color	color = null;
 		
+		// Check if default coloring must be overriden
+		if (sobj.odesc.usecolor)
+			color 	= wucore.utils.color.ColorTool.fromWColorToColor(sobj.odesc.color);
+			//color 	= sobj.odesc.color;
+
+		// What it is drawn as: its 3D model, or, with no model and a picture of its
+		// own, that picture lying flat over the ground its icon covers. An object
+		// with neither is not in this view, and takes no place of it
+		TransformGroup	shape = (sobj.odesc.shape != null) ? getCachedObject (sobj.odesc.shape, color)
+															: getObjectImage (sobj.odesc);
+
+		if (shape == null)				return -1;
+
 		// Assign an index number to the object
 		index	= -1;
 		for (i = 0; i < numobjects; i++)
@@ -134,13 +147,8 @@ public class Model3D extends Scene3D
 			numobjects ++;
 		}
 	
-		// Check if default coloring must be overriden
-		if (sobj.odesc.usecolor)
-			color 	= wucore.utils.color.ColorTool.fromWColorToColor(sobj.odesc.color);
-			//color 	= sobj.odesc.color;
-
 		// Initialise object structures
-		objects[index] 	= new Object3D (getCachedObject (sobj.odesc.shape, color), pt, a);		
+		objects[index] 	= new Object3D (shape, pt, a);		
 		bobjects.addChild (objects[index]);		
 
 		return index;

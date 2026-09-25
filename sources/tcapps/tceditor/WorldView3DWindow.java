@@ -699,8 +699,9 @@ public class WorldView3DWindow extends JFrame
 	}
 
 	/**
-	 * Adds a live object (3DS shape, or its icon when it has none, plus its
-	 * name floating above) and returns its index for {@link #updateObject}.
+	 * Adds a live object and returns its index for {@link #updateObject}: its 3DS
+	 * shape; with none, the picture it carries, lying flat over the ground its icon
+	 * covers; and with neither, the segments of its icon. Its name floats above it.
 	 */
 	public int addObject (WMObject o, double x, double y, double z, double a)
 	{
@@ -715,11 +716,19 @@ public class WorldView3DWindow extends JFrame
 		TransformGroup	tg = new TransformGroup ();
 		tg.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
 		TransformGroup	model = (o.shape != null) ? scene.getCachedObject (o.shape, o.usecolor ? wucore.utils.color.ColorTool.fromWColorToColor (o.color) : null) : null;
+		TransformGroup	plate = (model == null) ? scene.getObjectImage (o) : null;
 		double			height;
 		if (model != null)
 		{
 			tg.addChild (model);
 			height = Robot3D.labelHeight (model);
+		}
+		else if (plate != null)
+		{
+			// no 3D model but a picture of its own: the picture over the ground its icon
+			// covers, which lies flat and has nothing to raise the name over
+			tg.addChild (plate);
+			height = Robot3D.LABEL_GAP;
 		}
 		else
 		{

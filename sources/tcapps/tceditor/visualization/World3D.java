@@ -411,7 +411,14 @@ public class World3D extends BranchGroup
 	{
 		Color		color = null;
 		
-		if (object.shape == null)				return null;
+		if (object.shape == null)
+		{
+			// no 3D model: if it carries a picture, the picture itself lying flat over
+			// the ground its icon covers, and otherwise nothing at all
+			TransformGroup	plate = scene.getObjectImage (object);
+
+			return (plate != null) ? new Object3D (plate, object.pos, object.a) : null;
+		}
 		
 		// Check if default coloring must be overriden
 		if (object.usecolor)

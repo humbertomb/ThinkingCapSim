@@ -60,6 +60,7 @@ public class Scene3D extends Object
 	// Textures and coloring
 	private Hashtable<String, Appearance>	texCache;		// Textures cache
 	private Hashtable<String, BranchGroup>	objCache;		// 3D objects cache
+	private Hashtable<String, Appearance>	picCache;		// Pictures cache: one picture over one plate, not repeated
 
 	/* Constructors */
 	public Scene3D (Canvas3D canvas) 
@@ -73,6 +74,7 @@ public class Scene3D extends Object
 		// Caches
 		texCache	= new Hashtable<String, Appearance> ();	
 		objCache	= new Hashtable<String, BranchGroup> ();	
+		picCache	= new Hashtable<String, Appearance> ();	
 		
 		view		= new Transform3D ();
 		focus	= new Point3d (0.0, 0.0, 0.0);
@@ -167,6 +169,118 @@ public class Scene3D extends Object
 			texCache.put(name, app);
 		}
 		
+		return app;
+	}
+
+	/**
+	 * What an object of the world is drawn as when it carries a picture and no 3D
+	 * model: the picture itself, lying flat over the ground its icon covers, shown
+	 * once over the whole of it and not repeated.
+	 *
+	 * The object is only a drawing on the floor -- a line of a field, the badge of a
+	 * team, a mark -- so there is nothing of it to raise: the plate lies on the
+	 * floor, a hair above it so that the two are not drawn over each other, and is
+	 * seen from either side.
+	 *
+	 * @param o		the object
+	 * @return the plate, or null when the object has a model, no picture, or no icon
+	 *         to take the ground it covers from
+	 */
+	public TransformGroup getObjectImage (tc.shared.world.WMObject o)
+	{
+		if ((o == null) || (o.shape != null) || (o.image == null))		return null;
+		return getCachedImage (o.image, wucore.utils.image.PlanImage.bounds (o.getLocalIcon ()), PLATE);
+	}
+
+	/**
+	 * How high over the floor such a plate lies (m): over the zones, which are a slab
+	 * of a centimetre about the zero, and over the markings that are lifted a little
+	 * over them, so that a picture painted on the ground is seen and does not fight
+	 * for the same pixels with what is under it.
+	 */
+	static public final double		PLATE		= 0.022;
+
+	/**
+	 * A plate lying flat with a picture on it, in the frame of whoever carries it:
+	 * the picture is shown once over the whole plate, from its lower left corner to
+	 * its upper right one, and never repeated.
+	 *
+	 * @param name	the file of the picture
+	 * @param box	the ground it covers, {minx, miny, maxx, maxy} (m)
+	 * @param z		how high over the floor it lies (m)
+	 */
+	public TransformGroup getCachedImage (String name, double[] box, double z)
+	{
+		Appearance		app;
+		QuadArray		quad;
+		TransformGroup	tgroup;
+
+		if ((name == null) || (box == null))							return null;
+		if ((box[2] <= box[0]) || (box[3] <= box[1]))					return null;
+
+		app		= getCachedPicture (name);
+		if (app == null)												return null;
+
+		// the four corners of the ground it covers, and the four of the picture: the
+		// width of the picture along x and its height along y, its first row up
+		quad	= new QuadArray (4, QuadArray.COORDINATES | QuadArray.TEXTURE_COORDINATE_2 | QuadArray.NORMALS);
+		quad.setCoordinate (0, new Point3d (box[0], box[1], z));
+		quad.setCoordinate (1, new Point3d (box[2], box[1], z));
+		quad.setCoordinate (2, new Point3d (box[2], box[3], z));
+		quad.setCoordinate (3, new Point3d (box[0], box[3], z));
+		quad.setTextureCoordinate (0, 0, new TexCoord2f (0.0f, 0.0f));
+		quad.setTextureCoordinate (0, 1, new TexCoord2f (1.0f, 0.0f));
+		quad.setTextureCoordinate (0, 2, new TexCoord2f (1.0f, 1.0f));
+		quad.setTextureCoordinate (0, 3, new TexCoord2f (0.0f, 1.0f));
+		for (int i = 0; i < 4; i++)		quad.setNormal (i, new Vector3f (0.0f, 0.0f, 1.0f));
+
+		tgroup	= new TransformGroup ();
+		tgroup.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
+		tgroup.addChild (new Shape3D (quad, app));
+
+		return tgroup;
+	}
+
+	/**
+	 * The picture of a plate, read once and kept: clamped, so that it is shown
+	 * once and what falls outside it is not the picture over again, and taken as it
+	 * is rather than lit, which is what a drawing on the floor looks like.
+	 */
+	protected Appearance getCachedPicture (String name)
+	{
+		Appearance			app;
+		Texture				tex;
+		TextureAttributes	txta;
+		PolygonAttributes	pola;
+
+		if (picCache.containsKey (name))				return picCache.get (name);
+
+		System.out.println ("  [Scene3D] Loading picture <" + name + ">");
+
+		app		= null;
+		try
+		{
+			// a picture is as large as it is, and not a power of two
+			tex		= new TextureLoader (name, TextureLoader.ALLOW_NON_POWER_OF_TWO, canvas).getTexture ();
+			if (tex != null)
+			{
+				tex.setBoundaryModeS (Texture.CLAMP);
+				tex.setBoundaryModeT (Texture.CLAMP);
+
+				txta	= new TextureAttributes ();
+				txta.setTextureMode (TextureAttributes.REPLACE);
+				pola	= new PolygonAttributes ();
+				pola.setCullFace (PolygonAttributes.CULL_NONE);			// seen from either side
+
+				app		= new Appearance ();
+				app.setTexture (tex);
+				app.setTextureAttributes (txta);
+				app.setPolygonAttributes (pola);
+			}
+		} catch (Exception e) { e.printStackTrace (); }
+		if (app == null)		System.out.println ("--[Scene3D] Cannot read the picture <" + name + ">");
+
+		picCache.put (name, app);
 		return app;
 	}
 
