@@ -16,6 +16,8 @@ public class LogPlot implements ChildWindowListener
 	protected double				ymax;
 	protected boolean				impulses;
 	protected String				values;						// title of the panel of values, when one is asked for
+	protected double				yspan;						// the least a scale left to its values spans (0: no least)
+	protected double				rspan;
 	protected int					rfirst;						// the first line of the right scale, -1 for none
 	protected String				rlabel;						// ... what it is measured in
 	protected double				rmin;
@@ -37,6 +39,8 @@ public class LogPlot implements ChildWindowListener
 		ymax			= 1.0;
 		impulses		= false;
 		values			= null;
+		yspan			= 0.0;
+		rspan			= 0.0;
 		rfirst			= -1;
 		rlabel			= null;
 		rmin			= -1.0;
@@ -51,6 +55,19 @@ public class LogPlot implements ChildWindowListener
 	public final void		setValues (String title)				{ this.values = title; }
 	/** Draws the lines from this one on against a second scale on the right, of its own unit (-1: none). */
 	public final void		setRightAxis (int first, String label)	{ this.rfirst = first; this.rlabel = label; }
+	/** The least a scale left to its own values spans, so that values that are all nothing are still read against something. */
+	public void setSpans (double left, double right)
+	{
+		this.yspan	= left;		this.rspan	= right;
+		if (plot == null)				return;
+
+		final PlotWindow	p = plot;
+		final double		l = left, r = right;
+		onEventThread (new Runnable ()
+		{
+			public void run ()			{ p.setSpans (l, r); }
+		});
+	}
 	/** What that second scale covers. */
 	public final void		setRightRange (double ymin, double ymax){ this.rmin = ymin; this.rmax = ymax; }
 	
@@ -76,6 +93,7 @@ public class LogPlot implements ChildWindowListener
 				plot.setRightAxis (rfirst, rlabel);				// after the legend: it splits the lines
 				plot.setRightRange (rmin, rmax);
 				plot.setImpulses (impulses);
+				plot.setSpans (yspan, rspan);
 				plot.open ();
 			}
 		});

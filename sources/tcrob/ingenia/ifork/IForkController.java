@@ -677,6 +677,9 @@ public class IForkController extends Controller
 		{
 		    System.out.println("Controller INPUT  -  dist: "+dist+" delta: "+Math.toDegrees(delta)+" PlanVmax: "+iplan.spd_vmax+" looka: "+looka_dst);
 		    System.out.println("Controller OUTPUT -  vm: "+vm+" del: "+Math.toDegrees(del)+" vr: "+vr+" wr: "+Math.toDegrees(wr));
+		}
+		if (localgfx || debug)
+		{
 			plotValues (vr, wr, path_dst, delta);
 			
 			if (localgfx)
@@ -820,6 +823,9 @@ public class IForkController extends Controller
 		{
 		    System.out.println("Controller INPUT  -  dist: "+dist+" delta: "+Math.toDegrees(delta)+" PlanVmax: "+iplan.spd_vmax+" looka: "+looka_dst);
 		    System.out.println("Controller OUTPUT -  vm: "+vm+" del: "+Math.toDegrees(del)+" vr: "+vr+" wr: "+Math.toDegrees(wr)+" d["+dx+","+dy+"] dyl="+dyl);
+		}
+		if (localgfx || debug)
+		{
 			plotValues (vr, wr, path_dst, delta);
 			
 			if (localgfx)
@@ -895,7 +901,7 @@ public class IForkController extends Controller
 		}
 		
 		// Plot current motion commands
-		if (debug)
+		if (localgfx || debug)
 		{
 		    //System.out.println("Controller INPUT  -  dist: " + dist + " delta: " + Math.toDegrees(delta) + " PlanVmax: " + iplan.spd_vmax + " looka: " + looka_dst);
 		    //System.out.println("Controller OUTPUT -  vm: " + vm + " del: " + Math.toDegrees(del) + " vr: " + vr + " wr: " + Math.toDegrees(wr));
@@ -916,7 +922,7 @@ public class IForkController extends Controller
 		wr		= 0.0;
 		
 		// Plot current motion commands
-		if (debug)
+		if (localgfx || debug)
 		{
 			plotValues (vr, wr, path_dst, 0.0);
 
@@ -1225,15 +1231,20 @@ public class IForkController extends Controller
 	{
 		super.notify_execution (space, item);
 	    	    
-		if (debug)
+		// The plot opens when the module was asked for its own graphics, as it does in
+		// every other controller, and not only when the debug of the controller is on.
+		// The dump is what the debug asks for when there are no graphics to draw on
+		if (localgfx)
 		{
-			if (localgfx)
-				c_plot.open (c_labels);
-			else
-				c_dump.open (c_labels);
+			// the scales are left to the values, but never shrink below what the
+			// platform does: standing still, every value is nothing, and a scale with
+			// nothing to scale to would be drawn against billionths of a metre
+			if ((rdesc != null) && (rdesc.model != null))
+				c_plot.setSpans (2.0 * rdesc.model.Vmax, 2.0 * Math.toDegrees (rdesc.model.Rmax));
+			c_plot.open (c_labels);
 		}
-		else
-			c_dump.close ();
+		if (debug && !localgfx)			c_dump.open (c_labels);
+		else							c_dump.close ();
 	}
 	
 	public void notify_goal (String space, ItemGoal goal)

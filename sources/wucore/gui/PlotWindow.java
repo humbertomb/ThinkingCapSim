@@ -415,6 +415,27 @@ public class PlotWindow extends JFrame
 		else									axis.setAutoRange (true);
 	}
 
+	/**
+	 * The least a scale left to its own values may shrink to: a plot of values that
+	 * are all nothing has nothing to scale to, and is drawn against billionths of a
+	 * unit unless it is told what a sensible height is. Nothing at all leaves it as
+	 * it was, and a scale of a given range is not touched by this.
+	 *
+	 * @param left		the least the left scale spans, top to bottom
+	 * @param right		the same for the right one
+	 */
+	public void setSpans (double left, double right)
+	{
+		span (plot.getRangeAxis (), left);
+		span (plot.getRangeAxis (1), right);
+	}
+
+	static private void span (org.jfree.chart.axis.ValueAxis axis, double span)
+	{
+		if ((axis == null) || !(axis instanceof NumberAxis) || !(span > 0.0))		return;
+		((NumberAxis) axis).setAutoRangeMinimumSize (span);
+	}
+
 	/** One cycle of every line, in the order the legend named them. */
 	public void updateData (double[] data)
 	{
