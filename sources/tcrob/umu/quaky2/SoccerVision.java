@@ -514,13 +514,32 @@ public class SoccerVision extends Perception
 	/** The vision works on the LPS of the perception module of the robot (IndoorPerception), not on one of its own. */
 	protected boolean lps_guest ()							{ return true; }
 
-	/** Puts the LPOs of the vision (ball, nets, alignment) into an LPS, once. */
+	/**
+	 * Puts the LPOs of the vision (ball, nets, alignment) into an LPS, once. An
+	 * object of the same name that the LPS already has and is not one of the
+	 * vision's -- a point of the map, as a zone of the world called Net1 becomes
+	 * (IndoorPerception) -- gives its place up to the one the vision sees: whoever
+	 * asks the LPS for a Net1 (the programs, the attention) is to get the net, not
+	 * a point of the world named after it.
+	 */
 	protected void attach (LPS l)
 	{
 		if (l == attached)		return;
 		for (LPO o : new LPO[] { ball, net1, net2, align })
-			if ((o != null) && (l.find (o.label ()) == null))
-				l.add (o);
+		{
+			if (o == null)			continue;
+
+			LPO		had = l.find (o.label ());
+
+			if (had == o)			continue;
+			if (had != null)
+			{
+				l.remove (had);
+				System.out.println ("  [VISION] The LPS had a " + had.getClass ().getSimpleName () + " called " + o.label ()
+									+ " (of the world): the " + o.label () + " the vision sees takes its place");
+			}
+			l.add (o);
+		}
 		attached	= l;
 	}
 
@@ -536,9 +555,17 @@ public class SoccerVision extends Perception
 		if ((d == null) || (lpo == null))		return;
 		// a net cut by one side of the frame (the camera panned past it) shows only
 		// part of itself, and the centre of that part is not where the net is: it is
-		// left where it was last seen whole, and ages. One that fills the frame from
-		// side to side is right in front, and its centre is as good as it gets.
-		if (onFloor && ((d.xmin <= 0) != (d.xmax >= w - 1)))		return;
+		// seen, so the LPS is sure of it again, but it is left where it was last seen
+		// whole -- unless it never was, when where the part is beats nothing. One
+		// that fills the frame from side to side is right in front, and its centre
+		// is as good as it gets.
+		if (onFloor && ((d.xmin <= 0) != (d.xmax >= w - 1)) && lpo.anchored ())
+		{
+			lpo.active (true);
+			lpo.anchor (1.0);
+			lpo.ageing (0);
+			return;
+		}
 		// a net stands on the floor at the bottom of its blob; the ball's centre is the one of its circle
 		// (the centre of its blob is not, when the ball is cut by the frame); the camera
 		// was turned as the frame says when it took it (the scan), so the rays go from there

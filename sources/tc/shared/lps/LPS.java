@@ -165,6 +165,22 @@ public class LPS extends Object
 		lpos_n ++;
 	}
 
+	/**
+	 * Takes an object out of the LPS, the ones after it closing up. False when it
+	 * was not there.
+	 */
+	public synchronized boolean remove (LPO lpo)
+	{
+		for (int i = 0; i < lpos_n; i++)
+			if (lpos[i] == lpo)
+			{
+				System.arraycopy (lpos, i + 1, lpos, i, lpos_n - i - 1);
+				lpos[--lpos_n]	= null;
+				return true;
+			}
+		return false;
+	}
+
 	public LPO find (String label)
 	{
 		int				i;
