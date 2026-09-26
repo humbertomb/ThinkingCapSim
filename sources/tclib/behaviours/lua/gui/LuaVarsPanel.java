@@ -80,6 +80,12 @@ public class LuaVarsPanel extends JPanel
 		public boolean isCurrent (String chunk);
 	}
 
+	/** How a script is named in the Scope column, when it is not by the name the interpreter knows it by. */
+	public interface Labels
+	{
+		public String label (String chunk);
+	}
+
 	/** One row of the table. */
 	static public class Var
 	{
@@ -104,6 +110,7 @@ public class LuaVarsPanel extends JPanel
 	protected LuaState				lua;
 	protected Chaos					chaos;
 	protected Current				current;
+	protected Labels				labels;						// null: the scripts are shown by the names the interpreter knows them by
 	protected volatile String		wrong;						// what is the matter with the scripts, null for nothing
 	protected String				what;						// what is being run, for the status bar (the program, the machine), or null
 
@@ -183,6 +190,14 @@ public class LuaVarsPanel extends JPanel
 
 	/** Which scripts are the current ones from now on. */
 	public void current (Current c)					{ current = c; }
+	/** How the scripts are named in the table from now on (null: as the interpreter knows them). */
+	public void labels (Labels l)					{ labels = l; }
+
+	/** A script as it is named in the table. */
+	protected String label (String chunk)
+	{
+		return (labels != null) ? labels.label (chunk) : chunk;
+	}
 	/** What is being run, as the status bar names it (the program, the machine), or null. */
 	public void what (String w)						{ what = w; }
 
@@ -276,10 +291,10 @@ public class LuaVarsPanel extends JPanel
 
 						if (k >= 0)											// seen already: one more script holds it
 						{
-							shared.get (k).scope	+= ", " + e.getKey ();
+							shared.get (k).scope	+= ", " + label (e.getKey ());
 							continue;
 						}
-						Var		row = var (name, value, S_LOCAL + " " + e.getKey ());
+						Var		row = var (name, value, S_LOCAL + " " + label (e.getKey ()));
 
 						shared.add (row);
 						tables.add ((LuaTable) value);
@@ -288,7 +303,7 @@ public class LuaVarsPanel extends JPanel
 
 					int		at = rows.size ();
 
-					add (rows, name, value, S_LOCAL + " " + e.getKey ());
+					add (rows, name, value, S_LOCAL + " " + label (e.getKey ()));
 					if ((wrong != null) && (rows.size () > at))
 						rows.get (at).wrong	= wrong;
 				}

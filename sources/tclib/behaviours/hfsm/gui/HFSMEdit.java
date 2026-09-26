@@ -234,18 +234,15 @@ public class HFSMEdit
 
 		int		dx = m.getX () - (minx + maxx) / 2, dy = m.getY () - (miny + maxy) / 2;
 
-		// out they come, the meta state first so its name is free again
+		// out they come, keeping their names: two states or transitions may be called
+		// the same, it is their numbers that tell them apart
 		parent.removeState (m);
 		for (State s : inner)
 		{
 			m.removeState (s);
-			if (!nameFree (root, s.getName ()))		s.setName (uniqueName (root, s.getName ()));
 			s.setPosition (s.getX () + dx, s.getY () + dy);
 			for (Transition t : s.getTransitions ())
-			{
-				if (!nameFree (root, t.getName ()))	t.setName (uniqueName (root, t.getName ()));
 				t.setPosition (t.getX () + dx, t.getY () + dy);
-			}
 			parent.addState (s);
 		}
 
@@ -258,7 +255,7 @@ public class HFSMEdit
 		for (Transition t : m.getTransitions ())
 			for (State s : inner)
 			{
-				Transition	c = new Transition (t.getArrivalState (), uniqueName (root, t.getName ()), nextId (root),
+				Transition	c = new Transition (t.getArrivalState (), t.getName (), nextId (root),
 												s.getX () + (t.getX () - m.getX ()), s.getY () + (t.getY () - m.getY ()));
 
 				c.setPriority (t.getPriority ());
@@ -267,18 +264,6 @@ public class HFSMEdit
 				s.addTransition (c);
 			}
 		return first;
-	}
-
-	/** Whether no state and no transition of the machine has a name. */
-	static private boolean nameFree (MetaState root, String name)
-	{
-		for (State s : all (root))
-		{
-			if (name.equals (s.getName ()))			return false;
-			for (Transition t : s.getTransitions ())
-				if (name.equals (t.getName ()))		return false;
-		}
-		return true;
 	}
 
 	/** Makes a state the one its meta state starts at. */

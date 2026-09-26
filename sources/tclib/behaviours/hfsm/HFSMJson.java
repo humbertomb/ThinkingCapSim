@@ -139,7 +139,11 @@ public class HFSMJson
 
 		o.remove ("code");					// a meta state does what its states do, and has no script of its own
 		o.addProperty ("meta", true);
-		if (m.getInitialState () != null)		o.addProperty ("initial", m.getInitialState ().getName ());
+		if (m.getInitialState () != null)
+		{
+			o.addProperty ("initial", m.getInitialState ().getName ());
+			o.addProperty ("initialId", Integer.valueOf (m.getInitialState ().getId ()));	// the name may be two states'
+		}
 		if (m.isExtern ())
 		{
 			o.addProperty ("extern", true);
@@ -264,6 +268,7 @@ public class HFSMJson
 		{
 			final MetaState		ms = (MetaState) s;
 			final String		initial = string (o, "initial", null);
+			final int			initialId = integer (o, "initialId", -1);
 
 			ms.setExtern (bool (o, "extern", false));
 			if (ms.isExtern ())					ms.setPathExtern (string (o, "path", null));
@@ -275,8 +280,9 @@ public class HFSMJson
 				{
 					public void run ()
 					{
-						State	init = ms.findState (initial);
+						State	init = (initialId >= 0) ? ms.findState (initialId) : null;	// the id first: the name may be two states'
 
+						if (init == null)		init = ms.findState (initial);
 						if (init != null)		ms.setInitialState (init);
 						else					problems.add ("Meta state '" + ms.getName () + "' starts at '" + initial
 															  + "', which it does not hold");

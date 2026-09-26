@@ -30,6 +30,7 @@ public class Transition
 	// Identity
 	protected String				name;
 	protected int					id;
+	protected final int				uid		= State.freshUid ();	// its own number for this run, not kept in the file (see State)
 	protected int					priority;					// the lower the number, the sooner it is tried
 
 	// Where it arrives (a State or a MetaState)
@@ -75,6 +76,10 @@ public class Transition
 	public String getName ()					{ return this.name; }
 	public int getId ()							{ return this.id; }
 	public void setId (int i)					{ this.id = i; }
+	/** The number of this transition alone, for this run: it is not kept in the file. */
+	public final int uid ()						{ return this.uid; }
+	/** What refers to this transition and no other, the name and the number: <code>Name#uid</code>. */
+	public final String ref ()					{ return this.name + "#" + this.uid; }
 
 	public void setPriority (int n)				{ this.priority = n; }
 	public int getPriority ()					{ return this.priority; }
@@ -134,10 +139,10 @@ public class Transition
 		this.doScript	= null;
 		this.codeError	= null;
 		if ((this.testCode != null) && (this.testCode.trim ().length () > 0))
-			try { this.testScript = new LuaScript (this.testCode, "transition " + this.name + " (test)"); }
+			try { this.testScript = new LuaScript (this.testCode, "transition " + ref () + " (test)"); }
 			catch (RuntimeException e) { this.codeError = e.getMessage (); }
 		if ((this.doCode != null) && (this.doCode.trim ().length () > 0))
-			try { this.doScript = new LuaScript (this.doCode, "transition " + this.name + " (do)"); }
+			try { this.doScript = new LuaScript (this.doCode, "transition " + ref () + " (do)"); }
 			catch (RuntimeException e) { this.codeError = ((this.codeError != null) ? (this.codeError + "; ") : "") + e.getMessage (); }
 	}
 

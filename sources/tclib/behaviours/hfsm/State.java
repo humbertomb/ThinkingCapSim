@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import tclib.behaviours.lua.interpreter.LuaScript;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * One state of a hierarchical machine: what the robot does while it is there
@@ -60,6 +61,20 @@ public class State
 		public int compare (Transition a, Transition b)			{ return a.getPriority () - b.getPriority (); }
 	};
 
+	/*
+	 * Every state, meta state and transition gets a number of its own the moment
+	 * it is made, which nothing writes to a file: it is what tells two of them
+	 * apart when they are called the same (two transitions named BallSeen out of
+	 * different states), so that the name is what is read on the diagram and the
+	 * name with the number (ref) is what refers to one of them.
+	 */
+	static private final AtomicInteger	UIDS	= new AtomicInteger ();
+
+	/** A number no other state or transition of this run has. */
+	static public int freshUid ()				{ return UIDS.incrementAndGet (); }
+
+	protected final int				uid		= freshUid ();
+
 	// Constructors
 	public State (int i)
 	{
@@ -88,6 +103,10 @@ public class State
 	public String getName ()					{ return this.name; }
 	public int getId ()							{ return this.id; }
 	public void setId (int i)					{ this.id = i; }
+	/** The number of this state alone, for this run: it is not kept in the file. */
+	public final int uid ()						{ return this.uid; }
+	/** What refers to this state and no other, the name and the number: <code>Name#uid</code>. */
+	public final String ref ()					{ return this.name + "#" + this.uid; }
 
 	public void setVerified (boolean v)			{ this.verified = v; }
 	public boolean isVerified ()				{ return this.verified; }
@@ -158,7 +177,7 @@ public class State
 		this.script		= null;
 		this.codeError	= null;
 		if ((this.code == null) || (this.code.trim ().length () == 0))		return;
-		try { this.script = new LuaScript (this.code, "state " + this.name); }
+		try { this.script = new LuaScript (this.code, "state " + ref ()); }
 		catch (RuntimeException e) { this.codeError = e.getMessage (); }
 	}
 
@@ -195,14 +214,7 @@ public class State
 			else
 				unreachableStatesList.remove (temp.getArrivalState ());
 
-			for (int j = i; j < totalTransList.size (); j++)
-				if ((temp != totalTransList.get (j)) && temp.getName ().equals (totalTransList.get (j).getName ()))
-				{
-					this.error	+= "ERROR in Meta State '" + meta + "' : Transition name repeated: '" + temp.getName () + "'.\n";
-					r	= false;
-					break;
-				}
-			totalTransList.add (temp);
+			totalTransList.add (temp);				// two transitions may well be called the same: their numbers tell them apart
 		}
 		return r;
 	}

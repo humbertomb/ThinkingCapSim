@@ -150,6 +150,10 @@ public class HFSMMonitorWindow extends JFrame
 			public boolean isCurrent (String chunk)		{ return HFSMMonitorWindow.this.isCurrent (chunk); }
 		});
 		vars.what (title ().replaceFirst ("^HFSM Monitor[^:]*: ", "machine "));
+		vars.labels (new LuaVarsPanel.Labels ()
+		{															// the scripts are shown by name alone, without the number that tells two apart
+			public String label (String chunk)		{ return chunk.replaceAll ("#\\d+", ""); }
+		});
 		vars.setMinimumSize (new Dimension (100, 80));
 
 		split	= new javax.swing.JSplitPane (javax.swing.JSplitPane.VERTICAL_SPLIT, true, diagram, vars);
@@ -415,8 +419,9 @@ public class HFSMMonitorWindow extends JFrame
 	/**
 	 * Whether a script is one of those being run: the script of the state the
 	 * machine is in, the tests and actions of the transitions out of it and of the
-	 * meta states that hold it (named "state X", "transition T (test)",
-	 * "transition T (do)" by the machine) and the behaviour it chose (its file).
+	 * meta states that hold it (named "state X#n", "transition T#n (test)",
+	 * "transition T#n (do)" by the machine, n being the number that tells apart two
+	 * called the same) and the behaviour it chose (its file).
 	 */
 	protected boolean isCurrent (String chunk)
 	{
@@ -428,9 +433,9 @@ public class HFSMMonitorWindow extends JFrame
 
 		for (State s : live)
 		{
-			if (chunk.equals ("state " + s.getName ()))							return true;
+			if (chunk.equals ("state " + s.ref ()))								return true;
 			for (tclib.behaviours.hfsm.Transition t : s.getTransitions ())
-				if (chunk.startsWith ("transition " + t.getName () + " ("))		return true;
+				if (chunk.startsWith ("transition " + t.ref () + " ("))			return true;
 		}
 
 		String		beh = (m.chaos () != null) ? m.chaos ().behaviour () : null;
