@@ -351,6 +351,7 @@ public class HFSMMonitorWindow extends JFrame
 
 		final HFSEditorMWindow	w = new HFSEditorMWindow (file, false);
 
+		w.getEditor ().setOneFile (true);			// the machine that is running, and no other
 		w.getEditor ().setOnSave (new HFSMPanel.Saved ()
 		{
 			public void saved (java.io.File f)
