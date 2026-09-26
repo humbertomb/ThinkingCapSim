@@ -113,9 +113,13 @@ public class LuaInterp
 	protected LuaTable				globals;
 	protected String				chunk;
 
-	/* Watching the locals, for whoever looks at a program while it runs */
+	/*
+	 * Watching the locals, for whoever looks at a program while it runs. The scripts
+	 * write the notes from their own thread and the monitor reads them from Swing's,
+	 * so every look at the map, and every note into it, holds its lock.
+	 */
 	protected boolean				watch;
-	protected Map<String, Map<String, Cell>>	watched = new java.util.LinkedHashMap<String, Map<String, Cell>> ();
+	protected final Map<String, Map<String, Cell>>	watched = new java.util.LinkedHashMap<String, Map<String, Cell>> ();
 	protected String				complaint;					// what a call of the statement being run complained of
 
 	public LuaInterp (LuaTable globals)
@@ -130,11 +134,11 @@ public class LuaInterp
 	 * monitor of a running program looks at. It costs a note per local declared, so
 	 * nobody pays for it unless they ask.
 	 */
-	public void watch (boolean b)				{ watch = b;	if (!b)		watched.clear (); }
+	public void watch (boolean b)				{ watch = b;	if (!b)		forget (); }
 	public boolean watching ()					{ return watch; }
 
 	/** Nothing is remembered of the locals of the runs so far, watched or not. */
-	public void forget ()						{ watched.clear (); }
+	public void forget ()						{ synchronized (watched) { watched.clear (); } }
 
 	/**
 	 * The locals of every script as its last run left them, by script and in the
@@ -144,13 +148,16 @@ public class LuaInterp
 	{
 		Map<String, Map<String, Object>>	all = new java.util.LinkedHashMap<String, Map<String, Object>> ();
 
-		for (Map.Entry<String, Map<String, Cell>> e : watched.entrySet ())
+		synchronized (watched)
 		{
-			Map<String, Object>		one = new java.util.LinkedHashMap<String, Object> ();
+			for (Map.Entry<String, Map<String, Cell>> e : watched.entrySet ())
+			{
+				Map<String, Object>		one = new java.util.LinkedHashMap<String, Object> ();
 
-			for (Map.Entry<String, Cell> c : e.getValue ().entrySet ())
-				one.put (c.getKey (), c.getValue ().value);
-			all.put (e.getKey (), one);
+				for (Map.Entry<String, Cell> c : e.getValue ().entrySet ())
+					one.put (c.getKey (), c.getValue ().value);
+				all.put (e.getKey (), one);
+			}
 		}
 		return all;
 	}
@@ -165,15 +172,18 @@ public class LuaInterp
 	{
 		Map<String, Map<String, String>>	all = new java.util.LinkedHashMap<String, Map<String, String>> ();
 
-		for (Map.Entry<String, Map<String, Cell>> e : watched.entrySet ())
-			for (Map.Entry<String, Cell> c : e.getValue ().entrySet ())
-				if (c.getValue ().wrong != null)
-				{
-					Map<String, String>		one = all.get (e.getKey ());
+		synchronized (watched)
+		{
+			for (Map.Entry<String, Map<String, Cell>> e : watched.entrySet ())
+				for (Map.Entry<String, Cell> c : e.getValue ().entrySet ())
+					if (c.getValue ().wrong != null)
+					{
+						Map<String, String>		one = all.get (e.getKey ());
 
-					if (one == null)			all.put (e.getKey (), one = new java.util.LinkedHashMap<String, String> ());
-					one.put (c.getKey (), c.getValue ().wrong);
-				}
+						if (one == null)			all.put (e.getKey (), one = new java.util.LinkedHashMap<String, String> ());
+						one.put (c.getKey (), c.getValue ().wrong);
+					}
+		}
 		return all;
 	}
 
@@ -183,10 +193,14 @@ public class LuaInterp
 		if (!watch || (cell == null))			return;
 
 		String		where = (chunk != null) ? chunk : "?";
-		Map<String, Cell>	one = watched.get (where);
 
-		if (one == null)						watched.put (where, one = new java.util.LinkedHashMap<String, Cell> ());
-		one.put (name, cell);
+		synchronized (watched)
+		{
+			Map<String, Cell>	one = watched.get (where);
+
+			if (one == null)					watched.put (where, one = new java.util.LinkedHashMap<String, Cell> ());
+			one.put (name, cell);
+		}
 	}
 
 	/** Runs a script, reading it first. */
@@ -201,7 +215,7 @@ public class LuaInterp
 		String		old = this.chunk;
 
 		this.chunk	= chunk;
-		if (watch)						watched.remove ((chunk != null) ? chunk : "?");	// the locals of this run, not of the last
+		if (watch)						synchronized (watched) { watched.remove ((chunk != null) ? chunk : "?"); }	// the locals of this run, not of the last
 		try
 		{
 			exec (block, new Scope (null));
