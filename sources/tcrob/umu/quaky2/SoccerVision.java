@@ -69,8 +69,9 @@ public class SoccerVision extends Perception
 	protected Tuple						ctuple;
 	protected ItemCameraCtrl			citem;
 
-	// Attention: the object the behaviours need to keep seeing (BEH_NEEDS), which
-	// the camera is turned to instead of scanning; null when nothing is needed
+	// Attention: what the behaviours need to keep seeing (BEH_NEEDS), and which
+	// of it the camera is turned to now instead of scanning (null: nothing)
+	protected java.util.List<ItemBehNeeds.BehNeeds>	needs = new java.util.ArrayList<ItemBehNeeds.BehNeeds> ();
 	protected String					attending;
 
 	// Local graphics: configuration and monitoring of the vision
@@ -277,41 +278,70 @@ public class SoccerVision extends Perception
 
 	/**
 	 * What the behaviours need of the vision: how to scan with the camera, and
-	 * which objects to keep seeing. Of those, the one needed most (the highest
-	 * need, the first when several are needed as much) is the one the camera
-	 * attends to; nothing needed, and the camera scans as told.
+	 * which objects to keep seeing, and how much (0 to 1). Which of them the
+	 * camera attends to is decided frame by frame ({@link #choose}), against how
+	 * well the LPS knows each one now.
 	 */
 	public void notify_beh_neeeds (String space, ItemBehNeeds item)
 	{
-		ItemBehNeeds.BehNeeds	most = item.mostNeeded ();
+		java.util.List<ItemBehNeeds.BehNeeds>	list = new java.util.ArrayList<ItemBehNeeds.BehNeeds> ();
 
-		scan		= item.scanType;
-		attending	= (most != null) ? most.object : null;
+		for (ItemBehNeeds.BehNeeds n : item.needs)
+			if ((n != null) && (n.object != null))		list.add (n);
+		scan	= item.scanType;
+		needs	= list;
 	}
 
 	/** The object the camera is attending to (the LPS's name for it), or null when it is scanning. */
 	public String attending ()								{ return attending; }
+
+	/**
+	 * Which of the needed objects the camera attends to now: the one the LPS
+	 * knows less well than the behaviours need it -- its anchor below its need --
+	 * and, when several are, the one the furthest below (the largest need minus
+	 * anchor; the first of them when equal). An object the LPS has never seen has
+	 * an anchor of 0, so it is wanting by all its need. Null when every needed
+	 * object is known at least as well as it is needed, or nothing is needed:
+	 * then the camera is free to scan, and as the anchors fade an object becomes
+	 * wanting again and the camera comes back to it.
+	 */
+	protected String choose ()
+	{
+		String		best = null;
+		double		gap = 0.0;
+
+		for (ItemBehNeeds.BehNeeds n : needs)
+		{
+			LPO		o = object (n.object);
+			double	anchor = (o != null) ? o.anchor () : 0.0;
+			double	g = n.need - anchor;
+
+			if ((g > 0.0) && ((best == null) || (g > gap)))		{ best = n.object;	gap = g; }
+		}
+		return best;
+	}
 
 	/* ------------------------------------------------------------------ */
 	/* Attention: where the camera goes next                               */
 	/* ------------------------------------------------------------------ */
 
 	/**
-	 * Turns the camera for the next frame. With an object to attend to, the scan
-	 * stops and the camera is turned to hold it in the fovea (the centre of the
-	 * frame): when the object is in this frame, by what it is off the centre, so
-	 * that the next frame has it there; when it is not in the frame but the LPS
-	 * still knows where it is (it was seen, and its anchor has not faded below
-	 * {@link #ANCHOR_MIN}), towards where the LPS has it; and when nothing is known
-	 * of it, the camera scans for it as the behaviours asked (setScanType). With
-	 * nothing to attend to, the camera scans.
+	 * Turns the camera for the next frame. With an object to attend to
+	 * ({@link #choose}), the scan stops and the camera is turned to hold it in the
+	 * fovea (the centre of the frame): when the object is in this frame, by what
+	 * it is off the centre, so that the next frame has it there; when it is not in
+	 * the frame but the LPS still knows where it is (it was seen, and its anchor
+	 * has not faded below {@link #ANCHOR_MIN}), towards where the LPS has it; and
+	 * when nothing is known of it, the camera scans for it as the behaviours asked
+	 * (setScanType). With nothing to attend to, the camera scans.
 	 */
 	protected void attend (ItemCamera frame)
 	{
-		String						what = attending;
+		String						what = choose ();
 		SoccerRecognizer.Detection	d;
 		LPO							o;
 
+		attending	= what;
 		if (what == null)					{ do_scan_pattern ();	return; }
 
 		d	= detection (what);
