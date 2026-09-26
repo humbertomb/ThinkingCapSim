@@ -7,8 +7,6 @@ package tc.vrobot;
 
 public class CameraCtrl
 {
-	public int						device;				// camera id
-
 	// Camera control
 	public double					pan;				// Pan movement control
 	public double					tilt;				// Tilt movement control
@@ -16,25 +14,19 @@ public class CameraCtrl
 
 	public void set (CameraCtrl other)
 	{
-		this.device		= other.device;
-		
 		this.pan		= other.pan;
 		this.tilt		= other.tilt;
 		this.zoom		= other.zoom;
 	}
 		
-	public void set (int device, double pan, double tilt)
+	public void set (double pan, double tilt)
 	{
-		this.device		= device;
-		
 		this.pan		= pan;
 		this.tilt		= tilt;
 	}
 	
-	public void set (int device, double pan, double tilt, double zoom)
+	public void set (double pan, double tilt, double zoom)
 	{
-		this.device		= device;
-		
 		this.pan		= pan;
 		this.tilt		= tilt;
 		this.zoom		= zoom;

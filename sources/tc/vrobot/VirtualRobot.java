@@ -5,7 +5,7 @@
 package tc.vrobot;
 
 import java.io.File;
-import java.util.Properties;
+import java.util.*;
 import java.awt.image.*;
 
 import tc.runtime.thread.ModuleConfig;
@@ -29,40 +29,40 @@ import wucore.gui.PlotWindow;
 public abstract class VirtualRobot extends StdThread implements ChildWindowListener
 {
 	// General constants
-	static protected final String[]	labels		= {"vlin", "vlat", "vrot"};
+	static protected final String[]		labels		= {"vlin", "vlat", "vrot"};
 	
-	protected RobotDesc				rdesc;				// Robot description
-	protected PlotWindow			plot;				// Window to plot current motion command
+	protected RobotDesc					rdesc;				// Robot description
+	protected PlotWindow				plot;				// Window to plot current motion command
 
 	// Parameters for robot connection and environment settings
-	protected Properties			rprops;				// Contents of robot description file
-	protected String				wname;				// Description of robot environment
-	protected String				wtext;				// Contents (JSON text) of the world description file
+	protected Properties				rprops;				// Contents of robot description file
+	protected String					wname;				// Description of robot environment
+	protected String					wtext;				// Contents (JSON text) of the world description file
 	
 	// Time calculation and correction
-	protected long					ltime;				// Previous time mark (ms)
+	protected long						ltime;				// Previous time mark (ms)
 
 	// Sensor update scheduling
-	protected int					cycson;
-	protected int					cycir;
-	protected int					cyclsb;
-	protected int					cyclrf;
-	protected int					cycvis;
+	protected int						cycson;
+	protected int						cycir;
+	protected int						cyclsb;
+	protected int						cyclrf;
+	protected int						cycvis;
 	
 	// Data sent by the robot
-	protected Tuple					tdata;
-	protected ItemSensors			sdata;
-	protected RobotData				data;
-	protected Tuple					tobj;
-	protected ItemObject			sobj;
-	protected Tuple					tcam;
-	protected ItemCamera			scam;
-	protected BufferedImage			cdata;			// frame of the current cycle (null: no camera, or nothing taken)
-	protected int					cdev;					// which camera of the robot took it
-	protected RobotDataCtrl			data_ctrl;
-	protected CameraCtrl			camera_ctrl;
+	protected Tuple						tdata;
+	protected ItemSensors				sdata;
+	protected RobotData					data;
+	protected Tuple						tobj;
+	protected ItemObject				sobj;
+	protected Tuple						tcam;
+	protected ItemCamera				scam;
+	protected BufferedImage				cdata;			// frame of the current cycle (null: no camera, or nothing taken)
+	protected int						cdev;					// which camera of the robot took it
+	protected RobotDataCtrl				data_ctrl;
+	protected ArrayList<CameraCtrl>		camera_ctrl;
 
-	private double[]				buffer;				// Buffer to store curve points
+	private double[]					buffer;				// Buffer to store curve points
 
 	// Constructors
 	public VirtualRobot (ModuleConfig cfg, Linda linda)
@@ -117,6 +117,7 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		rdesc 		= new RobotDesc (rprops);
 		data		= new RobotData (rdesc);
 		data_ctrl	= new RobotDataCtrl ();
+		camera_ctrl	= new ArrayList<CameraCtrl> ();
 
 		// Additional initialisations
 		buffer		= new double[3];
@@ -286,7 +287,10 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 
 	public void notify_camera_ctrl (String space, ItemCameraCtrl item)
 	{
-		camera_ctrl.set (item.camera_ctrl);
+		if (camera_ctrl.size () < item.device+1)
+			for  (int i = camera_ctrl.size (); i < item.device+1; i++)
+				camera_ctrl.add (null);
+		camera_ctrl.set (item.device, item.camera_ctrl);
 	}
 
 	// Abstract instance methods. Subclasses MUST implement

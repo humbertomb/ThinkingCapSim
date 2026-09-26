@@ -60,6 +60,11 @@
               "symbol": "CAMERA",
               "itemClass": "tc.shared.linda.ItemCamera",
               "method": "notify_camera"
+            },
+            {
+              "symbol": "BEH_NEEDS",
+              "itemClass": "tc.shared.linda.ItemBehNeeds",
+              "method": "notify_beh_neeeds"
             }
           ]
         }

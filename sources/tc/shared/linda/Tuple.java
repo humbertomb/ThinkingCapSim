@@ -25,6 +25,7 @@ public class Tuple implements Serializable
 	
 	// Key values (behaviours)
 	public static final String			BEHRESULT		= "BEHRESULT";
+	public static final String			BEHNEEDS		= "BEH_NEEDS";
 	public static final String			BEHINFO 		= "BEHINFO";
 	public static final String			BEHRULES		= "BEHRULES";
 	public static final String			BEHNAME			= "BEHNAME";
