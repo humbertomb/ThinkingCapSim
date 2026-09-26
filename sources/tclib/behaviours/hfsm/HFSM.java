@@ -40,7 +40,7 @@ public class HFSM
 	protected List<String>			problems = new ArrayList<String> ();
 
 	// Where it is: the state of each level, outermost first
-	protected List<State>			active = new ArrayList<State> ();
+	protected List<State>			active = new java.util.concurrent.CopyOnWriteArrayList<State> ();	// the monitor reads it from another thread
 
 	// How it is run
 	protected LuaState				lua;
@@ -155,7 +155,7 @@ public class HFSM
 			active.add (m);
 			if (init == null)												// a meta state with no initial state stops here
 			{
-				if (debug)	System.out.println ("  [HFSM] Meta state <" + m.getName () + "> has no initial state");
+				System.out.println ("  [HFSM] Meta state <" + m.getName () + "> has no initial state: the machine does nothing there");
 				return;
 			}
 			s	= init;
@@ -176,7 +176,9 @@ public class HFSM
 	/** The state the machine is in, the innermost one. */
 	public State state ()
 	{
-		return active.isEmpty () ? null : active.get (active.size () - 1);
+		Object[]	now = active.toArray ();							// one picture of it, whatever the machine does meanwhile
+
+		return (now.length == 0) ? null : (State) now[now.length - 1];
 	}
 
 	/** Where the machine is, as <code>root.meta.state</code>. */
@@ -184,9 +186,23 @@ public class HFSM
 	{
 		StringBuffer	sb = new StringBuffer ();
 
-		for (int i = 0; i < active.size (); i++)
-			sb.append ((i > 0) ? "." : "").append (active.get (i).getName ());
+		for (State s : active)												// a snapshot: the machine may move meanwhile
+			sb.append ((sb.length () > 0) ? "." : "").append (s.getName ());
 		return sb.toString ();
+	}
+
+	/**
+	 * Why the machine does nothing, when it does nothing: it is in a meta state
+	 * that has no initial state (deleted in the editor, or named in the file by a
+	 * name no state has), so there is no state to run. Null when it runs.
+	 */
+	public String stuck ()
+	{
+		State		s = state ();
+
+		if (s == null)							return "the machine has no state to be in";
+		if (s instanceof MetaState)				return "meta state '" + s.getName () + "' has no initial state, so the machine does nothing there";
+		return null;
 	}
 
 	/** The last transition taken, or null when none has been. */

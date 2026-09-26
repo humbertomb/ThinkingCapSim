@@ -215,7 +215,13 @@ public class LuaVarsPanel extends JPanel
 	/** Looks at the variables again, and says what has changed since the last look. */
 	public void refresh ()
 	{
-		List<Var>		now = read ();
+		List<Var>		now;
+
+		// the scripts run in another thread and may be writing while this reads:
+		// this look at them is then given up, and the next one will do
+		try { now = read (); }
+		catch (java.util.ConcurrentModificationException e)		{ return; }
+		catch (NullPointerException e)								{ return; }
 
 		vars.set (now);
 		status.setText (said ());

@@ -50,6 +50,7 @@ public class HFSMMonitorWindow extends JFrame
 	static public final int			PERIOD		= 100;
 
 	static private final Color		C_LIVE		= new Color (200, 40, 40);
+	static private final Color		C_WRONG		= new Color (180, 0, 0);		// what is the matter with the machine
 
 	/** What the monitor asks of whoever runs the machine. */
 	public interface Reload
@@ -71,7 +72,8 @@ public class HFSMMonitorWindow extends JFrame
 	protected Timer					timer;
 	protected boolean				fitted;						// the diagram was put in view once the window had a size
 	protected MetaState				holder;						// the meta state the machine was last seen in, whose level the diagram follows
-	protected boolean				divided;					// the divider was put at its share once the window had a size
+	protected boolean				divided;
+	protected boolean				complained;					// the table failed once and it was said					// the divider was put at its share once the window had a size
 
 	protected HFSEditorMWindow		editor;						// the one editor of the machine, while it is open
 	protected javax.swing.JButton	edit;
@@ -397,7 +399,11 @@ public class HFSMMonitorWindow extends JFrame
 		follow (live);
 		canvas.setLive (live);
 		said ();
-		vars.refresh ();
+		try { vars.refresh (); }
+		catch (RuntimeException e)											// the table is no reason for the diagram to stop
+		{
+			if (!complained)			{ complained = true;	System.out.println ("  [HFSM] The monitor cannot read the variables: " + e); }
+		}
 	}
 
 	/**
@@ -449,9 +455,27 @@ public class HFSMMonitorWindow extends JFrame
 		if (machine == null)					return;
 
 		String			last = machine.lastTransition ();
+		String			stuck = machine.stuck ();								// a meta state with nothing to start at: said in red, here and under the table
+		String			problems = problems ();
 
-		where.setText ("At " + machine.where () + ((last != null) ? ("   (" + last + ")") : ""));
+		where.setText ("At " + machine.where () + ((stuck != null) ? ("   -- " + stuck) : (last != null) ? ("   (" + last + ")") : ""));
+		where.setForeground ((stuck != null) ? C_WRONG : C_LIVE);
+		vars.problem ((stuck == null) ? problems : (problems == null) ? stuck : (stuck + " (" + problems + ")"));
 		level.setText ("Showing " + canvas.levelPath () + (canvas.canGoUp () ? "   (double click on the background to go up)" : ""));
+	}
+
+	/** What the machine had the matter with it when it was read, in one line, or null for nothing. */
+	protected String problems ()
+	{
+		HFSM		m = machine;
+
+		if ((m == null) || m.problems ().isEmpty ())		return null;
+
+		StringBuilder	sb = new StringBuilder ();
+
+		for (String p : m.problems ())
+			sb.append ((sb.length () > 0) ? "; " : "").append (p);
+		return sb.toString ();
 	}
 
 	/** Stops looking at the machine and goes away. */
