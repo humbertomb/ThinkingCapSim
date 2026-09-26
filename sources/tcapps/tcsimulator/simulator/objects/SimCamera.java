@@ -27,6 +27,7 @@ import tc.vrobot.RobotData;
 import tc.vrobot.RobotDesc;
 import tc.vrobot.SensorPos;
 
+import tcapps.tceditor.visualization.Color3D;
 import tcapps.tceditor.visualization.Object3D;
 import tcapps.tceditor.visualization.Robot3D;
 import tcapps.tceditor.visualization.Scene3D;
@@ -362,6 +363,18 @@ public class SimCamera extends Scene3D
 			aim (data);
 			off.renderOffScreenBuffer ();
 			off.waitForOffScreenRendering ();
+			// Java 3D takes the moves above in on a thread of its own, and now and then
+			// the frame is drawn before the view has them: nothing is in the frustum and
+			// the frame is the background alone. A frame of nothing but background is
+			// drawn again, which is by then with the moves in
+			for (int again = 0; (again < BLANK_RETRIES) && blank (); again++)
+			{
+				if (++blanks <= 5)
+					System.out.println ("  [SimCamera] camera " + dev + " of robot " + robot + ": a frame of background alone, drawn again"
+										+ ((blanks == 5) ? " (said no more)" : ""));
+				off.renderOffScreenBuffer ();
+				off.waitForOffScreenRendering ();
+			}
 			return frame;
 		}
 		catch (Throwable t)
@@ -369,6 +382,29 @@ public class SimCamera extends Scene3D
 			System.out.println ("--[SimCamera] Cannot take a frame of camera " + dev + " of robot " + robot + ": " + t);
 			return null;
 		}
+	}
+
+	/** How many times a frame of background alone is drawn again before it is let be. */
+	static public final int			BLANK_RETRIES	= 2;
+	/** How many frames came out as background alone and were drawn again (for whoever wonders). */
+	protected long					blanks;
+
+	public final long				blanks ()		{ return blanks; }
+
+	/**
+	 * Whether the frame just drawn is the background alone: a few pixels spread
+	 * over it, all of the colour of the background. A camera that looks at the
+	 * world sees something else in some of them.
+	 */
+	protected boolean blank ()
+	{
+		int		w = frame.getWidth (), h = frame.getHeight ();
+		int		bg = new java.awt.Color (Color3D.ambientblue.x, Color3D.ambientblue.y, Color3D.ambientblue.z).getRGB () & 0xFFFFFF;
+
+		for (int j = 1; j < 8; j++)
+			for (int i = 1; i < 8; i++)
+				if ((frame.getRGB (i * w / 8, j * h / 8) & 0xFFFFFF) != bg)		return false;
+		return true;
 	}
 
 	/** The other robots, where the simulation has them. */
