@@ -489,6 +489,18 @@ public class HFSMCanvas extends JPanel
 		}
 	}
 
+	/** Expands the selected meta state: what it holds comes out to this level, and it goes (see {@link HFSMEdit#expand}). */
+	public void expandSelection ()
+	{
+		if (!(selection instanceof MetaState) || (selection == root))		return;
+
+		MetaState	m = (MetaState) selection;
+		State		first = HFSMEdit.expand (root, m);
+
+		setSelection (first);
+		changed ("Expand meta state " + m.getName ());
+	}
+
 	/** Asks for a new name for a state or a transition. */
 	public void rename (Object o)
 	{

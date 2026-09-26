@@ -193,6 +193,94 @@ public class HFSMEdit
 		if (from != null)						from.removeTransition (t);
 	}
 
+	/**
+	 * Expands a meta state: what it holds comes out into the meta state that
+	 * holds it, and it goes. The states inside, with their transitions, are laid
+	 * where the meta state was (shifted as a block, so they keep their shape);
+	 * every transition that arrived at the meta state arrives now at what was its
+	 * initial state; and the transitions of the meta state itself, which fired
+	 * from any state inside it, are given to each of those states, so the
+	 * machine goes on doing the same. What is inside is not expanded in turn:
+	 * a meta state inside comes out as it is. Names that would repeat in the
+	 * machine are made unique.
+	 *
+	 * @return what was the initial state of the meta state (where its links go now), or null when nothing was done
+	 */
+	static public State expand (MetaState root, MetaState m)
+	{
+		MetaState		parent = parent (root, m);
+
+		if ((parent == null) || (m == root))	return null;					// the root cannot come out of itself
+
+		List<State>		inner = new ArrayList<State> (m.getStatesList ());
+		State			first = m.getInitialState ();
+
+		if (inner.isEmpty ())
+		{
+			// nothing inside: the links to it lead nowhere, as when a state is deleted
+			remove (root, m);
+			return null;
+		}
+		if ((first == null) || !inner.contains (first))		first = inner.get (0);
+
+		// where the block goes: the states keep their layout, centred where the meta state was
+		int		minx = Integer.MAX_VALUE, maxx = Integer.MIN_VALUE, miny = Integer.MAX_VALUE, maxy = Integer.MIN_VALUE;
+
+		for (State s : inner)
+		{
+			minx = Math.min (minx, s.getX ());	maxx = Math.max (maxx, s.getX ());
+			miny = Math.min (miny, s.getY ());	maxy = Math.max (maxy, s.getY ());
+		}
+
+		int		dx = m.getX () - (minx + maxx) / 2, dy = m.getY () - (miny + maxy) / 2;
+
+		// out they come, the meta state first so its name is free again
+		parent.removeState (m);
+		for (State s : inner)
+		{
+			m.removeState (s);
+			if (!nameFree (root, s.getName ()))		s.setName (uniqueName (root, s.getName ()));
+			s.setPosition (s.getX () + dx, s.getY () + dy);
+			for (Transition t : s.getTransitions ())
+			{
+				if (!nameFree (root, t.getName ()))	t.setName (uniqueName (root, t.getName ()));
+				t.setPosition (t.getX () + dx, t.getY () + dy);
+			}
+			parent.addState (s);
+		}
+
+		// what arrived at the meta state arrives at its initial state
+		for (Transition t : transitions (root))
+			if (t.getArrivalState () == m)		t.setArrivalState (first);
+		if (parent.getInitialState () == m)		parent.setInitialState (first);
+
+		// and what left the meta state, from wherever inside it, leaves every state that was inside
+		for (Transition t : m.getTransitions ())
+			for (State s : inner)
+			{
+				Transition	c = new Transition (t.getArrivalState (), uniqueName (root, t.getName ()), nextId (root),
+												s.getX () + (t.getX () - m.getX ()), s.getY () + (t.getY () - m.getY ()));
+
+				c.setPriority (t.getPriority ());
+				c.setTestCode (t.getTestCode ());
+				c.setDoCode (t.getDoCode ());
+				s.addTransition (c);
+			}
+		return first;
+	}
+
+	/** Whether no state and no transition of the machine has a name. */
+	static private boolean nameFree (MetaState root, String name)
+	{
+		for (State s : all (root))
+		{
+			if (name.equals (s.getName ()))			return false;
+			for (Transition t : s.getTransitions ())
+				if (name.equals (t.getName ()))		return false;
+		}
+		return true;
+	}
+
 	/** Makes a state the one its meta state starts at. */
 	static public void setInitial (MetaState root, State s)
 	{

@@ -88,7 +88,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	protected JLabel				statusLabel;
 	protected JLabel				usageLabel;
 	protected JToggleButton[]		toolButtons	= new JToggleButton[HFSMCanvas.NTOOLS];
-	protected Action				deleteAction, renameAction, initialAction, upAction;
+	protected Action				deleteAction, renameAction, initialAction, upAction, expandAction;
 	protected Host					host;
 
 	public HFSMPanel ()
@@ -212,6 +212,10 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		{
 			public void run ()		{ canvas.rename (canvas.getSelection ()); }
 		});
+		expandAction	= action ("Expand meta state", HFSMIcon.UP, "What the meta state holds comes out to this level, and it goes", new Runnable ()
+		{
+			public void run ()		{ canvas.expandSelection (); }
+		});
 
 		// the letters of the tools, with the diagram focused
 		key ("S", HFSMCanvas.T_SELECT);		key ("H", HFSMCanvas.T_PAN);		key ("T", HFSMCanvas.T_STATE);
@@ -316,7 +320,6 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		{
 			public void run ()		{ load (); }
 		}));
-		file.addSeparator ();
 		file.add (item ("Save State Machine", KeyStroke.getKeyStroke (KeyEvent.VK_S, mask), new Runnable ()
 		{
 			public void run ()		{ save (); }
@@ -342,6 +345,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		edit.add (new JMenuItem (renameAction));
 		edit.add (new JMenuItem (initialAction));
 		edit.add (new JMenuItem (deleteAction));
+		edit.add (new JMenuItem (expandAction));
 		edit.addSeparator ();
 		edit.add (item ("Priority of the transition...", null, new Runnable ()
 		{
@@ -770,6 +774,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		deleteAction.setEnabled ((sel != null) && (sel != root));
 		renameAction.setEnabled (sel != null);
 		initialAction.setEnabled (sel instanceof State);
+		expandAction.setEnabled ((sel instanceof MetaState) && (sel != root));
 		showCode (sel);
 		if (host != null)						host.editorStateChanged (this);
 	}
