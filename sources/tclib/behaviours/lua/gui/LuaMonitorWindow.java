@@ -502,6 +502,7 @@ public class LuaMonitorWindow extends JFrame
 			rows.add (var ("vlat", Double.valueOf (chaos.vlat ()), S_COMMAND));
 			rows.add (var ("vrot", Double.valueOf (chaos.vrot ()), S_COMMAND));
 			rows.add (var ("behaviour", (chaos.behaviour () != null) ? chaos.behaviour () : null, S_COMMAND));
+			rows.add (var ("scan", chaos.scanType ().name (), S_COMMAND));
 		}
 		return rows;
 	}

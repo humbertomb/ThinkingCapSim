@@ -98,6 +98,9 @@ public class LuaController extends Controller
 	protected double				path_dst;					// Current robot to desired path distance (m)
 
 	protected tclib.behaviours.lua.gui.LuaMonitorWindow	monitor;	// the variables of the program while it runs
+	protected ItemBehNeeds			nitem;						// what the program needs of the vision (BEH_NEEDS): the scan of the camera
+	protected Tuple					ntuple;
+	protected ItemBehNeeds.ScanTypes	nscan;					// the scan last told to the vision; null: none yet
 	protected boolean				autostart;					// AUTO: run from the first cycle, waiting for nothing
 	protected boolean				dump;
 
@@ -131,6 +134,11 @@ public class LuaController extends Controller
 		chaos		= new Chaos ();
 		lua			= new LuaState ();
 		lua.set ("chaos", chaos.table ());
+
+		// What the program needs of the vision
+		nitem		= new ItemBehNeeds ();
+		ntuple		= new Tuple (Tuple.BEHNEEDS, nitem);
+		nscan		= null;
 
 		// Initialize debug modules
 		c_buffer	= new double[3];
@@ -312,6 +320,7 @@ public class LuaController extends Controller
 
 		chaos.clear ();
 		chaos.behaviour (null);								// the program begins again, as a behaviour just chosen
+		nscan		= null;									// and the vision is told again what it needs
 		has_goal	= autostart;
 		has_plan	= false;
 		new_goal	= false;
@@ -371,6 +380,9 @@ public class LuaController extends Controller
 
 		// One cycle of the program, and the behaviour it chose, which is what moves the robot
 		step ();
+
+		// What the program needs of the vision
+		needs ();
 
 		// What the program commanded
 		vlin	= chaos.linear ();
@@ -449,6 +461,24 @@ public class LuaController extends Controller
 		String			chosen = chaos.behaviour ();
 
 		if ((chosen != null) && !chosen.equals (mine))		behaviour (chosen);
+	}
+
+	/**
+	 * Tells the vision what the program needs of it (BEH_NEEDS): the scan of the
+	 * camera it asked for on this cycle (chaos.setScanType), SCAN_NONE when it asked
+	 * for none. It is written when it is not what the vision was last told, and on
+	 * the first cycle, so that a vision that starts scanning on its own is told to
+	 * stop unless a program says otherwise.
+	 */
+	protected void needs ()
+	{
+		ItemBehNeeds.ScanTypes	scan = chaos.scanType ();
+
+		if ((nscan != null) && (nscan == scan))		return;
+		nitem.changeScna (scan);
+		nitem.set (System.currentTimeMillis ());
+		linda.write (ntuple);
+		nscan	= scan;
 	}
 
 	/** What the program is called: its file, without the suffix. */

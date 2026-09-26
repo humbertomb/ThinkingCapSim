@@ -9,6 +9,7 @@ import java.util.Map;
 
 import devices.pos.Position;
 
+import tc.shared.linda.ItemBehNeeds.ScanTypes;
 import tc.shared.lps.LPS;
 import tc.shared.lps.lpo.LPO;
 
@@ -60,6 +61,14 @@ public class Chaos
 	/** The objects of the LPS the scripts ask for by number (chaos.getLpo). */
 	static public final String[]	LPOS		= { "Ball", "Net1", "Net2", "Align", "Looka" };
 
+	/**
+	 * The kinds of scan of the camera a script may ask for (chaos.setScanType), as
+	 * constants of the table: SCAN_NONE, SCAN_LOW, SCAN_MID, SCAN_HIGH and
+	 * SCAN_FULL, each worth its place in {@link ScanTypes}, which is what the vision
+	 * is told.
+	 */
+	static public final ScanTypes[]	SCANS		= ScanTypes.values ();
+
 	// What the robot knows
 	protected LPS					lps;
 	protected String[]				lpos		= LPOS;
@@ -75,6 +84,7 @@ public class Chaos
 	protected String				behaviour;							// the behaviour the state chose
 	protected boolean				behaviournew;						// ... and whether it has just been chosen
 	protected long					behaviourtime;						// when it was chosen (ms)
+	protected ScanTypes				scan		= ScanTypes.SCAN_NONE;	// the scan of the camera the script asked for this cycle
 	protected boolean				kick;
 	protected boolean				synchrokick;
 	protected boolean				surround;
@@ -144,6 +154,8 @@ public class Chaos
 			named.add (constant (lpos[i]));
 			table.set (constant (lpos[i]), Double.valueOf (i));
 		}
+		for (int i = 0; i < SCANS.length; i++)						// and the kinds of scan, by the name of the enum
+			table.set (SCANS[i].name (), Double.valueOf (i));
 	}
 
 	/** What the constant of an object of the LPS is called: Net1 is NET1_LPO. */
@@ -192,6 +204,9 @@ public class Chaos
 	/** Whether the behaviour was chosen in this very cycle, which a behaviour asks to set itself up. */
 	public boolean behaviourIsNew ()							{ return behaviournew; }
 
+	/** The scan of the camera the scripts asked for on this cycle: none unless one said so (chaos.setScanType). */
+	public ScanTypes scanType ()								{ return scan; }
+
 	public boolean kicking ()									{ return kick; }
 	public boolean surrounding ()								{ return surround; }
 	public Position desired ()									{ return desired; }
@@ -204,6 +219,7 @@ public class Chaos
 	{
 		constants ();									// what a script wrote over is put back
 		behaviournew	= false;
+		scan	= ScanTypes.SCAN_NONE;					// a scan is asked for on every cycle, as a speed is
 		vlin	= 0.0;
 		vrot	= 0.0;
 		vlat	= 0.0;
@@ -317,6 +333,35 @@ public class Chaos
 				int		i = index (this, args);
 
 				return (i >= 0) ? lpo (i) : null;
+			}
+		});
+
+		// the scan of the camera: setScanType (chaos.SCAN_LOW) and so on; a number of
+		// no scan, or none at all, is said once and ignored, as an object of no number is
+		c.set ("setScanType", new LuaFunction ("chaos.setScanType")
+		{
+			public Object call (Object[] args)
+			{
+				Object		a = LuaFunction.arg (args, 0);
+				Double		d = Lua.tonumber (a);
+				int			i = (d != null) ? d.intValue () : -1;
+
+				if ((d != null) && (i >= 0) && (i < SCANS.length))
+				{
+					scan	= SCANS[i];
+					return null;
+				}
+
+				StringBuilder	sb = new StringBuilder ();
+
+				for (int k = 0; k < SCANS.length; k++)
+					sb.append ((k > 0) ? ", " : "").append ("chaos.").append (SCANS[k].name ()).append (" (").append (k).append (")");
+
+				String		what = name + " was given " + Lua.tostring (a) + " and ignored: it wants one of " + sb;
+
+				complain (what);
+				if (warned.add (name + "/" + Lua.tostring (a)))		System.out.println ("  [CHAOS] " + what);
+				return null;
 			}
 		});
 

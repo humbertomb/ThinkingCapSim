@@ -147,6 +147,10 @@ public class LuaHelp
 					+ "not to be written out: every object has a constant of its own (see <i>the constants</i> below), so it is "
 					+ "<span class=\"mono\">chaos.getLpo (chaos.BALL_LPO)</span>. A constant that does not exist is nil, and "
 					+ "then this gives nil and says so once on the console, with the constants there are." },
+		{ "setScanType", "scan", "Asks the vision to scan with the camera this way on this cycle: one of the constants "
+					+ "<span class=\"mono\">chaos.SCAN_NONE</span>, <span class=\"mono\">SCAN_LOW</span>, <span class=\"mono\">SCAN_MID</span>, "
+					+ "<span class=\"mono\">SCAN_HIGH</span> or <span class=\"mono\">SCAN_FULL</span>. A cycle that asks for none is "
+					+ "<span class=\"mono\">SCAN_NONE</span>: the camera stays where the description points it." },
 		{ "setNeeded", "index, weight", "Says that the behaviour needs to keep seeing that object, and how much (0 to 1). "
 					+ "The vision of the simulation looks everywhere at once, so it is taken note of and no more." },
 		{ "getMyPos", "", "Where the robot thinks it is: x and y in mm, theta in degrees, in the field." },
@@ -316,7 +320,13 @@ public class LuaHelp
 			 .append (esc (chaos.lpoNames ()[i])).append ("</span></td></tr>");
 		h.append ("</table>");
 		h.append ("<p class=\"none\">These are the ones of the objects a module is given by default; a module with an LPOS of ")
-		 .append ("its own has a constant for each of the objects it names.</p><br>");
+		 .append ("its own has a constant for each of the objects it names.</p>");
+		h.append ("<p>The kinds of scan of the camera (<span class=\"mono\">chaos.setScanType</span>) are constants too:</p>");
+		h.append ("<table width=\"100%\" cellpadding=\"4\" cellspacing=\"0\">");
+		for (int i = 0; i < Chaos.SCANS.length; i++)
+			h.append ("<tr valign=\"top\"><td width=\"38%\"><span class=\"mono\"><b>")
+			 .append (Chaos.SCANS[i].name ()).append ("</b></span></td><td>").append (i).append ("</td></tr>");
+		h.append ("</table><br>");
 
 		// the tables the bridge answers with
 		h.append ("<a name=\"tables\"></a><h2>The tables it answers</h2>");
