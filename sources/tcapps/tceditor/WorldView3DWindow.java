@@ -100,6 +100,7 @@ public class WorldView3DWindow extends JFrame
 	/* Model */
 	protected World					world;
 	protected WorldItem				selection;
+	protected boolean				handles = true;		// whether the selected element is marked: the simulator does without
 	protected boolean				needsRebuild	= true;
 	protected boolean				needsFit		= true;
 
@@ -300,6 +301,17 @@ public class WorldView3DWindow extends JFrame
 		scheduleRebuild ();
 	}
 
+	/**
+	 * Whether the selected element is marked with its handles in the view. The
+	 * simulator turns it off: what is picked on its 2D view is looked at, not
+	 * edited, and the markers would only hide the robots and objects.
+	 */
+	public void setHandlesShown (boolean b)
+	{
+		handles	= b;
+		if (isVisible ())		updateSelection ();
+	}
+
 	public void setSelection (WorldItem item)
 	{
 		selection = item;
@@ -468,6 +480,7 @@ public class WorldView3DWindow extends JFrame
 			selBranch.detach ();
 			selBranch = null;
 		}
+		if (!handles)			return;
 		if (!WorldEditor.valid (world, selection) || WorldItem.isSettings (selection.kind) || (selection.kind == WorldItem.ICON))		return;
 
 		BranchGroup		bg = new BranchGroup ();

@@ -81,10 +81,28 @@ public class WorldCanvas extends JPanel
 	static public final int		NTOOLS		= 16;
 
 	/** Receives notifications from the canvas. */
-	/** Extra layer painted over the world (e.g. the simulated robots); coordinates via toPixelX/Y and getScale. */
+	/**
+	 * Extra layer painted over the world (e.g. the simulated robots); coordinates
+	 * via toPixelX/Y and getScale. What it draws may be picked and moved by hand
+	 * as well, when it says so ({@link #pick}): the canvas then draws the pick
+	 * (a ring and the handle of its heading) and hands the new pose back
+	 * ({@link #place}), and it is the owner of the overlay that makes something of
+	 * it -- a simulation puts its robot there -- the world being left as it is.
+	 */
 	public interface Overlay
 	{
 		public void paint (Graphics2D g, WorldCanvas canvas);
+
+		/** Which of what it draws is at (x, y), within tol: its number, or -1 for nothing there (or nothing to be moved). */
+		default public int pick (double x, double y, double tol)		{ return -1; }
+		/** Where the i-th one is, as {x, y, a}, or null when it is not known yet. */
+		default public double[] pose (int i)							{ return null; }
+		/** How big the i-th one is, for the ring drawn round it and the handle of its heading. */
+		default public double radius (int i)							{ return 0.3; }
+		/** What the i-th one is called, for the status bar. */
+		default public String name (int i)								{ return "element " + i; }
+		/** The i-th one was put there by hand: whoever owns it takes it from here. */
+		default public void place (int i, double x, double y, double a)	{ }
 	}
 
 	public interface Listener
@@ -167,6 +185,7 @@ public class WorldCanvas extends JPanel
 	protected boolean				editable	= true;		// false: viewer mode (select, pan and zoom only)
 	protected boolean				orientable	= false;	// viewer mode: the orientation of the selection can still be turned
 	protected Overlay				overlay;				// extra drawing on top of the world (robots, ...)
+	protected int					overlaySel	= -1;		// which of what the overlay draws is picked, -1 for none
 	protected int					iconVertex	= -1;		// icon tool: vertex being dragged / last clicked
 	protected int					iconSegment	= -1;		// icon tool: segment under the last click
 
@@ -227,6 +246,7 @@ public class WorldCanvas extends JPanel
 	public void setSelection (WorldItem item)
 	{
 		if (!WorldEditor.valid (world, item))		item = null;
+		if (item != null)							overlaySel = -1;		// one thing picked at a time
 		selection = item;
 		repaint ();
 		if (listener != null)		listener.selectionChanged (item);
@@ -301,7 +321,32 @@ public class WorldCanvas extends JPanel
 		return m;
 	}
 
-	public void setOverlay (Overlay overlay)		{ this.overlay = overlay; repaint (); }
+	public void setOverlay (Overlay overlay)		{ this.overlay = overlay; overlaySel = -1; repaint (); }
+
+	/** Which of what the overlay draws is picked, -1 for none. */
+	public int getOverlaySelection ()			{ return overlaySel; }
+
+	/** Picks one of what the overlay draws (or none, with -1), letting go of any element of the world that was picked. */
+	public void setOverlaySelection (int i)
+	{
+		if ((overlay == null) || (i < 0) || (overlay.pose (i) == null))		i = -1;
+		if ((i >= 0) && (selection != null))	setSelection (null);
+		overlaySel	= i;
+		repaint ();
+		showUsage ();
+	}
+
+	/** Where the handle of the heading of the picked overlay element is, or null. */
+	private Point2 overlayHandle ()
+	{
+		double[]	p = ((overlay != null) && (overlaySel >= 0)) ? overlay.pose (overlaySel) : null;
+
+		if (p == null)								return null;
+
+		double		len = overlay.radius (overlaySel) * (1.0 + HEADING);
+
+		return new Point2 (p[0] + len * Math.cos (p[2]), p[1] + len * Math.sin (p[2]));
+	}
 
 	public void setTool (int tool)
 	{
@@ -550,6 +595,29 @@ public class WorldCanvas extends JPanel
 		{
 		case T_SELECT:
 		{
+			// what the overlay draws (the robots of a simulation) is on top of everything:
+			// the handle of the heading of the one picked, then any of them under the hand
+			if (overlay != null)
+			{
+				Point2		oh = overlayHandle ();
+
+				if ((oh != null) && (oh.distance (curX, curY) < tol * 1.3))
+				{
+					dragMode	= 8;
+					return;
+				}
+
+				int			hit = overlay.pick (curX, curY, tol);
+
+				if (hit >= 0)
+				{
+					setOverlaySelection (hit);
+					dragMode	= 7;
+					anchorX	= curX;	anchorY = curY;			// unsnapped: movement is relative
+					return;
+				}
+				if (overlaySel >= 0)		setOverlaySelection (-1);		// a click elsewhere lets go of it
+			}
 			// handle of the current selection?
 			if (selection != null)
 			{
@@ -687,6 +755,30 @@ public class WorldCanvas extends JPanel
 		case 5:		// drag icon vertex
 			onIconDrag (nx, ny);
 			break;
+		case 7:		// move what the overlay draws: it goes where the hand takes it
+		{
+			double[]	p = (overlay != null) ? overlay.pose (overlaySel) : null;
+
+			if (p != null)
+			{
+				overlay.place (overlaySel, p[0] + (nx - curX), p[1] + (ny - curY), p[2]);
+				dragged = true;
+				repaint ();
+			}
+			break;
+		}
+		case 8:		// turn what the overlay draws: it faces the hand
+		{
+			double[]	p = (overlay != null) ? overlay.pose (overlaySel) : null;
+
+			if (p != null)
+			{
+				overlay.place (overlaySel, p[0], p[1], Math.atan2 (ny - p[1], nx - p[0]));
+				dragged = true;
+				repaint ();
+			}
+			break;
+		}
 		}
 		lastPx	= e.getPoint ();
 		curX	= nx;
@@ -814,6 +906,7 @@ public class WorldCanvas extends JPanel
 		case KeyEvent.VK_ESCAPE:
 			if (polyPoints.size () > 0)		cancelDrawing ();
 			else if (tool != T_SELECT)		{ if (listener != null) listener.toolFinished (); }
+			else if (overlaySel >= 0)		setOverlaySelection (-1);
 			else							setSelection (null);
 			break;
 		case KeyEvent.VK_ENTER:		if (tool == T_FAREA) finishPolygon ();		break;
@@ -844,6 +937,7 @@ public class WorldCanvas extends JPanel
 		switch (tool)
 		{
 		case T_SELECT:
+			if (overlaySel >= 0)		return "Drag " + ((overlay != null) ? overlay.name (overlaySel) : "it") + " to put it elsewhere, or its round handle to turn it (the world is not changed). Esc: deselect";
 			if (!editable && isLive (selection))
 										return "Drag the element or its handles to put it where the simulation is to have it (the world is not changed). Esc: deselect";
 			if (!editable && canTurn ())
@@ -908,6 +1002,7 @@ public class WorldCanvas extends JPanel
 
 		if ((selection != null) && (selection.kind == WorldItem.WAYPOINT))		drawDockingPaths (g, selection.index);
 		if (overlay != null)				overlay.paint (g, this);
+		if (overlaySel >= 0)				drawOverlaySelection (g);
 
 		drawRubber (g);
 		if (tool == T_ICON)					drawIconHandles (g, true);
@@ -1573,6 +1668,28 @@ public class WorldCanvas extends JPanel
 			g.setColor (C_SEL);
 			g.drawRect (x - HANDLE_PX, y - HANDLE_PX, 2 * HANDLE_PX, 2 * HANDLE_PX);
 		}
+	}
+
+	/** The pick among what the overlay draws: a ring round it and the handle of its heading, as an element of the world is marked. */
+	private void drawOverlaySelection (Graphics2D g)
+	{
+		double[]	p = (overlay != null) ? overlay.pose (overlaySel) : null;
+		Point2		h = overlayHandle ();
+
+		if ((p == null) || (h == null))				return;
+
+		int			x = toPixelX (p[0]), y = toPixelY (p[1]);
+		int			r = (int) Math.round (overlay.radius (overlaySel) * scale) + 3;
+		int			hx = toPixelX (h.x ()), hy = toPixelY (h.y ());
+
+		g.setStroke (stroke (1.5f));
+		g.setColor (C_SEL);
+		g.drawOval (x - r, y - r, 2 * r, 2 * r);
+		g.drawLine (x, y, hx, hy);
+		g.setColor (C_HANDLE);
+		g.fillOval (hx - HANDLE_PX, hy - HANDLE_PX, 2 * HANDLE_PX, 2 * HANDLE_PX);
+		g.setColor (C_SEL);
+		g.drawOval (hx - HANDLE_PX, hy - HANDLE_PX, 2 * HANDLE_PX, 2 * HANDLE_PX);
 	}
 
 	private void drawHandles (Graphics2D g)

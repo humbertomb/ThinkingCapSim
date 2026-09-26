@@ -309,6 +309,23 @@ public class Simulator
 	/** ... and the tilt of each. */
 	public double[] cameraTilts (int robot)		{ return ((robot >= 0) && (robot < MAX_ROBOTS)) ? camtilt[robot] : null; }
 
+	/**
+	 * Puts a robot at a pose by hand, as one is picked up and set down while the
+	 * simulation runs: only where the simulation has it changes (its odometry goes
+	 * on from where it was), and what the visualisation shows of it follows at once.
+	 */
+	public void placeRobot (int i, double x, double y, double a)
+	{
+		if ((i < 0) || (i >= numrobots) || (MODEL[i] == null))		return;
+		MODEL[i].relocate (x, y, a);
+		if (lastRobotData[i] != null)
+		{
+			lastRobotData[i].real_x	= x;
+			lastRobotData[i].real_y	= y;
+			lastRobotData[i].real_a	= a;
+		}
+	}
+
 	public void placeObject (int i, double x, double y, double a)
 	{
 		SimObjects	objs = objects;

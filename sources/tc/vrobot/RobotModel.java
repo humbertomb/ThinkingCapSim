@@ -175,6 +175,17 @@ public abstract class RobotModel extends Object
 		data.odom_x		= x;		data.odom_y		= y;		data.odom_a		= alpha;
 	}
 
+	/**
+	 * Puts the robot elsewhere, as a hand would: only where it really is changes,
+	 * the odometry going on from where it was, as it would on a robot picked up and
+	 * set down somewhere else (see {@link #position} for a start, odometry and all).
+	 */
+	public void relocate (double x, double y, double alpha)
+	{
+		real_x			= x;		real_y			= y;		real_a			= alpha;
+		orx				= x;		ory				= y;		ora				= alpha;	// a restore of this cycle keeps it there
+	}
+
 	public void backup (RobotData data)
 	{
 		orx 	= real_x;			ory 	= real_y; 			ora 	= real_a;

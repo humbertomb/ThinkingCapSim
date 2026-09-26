@@ -184,6 +184,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 
 		statusBar	= new StatusBar ();
 		view3d		= new View3DController (this, canvas);
+		view3d.setHandlesShown (false);								// what is picked here is looked at, not edited: no markers over the 3D world
 
 		// world view on top, Robots / Events tables below (as the monitor's main panel)
 		monitorPanel	= new RobotMonitorPanel ();
@@ -610,6 +611,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		view3d.clearObjects ();
 		view3d.setAnimatedVisible (true);
 		canvas.setKindLive (WorldItem.AOBJECT, false);
+		canvas.setOverlaySelection (-1);							// the robot that was picked is gone with the run
 		// back where the world has them: what the simulation did to them is over
 		for (int i = 0; (i < aobjectsPoses.size ()) && (i < world.aobjects ().size ()); i++)
 		{
@@ -916,6 +918,83 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			for (RobotView rv : robots)
 				if (rv.data != null)		drawRobot (g, c, rv);
 		}
+	}
+
+	/*
+	 * The robots are what the overlay offers to be picked and moved by hand while
+	 * the simulation runs: the one under the hand, its pose and radius as the
+	 * simulation has them, and the new pose handed to the simulation, which puts
+	 * the robot there (its odometry going on from where it was).
+	 */
+	public int pick (double x, double y, double tol)
+	{
+		if (simulator == null)			return -1;
+		synchronized (robots)
+		{
+			int		best = -1;
+			double	bd = Double.MAX_VALUE;
+
+			for (int i = 0; i < robots.size (); i++)
+			{
+				RobotView	rv = robots.get (i);
+
+				if ((rv == null) || (rv.data == null))		continue;
+
+				double		d = Math.hypot (rv.data.real_x - x, rv.data.real_y - y);
+
+				if ((d < rv.rdesc.RADIUS + tol) && (d < bd))		{ bd = d;	best = i; }
+			}
+			return best;
+		}
+	}
+
+	public double[] pose (int i)
+	{
+		synchronized (robots)
+		{
+			if ((i < 0) || (i >= robots.size ()) || (robots.get (i).data == null))		return null;
+
+			RobotData	d = robots.get (i).data;
+
+			return new double[] { d.real_x, d.real_y, d.real_a };
+		}
+	}
+
+	public double radius (int i)
+	{
+		synchronized (robots)
+		{
+			return ((i >= 0) && (i < robots.size ())) ? robots.get (i).rdesc.RADIUS : 0.3;
+		}
+	}
+
+	public String name (int i)
+	{
+		synchronized (robots)
+		{
+			String	n = ((i >= 0) && (i < robots.size ())) ? robots.get (i).name : null;
+
+			return (n != null) ? ("robot " + n) : ("robot " + i);
+		}
+	}
+
+	public void place (int i, double x, double y, double a)
+	{
+		if (simulator == null)			return;
+		simulator.placeRobot (i, x, y, a);
+		// and the overlay draws it there at once, without waiting for the simulation to say so
+		synchronized (robots)
+		{
+			if ((i >= 0) && (i < robots.size ()) && (robots.get (i).data != null))
+			{
+				RobotData	d = robots.get (i).data;
+
+				d.real_x	= x;
+				d.real_y	= y;
+				d.real_a	= a;
+			}
+		}
+		canvas.repaint ();
 	}
 
 	/** A live animated object: its icon at the simulated pose, its virtual radius and its name (as the robots). */

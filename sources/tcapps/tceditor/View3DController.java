@@ -83,6 +83,7 @@ public class View3DController
 				});
 				view3d.setSize (900, 700);
 				view3d.setAnimatedVisible (animatedVisible);
+				view3d.setHandlesShown (handlesShown);
 				// place it beside the owner when there is room
 				java.awt.Window	win = (owner instanceof java.awt.Window) ? (java.awt.Window) owner : SwingUtilities.getWindowAncestor (owner);
 				Rectangle	r = (win != null) ? win.getBounds () : new Rectangle (0, 0, 0, 0);
@@ -130,6 +131,15 @@ public class View3DController
 	public void selectionChanged (WorldItem item)
 	{
 		if (view3d != null)		view3d.setSelection (item);
+	}
+
+	protected boolean				handlesShown = true;
+
+	/** Whether the selected element is marked with its handles in the 3D view (the simulator does without). */
+	public void setHandlesShown (boolean b)
+	{
+		handlesShown	= b;
+		if (view3d != null)		view3d.setHandlesShown (b);
 	}
 
 	/* --- simulated robots (delegated to the 3D window; no-ops while it does not exist) --- */
