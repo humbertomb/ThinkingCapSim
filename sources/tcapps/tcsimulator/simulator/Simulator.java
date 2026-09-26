@@ -75,6 +75,13 @@ public class Simulator
 	public SimulatorDesc[]			SDESC;
 	public RobotDesc[]				RDESC;
 	public RobotModel[]				MODEL;
+	public String[]					NAMES		= new String[MAX_ROBOTS];		// what each robot is called (the deployment's name), or null
+
+	/** What the i-th robot is called, its number when it has no name. */
+	public String robotName (int i)
+	{
+		return ((i >= 0) && (i < numrobots) && (NAMES[i] != null)) ? NAMES[i] : ("robot " + i);
+	}
 	public RobotDataCtrl[]			DATA_CTRL;
 	public int[]					ROBOINDEX;
 	public Position[][]				VISOBJS;
@@ -351,6 +358,7 @@ public class Simulator
 	/** Adds a robot with its name (shown by the visualisation). */
 	synchronized public int add_robot (RobotDesc rdesc, SimulatorDesc sdesc, RobotModel model, RobotDataCtrl datactrl, String name)
 	{
+		NAMES[numrobots] = name;
 		RDESC[numrobots] = rdesc;
 		SDESC[numrobots] = sdesc;
 		MODEL[numrobots] = model;
