@@ -475,7 +475,7 @@ public class LuaController extends Controller
 		ItemBehNeeds.ScanTypes	scan = chaos.scanType ();
 
 		if ((nscan != null) && (nscan == scan))		return;
-		nitem.changeScna (scan);
+		nitem.changeScan (scan);
 		nitem.set (System.currentTimeMillis ());
 		linda.write (ntuple);
 		nscan	= scan;

@@ -34,7 +34,7 @@ public class ItemBehNeeds extends Item implements Serializable
 	
 	// Instance methods
 	public void clearNeeds ()					{ needs.clear(); }
-	public void changeScna (ScanTypes scan)		{ this.scanType = scan; }
+	public void changeScan (ScanTypes scan)		{ this.scanType = scan; }
 	
 	public void addNeed (String object, double need, long tstamp)
 	{
