@@ -2106,7 +2106,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.MARKING:		return new String[] { "x1", "y1", "z1", "x2", "y2", "z2", "color", "width" };
 		case WorldItem.OBJECT:		return new String[] { "x", "y", "z", "orientation", "icon", "image", "shape", "color", "usecolor" };
 		case WorldItem.AOBJECT:		return new String[] { "label", "x", "y", "z", "orientation", "radius", "icon", "image", "shape", "color", "usecolor", "dynamics",
-														  "movement", "speed", "acceleration", "mass", "coef_res", "coef_fric" };
+														  "movement", "speed", "acceleration", "mass", "coef_col", "coef_fric" };
 		case WorldItem.ICON:		return new String[] { "label", "x", "y", "z", "orientation", "segments" };
 		case WorldItem.CONNECTOR:		return new String[] { "label", "x1", "y1", "z1", "x2", "y2", "z2", "path x1", "path y1", "path z1", "path x2", "path y2", "path z2", "width", "height", "texture" };
 		case WorldItem.BEACON:		return new String[] { "label", "x", "y", "z", "orientation", "width", "height" };
@@ -2211,7 +2211,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 				if (name.equals ("speed"))			return fmt (ao.speed);
 				if (name.equals ("acceleration"))	return fmt (ao.acceleration);
 				if (name.equals ("mass"))			return fmt (ao.mass);
-				if (name.equals ("coef_res"))		return fmt (ao.coef_res);
+				if (name.equals ("coef_col"))		return fmt (ao.coef_col);
 				if (name.equals ("coef_fric"))		return fmt (ao.coef_fric, WMAObject.FRIC_DECIMALS);
 			}
 			break;
@@ -2431,7 +2431,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 				else if (name.equals ("speed"))			ao.speed = num (value);
 				else if (name.equals ("acceleration"))	ao.acceleration = num (value);
 				else if (name.equals ("mass"))			ao.mass = num (value);
-				else if (name.equals ("coef_res"))		ao.coef_res = num (value);
+				else if (name.equals ("coef_col"))		ao.coef_col = num (value);
 				else if (name.equals ("coef_fric"))		ao.coef_fric = num (value);
 			}
 			return;
@@ -2579,13 +2579,13 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 
 	/**
 	 * False for the properties that do not apply in the current state of the
-	 * element: the motion parameters (speed, acceleration, mass, coef_res,
+	 * element: the motion parameters (speed, acceleration, mass, coef_col,
 	 * coef_fric) of an animated object with STATIC movement.
 	 */
 	static public boolean isEnabledProperty (World w, WorldItem it, String name)
 	{
 		if ((it == null) || (it.kind != WorldItem.AOBJECT) || !valid (w, it))		return true;
-		if (name.equals ("speed") || name.equals ("acceleration") || name.equals ("mass") || name.equals ("coef_res") || name.equals ("coef_fric"))
+		if (name.equals ("speed") || name.equals ("acceleration") || name.equals ("mass") || name.equals ("coef_col") || name.equals ("coef_fric"))
 			return w.aobjects ().get (it.index).isMoving ();
 		return true;
 	}

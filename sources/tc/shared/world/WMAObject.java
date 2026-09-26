@@ -17,7 +17,11 @@ import java.util.List;
  * parameters will be added as the dynamics are defined.
  *
  * JSON: {label, icon, x, y, z, orientation, radius, color [, shape, usecolor]
- * [, dynamics], movement, speed, acceleration, mass, coef_res, coef_fric}
+ * [, dynamics], movement, speed, acceleration, mass, coef_col, coef_fric}
+ *
+ * coef_col is the part of the speed the object loses when it collides (0.2: it
+ * bounces with 80% of the speed it met with). Worlds written before it carried
+ * coef_res, the part it kept, which is read as 1 - coef_col.
  */
 public class WMAObject extends WMObject
 {
@@ -26,7 +30,7 @@ public class WMAObject extends WMObject
 
 	static public final Movement	DEFAULT_MOVEMENT	= Movement.STATIC;
 	static public final double		DEF_RADIUS			= 0.5;		// virtual radius (m)
-	static public final double		DEF_COEF_RES		= 0.75;		// restitution coefficient
+	static public final double		DEF_COEF_COL		= 0.20;		// collision coefficient: the part of the speed lost in a bounce
 	static public final double		DEF_COEF_FRIC		= 0.001;	// friction coefficient
 
 	/** Decimals kept of the friction, which is a small number worked out to millionths. */
@@ -38,7 +42,7 @@ public class WMAObject extends WMObject
 	public double				speed;							// Simulated speed (m/s)
 	public double				acceleration;					// Simulated acceleration (m/s2)
 	public double				mass;							// Mass (kg)
-	public double				coef_res	= DEF_COEF_RES;		// Restitution coefficient
+	public double				coef_col	= DEF_COEF_COL;		// Collision coefficient (part of the speed lost in a bounce)
 	public double				coef_fric	= DEF_COEF_FRIC;	// Friction coefficient
 
 	/* Constructors */
@@ -59,7 +63,9 @@ public class WMAObject extends WMObject
 		speed			= World.getDouble (o, "speed", 0.0);
 		acceleration	= World.getDouble (o, "acceleration", 0.0);
 		mass			= World.getDouble (o, "mass", 0.0);
-		coef_res		= World.getDouble (o, "coef_res", DEF_COEF_RES);
+		coef_col		= World.getDouble (o, "coef_col", DEF_COEF_COL);
+		if (!o.has ("coef_col") && o.has ("coef_res"))				// the old name: what the bounce kept
+			coef_col	= 1.0 - World.getDouble (o, "coef_res", 1.0 - DEF_COEF_COL);
 		coef_fric		= World.getDouble (o, "coef_fric", DEF_COEF_FRIC);
 	}
 
@@ -96,7 +102,7 @@ public class WMAObject extends WMObject
 		o.addProperty ("speed", World.num (speed));
 		o.addProperty ("acceleration", World.num (acceleration));
 		o.addProperty ("mass", World.num (mass));
-		o.addProperty ("coef_res", World.num (coef_res));
+		o.addProperty ("coef_col", World.num (coef_col));
 		o.addProperty ("coef_fric", World.num (coef_fric, FRIC_DECIMALS));
 		return o;
 	}

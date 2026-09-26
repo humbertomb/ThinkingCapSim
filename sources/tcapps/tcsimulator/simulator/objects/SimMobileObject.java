@@ -25,16 +25,11 @@ public class SimMobileObject extends SimObject
 	public double ACC;   // Acceleration (metres per square second)
 	public double MASS = 0.4;  // Mass (Kilograms)
 
-	public double RES_COEF = 0.75; // Restitution coeficient (of the world object; the bounces use BOUNCE_LOSS)
-
-	/** The part of the speed an object meets a wall, a robot or another object with that it loses in the bounce. */
-	public final static double	BOUNCE_LOSS	= 0.20;
-	/** What the bounce keeps of the speed of incidence. */
-	public final static double	BOUNCE_KEEP	= 1.0 - BOUNCE_LOSS;
+	public double COL_COEF = 0.20; // Collision coefficient: the part of the speed lost when it meets a wall, a robot or another object
 
 	public double FRIC_COEF = 0.001; // Friction coeficient
 
-	/** The movement parameters come from the world object (movement, speed, acceleration, mass, coef_res, coef_fric). */
+	/** The movement parameters come from the world object (movement, speed, acceleration, mass, coef_col, coef_fric). */
 	public SimMobileObject (WMAObject odesc)
 	{
 		super (odesc);
@@ -43,7 +38,7 @@ public class SimMobileObject extends SimObject
 		SPEED		= odesc.speed;
 		ACC			= odesc.acceleration;
 		MASS		= odesc.mass;
-		RES_COEF	= odesc.coef_res;
+		COL_COEF	= odesc.coef_col;
 		FRIC_COEF	= odesc.coef_fric;
 	}
 	
@@ -83,7 +78,7 @@ public class SimMobileObject extends SimObject
 	public void object_collision (Line2 edge, double xobj, double yobj, double aobj, double vobj, double mobj)
 	{
 		recalc_angle(edge);
-		SPEED=(mobj*SPEED+MASS*Math.abs(vobj)-mobj*BOUNCE_KEEP*(Math.abs(vobj)-SPEED))/(MASS+mobj);
+		SPEED=(mobj*SPEED+MASS*Math.abs(vobj)-mobj*kept ()*(Math.abs(vobj)-SPEED))/(MASS+mobj);
 	}
 	
 	/**
@@ -91,7 +86,7 @@ public class SimMobileObject extends SimObject
 	 * against the object: when they overlap, the object is put out of it (just
 	 * touching it, along the line from its centre) and, if they were getting
 	 * closer, it bounces on it as on a moving wall of infinite mass (losing
-	 * BOUNCE_LOSS of the speed they met with, plus the one the robot pushes with).
+	 * COL_COEF of the speed they met with, plus the one the robot pushes with).
 	 * Returns whether they touched.
 	 */
 	public boolean robot_collision (double rx, double ry, double rradius, double rvx, double rvy)
@@ -116,18 +111,24 @@ public class SimMobileObject extends SimObject
 		rel		= (vx - rvx) * nx + (vy - rvy) * ny;
 		if (rel < 0.0)
 		{
-			vx		-= (1.0 + BOUNCE_KEEP) * rel * nx;
-			vy		-= (1.0 + BOUNCE_KEEP) * rel * ny;
+			vx		-= (1.0 + kept ()) * rel * nx;
+			vy		-= (1.0 + kept ()) * rel * ny;
 			SPEED	= Math.sqrt (vx * vx + vy * vy);
 			if (SPEED > 0.0)		odesc.a = Math.atan2 (vy, vx);
 		}
 		return true;
 	}
 
-	/** Indicates odesc.a wall collision: the object bounces off it, losing BOUNCE_LOSS of the speed it came with. */
+	/** What a bounce keeps of the speed of incidence (never below nothing, nor above all of it). */
+	protected double kept ()
+	{
+		return Math.min (1.0, Math.max (0.0, 1.0 - COL_COEF));
+	}
+
+	/** Indicates odesc.a wall collision: the object bounces off it, losing COL_COEF of the speed it came with. */
 	public void wall_collision (Line2 wall)
 	{
-		SPEED=SPEED*BOUNCE_KEEP;
+		SPEED=SPEED*kept ();
 		recalc_angle(wall);		
 		// Avoid that the ball pass off the wall
 		if (wall.distance(odesc.pos.x(),odesc.pos.y())<= radius)
