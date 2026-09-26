@@ -133,9 +133,12 @@
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
     "items": [
-      { "label": "Field", "x": -2.55, "y": -3.45, "z": 0, "width": 5.1, "height": 6.9, "texture": "./conf/3dmodels/textures/floor2.jpg" },
-      { "label": "Net1", "x": -0.4, "y": 2.7, "z": 0, "width": 0.8, "height": 0.3 },
-      { "label": "Net2", "x": -0.4, "y": -3, "z": 0, "width": 0.8, "height": 0.3 }
+      { "label": "Arena", "x": -2.55, "y": -3.45, "z": 0, "width": 5.1, "height": 6.9, "texture": "./conf/3dmodels/textures/floor2.jpg" },
+      { "label": "Net1Inside", "x": -0.4, "y": 2.7, "z": 0, "width": 0.8, "height": 0.3, "texture": "./conf/3dmodels/textures/floor2.jpg" },
+      { "label": "Net2Inside", "x": -0.4, "y": -3, "z": 0, "width": 0.8, "height": 0.3, "texture": "./conf/3dmodels/textures/floor2.jpg" },
+      { "label": "Field", "x": -1.83, "y": -2.73, "z": 0, "width": 3.66, "height": 5.46, "texture": "./conf/3dmodels/textures/floor2.jpg" },
+      { "label": "Net1Area", "x": -0.68, "y": 2.02, "z": 0, "width": 1.36, "height": 0.7, "texture": "./conf/3dmodels/textures/floor2.jpg" },
+      { "label": "Net2Area", "x": -0.68, "y": -2.7, "z": 0, "width": 1.36, "height": 0.68, "texture": "./conf/3dmodels/textures/floor2.jpg" }
     ]
   },
   "fareas": {

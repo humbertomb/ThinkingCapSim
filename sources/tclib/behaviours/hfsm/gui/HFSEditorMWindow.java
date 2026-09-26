@@ -21,7 +21,7 @@ import javax.swing.UIManager;
  *   java tclib.behaviours.hfsm.gui.HFSMWindow [machine.xas]
  * </pre>
  */
-public class HFSMWindow extends JFrame implements HFSMPanel.Host
+public class HFSEditorMWindow extends JFrame implements HFSMPanel.Host
 {
 	private static final long		serialVersionUID = 1L;
 
@@ -29,12 +29,12 @@ public class HFSMWindow extends JFrame implements HFSMPanel.Host
 
 	protected HFSMPanel				editor;
 
-	public HFSMWindow ()
+	public HFSEditorMWindow ()
 	{
 		this (null);
 	}
 
-	public HFSMWindow (File file)
+	public HFSEditorMWindow (File file)
 	{
 		super (TITLE);
 
@@ -86,7 +86,7 @@ public class HFSMWindow extends JFrame implements HFSMPanel.Host
 		{
 			public void run ()
 			{
-				HFSMWindow	win = new HFSMWindow ((name != null) ? new File (name) : null);
+				HFSEditorMWindow	win = new HFSEditorMWindow ((name != null) ? new File (name) : null);
 
 				win.setVisible (true);
 			}

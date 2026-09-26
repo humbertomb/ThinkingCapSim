@@ -640,11 +640,11 @@
           "orientation": 0.0,
           "elevation": -29.054604099077228,
           "rangemax": 6.0,
-          "panmax": 30.0,
-          "tiltmax": 15.0,
+          "panmax": 90.0,
+          "tiltmax": 30.0,
           "hfov": 43.6,
           "vfov": 33.4,
-          "framerate": 5.0,
+          "framerate": 10.0,
           "resolution": "640x480"
         }
       ]

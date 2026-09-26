@@ -23,6 +23,7 @@ else
 	vrot = 75 * sgn
 end
 
+chaos.setScanType(chaos.SCAN_FULL)
 chaos.setNeeded(chaos.BALL_LPO,1.0)
 chaos.setVlin(vlin)
 chaos.setVlat(vlat)

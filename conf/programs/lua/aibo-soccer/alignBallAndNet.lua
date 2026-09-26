@@ -5,10 +5,10 @@
 
 local MIN_DRHO = 50
 local MIN_DTHETA = 1
-local MAX_VROT = 70
+local MAX_VROT = 60
 
-local MAX_VLIN = 150
-local MAX_VLAT = 100
+local MAX_VLIN = 250
+local MAX_VLAT = 150
 
 local ball	= chaos.getLpo(chaos.BALL_LPO)
 local net1	= chaos.getLpo(chaos.NET1_LPO)
@@ -65,6 +65,7 @@ else
 	vrot = math.limit (vrot - 0.9 * delta_theta, -MAX_VROT, MAX_VROT)
 end
 
+chaos.setScanType(chaos.SCAN_FULL)
 chaos.setNeeded(chaos.BALL_LPO,1.0)
 chaos.setNeeded(chaos.NET1_LPO,1.0)
 chaos.setVlin(vlin)

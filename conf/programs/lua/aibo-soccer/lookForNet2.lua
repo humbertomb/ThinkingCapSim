@@ -16,12 +16,13 @@ sgn = chaos.getGlobal("NET2_DIRECTION")
 
 -- PID-like controller
 if net2.anchored > 0.8 and math.abs (net2.theta) < 30 then
-	vrot = 5.5 * net2.theta
+	vrot = 3.5 * net2.theta
 else
-	vrot = 75 * sgn
+	vrot = 65 * sgn
 end
 
-chaos.setNeeded(chaos.BALL_LPO,1.0)
+chaos.setScanType(chaos.SCAN_FULL)
+chaos.setNeeded(chaos.NET2_LPO,1.0)
 chaos.setVlin(vlin)
 chaos.setVlat(vlat)
 chaos.setVrot(vrot)

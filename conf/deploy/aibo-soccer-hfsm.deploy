@@ -1,5 +1,5 @@
 {
-  "world": "./conf/maps/soccer_field_mini.world",
+  "world": "./conf/maps/soccer_field_aibo_2007.world",
   "robots": [
     {
       "name": "QUAKY2-1",

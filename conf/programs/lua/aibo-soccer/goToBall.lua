@@ -6,7 +6,7 @@
 local ANGLE_LARGE = 50
 local ANGLE_SMALL = 25
 
-local RHO_MIN = 100
+local RHO_MIN = 250
 local RHO_SLOWDOWN = 600
 
 local vlin = 0
@@ -41,6 +41,7 @@ else
 	end
 end
 	
+chaos.setScanType(chaos.SCAN_FULL)
 chaos.setNeeded(chaos.BALL_LPO,1.0)
 chaos.setVlin(vlin)
 chaos.setVrot(vrot)

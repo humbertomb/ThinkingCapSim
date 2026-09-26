@@ -9,6 +9,7 @@ local vlin = 0.75 * ball.rho + 100
 local vrot = 0.9 * ball.theta
 local vlat = 0
 	
+chaos.setScanType(chaos.SCAN_LOW)
 chaos.setNeeded(chaos.BALL_LPO,1.0)
 chaos.setVlin(vlin)
 chaos.setVrot(vrot)
