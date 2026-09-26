@@ -22,6 +22,7 @@ import tcrob.umu.quaky2.gui.SoccerVisionWindow;
 import tcrob.umu.quaky2.lpo.*;
 
 import wucore.utils.color.*;
+import wucore.utils.math.Angles;
 
 public class SoccerVision extends Perception
 {
@@ -34,6 +35,11 @@ public class SoccerVision extends Perception
 	static public final double			NET_FADING	= 15.0;
 
 	static public final int				SCAN_STEPS	= 10;
+
+	/** How sure the LPS has to be of an object (its anchor) for the camera to turn to where it was last seen. */
+	static public final double			ANCHOR_MIN	= 0.2;
+	/** Where the camera aims at a net when it turns to it: this high up it (m), so it does not look at the floor line. */
+	static public final double			NET_AIM		= 0.15;
 		
 	// Application LPOs
 	protected LPOBall					ball;
@@ -61,6 +67,10 @@ public class SoccerVision extends Perception
 
 	protected Tuple						ctuple;
 	protected ItemCameraCtrl			citem;
+
+	// Attention: the object the behaviours need to keep seeing (BEH_NEEDS), which
+	// the camera is turned to instead of scanning; null when nothing is needed
+	protected String					attending;
 
 	// Local graphics: configuration and monitoring of the vision
 	protected SoccerVisionWindow		win;
@@ -260,12 +270,156 @@ public class SoccerVision extends Perception
 		if (shown != null)
 			SwingUtilities.invokeLater (() -> shown.updateBufferedImage (item.image));
 		
-		do_scan_pattern ();
+		// and where the camera goes next: to what is needed, or on with its scan
+		attend (item);
 	}
 
+	/**
+	 * What the behaviours need of the vision: how to scan with the camera, and
+	 * which objects to keep seeing. Of those, the one needed most (the highest
+	 * need, the first when several are needed as much) is the one the camera
+	 * attends to; nothing needed, and the camera scans as told.
+	 */
 	public void notify_beh_neeeds (String space, ItemBehNeeds item)
 	{
-		scan = item.scanType;
+		ItemBehNeeds.BehNeeds	most = item.mostNeeded ();
+
+		scan		= item.scanType;
+		attending	= (most != null) ? most.object : null;
+	}
+
+	/** The object the camera is attending to (the LPS's name for it), or null when it is scanning. */
+	public String attending ()								{ return attending; }
+
+	/* ------------------------------------------------------------------ */
+	/* Attention: where the camera goes next                               */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * Turns the camera for the next frame. With an object to attend to, the scan
+	 * stops and the camera is turned to hold it in the fovea (the centre of the
+	 * frame): when the object is in this frame, by what it is off the centre, so
+	 * that the next frame has it there; when it is not in the frame but the LPS
+	 * still knows where it is (it was seen, and its anchor has not faded below
+	 * {@link #ANCHOR_MIN}), towards where the LPS has it; and when nothing is known
+	 * of it, the camera scans for it as the behaviours asked (setScanType). With
+	 * nothing to attend to, the camera scans.
+	 */
+	protected void attend (ItemCamera frame)
+	{
+		String						what = attending;
+		SoccerRecognizer.Detection	d;
+		LPO							o;
+
+		if (what == null)					{ do_scan_pattern ();	return; }
+
+		d	= detection (what);
+		o	= object (what);
+		if (d != null)
+			foveate (frame, d, o == ball);
+		else if ((o != null) && (o.anchor () >= ANCHOR_MIN))
+			turnTo (frame.device, o, (o == ball) ? BALL_RADIUS : NET_AIM);
+		else
+			do_scan_pattern ();
+	}
+
+	/** What the recognizer found of an object in the frame just processed, by the LPS's name for it, or null. */
+	protected SoccerRecognizer.Detection detection (String name)
+	{
+		if ((recognizer == null) || (name == null))		return null;
+		if ((ball != null) && name.equals (ball.label ()))	return recognizer.ball;
+		if ((net1 != null) && name.equals (net1.label ()))	return recognizer.net1;
+		if ((net2 != null) && name.equals (net2.label ()))	return recognizer.net2;
+		return null;
+	}
+
+	/** The object of the LPS of that name, as the LPS of the robot has it now, or null. */
+	protected LPO object (String name)
+	{
+		LPS			l = lps_current ();
+
+		if ((l == null) || (name == null))				return null;
+		synchronized (l) { return l.find (name); }
+	}
+
+	/**
+	 * Turns the camera by what an object seen in the frame is off its centre, so
+	 * that the next frame has it in the centre: the pixel is turned into the angles
+	 * of the ray through it (the two fields of view spread over the frame), and
+	 * those go on top of the pan and tilt the frame was taken with. A ball is
+	 * followed by the centre of its circle, which may be out of the frame when the
+	 * ball is cut by it; a net by the centre of its blob.
+	 */
+	protected void foveate (ItemCamera frame, SoccerRecognizer.Detection d, boolean round)
+	{
+		double		hfov = camhfov (frame.device), vfov = camvfov (frame.device);
+		int			w = frame.image.getWidth (), h = frame.image.getHeight ();
+		double		u = round ? d.cx : d.x, v = round ? d.cy : d.y;
+		double		ax, ay;
+
+		if ((hfov <= 0.0) || (vfov <= 0.0) || (w <= 0) || (h <= 0))		return;
+		ax	= Math.atan ((2.0 * (u + 0.5) / w - 1.0) * Math.tan (hfov / 2.0));		// to the right of the centre
+		ay	= Math.atan ((1.0 - 2.0 * (v + 0.5) / h) * Math.tan (vfov / 2.0));		// above it
+		aim (frame.pan - ax, frame.tilt + ay);
+	}
+
+	/**
+	 * Turns the camera towards where the LPS has an object, at a height of it: the
+	 * pan and tilt that point the camera, from where it sits on the robot, at that
+	 * point.
+	 */
+	protected void turnTo (int dev, LPO o, double height)
+	{
+		SensorPos	feat = camfeat (dev);
+		double		ox, oy, dx, dy, pan, tilt;
+
+		if (feat == null)					return;
+		ox		= o.rho () * Math.cos (o.theta ());
+		oy		= o.rho () * Math.sin (o.theta ());
+		dx		= ox - feat.rho () * Math.cos (feat.theta ());
+		dy		= oy - feat.rho () * Math.sin (feat.theta ());
+		pan		= Angles.radnorm_180 (Math.atan2 (dy, dx) - feat.orientation ());
+		tilt	= Math.atan2 (height - feat.z (), Math.sqrt (dx * dx + dy * dy)) - feat.elevation ();
+		aim (pan, tilt);
+	}
+
+	/**
+	 * Sends the camera a pan and a tilt (CAMERA_CTRL), within what it can do: no
+	 * further either way than the description of the robot says (pan max, tilt
+	 * max), and nowhere at all when it says the camera is fixed.
+	 */
+	protected void aim (double pan, double tilt)
+	{
+		pan		= Math.max (-scan_max_pan, Math.min (scan_max_pan, pan));
+		tilt	= Math.max (-scan_max_tilt, Math.min (scan_max_tilt, tilt));
+		camera_ctrl.set (pan, tilt);
+		citem.set (0, camera_ctrl, System.currentTimeMillis ());
+		linda.write (ctuple);
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* The camera, as the description of the robot has it                  */
+	/* ------------------------------------------------------------------ */
+
+	/** Where a camera sits and where it looks, or null when the robot has no such camera. */
+	protected SensorPos camfeat (int dev)
+	{
+		if ((rdesc == null) || (rdesc.camfeat == null) || (dev < 0) || (dev >= rdesc.camfeat.length))		return null;
+		return rdesc.camfeat[dev];
+	}
+
+	/** How wide a camera sees (rad), that of the family when the camera says nothing. */
+	protected double camhfov (int dev)
+	{
+		if (rdesc == null)					return 0.0;
+		return ((rdesc.camhfov != null) && (dev >= 0) && (dev < rdesc.camhfov.length) && (rdesc.camhfov[dev] > 0.0)) ? rdesc.camhfov[dev] : rdesc.CONECAM;
+	}
+
+	/** How high a camera sees (rad), that of the family when the camera says nothing. */
+	protected double camvfov (int dev)
+	{
+		if (rdesc == null)					return 0.0;
+		return ((rdesc.camvfov != null) && (dev >= 0) && (dev < rdesc.camvfov.length) && (rdesc.camvfov[dev] > 0.0)) ? rdesc.camvfov[dev] : rdesc.VFOVCAM;
 	}
 	
 	/* ------------------------------------------------------------------ */
@@ -357,11 +511,10 @@ public class SoccerVision extends Perception
 		double			xn, yn, t;
 		double			x, y;
 
-		if ((rdesc == null) || (rdesc.camfeat == null) || (dev < 0) || (dev >= rdesc.camfeat.length) || (rdesc.camfeat[dev] == null))
-			return null;
-		feat	= rdesc.camfeat[dev];
-		hfov	= ((rdesc.camhfov != null) && (dev < rdesc.camhfov.length) && (rdesc.camhfov[dev] > 0.0)) ? rdesc.camhfov[dev] : rdesc.CONECAM;
-		vfov	= ((rdesc.camvfov != null) && (dev < rdesc.camvfov.length) && (rdesc.camvfov[dev] > 0.0)) ? rdesc.camvfov[dev] : rdesc.VFOVCAM;
+		feat	= camfeat (dev);
+		if (feat == null)						return null;
+		hfov	= camhfov (dev);
+		vfov	= camvfov (dev);
 		if ((hfov <= 0.0) || (vfov <= 0.0))		return null;
 
 		// the axes of the camera in the robot: forward, right and up, with the camera

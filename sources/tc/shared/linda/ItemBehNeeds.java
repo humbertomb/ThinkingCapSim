@@ -9,8 +9,10 @@ import java.util.*;
 
 public class ItemBehNeeds extends Item implements Serializable
 {
-	public class BehNeeds
+	static public class BehNeeds implements Serializable
 	{
+		private static final long	serialVersionUID = 1L;
+
 		public String 				object;
 		public double				need;
 		
@@ -41,5 +43,26 @@ public class ItemBehNeeds extends Item implements Serializable
 		set (tstamp);
 		
 		needs.add (new BehNeeds (object, need));
+	}
+
+	/**
+	 * The object needed most: the one of the highest need, the first of them when
+	 * several are needed as much, or null when nothing is needed.
+	 */
+	public BehNeeds mostNeeded ()
+	{
+		BehNeeds		best = null;
+
+		for (BehNeeds n : needs)
+			if ((n != null) && (n.object != null) && ((best == null) || (n.need > best.need)))		best = n;
+		return best;
+	}
+
+	public String toString ()
+	{
+		StringBuilder	sb = new StringBuilder ("scan " + scanType);
+
+		for (BehNeeds n : needs)		sb.append (", ").append (n.object).append ("=").append (n.need);
+		return sb.toString ();
 	}
 }
