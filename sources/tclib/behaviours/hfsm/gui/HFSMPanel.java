@@ -769,13 +769,16 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	{
 		upAction.setEnabled (canvas.canGoUp ());
 
-		Object		sel = canvas.getSelection ();
+		Object			sel = canvas.getSelection ();				// the one block selected; null with none, or several
+		List<Object>	all = canvas.getSelected ();
 
-		deleteAction.setEnabled ((sel != null) && (sel != root));
+		// what works on several blocks at once works on any selection; the rest wants one block
+		deleteAction.setEnabled (!all.isEmpty () && !((all.size () == 1) && (all.get (0) == root)));
 		renameAction.setEnabled (sel != null);
 		initialAction.setEnabled (sel instanceof State);
 		expandAction.setEnabled ((sel instanceof MetaState) && (sel != root));
-		showCode (sel);
+		if ((sel == null) && (all.size () > 1))		showSeveral (all);
+		else										showCode (sel);
 		if (host != null)						host.editorStateChanged (this);
 	}
 
@@ -812,6 +815,21 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 			actionCode.setCode ("");
 			actionCode.setWritable (false);
 		}
+	}
+
+	/** Several blocks selected: they are counted, and no code is shown, as there is no one script to show. */
+	protected void showSeveral (List<Object> all)
+	{
+		int		states = 0, transitions = 0;
+
+		for (Object o : all)
+			if (o instanceof State)		states++;	else	transitions++;
+		selLabel.setText (all.size () + " blocks selected: " + states + " state" + ((states == 1) ? "" : "s") + ", "
+						  + transitions + " transition" + ((transitions == 1) ? "" : "s") + "   (Del deletes them, drag or arrows move them together)");
+		testCode.setCode ("");
+		testCode.setWritable (false);
+		actionCode.setCode ("");
+		actionCode.setWritable (false);
 	}
 
 	protected void status (String text)

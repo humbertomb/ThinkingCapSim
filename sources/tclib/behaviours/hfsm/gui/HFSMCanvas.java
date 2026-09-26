@@ -25,7 +25,11 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -73,6 +77,7 @@ public class HFSMCanvas extends JPanel
 	static private final Color		C_TEXT		= new Color (20, 20, 20);
 	static private final Color		C_SEL		= new Color (255, 140, 0);
 	static private final Color		C_RUBBER	= new Color (0, 120, 215);
+	static private final Color		C_AREA		= new Color (0, 120, 215, 28);		// the area dragged to select
 	static private final Color		C_LEVEL		= new Color (120, 120, 120);
 	static private final Color		C_LOST		= new Color (200, 60, 60);		// a transition that arrives nowhere
 	static private final Color		C_LIVE		= new Color (230, 60, 60);		// where the machine is now
@@ -97,7 +102,9 @@ public class HFSMCanvas extends JPanel
 	/* Model */
 	protected MetaState				root;
 	protected MetaState				level;						// the machine being shown
-	protected Object				selection;					// a State or a Transition
+	protected Object				selection;					// the one block selected (a State or a Transition); null when none, or several
+	protected LinkedHashSet<Object>	selected = new LinkedHashSet<Object> ();	// every block selected: one, or several dragged an area around
+	protected Map<Object, int[]>	grabbed = new HashMap<Object, int[]> ();	// where each selected block was when the drag began
 
 	/* Watching a machine run: where it is, and nothing of it can be changed */
 	protected List<State>			live = new ArrayList<State> ();
@@ -110,11 +117,10 @@ public class HFSMCanvas extends JPanel
 	protected Listener				listener;
 
 	/* Dragging */
-	protected int					dragMode;					// 0 none, 1 move, 2 pan, 3 rubber (join)
+	protected int					dragMode;					// 0 none, 1 move, 2 pan, 3 rubber (join), 4 area (select what is inside)
 	protected double				anchorX, anchorY;			// where the drag started
 	protected double				curX, curY;					// where the cursor is
 	protected Object				dragging;					// what is being moved or joined
-	protected int					grabX, grabY;				// where inside the block it was grabbed
 
 	public HFSMCanvas (MetaState root)
 	{
@@ -134,6 +140,7 @@ public class HFSMCanvas extends JPanel
 		this.root		= root;
 		this.level		= root;
 		this.selection	= null;
+		this.selected.clear ();
 		if (listener != null)		{ listener.levelChanged (level);	listener.selectionChanged (null); }
 		zoomToFit ();
 		repaint ();
@@ -141,7 +148,10 @@ public class HFSMCanvas extends JPanel
 
 	public MetaState				getMachine ()			{ return root; }
 	public MetaState				getLevel ()				{ return level; }
+	/** The one block selected, or null when none is, or several are (see {@link #getSelected}). */
 	public Object					getSelection ()			{ return selection; }
+	/** Every block selected, in the order they were: one, or the several an area was dragged around. */
+	public List<Object>				getSelected ()			{ return new ArrayList<Object> (selected); }
 	public double					getScale ()				{ return scale; }
 	public void						setListener (Listener l)	{ listener = l;	showUsage (); }
 
@@ -151,6 +161,7 @@ public class HFSMCanvas extends JPanel
 		if (m == null)					return;
 		level		= m;
 		selection	= null;
+		selected.clear ();
 		if (listener != null)			{ listener.levelChanged (level);	listener.selectionChanged (null); }
 		zoomToFit ();
 		repaint ();
@@ -181,10 +192,26 @@ public class HFSMCanvas extends JPanel
 
 	public void setSelection (Object o)
 	{
+		selected.clear ();
+		if (o != null)					selected.add (o);
 		selection	= o;
 		if (listener != null)			listener.selectionChanged (o);
 		repaint ();
 	}
+
+	/** Selects several blocks at once: with one of them it is the selection, with more there is no single one. */
+	public void setSelected (Collection<?> blocks)
+	{
+		selected.clear ();
+		if (blocks != null)
+			for (Object o : blocks)		if (o != null)	selected.add (o);
+		selection	= (selected.size () == 1) ? selected.iterator ().next () : null;
+		if (listener != null)			listener.selectionChanged (selection);
+		repaint ();
+	}
+
+	/** Whether a block is among the selected ones. */
+	public boolean isSelected (Object o)		{ return selected.contains (o); }
 
 	/**
 	 * Where a machine that is running is, as the state of every level (see
@@ -343,13 +370,33 @@ public class HFSMCanvas extends JPanel
 		{
 			Object	hit = pick (x, y);
 
-			setSelection (hit);
-			if ((hit != null) && !watch)								// watching it, nothing is moved
+			if (hit == null)
+			{
+				// on the background: an area is dragged, and what it encloses is selected
+				// on release (shift keeps what was selected and adds to it)
+				if (!e.isShiftDown ())			setSelection (null);
+				dragMode	= 4;
+				break;
+			}
+			// on a block: shift adds it to (or takes it from) the selection; a block already
+			// among the selected ones keeps them all, to be dragged together; any other
+			// block is the one selection
+			if (e.isShiftDown ())
+			{
+				LinkedHashSet<Object>	now = new LinkedHashSet<Object> (selected);
+
+				if (!now.remove (hit))			now.add (hit);
+				setSelected (now);
+			}
+			else if (!selected.contains (hit))
+				setSelection (hit);
+			if (!watch && selected.contains (hit))						// watching it, nothing is moved
 			{
 				dragMode	= 1;
 				dragging	= hit;
-				grabX		= (int) Math.round (x - blockX (hit));
-				grabY		= (int) Math.round (y - blockY (hit));
+				grabbed.clear ();
+				for (Object o : selected)
+					grabbed.put (o, new int[] { (int) Math.round (blockX (o)), (int) Math.round (blockY (o)) });
 			}
 			break;
 		}
@@ -386,13 +433,20 @@ public class HFSMCanvas extends JPanel
 
 		switch (dragMode)
 		{
-		case 1:																	// moving a block
+		case 1:																	// moving the selected blocks together
 			if (dragging != null)
 			{
-				move (dragging, (int) Math.round (curX - grabX), (int) Math.round (curY - grabY));
+				int		dx = (int) Math.round (curX - anchorX), dy = (int) Math.round (curY - anchorY);
+
+				for (Map.Entry<Object, int[]> g : grabbed.entrySet ())
+					move (g.getKey (), g.getValue ()[0] + dx, g.getValue ()[1] + dy);
 				status (dragging);
 				repaint ();
 			}
+			break;
+
+		case 4:																	// dragging an area
+			repaint ();
 			break;
 
 		case 2:																	// panning
@@ -411,10 +465,38 @@ public class HFSMCanvas extends JPanel
 	{
 		if (dragMode == 1)			changed ("Move");
 		if (dragMode == 3)			join (pick (wx (e.getX ()), wy (e.getY ())));
+		if (dragMode == 4)			selectArea (e.isShiftDown ());
 
 		dragMode	= 0;
 		dragging	= null;
+		grabbed.clear ();
 		repaint ();
+	}
+
+	/**
+	 * Selects the blocks of the level inside the area dragged (from the anchor to
+	 * where the mouse is): a state by its centre, a transition by the centre of
+	 * its box. With shift, they are added to what was selected.
+	 */
+	protected void selectArea (boolean add)
+	{
+		double		x1 = Math.min (anchorX, curX), x2 = Math.max (anchorX, curX);
+		double		y1 = Math.min (anchorY, curY), y2 = Math.max (anchorY, curY);
+		LinkedHashSet<Object>	now = new LinkedHashSet<Object> ();
+
+		if (add)					now.addAll (selected);
+		if ((x2 - x1 < 2) && (y2 - y1 < 2))		{ if (!add) setSelection (null);	return; }	// a click, not an area
+		for (State s : level.getStatesList ())
+		{
+			if ((s.getX () >= x1) && (s.getX () <= x2) && (s.getY () >= y1) && (s.getY () <= y2))		now.add (s);
+			for (Transition t : s.getTransitions ())
+			{
+				double	tx = t.getX () + BOX_W / 2.0, ty = t.getY () + BOX_H / 2.0;
+
+				if ((tx >= x1) && (tx <= x2) && (ty >= y1) && (ty <= y2))		now.add (t);
+			}
+		}
+		setSelected (now);
 	}
 
 	private void onClick (MouseEvent e)
@@ -471,22 +553,30 @@ public class HFSMCanvas extends JPanel
 	/* What the tools do                                                   */
 	/* ------------------------------------------------------------------ */
 
-	/** Deletes what is selected, and with a state whatever joins it. */
+	/** Deletes what is selected -- one block or several -- and with a state whatever joins it. */
 	public void deleteSelection ()
 	{
-		if (selection instanceof Transition)
-		{
-			HFSMEdit.remove (root, (Transition) selection);
-			setSelection (null);
-			changed ("Delete transition");
-		}
-		else if (selection instanceof State)
-		{
-			if (selection == root)				return;
-			HFSMEdit.remove (root, (State) selection);
-			setSelection (null);
-			changed ("Delete state");
-		}
+		List<Object>	gone = getSelected ();
+		int				states = 0, transitions = 0;
+
+		if (gone.isEmpty ())					return;
+		// the transitions first: one of a state that goes too is gone with it either way
+		for (Object o : gone)
+			if ((o instanceof Transition) && (HFSMEdit.origin (root, (Transition) o) != null))
+			{
+				HFSMEdit.remove (root, (Transition) o);
+				transitions++;
+			}
+		for (Object o : gone)
+			if ((o instanceof State) && (o != root) && (HFSMEdit.parent (root, (State) o) != null))
+			{
+				HFSMEdit.remove (root, (State) o);
+				states++;
+			}
+		setSelection (null);
+		if (states + transitions == 0)			return;
+		changed ((states + transitions == 1) ? ((states == 1) ? "Delete state" : "Delete transition")
+											 : ("Delete " + (states + transitions) + " blocks"));
 	}
 
 	/** Expands the selected meta state: what it holds comes out to this level, and it goes (see {@link HFSMEdit#expand}). */
@@ -525,11 +615,12 @@ public class HFSMCanvas extends JPanel
 		changed ("Initial state");
 	}
 
-	/** Moves the selection by a few pixels. */
+	/** Moves what is selected, all of it, by a few pixels. */
 	public void nudge (int dx, int dy)
 	{
-		if (selection == null)					return;
-		move (selection, (int) blockX (selection) + dx, (int) blockY (selection) + dy);
+		if (selected.isEmpty ())				return;
+		for (Object o : selected)
+			move (o, (int) blockX (o) + dx, (int) blockY (o) + dy);
 		changed ("Move");
 	}
 
@@ -657,7 +748,7 @@ public class HFSMCanvas extends JPanel
 	{
 		double		r = radius (s) * scale;
 		double		x = px (s.getX ()), y = py (s.getY ());
-		boolean		sel = (selection == s);
+		boolean		sel = selected.contains (s);
 		boolean		initial = (level.getInitialState () == s);
 		boolean		here = live.contains (s);								// the machine is in it, or inside it
 		boolean		now = here && (live.indexOf (s) == (live.size () - 1));	// and this is the state it is really in
@@ -693,7 +784,7 @@ public class HFSMCanvas extends JPanel
 	{
 		double		x = px (t.getX ()), y = py (t.getY ());
 		double		w = BOX_W * scale, h = BOX_H * scale;
-		boolean		sel = (selection == t);
+		boolean		sel = selected.contains (t);
 		boolean		lost = (t.getArrivalState () == null);
 
 		g.setColor (C_TRANS);
@@ -736,6 +827,19 @@ public class HFSMCanvas extends JPanel
 	/** What is being dragged to join two blocks. */
 	private void rubber (Graphics2D g)
 	{
+		if (dragMode == 4)															// the area being dragged around blocks
+		{
+			double	x1 = px (Math.min (anchorX, curX)), y1 = py (Math.min (anchorY, curY));
+			double	x2 = px (Math.max (anchorX, curX)), y2 = py (Math.max (anchorY, curY));
+			java.awt.geom.Rectangle2D	r = new java.awt.geom.Rectangle2D.Double (x1, y1, x2 - x1, y2 - y1);
+
+			g.setColor (C_AREA);
+			g.fill (r);
+			g.setColor (C_RUBBER);
+			g.setStroke (new BasicStroke (1.2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f, new float[] { 5f, 4f }, 0f));
+			g.draw (r);
+			return;
+		}
 		if (dragMode != 3)						return;
 
 		g.setColor (C_RUBBER);
@@ -840,7 +944,7 @@ public class HFSMCanvas extends JPanel
 		case T_META:	return "Click to put a meta state (double click on it to go inside). Right click / Esc: back to Select";
 		case T_TRANS:	return "Drag from one state to another to put a transition between them. Right click / Esc: back to Select";
 		case T_LINK:	return "Drag a state onto a transition (it leaves it) or a transition onto a state (it arrives there)";
-		default:		return "Click to select, drag to move. Double click: a meta state opens, anything else is renamed."
+		default:		return "Click to select, drag to move; drag on the background to select an area (shift: add). Double click: a meta state opens, anything else is renamed."
 							   + " Del: delete, F2: rename, arrows: nudge";
 		}
 	}
