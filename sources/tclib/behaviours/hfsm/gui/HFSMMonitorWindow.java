@@ -22,6 +22,7 @@ import javax.swing.Timer;
 import tclib.behaviours.hfsm.HFSM;
 import tclib.behaviours.hfsm.MetaState;
 import tclib.behaviours.hfsm.State;
+import tclib.behaviours.lua.gui.LuaVarsPanel;
 
 /**
  * A look at a machine of states while it runs: the diagram of one level, with
@@ -31,13 +32,19 @@ import tclib.behaviours.hfsm.State;
  * meta state goes into it and a double click on the background comes back out.
  * The tool bar is where things are done: the button opens the editor on the
  * machine (what is saved there is read again by the robot), and the selector
- * runs another of the machines kept beside it. Where the machine is is read on
- * its own, every {@link #PERIOD} milliseconds, so the module that runs the
- * machine has nothing to tell it.
+ * runs another of the machines kept beside it. Under the diagram, the variables
+ * of the Lua scripts of the machine ({@link LuaVarsPanel}), as in the Lua
+ * monitor: by default the locals of the state the machine is in and of the
+ * behaviour it chose, and every variable when asked for. Where the machine is,
+ * and what its variables are worth, is read on its own, every {@link #PERIOD}
+ * milliseconds, so the module that runs the machine has nothing to tell it.
  */
 public class HFSMMonitorWindow extends JFrame
 {
 	private static final long		serialVersionUID = 1L;
+
+	/** The share of the window the diagram takes, the variables having the rest. */
+	static public final double		SPLIT		= 0.40;
 
 	/** How often where the machine is is looked at [ms]. */
 	static public final int			PERIOD		= 100;
@@ -57,10 +64,13 @@ public class HFSMMonitorWindow extends JFrame
 	protected String				robot;
 	protected Reload				reload;
 	protected HFSMCanvas			canvas;
+	protected LuaVarsPanel			vars;						// the variables of the scripts, under the diagram
+	protected javax.swing.JSplitPane	split;
 	protected JLabel				where;
 	protected JLabel				level;
 	protected Timer					timer;
 	protected boolean				fitted;						// the diagram was put in view once the window had a size
+	protected boolean				divided;					// the divider was put at its share once the window had a size
 
 	protected HFSEditorMWindow		editor;						// the one editor of the machine, while it is open
 	protected javax.swing.JButton	edit;
@@ -126,12 +136,40 @@ public class HFSMMonitorWindow extends JFrame
 			}
 		});
 
+		// the diagram, with its bar, over the variables of the scripts
+		JPanel		diagram = new JPanel (new BorderLayout ());
+
+		diagram.add (canvas, BorderLayout.CENTER);
+		diagram.add (bar, BorderLayout.SOUTH);
+		diagram.setMinimumSize (new Dimension (100, 80));
+
+		vars	= new LuaVarsPanel ((machine != null) ? machine.lua () : null, (machine != null) ? machine.chaos () : null,
+									new LuaVarsPanel.Current ()
+		{
+			public boolean isCurrent (String chunk)		{ return HFSMMonitorWindow.this.isCurrent (chunk); }
+		});
+		vars.what (title ().replaceFirst ("^HFSM Monitor[^:]*: ", "machine "));
+		vars.setMinimumSize (new Dimension (100, 80));
+
+		split	= new javax.swing.JSplitPane (javax.swing.JSplitPane.VERTICAL_SPLIT, true, diagram, vars);
+		split.setResizeWeight (SPLIT);								// the diagram keeps its share when the window grows
+		split.setBorder (null);
+		split.setOneTouchExpandable (true);
+
 		getContentPane ().setLayout (new BorderLayout ());
 		getContentPane ().add (buildToolBar (), BorderLayout.NORTH);
-		getContentPane ().add (canvas, BorderLayout.CENTER);
-		getContentPane ().add (bar, BorderLayout.SOUTH);
+		getContentPane ().add (split, BorderLayout.CENTER);
 		setDefaultCloseOperation (DISPOSE_ON_CLOSE);
-		setSize (new Dimension (760, 640));
+		setSize (new Dimension (760, 760));
+		split.addComponentListener (new java.awt.event.ComponentAdapter ()
+		{															// the divider is put at its share once there is a height to share
+			public void componentResized (java.awt.event.ComponentEvent e)
+			{
+				if (divided || (split.getHeight () <= 0))		return;
+				divided	= true;
+				split.setDividerLocation (SPLIT);
+			}
+		});
 
 		timer	= new Timer (PERIOD, new ActionListener ()
 		{
@@ -145,6 +183,9 @@ public class HFSMMonitorWindow extends JFrame
 
 	public final HFSM				machine ()			{ return machine; }
 	public final HFSMCanvas			getCanvas ()		{ return canvas; }
+	/** The table of the variables of the scripts, under the diagram. */
+	public final LuaVarsPanel		getVars ()			{ return vars; }
+	public final javax.swing.JSplitPane	getSplit ()		{ return split; }
 	/** The editor of the machine while it is open, null when it is not. */
 	public final HFSEditorMWindow	getEditor ()		{ return editor; }
 	/** The file of the machine being watched, or null. */
@@ -169,7 +210,9 @@ public class HFSMMonitorWindow extends JFrame
 			{
 				machine	= m;
 				canvas.setMachine ((m != null) ? m.root () : new MetaState ("nothing", 0));
+				vars.source ((m != null) ? m.lua () : null, (m != null) ? m.chaos () : null);
 				setTitle (title ());
+				vars.what ((m != null) ? ("machine " + m.root ().getName ()) : null);
 				fillMachines ();
 				refresh ();
 			}
@@ -337,7 +380,7 @@ public class HFSMMonitorWindow extends JFrame
 		w.setLocation (x, y);
 	}
 
-	/** Where the machine is now, straight onto the diagram. */
+	/** Where the machine is now, straight onto the diagram, and what its variables are worth. */
 	public void refresh ()
 	{
 		if (machine == null)					return;
@@ -346,6 +389,33 @@ public class HFSMMonitorWindow extends JFrame
 
 		canvas.setLive (live);
 		said ();
+		vars.refresh ();
+	}
+
+	/**
+	 * Whether a script is one of those being run: the script of the state the
+	 * machine is in, the tests and actions of the transitions out of it and of the
+	 * meta states that hold it (named "state X", "transition T (test)",
+	 * "transition T (do)" by the machine) and the behaviour it chose (its file).
+	 */
+	protected boolean isCurrent (String chunk)
+	{
+		HFSM		m = machine;
+
+		if ((m == null) || (chunk == null))		return false;
+
+		List<State>		live = m.active ();
+
+		for (State s : live)
+		{
+			if (chunk.equals ("state " + s.getName ()))							return true;
+			for (tclib.behaviours.hfsm.Transition t : s.getTransitions ())
+				if (chunk.startsWith ("transition " + t.getName () + " ("))		return true;
+		}
+
+		String		beh = (m.chaos () != null) ? m.chaos ().behaviour () : null;
+
+		return (beh != null) && (chunk.equals (beh + ".lua") || chunk.equals (beh));
 	}
 
 	/** What the bar at the bottom says. */

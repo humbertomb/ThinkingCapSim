@@ -8,32 +8,19 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.BorderFactory;
-import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
 
 import tclib.behaviours.lua.Chaos;
-import tclib.behaviours.lua.interpreter.Lua;
-import tclib.behaviours.lua.interpreter.LuaFunction;
 import tclib.behaviours.lua.interpreter.LuaState;
-import tclib.behaviours.lua.interpreter.LuaTable;
 
 /**
  * A look at a Lua program while it runs: every variable in use, what it is
@@ -67,18 +54,11 @@ public class LuaMonitorWindow extends JFrame
 	/** How often the variables are looked at [ms]. */
 	static public final int			PERIOD		= 200;
 
-	/* The scopes, as they are written in the table */
-	static public final String		S_LOCAL		= "local";
-	static public final String		S_GLOBAL	= "global";
-	static public final String		S_CHAOS		= "chaos global";
-	static public final String		S_COMMAND	= "command";
-
-	static private final Color		C_CHANGED	= new Color (255, 246, 200);	// what has just changed
-	static private final Color		C_SCOPE		= new Color (100, 100, 100);
-	static private final Color		C_WRONG		= new Color (180, 0, 0);		// what is the matter with the program
-
-	/** The names the library and the bridge take up, which are nobody's variables. */
-	static private final String[]	LIBRARY		= { "math", "io", "string", "table", "os", "chaos", "_VERSION" };
+	/* The scopes, as they are written in the table (those of the panel, kept here by name) */
+	static public final String		S_LOCAL		= LuaVarsPanel.S_LOCAL;
+	static public final String		S_GLOBAL	= LuaVarsPanel.S_GLOBAL;
+	static public final String		S_CHAOS		= LuaVarsPanel.S_CHAOS;
+	static public final String		S_COMMAND	= LuaVarsPanel.S_COMMAND;
 
 	/** What the monitor asks of whoever runs the program. */
 	public interface Reload
@@ -94,38 +74,13 @@ public class LuaMonitorWindow extends JFrame
 	protected String				program;
 	protected java.io.File			file;						// the program being run, to write in
 	protected Reload				reload;
-	protected volatile String		wrong;						// what is the matter with the program, null for nothing
 	protected String				robot;
 	protected LuaEditorWindow		editor;						// the one editor of it, while it is open
 
-	protected Vars					vars;
-	protected JTable				table;
-	protected JLabel				status;
-	protected JCheckBox			library;			// "Show all variables": the other scripts' locals and the library's globals too
+	protected LuaVarsPanel			vars;						// the table of the variables
 	protected javax.swing.JComboBox<String>	programs;			// the programs of the folder of the one running
 	protected boolean				choosing;					// the selector is being filled in, which is nobody's choice
 	protected Timer					timer;
-
-	/** One row of the table. */
-	static public class Var
-	{
-		public String				name;
-		public String				value;
-		public String				type;
-		public String				scope;
-		public boolean				changed;
-		public String				wrong;				// why it is not what the script meant (a nil of chaos.getLpo given no object), or null
-
-		Var (String name, String value, String type, String scope)
-		{
-			this.name	= name;
-			this.value	= value;
-			this.type	= type;
-			this.scope	= scope;
-		}
-
-		String key ()				{ return scope + "/" + name; }
-	}
 
 	public LuaMonitorWindow (LuaState lua, Chaos chaos, String program)
 	{
@@ -154,61 +109,16 @@ public class LuaMonitorWindow extends JFrame
 		this.reload		= reload;
 		this.robot		= robot;
 
-		if (lua != null)			lua.interpreter ().watch (true);		// the locals are only kept track of when asked for
-
-		vars	= new Vars ();
-		table	= new JTable (vars)
+		// the table: the locals it shows by default are those of the program being run
+		vars	= new LuaVarsPanel (lua, chaos, new LuaVarsPanel.Current ()
 		{
-			private static final long	serialVersionUID = 1L;
-
-			private final DefaultTableCellRenderer	cells = new DefaultTableCellRenderer ()
-			{
-				private static final long	serialVersionUID = 1L;
-
-				public Component getTableCellRendererComponent (JTable t, Object value, boolean sel, boolean focus, int row, int col)
-				{
-					super.getTableCellRendererComponent (t, value, sel, focus, row, col);
-
-					Var		v = vars.at (row);
-
-					boolean	wrong = (v != null) && (v.wrong != null);
-
-					if (!sel)			setBackground ((v != null) && v.changed ? C_CHANGED : Color.WHITE);
-					setForeground (wrong ? C_WRONG : (col == 3) ? C_SCOPE : Color.BLACK);
-					setFont (getFont ().deriveFont ((col == 0) ? Font.BOLD : Font.PLAIN));
-					setToolTipText (wrong ? v.wrong : null);
-					return this;
-				}
-			};
-
-			public TableCellRenderer getCellRenderer (int row, int column)		{ return cells; }
-		};
-		table.setRowHeight (20);
-		table.setShowGrid (false);
-		table.setFont (new Font (Font.MONOSPACED, Font.PLAIN, 12));
-		table.getColumnModel ().getColumn (0).setPreferredWidth (170);
-		table.getColumnModel ().getColumn (1).setPreferredWidth (230);
-		table.getColumnModel ().getColumn (2).setPreferredWidth (80);
-		table.getColumnModel ().getColumn (3).setPreferredWidth (150);
-
-		status	= new JLabel (" ");
-		library	= new JCheckBox ("Show all variables", false);
-		library.setToolTipText ("The locals of the other scripts (behaviours, programs run before) and what the library and the bridge put in the globals");
-		library.addActionListener (new ActionListener ()
-		{
-			public void actionPerformed (ActionEvent e)		{ refresh (); }
+			public boolean isCurrent (String chunk)		{ return (program != null) && program.equals (chunk); }
 		});
-
-		JPanel			bar = new JPanel (new BorderLayout (8, 0));
-
-		bar.setBorder (BorderFactory.createEmptyBorder (3, 6, 3, 6));
-		bar.add (status, BorderLayout.WEST);
-		bar.add (library, BorderLayout.EAST);
+		vars.what ((program != null) ? ("program " + program) : null);
 
 		getContentPane ().setLayout (new BorderLayout ());
 		getContentPane ().add (buildToolBar (), BorderLayout.NORTH);
-		getContentPane ().add (new JScrollPane (table), BorderLayout.CENTER);
-		getContentPane ().add (bar, BorderLayout.SOUTH);
+		getContentPane ().add (vars, BorderLayout.CENTER);
 		setDefaultCloseOperation (DISPOSE_ON_CLOSE);
 		setSize (new Dimension (680, 560));
 
@@ -222,9 +132,11 @@ public class LuaMonitorWindow extends JFrame
 		refresh ();
 	}
 
-	public final JTable				getTable ()			{ return table; }
+	public final JTable				getTable ()			{ return vars.getTable (); }
 	/** The variables as the last look at them found them. */
-	public List<Var>				getVars ()			{ return vars.rows (); }
+	public List<LuaVarsPanel.Var>	getVars ()			{ return vars.getVars (); }
+	/** The table of the variables, to put it elsewhere too. */
+	public final LuaVarsPanel		getVarsPanel ()		{ return vars; }
 	/** The program being watched, or null when it is not known where it is kept. */
 	public final java.io.File		getFile ()			{ return file; }
 	/** The editor of the program while it is open, null when it is not. */
@@ -332,6 +244,7 @@ public class LuaMonitorWindow extends JFrame
 
 		file		= chosen;
 		program		= chosen.getName ();
+		vars.what ("program " + program);
 		setTitle (title ());
 		if (reload != null)							reload.load (chosen);
 		if ((editor != null) && editor.isDisplayable ())
@@ -339,7 +252,7 @@ public class LuaMonitorWindow extends JFrame
 			editor.load (chosen);
 			editor.toFront ();
 		}
-		status.setText (chosen.getName () + " is now the program");
+		vars.notice (chosen.getName () + " is now the program");
 		fillPrograms ();
 		refresh ();
 	}
@@ -377,7 +290,7 @@ public class LuaMonitorWindow extends JFrame
 				boolean		same = (file != null) && file.getAbsolutePath ().equals (f.getAbsolutePath ());
 
 				if (same && (reload != null))		reload.reload ();	// what was just written is what runs
-				status.setText (f.getName () + (same ? " saved and read again" : " saved (a copy: the robot goes on with "
+				vars.notice (f.getName () + (same ? " saved and read again" : " saved (a copy: the robot goes on with "
 																				 + file.getName () + ")"));
 			}
 		});
@@ -406,11 +319,7 @@ public class LuaMonitorWindow extends JFrame
 	/** Looks at the variables again, and says what has changed since the last look. */
 	public void refresh ()
 	{
-		List<Var>		now = read ();
-
-		vars.set (now);
-		status.setText (said ());
-		status.setForeground ((wrong != null) ? C_WRONG : Color.BLACK);
+		vars.refresh ();
 	}
 
 	/**
@@ -420,7 +329,7 @@ public class LuaMonitorWindow extends JFrame
 	 */
 	public void problem (String text)
 	{
-		wrong	= ((text != null) && (text.trim ().length () > 0)) ? text.trim () : null;
+		vars.problem (text);
 		SwingUtilities.invokeLater (new Runnable ()
 		{
 			public void run ()		{ refresh (); }
@@ -428,191 +337,8 @@ public class LuaMonitorWindow extends JFrame
 	}
 
 	/** What is the matter with the program, null when there is nothing. */
-	public final String				problem ()			{ return wrong; }
+	public final String				problem ()			{ return vars.problem (); }
 
-	protected String said ()
-	{
-		String			beh = (chaos != null) ? chaos.behaviour () : null;
-
-		// the error of a program says which one and where already
-		if (wrong != null)
-			return ((program == null) || wrong.startsWith (program)) ? wrong : (program + ": " + wrong);
-
-		return vars.getRowCount () + " variables"
-			   + ((program != null) ? ("   program " + program) : "")
-			   + ((beh != null) ? ("   behaviour " + beh) : "");
-	}
-
-	/** Every variable in use, in the order they are shown: locals, globals, the bridge's. */
-	protected List<Var> read ()
-	{
-		List<Var>		rows = new ArrayList<Var> ();
-
-		if (lua != null)
-		{
-			// the locals of the program being run, as its last run left them -- and of
-			// every other script only when all the variables are asked for: a behaviour
-			// or a program run before has locals of the same names, and side by side
-			// they would not be told apart
-			// A local declared from a call that could not answer (chaos.getLpo of a
-			// constant there is not) is nil and to blame for what follows: its row is red,
-			// and says why when pointed at.
-			Map<String, Map<String, String>>	wrongs = lua.interpreter ().complaints ();
-
-			for (Map.Entry<String, Map<String, Object>> e : lua.interpreter ().locals ().entrySet ())
-			{
-				if (!library.isSelected () && !isCurrent (e.getKey ()))		continue;
-
-				Map<String, String>		bad = wrongs.get (e.getKey ());
-
-				for (Map.Entry<String, Object> v : e.getValue ().entrySet ())
-				{
-					int		at = rows.size ();
-
-					add (rows, v.getKey (), v.getValue (), S_LOCAL + " " + e.getKey ());
-					if ((bad != null) && bad.containsKey (v.getKey ()) && (rows.size () > at))
-						rows.get (at).wrong	= bad.get (v.getKey ());
-				}
-			}
-
-			// the globals every script shares
-			LuaTable	g = lua.globals ();
-			List<Object>	names = g.keys ();
-
-			java.util.Collections.sort (names, new java.util.Comparator<Object> ()
-			{
-				public int compare (Object a, Object b)		{ return Lua.tostring (a).compareTo (Lua.tostring (b)); }
-			});
-			for (Object k : names)
-			{
-				String	name = Lua.tostring (k);
-				Object	value = g.get (k);
-
-				if (!library.isSelected () && isLibrary (name, value))		continue;
-				add (rows, name, value, S_GLOBAL);
-			}
-		}
-		if (chaos != null)
-		{
-			for (Map.Entry<String, Object> e : chaos.globals ().entrySet ())
-				rows.add (var (e.getKey (), e.getValue (), S_CHAOS));
-
-			// and what the program is asking the robot for right now
-			rows.add (var ("vlin", Double.valueOf (chaos.vlin ()), S_COMMAND));
-			rows.add (var ("vlat", Double.valueOf (chaos.vlat ()), S_COMMAND));
-			rows.add (var ("vrot", Double.valueOf (chaos.vrot ()), S_COMMAND));
-			rows.add (var ("behaviour", (chaos.behaviour () != null) ? chaos.behaviour () : null, S_COMMAND));
-			rows.add (var ("scan", chaos.scanType ().name (), S_COMMAND));
-		}
-		return rows;
-	}
-
-	/**
-	 * A variable, and, when it is a table of its own (the object of the LPS a script
-	 * asked for, what a behaviour was told about itself), what it holds, one field
-	 * to a row under it: a table of many fields is only counted, as it is a lot of
-	 * rows and little to read.
-	 */
-	protected void add (List<Var> rows, String name, Object value, String scope)
-	{
-		rows.add (var (name, value, scope));
-		if (!(value instanceof LuaTable))		return;
-
-		LuaTable		t = (LuaTable) value;
-
-		if (t.keys ().size () > FIELDS)			return;
-		for (Object k : t.keys ())
-		{
-			Object	f = t.get (k);
-
-			if (f instanceof LuaFunction)		continue;					// a table of functions is a library, not data
-			rows.add (var (name + "." + Lua.tostring (k), f, scope));
-		}
-	}
-
-	/** How many fields of a table are written out one by one. */
-	static public final int			FIELDS		= 16;
-
-	/** Whether a script is the program being run, by the name the interpreter knows it by (its file). */
-	protected boolean isCurrent (String chunk)
-	{
-		return (program != null) && program.equals (chunk);
-	}
-
-	/** Whether a global is the library's or the bridge itself, and so nobody's variable. */
-	static protected boolean isLibrary (String name, Object value)
-	{
-		for (String s : LIBRARY)
-			if (s.equals (name))				return true;
-		return value instanceof LuaFunction;
-	}
-
-	/** One row: what a value is worth and what it is, as Lua has it. */
-	static protected Var var (String name, Object value, String scope)
-	{
-		return new Var (name, text (value), Lua.type (value), scope);
-	}
-
-	/** A value as it is written in the table: a table says how much it holds. */
-	static protected String text (Object value)
-	{
-		if (value == null)						return "nil";
-		if (value instanceof LuaTable)			return "table (" + ((LuaTable) value).keys ().size () + " fields)";
-		if (value instanceof LuaFunction)		return "function " + ((LuaFunction) value).name ();
-		if (value instanceof Double)			return Lua.number (((Double) value).doubleValue ());
-		if (value instanceof String)			return "\"" + value + "\"";
-		return Lua.tostring (value);
-	}
-
-	/* ------------------------------------------------------------------ */
-	/* The table                                                           */
-	/* ------------------------------------------------------------------ */
-
-	/** The rows of the table, which say which of them have just changed. */
-	protected class Vars extends AbstractTableModel
-	{
-		private static final long	serialVersionUID = 1L;
-
-		static private final String[]	COLUMNS = { "Variable", "Value", "Type", "Scope" };
-
-		protected List<Var>			list = new ArrayList<Var> ();
-		protected Map<String, String>	was = new HashMap<String, String> ();
-
-		void set (List<Var> now)
-		{
-			for (Var v : now)
-			{
-				String	old = was.get (v.key ());
-
-				v.changed	= (old != null) && !old.equals (v.value);
-				was.put (v.key (), v.value);
-			}
-			list	= now;
-			fireTableDataChanged ();
-		}
-
-		Var at (int r)						{ return ((r >= 0) && (r < list.size ())) ? list.get (r) : null; }
-		List<Var> rows ()					{ return new ArrayList<Var> (list); }
-
-		public int getRowCount ()			{ return list.size (); }
-		public int getColumnCount ()		{ return COLUMNS.length; }
-		public String getColumnName (int c)	{ return COLUMNS[c]; }
-		public boolean isCellEditable (int r, int c)	{ return false; }
-
-		public Object getValueAt (int r, int c)
-		{
-			Var		v = at (r);
-
-			if (v == null)					return "";
-			switch (c)
-			{
-			case 0:		return v.name;
-			case 1:		return v.value;
-			case 2:		return v.type;
-			default:	return v.scope;
-			}
-		}
-	}
 
 	/**
 	 * The icon of the button: a sheet of paper with lines of text on it and a pencil
