@@ -144,6 +144,12 @@ public class View3DController
 		if (view3d != null)		view3d.updateRobot (index, data);
 	}
 
+	/** The same, with the cameras of the robot turned as the simulation has them (pan, tilt of each, rad). */
+	public void updateRobot (int index, tc.vrobot.RobotData data, double[] pans, double[] tilts)
+	{
+		if (view3d != null)		view3d.updateRobot (index, data, pans, tilts);
+	}
+
 	public void clearRobots ()
 	{
 		if (view3d != null)		view3d.clearRobots ();

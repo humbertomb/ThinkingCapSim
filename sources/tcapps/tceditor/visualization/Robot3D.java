@@ -28,6 +28,7 @@ public class Robot3D extends BranchGroup
 	protected Range3D				irs;
 	protected Range3D				sonars;
 	protected Scan3D					lasers;
+	protected Camera3D				cameras;			// what its cameras see, turned as they are (null: it has none)
 
 	protected boolean 				sonarActive = false;
 	protected boolean 				irActive = false;
@@ -109,10 +110,27 @@ public class Robot3D extends BranchGroup
 		sonars	= new Range3D (rdesc.sonfeat, rdesc.CONESON, Color3D.yellow, rdesc.MAXSONAR);
 		irs		= new Range3D (rdesc.irfeat, rdesc.CONEIR, Color3D.orange, rdesc.MAXIR);
 		lasers	= new Scan3D (rdesc.lrffeat, rdesc.CONELRF, rdesc.RAYLRF, Color3D.blue, rdesc.MAXLRF);
+
+		// and what the cameras see, always shown: the prism of each one, turned with it
+		if (rdesc.MAXCAMERA > 0)
+		{
+			cameras	= new Camera3D (rdesc, pt, a);
+			if (cameras.count () > 0)		addChild (cameras);
+			else							cameras = null;
+		}
 	}
 	
 	// Instance methods
 	public void move (RobotData data, Point3 pt, double hl, double a)
+	{
+		move (data, pt, hl, a, null, null);
+	}
+
+	/**
+	 * Moves the robot to a pose, with its cameras turned as they are now: pan
+	 * and tilt of each (rad), or null to leave them as they were.
+	 */
+	public void move (RobotData data, Point3 pt, double hl, double a, double[] pans, double[] tilts)
 	{
 		mov.setIdentity ();
 		mov.rotZ (a);	
@@ -139,6 +157,7 @@ public class Robot3D extends BranchGroup
 		if (sonarActive)		sonars.move (data.sonars, pt, a);
 		if (irActive)		irs.move (data.irs, pt, a);
 		if (laserActive)		lasers.move (data.lrfs, pt, a);
+		if (cameras != null)	cameras.move (pt, a, pans, tilts);
 	}	
 		
 	public void showLaser (boolean show)

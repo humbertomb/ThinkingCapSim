@@ -882,7 +882,9 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			{
 				if (rv.data == null)		continue;
 				if (rv.index3d < 0)		rv.index3d = view3d.addRobot (rv.rdesc, rv.sdesc, rv.data.real_x, rv.data.real_y, rv.data.real_a, rv.name);
-				view3d.updateRobot (rv.index3d, rv.data);
+				// with its cameras turned as the simulation has them (pan, tilt)
+				int		ri = robots.indexOf (rv);
+				view3d.updateRobot (rv.index3d, rv.data, simulator.cameraPans (ri), simulator.cameraTilts (ri));
 			}
 		}
 	}

@@ -677,8 +677,14 @@ public class WorldView3DWindow extends JFrame
 	/** Moves a robot (and its sensor displays) to the pose of <code>data</code>. */
 	public void updateRobot (int index, RobotData data)
 	{
+		updateRobot (index, data, null, null);
+	}
+
+	/** The same, with its cameras turned as the simulation has them (pan, tilt of each, rad; null: as they were). */
+	public void updateRobot (int index, RobotData data, double[] pans, double[] tilts)
+	{
 		if ((index < 0) || (index >= robots.size ()))		return;
-		robots.get (index).move (data, new Point3 (data.real_x, data.real_y, 0.0), data.fork, data.real_a);
+		robots.get (index).move (data, new Point3 (data.real_x, data.real_y, 0.0), data.fork, data.real_a, pans, tilts);
 	}
 
 	public void clearRobots ()

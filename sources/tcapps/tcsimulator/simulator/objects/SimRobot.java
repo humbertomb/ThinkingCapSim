@@ -103,7 +103,11 @@ public class SimRobot extends VirtualRobot
 	{
 		camera_ctrl.clear ();
 		if (cams != null)
-			for (SimCamera c : cams)			c.control (null);
+			for (SimCamera c : cams)
+			{
+				c.control (null);
+				simul.cameraTurned (r_index, c.device (), 0.0, 0.0);
+			}
 	}
 	
 	/** Places the robot at a given pose (x, y, angle) instead of the START of the world; the world START is left untouched. */
@@ -197,6 +201,7 @@ public class SimRobot extends VirtualRobot
 			
 			if (!c.due (dtime))					continue;
 			c.control (control (c.device ()));
+			simul.cameraTurned (r_index, c.device (), c.pan (), c.tilt ());		// for the 3D world to draw it so
 			BufferedImage	im = c.take (data);
 			if (im == null)						continue;
 			if (camwin != null)					camwin.show (c.device (), im);

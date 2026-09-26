@@ -81,6 +81,8 @@ public class Simulator
 	public Position[]				VISPOS;
 	public int						numrobots;
 	public RobotData[] 				lastRobotData; // Stores the last 'RobotData' object received from "SimulatedRobot" to allow 3D representation in the "RefreshThread"
+	protected double[][]			campan;			// how the cameras of each robot are turned now (rad), by robot and camera; null rows: never turned
+	protected double[][]			camtilt;
 	
 	// Simulated world visualization
 	protected SimulatorListener 		win;
@@ -144,6 +146,8 @@ public class Simulator
 		icons 		= new Line2[MAX_ROBOTS][];
 		bpos		= new Position ();		
 		lastRobotData = new RobotData[MAX_ROBOTS];
+		campan		= new double[MAX_ROBOTS][];
+		camtilt		= new double[MAX_ROBOTS][];
 		objectPicked = new int[MAX_ROBOTS];		
 		for (i = 0; i < MAX_ROBOTS; i++)
 		{
@@ -275,6 +279,36 @@ public class Simulator
 	}
 
 	/** Puts an animated object where a hand on the visualisation left it (see SimObjects.place). */
+	/**
+	 * Takes note of how a camera of a robot is turned on its mount (pan to the
+	 * left, tilt upwards, rad), as the robot turns it before taking a frame, for
+	 * whoever draws the robot (the prism of the camera in the 3D world).
+	 */
+	public void cameraTurned (int robot, int dev, double pan, double tilt)
+	{
+		if ((robot < 0) || (robot >= MAX_ROBOTS) || (dev < 0))		return;
+		if ((campan[robot] == null) || (dev >= campan[robot].length))
+		{
+			int			n = Math.max (dev + 1, ((RDESC[robot] != null) ? RDESC[robot].MAXCAMERA : 0));
+			double[]	p = new double[n], t = new double[n];
+
+			if (campan[robot] != null)
+			{
+				System.arraycopy (campan[robot], 0, p, 0, campan[robot].length);
+				System.arraycopy (camtilt[robot], 0, t, 0, camtilt[robot].length);
+			}
+			campan[robot]	= p;
+			camtilt[robot]	= t;
+		}
+		campan[robot][dev]	= pan;
+		camtilt[robot][dev]	= tilt;
+	}
+
+	/** How the cameras of a robot are turned now, pan of each (rad), or null when none was ever turned. */
+	public double[] cameraPans (int robot)		{ return ((robot >= 0) && (robot < MAX_ROBOTS)) ? campan[robot] : null; }
+	/** ... and the tilt of each. */
+	public double[] cameraTilts (int robot)		{ return ((robot >= 0) && (robot < MAX_ROBOTS)) ? camtilt[robot] : null; }
+
 	public void placeObject (int i, double x, double y, double a)
 	{
 		SimObjects	objs = objects;
