@@ -70,6 +70,7 @@ public class HFSMMonitorWindow extends JFrame
 	protected JLabel				level;
 	protected Timer					timer;
 	protected boolean				fitted;						// the diagram was put in view once the window had a size
+	protected MetaState				holder;						// the meta state the machine was last seen in, whose level the diagram follows
 	protected boolean				divided;					// the divider was put at its share once the window had a size
 
 	protected HFSEditorMWindow		editor;						// the one editor of the machine, while it is open
@@ -209,6 +210,7 @@ public class HFSMMonitorWindow extends JFrame
 			public void run ()
 			{
 				machine	= m;
+				holder	= null;										// the diagram finds where the new one is
 				canvas.setMachine ((m != null) ? m.root () : new MetaState ("nothing", 0));
 				vars.source ((m != null) ? m.lua () : null, (m != null) ? m.chaos () : null);
 				setTitle (title ());
@@ -388,9 +390,26 @@ public class HFSMMonitorWindow extends JFrame
 
 		List<State>		live = machine.active ();
 
+		follow (live);
 		canvas.setLive (live);
 		said ();
 		vars.refresh ();
+	}
+
+	/**
+	 * The diagram follows the machine into and out of the meta states: when the
+	 * state it is in is held by another meta state than the last time, that is the
+	 * level shown, going in when the machine enters one and out when it leaves it.
+	 * Between such moves the level can be browsed by hand.
+	 */
+	protected void follow (List<State> live)
+	{
+		MetaState		in = (live.size () >= 2) && (live.get (live.size () - 2) instanceof MetaState)
+							 ? (MetaState) live.get (live.size () - 2) : machine.root ();
+
+		if (in == holder)						return;
+		holder	= in;
+		if (canvas.getLevel () != in)			canvas.setLevel (in);
 	}
 
 	/**

@@ -250,7 +250,13 @@ public class LuaVarsPanel extends JPanel
 			// A local declared from a call that could not answer (chaos.getLpo of a
 			// constant there is not) is nil and to blame for what follows: its row is red,
 			// and says why when pointed at.
+			// A table several scripts hold under the same name with the same in it (the
+			// ball, asked of chaos.getLpo by a state and by the transitions out of it) is
+			// one row, its scope naming every script, rather than the same fields over
+			// and over.
 			Map<String, Map<String, String>>	wrongs = lua.interpreter ().complaints ();
+			List<Var>							shared = new ArrayList<Var> ();		// the tables, one row per distinct one
+			List<LuaTable>						tables = new ArrayList<LuaTable> ();	// and the table each of them is
 
 			for (Map.Entry<String, Map<String, Object>> e : lua.interpreter ().locals ().entrySet ())
 			{
@@ -260,13 +266,35 @@ public class LuaVarsPanel extends JPanel
 
 				for (Map.Entry<String, Object> v : e.getValue ().entrySet ())
 				{
+					String	name = v.getKey ();
+					Object	value = v.getValue ();
+					String	wrong = ((bad != null) && bad.containsKey (name)) ? bad.get (name) : null;
+
+					if ((value instanceof LuaTable) && (wrong == null))
+					{
+						int		k = sameTable (shared, tables, name, (LuaTable) value);
+
+						if (k >= 0)											// seen already: one more script holds it
+						{
+							shared.get (k).scope	+= ", " + e.getKey ();
+							continue;
+						}
+						Var		row = var (name, value, S_LOCAL + " " + e.getKey ());
+
+						shared.add (row);
+						tables.add ((LuaTable) value);
+						continue;
+					}
+
 					int		at = rows.size ();
 
-					add (rows, v.getKey (), v.getValue (), S_LOCAL + " " + e.getKey ());
-					if ((bad != null) && bad.containsKey (v.getKey ()) && (rows.size () > at))
-						rows.get (at).wrong	= bad.get (v.getKey ());
+					add (rows, name, value, S_LOCAL + " " + e.getKey ());
+					if ((wrong != null) && (rows.size () > at))
+						rows.get (at).wrong	= wrong;
 				}
 			}
+			for (int k = 0; k < shared.size (); k++)						// the tables, with their fields, after the plain locals
+				add (rows, shared.get (k), tables.get (k));
 
 			// the globals every script shares
 			LuaTable	g = lua.globals ();
@@ -308,19 +336,61 @@ public class LuaVarsPanel extends JPanel
 	 */
 	protected void add (List<Var> rows, String name, Object value, String scope)
 	{
-		rows.add (var (name, value, scope));
-		if (!(value instanceof LuaTable))		return;
+		Var		row = var (name, value, scope);
 
-		LuaTable		t = (LuaTable) value;
+		if (value instanceof LuaTable)			add (rows, row, (LuaTable) value);
+		else									rows.add (row);
+	}
 
+	/** A table, as a row of its own and one under it per field, all with the scope of the table's row. */
+	protected void add (List<Var> rows, Var row, LuaTable t)
+	{
+		rows.add (row);
 		if (t.keys ().size () > FIELDS)			return;
 		for (Object k : t.keys ())
 		{
 			Object	f = t.get (k);
 
 			if (f instanceof LuaFunction)		continue;					// a table of functions is a library, not data
-			rows.add (var (name + "." + Lua.tostring (k), f, scope));
+			rows.add (var (row.name + "." + Lua.tostring (k), f, row.scope));
 		}
+	}
+
+	/**
+	 * Which of the tables gathered so far is the same as this one, by name and by
+	 * what it holds: the very object, or one with the same fields worth the same.
+	 * -1 for none.
+	 */
+	static protected int sameTable (List<Var> rows, List<LuaTable> tables, String name, LuaTable t)
+	{
+		for (int i = 0; i < rows.size (); i++)
+		{
+			if (!rows.get (i).name.equals (name))		continue;
+
+			LuaTable	o = tables.get (i);
+
+			if ((o == t) || sameContent (o, t))			return i;
+		}
+		return -1;
+	}
+
+	/** Whether two tables hold the same fields, each worth the same (as written in the table). */
+	static protected boolean sameContent (LuaTable a, LuaTable b)
+	{
+		List<Object>	ka = a.keys ();
+
+		if (ka.size () != b.keys ().size ())			return false;
+		for (Object k : ka)
+		{
+			Object	fa = a.get (k), fb = b.get (k);
+
+			if ((fa instanceof LuaTable) && (fb instanceof LuaTable))
+			{
+				if (!sameContent ((LuaTable) fa, (LuaTable) fb))	return false;
+			}
+			else if (!text (fa).equals (text (fb)))		return false;
+		}
+		return true;
 	}
 
 	/** Whether a script is one of those being run, by the name the interpreter knows it by. */
