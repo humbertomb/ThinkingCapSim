@@ -80,20 +80,21 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	}
 
 	protected Saved					onSave;
-	protected JMenuItem				newItem, loadItem;			// File > New / Load, which an editor of one file has not
-	protected boolean				oneFile;					// the machine being run, and no other: New and Load are out
+	protected JMenuItem				newItem, loadItem, importItem;	// File > New / Load / Import, which an editor of one file has not
+	protected boolean				oneFile;					// the machine being run, and no other: New, Load and Import are out
 
 	public void setOnSave (Saved s)					{ onSave = s; }
 	/**
 	 * Whether the editor is on one file and no other (the machine a robot runs,
-	 * opened from its monitor): File > New and Load are then disabled, as the
-	 * machine the robot runs is not to be swapped from here.
+	 * opened from its monitor): File > New, Load and Import Chaos HFSM are then
+	 * disabled, as the machine the robot runs is not to be swapped from here.
 	 */
 	public void setOneFile (boolean b)
 	{
 		oneFile	= b;
 		if (newItem != null)					newItem.setEnabled (!b);
 		if (loadItem != null)					loadItem.setEnabled (!b);
+		if (importItem != null)					importItem.setEnabled (!b);
 	}
 	public boolean isOneFile ()						{ return oneFile; }
 
@@ -344,8 +345,6 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		{
 			public void run ()		{ load (); }
 		}));
-		newItem.setEnabled (!oneFile);
-		loadItem.setEnabled (!oneFile);
 		file.add (item ("Save State Machine", KeyStroke.getKeyStroke (KeyEvent.VK_S, mask), new Runnable ()
 		{
 			public void run ()		{ save (); }
@@ -355,10 +354,11 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 			public void run ()		{ saveAs (); }
 		}));
 		file.addSeparator ();
-		file.add (item ("Import Chaos HFSM", null, new Runnable ()
+		file.add (importItem = item ("Import Chaos HFSM", null, new Runnable ()
 		{
 			public void run ()		{ importChaos (); }
 		}));
+		setOneFile (oneFile);								// New, Load and Import as the mode says
 		file.addSeparator ();
 		file.add (item ("Close", null, new Runnable ()
 		{
