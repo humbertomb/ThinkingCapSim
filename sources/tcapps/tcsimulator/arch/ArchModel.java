@@ -68,7 +68,7 @@ public class ArchModel
 	 * <code>tc.modules</code> they derive from: the kind a module is created as is
 	 * kept with it (TYPE) and is what names it and says which classes it may be.
 	 */
-	static public final String[]	MODULE_TYPES	= { "Controller", "Navigation", "Perception", "Planner" };
+	static public final String[]	MODULE_TYPES	= { "Controller", "Navigation", "Perception", "Planner", "Supervisor" };
 
 	/** The kind of module that runs a program of its own. */
 	static public final String		CONTROLLER		= "Controller";

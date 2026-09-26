@@ -288,7 +288,7 @@ public class DeployArch
 	static public Module newModule (String name)				{ return newModule (name, null); }
 
 	/**
-	 * A module of a kind ("Controller", "Navigation", "Perception", "Planner"):
+	 * A module of a kind ("Controller", "Navigation", "Perception", "Planner", "Supervisor"):
 	 * the kind is kept with it (<code>TYPE</code>), which is what says the class
 	 * it may be given -- one deriving from the class of that kind in
 	 * <code>tc.modules</code>.

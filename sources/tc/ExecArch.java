@@ -214,9 +214,14 @@ public class ExecArch extends Thread
 			if (lrdesc != null)
 				lrdesc.start_thread (robotid, lldesc, linda_loc, gldesc, linda_glob);
 
-			// Execute required standard modules
+			// Execute required standard modules -- a module that wants the simulator
+			// it runs in (a referee) is given it, when there is one
 			for (i = 0; i < num; i++)
+			{
 				thdesc[i].start_thread (robotid, lldesc, linda_loc);
+				if ((sim != null) && (thdesc[i].thread instanceof tcapps.tcsimulator.simulator.Simulated))
+					((tcapps.tcsimulator.simulator.Simulated) thdesc[i].thread).simulator (sim);
+			}
 			
 			// Execute VirtualRobot if needed
 			virtual_robot ();
