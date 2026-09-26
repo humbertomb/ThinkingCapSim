@@ -36,8 +36,15 @@ public class SoccerVision extends Perception
 
 	static public final int				SCAN_STEPS	= 10;
 
-	/** How sure the LPS has to be of an object (its anchor) for the camera to turn to where it was last seen. */
-	static public final double			ANCHOR_MIN	= 0.2;
+	/**
+	 * How far short of its need the anchor of an object may fall before the camera
+	 * acts on it, as a share of the need: the modules and the events are not in
+	 * step, so an object held in the fovea is still short of its need by a little
+	 * now and then, and that is not losing it. Losing it is falling further short
+	 * than this: then the camera goes and looks for it (the scan), and another
+	 * needed object takes the attention only when it is this much worse off.
+	 */
+	static public final double			SLACK		= 0.10;
 	/** Where the camera aims at a net when it turns to it: this high up it (m), so it does not look at the floor line. */
 	static public final double			NET_AIM		= 0.15;
 		
@@ -297,28 +304,48 @@ public class SoccerVision extends Perception
 
 	/**
 	 * Which of the needed objects the camera attends to now: the one the LPS
-	 * knows less well than the behaviours need it -- its anchor below its need --
-	 * and, when several are, the one the furthest below (the largest need minus
-	 * anchor; the first of them when equal). An object the LPS has never seen has
-	 * an anchor of 0, so it is wanting by all its need. Null when every needed
-	 * object is known at least as well as it is needed, or nothing is needed:
-	 * then the camera is free to scan, and as the anchors fade an object becomes
-	 * wanting again and the camera comes back to it.
+	 * knows worst against what the behaviours need of it -- the largest need
+	 * minus anchor, the first of them when equal. An object the LPS has never
+	 * seen has an anchor of 0, so it is wanting by all its need. Once an object
+	 * has the attention it keeps it while it is held: another takes it over only
+	 * when it is worse off by more than {@link #SLACK} of its need, so the camera
+	 * does not flit between two objects over the odd hundredth of anchor. Null
+	 * when nothing is needed: then the camera scans.
 	 */
 	protected String choose ()
 	{
-		String		best = null;
-		double		gap = 0.0;
+		String		best = null, kept = attending;
+		double		gap = 0.0, keptgap = 0.0, keptneed = 0.0;
+		boolean		stillneeded = false;
 
 		for (ItemBehNeeds.BehNeeds n : needs)
 		{
-			LPO		o = object (n.object);
-			double	anchor = (o != null) ? o.anchor () : 0.0;
-			double	g = n.need - anchor;
+			if (n.need <= 0.0)				continue;
 
-			if ((g > 0.0) && ((best == null) || (g > gap)))		{ best = n.object;	gap = g; }
+			double	g = n.need - anchorOf (n.object);
+
+			if ((best == null) || (g > gap))		{ best = n.object;	gap = g; }
+			if (n.object.equals (kept))				{ stillneeded = true;	keptgap = g;	keptneed = n.need; }
 		}
+		if ((best != null) && stillneeded && !best.equals (kept) && (gap - keptgap <= SLACK * keptneed))
+			return kept;
 		return best;
+	}
+
+	/** How sure the LPS is of an object now (its anchor, 0 to 1), 0 when it has no such object. */
+	protected double anchorOf (String name)
+	{
+		LPO		o = object (name);
+
+		return (o != null) ? o.anchor () : 0.0;
+	}
+
+	/** How much the behaviours need an object, 0 when they do not. */
+	protected double needOf (String name)
+	{
+		for (ItemBehNeeds.BehNeeds n : needs)
+			if (n.object.equals (name))		return n.need;
+		return 0.0;
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -330,10 +357,11 @@ public class SoccerVision extends Perception
 	 * ({@link #choose}), the scan stops and the camera is turned to hold it in the
 	 * fovea (the centre of the frame): when the object is in this frame, by what
 	 * it is off the centre, so that the next frame has it there; when it is not in
-	 * the frame but the LPS still knows where it is (it was seen, and its anchor
-	 * has not faded below {@link #ANCHOR_MIN}), towards where the LPS has it; and
-	 * when nothing is known of it, the camera scans for it as the behaviours asked
-	 * (setScanType). With nothing to attend to, the camera scans.
+	 * the frame but the LPS still knows it about as well as it is needed (its
+	 * anchor short of the need by no more than {@link #SLACK} of it: it was missed
+	 * for a moment), towards where the LPS has it; and when it has fallen further
+	 * than that, the object is lost and the camera scans for it as the behaviours
+	 * asked (setScanType). With nothing to attend to, the camera scans.
 	 */
 	protected void attend (ItemCamera frame)
 	{
@@ -348,7 +376,7 @@ public class SoccerVision extends Perception
 		o	= object (what);
 		if (d != null)
 			foveate (frame, d, o == ball);
-		else if ((o != null) && (o.anchor () >= ANCHOR_MIN))
+		else if ((o != null) && (needOf (what) - o.anchor () <= SLACK * needOf (what)))
 			turnTo (frame.device, o, (o == ball) ? BALL_RADIUS : NET_AIM);
 		else
 			do_scan_pattern ();
