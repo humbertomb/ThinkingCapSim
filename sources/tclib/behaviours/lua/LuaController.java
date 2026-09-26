@@ -98,8 +98,7 @@ public class LuaController extends Controller
 	protected double				path_dst;					// Current robot to desired path distance (m)
 
 	protected tclib.behaviours.lua.gui.LuaMonitorWindow	monitor;	// the variables of the program while it runs
-	protected ItemBehNeeds			nitem;						// what the program needs of the vision (BEH_NEEDS): the scan of the camera
-	protected Tuple					ntuple;
+	protected Tuple					ntuple;						// what the program needs of the vision (BEH_NEEDS): the scan of the camera and the objects
 	protected String				nsaid;						// what the vision was last told (scan and needs, as text); null: nothing yet
 	protected boolean				autostart;					// AUTO: run from the first cycle, waiting for nothing
 	protected boolean				dump;
@@ -136,8 +135,7 @@ public class LuaController extends Controller
 		lua.set ("chaos", chaos.table ());
 
 		// What the program needs of the vision
-		nitem		= new ItemBehNeeds ();
-		ntuple		= new Tuple (Tuple.BEHNEEDS, nitem);
+		ntuple		= new Tuple (Tuple.BEHNEEDS, null);
 		nsaid		= null;
 
 		// Initialize debug modules
@@ -485,12 +483,16 @@ public class LuaController extends Controller
 				said.append (' ').append (names[i]).append ('=').append (chaos.needed ().get (i));
 		if (said.toString ().equals (nsaid))		return;
 
-		nitem.clearNeeds ();
+		// a new item every time: a shared Linda hands the reader the very object, and
+		// one filled in again underneath it could be read half done
+		ItemBehNeeds	nitem = new ItemBehNeeds ();
+
 		nitem.changeScan (scan);
 		for (Integer i : idx)
 			if ((i >= 0) && (i < names.length))
 				nitem.addNeed (names[i], chaos.needed ().get (i), System.currentTimeMillis ());
 		nitem.set (System.currentTimeMillis ());
+		ntuple.value	= nitem;
 		linda.write (ntuple);
 		nsaid	= said.toString ();
 	}

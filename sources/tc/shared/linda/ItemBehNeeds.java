@@ -38,11 +38,30 @@ public class ItemBehNeeds extends Item implements Serializable
 	public void clearNeeds ()					{ needs.clear(); }
 	public void changeScan (ScanTypes scan)		{ this.scanType = scan; }
 	
+	/**
+	 * Says how much an object is needed. One need to an object: said again, the
+	 * new need takes the place of the old one, where it was in the list, rather
+	 * than being added beside it.
+	 */
 	public void addNeed (String object, double need, long tstamp)
 	{
 		set (tstamp);
 		
+		for (BehNeeds n : needs)
+			if ((n != null) && (n.object != null) && n.object.equals (object))
+			{
+				n.need	= need;
+				return;
+			}
 		needs.add (new BehNeeds (object, need));
+	}
+
+	/** How much an object is needed, 0 when it is not in the list. */
+	public double needOf (String object)
+	{
+		for (BehNeeds n : needs)
+			if ((n != null) && (n.object != null) && n.object.equals (object))		return n.need;
+		return 0.0;
 	}
 
 	/**
