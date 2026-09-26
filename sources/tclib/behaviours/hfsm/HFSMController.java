@@ -49,6 +49,8 @@ public class HFSMController extends Controller
 	protected java.io.File			file;						// the file the machine came from
 	protected String				behs;						// the folder of the behaviours the settings say (BEH), or null
 	protected Chaos					chaos;
+	protected Tuple					ntuple;						// what the scripts need of the vision (BEH_NEEDS): the scan of the camera and the objects
+	protected String				nsaid;						// what the vision was last told (scan and needs, as text); null: nothing yet
 
 	// Controller debug
 	protected tclib.behaviours.hfsm.gui.HFSMMonitorWindow	monitor;	// the diagram, with where the machine is
@@ -103,6 +105,10 @@ public class HFSMController extends Controller
 
 		// The bridge the scripts of the machine speak through
 		chaos		= new Chaos ();
+
+		// What the scripts need of the vision
+		ntuple		= new Tuple (Tuple.BEHNEEDS, null);
+		nsaid		= null;
 
 		// Initialize debug modules
 		c_buffer	= new double[3];
@@ -170,6 +176,7 @@ public class HFSMController extends Controller
 
 			file	= f;
 			machine	= m;								// from the next cycle on
+			nsaid	= null;								// another machine: the vision is told what this one needs
 			if (monitor != null)				monitor.setMachine (m);
 			return true;
 		}
@@ -224,12 +231,49 @@ public class HFSMController extends Controller
 
 		if (machine != null)				machine.reset ();
 		chaos.clear ();
+		nsaid		= null;									// and the vision is told again what it needs
 		has_goal	= autostart;
 		has_plan	= false;
 		new_goal	= false;
 		path		= null;
 		idtask		= 0;
 		new_id		= 0;
+	}
+
+	/**
+	 * Tells the vision what the scripts of the machine need of it (BEH_NEEDS): the
+	 * scan of the camera asked for on this cycle (chaos.setScanType), SCAN_NONE when
+	 * none was, and the objects it needs to keep seeing and how much
+	 * (chaos.setNeeded), by the names the LPS knows them by. It is written when it
+	 * is not what the vision was last told, and on the first cycle, so that a
+	 * vision that starts scanning on its own is told to stop unless a script says
+	 * otherwise. It is the same the program of a {@link tclib.behaviours.lua.LuaController} does.
+	 */
+	protected void needs ()
+	{
+		ItemBehNeeds.ScanTypes	scan = chaos.scanType ();
+		String[]				names = chaos.lpoNames ();
+		StringBuilder			said = new StringBuilder (scan.name ());
+		java.util.List<Integer>	idx = new java.util.ArrayList<Integer> (chaos.needed ().keySet ());
+
+		java.util.Collections.sort (idx);
+		for (Integer i : idx)
+			if ((i >= 0) && (i < names.length))
+				said.append (' ').append (names[i]).append ('=').append (chaos.needed ().get (i));
+		if (said.toString ().equals (nsaid))		return;
+
+		// a new item every time: a shared Linda hands the reader the very object, and
+		// one filled in again underneath it could be read half done
+		ItemBehNeeds	nitem = new ItemBehNeeds ();
+
+		nitem.changeScan (scan);
+		for (Integer i : idx)
+			if ((i >= 0) && (i < names.length))
+				nitem.addNeed (names[i], chaos.needed ().get (i), System.currentTimeMillis ());
+		nitem.set (System.currentTimeMillis ());
+		ntuple.value	= nitem;
+		linda.write (ntuple);
+		nsaid	= said.toString ();
 	}
 
 	protected void controller ()
@@ -288,6 +332,9 @@ public class HFSMController extends Controller
 
 		if (m == null)							{ setMotion (0.0, 0.0, 0.0);	return; }
 		m.step ();
+
+		// What the scripts need of the vision
+		needs ();
 
 		// What the scripts commanded
 		vlin	= chaos.linear ();
