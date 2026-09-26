@@ -33,7 +33,8 @@ import wucore.utils.math.*;
  * <pre>
  *   PRG         the .xas file of the machine
  *   BEH         the folder the behaviours the states name are read from
- *               (default ./conf/programs/lua)
+ *               (default: what the machine says in its file, behpath, else
+ *               the folder of the machine)
  *   LPOS        the objects of the LPS the scripts ask for by number,
  *               separated by commas (default Ball, Net1, Net2, Align, Looka)
  *   AUTO        run from the first cycle, with no plan

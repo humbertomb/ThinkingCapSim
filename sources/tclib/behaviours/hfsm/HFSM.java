@@ -33,9 +33,6 @@ import tclib.behaviours.lua.interpreter.LuaState;
  */
 public class HFSM
 {
-	/** Where the behaviours the states name are looked for, when nothing else is said. */
-	static public final String		BEHAVIOURS	= "./conf/programs/lua";
-
 	// The machine
 	protected MetaState				root;
 	protected File					file;
@@ -48,7 +45,7 @@ public class HFSM
 	// How it is run
 	protected LuaState				lua;
 	protected Chaos					chaos;
-	protected String				behaviours = BEHAVIOURS;
+	protected String				behaviours;					// where the behaviours the states name are: what the file says, else the folder of the file
 	protected Map<String, LuaScript>	library = new HashMap<String, LuaScript> ();
 	protected List<String>			missing = new ArrayList<String> ();
 
@@ -79,6 +76,7 @@ public class HFSM
 			this.root		= machine.root;
 			this.vars		= machine.vars;
 			this.problems	= machine.problems;
+			this.behaviours	= machine.behpath;
 		}
 		else
 		{
@@ -89,6 +87,9 @@ public class HFSM
 			this.problems	= parser.problems ();
 			this.root.loadCode (file.getParent ());
 		}
+		// a machine that does not say where its behaviours are has them beside it
+		if (this.behaviours == null)
+			this.behaviours	= (file.getAbsoluteFile ().getParent () != null) ? file.getAbsoluteFile ().getParent () : ".";
 		this.root.sortAll ();
 		this.root.compileAll (this.problems);
 
@@ -115,8 +116,8 @@ public class HFSM
 
 	public void debug (boolean d)						{ debug = d; }
 
-	/** Where the behaviours the states name are looked for. */
-	public void behaviours (String path)				{ behaviours = path;	library.clear (); }
+	/** Where the behaviours the states name are looked for: what the module was told (BEH), else what the file says (behpath), else the folder of the file. */
+	public void behaviours (String path)				{ if ((path != null) && (path.trim ().length () > 0))	{ behaviours = path.trim ();	library.clear ();	missing.clear (); } }
 	public String behaviours ()							{ return behaviours; }
 
 	/** The constants the file declares, as globals of the interpreter. */

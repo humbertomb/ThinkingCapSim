@@ -42,6 +42,7 @@ import tclib.behaviours.hfsm.Transition;
 import tclib.behaviours.hfsm.XMLParser;
 import tclib.behaviours.hfsm.XMLWriter;
 import tclib.behaviours.lua.gui.CodeEditor;
+import tclib.behaviours.lua.gui.LuaHelp;
 
 /**
  * The editor of a machine of hierarchical states: the diagram of one level in
@@ -76,6 +77,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	protected MetaState				root;
 	protected File					file;						// the .hfsm it came from, or null
 	protected List<XMLParser.PrivateVar>	vars = new ArrayList<XMLParser.PrivateVar> ();
+	protected String				behpath;					// where the behaviours the states name are (kept in the file); null: not said
 	protected boolean				dirty;
 
 	/* GUI */
@@ -345,6 +347,11 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		{
 			public void run ()		{ priority (); }
 		}));
+		edit.addSeparator ();
+		edit.add (item ("Default path...", null, new Runnable ()
+		{
+			public void run ()		{ defaultPath (); }
+		}));
 		edit.add (item ("Check the machine", null, new Runnable ()
 		{
 			public void run ()		{ check (); }
@@ -360,7 +367,86 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		}));
 		bar.add (view);
 
+		// the scripts of the states are Lua, and speak to the robot as the programs do
+		JMenu		help = new JMenu ("Help");
+
+		help.add (item ("Language", null, new Runnable ()
+		{
+			public void run ()		{ tcapps.tceditor.HelpWindow.show (HFSMPanel.this, LuaHelp.LANGUAGE, LuaHelp.language ()); }
+		}));
+		help.add (item ("Classes", null, new Runnable ()
+		{
+			public void run ()		{ tcapps.tceditor.HelpWindow.show (HFSMPanel.this, LuaHelp.CLASSES, LuaHelp.classes ()); }
+		}));
+		bar.add (help);
+
 		return bar;
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Where the behaviours are                                            */
+	/* ------------------------------------------------------------------ */
+
+	/** Where the behaviours the states name are read from, as the file says it (null: it does not say). */
+	public String behpath ()								{ return behpath; }
+
+	/**
+	 * Asks for the folder the behaviours the states name are read from (the Lua
+	 * programs of <code>chaos.setBehavior</code>), and keeps it with the machine.
+	 * A folder under the working directory is kept relative to it, as the rest of
+	 * the paths of the configuration are, so the file goes from one machine to
+	 * another.
+	 */
+	public void defaultPath ()
+	{
+		JFileChooser	fc = new JFileChooser ();
+		File			now = behavioursFolder ();
+
+		fc.setDialogTitle ("Where the behaviours of the states are");
+		fc.setFileSelectionMode (JFileChooser.DIRECTORIES_ONLY);
+		fc.setAcceptAllFileFilterUsed (false);
+		fc.setApproveButtonText ("Choose folder");
+		if ((now != null) && now.exists ())		fc.setCurrentDirectory (now);
+		else									fc.setCurrentDirectory (new File ("."));
+		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+
+		File		chosen = fc.getSelectedFile ();
+
+		if ((chosen == null) || !chosen.isDirectory ())		return;
+		behpath	= relative (chosen);
+		dirty	= true;
+		refresh ();
+		status ("The behaviours are read from " + behpath);
+	}
+
+	/** The folder the behaviours are in now: what the machine says, else where it lives, else nothing. */
+	protected File behavioursFolder ()
+	{
+		if (behpath != null)						return new File (behpath);
+		if ((file != null) && (file.getAbsoluteFile ().getParentFile () != null))		return file.getAbsoluteFile ().getParentFile ();
+		return null;
+	}
+
+	/** A folder as it is written in the file: under the working directory, as ./..., and otherwise as it is. */
+	static protected String relative (File dir)
+	{
+		try
+		{
+			java.nio.file.Path	cwd = new File (".").getCanonicalFile ().toPath ();
+			java.nio.file.Path	p = dir.getCanonicalFile ().toPath ();
+
+			if (p.startsWith (cwd))
+			{
+				String	rel = cwd.relativize (p).toString ().replace (File.separatorChar, '/');
+
+				return (rel.length () == 0) ? "." : ("./" + rel);
+			}
+			return p.toString ();
+		}
+		catch (Exception e)
+		{
+			return dir.getPath ();
+		}
 	}
 
 	private JMenuItem item (String name, KeyStroke key, final Runnable what)
@@ -386,6 +472,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		root	= newMachine ();
 		file	= null;
 		vars	= new ArrayList<XMLParser.PrivateVar> ();
+		behpath	= null;
 		dirty	= false;
 		canvas.setMachine (root);
 		refresh ();
@@ -460,6 +547,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	{
 		root	= machine.root;
 		vars	= machine.vars;
+		behpath	= machine.behpath;
 		file	= f;
 		dirty	= false;
 		canvas.setMachine (root);
@@ -511,7 +599,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 			int		dot = name.lastIndexOf ('.');
 
 			root.setName ((dot > 0) ? name.substring (0, dot) : name);
-			HFSMJson.write (root, f, vars);
+			HFSMJson.write (root, f, vars, behpath);
 			file	= f;
 			dirty	= false;
 			refresh ();
@@ -588,7 +676,12 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		}
 	}
 
-	/** Says what is wrong with the machine, if anything, and whether its scripts are Lua. */
+	/**
+	 * Says what is wrong with the machine, if anything: how it is put together,
+	 * whether its scripts are Lua, and whether the behaviours they name
+	 * (<code>chaos.setBehavior ("name")</code>) are there to be run, as
+	 * <code>name.lua</code> in the folder of the behaviours.
+	 */
 	protected void check ()
 	{
 		List<String>	problems = new ArrayList<String> ();
@@ -598,9 +691,60 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 			for (String line : root.getError ().split ("\n"))
 				if (line.trim ().length () > 0)		problems.add (line.trim ());
 		root.compileAll (problems);
+		checkBehaviours (problems);
 
 		JOptionPane.showMessageDialog (this, problems.isEmpty () ? "The machine is correct." : join (problems), TITLE,
 									   problems.isEmpty () ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
+	}
+
+	/** What a script says to run a behaviour, with the name of it: chaos.setBehavior ("name") or setBehaviour. */
+	static private final java.util.regex.Pattern	SET_BEHAVIOUR =
+		java.util.regex.Pattern.compile ("setBehaviou?r\\s*\\(\\s*([\"'])([^\"']*)\\1\\s*\\)");
+
+	/** The behaviours every script of the machine names, in the order they are met, each once. */
+	static public List<String> behaviours (MetaState root)
+	{
+		List<String>	names = new ArrayList<String> ();
+
+		for (State s : HFSMEdit.all (root))
+			named (s.getCode (), names);
+		for (Transition t : HFSMEdit.transitions (root))
+		{
+			named (t.getTestCode (), names);
+			named (t.getDoCode (), names);
+		}
+		return names;
+	}
+
+	static private void named (String code, List<String> names)
+	{
+		if (code == null)						return;
+
+		// what is commented out is not run: the block comments go, then the line ones
+		code	= code.replaceAll ("(?s)--\\[\\[.*?\\]\\]", " ").replaceAll ("(?m)--.*$", "");
+
+		java.util.regex.Matcher	m = SET_BEHAVIOUR.matcher (code);
+
+		while (m.find ())
+			if ((m.group (2).length () > 0) && !names.contains (m.group (2)))		names.add (m.group (2));
+	}
+
+	/** Whether every behaviour the scripts name is a Lua program in the folder of the behaviours. */
+	protected void checkBehaviours (List<String> problems)
+	{
+		List<String>	names = behaviours (root);
+		File			dir = behavioursFolder ();
+
+		if (names.isEmpty ())					return;
+		if ((dir == null) || !dir.isDirectory ())
+		{
+			problems.add ("The behaviours " + names + " cannot be checked: "
+						  + ((dir == null) ? "the machine says no folder for them (Edit > Default path...)" : ("there is no folder " + dir)));
+			return;
+		}
+		for (String n : names)
+			if (!new File (dir, n + ".lua").isFile ())
+				problems.add ("Behaviour <" + n + "> is not in " + dir + " (no " + n + ".lua)");
 	}
 
 	static private String join (List<String> lines)

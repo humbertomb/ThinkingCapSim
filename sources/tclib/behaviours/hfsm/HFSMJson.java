@@ -29,6 +29,7 @@ import com.google.gson.JsonParser;
  * <pre>
  *   {
  *     "name": "gk",
+ *     "behpath": "./conf/programs/lua/aibo-soccer",
  *     "vars": [ { "name": "BALL_CLOSE", "type": "int", "value": "600" } ],
  *     "machine": {
  *       "name": "gk", "id": 0, "initial": "InitialGK",
@@ -45,7 +46,9 @@ import com.google.gson.JsonParser;
  *
  * A transition says where it arrives both by name and by id, and is read by id
  * first, so that a machine whose states were renamed by hand still holds
- * together.
+ * together. <code>behpath</code> is the folder the behaviours the states name
+ * (<code>chaos.setBehavior</code>) are read from, as Lua programs; a machine
+ * that says none is run with the folder its module is given (BEH), or its own.
  */
 public class HFSMJson
 {
@@ -55,6 +58,7 @@ public class HFSMJson
 		public MetaState						root;
 		public List<XMLParser.PrivateVar>		vars = new ArrayList<XMLParser.PrivateVar> ();
 		public List<String>						problems = new ArrayList<String> ();
+		public String							behpath;						// where its behaviours are (null: it does not say)
 	}
 
 	/** How a file of a machine is named. */
@@ -72,23 +76,40 @@ public class HFSMJson
 	/** The machine into a file. */
 	static public void write (MetaState root, File file, List<XMLParser.PrivateVar> vars) throws Exception
 	{
+		write (root, file, vars, null);
+	}
+
+	/** The machine into a file, with where its behaviours are (null: it does not say). */
+	static public void write (MetaState root, File file, List<XMLParser.PrivateVar> vars, String behpath) throws Exception
+	{
 		File			dir = file.getParentFile ();
 
 		if ((dir != null) && !dir.exists ())	dir.mkdirs ();
-		Files.write (file.toPath (), text (root, vars).getBytes (StandardCharsets.UTF_8));
+		Files.write (file.toPath (), text (root, vars, behpath).getBytes (StandardCharsets.UTF_8));
 	}
 
 	/** The text of the file. */
 	static public String text (MetaState root, List<XMLParser.PrivateVar> vars)
 	{
-		return GSON.toJson (toJson (root, vars)) + "\n";
+		return text (root, vars, null);
+	}
+
+	static public String text (MetaState root, List<XMLParser.PrivateVar> vars, String behpath)
+	{
+		return GSON.toJson (toJson (root, vars, behpath)) + "\n";
 	}
 
 	static public JsonObject toJson (MetaState root, List<XMLParser.PrivateVar> vars)
 	{
+		return toJson (root, vars, null);
+	}
+
+	static public JsonObject toJson (MetaState root, List<XMLParser.PrivateVar> vars, String behpath)
+	{
 		JsonObject		o = new JsonObject ();
 
 		o.addProperty ("name", root.getName ());
+		if ((behpath != null) && (behpath.trim ().length () > 0))		o.addProperty ("behpath", behpath.trim ());
 		if ((vars != null) && !vars.isEmpty ())
 		{
 			JsonArray	arr = new JsonArray ();
@@ -193,6 +214,8 @@ public class HFSMJson
 		Machine				out = new Machine ();
 		JsonElement			m = o.get ("machine");
 
+		out.behpath	= string (o, "behpath", null);
+		if ((out.behpath != null) && (out.behpath.trim ().length () == 0))		out.behpath = null;
 		for (JsonElement e : array (o, "vars"))
 		{
 			JsonObject				vo = e.getAsJsonObject ();
