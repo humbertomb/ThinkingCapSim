@@ -45,7 +45,9 @@ public class HFSMController extends Controller
 	static public final String		PREFFIX			= "HFSM_";
 
 	// The machine of states and the bridge its scripts speak through
-	protected HFSM					machine;
+	protected volatile HFSM			machine;
+	protected java.io.File			file;						// the file the machine came from
+	protected String				behs;						// the folder of the behaviours the settings say (BEH), or null
 	protected Chaos					chaos;
 
 	// Controller debug
@@ -129,33 +131,59 @@ public class HFSMController extends Controller
 	protected void parse (ModuleConfig cfg)
 	{
 		String			name = cfg.get ("PRG");
-		String			behs = cfg.get ("BEH");
 		String			lpos = cfg.get ("LPOS");
 
+		behs	= cfg.get ("BEH");
+		if (lpos != null)						chaos.lpoNames (lpos.split ("[,;\\s]+"));
 		if (name == null)						return;
 
+		if (load (new java.io.File (name)) && localgfx)
+		{
+			openMotionPlot (c_plot, c_labels);
+			monitor	= tclib.behaviours.hfsm.gui.HFSMMonitorWindow.open (machine, cfg.robot (), new tclib.behaviours.hfsm.gui.HFSMMonitorWindow.Reload ()
+			{
+				public void reload ()						{ HFSMController.this.reload (); }
+				public void load (java.io.File f)			{ HFSMController.this.load (f); }
+			});
+		}
+	}
+
+	/**
+	 * Loads a machine from a file and runs it from the next cycle on, in the place
+	 * of the one running: from its initial state, with an interpreter of its own,
+	 * and through the same bridge. The monitor, if it is open, is told. False when
+	 * the file cannot be read, and the machine running goes on.
+	 */
+	public boolean load (java.io.File f)
+	{
 		try
 		{
-			machine	= new HFSM (new java.io.File (name), chaos);
-			machine.debug (debug);
-			if (behs != null)					machine.behaviours (behs);
-			if (lpos != null)					chaos.lpoNames (lpos.split ("[,;\\s]+"));
+			HFSM	m = new HFSM (f, chaos);
 
-			System.out.println ("  [HFSM] Machine <" + machine.root ().getName () + ">: " + machine.summary ());
-			for (String p : machine.problems ())
+			m.debug (debug);
+			if (behs != null)					m.behaviours (behs);
+
+			System.out.println ("  [HFSM] Machine <" + m.root ().getName () + ">: " + m.summary ()
+								+ ", behaviours from " + m.behaviours ());
+			for (String p : m.problems ())
 				System.out.println ("  [HFSM] " + p);
 
-			if (localgfx)
-			{
-				openMotionPlot (c_plot, c_labels);
-				monitor	= tclib.behaviours.hfsm.gui.HFSMMonitorWindow.open (machine, cfg.robot ());
-			}
+			file	= f;
+			machine	= m;								// from the next cycle on
+			if (monitor != null)				monitor.setMachine (m);
+			return true;
 		}
 		catch (Exception e)
 		{
-			machine	= null;
-			System.out.println ("  [HFSM] Cannot load <" + name + ">: " + e);
+			System.out.println ("  [HFSM] Cannot load <" + f + ">: " + e);
+			return false;
 		}
+	}
+
+	/** Reads the machine again from its file: it was written (the editor of the monitor). */
+	public boolean reload ()
+	{
+		return (file != null) && load (file);
 	}
 
 	/** The machine being run, or null when none could be loaded. */
@@ -254,8 +282,12 @@ public class HFSMController extends Controller
 			chaos.desired ().set (plan.tpos);
 
 		// One cycle of the machine: a transition if one is due, the script of the
-		// state it ends in, and the behaviour that state chose
-		machine.step ();
+		// state it ends in, and the behaviour that state chose -- of the machine
+		// there is now, which the monitor may have changed for another
+		HFSM		m = machine;
+
+		if (m == null)							{ setMotion (0.0, 0.0, 0.0);	return; }
+		m.step ();
 
 		// What the scripts commanded
 		vlin	= chaos.linear ();

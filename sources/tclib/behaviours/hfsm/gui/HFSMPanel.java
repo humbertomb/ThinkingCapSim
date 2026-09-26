@@ -73,6 +73,16 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		public void editorStateChanged (HFSMPanel editor);
 	}
 
+	/** Whoever wants to know when a machine is written to a file (the monitor, which has it read again). */
+	public interface Saved
+	{
+		public void saved (File f);
+	}
+
+	protected Saved					onSave;
+
+	public void setOnSave (Saved s)					{ onSave = s; }
+
 	/* Model */
 	protected MetaState				root;
 	protected File					file;						// the .hfsm it came from, or null
@@ -608,6 +618,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 			dirty	= false;
 			refresh ();
 			status ("Saved " + f.getName () + " in " + f.getParent ());
+			if (onSave != null)					onSave.saved (f);
 			return true;
 		}
 		catch (Exception e)

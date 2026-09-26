@@ -28,6 +28,7 @@ public class HFSEditorMWindow extends JFrame implements HFSMPanel.Host
 	static public final String		TITLE		= HFSMPanel.TITLE;
 
 	protected HFSMPanel				editor;
+	protected boolean				standalone;					// the program is this window: closing it ends it
 
 	public HFSEditorMWindow ()
 	{
@@ -36,7 +37,19 @@ public class HFSEditorMWindow extends JFrame implements HFSMPanel.Host
 
 	public HFSEditorMWindow (File file)
 	{
+		this (file, true);
+	}
+
+	/**
+	 * @param standalone  true when the window is the program (closing it exits);
+	 *                    false when it is opened from elsewhere, as by the monitor
+	 *                    of a running machine, and closing it just closes it
+	 */
+	public HFSEditorMWindow (File file, boolean standalone)
+	{
 		super (TITLE);
+
+		this.standalone	= standalone;
 
 		editor	= new HFSMPanel (HFSMPanel.newMachine (), null, this);
 		getContentPane ().setLayout (new BorderLayout ());
@@ -64,12 +77,15 @@ public class HFSEditorMWindow extends JFrame implements HFSMPanel.Host
 		setTitle (TITLE + " - " + ed.getTitle ());
 	}
 
-	/** Closes the window, asking about the work in hand when it was changed. */
+	/** Whether the work in hand may be thrown away (asks when it was changed). */
+	public boolean confirmDiscard ()				{ return editor.confirmDiscard (); }
+
+	/** Closes the window, asking about the work in hand when it was changed; the program ends with it when it is the program. */
 	public void quit ()
 	{
 		if (!editor.confirmDiscard ())			return;
 		dispose ();
-		System.exit (0);
+		if (standalone)							System.exit (0);
 	}
 
 	static public void main (String[] args)

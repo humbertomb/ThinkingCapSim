@@ -27,11 +27,13 @@ import tclib.behaviours.hfsm.State;
  * A look at a machine of states while it runs: the diagram of one level, with
  * the state the machine is in, and the meta states that hold it, drawn in red.
  *
- * Nothing of the machine can be changed here: a double click on a meta state
- * goes into it and a double click on the background comes back out, which is
- * all there is to do. Where the machine is is read on its own, every
- * {@link #PERIOD} milliseconds, so the module that runs the machine has nothing
- * to tell it.
+ * Nothing of the machine can be changed on the diagram: a double click on a
+ * meta state goes into it and a double click on the background comes back out.
+ * The tool bar is where things are done: the button opens the editor on the
+ * machine (what is saved there is read again by the robot), and the selector
+ * runs another of the machines kept beside it. Where the machine is is read on
+ * its own, every {@link #PERIOD} milliseconds, so the module that runs the
+ * machine has nothing to tell it.
  */
 public class HFSMMonitorWindow extends JFrame
 {
@@ -42,25 +44,52 @@ public class HFSMMonitorWindow extends JFrame
 
 	static private final Color		C_LIVE		= new Color (200, 40, 40);
 
+	/** What the monitor asks of whoever runs the machine. */
+	public interface Reload
+	{
+		/** Read the machine again: its file was written. */
+		public void reload ();
+		/** Run this machine instead, from the next cycle on. */
+		public void load (java.io.File machine);
+	}
+
 	protected HFSM					machine;
+	protected String				robot;
+	protected Reload				reload;
 	protected HFSMCanvas			canvas;
 	protected JLabel				where;
 	protected JLabel				level;
 	protected Timer					timer;
 	protected boolean				fitted;						// the diagram was put in view once the window had a size
 
+	protected HFSEditorMWindow		editor;						// the one editor of the machine, while it is open
+	protected javax.swing.JButton	edit;
+	protected javax.swing.JComboBox<String>	machines;			// the machines of the folder of the one running
+	protected boolean				choosing;					// the selector is being filled in, which is nobody's choice
+
 	public HFSMMonitorWindow (HFSM machine)
 	{
-		this (machine, null);
+		this (machine, null, null);
 	}
 
-	/** Watches a machine, the window named after the robot that runs it. */
 	public HFSMMonitorWindow (HFSM machine, String robot)
 	{
-		super ("HFSM Monitor" + ((robot != null) ? (" [" + robot + "]") : "")
-			   + ((machine != null) ? (": " + machine.root ().getName ()) : ""));
+		this (machine, robot, null);
+	}
+
+	/**
+	 * Watches a machine, the window named after the robot that runs it.
+	 *
+	 * @param reload  whoever runs the machine, to have it read again or another run (null: the tool bar does nothing)
+	 */
+	public HFSMMonitorWindow (HFSM machine, String robot, Reload reload)
+	{
+		super ("");
 
 		this.machine	= machine;
+		this.robot		= robot;
+		this.reload		= reload;
+		setTitle (title ());
 
 		canvas	= new HFSMCanvas ((machine != null) ? machine.root () : new MetaState ("nothing", 0));
 		canvas.setWatching (true);
@@ -98,6 +127,7 @@ public class HFSMMonitorWindow extends JFrame
 		});
 
 		getContentPane ().setLayout (new BorderLayout ());
+		getContentPane ().add (buildToolBar (), BorderLayout.NORTH);
 		getContentPane ().add (canvas, BorderLayout.CENTER);
 		getContentPane ().add (bar, BorderLayout.SOUTH);
 		setDefaultCloseOperation (DISPOSE_ON_CLOSE);
@@ -115,6 +145,197 @@ public class HFSMMonitorWindow extends JFrame
 
 	public final HFSM				machine ()			{ return machine; }
 	public final HFSMCanvas			getCanvas ()		{ return canvas; }
+	/** The editor of the machine while it is open, null when it is not. */
+	public final HFSEditorMWindow	getEditor ()		{ return editor; }
+	/** The file of the machine being watched, or null. */
+	public final java.io.File		getFile ()			{ return (machine != null) ? machine.file () : null; }
+
+	/** What the title bar says. */
+	protected String title ()
+	{
+		return "HFSM Monitor" + ((robot != null) ? (" [" + robot + "]") : "")
+			   + ((machine != null) ? (": " + machine.root ().getName ()) : "");
+	}
+
+	/**
+	 * Another machine is being run (read again, or another file): the diagram is
+	 * the one of it from now on. Whoever runs the machine says so once it has it.
+	 */
+	public void setMachine (final HFSM m)
+	{
+		Runnable	r = new Runnable ()
+		{
+			public void run ()
+			{
+				machine	= m;
+				canvas.setMachine ((m != null) ? m.root () : new MetaState ("nothing", 0));
+				setTitle (title ());
+				fillMachines ();
+				refresh ();
+			}
+		};
+
+		if (SwingUtilities.isEventDispatchThread ())	r.run ();
+		else											SwingUtilities.invokeLater (r);
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* The tool bar                                                        */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * What there is to do from here: edit the machine that is running, and run
+	 * another of the ones that are kept beside it.
+	 */
+	protected javax.swing.JToolBar buildToolBar ()
+	{
+		javax.swing.JToolBar	tb = new javax.swing.JToolBar ();
+
+		tb.setFloatable (false);
+		tb.setBorder (BorderFactory.createEmptyBorder (2, 4, 2, 4));
+		tb.add (editButton ());
+		tb.add (javax.swing.Box.createHorizontalGlue ());		// the selector goes on the right
+		tb.add (new JLabel ("State Machine "));
+		tb.add (machinesBox ());
+		return tb;
+	}
+
+	/** The button that edits the machine: the icon alone, with no border around it. */
+	protected javax.swing.JButton editButton ()
+	{
+		edit	= new javax.swing.JButton (new tclib.behaviours.lua.gui.LuaMonitorWindow.EditorIcon ());
+		edit.setToolTipText ("Edit the state machine (it is read again when saved)");
+		edit.setEnabled (getFile () != null);
+		edit.setFocusable (false);
+		edit.setBorderPainted (false);							// the icon says it all
+		edit.setContentAreaFilled (false);
+		edit.setFocusPainted (false);
+		edit.setBorder (BorderFactory.createEmptyBorder (2, 2, 2, 2));
+		edit.setMargin (new java.awt.Insets (0, 0, 0, 0));
+		edit.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ edit (); }
+		});
+		return edit;
+	}
+
+	/** The machines of the folder the one running is kept in, to run another of them. */
+	protected javax.swing.JComboBox<String> machinesBox ()
+	{
+		machines	= new javax.swing.JComboBox<String> ();
+		machines.setToolTipText ("The state machines beside this one: choosing another runs it");
+		machines.setMaximumSize (new Dimension (220, 24));
+		machines.setPreferredSize (new Dimension (200, 24));
+		machines.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)
+			{
+				if (choosing)						return;
+				chose ((String) machines.getSelectedItem ());
+			}
+		});
+		fillMachines ();
+		return machines;
+	}
+
+	/** Every .hfsm of the folder of the machine being run, the one running selected. */
+	protected void fillMachines ()
+	{
+		if (machines == null)						return;
+
+		java.io.File		file = getFile ();
+		java.io.File		dir = (file != null) ? file.getAbsoluteFile ().getParentFile () : null;
+		String[]			names = (dir != null) ? dir.list (new java.io.FilenameFilter ()
+		{
+			public boolean accept (java.io.File d, String name)		{ return name.toLowerCase ().endsWith (tclib.behaviours.hfsm.HFSMJson.SUFFIX); }
+		}) : null;
+
+		if (names == null)							names = new String[0];
+		java.util.Arrays.sort (names, String.CASE_INSENSITIVE_ORDER);
+
+		choosing	= true;
+		machines.setModel (new javax.swing.DefaultComboBoxModel<String> (names));
+		if (file != null)							machines.setSelectedItem (file.getName ());
+		machines.setEnabled ((file != null) && (reload != null));
+		if (edit != null)							edit.setEnabled (file != null);
+		choosing	= false;
+	}
+
+	/**
+	 * Another machine of the folder was chosen: it is the one the robot runs from
+	 * now on, and the one the editor is on, if it is open (what was being written
+	 * there is offered to be saved first).
+	 */
+	protected void chose (String name)
+	{
+		java.io.File		file = getFile ();
+
+		if ((name == null) || (file == null) || (reload == null))		return;
+
+		java.io.File		chosen = new java.io.File (file.getAbsoluteFile ().getParentFile (), name);
+
+		if (chosen.getAbsolutePath ().equals (file.getAbsolutePath ()))		return;
+		if ((editor != null) && editor.isDisplayable () && !editor.confirmDiscard ())
+		{
+			fillMachines ();						// it was not to be: the selector says what is running
+			return;
+		}
+		reload.load (chosen);						// whoever runs it says so with setMachine, and the diagram follows
+		if ((editor != null) && editor.isDisplayable ())
+		{
+			editor.load (chosen);
+			editor.toFront ();
+		}
+	}
+
+	/**
+	 * Opens the editor on the machine being run, beside this window (its top left
+	 * against the top right of this one), and has whoever runs the machine read it
+	 * again every time it is saved. There is one editor: asking again brings the one
+	 * that is open to the front.
+	 */
+	public HFSEditorMWindow edit ()
+	{
+		final java.io.File	file = getFile ();
+
+		if (file == null)						return null;
+		if ((editor != null) && editor.isDisplayable ())
+		{
+			editor.toFront ();
+			editor.requestFocus ();
+			return editor;
+		}
+
+		final HFSEditorMWindow	w = new HFSEditorMWindow (file, false);
+
+		w.getEditor ().setOnSave (new HFSMPanel.Saved ()
+		{
+			public void saved (java.io.File f)
+			{
+				java.io.File	now = getFile ();
+				boolean			same = (now != null) && now.getAbsolutePath ().equals (f.getAbsolutePath ());
+
+				if (same && (reload != null))		reload.reload ();	// what was just written is what runs
+				else if (reload != null)			reload.load (f);	// saved as another: that is the machine now
+			}
+		});
+		beside (w);
+		w.setVisible (true);
+		editor	= w;
+		return w;
+	}
+
+	/** Puts a window against the top right side of this one, on the screen if it fits. */
+	protected void beside (JFrame w)
+	{
+		java.awt.Rectangle	screen = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment ().getMaximumWindowBounds ();
+		int					x = getX () + getWidth ();
+		int					y = getY ();
+
+		if ((x + w.getWidth ()) > (screen.x + screen.width))			// no room on the right: as far right as it goes
+			x	= Math.max (screen.x, screen.x + screen.width - w.getWidth ());
+		w.setLocation (x, y);
+	}
 
 	/** Where the machine is now, straight onto the diagram. */
 	public void refresh ()
@@ -146,6 +367,7 @@ public class HFSMMonitorWindow extends JFrame
 			public void run ()
 			{
 				if (timer != null)			timer.stop ();
+				if (editor != null)			{ editor.dispose ();	editor = null; }
 				setVisible (false);
 				dispose ();
 			}
@@ -161,6 +383,11 @@ public class HFSMMonitorWindow extends JFrame
 	/** Watches a machine of states run, as a window of its own. */
 	static public HFSMMonitorWindow open (final HFSM machine, final String robot)
 	{
+		return open (machine, robot, null);
+	}
+
+	static public HFSMMonitorWindow open (final HFSM machine, final String robot, final Reload reload)
+	{
 		final HFSMMonitorWindow[]	w = new HFSMMonitorWindow[1];
 
 		try
@@ -169,7 +396,7 @@ public class HFSMMonitorWindow extends JFrame
 			{
 				public void run ()
 				{
-					w[0]	= new HFSMMonitorWindow (machine, robot);
+					w[0]	= new HFSMMonitorWindow (machine, robot, reload);
 					w[0].setVisible (true);
 				}
 			});
