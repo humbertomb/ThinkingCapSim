@@ -69,6 +69,7 @@ public class SoccerVision extends Perception
 	private int							scan_step = 0;		// where the scan is, 0 .. SCAN_STEPS (both ends of the pan included)
 	private int							scan_dir = 1;		// which way it goes: +1 towards +pan max, -1 back towards -pan max
 	private int							scan_full = 0;		// a full scan: which of LOW (0), MID (1) and HIGH (2) this sweep of the pan is
+	private int							scan_full_dir = 1;	// ... and which way the tilt goes next: up (+1) towards HIGH, down (-1) towards LOW
 	private double						scan_max_pan = 0.0;
 	private double						scan_max_tilt = 0.0;	
 	protected CameraCtrl				camera_ctrl;
@@ -601,8 +602,10 @@ public class SoccerVision extends Perception
 	 * sweeps from -pan max to +pan max in SCAN_STEPS steps and then back the same
 	 * way, end to end and over again, so the camera never jumps from one end to
 	 * the other; the tilt is the one of the kind of scan. A full scan is the three
-	 * of them in turn: one sweep of the pan low, the next in the middle, the next
-	 * high, and low again -- the tilt changes at the ends of the pan.
+	 * of them in turn, up and down: one sweep of the pan low, the next in the
+	 * middle, the next high, then the middle again, low again and so on
+	 * (LOW, MID, HIGH, MID, LOW, ...), so the tilt never jumps from one end to
+	 * the other either -- it changes at the ends of the pan.
 	 */
 	protected void do_scan_pattern ()
 	{
@@ -625,10 +628,18 @@ public class SoccerVision extends Perception
 		linda.write (ctuple);
 		
 		// the next step: on to the end, and back from it -- and at the end of a
-		// sweep, a full scan goes on to the next tilt
+		// sweep, a full scan goes on to the next tilt, up to HIGH and back down to LOW
 		scan_step	+= scan_dir;
-		if (scan_step >= SCAN_STEPS)		{ scan_step = SCAN_STEPS;	scan_dir = -1;	scan_full = (scan_full + 1) % 3; }
-		else if (scan_step <= 0)			{ scan_step = 0;			scan_dir = 1;	scan_full = (scan_full + 1) % 3; }
+		if (scan_step >= SCAN_STEPS)		{ scan_step = SCAN_STEPS;	scan_dir = -1;	nextTilt (); }
+		else if (scan_step <= 0)			{ scan_step = 0;			scan_dir = 1;	nextTilt (); }
+	}
+
+	/** The tilt of the next sweep of a full scan: LOW, MID, HIGH, MID, LOW, ... */
+	private void nextTilt ()
+	{
+		scan_full	+= scan_full_dir;
+		if (scan_full >= 2)					{ scan_full = 2;	scan_full_dir = -1; }
+		else if (scan_full <= 0)			{ scan_full = 0;	scan_full_dir = 1; }
 	}
 
 	/** The tilt of a kind of scan: low (0), in the middle (1) or high (2), as shares of the tilt max. */
