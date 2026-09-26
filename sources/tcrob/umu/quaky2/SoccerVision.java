@@ -61,6 +61,7 @@ public class SoccerVision extends Perception
 	public ScanTypes					scan = ScanTypes.SCAN_HIGH;
 	private int							scan_step = 0;		// where the scan is, 0 .. SCAN_STEPS (both ends of the pan included)
 	private int							scan_dir = 1;		// which way it goes: +1 towards +pan max, -1 back towards -pan max
+	private int							scan_full = 0;		// a full scan: which of LOW (0), MID (1) and HIGH (2) this sweep of the pan is
 	private double						scan_max_pan = 0.0;
 	private double						scan_max_tilt = 0.0;	
 	protected CameraCtrl				camera_ctrl;
@@ -541,30 +542,46 @@ public class SoccerVision extends Perception
 	 * One step of the scan of the camera, sent to the robot (CAMERA_CTRL): the pan
 	 * sweeps from -pan max to +pan max in SCAN_STEPS steps and then back the same
 	 * way, end to end and over again, so the camera never jumps from one end to
-	 * the other; the tilt is the one of the kind of scan.
+	 * the other; the tilt is the one of the kind of scan. A full scan is the three
+	 * of them in turn: one sweep of the pan low, the next in the middle, the next
+	 * high, and low again -- the tilt changes at the ends of the pan.
 	 */
 	protected void do_scan_pattern ()
 	{
-		double		pan_step, pan;
+		double		pan_step, pan, tilt;
 		
 		pan_step	= scan_max_pan * 2.0 / (double) SCAN_STEPS;
 		pan			= -scan_max_pan + pan_step * scan_step;
 		switch (scan)
 		{
-		case SCAN_NONE:		camera_ctrl.set (0.0, 0.0); break;
-		case SCAN_LOW:		camera_ctrl.set (pan, -scan_max_tilt*0.6); break;
-		case SCAN_MID:		camera_ctrl.set (pan, 0.0); break;
-		case SCAN_HIGH:		camera_ctrl.set (pan, scan_max_tilt*0.8); break;
-		case SCAN_FULL:		camera_ctrl.set (0.0, 0.0); break;
+		case SCAN_LOW:		tilt = tiltOf (0);				break;
+		case SCAN_MID:		tilt = tiltOf (1);				break;
+		case SCAN_HIGH:		tilt = tiltOf (2);				break;
+		case SCAN_FULL:		tilt = tiltOf (scan_full);		break;
+		case SCAN_NONE:
+		default:			pan = 0.0;	tilt = 0.0;			break;
 		}
+		camera_ctrl.set (pan, tilt);
 		
 		citem.set (0, camera_ctrl, System.currentTimeMillis ());
 		linda.write (ctuple);
 		
-		// the next step: on to the end, and back from it
+		// the next step: on to the end, and back from it -- and at the end of a
+		// sweep, a full scan goes on to the next tilt
 		scan_step	+= scan_dir;
-		if (scan_step >= SCAN_STEPS)		{ scan_step = SCAN_STEPS;	scan_dir = -1; }
-		else if (scan_step <= 0)			{ scan_step = 0;			scan_dir = 1; }
+		if (scan_step >= SCAN_STEPS)		{ scan_step = SCAN_STEPS;	scan_dir = -1;	scan_full = (scan_full + 1) % 3; }
+		else if (scan_step <= 0)			{ scan_step = 0;			scan_dir = 1;	scan_full = (scan_full + 1) % 3; }
+	}
+
+	/** The tilt of a kind of scan: low (0), in the middle (1) or high (2), as shares of the tilt max. */
+	protected double tiltOf (int kind)
+	{
+		switch (kind)
+		{
+		case 0:		return -scan_max_tilt * 0.6;
+		case 2:		return  scan_max_tilt * 0.8;
+		default:	return  0.0;
+		}
 	}
 }
 
