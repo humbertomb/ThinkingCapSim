@@ -25,7 +25,12 @@ public class SimMobileObject extends SimObject
 	public double ACC;   // Acceleration (metres per square second)
 	public double MASS = 0.4;  // Mass (Kilograms)
 
-	public double RES_COEF = 0.75; // Restitution coeficient
+	public double RES_COEF = 0.75; // Restitution coeficient (of the world object; the bounces use BOUNCE_LOSS)
+
+	/** The part of the speed an object meets a wall, a robot or another object with that it loses in the bounce. */
+	public final static double	BOUNCE_LOSS	= 0.20;
+	/** What the bounce keeps of the speed of incidence. */
+	public final static double	BOUNCE_KEEP	= 1.0 - BOUNCE_LOSS;
 
 	public double FRIC_COEF = 0.001; // Friction coeficient
 
@@ -78,15 +83,15 @@ public class SimMobileObject extends SimObject
 	public void object_collision (Line2 edge, double xobj, double yobj, double aobj, double vobj, double mobj)
 	{
 		recalc_angle(edge);
-		SPEED=(mobj*SPEED+MASS*Math.abs(vobj)-mobj*RES_COEF*(Math.abs(vobj)-SPEED))/(MASS+mobj);
+		SPEED=(mobj*SPEED+MASS*Math.abs(vobj)-mobj*BOUNCE_KEEP*(Math.abs(vobj)-SPEED))/(MASS+mobj);
 	}
 	
 	/**
 	 * A robot, a disc of radius rradius at (rx, ry) moving at (rvx, rvy) m/s,
 	 * against the object: when they overlap, the object is put out of it (just
 	 * touching it, along the line from its centre) and, if they were getting
-	 * closer, it bounces on it as on a moving wall of infinite mass (keeping
-	 * RES_COEF of the speed they met with, plus the one the robot pushes with).
+	 * closer, it bounces on it as on a moving wall of infinite mass (losing
+	 * BOUNCE_LOSS of the speed they met with, plus the one the robot pushes with).
 	 * Returns whether they touched.
 	 */
 	public boolean robot_collision (double rx, double ry, double rradius, double rvx, double rvy)
@@ -111,18 +116,18 @@ public class SimMobileObject extends SimObject
 		rel		= (vx - rvx) * nx + (vy - rvy) * ny;
 		if (rel < 0.0)
 		{
-			vx		-= (1.0 + RES_COEF) * rel * nx;
-			vy		-= (1.0 + RES_COEF) * rel * ny;
+			vx		-= (1.0 + BOUNCE_KEEP) * rel * nx;
+			vy		-= (1.0 + BOUNCE_KEEP) * rel * ny;
 			SPEED	= Math.sqrt (vx * vx + vy * vy);
 			if (SPEED > 0.0)		odesc.a = Math.atan2 (vy, vx);
 		}
 		return true;
 	}
 
-	/** Indicates odesc.a wall collision */
+	/** Indicates odesc.a wall collision: the object bounces off it, losing BOUNCE_LOSS of the speed it came with. */
 	public void wall_collision (Line2 wall)
 	{
-		SPEED=SPEED*RES_COEF;
+		SPEED=SPEED*BOUNCE_KEEP;
 		recalc_angle(wall);		
 		// Avoid that the ball pass off the wall
 		if (wall.distance(odesc.pos.x(),odesc.pos.y())<= radius)
