@@ -1,7 +1,13 @@
 {
   "apw": true,
   "starts": [
-    { "x": 0, "y": -1.35, "z": 0, "orientation": -155.5843, "radius": 0.1 }
+    { "x": 0, "y": -0.5, "z": 0, "orientation": 90, "radius": 0.1 },
+    { "x": -1.2, "y": -1.4, "z": 0, "orientation": 90, "radius": 0.1 },
+    { "x": 1.2, "y": -1.4, "z": 0, "orientation": 90, "radius": 0.1 },
+    { "x": 0, "y": -2.4, "z": 0, "orientation": 90, "radius": 0.1 },
+    { "x": 2.2, "y": -0.3, "z": 0, "orientation": 180, "radius": 0.1 },
+    { "x": 2.2, "y": -0.8, "z": 0, "orientation": 180, "radius": 0.1 },
+    { "x": 2.2, "y": -1.3, "z": 0, "orientation": 180, "radius": 0.1 }
   ],
   "path": [],
   "walls": {
@@ -128,7 +134,7 @@
     { "icon": "teamchaos", "image": "./conf/2dmodels/teamchaos.jpg", "x": -1, "y": -3.3, "z": 0, "orientation": 180, "color": "gray_dark" }
   ],
   "aobjects": [
-    { "label": "ball", "icon": "ball", "image": "./conf/2dmodels/ball.png", "x": 0, "y": 0, "z": 0.04, "orientation": 0, "radius": 0.04, "color": "gray_dark", "shape": "./conf/3dmodels/aibo-ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.01 }
+    { "label": "ball", "icon": "ball", "image": "./conf/2dmodels/ball.png", "x": 0, "y": 0, "z": 0.04, "orientation": 0, "radius": 0.04, "color": "gray_dark", "shape": "./conf/3dmodels/aibo-ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.01 }
   ],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
