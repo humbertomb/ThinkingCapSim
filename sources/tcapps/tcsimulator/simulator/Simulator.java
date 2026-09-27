@@ -76,6 +76,15 @@ public class Simulator
 	public RobotDesc[]				RDESC;
 	public RobotModel[]				MODEL;
 	public String[]					NAMES		= new String[MAX_ROBOTS];		// what each robot is called (the deployment's name), or null
+	protected double[][][]			BODY		= new double[MAX_ROBOTS][][];	// what each robot collides as (see body ()), made when first needed
+
+	/**
+	 * Whether the actuators of the robots (the fork of a forklift, the arm of a
+	 * manipulator) collide with what is in the world. Off, a robot with an
+	 * actuator collides as its body alone, and puts its fork under a pallet
+	 * without being pushed off it. Set in code; off until it is needed.
+	 */
+	static public boolean			COLLIDE_ACTUATORS	= false;
 	public double[][]				START		= new double[MAX_ROBOTS][];		// where each robot starts (x, y, a), as it was last put there at a reset
 
 	/** Where the i-th robot starts, as {x, y, a}: where it was put at its last reset, or null when it never was. */
@@ -1110,32 +1119,92 @@ public class Simulator
 	}
 
 	/**
-	 * The robot against what it can hit: it is the disc of its radius, and an
-	 * edge it overlaps puts it out of the way (the deepest one first, a few
-	 * times, so that it comes out of a corner too), which is what lets it slide
-	 * along a wall instead of stopping dead against it. Its bumpers are set from
-	 * where it was touched. Returns whether it touched anything.
+	 * What a robot collides as, in its own frame: discs {dx, dy, r}. The one disc
+	 * of its radius at its origin, as a rule. When its actuator is not to collide
+	 * ({@link #COLLIDE_ACTUATORS}) and the robot has one (a 3D model of it) and
+	 * its bumpers outline its body, it is that body instead: discs of half the
+	 * width of the outline, side by side along its length, which leave the fork
+	 * out of the collision and let it go under a pallet.
+	 */
+	protected double[][] body (int robotind)
+	{
+		if (BODY[robotind] != null)			return BODY[robotind];
+
+		RobotDesc		rd = RDESC[robotind];
+		double[][]		discs = { { 0.0, 0.0, rd.RADIUS } };
+		boolean			actuator = (SDESC[robotind] != null) && (SDESC[robotind].V3DLIFT != null);
+
+		if (!COLLIDE_ACTUATORS && actuator && (rd.MAXBUMPER > 0) && (rd.bumfeat != null))
+		{
+			double		x0 = Double.MAX_VALUE, y0 = Double.MAX_VALUE, x1 = -Double.MAX_VALUE, y1 = -Double.MAX_VALUE;
+
+			for (int i = 0; i < rd.MAXBUMPER; i++)
+			{
+				Line2	b = rd.bumfeat[i];
+
+				if (b == null)		continue;
+				x0 = Math.min (x0, Math.min (b.orig ().x (), b.dest ().x ()));	x1 = Math.max (x1, Math.max (b.orig ().x (), b.dest ().x ()));
+				y0 = Math.min (y0, Math.min (b.orig ().y (), b.dest ().y ()));	y1 = Math.max (y1, Math.max (b.orig ().y (), b.dest ().y ()));
+			}
+			if ((x1 > x0) && (y1 > y0))
+			{
+				// the shorter side gives the discs, laid along the longer one from end to end
+				boolean		alongX = (x1 - x0) >= (y1 - y0);
+				double		r = (alongX ? (y1 - y0) : (x1 - x0)) / 2.0;
+				double		from = (alongX ? x0 : y0) + r, to = (alongX ? x1 : y1) - r;
+				double		mid = alongX ? (y0 + y1) / 2.0 : (x0 + x1) / 2.0;
+				int			n = Math.max (1, (int) Math.ceil ((to - from) / r)) + 1;		// no gap wider than the radius between centres
+
+				discs	= new double[n][];
+				for (int i = 0; i < n; i++)
+				{
+					double	c = (n > 1) ? from + (to - from) * i / (n - 1) : (from + to) / 2.0;
+
+					discs[i]	= alongX ? new double[] { c, mid, r } : new double[] { mid, c, r };
+				}
+			}
+		}
+		BODY[robotind]	= discs;
+		return discs;
+	}
+
+	/**
+	 * The robot against what it can hit: it is the disc of its radius (or the
+	 * discs of its body, see {@link #body}), and an edge it overlaps puts it out
+	 * of the way (the deepest one first, a few times, so that it comes out of a
+	 * corner too), which is what lets it slide along a wall instead of stopping
+	 * dead against it. Its bumpers are set from where it was touched. Returns
+	 * whether it touched anything.
 	 */
 	protected boolean collide (int robotind, RobotData data)
 	{
-		double		radius = RDESC[robotind].RADIUS;
+		double[][]	discs = body (robotind);
 		boolean		hit = false;
 
 		if (map == null)		return false;
-		for (int pass = 0; pass < 4; pass++)
+		for (int pass = 0; pass < 6; pass++)
 		{
 			Line2		deepest = null;
 			double[]	where = null;
 			double		into = 0.0;
+			double		cx = 0.0, cy = 0.0;										// the centre of the disc that went deepest
+			double		ca = Math.cos (MODEL[robotind].real_a), sa = Math.sin (MODEL[robotind].real_a);
+			java.util.List<Line2>	edges = obstacles (robotind);
 
-			for (Line2 e : obstacles (robotind))
+			for (double[] d : discs)
 			{
-				double[]	c = closestOn (e, MODEL[robotind].real_x, MODEL[robotind].real_y);
-				if ((radius - c[2] > into) && (radius - c[2] > 1e-6))		{ into = radius - c[2]; deepest = e; where = c; }
+				double	dx = MODEL[robotind].real_x + d[0] * ca - d[1] * sa;
+				double	dy = MODEL[robotind].real_y + d[0] * sa + d[1] * ca;
+
+				for (Line2 e : edges)
+				{
+					double[]	c = closestOn (e, dx, dy);
+					if ((d[2] - c[2] > into) && (d[2] - c[2] > 1e-6))		{ into = d[2] - c[2]; deepest = e; where = c; cx = dx; cy = dy; }
+				}
 			}
 			if (deepest == null)		break;
 
-			double		nx = MODEL[robotind].real_x - where[0], ny = MODEL[robotind].real_y - where[1];
+			double		nx = cx - where[0], ny = cy - where[1];
 			double		n = Math.sqrt (nx * nx + ny * ny);
 
 			if (n < 1e-9)											// dead on the edge: out the way it came from
