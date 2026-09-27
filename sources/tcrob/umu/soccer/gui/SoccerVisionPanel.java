@@ -101,9 +101,11 @@ public class SoccerVisionPanel extends JPanel
 
 		setVisible (true);
 		
-		lutmodeCB.setSelectedIndex (0);
-		segmodeCB.setSelectedIndex (0);
-		blobmodeCB.setSelectedIndex (0);
+		// the methods of the configuration the vision already works with: the
+		// listeners leave alone a choice that changes nothing, so nothing is built twice
+		lutmodeCB.setSelectedIndex (pam.vconfig.lutmode);
+		segmodeCB.setSelectedIndex (pam.vconfig.segmode);
+		blobmodeCB.setSelectedIndex (pam.vconfig.blobmode);
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -331,6 +333,7 @@ public class SoccerVisionPanel extends JPanel
 		lutmodeCB.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e)
 			{
+				if ((lutmodeCB.getSelectedIndex () == pam.vconfig.lutmode) && (pam.lut != null))		return;
 				pam.vconfig.lutmode = lutmodeCB.getSelectedIndex ();
 				pam.instanceLUT ();
 				
@@ -348,6 +351,7 @@ public class SoccerVisionPanel extends JPanel
 		segmodeCB.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e)
 			{
+				if ((segmodeCB.getSelectedIndex () == pam.vconfig.segmode) && (pam.segment != null))	return;
 				pam.vconfig.segmode = segmodeCB.getSelectedIndex ();
 				pam.instanceSegment ();
 
@@ -365,6 +369,7 @@ public class SoccerVisionPanel extends JPanel
 		blobmodeCB.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent e)
 			{
+				if ((blobmodeCB.getSelectedIndex () == pam.vconfig.blobmode) && (pam.blobbing != null))	return;
 				pam.vconfig.blobmode = blobmodeCB.getSelectedIndex ();
 				pam.instanceBlob ();
 				
