@@ -12,7 +12,7 @@
         {
           "name": "Controller",
           "properties": {
-            "CLASS": "tcrob.umu.soccer.SoccerController",
+            "CLASS": "tcrob.umu.soccer.SoccerHfsmController",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",

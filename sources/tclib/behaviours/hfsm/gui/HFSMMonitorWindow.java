@@ -146,7 +146,7 @@ public class HFSMMonitorWindow extends JFrame
 		diagram.add (bar, BorderLayout.SOUTH);
 		diagram.setMinimumSize (new Dimension (100, 80));
 
-		vars	= new LuaVarsPanel ((machine != null) ? machine.lua () : null, (machine != null) ? machine.chaos () : null,
+		vars	= new LuaVarsPanel ((machine != null) ? machine.lua () : null, (machine != null) ? machine.bridge () : null,
 									new LuaVarsPanel.Current ()
 		{
 			public boolean isCurrent (String chunk)		{ return HFSMMonitorWindow.this.isCurrent (chunk); }
@@ -218,7 +218,7 @@ public class HFSMMonitorWindow extends JFrame
 				machine	= m;
 				holder	= null;										// the diagram finds where the new one is
 				canvas.setMachine ((m != null) ? m.root () : new MetaState ("nothing", 0));
-				vars.source ((m != null) ? m.lua () : null, (m != null) ? m.chaos () : null);
+				vars.source ((m != null) ? m.lua () : null, (m != null) ? m.bridge () : null);
 				setTitle (title ());
 				vars.what ((m != null) ? ("machine " + m.root ().getName ()) : null);
 				fillMachines ();
@@ -444,7 +444,7 @@ public class HFSMMonitorWindow extends JFrame
 				if (chunk.startsWith ("transition " + t.ref () + " ("))			return true;
 		}
 
-		String		beh = (m.chaos () != null) ? m.chaos ().behaviour () : null;
+		String		beh = (m.bridge () != null) ? m.bridge ().behaviour () : null;
 
 		return (beh != null) && (chunk.equals (beh + ".lua") || chunk.equals (beh));
 	}

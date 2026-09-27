@@ -19,7 +19,7 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
-import tclib.behaviours.lua.Chaos;
+import tclib.behaviours.lua.LuaBridge;
 import tclib.behaviours.lua.interpreter.LuaState;
 
 /**
@@ -70,7 +70,7 @@ public class LuaMonitorWindow extends JFrame
 	}
 
 	protected LuaState				lua;
-	protected Chaos					chaos;
+	protected LuaBridge				chaos;
 	protected String				program;
 	protected java.io.File			file;						// the program being run, to write in
 	protected Reload				reload;
@@ -82,12 +82,12 @@ public class LuaMonitorWindow extends JFrame
 	protected boolean				choosing;					// the selector is being filled in, which is nobody's choice
 	protected Timer					timer;
 
-	public LuaMonitorWindow (LuaState lua, Chaos chaos, String program)
+	public LuaMonitorWindow (LuaState lua, LuaBridge chaos, String program)
 	{
 		this (lua, chaos, program, null);
 	}
 
-	public LuaMonitorWindow (LuaState lua, Chaos chaos, String program, String robot)
+	public LuaMonitorWindow (LuaState lua, LuaBridge chaos, String program, String robot)
 	{
 		this (lua, chaos, (program != null) ? new java.io.File (program) : null, robot, null);
 	}
@@ -97,7 +97,7 @@ public class LuaMonitorWindow extends JFrame
 	 * it. The file is the program being run, which can be written from here, and
 	 * whoever runs it is told to read it again once it was.
 	 */
-	public LuaMonitorWindow (LuaState lua, Chaos chaos, java.io.File file, String robot, Reload reload)
+	public LuaMonitorWindow (LuaState lua, LuaBridge chaos, java.io.File file, String robot, Reload reload)
 	{
 		super ("Lua Monitor" + ((robot != null) ? (" [" + robot + "]") : "")
 			   + ((file != null) ? (": " + file.getName ()) : ""));
@@ -422,7 +422,7 @@ public class LuaMonitorWindow extends JFrame
 	}
 
 	/** Watches the variables of a program, as a window of its own. */
-	static public LuaMonitorWindow open (final LuaState lua, final Chaos chaos, final java.io.File file,
+	static public LuaMonitorWindow open (final LuaState lua, final LuaBridge chaos, final java.io.File file,
 										 final String robot, final Reload reload)
 	{
 		final LuaMonitorWindow[]	w = new LuaMonitorWindow[1];

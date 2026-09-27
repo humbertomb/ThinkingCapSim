@@ -32,7 +32,7 @@ import wucore.utils.math.Angles;
  * and writes about an angle is in the same unit: what ThinkingCap keeps in
  * metres and radians is turned on this bridge and nowhere else.
  */
-public class Chaos
+public class Chaos implements LuaBridge
 {
 	/** How many millimetres a metre has: what the scripts count distances in. */
 	static public final double		MM			= 1000.0;
@@ -121,6 +121,20 @@ public class Chaos
 
 	/** The table the scripts see as <code>chaos</code>. */
 	public final LuaTable			table ()					{ return table; }
+	public final String				name ()						{ return "chaos"; }
+
+	/** What the scripts asked of the robot on this cycle, as the monitors show it. */
+	public Map<String, Object> commands ()
+	{
+		Map<String, Object>		c = new java.util.LinkedHashMap<String, Object> ();
+
+		c.put ("vlin", Double.valueOf (vlin));
+		c.put ("vlat", Double.valueOf (vlat));
+		c.put ("vrot", Double.valueOf (vrot));
+		c.put ("behaviour", behaviour);
+		c.put ("scan", scan.name ());
+		return c;
+	}
 
 	/**
 	 * What the scripts left for one another through

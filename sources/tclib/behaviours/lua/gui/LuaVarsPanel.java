@@ -25,7 +25,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
-import tclib.behaviours.lua.Chaos;
+import tclib.behaviours.lua.LuaBridge;
 import tclib.behaviours.lua.interpreter.Lua;
 import tclib.behaviours.lua.interpreter.LuaFunction;
 import tclib.behaviours.lua.interpreter.LuaState;
@@ -41,7 +41,7 @@ import tclib.behaviours.lua.interpreter.LuaTable;
  * <pre>
  *   local &lt;script&gt;   a local of that script, as its last run left it
  *   global            a global of the interpreter, which every script shares
- *   chaos global      what the scripts left for one another (chaos.setGlobal)
+ *   chaos global      what the scripts left for one another through the bridge (chaos.setGlobal), named after it
  *   command           what the scripts asked the robot for on this cycle
  * </pre>
  * The locals shown are those of the scripts that are current (see
@@ -61,7 +61,7 @@ public class LuaVarsPanel extends JPanel
 	/* The scopes, as they are written in the table */
 	static public final String		S_LOCAL		= "local";
 	static public final String		S_GLOBAL	= "global";
-	static public final String		S_CHAOS		= "chaos global";
+	static public final String		S_CHAOS		= "chaos global";	// for a bridge called chaos: it is named after the bridge
 	static public final String		S_COMMAND	= "command";
 
 	/** How many fields of a table are written out one by one. */
@@ -72,7 +72,7 @@ public class LuaVarsPanel extends JPanel
 	static private final Color		C_WRONG		= new Color (180, 0, 0);		// what is the matter with the scripts
 
 	/** The names the library and the bridge take up, which are nobody's variables. */
-	static private final String[]	LIBRARY		= { "math", "io", "string", "table", "os", "chaos", "_VERSION" };
+	static private final String[]	LIBRARY		= { "math", "io", "string", "table", "os", "_VERSION" };
 
 	/** Which scripts are the ones being run, by the name the interpreter knows them by. */
 	public interface Current
@@ -108,7 +108,7 @@ public class LuaVarsPanel extends JPanel
 	}
 
 	protected LuaState				lua;
-	protected Chaos					chaos;
+	protected LuaBridge				chaos;						// the bridge the scripts speak through, or null
 	protected Current				current;
 	protected Labels				labels;						// null: the scripts are shown by the names the interpreter knows them by
 	protected volatile String		wrong;						// what is the matter with the scripts, null for nothing
@@ -119,7 +119,7 @@ public class LuaVarsPanel extends JPanel
 	protected JLabel				status;
 	protected JCheckBox				library;					// "Show all variables": the other scripts' locals and the library's globals too
 
-	public LuaVarsPanel (LuaState lua, Chaos chaos, Current current)
+	public LuaVarsPanel (LuaState lua, LuaBridge chaos, Current current)
 	{
 		super (new BorderLayout ());
 
@@ -181,7 +181,7 @@ public class LuaVarsPanel extends JPanel
 	}
 
 	/** Reads another interpreter and bridge from now on (another program, another machine). */
-	public void source (LuaState lua, Chaos chaos)
+	public void source (LuaState lua, LuaBridge chaos)
 	{
 		this.lua		= lua;
 		this.chaos		= chaos;
@@ -330,21 +330,20 @@ public class LuaVarsPanel extends JPanel
 				String	name = Lua.tostring (k);
 				Object	value = g.get (k);
 
-				if (!library.isSelected () && isLibrary (name, value))		continue;
+				if (!library.isSelected () && (isLibrary (name, value) || ((chaos != null) && name.equals (chaos.name ()))))		continue;
 				add (rows, name, value, S_GLOBAL);
 			}
 		}
 		if (chaos != null)
 		{
+			String	scope = chaos.name () + " global";
+
 			for (Map.Entry<String, Object> e : chaos.globals ().entrySet ())
-				rows.add (var (e.getKey (), e.getValue (), S_CHAOS));
+				rows.add (var (e.getKey (), e.getValue (), scope));
 
 			// and what the scripts are asking the robot for right now
-			rows.add (var ("vlin", Double.valueOf (chaos.vlin ()), S_COMMAND));
-			rows.add (var ("vlat", Double.valueOf (chaos.vlat ()), S_COMMAND));
-			rows.add (var ("vrot", Double.valueOf (chaos.vrot ()), S_COMMAND));
-			rows.add (var ("behaviour", (chaos.behaviour () != null) ? chaos.behaviour () : null, S_COMMAND));
-			rows.add (var ("scan", chaos.scanType ().name (), S_COMMAND));
+			for (Map.Entry<String, Object> e : chaos.commands ().entrySet ())
+				rows.add (var (e.getKey (), e.getValue (), S_COMMAND));
 		}
 		return rows;
 	}

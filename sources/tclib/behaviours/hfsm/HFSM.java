@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import tclib.behaviours.lua.Chaos;
+import tclib.behaviours.lua.LuaBridge;
 import tclib.behaviours.lua.interpreter.Lua;
 import tclib.behaviours.lua.interpreter.LuaError;
 import tclib.behaviours.lua.interpreter.LuaScript;
@@ -30,6 +30,12 @@ import tclib.behaviours.lua.interpreter.LuaState;
  * Every script runs in the same interpreter, so what one leaves in a global
  * another one finds, as the Chaos robots had it. The constants the file declares
  * (<code>privatevariable</code>) are globals from the start.
+ *
+ * What the scripts speak to the robot through is a bridge ({@link LuaBridge}),
+ * given by whoever runs the machine and put in the interpreter under its name:
+ * the machine knows nothing of what is in it, it only clears it before every
+ * cycle and asks it which behaviour the scripts chose. A machine may run with
+ * no bridge at all, its scripts then having the language alone.
  */
 public class HFSM
 {
@@ -44,7 +50,7 @@ public class HFSM
 
 	// How it is run
 	protected LuaState				lua;
-	protected Chaos					chaos;
+	protected LuaBridge				bridge;
 	protected String				behaviours;					// where the behaviours the states name are: what the file says, else the folder of the file
 	protected Map<String, LuaScript>	library = new HashMap<String, LuaScript> ();
 	protected List<String>			missing = new ArrayList<String> ();
@@ -53,10 +59,10 @@ public class HFSM
 	protected String				lastTransition;
 	protected long					steps;
 
-	/** Loads the machine a file holds, with a bridge of its own. */
+	/** Loads the machine a file holds, with no bridge: its scripts have the language alone. */
 	public HFSM (String path) throws Exception
 	{
-		this (new File (path), new Chaos ());
+		this (new File (path), null);
 	}
 
 	/**
@@ -64,10 +70,10 @@ public class HFSM
 	 * everything) or the <code>.xas</code> of the Chaos editor, whose scripts are
 	 * the <code>.acc</code> files beside it.
 	 */
-	public HFSM (File file, Chaos chaos) throws Exception
+	public HFSM (File file, LuaBridge bridge) throws Exception
 	{
 		this.file	= file;
-		this.chaos	= (chaos != null) ? chaos : new Chaos ();
+		this.bridge	= bridge;
 
 		if (file.getName ().toLowerCase ().endsWith (HFSMJson.SUFFIX))
 		{
@@ -94,7 +100,7 @@ public class HFSM
 		this.root.compileAll (this.problems);
 
 		this.lua	= new LuaState ();
-		this.lua.set ("chaos", this.chaos.table ());
+		if (bridge != null)			this.lua.set (bridge.name (), bridge.table ());
 		declare ();
 		reset ();
 	}
@@ -106,7 +112,8 @@ public class HFSM
 	public final MetaState			root ()				{ return root; }
 	public final File				file ()				{ return file; }
 	public final LuaState			lua ()				{ return lua; }
-	public final Chaos				chaos ()			{ return chaos; }
+	/** What the scripts speak to the robot through, or null when they have the language alone. */
+	public final LuaBridge			bridge ()			{ return bridge; }
 	public final List<XMLParser.PrivateVar>	vars ()		{ return vars; }
 	/** What the file said that could not be made sense of. */
 	public final List<String>		problems ()			{ return problems; }
@@ -221,7 +228,7 @@ public class HFSM
 	{
 		if (active.isEmpty ())					reset ();
 
-		chaos.clear ();
+		if (bridge != null)			bridge.clear ();
 		lastTransition	= null;
 		steps++;
 
@@ -247,7 +254,7 @@ public class HFSM
 		if (now != null)						run (now.getScript ());
 
 		// and the behaviour that was chosen, which is what moves it
-		behaviour (chaos.behaviour ());
+		if (bridge != null)			behaviour (bridge.behaviour ());
 	}
 
 	/** The first transition of a state whose test says yes, or null. */

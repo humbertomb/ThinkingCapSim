@@ -10,7 +10,7 @@ import tc.runtime.thread.ModuleConfig;
 import tc.modules.*;
 import tc.shared.lps.lpo.*;
 import tc.shared.linda.*;
-import tclib.behaviours.lua.Chaos;
+import tclib.behaviours.lua.LuaBridge;
 import tclib.planning.sequence.*;
 
 import devices.pos.*;
@@ -20,23 +20,24 @@ import wucore.utils.math.*;
 /**
  * A controller driven by a machine of hierarchical states, in the place of the
  * BG program of {@link tclib.behaviours.bg.BGController}: the <code>PRG</code>
- * of the module is the <code>.xas</code> file of a machine, whose states and
+ * of the module is the <code>.hfsm</code> file of a machine, whose states and
  * transitions are Lua scripts, and it is those that are run on every cycle
  * instead of the behaviours of a BG program.
  *
- * The scripts reach the robot through the table they know as
- * <code>chaos</code> ({@link Chaos}): they read the objects of the LPS and
- * where the robot is, and they command the three velocities of the platform
- * (vlin, vlat, vrot) and a behaviour, which the controller then carries out.
+ * This one knows nothing of what the scripts may say to the robot: it loads
+ * the machine, runs it cycle after cycle, keeps it in step with the goals and
+ * paths of the architecture and shows it in its monitor. What the scripts
+ * speak through -- a bridge ({@link LuaBridge}), a table with what they may
+ * read and command -- and what is made of it is for a subclass to say, through
+ * {@link #bridge(ModuleConfig)}, {@link #before()} and {@link #after()}: with
+ * none, the machine runs with the language alone and the robot stands still.
  *
  * Settings:
  * <pre>
- *   PRG         the .xas file of the machine
+ *   PRG         the .hfsm file of the machine
  *   BEH         the folder the behaviours the states name are read from
  *               (default: what the machine says in its file, behpath, else
  *               the folder of the machine)
- *   LPOS        the objects of the LPS the scripts ask for by number,
- *               separated by commas (default Ball, Net1, Net2, Align, Looka)
  *   AUTO        run from the first cycle, with no plan
  * </pre>
  */
@@ -48,9 +49,7 @@ public class HFSMController extends Controller
 	protected volatile HFSM			machine;
 	protected java.io.File			file;						// the file the machine came from
 	protected String				behs;						// the folder of the behaviours the settings say (BEH), or null
-	protected Chaos					chaos;
-	protected Tuple					ntuple;						// what the scripts need of the vision (BEH_NEEDS): the scan of the camera and the objects
-	protected String				nsaid;						// what the vision was last told (scan and needs, as text); null: nothing yet
+	protected LuaBridge				bridge;						// what the scripts speak through, or null for the language alone
 
 	// Controller debug
 	protected tclib.behaviours.hfsm.gui.HFSMMonitorWindow	monitor;	// the diagram, with where the machine is
@@ -103,12 +102,8 @@ public class HFSMController extends Controller
 		idtask		= 0;
 		looka_pts	= 15;
 
-		// The bridge the scripts of the machine speak through
-		chaos		= new Chaos ();
-
-		// What the scripts need of the vision
-		ntuple		= new Tuple (Tuple.BEHNEEDS, null);
-		nsaid		= null;
+		// The bridge the scripts of the machine speak through, if the subclass has one
+		bridge		= bridge (cfg);
 
 		// Initialize debug modules
 		c_buffer	= new double[3];
@@ -137,10 +132,8 @@ public class HFSMController extends Controller
 	protected void parse (ModuleConfig cfg)
 	{
 		String			name = cfg.get ("PRG");
-		String			lpos = cfg.get ("LPOS");
 
 		behs	= cfg.get ("BEH");
-		if (lpos != null)						chaos.lpoNames (lpos.split ("[,;\\s]+"));
 		if (name == null)						return;
 
 		if (load (new java.io.File (name)) && localgfx)
@@ -164,7 +157,7 @@ public class HFSMController extends Controller
 	{
 		try
 		{
-			HFSM	m = new HFSM (f, chaos);
+			HFSM	m = new HFSM (f, bridge);
 
 			m.debug (debug);
 			if (behs != null)					m.behaviours (behs);
@@ -176,7 +169,7 @@ public class HFSMController extends Controller
 
 			file	= f;
 			machine	= m;								// from the next cycle on
-			nsaid	= null;								// another machine: the vision is told what this one needs
+			machineChanged ();
 			if (monitor != null)				monitor.setMachine (m);
 			return true;
 		}
@@ -195,7 +188,36 @@ public class HFSMController extends Controller
 
 	/** The machine being run, or null when none could be loaded. */
 	public final HFSM				machine ()			{ return machine; }
-	public final Chaos				chaos ()			{ return chaos; }
+	/** What the scripts speak through, or null when they have the language alone. */
+	public final LuaBridge			bridge ()			{ return bridge; }
+
+	/* ------------------------------------------------------------------ */
+	/* What a subclass gives the scripts                                   */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * The bridge the scripts of the machine speak to the robot through, made from
+	 * the settings of the module; null, as here, for none: the scripts then have
+	 * the language alone and command nothing.
+	 */
+	protected LuaBridge bridge (ModuleConfig cfg)	{ return null; }
+
+	/**
+	 * Before every cycle of the machine: what the scripts are to read (the LPS,
+	 * where the robot is, where it is told to go) is put in the bridge. Nothing here.
+	 */
+	protected void before ()						{ }
+
+	/**
+	 * After every cycle of the machine: what the scripts commanded is taken out of
+	 * the bridge and answered as the three velocities of the platform, linear and
+	 * lateral in m/s and rotation in rad/s, in that order; whatever else they asked
+	 * for (of the vision, say) is passed on from here too. Standing still here.
+	 */
+	protected double[] after ()						{ return new double[] { 0.0, 0.0, 0.0 }; }
+
+	/** Another machine runs from now on (loaded, read again, or reset): whatever was said of the last one is to be said again. */
+	protected void machineChanged ()				{ }
 
 	/**
 	 * Whether the robot has arrived where it was told to go, as
@@ -230,50 +252,14 @@ public class HFSMController extends Controller
 		super.reset ();
 
 		if (machine != null)				machine.reset ();
-		chaos.clear ();
-		nsaid		= null;									// and the vision is told again what it needs
+		if (bridge != null)					bridge.clear ();
+		machineChanged ();
 		has_goal	= autostart;
 		has_plan	= false;
 		new_goal	= false;
 		path		= null;
 		idtask		= 0;
 		new_id		= 0;
-	}
-
-	/**
-	 * Tells the vision what the scripts of the machine need of it (BEH_NEEDS): the
-	 * scan of the camera asked for on this cycle (chaos.setScanType), SCAN_NONE when
-	 * none was, and the objects it needs to keep seeing and how much
-	 * (chaos.setNeeded), by the names the LPS knows them by. It is written when it
-	 * is not what the vision was last told, and on the first cycle, so that a
-	 * vision that starts scanning on its own is told to stop unless a script says
-	 * otherwise. It is the same the program of a {@link tclib.behaviours.lua.LuaController} does.
-	 */
-	protected void needs ()
-	{
-		ItemBehNeeds.ScanTypes	scan = chaos.scanType ();
-		String[]				names = chaos.lpoNames ();
-		StringBuilder			said = new StringBuilder (scan.name ());
-		java.util.List<Integer>	idx = new java.util.ArrayList<Integer> (chaos.needed ().keySet ());
-
-		java.util.Collections.sort (idx);
-		for (Integer i : idx)
-			if ((i >= 0) && (i < names.length))
-				said.append (' ').append (names[i]).append ('=').append (chaos.needed ().get (i));
-		if (said.toString ().equals (nsaid))		return;
-
-		// a new item every time: a shared Linda hands the reader the very object, and
-		// one filled in again underneath it could be read half done
-		ItemBehNeeds	nitem = new ItemBehNeeds ();
-
-		nitem.changeScan (scan);
-		for (Integer i : idx)
-			if ((i >= 0) && (i < names.length))
-				nitem.addNeed (names[i], chaos.needed ().get (i), System.currentTimeMillis ());
-		nitem.set (System.currentTimeMillis ());
-		ntuple.value	= nitem;
-		linda.write (ntuple);
-		nsaid	= said.toString ();
 	}
 
 	protected void controller ()
@@ -319,27 +305,21 @@ public class HFSMController extends Controller
 		/* MACHINE */
 		/* ------- */
 
-		// What the scripts of the machine are to read
-		chaos.lps (lps);
-		chaos.pose (pos);
-		if (has_plan && (plan.tpos != null))
-			chaos.desired ().set (plan.tpos);
-
-		// One cycle of the machine: a transition if one is due, the script of the
-		// state it ends in, and the behaviour that state chose -- of the machine
-		// there is now, which the monitor may have changed for another
+		// One cycle of the machine: what the scripts are to read goes in the bridge,
+		// then a transition if one is due, the script of the state it ends in and the
+		// behaviour that state chose -- of the machine there is now, which the monitor
+		// may have changed for another -- and what the scripts commanded comes out
 		HFSM		m = machine;
 
 		if (m == null)							{ setMotion (0.0, 0.0, 0.0);	return; }
+		before ();
 		m.step ();
 
-		// What the scripts need of the vision
-		needs ();
+		double[]	v = after ();
 
-		// What the scripts commanded
-		vlin	= chaos.linear ();
-		vlat	= chaos.lateral ();
-		vrot	= chaos.rotation ();
+		vlin	= v[0];
+		vlat	= v[1];
+		vrot	= v[2];
 
 		// Set action
 		result	= inGoal ();
