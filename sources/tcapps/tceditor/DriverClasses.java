@@ -32,6 +32,7 @@ import java.util.zip.ZipFile;
 public class DriverClasses
 {
 	static private final Map<String, List<String>>	CACHE = new HashMap<String, List<String>> ();
+	static private long								built;		// the class path as it was when the cache was filled (see stamp)
 
 	/**
 	 * The classes that derive from a class, by name and in order. An empty list
@@ -74,6 +75,11 @@ public class DriverClasses
 		base	= base.trim ();
 		cached	= base + (plain ? "|()" : "|*") + (project ? "|all" : "")
 					+ ((not != null) ? "|-" + String.join (",", not) : "");
+		// what was found is kept only while the development stays as it was: a class
+		// written while the program runs (the IDE builds it) is to be offered too
+		long	now = stamp ();
+
+		if (now != built)					{ CACHE.clear ();	SYMBOLS.clear ();	built = now; }
 		if (CACHE.containsKey (cached))		return CACHE.get (cached);
 
 		found	= search (base, plain, project, not);
@@ -82,7 +88,41 @@ public class DriverClasses
 	}
 
 	/** Forgets what was found (the development having been built again, say). */
-	static public synchronized void flush ()					{ CACHE.clear ();	SYMBOLS.clear (); }
+	static public synchronized void flush ()					{ CACHE.clear ();	SYMBOLS.clear ();	built = 0; }
+
+	/**
+	 * The class path as it is now, in one number: the directories under its
+	 * directory entries, how many there are and when each was last written (a
+	 * class added to a package, or built again by the IDE, writes its directory),
+	 * and the jars and when they were. Walking the directories alone, and not
+	 * their files, is what makes it cheap enough to do every time.
+	 */
+	static private long stamp ()
+	{
+		String		cp = System.getProperty ("java.class.path");
+		long		h = 17;
+
+		if (cp == null)			return h;
+		for (String entry : cp.split (File.pathSeparator))
+		{
+			File	f = new File (entry);
+
+			if (f.isDirectory ())		h = stampDirs (f, h, 0);
+			else if (f.isFile ())		h = h * 31 + f.lastModified ();
+		}
+		return h;
+	}
+
+	static private long stampDirs (File dir, long h, int depth)
+	{
+		File[]		files = dir.listFiles ();
+
+		h	= h * 31 + dir.lastModified ();
+		if ((files == null) || (depth > 32))		return h;
+		for (File f : files)
+			if (f.isDirectory ())					h = stampDirs (f, h, depth + 1);
+		return h;
+	}
 
 	/** True when the development holds a class by that name. */
 	static public boolean exists (String name)
