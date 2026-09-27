@@ -51,7 +51,14 @@ public class Simulator
 	public static final int			LSB_GAUSS	= 2;		// GAUSS laser beacom measures
 		
 	protected static final int		MAXDEPTH		= 5;		// Maximum number of ray reflections
-	public static final int 		GFX3D_UPD 	= 500;	// Time for 3D graphics update (in milisecs)
+	/**
+	 * How often what the simulation has (the poses of the robots and the objects)
+	 * is handed to the windows to be drawn, plan view and 3D (ms). The robots
+	 * move every cycle of their modules (100 ms, as a rule): handed over slower
+	 * than that, they were seen to jump from one pose to the one two or three
+	 * cycles later; at this rate every pose is drawn.
+	 */
+	public static final int 		GFX3D_UPD 	= 40;
 	private static int				MOVE_OBJECT_TIME	= 200;  //millis
 
 	// Simulation parameters

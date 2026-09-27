@@ -14,11 +14,13 @@ import wucore.utils.geom.Line2;
 
 /**
  * The name of a robot or an object, written flat on the floor under it: centred
- * on it, just over the floor so that it is not lost in it, and no wider than
- * {@link #SHARE} times the largest dimension of the thing seen from above --
- * the name of a ball is not to be bigger than the pitch. A name that fits is
- * left the size it is written in. It is placed again with {@link #place} as the
- * thing moves, and it does not turn with it, so that it can always be read.
+ * on it, just over the floor so that it is not lost in it, and in the one size
+ * of letter of the scene, which the robots set: the size at which the name of a
+ * robot is no wider than {@link #SHARE} times the robot seen from above
+ * ({@link #fit}), the same for every name so that they read alike -- a ball is
+ * not named in letters bigger than the robots'. It is placed again with
+ * {@link #place} as the thing moves, and it does not turn with it, so that it
+ * can always be read.
  */
 public class FloorName extends BranchGroup
 {
@@ -30,13 +32,11 @@ public class FloorName extends BranchGroup
 	protected TransformGroup		tg;
 	protected Transform3D			t		= new Transform3D ();
 	protected double				w, h;					// the text as written (m)
-	protected double				scale	= 1.0;			// how much it is shrunk to fit
+	protected double				scale	= 1.0;			// the size of letter: how much the text as written is shrunk
+	protected double				x, y, z;				// where it lies
 
-	/**
-	 * @param name    what is written
-	 * @param across  the largest dimension of the thing seen from above (m); 0 or less for no limit
-	 */
-	public FloorName (String name, double across)
+	/** @param name  what is written */
+	public FloorName (String name)
 	{
 		Text2D		text = new Text2D (name, new Color3f (0.1f, 0.1f, 0.6f), "Application", 140, java.awt.Font.BOLD);
 		double[]	size = size (text);
@@ -44,7 +44,6 @@ public class FloorName extends BranchGroup
 		setCapability (BranchGroup.ALLOW_DETACH);
 		w	= size[0];
 		h	= size[1];
-		if ((across > 0.0) && (w > 0.0))		scale = Math.min (1.0, SHARE * across / w);
 		tg	= new TransformGroup ();
 		tg.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
 		tg.addChild (text);
@@ -52,9 +51,37 @@ public class FloorName extends BranchGroup
 		place (0.0, 0.0, 0.0);
 	}
 
+	/** A name in the size of letter something else set (see {@link #fit}). */
+	public FloorName (String name, double scale)
+	{
+		this (name);
+		setScale (scale);
+	}
+
+	/**
+	 * The size of letter at which this name is no wider than {@link #SHARE} times
+	 * a thing this big seen from above (m): 1 when it fits as written, less when
+	 * it has to be shrunk. What a robot gives the scene.
+	 */
+	public double fit (double across)
+	{
+		return ((across > 0.0) && (w > 0.0)) ? Math.min (1.0, SHARE * across / w) : 1.0;
+	}
+
+	/** The size of letter: how much the text as written is shrunk (1: as written). */
+	public void setScale (double scale)
+	{
+		if (!(scale > 0.0) || (scale == this.scale))		return;
+		this.scale	= scale;
+		place (x, y, z);
+	}
+
+	public double getScale ()						{ return scale; }
+
 	/** Centred under (x, y), on the floor at height z. */
 	public void place (double x, double y, double z)
 	{
+		this.x	= x;	this.y	= y;	this.z	= z;
 		t.setIdentity ();
 		t.setScale (scale);
 		t.setTranslation (new Vector3d (x - scale * w / 2.0, y - scale * h / 2.0, z + Z));

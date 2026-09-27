@@ -88,7 +88,7 @@ public class World3D extends BranchGroup
 			if (obj != null)
 				addChild (obj);
 			if (showDecor && showLabels && (object instanceof WMAObject))
-				addChild (createLabel (object.label, object.pos, (obj != null) ? obj.across : FloorName.footprint (object)));
+				addChild (createLabel (object.label, object.pos));
 		}
 		
 		// Add floor
@@ -402,12 +402,18 @@ public class World3D extends BranchGroup
 	}	
 	
 	/** Adds a new 3D object to the universe */
-	/** The name of an animated object: on the floor under it, no wider than the object allows, as the robot names. */
-	protected FloorName createLabel (String name, Point3 pos, double across)
+	/** The names of the animated objects, on the floor under them, for whoever sets the size of letter of the scene. */
+	protected java.util.List<FloorName>	names = new java.util.ArrayList<FloorName> ();
+
+	public java.util.List<FloorName> names ()		{ return names; }
+
+	/** The name of an animated object: on the floor under it, as the robot names, in the size of letter of the scene. */
+	protected FloorName createLabel (String name, Point3 pos)
 	{
-		FloorName	fn = new FloorName (name, across);
+		FloorName	fn = new FloorName (name);
 
 		fn.place (pos.x (), pos.y (), pos.z ());
+		names.add (fn);
 		return fn;
 	}
 

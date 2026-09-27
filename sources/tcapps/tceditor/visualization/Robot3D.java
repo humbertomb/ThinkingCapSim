@@ -39,6 +39,7 @@ public class Robot3D extends BranchGroup
 	protected Vector3d				lpos;
 	protected FloorName				label;				// robot name on the floor under the robot (null when unnamed)
 	protected boolean				nameShown		= true;
+	protected double				across;				// how big the robot is seen from above (m)
 	static public final double		LABEL_GAP		= 0.25;	// m between the top of the object and its name
 	static public final double		LABEL_HEIGHT	= 2.2;	// m above the floor when the model height is unknown
 	protected double				labelHeight		= LABEL_HEIGHT;
@@ -97,12 +98,13 @@ public class Robot3D extends BranchGroup
 			addChild (lift);
 		}
 
-		// Robot name: flat text on the floor under the robot, centred on it and no
-		// wider than the robot seen from above allows (FloorName)
+		// Robot name: flat text on the floor under the robot, centred on it, in the
+		// size of letter the scene takes from its robots (FloorName)
+		across	= (foot > 0.0) ? foot : 2.0 * Math.max (0.05, rdesc.RADIUS);
 		if ((name != null) && (name.length () > 0))
 		{
 			labelHeight	= labelHeight (ro, rl);
-			label	= new FloorName (name, (foot > 0.0) ? foot : 2.0 * Math.max (0.05, rdesc.RADIUS));
+			label	= new FloorName (name);
 			label.place (pt.x (), pt.y (), 0.0);
 			addChild (label);
 		}
@@ -121,6 +123,15 @@ public class Robot3D extends BranchGroup
 		}
 	}
 	
+	/** The name on the floor, or null when the robot has none. */
+	public FloorName name ()						{ return label; }
+
+	/** The size of letter at which the name of this robot fits it (see FloorName.fit); 1 when it has no name. */
+	public double nameFit ()
+	{
+		return (label != null) ? label.fit (across) : 1.0;
+	}
+
 	/** Whether the name of the robot is drawn on the floor. */
 	public void showName (boolean show)
 	{

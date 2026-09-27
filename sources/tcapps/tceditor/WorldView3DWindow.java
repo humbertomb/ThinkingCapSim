@@ -123,6 +123,8 @@ public class WorldView3DWindow extends JFrame
 	protected boolean				showLabels		= true;	// View menu: the names of the objects
 	protected boolean				showFOVs		= true;	// View menu: what the cameras of the robots see
 	protected java.util.List<FloorName>	labels = new java.util.ArrayList<FloorName> ();	// the names of the live objects, one per object (null for an unnamed one)
+	protected World3D				world3d;				// the world as drawn now (its names take the size of letter of the scene)
+	protected double				nameScale		= 1.0;	// the size of letter of every name, set by the robots (see FloorName.fit)
 	protected int					vmode			= Scene3D.M_MOVE;
 
 	/* GUI */
@@ -314,6 +316,22 @@ public class WorldView3DWindow extends JFrame
 		}
 	}
 
+	/**
+	 * The one size of letter of the scene: the one at which every robot's name
+	 * fits its robot (the smallest of them), given to every name there is -- the
+	 * robots', the live objects' and the world's. As written, with no robot.
+	 */
+	private void updateNameScale ()
+	{
+		double	s = 1.0;
+
+		for (Robot3D r : robots)		s = Math.min (s, r.nameFit ());
+		nameScale	= s;
+		for (Robot3D r : robots)		if (r.name () != null)		r.name ().setScale (s);
+		for (FloorName fn : labels)		if (fn != null)				fn.setScale (s);
+		if (world3d != null)			for (FloorName fn : world3d.names ())		fn.setScale (s);
+	}
+
 	/** The names of the live robots on or off the floor, as the View menu says. */
 	private void updateNames ()
 	{
@@ -493,7 +511,9 @@ public class WorldView3DWindow extends JFrame
 		{
 			BranchGroup		bg = new BranchGroup ();
 			bg.setCapability (BranchGroup.ALLOW_DETACH);
-			bg.addChild (new World3D (world, scene, showAnimated, true, showLabels));
+			world3d	= new World3D (world, scene, showAnimated, true, showLabels);
+			for (FloorName fn : world3d.names ())		fn.setScale (nameScale);
+			bg.addChild (world3d);
 			bg.addChild (createExtras ());
 			if (floorCB.isSelected ())
 			{
@@ -820,6 +840,7 @@ public class WorldView3DWindow extends JFrame
 		r3d.showCameras (showFOVs);
 		r3d.showName (showNames);
 		robots.add (r3d);
+		updateNameScale ();											// another robot may want the letters smaller
 		robotsBranch.addChild (r3d);
 		return robots.size () - 1;
 	}
@@ -842,6 +863,7 @@ public class WorldView3DWindow extends JFrame
 		if (robotsBranch != null)		robotsBranch.detach ();
 		robotsBranch = null;
 		robots.clear ();
+		updateNameScale ();											// no robot to set the letters: as written
 	}
 
 	/* --- simulated animated objects: live copies moved by the simulator --- */
@@ -877,18 +899,10 @@ public class WorldView3DWindow extends JFrame
 		tg.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
 		TransformGroup	model = (o.shape != null) ? scene.getCachedObject (o.shape, o.usecolor ? wucore.utils.color.ColorTool.fromWColorToColor (o.color) : null) : null;
 		TransformGroup	plate = (model == null) ? scene.getObjectImage (o) : null;
-		double			across;
 		if (model != null)
-		{
-			across	= FloorName.footprint (model);					// while it is still in its own frame
 			tg.addChild (model);
-		}
 		else if (plate != null)
-		{
-			// no 3D model but a picture of its own: the picture over the ground its icon covers
-			across	= FloorName.footprint (plate);
-			tg.addChild (plate);
-		}
+			tg.addChild (plate);								// no 3D model but a picture of its own: the picture over the ground its icon covers
 		else
 		{
 			// no 3D model: the icon segments at floor level
@@ -896,15 +910,14 @@ public class WorldView3DWindow extends JFrame
 			Color3f			col = new Color3f (c.getRed () / 255f, c.getGreen () / 255f, c.getBlue () / 255f);
 			for (wucore.utils.geom.Line2 l : o.getLocalIcon ())
 				tg.addChild (segment (l.orig ().x (), l.orig ().y (), l.z1 () + 0.02, l.dest ().x (), l.dest ().y (), l.z2 () + 0.02, col, 2f));
-			across	= FloorName.footprint (o);
 		}
-		if (across <= 0.0)		across = FloorName.footprint (o);
-		// its name on the floor under it, in a branch of its own beside the object (it
-		// does not turn with it), so that the View menu can take it off and put it back
+		// its name on the floor under it, in the size of letter of the scene, in a branch
+		// of its own beside the object (it does not turn with it), so that the View menu
+		// can take it off and put it back
 		FloorName		fn = null;
 		if ((o.label != null) && (o.label.length () > 0))
 		{
-			fn	= new FloorName (o.label, across);
+			fn	= new FloorName (o.label, nameScale);
 			fn.place (x, y, z);
 			if (showLabels)		objectsBranch.addChild (fn);
 		}
