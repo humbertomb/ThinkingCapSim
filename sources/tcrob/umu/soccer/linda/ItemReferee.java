@@ -8,7 +8,7 @@ import java.io.*;
 
 import tc.shared.linda.*;
 
-public class ItemGameController extends Item implements Serializable
+public class ItemReferee extends Item implements Serializable
 {
 	public enum ScanStates			{ INITIAL, READY, SET, PLAYIMNG, PENALIZED, FINISHED }
 
@@ -16,7 +16,7 @@ public class ItemGameController extends Item implements Serializable
 	public int						player = 0;
 	
 	//Constructors
-	public ItemGameController ()
+	public ItemReferee ()
 	{
 		this.set (0);
 	}

@@ -28,18 +28,19 @@ public class LindaRouter implements LindaListener
 	protected void initialise (LindaListener listener)
 	{		
 		// Register LOCAL linda listeners
-		lindalocal.register (new Tuple (Tuple.CONFIG), listener);
-		lindalocal.register (new Tuple (Tuple.STATUS), listener);
-		lindalocal.register (new Tuple (Tuple.GOAL), listener);
-		lindalocal.register (new Tuple (Tuple.BEHINFO), listener);
+		lindalocal.register (new Tuple (Tuple.CONFIG),	listener);
+		lindalocal.register (new Tuple (Tuple.STATUS),	listener);
+		lindalocal.register (new Tuple (Tuple.GOAL),		listener);
+		lindalocal.register (new Tuple (Tuple.BEHINFO),	listener);
 		
 		// Register GLOBAL linda listeners
-		lindaglobal.register (new Tuple (robotid, Tuple.EXECUTION, null), listener);
-		lindaglobal.register (new Tuple (robotid, Tuple.PLAN, null), listener);
-		lindaglobal.register (new Tuple (robotid, Tuple.MOTION, null), listener);
-		lindaglobal.register (new Tuple (robotid, Tuple.BEHRULES, null), listener);
-		lindaglobal.register (new Tuple (robotid, Tuple.BEHNAME, null), listener);
-		lindaglobal.register (new Tuple (robotid, Tuple.BEHDEBUG, null), listener);
+		lindaglobal.register (new Tuple (robotid, Tuple.EXECUTION, null),	listener);
+		lindaglobal.register (new Tuple (robotid, Tuple.PLAN, null),		listener);
+		lindaglobal.register (new Tuple (robotid, Tuple.MOTION, null),		listener);
+		lindaglobal.register (new Tuple (robotid, Tuple.BEHRULES, null),	listener);
+		lindaglobal.register (new Tuple (robotid, Tuple.BEHNAME, null),		listener);
+		lindaglobal.register (new Tuple (robotid, Tuple.BEHDEBUG, null),	listener);
+		lindaglobal.register (new Tuple (robotid, Tuple.CAMERA_CTRL, null),	listener);
 	}
 	
 	public void notify (Tuple tuple)
