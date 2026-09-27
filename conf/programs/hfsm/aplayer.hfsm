@@ -1,6 +1,5 @@
 {
   "name": "aplayer",
-  "behpath": "./conf/programs/lua/aibo-soccer",
   "vars": [
     {
       "name": "ZONE_SCORABLE",
@@ -70,7 +69,7 @@
             "id": 6,
             "x": 173,
             "y": 187,
-            "code": "local gs     = chaos.gsGetMyPos()\nlocal ball   = chaos.getLpo(chaos.BALL_LPO)\nlocal net1   = chaos.getLpo(chaos.NET1_LPO) \nlocal net2   = chaos.getLpo(chaos.NET2_LPO) \n\n--if (gs.quality < 0.6) and (ball.rho > 1000) then\n--\tchaos.trackLandMarks()\n--end\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"go2ball\")\n",
+            "code": "local gs     = chaos.getCurrentPos()\nlocal ball   = chaos.getLpo(chaos.BALL_LPO)\nlocal net1   = chaos.getLpo(chaos.NET1_LPO) \nlocal net2   = chaos.getLpo(chaos.NET2_LPO) \n\n--if (gs.quality < 0.6) and (ball.rho > 1000) then\n--\tchaos.trackLandMarks()\n--end\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"go2ball\")\n",
             "transitions": [
               {
                 "name": "CanScore",
@@ -264,7 +263,7 @@
                 "id": 27,
                 "x": 55,
                 "y": 287,
-                "code": "--local gs   = chaos.gsGetMyPos()\n\n--if gs.quality < 0.6 then\n--\tchaos.trackLandMarks()\n--end\n\n--io.write(\"defender\\n\")\nlocal trgPos = chaos.getDefPose()\nchaos.setDesiredPos(trgPos.x, trgPos.y, 0)\nchaos.setBehavior(\"go2gposf\")\n--chaos.setBehavior(\"still\")",
+                "code": "--local gs   = chaos.getCurrentPos()\n\n--if gs.quality < 0.6 then\n--\tchaos.trackLandMarks()\n--end\n\n--io.write(\"defender\\n\")\nlocal trgPos = chaos.getDefPose()\nchaos.setDesiredPos(trgPos.x, trgPos.y, 0)\nchaos.setBehavior(\"go2gposf\")\n--chaos.setBehavior(\"still\")",
                 "transitions": [
                   {
                     "name": "OnPlace",
@@ -273,7 +272,7 @@
                     "y": 21,
                     "to": "FaceBall",
                     "toId": 26,
-                    "test": "--local gs   = chaos.gsGetMyPos()\n\n--if gs.quality < 0.6 then\n--\treturn false\n--end\n\n--if (math.abs(gs.x) < 300) and (gs.y > -1500) and (gs.y < -1200) then\n--\treturn true\n--else\n--\treturn false\n--end\n\nreturn false"
+                    "test": "--local gs   = chaos.getCurrentPos()\n\n--if gs.quality < 0.6 then\n--\treturn false\n--end\n\n--if (math.abs(gs.x) < 300) and (gs.y > -1500) and (gs.y < -1200) then\n--\treturn true\n--else\n--\treturn false\n--end\n\nreturn false"
                   }
                 ]
               }
@@ -339,7 +338,7 @@
                 "id": 35,
                 "x": 50,
                 "y": 34,
-                "code": "--io.write(\"supporter\\n\")\n--chaos.setBehavior(\"faceball\")\n\n--local gs   = chaos.gsGetMyPos()\n\n--if gs.quality < 0.6 then\n--\tchaos.trackLandMarks()\n--end\n\nlocal trgPos = chaos.getOptimalPose(2)\nchaos.setDesiredPos(trgPos.x, trgPos.y, 0)\nchaos.setBehavior(\"go2gposf\")",
+                "code": "--io.write(\"supporter\\n\")\n--chaos.setBehavior(\"faceball\")\n\n--local gs   = chaos.getCurrentPos()\n\n--if gs.quality < 0.6 then\n--\tchaos.trackLandMarks()\n--end\n\nlocal trgPos = chaos.getOptimalPose(2)\nchaos.setDesiredPos(trgPos.x, trgPos.y, 0)\nchaos.setBehavior(\"go2gposf\")",
                 "transitions": [
                   {
                     "name": "HeadingBall",
@@ -416,7 +415,7 @@
                 "y": 168,
                 "to": "LookFromDef",
                 "toId": 45,
-                "test": "local gs   = chaos.gsGetMyPos()\n\nif gs.quality < 0.6 then\n\treturn false\nend\n\nif (math.abs(gs.x) < 300) and (gs.y > -1500) and (gs.y < -1100) then\n\treturn true\nelse\n\treturn false\nend"
+                "test": "local gs   = chaos.getCurrentPos()\n\nif gs.quality < 0.6 then\n\treturn false\nend\n\nif (math.abs(gs.x) < 300) and (gs.y > -1500) and (gs.y < -1100) then\n\treturn true\nelse\n\treturn false\nend"
               },
               {
                 "name": "isBadLocation",
@@ -425,7 +424,7 @@
                 "y": 8,
                 "to": "DefLookBall",
                 "toId": 46,
-                "test": "local pos = chaos.gsGetMyPos()\n\nif pos.quality < 0.6 then\n\treturn true\nelse\n\treturn false\nend"
+                "test": "local pos = chaos.getCurrentPos()\n\nif pos.quality < 0.6 then\n\treturn true\nelse\n\treturn false\nend"
               }
             ]
           },

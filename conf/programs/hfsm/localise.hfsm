@@ -101,7 +101,7 @@
             "y": 33,
             "to": "Position2",
             "toId": 3,
-            "test": "-- Geometrical computations\nlocal pos = chaos.gsGetMyPos()\n\ndx = POS1X - pos.x\ndy = POS1Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
+            "test": "-- Geometrical computations\nlocal pos = chaos.getCurrentPos()\n\ndx = POS1X - pos.x\ndy = POS1Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
             "action": "chaos.setSynchroKick(\"HappyKick\")\n"
           }
         ]
@@ -120,7 +120,7 @@
             "y": 284,
             "to": "Position3",
             "toId": 5,
-            "test": "-- Geometrical computations\nlocal pos = chaos.gsGetMyPos()\n\ndx = POS2X - pos.x\ndy = POS2Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
+            "test": "-- Geometrical computations\nlocal pos = chaos.getCurrentPos()\n\ndx = POS2X - pos.x\ndy = POS2Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
             "action": "chaos.setSynchroKick(\"HappyKick\")\n"
           }
         ]
@@ -139,7 +139,7 @@
             "y": 496,
             "to": "Position4",
             "toId": 7,
-            "test": "-- Geometrical computations\nlocal pos = chaos.gsGetMyPos()\n\ndx = POS3X - pos.x\ndy = POS3Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
+            "test": "-- Geometrical computations\nlocal pos = chaos.getCurrentPos()\n\ndx = POS3X - pos.x\ndy = POS3Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
             "action": "chaos.setSynchroKick(\"HappyKick\")\n"
           }
         ]
@@ -158,7 +158,7 @@
             "y": 271,
             "to": "Position1",
             "toId": 1,
-            "test": "-- Geometrical computations\nlocal pos = chaos.gsGetMyPos()\n\ndx = POS4X - pos.x\ndy = POS4Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
+            "test": "-- Geometrical computations\nlocal pos = chaos.getCurrentPos()\n\ndx = POS4X - pos.x\ndy = POS4Y - pos.y\nrho= math.sqrt(dx*dx+dy*dy)\n\nif (rho < THRES) and (pos.quality > QPOS) then\n\treturn true\nelse\n\treturn false\nend\n",
             "action": "chaos.setSynchroKick(\"HappyKick\")\n"
           }
         ]

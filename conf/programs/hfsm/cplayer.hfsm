@@ -51,7 +51,7 @@
             "id": 5,
             "x": 474,
             "y": 160,
-            "code": "myPos  = chaos.gsGetMyPos()\nball   = chaos.getLpo(chaos.BALL_LPO)\n \nif (myPos.quality < 0.6) and (ball.rho > 1000) then\n\tchaos.trackLandMarks()\nend\n\nchaos.setBehavior(\"go2ball\")\n",
+            "code": "myPos  = chaos.getCurrentPos()\nball   = chaos.getLpo(chaos.BALL_LPO)\n \nif (myPos.quality < 0.6) and (ball.rho > 1000) then\n\tchaos.trackLandMarks()\nend\n\nchaos.setBehavior(\"go2ball\")\n",
             "transitions": [
               {
                 "name": "Kickable",

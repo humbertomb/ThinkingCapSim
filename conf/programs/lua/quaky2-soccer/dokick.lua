@@ -37,7 +37,7 @@ GRABNTURNLEFT = 3
 GRABNTURNRIGHT = 4
 
 -- Get object values
-local myPos = chaos.gsGetMyPos()
+local myPos = chaos.getCurrentPos()
 local ball = chaos.getLpo(ball_pos)
 local net1 = chaos.getLpo(net1_pos)
 local net2 = chaos.getLpo(net2_pos)

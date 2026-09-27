@@ -16,7 +16,7 @@ local PI2 = 360
 local MAXVEL = 370
 
 -- Geometrical computations
-local pos = chaos.gsGetMyPos()
+local pos = chaos.getCurrentPos()
 local dest = chaos.getDesiredPos()
 
 local vlin = 0

@@ -100,7 +100,7 @@
             "y": 253,
             "to": "KeepInArea",
             "toId": 14,
-            "test": "PI2=90\ntemp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nnet1=chaos.getLpo(chaos.NET1_LPO) -- Net1\n\n-- InPos and (see net1 or myPos.angle is 90)\n\n--if dist < IN_POS and ((net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) or\n--                     (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH)) then\nif dist < IN_POS and (net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) then\n    return true\nelse\n    return false\n\nend\n"
+            "test": "PI2=90\ntemp=chaos.getCurrentPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nnet1=chaos.getLpo(chaos.NET1_LPO) -- Net1\n\n-- InPos and (see net1 or myPos.angle is 90)\n\n--if dist < IN_POS and ((net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) or\n--                     (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH)) then\nif dist < IN_POS and (net1.anchored > ANCHORED_HIGH and math.abs( net1.theta ) < ANG_LOW) then\n    return true\nelse\n    return false\n\nend\n"
           },
           {
             "name": "BallVisGoTo",
@@ -109,7 +109,7 @@
             "y": 696,
             "to": "Defender",
             "toId": 23,
-            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\nball=chaos.getLpo(chaos.BALL_LPO) -- Ball\n\nif temp.quality > QUALITY_HIGH and dist < OUT_POS and \n   ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then\n    return true\nelse\n    return false\nend"
+            "test": "temp=chaos.getCurrentPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\nball=chaos.getLpo(chaos.BALL_LPO) -- Ball\n\nif temp.quality > QUALITY_HIGH and dist < OUT_POS and \n   ball.anchored > ANCHORED_HIGH and ball.rho < BALL_IN_AREA then\n    return true\nelse\n    return false\nend"
           },
           {
             "name": "InAstrayGoTo",
@@ -119,7 +119,7 @@
             "priority": 2,
             "to": "EscapeFromNet2",
             "toId": 8,
-            "test": "lps=chaos.lps_getAstray()\n\nif lps.astray > 0 then\n    return true\nelse\n    return false\nend\n"
+            "test": "lps = { astray = 0 }  -- the simulation never loses itself (lps_getAstray is gone)\n\nif lps.astray > 0 then\n    return true\nelse\n    return false\nend\n"
           }
         ],
         "meta": true,
@@ -165,7 +165,7 @@
             "y": 42,
             "to": "KeepInArea",
             "toId": 14,
-            "test": "PI2=90\ntemp=chaos.gsGetMyPos()\nnet1=chaos.getLpo(chaos.NET1_LPO) -- Net1\n\nif (net1.anchored > ANCHORED_HIGH and math.abs(net1.theta) < ANG_LOW) or\n   (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH) then\n    return true\nelse\n    return false\nend\n"
+            "test": "PI2=90\ntemp=chaos.getCurrentPos()\nnet1=chaos.getLpo(chaos.NET1_LPO) -- Net1\n\nif (net1.anchored > ANCHORED_HIGH and math.abs(net1.theta) < ANG_LOW) or\n   (math.abs(temp.theta-PI2) < ANG_LOW and temp.quality > QUALITY_HIGH) then\n    return true\nelse\n    return false\nend\n"
           }
         ],
         "meta": true,
@@ -185,7 +185,7 @@
                 "y": 43,
                 "to": "SearchNet1",
                 "toId": 12,
-                "test": "lps=chaos.lps_getAstray()\n\nif lps.astray == 0 then\n    return true\nelse\n    return false\nend\n"
+                "test": "lps = { astray = 0 }  -- the simulation never loses itself (lps_getAstray is gone)\n\nif lps.astray == 0 then\n    return true\nelse\n    return false\nend\n"
               }
             ]
           },
@@ -203,7 +203,7 @@
                 "y": 385,
                 "to": "EscapeFromNet2",
                 "toId": 10,
-                "test": "lps=chaos.lps_getAstray()\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
+                "test": "lps = { astray = 0 }  -- the simulation never loses itself (lps_getAstray is gone)\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
               }
             ]
           }
@@ -222,7 +222,7 @@
             "y": 406,
             "to": "GoToArea",
             "toId": 1,
-            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\nif temp.quality > QUALITY_HIGH and dist > OUT_POS  then\n    return true\nelse\n    return false\nend\n"
+            "test": "temp=chaos.getCurrentPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\nif temp.quality > QUALITY_HIGH and dist > OUT_POS  then\n    return true\nelse\n    return false\nend\n"
           },
           {
             "name": "InAstrayKeep",
@@ -231,7 +231,7 @@
             "y": 164,
             "to": "EscapeFromNet2",
             "toId": 8,
-            "test": "lps=chaos.lps_getAstray()\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
+            "test": "lps = { astray = 0 }  -- the simulation never loses itself (lps_getAstray is gone)\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
           },
           {
             "name": "BallVisMyArea",
@@ -249,7 +249,7 @@
             "y": 0,
             "to": "Localize",
             "toId": 32,
-            "test": "temp=chaos.gsGetMyPos()\n\nif temp.quality<QUALITY_LOW then\n    return true\nelse\n    return false\nend"
+            "test": "temp=chaos.getCurrentPos()\n\nif temp.quality<QUALITY_LOW then\n    return true\nelse\n    return false\nend"
           }
         ],
         "meta": true,
@@ -269,7 +269,7 @@
                 "y": 16,
                 "to": "SearchNet1",
                 "toId": 21,
-                "test": "local Pi2=90\nnet1=3\n-- Lpo object position\nlocal temp_lpo = chaos.getLpo(net1)\nball=0\nchaos.setNeeded(ball, 1.0)\nnet1=3\nchaos.setNeeded(net1, 1.0)\n\nif temp_lpo.anchored < ANCHORED_LOW then \n    return true\nelse\n    -- Check global data\n   -- mypos=chaos.gsGetMyPos()\n   -- if mypos.quality > QUALITY_HIGH and math.abs(mypos.theta - Pi2) > ANG_LOW then\n    --    return true\n   -- else\n        return false\n   -- end\nend\n"
+                "test": "local Pi2=90\nnet1=3\n-- Lpo object position\nlocal temp_lpo = chaos.getLpo(net1)\nball=0\nchaos.setNeeded(ball, 1.0)\nnet1=3\nchaos.setNeeded(net1, 1.0)\n\nif temp_lpo.anchored < ANCHORED_LOW then \n    return true\nelse\n    -- Check global data\n   -- mypos=chaos.getCurrentPos()\n   -- if mypos.quality > QUALITY_HIGH and math.abs(mypos.theta - Pi2) > ANG_LOW then\n    --    return true\n   -- else\n        return false\n   -- end\nend\n"
               }
             ]
           },
@@ -287,7 +287,7 @@
                 "y": 344,
                 "to": "KeepInArea",
                 "toId": 19,
-                "test": "local Pi2=90\n\n-- Lpo object position\nnet1=3\nlocal temp_lpo = chaos.getLpo(net1)\nif temp_lpo.anchored > ANCHORED_HIGH and math.abs(temp_lpo.theta) < ANG_LOW then \n    return true\nelse\n    -- Not seen in Lps. Check if my location is good enough\n    --mypos=chaos.gsGetMyPos()\n    --if mypos.quality > QUALITY_HIGH and  math.abs(mypos.theta - Pi2) < ANG_LOW then\n    --    return true\n    --else\n        return false\n    --end\nend"
+                "test": "local Pi2=90\n\n-- Lpo object position\nnet1=3\nlocal temp_lpo = chaos.getLpo(net1)\nif temp_lpo.anchored > ANCHORED_HIGH and math.abs(temp_lpo.theta) < ANG_LOW then \n    return true\nelse\n    -- Not seen in Lps. Check if my location is good enough\n    --mypos=chaos.getCurrentPos()\n    --if mypos.quality > QUALITY_HIGH and  math.abs(mypos.theta - Pi2) < ANG_LOW then\n    --    return true\n    --else\n        return false\n    --end\nend"
               }
             ]
           }
@@ -306,7 +306,7 @@
             "y": 858,
             "to": "GoToArea",
             "toId": 1,
-            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nball=chaos.getLpo(chaos.BALL_LPO) -- Ball\n\nif temp.quality>QUALITY_HIGH and dist > OUT_POS and \n   (ball.anchored < ANCHORED_LOW or ball.rho > BALL_IN_AREA) then\n    return true\nelse\n    return false\nend\n"
+            "test": "temp=chaos.getCurrentPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nball=chaos.getLpo(chaos.BALL_LPO) -- Ball\n\nif temp.quality>QUALITY_HIGH and dist > OUT_POS and \n   (ball.anchored < ANCHORED_LOW or ball.rho > BALL_IN_AREA) then\n    return true\nelse\n    return false\nend\n"
           },
           {
             "name": "InAstrayDefender",
@@ -315,7 +315,7 @@
             "y": 538,
             "to": "EscapeFromNet2",
             "toId": 8,
-            "test": "lps=chaos.lps_getAstray()\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
+            "test": "lps = { astray = 0 }  -- the simulation never loses itself (lps_getAstray is gone)\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
           },
           {
             "name": "BallNotVisOrOutOfArea",
@@ -324,7 +324,7 @@
             "y": 367,
             "to": "KeepInArea",
             "toId": 14,
-            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nball=chaos.getLpo(chaos.BALL_LPO) -- Ball\n\nif ball.anchored < ANCHORED_HIGH or ball.rho > BALL_IN_AREA then\n    return true\nelse\n    return false\nend\n"
+            "test": "temp=chaos.getCurrentPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\nball=chaos.getLpo(chaos.BALL_LPO) -- Ball\n\nif ball.anchored < ANCHORED_HIGH or ball.rho > BALL_IN_AREA then\n    return true\nelse\n    return false\nend\n"
           },
           {
             "name": "Transition_41",
@@ -333,7 +333,7 @@
             "y": 207,
             "to": "Localize",
             "toId": 32,
-            "test": "temp=chaos.gsGetMyPos()\n\nif temp.quality<QUALITY_LOW then\n    return true\nelse\n    return false\nend"
+            "test": "temp=chaos.getCurrentPos()\n\nif temp.quality<QUALITY_LOW then\n    return true\nelse\n    return false\nend"
           }
         ],
         "meta": true,
@@ -400,7 +400,7 @@
             "y": 195,
             "to": "EscapeFromNet2",
             "toId": 8,
-            "test": "lps=chaos.lps_getAstray()\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
+            "test": "lps = { astray = 0 }  -- the simulation never loses itself (lps_getAstray is gone)\n\nif lps.astray>0 then\n    return true\nelse\n    return false\nend\n"
           },
           {
             "name": "OutOfAreaLocalize",
@@ -409,7 +409,7 @@
             "y": 38,
             "to": "GoToArea",
             "toId": 1,
-            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\n--io.write(temp.quality,\"\\n\")\nif temp.quality>QUALITY_HIGH and dist > OUT_POS then\n    return true\nelse\n    return false\nend\n"
+            "test": "temp=chaos.getCurrentPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\n--io.write(temp.quality,\"\\n\")\nif temp.quality>QUALITY_HIGH and dist > OUT_POS then\n    return true\nelse\n    return false\nend\n"
           },
           {
             "name": "InAreaLoc",
@@ -418,7 +418,7 @@
             "y": 191,
             "to": "KeepInArea",
             "toId": 14,
-            "test": "temp=chaos.gsGetMyPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\nif temp.quality>QUALITY_HIGH and dist < OUT_POS then\n    return true\nelse\n    return false\nend\n"
+            "test": "temp=chaos.getCurrentPos()\ninitialPos=chaos.getDesiredPos()\ndx=initialPos.x - temp.x\ndy=initialPos.y - temp.y\ndist=math.sqrt(dx*dx + dy*dy)\n\nif temp.quality>QUALITY_HIGH and dist < OUT_POS then\n    return true\nelse\n    return false\nend\n"
           }
         ]
       }

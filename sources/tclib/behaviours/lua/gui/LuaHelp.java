@@ -153,12 +153,9 @@ public class LuaHelp
 					+ "<span class=\"mono\">SCAN_NONE</span>: the camera stays where the description points it." },
 		{ "setNeeded", "index, weight", "Says that the behaviour needs to keep seeing that object, and how much (0 to 1). "
 					+ "The vision of the simulation looks everywhere at once, so it is taken note of and no more." },
-		{ "getMyPos", "", "Where the robot thinks it is: x and y in mm, theta in degrees, in the field." },
+		{ "getCurrentPos", "", "Where the robot is now: x and y in mm, theta in degrees, in the field." },
 		{ "getStartPos", "", "Where the robot starts, the position it is put at for a kick-off: x and y in mm, theta in degrees, in the field." },
-		{ "gsGetMyPos", "", "The same, as the Chaos robots asked for it when the position came of the sight of the landmarks. "
-					+ "<span class=\"mono\">quality</span> says how sure it is (1 in the simulation)." },
 		{ "getBallVel", "", "How fast the ball is going, x and y in mm a second." },
-		{ "lps_getAstray", "", "Whether the robot is lost: <span class=\"mono\">astray</span> is always 0, as the simulation knows where it is." },
 		{ "setVlin", "mm/s", "How fast to go forward. Backwards is negative." },
 		{ "setVlat", "mm/s", "How fast to go sideways, to the left of the robot. It is commanded like the other two and it is "
 					+ "the platform that carries it out or not: a synchro drive steers every wheel together and goes sideways, "
@@ -186,7 +183,6 @@ public class LuaHelp
 		{ "getDesiredPos", "", "Where it was told to end up, as a point." },
 		{ "setKick", "", "Kick now." },
 		{ "setSynchroKick", "on", "Kick when the ball is where it should be (true or false)." },
-		{ "setSurround", "", "Go round the ball instead of at it." },
 		{ "trackLandMarks", "", "Point the camera at the landmarks. The camera of the simulation sees everywhere, so it does nothing." },
 		{ "getRole", "", "The part this robot plays in the team, in <span class=\"mono\">role</span>." },
 		{ "getOptimalPose", "", "Where the team would have this robot be, as a point." },
@@ -350,11 +346,10 @@ public class LuaHelp
 		 .append ("with what they are worth: a script reads them as <span class=\"mono\">ball.rho</span> or ")
 		 .append ("<span class=\"mono\">chaos.getGameState ().state</span>.</p>");
 		fields (h, "An object", "chaos.getLpo (index)", OBJECT_FIELDS);
-		fields (h, "A point", "getMyPos, getStartPos, gsGetMyPos, getDesiredPos, getBallVel, getOptimalPose, getDefPose", POINT_FIELDS);
+		fields (h, "A point", "getCurrentPos, getStartPos, getDesiredPos, getBallVel, getOptimalPose, getDefPose", POINT_FIELDS);
 		fields (h, "The behaviour", "chaos.getBehaviorInfo ()", BEHAVIOUR_FIELDS);
 		fields (h, "The game", "chaos.getGameState ()", GAME_FIELDS);
 		fields (h, "The part played", "chaos.getRole ()", ROLE_FIELDS);
-		fields (h, "Whether it is lost", "chaos.lps_getAstray ()", ASTRAY_FIELDS);
 
 		card (h, "math", "math", "tclib.behaviours.lua.interpreter.LuaLib",
 			  "The whole of the numbers. These are the functions of Lua, so they think in radians while everything of the "
@@ -412,7 +407,7 @@ public class LuaHelp
 
 	static private final String[][]	POINT_FIELDS =
 	{
-		{ "x", "number", "In mm: a position on the field (getMyPos, getDesiredPos, the poses) or a speed in mm a second (getBallVel)." },
+		{ "x", "number", "In mm: a position on the field (getCurrentPos, getDesiredPos, the poses) or a speed in mm a second (getBallVel)." },
 		{ "y", "number", "" },
 		{ "theta", "number", "The heading, in degrees; 0 for a speed." },
 		{ "quality", "number", "How good the position is, 0 to 1: 1 in the simulation, which knows where the robot is." },
@@ -452,10 +447,6 @@ public class LuaHelp
 		{ "role", "string", "The part the robot plays: player, goalie, ... as the settings say." },
 	};
 
-	static private final String[][]	ASTRAY_FIELDS =
-	{
-		{ "astray", "number", "1 when the robot is lost, 0 when it knows where it is: always 0 in the simulation." },
-	};
 
 	/** The fields of one of the tables the bridge answers, as a table of the help: name, type and what it is worth. */
 	static private void fields (StringBuilder h, String what, String from, String[][] fields)

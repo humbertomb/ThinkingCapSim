@@ -100,7 +100,6 @@ public class Chaos implements LuaBridge
 	protected ScanTypes				scan		= ScanTypes.SCAN_NONE;	// the scan of the camera the script asked for this cycle
 	protected boolean				kick;
 	protected boolean				synchrokick;
-	protected boolean				surround;
 	protected boolean				booked;
 
 	// What the scripts left for one another
@@ -265,7 +264,6 @@ public class Chaos implements LuaBridge
 	public ScanTypes scanType ()								{ return scan; }
 
 	public boolean kicking ()									{ return kick; }
-	public boolean surrounding ()								{ return surround; }
 	public Position desired ()									{ return desired; }
 
 	/** How much the machine says it needs each object of the LPS to be seen. */
@@ -281,7 +279,6 @@ public class Chaos implements LuaBridge
 		vrot	= 0.0;
 		vlat	= 0.0;
 		kick	= false;
-		surround	= false;
 		needed.clear ();
 	}
 
@@ -433,12 +430,8 @@ public class Chaos implements LuaBridge
 			}
 		});
 
-		c.set ("gsGetMyPos", new LuaFunction ("chaos.gsGetMyPos")
-		{
-			public Object call (Object[] args)		{ return point (pose.x (), pose.y (), pose.alpha ()); }
-		});
-
-		c.set ("getMyPos", new LuaFunction ("chaos.getMyPos")
+		// where the robot is now (it was getMyPos, and gsGetMyPos)
+		c.set ("getCurrentPos", new LuaFunction ("chaos.getCurrentPos")
 		{
 			public Object call (Object[] args)		{ return point (pose.x (), pose.y (), pose.alpha ()); }
 		});
@@ -452,17 +445,6 @@ public class Chaos implements LuaBridge
 		c.set ("getBallVel", new LuaFunction ("chaos.getBallVel")
 		{
 			public Object call (Object[] args)		{ return point (ballvel.x (), ballvel.y (), 0.0); }
-		});
-
-		c.set ("lps_getAstray", new LuaFunction ("chaos.lps_getAstray")
-		{
-			public Object call (Object[] args)
-			{
-				LuaTable	t = new LuaTable ();
-
-				t.set ("astray", Double.valueOf (0.0));						// the simulation never loses itself
-				return t;
-			}
 		});
 
 		/* ---- what the robot is asked to do ---- */
@@ -569,11 +551,6 @@ public class Chaos implements LuaBridge
 		c.set ("setSynchroKick", new LuaFunction ("chaos.setSynchroKick")
 		{
 			public Object call (Object[] args)		{ synchrokick = Lua.truth (arg (args, 0));	kick = synchrokick;	return null; }
-		});
-
-		c.set ("setSurround", new LuaFunction ("chaos.setSurround")
-		{
-			public Object call (Object[] args)		{ surround = true;	return null; }
 		});
 
 		c.set ("trackLandMarks", new LuaFunction ("chaos.trackLandMarks")
