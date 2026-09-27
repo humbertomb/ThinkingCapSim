@@ -7,7 +7,6 @@ package tcapps.tceditor;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Point;
 import java.awt.Window;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,9 +24,11 @@ import javax.swing.text.html.HTMLEditorKit;
  * support of Swing ({@link HTMLEditorKit}) rather than by anything of our own.
  * Whoever opens it hands over the page; this only shows it.
  *
- * One window per title: asking again for a page already open brings it to the
- * front and puts the new text in it, so a menu entry clicked twice does not
- * leave two windows behind.
+ * One window per window that asks: the help of an editor is one window, put
+ * against its top right side, and asking for another page from the same
+ * editor (Classes after Language) puts the new page and its title in that
+ * window rather than opening a second one. A window that goes away is made
+ * again the next time.
  */
 public class HelpWindow extends JFrame
 {
@@ -36,29 +37,32 @@ public class HelpWindow extends JFrame
 	static public final int			WIDTH	= 860;
 	static public final int			HEIGHT	= 700;
 
-	/** The windows open, by title. */
-	static private final Map<String, HelpWindow>	OPEN = new HashMap<String, HelpWindow> ();
+	/** The windows open, by the window that asked for them (null for none). */
+	static private final Map<Window, HelpWindow>	OPEN = new HashMap<Window, HelpWindow> ();
 
 	protected JEditorPane			view;
 
 	/**
-	 * Shows a page of help, or brings the one of that title to the front and
-	 * replaces what it says.
+	 * Shows a page of help in the help window of whoever asks: opened against the
+	 * top right of its window the first time, and given the new page and title
+	 * when it is open already.
 	 *
-	 * @param owner  component whose window the help is placed beside (may be null)
-	 * @param title  title of the window, and what tells one page of help from another
+	 * @param owner  component whose window asks for the help (may be null)
+	 * @param title  title of the page, which the window takes
 	 * @param html   the page itself
 	 */
 	static public HelpWindow show (Component owner, String title, String html)
 	{
-		HelpWindow	w = OPEN.get (title);
+		Window		win = (owner != null) ? SwingUtilities.getWindowAncestor (owner) : null;
+		HelpWindow	w = OPEN.get (win);
 
 		if ((w == null) || !w.isDisplayable ())
 		{
 			w	= new HelpWindow (title);
-			OPEN.put (title, w);
-			w.place (owner);
+			OPEN.put (win, w);
+			w.place (win);
 		}
+		w.setTitle (title);
 		w.setHtml (html);
 		w.setVisible (true);
 		w.toFront ();
@@ -122,13 +126,21 @@ public class HelpWindow extends JFrame
 		} catch (Throwable t)		{ }						// a page that cannot be opened is not worth a dialog
 	}
 
-	/** Beside the window of whoever opened it, and centred on the screen when there is none. */
-	protected void place (Component owner)
+	/**
+	 * Against the top right side of the window of whoever opened it (its top left
+	 * on that window's top right corner), as far right as the screen allows when
+	 * it does not fit there; centred on the screen when there is no window.
+	 */
+	protected void place (Window win)
 	{
-		Window		win = (owner != null) ? SwingUtilities.getWindowAncestor (owner) : null;
-
 		if (win == null)		{ setLocationRelativeTo (null); return; }
-		Point	p = win.getLocation ();
-		setLocation (p.x + Math.max (40, (win.getWidth () - getWidth ()) / 2), p.y + 40);
+
+		java.awt.Rectangle	screen = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment ().getMaximumWindowBounds ();
+		int					x = win.getX () + win.getWidth ();
+		int					y = win.getY ();
+
+		if ((x + getWidth ()) > (screen.x + screen.width))			x = Math.max (screen.x, screen.x + screen.width - getWidth ());
+		if ((y + getHeight ()) > (screen.y + screen.height))		y = Math.max (screen.y, screen.y + screen.height - getHeight ());
+		setLocation (x, y);
 	}
 }
