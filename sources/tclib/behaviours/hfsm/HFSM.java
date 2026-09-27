@@ -83,6 +83,13 @@ public class HFSM
 			this.vars		= machine.vars;
 			this.problems	= machine.problems;
 			this.behaviours	= machine.behpath;
+
+			// the extern meta states take in the machines of their files, so that one
+			// machine runs, whole, with the states of every file in their places
+			java.util.Set<String>	seen = new java.util.HashSet<String> ();
+
+			seen.add (canonical (file));
+			link (this.root, file, seen);
 		}
 		else
 		{
@@ -103,6 +110,73 @@ public class HFSM
 		if (bridge != null)			this.lua.set (bridge.name (), bridge.table ());
 		declare ();
 		reset ();
+	}
+
+	/**
+	 * Gives every extern meta state under a meta state what its file holds: the
+	 * states of the machine there, and which of them it starts at, become the
+	 * meta state's own; the constants of that file join those of this one. What
+	 * is inside is linked in turn, and a file that would come round to one being
+	 * read already is left out and said (it would never end).
+	 */
+	protected void link (MetaState m, File base, java.util.Set<String> seen)
+	{
+		for (State s : new java.util.ArrayList<State> (m.getStatesList ()))
+		{
+			if (!(s instanceof MetaState))				continue;
+
+			MetaState	ms = (MetaState) s;
+
+			if (ms.isExtern ())
+			{
+				File	f = HFSMJson.externFile (ms.getPathExtern (), base);
+
+				if (f == null)
+					problems.add ("Extern meta state '" + ms.getName () + "' names no file");
+				else if (!f.isFile ())
+					problems.add ("Extern meta state '" + ms.getName () + "': there is no " + f);
+				else if (seen.contains (canonical (f)))
+					problems.add ("Extern meta state '" + ms.getName () + "' comes round to " + f.getName () + ", which is being read already");
+				else
+				{
+					try
+					{
+						HFSMJson.Machine	other = HFSMJson.read (f);
+
+						for (String p : other.problems)		problems.add (f.getName () + ": " + p);
+						for (XMLParser.PrivateVar v : other.vars)
+							if (!declared (v.name))			vars.add (v);
+						ms.resetStates ();
+						for (State o : other.root.getStatesList ())		ms.addState (o);
+						ms.setInitialState (other.root.getInitialState ());
+						if (ms.getInitialState () == null)
+							problems.add ("Extern meta state '" + ms.getName () + "': " + f.getName () + " says nowhere to start");
+						seen.add (canonical (f));
+						link (ms, f, seen);							// what it holds may be extern in turn
+						seen.remove (canonical (f));				// the same file may be used twice, as two meta states, only not inside itself
+					}
+					catch (Exception e)
+					{
+						problems.add ("Extern meta state '" + ms.getName () + "': cannot read " + f + ": " + e.getMessage ());
+					}
+				}
+			}
+			else
+				link (ms, base, seen);
+		}
+	}
+
+	private boolean declared (String name)
+	{
+		for (XMLParser.PrivateVar v : vars)
+			if ((v.name != null) && v.name.equals (name))	return true;
+		return false;
+	}
+
+	static private String canonical (File f)
+	{
+		try { return f.getCanonicalPath (); }
+		catch (Exception e) { return f.getAbsolutePath (); }
 	}
 
 	/* ------------------------------------------------------------------ */

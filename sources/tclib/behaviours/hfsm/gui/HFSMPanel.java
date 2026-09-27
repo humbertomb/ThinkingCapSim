@@ -9,6 +9,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -28,6 +29,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JSplitPane;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
@@ -457,7 +459,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		return null;
 	}
 
-	/** A folder as it is written in the file: under the working directory, as ./..., and otherwise as it is. */
+	/** A folder or a file as it is written in the file: under the working directory, as ./..., and otherwise as it is. */
 	static protected String relative (File dir)
 	{
 		try
@@ -723,6 +725,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 				if (line.trim ().length () > 0)		problems.add (line.trim ());
 		root.compileAll (problems);
 		checkBehaviours (problems);
+		checkExterns (root, problems);
 
 		JOptionPane.showMessageDialog (this, problems.isEmpty () ? "The machine is correct." : join (problems), TITLE,
 									   problems.isEmpty () ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
@@ -761,6 +764,38 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	}
 
 	/** Whether every behaviour the scripts name is a Lua program in the folder of the behaviours. */
+	/** The extern meta states: each names a file that is there and reads as a machine, and none is this very file. */
+	protected void checkExterns (MetaState m, List<String> problems)
+	{
+		for (State s : m.getStatesList ())
+		{
+			if (!(s instanceof MetaState))				continue;
+
+			MetaState	ms = (MetaState) s;
+
+			if (ms.isExtern ())
+			{
+				File	f = HFSMJson.externFile (ms.getPathExtern (), file);
+
+				if (f == null)								problems.add ("Extern meta state '" + ms.getName () + "' names no file");
+				else if (!f.isFile ())						problems.add ("Extern meta state '" + ms.getName () + "': there is no " + f);
+				else if ((file != null) && f.getAbsoluteFile ().equals (file.getAbsoluteFile ()))
+															problems.add ("Extern meta state '" + ms.getName () + "' is this very machine");
+				else
+					try
+					{
+						HFSMJson.Machine	other = HFSMJson.read (f);
+
+						for (String p : other.problems)		problems.add (f.getName () + ": " + p);
+						if (other.root.getInitialState () == null)
+							problems.add ("Extern meta state '" + ms.getName () + "': " + f.getName () + " says nowhere to start");
+					}
+					catch (Exception e)						{ problems.add ("Extern meta state '" + ms.getName () + "': cannot read " + f + ": " + e.getMessage ()); }
+			}
+			checkExterns (ms, problems);
+		}
+	}
+
 	protected void checkBehaviours (List<String> problems)
 	{
 		List<String>	names = behaviours (root);
@@ -879,6 +914,100 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		dirty	= true;
 		refresh ();
 		status (what);
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* The menu of a state                                                 */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * The right button on a state or a meta state: rename it, name the file of an
+	 * extern meta state, or turn a plain state into a meta state, of this file or
+	 * of another. What does not apply to the one under the mouse is there, greyed.
+	 */
+	public void nodeMenu (final State s, int x, int y)
+	{
+		JPopupMenu		menu = new JPopupMenu ();
+		boolean			plain = !(s instanceof MetaState);
+		boolean			extern = (s instanceof MetaState) && ((MetaState) s).isExtern ();
+		JMenuItem		item;
+
+		item	= new JMenuItem ("Rename...");
+		item.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ canvas.rename (s); }
+		});
+		menu.add (item);
+
+		item	= new JMenuItem ("Set filename...");
+		item.setEnabled (extern);
+		item.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ setFilename ((MetaState) s); }
+		});
+		menu.add (item);
+		menu.addSeparator ();
+
+		item	= new JMenuItem ("Convert to metastate");
+		item.setEnabled (plain);
+		item.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ convert (s, false); }
+		});
+		menu.add (item);
+
+		item	= new JMenuItem ("Convert to external metastate");
+		item.setEnabled (plain);
+		item.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ convert (s, true); }
+		});
+		menu.add (item);
+
+		menu.show (canvas, x, y);
+	}
+
+	/** Asks which .hfsm an extern meta state takes its states from, and keeps it with the machine (as ./... under the working directory). */
+	public void setFilename (MetaState m)
+	{
+		JFileChooser	fc = chooser (HFSMJson.SUFFIX, "State machines (*" + HFSMJson.SUFFIX + ")", "hfsm");
+		File			now = HFSMJson.externFile (m.getPathExtern (), file);
+
+		fc.setDialogTitle ("The file of the extern meta state " + m.getName ());
+		if ((now != null) && now.exists ())		fc.setSelectedFile (now);
+		if (fc.showOpenDialog (this) != JFileChooser.APPROVE_OPTION)		return;
+
+		File	chosen = fc.getSelectedFile ();
+
+		if ((file != null) && chosen.getAbsoluteFile ().equals (file.getAbsoluteFile ()))
+		{
+			JOptionPane.showMessageDialog (this, "A meta state cannot take its states from the very machine it is in.", TITLE, JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+		m.setPathExtern (relative (chosen));
+		canvas.setSelection (m);
+		machineChanged ("Set filename");
+	}
+
+	/**
+	 * A plain state becomes a meta state (of this file, or an extern one whose
+	 * states are in a file to be named): its script goes, which is said first when
+	 * it has one.
+	 */
+	public void convert (State s, boolean extern)
+	{
+		if ((s == null) || (s instanceof MetaState))		return;
+		if ((s.getCode () != null) && (s.getCode ().trim ().length () > 0)
+			&& (JOptionPane.showConfirmDialog (this, "The state " + s.getName () + " has a script, which a meta state has not: it goes. Convert it?",
+											   TITLE, JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION))
+			return;
+
+		MetaState	m = HFSMEdit.convert (root, s, extern);
+
+		if (m == null)										return;
+		canvas.setSelection (m);
+		machineChanged (extern ? "Convert to external metastate" : "Convert to metastate");
+		if (extern)											setFilename (m);
 	}
 
 	public void statusChanged (String text)				{ status (text); }

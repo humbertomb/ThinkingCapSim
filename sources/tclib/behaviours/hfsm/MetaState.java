@@ -246,6 +246,15 @@ public class MetaState extends State
 	{
 		boolean		r = true;
 
+		if (this.extern && (this.states.size () == 0))		// what it holds is in its file: checked when it is linked
+		{
+			if ((this.pathExtern == null) || (this.pathExtern.trim ().length () == 0))
+			{
+				this.error	+= "ERROR in Meta State '" + this.name + "' : extern Meta State names no file.\n";
+				return false;
+			}
+			return true;
+		}
 		if (this.states.size () == 0)
 		{
 			this.error	+= "ERROR in Meta State '" + this.name + "' : Meta State is empty.\n";

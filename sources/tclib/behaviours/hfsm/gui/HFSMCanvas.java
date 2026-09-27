@@ -95,6 +95,8 @@ public class HFSMCanvas extends JPanel
 		public void machineChanged (String what);
 		public void statusChanged (String text);
 		public void usageChanged (String text);
+		/** The right button on a state or a meta state: whoever edits may offer a menu there (screen coordinates of the canvas). */
+		default public void nodeMenu (State s, int x, int y)		{ }
 		/** A tool finished what it was for (back to Select). */
 		public void toolFinished ();
 	}
@@ -360,7 +362,16 @@ public class HFSMCanvas extends JPanel
 
 		if (SwingUtilities.isRightMouseButton (e))
 		{
-			if (tool != T_SELECT)			{ setTool (T_SELECT);	if (listener != null) listener.toolFinished (); }
+			if (tool != T_SELECT)			{ setTool (T_SELECT);	if (listener != null) listener.toolFinished (); return; }
+
+			// on a state or a meta state, while editing: it is selected and offered its menu
+			Object	hit = pick (x, y);
+
+			if (!watch && (hit instanceof State))
+			{
+				if (!selected.contains (hit))	setSelection (hit);
+				if (listener != null)			listener.nodeMenu ((State) hit, e.getX (), e.getY ());
+			}
 			return;
 		}
 
@@ -771,12 +782,41 @@ public class HFSMCanvas extends JPanel
 			MetaState	m = (MetaState) s;
 
 			label (g, m.getStateCount () + "+" + m.getMetaStateCount (), x, y + r - 8 * scale, C_LEVEL, 10);
+			if (m.isExtern ())			file (g, x + r * 0.62, y + r * 0.62);	// what it holds is in a file: a sheet at its bottom right
 		}
 		// a name that does not fit inside the circle goes under it
 		if (width (g, s.getName (), 12) < (2 * r - 8))
 			label (g, s.getName (), x, y + 4 * scale, now ? C_LIVE : C_TEXT, 12);
 		else
 			label (g, s.getName (), x, y + r + 14 * scale, now ? C_LIVE : C_TEXT, 12);
+	}
+
+	/**
+	 * A sheet of paper with its corner folded, on a circle: an extern meta state,
+	 * whose states are in a file of their own. Centred on (cx, cy), in pixels.
+	 */
+	private void file (Graphics2D g, double cx, double cy)
+	{
+		double		w = 12 * scale, h = 15 * scale, f = 4 * scale;
+		double		x = cx - w / 2, y = cy - h / 2;
+		Path2D		sheet = new Path2D.Double ();
+
+		sheet.moveTo (x, y);
+		sheet.lineTo (x + w - f, y);
+		sheet.lineTo (x + w, y + f);
+		sheet.lineTo (x + w, y + h);
+		sheet.lineTo (x, y + h);
+		sheet.closePath ();
+		g.setColor (Color.WHITE);
+		g.fill (sheet);
+		g.setColor (C_EDGE);
+		g.setStroke (new BasicStroke (1.1f));
+		g.draw (sheet);
+		g.draw (new Line2D.Double (x + w - f, y, x + w - f, y + f));			// the fold
+		g.draw (new Line2D.Double (x + w - f, y + f, x + w, y + f));
+		g.setStroke (new BasicStroke (0.9f));
+		for (int i = 1; i <= 3; i++)											// lines of text
+			g.draw (new Line2D.Double (x + 2.5 * scale, y + f + i * 3 * scale, x + w - 2.5 * scale, y + f + i * 3 * scale));
 	}
 
 	/** A transition as a box in light cyan. */
@@ -901,7 +941,8 @@ public class HFSMCanvas extends JPanel
 			MetaState	m = (MetaState) o;
 
 			listener.statusChanged ("Meta state " + m.getName () + " [" + m.getId () + "]: " + m.getStateCount () + " states, "
-									+ m.getMetaStateCount () + " meta states, " + m.getTransitionCount () + " transitions");
+									+ m.getMetaStateCount () + " meta states, " + m.getTransitionCount () + " transitions"
+									+ (m.isExtern () ? ("  --  extern, from " + ((m.getPathExtern () != null) ? m.getPathExtern () : "no file yet")) : ""));
 		}
 		else if (o instanceof State)
 		{

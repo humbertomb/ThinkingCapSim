@@ -64,6 +64,22 @@ public class HFSMJson
 	/** How a file of a machine is named. */
 	static public final String		SUFFIX		= ".hfsm";
 
+	/**
+	 * The file of an extern meta state, from the path it keeps: as it is when it
+	 * is absolute or from the working directory (./conf/...), and beside the file
+	 * that names it otherwise. Null when there is no path.
+	 */
+	static public File externFile (String path, File base)
+	{
+		if ((path == null) || (path.trim ().length () == 0))		return null;
+
+		File	f = new File (path.trim ());
+
+		if (f.isAbsolute () || path.startsWith ("./") || path.startsWith ("../"))		return f;
+		File	dir = (base != null) ? base.getAbsoluteFile ().getParentFile () : null;
+		return (dir != null) ? new File (dir, path.trim ()) : f;
+	}
+
 	/** Where the machines are kept. */
 	static public final String		FOLDER		= "./conf/programs/hfsm";
 

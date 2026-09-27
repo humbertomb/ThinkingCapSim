@@ -266,6 +266,36 @@ public class HFSMEdit
 		return first;
 	}
 
+	/**
+	 * Turns a plain state into a meta state, in its place: the same name, id and
+	 * position, the transitions that left it leave the meta state, the ones that
+	 * arrived at it arrive there, and it starts its level if the state did. An
+	 * extern one has what it holds in a file (to be named): it starts empty.
+	 * The script of the state goes: a meta state has none. The meta state.
+	 */
+	static public MetaState convert (MetaState root, State s, boolean extern)
+	{
+		MetaState		parent = parent (root, s);
+
+		if ((s == null) || (s instanceof MetaState) || (parent == null))		return null;
+
+		MetaState		m = new MetaState (s.getName (), s.getId (), s.getX (), s.getY ());
+		List<State>		list = parent.getStatesList ();
+		int				at = list.indexOf (s);
+
+		m.setExtern (extern);
+		for (Transition t : new java.util.ArrayList<Transition> (s.getTransitions ()))
+		{
+			s.removeTransition (t);
+			m.addTransition (t);
+		}
+		for (Transition t : transitions (root))
+			if (t.getArrivalState () == s)		t.setArrivalState (m);
+		list.set (at, m);
+		if (parent.getInitialState () == s)		parent.setInitialState (m);
+		return m;
+	}
+
 	/** Makes a state the one its meta state starts at. */
 	static public void setInitial (MetaState root, State s)
 	{
