@@ -517,9 +517,12 @@ public class HFSMCanvas extends JPanel
 		Object		hit = pick (wx (e.getX ()), wy (e.getY ()));
 
 		// the background goes out of the level, a meta state goes into it, and anything
-		// else is renamed -- but not while the machine is only being watched
+		// else is renamed -- but not while the machine is only being watched. An extern
+		// meta state has nothing inside while it is edited (its states are in its file),
+		// so it is renamed as a plain state is; watched, it holds them and is entered
 		if (hit == null)						{ if (canGoUp ())	levelUp ();		return; }
-		if (hit instanceof MetaState)			{ setLevel ((MetaState) hit);		return; }
+		if ((hit instanceof MetaState) && (watch || !((MetaState) hit).isExtern ()))
+												{ setLevel ((MetaState) hit);		return; }
 		if (!watch)								rename (hit);
 	}
 

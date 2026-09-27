@@ -95,7 +95,23 @@ public class SimRobot extends VirtualRobot
 		vrot	= 0.0;
 		
 		simul.reset (r_index, data, map);
+		startProps ();
 		reset_cameras ();
+	}
+
+	/**
+	 * Where the robot starts, in the description it sends the modules (CONFIG):
+	 * START_X, START_Y in metres and START_A in radians, as the simulator has it
+	 * after the last reset. A controller gives it to its scripts (chaos.getStartPos).
+	 */
+	protected void startProps ()
+	{
+		double[]	p = simul.startPose (r_index);
+
+		if ((p == null) || (rprops == null))		return;
+		rprops.setProperty ("START_X", String.valueOf (p[0]));
+		rprops.setProperty ("START_Y", String.valueOf (p[1]));
+		rprops.setProperty ("START_A", String.valueOf (p[2]));
 	}
 
 	/** The cameras back where the description points them: what they were told (CAMERA_CTRL) is forgotten. */
@@ -118,6 +134,7 @@ public class SimRobot extends VirtualRobot
 		vrot	= 0.0;
 		simul.reset (r_index, data, start.x (), start.y (), start.z ());
 		data.location (start.x (), start.y (), start.z ());
+		startProps ();
 	}
 	
 	public void process_sensors (long dtime)

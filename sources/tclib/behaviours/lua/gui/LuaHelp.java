@@ -154,6 +154,7 @@ public class LuaHelp
 		{ "setNeeded", "index, weight", "Says that the behaviour needs to keep seeing that object, and how much (0 to 1). "
 					+ "The vision of the simulation looks everywhere at once, so it is taken note of and no more." },
 		{ "getMyPos", "", "Where the robot thinks it is: x and y in mm, theta in degrees, in the field." },
+		{ "getStartPos", "", "Where the robot starts, the position it is put at for a kick-off: x and y in mm, theta in degrees, in the field." },
 		{ "gsGetMyPos", "", "The same, as the Chaos robots asked for it when the position came of the sight of the landmarks. "
 					+ "<span class=\"mono\">quality</span> says how sure it is (1 in the simulation)." },
 		{ "getBallVel", "", "How fast the ball is going, x and y in mm a second." },
@@ -348,7 +349,7 @@ public class LuaHelp
 		 .append ("with what they are worth: a script reads them as <span class=\"mono\">ball.rho</span> or ")
 		 .append ("<span class=\"mono\">chaos.getGameState ().state</span>.</p>");
 		fields (h, "An object", "chaos.getLpo (index)", OBJECT_FIELDS);
-		fields (h, "A point", "getMyPos, gsGetMyPos, getDesiredPos, getBallVel, getOptimalPose, getDefPose", POINT_FIELDS);
+		fields (h, "A point", "getMyPos, getStartPos, gsGetMyPos, getDesiredPos, getBallVel, getOptimalPose, getDefPose", POINT_FIELDS);
 		fields (h, "The behaviour", "chaos.getBehaviorInfo ()", BEHAVIOUR_FIELDS);
 		fields (h, "The game", "chaos.getGameState ()", GAME_FIELDS);
 		fields (h, "The part played", "chaos.getRole ()", ROLE_FIELDS);

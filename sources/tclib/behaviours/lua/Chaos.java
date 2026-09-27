@@ -84,6 +84,7 @@ public class Chaos implements LuaBridge
 	protected String[]				lpos		= LPOS;
 	protected Position				pose		= new Position ();		// where the robot is (m, rad)
 	protected Position				desired		= new Position ();		// where it has been told to go
+	protected Position				start		= new Position ();		// where it starts (m, rad): its position at a kick-off
 	protected Position				ballvel		= new Position ();		// how fast the ball goes (m/s)
 	protected String				role		= "player";
 	protected volatile ItemReferee	referee;							// the last thing the referee said, null while nothing
@@ -192,6 +193,9 @@ public class Chaos implements LuaBridge
 	}
 
 	public void pose (Position p)								{ if (p != null) pose.set (p); }
+	/** Where the robot starts, which the scripts read with chaos.getStartPos. */
+	public void start (double x, double y, double alpha)		{ start.set (x, y, alpha); }
+	public Position start ()									{ return start; }
 	public Position pose ()										{ return pose; }
 
 	public void ballVelocity (double vx, double vy)				{ ballvel.set (vx, vy); }
@@ -415,6 +419,12 @@ public class Chaos implements LuaBridge
 		c.set ("getMyPos", new LuaFunction ("chaos.getMyPos")
 		{
 			public Object call (Object[] args)		{ return point (pose.x (), pose.y (), pose.alpha ()); }
+		});
+
+		// where the robot starts: the position it is put at for a kick-off
+		c.set ("getStartPos", new LuaFunction ("chaos.getStartPos")
+		{
+			public Object call (Object[] args)		{ return point (start.x (), start.y (), start.alpha ()); }
 		});
 
 		c.set ("getBallVel", new LuaFunction ("chaos.getBallVel")

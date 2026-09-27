@@ -321,10 +321,17 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		}));
 	}
 
+	/**
+	 * A key of the diagram, taken only while the diagram has the focus: bound to
+	 * the panel, for any focused child, the I of the initial state fired while a
+	 * script was being typed (the refresh it brings put the caret at the start of
+	 * the line, and the letter went there), and the letters of the tools changed
+	 * the tool under the typist's fingers.
+	 */
 	private void bind (KeyStroke key, String name, Action a)
 	{
-		getInputMap (JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put (key, name);
-		getActionMap ().put (name, a);
+		canvas.getInputMap (JComponent.WHEN_FOCUSED).put (key, name);
+		canvas.getActionMap ().put (name, a);
 	}
 
 	/* ------------------------------------------------------------------ */
