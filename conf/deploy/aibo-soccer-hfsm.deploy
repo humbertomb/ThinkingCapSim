@@ -76,7 +76,7 @@
             "PASSIVE": "false",
             "GFX": "true",
             "EXTIME": "100",
-            "CLASS": "tcrob.umu.quaky2.SoccerSupervisorSimul"
+            "CLASS": "tcrob.umu.quaky2.SoccerRefereeSimul"
           },
           "events": []
         }

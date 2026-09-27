@@ -20,7 +20,8 @@ import tcrob.umu.quaky2.gui.SoccerRefereeWindow;
 /**
  * The referee of a simulated soccer match: it looks at where the simulator
  * really has the ball and the robots and decides on them. The ball leaving the
- * field (the zone FIELD) is a fault; the ball getting inside a net (the zones
+ * field (the zone FIELD) is a fault, and the ball is put back still on the line
+ * of the field, at the point nearest to where it went out; the ball getting inside a net (the zones
  * NET1, NET2, Net1Inside and Net2Inside) is a goal for the team that attacks
  * that net, the red team owning the red net (Net1) and the blue team the blue
  * one (Net2). A robot in the area of a net (AREA1, AREA2, Net1Area and
@@ -175,8 +176,18 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 			}
 			if ((inField != null) && inField.booleanValue () && !field.booleanValue ())
 			{
+				double[]	back = onTheLine (x, y, ball.radius);
+
 				faults++;
-				announce ("FAULT: ball out of the field at (" + fmt (x) + ", " + fmt (y) + ")  --  faults: " + faults);
+				if (back != null)
+				{
+					sim.placeObject (index (ball), back[0], back[1], ball.odesc.a);		// still, on the line, nearest to where it went out
+					announce ("FAULT: ball out of the field at (" + fmt (x) + ", " + fmt (y) + "), put back on the line at ("
+							  + fmt (back[0]) + ", " + fmt (back[1]) + ")  --  faults: " + faults);
+					field	= Boolean.TRUE;								// it is in the field again, and nothing to say about it
+				}
+				else
+					announce ("FAULT: ball out of the field at (" + fmt (x) + ", " + fmt (y) + ")  --  faults: " + faults);
 			}
 			else if ((inField != null) && !inField.booleanValue () && field.booleanValue ())
 				announce ("Ball back in the field");
@@ -286,6 +297,35 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		String[]	n = list.trim ().split ("[,;\\s]+");
 
 		return (n.length > 0) ? n : null;
+	}
+
+	/**
+	 * The point of the line of the field nearest to a point outside it, brought in
+	 * by the radius of the ball so that the ball rests on the line and not beyond
+	 * it; null when there is no field to speak of.
+	 */
+	protected double[] onTheLine (double x, double y, double radius)
+	{
+		WMZone		f = (world != null) ? world.zones ().at (fieldName) : null;
+
+		if (f == null)								return null;
+
+		double		in = Math.max (0.0, radius) + 0.005;
+		double		x0 = f.area.getMinX () + in, x1 = f.area.getMaxX () - in;
+		double		y0 = f.area.getMinY () + in, y1 = f.area.getMaxY () - in;
+
+		return new double[] { Math.min (Math.max (x, x0), x1), Math.min (Math.max (y, y0), y1) };
+	}
+
+	/** Which of the objects of the simulator one is, or -1. */
+	protected int index (SimObject o)
+	{
+		Simulator	s = sim;
+
+		if ((s == null) || (s.objects == null))		return -1;
+		for (int i = 0; i < s.objects.numobjects; i++)
+			if (s.objects.OBJS[i] == o)				return i;
+		return -1;
 	}
 
 	/** The simulated ball, or null while there is none to look at. */

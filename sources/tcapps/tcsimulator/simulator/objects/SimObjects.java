@@ -96,7 +96,11 @@ public class SimObjects
 		o.pos.set (x, y, o.pos.z ());
 		o.a		= a;
 		o.invalidate ();
-		if (OBJS[i] instanceof SimMobileObject)		((SimMobileObject) OBJS[i]).v = 0.0;
+		if (OBJS[i] instanceof SimMobileObject)		// put down by hand: it stops where it is put
+		{
+			((SimMobileObject) OBJS[i]).v		= 0.0;
+			((SimMobileObject) OBJS[i]).SPEED	= 0.0;
+		}
 		updateIcon (i);
 	}
 

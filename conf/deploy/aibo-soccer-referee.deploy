@@ -71,7 +71,7 @@
         {
           "name": "Referee",
           "properties": {
-            "CLASS": "tcrob.umu.quaky2.SoccerSupervisorSimul",
+            "CLASS": "tcrob.umu.quaky2.SoccerRefereeSimul",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "false",
