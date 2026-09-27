@@ -10,6 +10,7 @@ import java.util.Map;
 import devices.pos.Position;
 
 import tc.shared.linda.ItemBehNeeds.ScanTypes;
+import tcrob.umu.soccer.linda.ItemReferee;
 import tc.shared.lps.LPS;
 import tc.shared.lps.lpo.LPO;
 
@@ -69,6 +70,15 @@ public class Chaos
 	 */
 	static public final ScanTypes[]	SCANS		= ScanTypes.values ();
 
+	/**
+	 * The states of the game the referee may say (chaos.getGameState), as
+	 * constants of the table: REFEREE_INITIAL, REFEREE_READY, REFEREE_SET,
+	 * REFEREE_PLAYING, REFEREE_PENALIZED and REFEREE_FINISHED, each worth its place
+	 * in {@link ItemReferee.GameStates}.
+	 */
+	static public final ItemReferee.GameStates[]	STATES	= ItemReferee.GameStates.values ();
+	static public final String		REFEREE_	= "REFEREE_";
+
 	// What the robot knows
 	protected LPS					lps;
 	protected String[]				lpos		= LPOS;
@@ -76,6 +86,7 @@ public class Chaos
 	protected Position				desired		= new Position ();		// where it has been told to go
 	protected Position				ballvel		= new Position ();		// how fast the ball goes (m/s)
 	protected String				role		= "player";
+	protected volatile ItemReferee	referee;							// the last thing the referee said, null while nothing
 
 	// What the scripts commanded
 	protected double				vlin;								// mm/s
@@ -156,6 +167,8 @@ public class Chaos
 		}
 		for (int i = 0; i < SCANS.length; i++)						// and the kinds of scan, by the name of the enum
 			table.set (SCANS[i].name (), Double.valueOf (i));
+		for (int i = 0; i < STATES.length; i++)					// and the states of the game: REFEREE_PLAYING and so on
+			table.set (REFEREE_ + STATES[i].name (), Double.valueOf (i));
 	}
 
 	/** What the constant of an object of the LPS is called: Net1 is NET1_LPO. */
@@ -203,6 +216,10 @@ public class Chaos
 
 	/** Whether the behaviour was chosen in this very cycle, which a behaviour asks to set itself up. */
 	public boolean behaviourIsNew ()							{ return behaviournew; }
+
+	/** What the referee last said (REFEREE), for the scripts to read (chaos.getGameState); null while nothing. */
+	public void referee (ItemReferee item)						{ referee = item; }
+	public ItemReferee referee ()								{ return referee; }
 
 	/** The scan of the camera the scripts asked for on this cycle: none unless one said so (chaos.setScanType). */
 	public ScanTypes scanType ()								{ return scan; }
@@ -450,6 +467,29 @@ public class Chaos
 				t.set ("time", t.get ("timer"));
 				t.set ("finished", Double.valueOf (0.0));
 				t.set ("failed", Double.valueOf (0.0));
+				return t;
+			}
+		});
+
+		// what the referee says: the state of the game as one of the REFEREE_ constants
+		// (REFEREE_INITIAL while it has said nothing) and the last decision
+		c.set ("getGameState", new LuaFunction ("chaos.getGameState")
+		{
+			public Object call (Object[] args)
+			{
+				ItemReferee	r = referee;
+				LuaTable	t = new LuaTable ();
+
+				t.set ("state", Double.valueOf ((r != null) ? r.state.ordinal () : 0));
+				t.set ("name", (r != null) ? r.state.name () : ItemReferee.GameStates.INITIAL.name ());
+				t.set ("player", Double.valueOf ((r != null) ? r.player : -1));
+				t.set ("event", (r != null) ? r.event.name () : "");
+				t.set ("team", Double.valueOf ((r != null) ? r.team : -1));
+				t.set ("robot", ((r != null) && (r.robot != null)) ? r.robot : "");
+				t.set ("text", (r != null) ? r.text : "");
+				t.set ("score1", Double.valueOf ((r != null) ? r.score1 : 0));
+				t.set ("score2", Double.valueOf ((r != null) ? r.score2 : 0));
+				t.set ("time", Double.valueOf ((r != null) ? r.time : 0));
 				return t;
 			}
 		});

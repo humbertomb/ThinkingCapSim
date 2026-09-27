@@ -58,6 +58,7 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 	protected SoccerRefereeSimul	referee;
 	protected Scoreboard			board;
 	protected JLabel				clock;
+	protected JLabel				state;						// the state of the game, over the clock
 	protected JTextArea				ticker;
 	protected Timer					timer;
 	protected int					shown;						// how many decisions the ticker has
@@ -91,11 +92,24 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 		ticker.setBorder (BorderFactory.createEmptyBorder (6, 8, 6, 8));
 		for (Supervisor.Decision d : referee.decisions ())		line (d);
 
+		// the state of the game, small, over the clock
+		state	= new JLabel (referee.state ().name (), SwingConstants.CENTER);
+		state.setFont (new Font (Font.SANS_SERIF, Font.BOLD, 18));
+		state.setForeground (C_DASH);
+		state.setOpaque (true);
+		state.setBackground (C_BOARD);
+
+		JPanel		clocks = new JPanel (new BorderLayout ());
+
+		clocks.setBackground (C_BOARD);
+		clocks.add (state, BorderLayout.NORTH);
+		clocks.add (clock, BorderLayout.CENTER);
+
 		JPanel		top = new JPanel (new BorderLayout ());
 
 		top.setBackground (C_BOARD);
 		top.add (board, BorderLayout.CENTER);
-		top.add (clock, BorderLayout.SOUTH);
+		top.add (clocks, BorderLayout.SOUTH);
 
 		JScrollPane	scroll = new JScrollPane (ticker);
 
@@ -176,6 +190,7 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 
 		clock.setText ((left >= 0) ? Supervisor.clock (left) : Supervisor.clock (referee.elapsed ()));
 		clock.setForeground (referee.isOver () ? C_CLOCK_OVER : C_CLOCK);
+		state.setText (referee.state ().name ());
 		board.repaint ();
 	}
 

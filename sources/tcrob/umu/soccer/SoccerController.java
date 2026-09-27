@@ -17,7 +17,11 @@ public class SoccerController extends HFSMController
 		super (cfg, linda);
 	}
 
+	/** What the referee says (REFEREE) goes to the machine through the bridge: chaos.getGameState reads it. */
 	public void notify_referee (String space, ItemReferee item)
 	{
+		if (item == null)			return;
+		chaos.referee (item);
+		if (debug)					System.out.println ("  [SoccerController] " + item);
 	}
 }

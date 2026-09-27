@@ -167,6 +167,14 @@ public class LuaHelp
 		{ "setVelocities", "vlin, vlat, vrot", "The three at once: along, across and around, in mm/s and deg/s." },
 		{ "setBehavior", "name", "The behaviour to run: the file <span class=\"mono\">&lt;name&gt;.lua</span> of the folder of the "
 					+ "behaviours (BEH), which is run right after the program on the same cycle." },
+		{ "getGameState", "", "What the referee last said: <span class=\"mono\">state</span>, one of the constants "
+					+ "<span class=\"mono\">chaos.REFEREE_INITIAL</span>, <span class=\"mono\">REFEREE_READY</span>, <span class=\"mono\">REFEREE_SET</span>, "
+					+ "<span class=\"mono\">REFEREE_PLAYING</span>, <span class=\"mono\">REFEREE_PENALIZED</span>, <span class=\"mono\">REFEREE_FINISHED</span> "
+					+ "(and <span class=\"mono\">name</span>, the same as text); <span class=\"mono\">player</span>, the robot it is about (-1 for all); "
+					+ "<span class=\"mono\">event</span> (STATE, KICKOFF, GOAL, KICKOFF_SHOT, BALL_OUT, ILLEGAL_DEFENDER, TIME_UP), "
+					+ "<span class=\"mono\">team</span> and <span class=\"mono\">robot</span> it concerns, <span class=\"mono\">text</span>, "
+					+ "<span class=\"mono\">score1</span>, <span class=\"mono\">score2</span> and <span class=\"mono\">time</span> (ms of match). "
+					+ "REFEREE_INITIAL while no referee has spoken." },
 		{ "getBehaviorInfo", "", "About the behaviour running: <span class=\"mono\">name</span>, "
 					+ "<span class=\"mono\">isNew</span> (1 on its first cycle, 0 afterwards), <span class=\"mono\">timer</span> "
 					+ "and <span class=\"mono\">time</span> (ms since it started), <span class=\"mono\">finished</span> and "
@@ -326,6 +334,12 @@ public class LuaHelp
 		for (int i = 0; i < Chaos.SCANS.length; i++)
 			h.append ("<tr valign=\"top\"><td width=\"38%\"><span class=\"mono\"><b>")
 			 .append (Chaos.SCANS[i].name ()).append ("</b></span></td><td>").append (i).append ("</td></tr>");
+		h.append ("</table>");
+		h.append ("<p>The states of the game the referee says (<span class=\"mono\">chaos.getGameState</span>) are constants too:</p>");
+		h.append ("<table width=\"100%\" cellpadding=\"4\" cellspacing=\"0\">");
+		for (int i = 0; i < Chaos.STATES.length; i++)
+			h.append ("<tr valign=\"top\"><td width=\"38%\"><span class=\"mono\"><b>")
+			 .append (Chaos.REFEREE_).append (Chaos.STATES[i].name ()).append ("</b></span></td><td>").append (i).append ("</td></tr>");
 		h.append ("</table><br>");
 
 		// the tables the bridge answers with

@@ -12,7 +12,7 @@
         {
           "name": "Controller",
           "properties": {
-            "CLASS": "tclib.behaviours.lua.LuaController",
+            "CLASS": "tcrob.umu.soccer.SoccerController",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
@@ -25,6 +25,11 @@
               "symbol": "LPS",
               "itemClass": "tc.shared.linda.ItemLPS",
               "method": "notify_lps"
+            },
+            {
+              "symbol": "REFEREE",
+              "itemClass": "tcrob.umu.soccer.linda.ItemReferee",
+              "method": "notify_referee"
             }
           ]
         },
