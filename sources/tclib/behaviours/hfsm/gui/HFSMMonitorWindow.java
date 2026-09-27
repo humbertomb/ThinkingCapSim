@@ -105,6 +105,7 @@ public class HFSMMonitorWindow extends JFrame
 		setTitle (title ());
 
 		canvas	= new HFSMCanvas ((machine != null) ? machine.root () : new MetaState ("nothing", 0));
+		canvas.setFile ((machine != null) ? machine.file () : null);
 		canvas.setWatching (true);
 
 		where	= new JLabel (" ");
@@ -218,6 +219,7 @@ public class HFSMMonitorWindow extends JFrame
 				machine	= m;
 				holder	= null;										// the diagram finds where the new one is
 				canvas.setMachine ((m != null) ? m.root () : new MetaState ("nothing", 0));
+				canvas.setFile ((m != null) ? m.file () : null);
 				vars.source ((m != null) ? m.lua () : null, (m != null) ? m.bridge () : null);
 				setTitle (title ());
 				vars.what ((m != null) ? ("machine " + m.root ().getName ()) : null);

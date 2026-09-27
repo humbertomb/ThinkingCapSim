@@ -84,6 +84,20 @@ public class Simulator
 		return ((i >= 0) && (i < MAX_ROBOTS)) ? START[i] : null;
 	}
 
+	/**
+	 * The i-th start point of the world, as {x, y, a}: the ones past the robots
+	 * are where a referee may send a robot to. Null when the world has no such
+	 * point (or no world yet).
+	 */
+	public double[] worldStart (int i)
+	{
+		if ((map == null) || (i < 0) || (i >= map.n_starts ()))		return null;
+
+		tc.shared.world.WMStart	st = map.start (i);
+
+		return new double[] { st.x (), st.y (), st.orientation };
+	}
+
 	/** Puts a robot back where it starts (see {@link #placeRobot}: only where it is changes). Whether it could be. */
 	public boolean restartRobot (int i)
 	{

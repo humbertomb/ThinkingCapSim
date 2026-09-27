@@ -444,7 +444,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		if (wname != null)		showWorld (new File (wname));
 		else					showWorld (null);
 		updateTitle ();
-		updateTasksState ();					// another deployment, other planners (or none)
+		updateExecutionState ();				// another deployment, other planners (or none), and maybe nothing to run
 	}
 
 	public boolean saveArch (boolean saveAs)
@@ -671,9 +671,20 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			statusBar.setStatus ("Plan sent to " + robot + ": " + seq);
 	}
 
+	/**
+	 * Whether there is anything to execute: a deployment with a world and at
+	 * least one robot. With nothing loaded there is no simulation to start, and
+	 * the buttons of the execution say so.
+	 */
+	private boolean canExecute ()
+	{
+		return (deploy != null) && (deploy.getWorldFile () != null) && !deploy.robots.isEmpty ();
+	}
+
 	private void updateExecutionState ()
 	{
 		boolean	on = (running != null);
+		if (executeAction != null)		executeAction.setEnabled (canExecute () || on);		// a run in course can always be restarted or stopped
 		resetAction.setEnabled (on);
 		startAction.setEnabled (on);
 		stepAction.setEnabled (on);
@@ -1199,6 +1210,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		deploy.setWorldFile (relativePath (f));
 		worldModified	= true;
 		updateTitle ();
+		updateExecutionState ();				// now there is a world to run in
 	}
 
 	/** Loads and displays a world (null: empty world); false if the file cannot be read. */
@@ -1273,6 +1285,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			deploy.setWorldFile (relativePath (f));
 			worldModified	= true;
 			updateTitle ();
+			updateExecutionState ();
 		}
 		statusBar.setStatus ("World saved to " + f.getPath ());
 	}

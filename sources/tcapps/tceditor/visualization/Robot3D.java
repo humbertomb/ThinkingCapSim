@@ -30,6 +30,7 @@ public class Robot3D extends BranchGroup
 	protected Scan3D					lasers;
 	protected Camera3D				cameras;			// what its cameras see, turned as they are (null: it has none)
 
+	protected boolean				camerasShown = true;	// whether the prisms of the cameras are on the scene
 	protected boolean 				sonarActive = false;
 	protected boolean 				irActive = false;
 	protected boolean 				laserActive = false;
@@ -160,6 +161,21 @@ public class Robot3D extends BranchGroup
 		if (cameras != null)	cameras.move (pt, a, pans, tilts);
 	}	
 		
+	/** Whether what the cameras see (the prism of each) is drawn. */
+	public void showCameras (boolean show)
+	{
+		if ((cameras == null) || (camerasShown == show))		return;
+		camerasShown	= show;
+		if (show)		addChild (cameras);
+		else			cameras.detach ();
+	}
+
+	/** The outer walls of the world the prisms of the cameras are cut at (xmin, ymin, xmax, ymax; null: none). */
+	public void setCameraBounds (double[] bounds)
+	{
+		if (cameras != null)		cameras.setBounds (bounds);
+	}
+
 	public void showLaser (boolean show)
 	{
 		laserActive = show;

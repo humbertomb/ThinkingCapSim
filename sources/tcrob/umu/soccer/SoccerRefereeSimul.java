@@ -102,6 +102,9 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	protected String[]				netNames	= new String[2];
 	protected String[]				areaNames	= new String[2];
 	protected String[]				teamNames	= new String[2];
+	/** How many start points past its own a penalised robot is sent to (START_1 -> START_5). */
+	static public final int			PENALTY_START	= 4;
+
 	protected String[][]			teamRobots	= new String[2][];		// by name, when the settings say; null for by the half they start in
 	protected double				throwIn;				// the throw-in line, in from the side line [m]
 	protected double				corner;					// the corner kick point, in from the end line [m]
@@ -499,17 +502,34 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 					{
 						faults++;
 						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + who + " in " + areaNames[net] + " (" + teamNames[net] + " net): only the "
-								+ teamNames[net] + " keeper may be there  --  faults: " + faults);
+								+ teamNames[net] + " keeper may be there" + penalize (r) + "  --  faults: " + faults);
 					}
 					else if (keeperIn (net, r))		// of the team, but the keeper is in already
 					{
 						faults++;
-						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + who + " in " + areaNames[net] + " (" + teamNames[net] + " net) with the keeper already there: only one may be  --  faults: " + faults);
+						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + who + " in " + areaNames[net] + " (" + teamNames[net] + " net) with the keeper already there: only one may be"
+								+ penalize (r) + "  --  faults: " + faults);
 					}
 				}
 				inArea[r][net]	= in;
 			}
 		}
+	}
+
+	/**
+	 * A robot penalised is taken off the pitch: to the start point of the world
+	 * {@link #PENALTY_START} places past its own (the robot that starts at START_1
+	 * is put on START_5), standing as that point says. What was done, for the
+	 * message of the fault; nothing when the world has no such point.
+	 */
+	protected String penalize (int r)
+	{
+		Simulator	s = sim;
+		double[]	p = (s != null) ? s.worldStart (r + PENALTY_START) : null;
+
+		if (p == null)					return "";
+		s.placeRobot (r, p[0], p[1], p[2]);
+		return ", penalised: sent to START_" + (r + PENALTY_START + 1);
 	}
 
 	/** Whether a robot of the team that owns a net, other than this one, is in its area. */

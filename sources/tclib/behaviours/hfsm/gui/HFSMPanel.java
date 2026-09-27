@@ -114,6 +114,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	protected JLabel				selLabel;
 	protected JLabel				statusLabel;
 	protected JLabel				usageLabel;
+	protected JLabel				pathLabel;					// where the Lua behaviours are read from, on the top bar
 	protected JToggleButton[]		toolButtons	= new JToggleButton[HFSMCanvas.NTOOLS];
 	protected Action				deleteAction, renameAction, initialAction, upAction, expandAction;
 	protected Host					host;
@@ -185,6 +186,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		centre.setResizeWeight (1.0);
 
 		add (toolbar (), BorderLayout.WEST);
+		add (topbar (), BorderLayout.NORTH);
 		add (centre, BorderLayout.CENTER);
 		add (bottom, BorderLayout.SOUTH);
 		canvas.setListener (this);					// everything it talks to is there now
@@ -252,6 +254,35 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 			  action ("fit", HFSMIcon.ZOOM_FIT, null, new Runnable () { public void run () { canvas.zoomToFit (); } }));
 
 		return tb;
+	}
+
+	/**
+	 * The bar over the diagram: the folder the Lua behaviours the states name are
+	 * read from, on its right side (the machine's own, or where it lives when it
+	 * says none). Edit > Default path... changes it.
+	 */
+	private JToolBar topbar ()
+	{
+		JToolBar	tb = new JToolBar (JToolBar.HORIZONTAL);
+
+		tb.setFloatable (false);
+		pathLabel	= new JLabel (" ");
+		pathLabel.setBorder (BorderFactory.createEmptyBorder (3, 8, 3, 8));
+		pathLabel.setToolTipText ("Where the Lua behaviours the states name are read from (Edit > Default path...)");
+		tb.add (javax.swing.Box.createHorizontalGlue ());
+		tb.add (pathLabel);
+		return tb;
+	}
+
+	/** The path of the Lua behaviours as the top bar shows it. */
+	protected void refreshPath ()
+	{
+		if (pathLabel == null)					return;
+
+		File		dir = behavioursFolder ();
+		String		txt = (behpath != null) ? behpath : ((dir != null) ? (relative (dir) + "  (where the machine lives)") : "(not set)");
+
+		pathLabel.setText ("LUA Path  " + txt);
 	}
 
 	private JPanel statusBar ()
@@ -848,6 +879,8 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		expandAction.setEnabled ((sel instanceof MetaState) && (sel != root));
 		if ((sel == null) && (all.size () > 1))		showSeveral (all);
 		else										showCode (sel);
+		refreshPath ();
+		canvas.setFile (file);						// the paths of the extern meta states are shown from it
 		if (host != null)						host.editorStateChanged (this);
 	}
 

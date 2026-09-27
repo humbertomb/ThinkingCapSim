@@ -24,6 +24,7 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.RoundRectangle2D;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -103,6 +104,7 @@ public class HFSMCanvas extends JPanel
 
 	/* Model */
 	protected MetaState				root;
+	protected File					file;							// the file of the root machine (null: none yet)
 	protected MetaState				level;						// the machine being shown
 	protected Object				selection;					// the one block selected (a State or a Transition); null when none, or several
 	protected LinkedHashSet<Object>	selected = new LinkedHashSet<Object> ();	// every block selected: one, or several dragged an area around
@@ -136,6 +138,36 @@ public class HFSMCanvas extends JPanel
 	/* ------------------------------------------------------------------ */
 	/* Model and view                                                      */
 	/* ------------------------------------------------------------------ */
+
+	/** The file the root machine is in (null: none yet): the paths of the extern meta states are shown from it. */
+	public void setFile (File file)
+	{
+		if ((file == null) ? (this.file == null) : file.equals (this.file))		return;
+		this.file	= file;
+		repaint ();
+	}
+
+	/**
+	 * The path of the file of an extern meta state as shown under it: from the
+	 * folder of the root machine's file when both are known (../other/x.hfsm),
+	 * else as the meta state keeps it.
+	 */
+	protected String externPath (MetaState m)
+	{
+		String		path = m.getPathExtern ();
+
+		if ((path == null) || (path.trim ().length () == 0))		return "(no file)";
+		if (file == null)										return path.trim ();
+		try
+		{
+			File				base = file.getAbsoluteFile ().getParentFile ();
+			File				f = tclib.behaviours.hfsm.HFSMJson.externFile (path, file);
+			java.nio.file.Path	rel = base.getCanonicalFile ().toPath ().relativize (f.getCanonicalFile ().toPath ());
+
+			return rel.toString ().replace (File.separatorChar, '/');
+		}
+		catch (Exception e)		{ return path.trim (); }
+	}
 
 	public void setMachine (MetaState root)
 	{
@@ -788,10 +820,18 @@ public class HFSMCanvas extends JPanel
 			if (m.isExtern ())			file (g, x + r * 0.62, y + r * 0.62);	// what it holds is in a file: a sheet at its bottom right
 		}
 		// a name that does not fit inside the circle goes under it
+		double		under = y + r + 14 * scale;								// the first line under the circle
+
 		if (width (g, s.getName (), 12) < (2 * r - 8))
 			label (g, s.getName (), x, y + 4 * scale, now ? C_LIVE : C_TEXT, 12);
 		else
-			label (g, s.getName (), x, y + r + 14 * scale, now ? C_LIVE : C_TEXT, 12);
+		{
+			label (g, s.getName (), x, under, now ? C_LIVE : C_TEXT, 12);
+			under	+= 12 * scale;
+		}
+		// an extern meta state says under it where its file is, from the file of this machine
+		if ((s instanceof MetaState) && ((MetaState) s).isExtern ())
+			label (g, externPath ((MetaState) s), x, under, C_LEVEL, 9);
 	}
 
 	/**

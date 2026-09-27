@@ -34,6 +34,9 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JToggleButton;
@@ -114,6 +117,10 @@ public class WorldView3DWindow extends JFrame
 	protected BranchGroup			objectsBranch;		// live: simulated animated objects (one TransformGroup each)
 	protected java.util.List<TransformGroup>	objects = new java.util.ArrayList<TransformGroup> ();
 	protected boolean				showAnimated	= true;	// draw the world's animated objects at their initial pose (off while simulating)
+	protected boolean				showStarts		= true;	// View menu: the starting positions of the robots
+	protected boolean				showLabels		= true;	// View menu: the names floating over the objects
+	protected boolean				showFOVs		= true;	// View menu: what the cameras of the robots see
+	protected java.util.Map<BranchGroup, TransformGroup>	labels = new java.util.LinkedHashMap<BranchGroup, TransformGroup> ();	// the names of the live objects and the pose each hangs from
 	protected int					vmode			= Scene3D.M_MOVE;
 
 	/* GUI */
@@ -146,6 +153,7 @@ public class WorldView3DWindow extends JFrame
 		getContentPane ().add (buildToolBar (), BorderLayout.NORTH);
 		getContentPane ().add (canvas, BorderLayout.CENTER);
 		getContentPane ().add (statusLabel, BorderLayout.SOUTH);
+		setJMenuBar (buildMenuBar ());
 
 		installMouse ();
 
@@ -213,6 +221,79 @@ public class WorldView3DWindow extends JFrame
 		tb.add (followCB);
 
 		return tb;
+	}
+
+	/** The View menu: what is drawn over the world, each on or off. */
+	private JMenuBar buildMenuBar ()
+	{
+		JMenuBar	mb = new JMenuBar ();
+		JMenu		view = new JMenu ("View");
+
+		view.add (check ("Show starting positions", showStarts, new Runnable ()
+		{
+			public void run ()		{ showStarts = !showStarts;	scheduleRebuild (); }
+		}));
+		view.add (check ("Show object labels", showLabels, new Runnable ()
+		{
+			public void run ()		{ showLabels = !showLabels;	updateLabels ();	scheduleRebuild (); }
+		}));
+		view.add (check ("Show camera FOVs", showFOVs, new Runnable ()
+		{
+			public void run ()		{ showFOVs = !showFOVs;	updateFOVs (); }
+		}));
+		mb.add (view);
+		return mb;
+	}
+
+	private JCheckBoxMenuItem check (String text, boolean on, final Runnable toggle)
+	{
+		JCheckBoxMenuItem	mi = new JCheckBoxMenuItem (text, on);
+
+		mi.addActionListener (new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent e)		{ toggle.run (); }
+		});
+		return mi;
+	}
+
+	/** The names of the live objects on or off the scene, as the View menu says. */
+	private void updateLabels ()
+	{
+		// they all follow the menu: every one is on when it says so, and off otherwise
+		for (java.util.Map.Entry<BranchGroup, TransformGroup> e : labels.entrySet ())
+		{
+			if (showLabels)		e.getValue ().addChild (e.getKey ());
+			else				e.getKey ().detach ();
+		}
+	}
+
+	/** What the cameras of the live robots see, on or off, as the View menu says. */
+	private void updateFOVs ()
+	{
+		for (Robot3D r : robots)		r.showCameras (showFOVs);
+	}
+
+	/**
+	 * The outer walls of the world, which the prisms of the cameras are cut at:
+	 * the box round every wall (xmin, ymin, xmax, ymax); null with no walls.
+	 */
+	private double[] wallBounds ()
+	{
+		if ((world == null) || (world.walls ().n () == 0))		return null;
+
+		double[]	b = { Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE };
+
+		for (int i = 0; i < world.walls ().n (); i++)
+		{
+			WMWall	w = world.walls ().at (i);
+
+			for (Point2 p : new Point2[] { w.edge.orig (), w.edge.dest () })
+			{
+				b[0] = Math.min (b[0], p.x ());	b[1] = Math.min (b[1], p.y ());
+				b[2] = Math.max (b[2], p.x ());	b[3] = Math.max (b[3], p.y ());
+			}
+		}
+		return b;
 	}
 
 	private JToggleButton modeButton (ButtonGroup group, String name, final int mode, boolean sel)
@@ -359,7 +440,7 @@ public class WorldView3DWindow extends JFrame
 		{
 			BranchGroup		bg = new BranchGroup ();
 			bg.setCapability (BranchGroup.ALLOW_DETACH);
-			bg.addChild (new World3D (world, scene, showAnimated));
+			bg.addChild (new World3D (world, scene, showAnimated, true, showLabels));
 			bg.addChild (createExtras ());
 			if (floorCB.isSelected ())
 			{
@@ -443,7 +524,7 @@ public class WorldView3DWindow extends JFrame
 		}
 
 		// start point: red disc with heading bar
-		for (tc.shared.world.WMStart st : world.starts ())
+		if (showStarts)		for (tc.shared.world.WMStart st : world.starts ())
 		{
 			double	sx = st.x (), sy = st.y (), sz = st.z (), sa = st.orientation;
 			// as wide as the start point says it is, with the heading bar going on past
@@ -682,6 +763,8 @@ public class WorldView3DWindow extends JFrame
 		body.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
 		if (lift != null)		lift.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
 		Robot3D		r3d = new Robot3D (rdesc, body, lift, new Point3 (x, y, 0.0), 0.0, a, name);
+		r3d.setCameraBounds (wallBounds ());						// what its cameras see stops at the outer walls
+		r3d.showCameras (showFOVs);
 		robots.add (r3d);
 		robotsBranch.addChild (r3d);
 		return robots.size () - 1;
@@ -769,7 +852,14 @@ public class WorldView3DWindow extends JFrame
 			tl.setTranslation (new Vector3d (0.0, 0.0, height));
 			TransformGroup	lg = new TransformGroup (tl);
 			lg.addChild (text);
-			tg.addChild (lg);
+			// the name in a branch of its own under the same pose, so that the View menu can take it off and put it back
+			BranchGroup		lb = new BranchGroup ();
+			lb.setCapability (BranchGroup.ALLOW_DETACH);
+			lb.addChild (lg);
+			tg.setCapability (TransformGroup.ALLOW_CHILDREN_EXTEND);
+			tg.setCapability (TransformGroup.ALLOW_CHILDREN_WRITE);
+			labels.put (lb, tg);
+			if (showLabels)		tg.addChild (lb);
 		}
 		BranchGroup		bg = new BranchGroup ();
 		bg.setCapability (BranchGroup.ALLOW_DETACH);
@@ -795,6 +885,7 @@ public class WorldView3DWindow extends JFrame
 		if (objectsBranch != null)		objectsBranch.detach ();
 		objectsBranch = null;
 		objects.clear ();
+		labels.clear ();
 	}
 
 	/* ------------------------------------------------------------------ */

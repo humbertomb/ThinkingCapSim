@@ -61,6 +61,12 @@ public class World3D extends BranchGroup
 	 */
 	public World3D (World map, Scene3D scene, boolean showAnimated, boolean showDecor)
 	{
+		this (map, scene, showAnimated, showDecor, showDecor);
+	}
+
+	/** @param showLabels   false to leave out the names of the animated objects alone, keeping the rest of the decor */
+	public World3D (World map, Scene3D scene, boolean showAnimated, boolean showDecor, boolean showLabels)
+	{
 		int				i;
 		
 		this.scene	= scene;
@@ -81,7 +87,7 @@ public class World3D extends BranchGroup
 			obj	= createObject (object);
 			if (obj != null)
 				addChild (obj);
-			if (showDecor && (object instanceof WMAObject))
+			if (showDecor && showLabels && (object instanceof WMAObject))
 				addChild (createLabel (object.label, object.pos, (obj != null) ? Robot3D.labelHeight (obj) : Robot3D.LABEL_GAP));
 		}
 		
