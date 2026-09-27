@@ -344,22 +344,15 @@ public class LuaHelp
 
 		// the tables the bridge answers with
 		h.append ("<a name=\"tables\"></a><h2>The tables it answers</h2>");
-		h.append ("<p>A call of the bridge answers a table, never an object of Java:</p>");
-		h.append ("<ul>");
-		h.append ("<li><b>an object</b> (<span class=\"mono\">chaos.getLpo</span>): ")
-		 .append ("<span class=\"mono\">index</span>, <span class=\"mono\">name</span>, ")
-		 .append ("<span class=\"mono\">rho</span> (how far, mm), <span class=\"mono\">theta</span> (which way, degrees), ")
-		 .append ("<span class=\"mono\">x</span> and <span class=\"mono\">y</span> (the same, in front of the robot, mm), ")
-		 .append ("<span class=\"mono\">anchored</span> and <span class=\"mono\">quality</span> (0 to 1: how sure, and 0 when it ")
-		 .append ("has not been seen for a while), <span class=\"mono\">active</span>. ")
-		 .append ("An object that is not there at all answers rho 0 and anchored 0, which is what a script is to look at first.</li>");
-		h.append ("<li><b>a point</b> (<span class=\"mono\">getMyPos</span>, <span class=\"mono\">getDesiredPos</span>, ")
-		 .append ("<span class=\"mono\">getBallVel</span>, <span class=\"mono\">getOptimalPose</span>, ")
-		 .append ("<span class=\"mono\">getDefPose</span>): <span class=\"mono\">x</span>, <span class=\"mono\">y</span> (mm), ")
-		 .append ("<span class=\"mono\">theta</span> (degrees), <span class=\"mono\">quality</span>, <span class=\"mono\">anchored</span>.</li>");
-		h.append ("<li><b>the behaviour</b> (<span class=\"mono\">getBehaviorInfo</span>) and <b>the part played</b> ")
-		 .append ("(<span class=\"mono\">getRole</span>), as said above.</li>");
-		h.append ("</ul>");
+		h.append ("<p>A call of the bridge answers a table, never an object of Java. These are the fields of each, ")
+		 .append ("with what they are worth: a script reads them as <span class=\"mono\">ball.rho</span> or ")
+		 .append ("<span class=\"mono\">chaos.getGameState ().state</span>.</p>");
+		fields (h, "An object", "chaos.getLpo (index)", OBJECT_FIELDS);
+		fields (h, "A point", "getMyPos, gsGetMyPos, getDesiredPos, getBallVel, getOptimalPose, getDefPose", POINT_FIELDS);
+		fields (h, "The behaviour", "chaos.getBehaviorInfo ()", BEHAVIOUR_FIELDS);
+		fields (h, "The game", "chaos.getGameState ()", GAME_FIELDS);
+		fields (h, "The part played", "chaos.getRole ()", ROLE_FIELDS);
+		fields (h, "Whether it is lost", "chaos.lps_getAstray ()", ASTRAY_FIELDS);
 
 		card (h, "math", "math", "tclib.behaviours.lua.interpreter.LuaLib",
 			  "The whole of the numbers. These are the functions of Lua, so they think in radians while everything of the "
@@ -401,6 +394,81 @@ public class LuaHelp
 	/* ------------------------------------------------------------------ */
 
 	/** One table of the library: the card of its name, and a row for every name in it. */
+	/* The fields of the tables the bridge answers: name, type and what it is worth */
+	static private final String[][]	OBJECT_FIELDS =
+	{
+		{ "index", "number", "The number of the object, the one it was asked for by (<span class=\"mono\">chaos.BALL_LPO</span> and so on)." },
+		{ "name", "string", "What the LPS calls it: Ball, Net1, Net2, Align, Looka." },
+		{ "rho", "number", "How far it is from the robot, in mm; 0 when it is not there at all." },
+		{ "theta", "number", "Which way it is, in degrees, from the heading of the robot: positive to the left. Of the robot, not of the camera." },
+		{ "x", "number", "Where it is in front of the robot, in mm (x ahead, y to the left): rho and theta as coordinates." },
+		{ "y", "number", "" },
+		{ "anchored", "number", "How sure the robot is of it, 0 to 1: 1 when it has just been seen, fading to 0 when it has not been seen for a while. What a script looks at first." },
+		{ "quality", "number", "The same as anchored, kept for the scripts of the Chaos robots." },
+		{ "active", "boolean", "Whether the LPS is keeping it up to date at all." },
+	};
+
+	static private final String[][]	POINT_FIELDS =
+	{
+		{ "x", "number", "In mm: a position on the field (getMyPos, getDesiredPos, the poses) or a speed in mm a second (getBallVel)." },
+		{ "y", "number", "" },
+		{ "theta", "number", "The heading, in degrees; 0 for a speed." },
+		{ "quality", "number", "How good the position is, 0 to 1: 1 in the simulation, which knows where the robot is." },
+		{ "anchored", "number", "The same as quality." },
+	};
+
+	static private final String[][]	BEHAVIOUR_FIELDS =
+	{
+		{ "name", "string", "The behaviour running: the one the state chose with setBehavior, or the program itself." },
+		{ "isNew", "number", "1 on the first cycle the behaviour runs, 0 afterwards: where a behaviour sets itself up." },
+		{ "timer", "number", "How long it has been running, in ms." },
+		{ "time", "number", "The same as timer." },
+		{ "finished", "number", "Always 0: a behaviour of a state never ends on its own, the machine leaves the state." },
+		{ "failed", "number", "Always 0, for the same reason." },
+	};
+
+	static private final String[][]	GAME_FIELDS =
+	{
+		{ "state", "number", "The state of the game, as one of the constants <span class=\"mono\">chaos.REFEREE_INITIAL</span>, "
+					+ "<span class=\"mono\">REFEREE_READY</span>, <span class=\"mono\">REFEREE_SET</span>, <span class=\"mono\">REFEREE_PLAYING</span>, "
+					+ "<span class=\"mono\">REFEREE_PENALIZED</span>, <span class=\"mono\">REFEREE_FINISHED</span>; REFEREE_INITIAL while no referee has spoken." },
+		{ "name", "string", "The same state, by its name: INITIAL, READY, SET, PLAYING, PENALIZED, FINISHED." },
+		{ "player", "number", "The robot the state is about (its number in the simulation), -1 for all of them." },
+		{ "event", "string", "The last thing the referee decided: STATE (a change of state), KICKOFF, GOAL, KICKOFF_SHOT, BALL_OUT, ILLEGAL_DEFENDER, TIME_UP; empty while it has said nothing." },
+		{ "team", "number", "The team the decision concerns (0 the red, 1 the blue), -1 for none." },
+		{ "robot", "string", "The robot named in the decision (the one that touched the ball last, the one in the area), with its team; empty for none." },
+		{ "text", "string", "What the referee said, word for word, as the ticker of its window shows it." },
+		{ "score1", "number", "The goals of the red team when it was said." },
+		{ "score2", "number", "The goals of the blue team." },
+		{ "time", "number", "How long the match had been running, in ms." },
+	};
+
+	static private final String[][]	ROLE_FIELDS =
+	{
+		{ "role", "string", "The part the robot plays: player, goalie, ... as the settings say." },
+	};
+
+	static private final String[][]	ASTRAY_FIELDS =
+	{
+		{ "astray", "number", "1 when the robot is lost, 0 when it knows where it is: always 0 in the simulation." },
+	};
+
+	/** The fields of one of the tables the bridge answers, as a table of the help: name, type and what it is worth. */
+	static private void fields (StringBuilder h, String what, String from, String[][] fields)
+	{
+		h.append ("<p><b>").append (what).append ("</b> &mdash; <span class=\"mono\">").append (esc (from)).append ("</span></p>");
+		h.append ("<table width=\"100%\" cellpadding=\"4\" cellspacing=\"0\">");
+		for (String[] f : fields)
+		{
+			h.append ("<tr valign=\"top\">");
+			h.append ("<td width=\"22%\"><span class=\"mono\"><b>").append (esc (f[0])).append ("</b></span></td>");
+			h.append ("<td width=\"12%\"><span class=\"none\">").append (esc (f[1])).append ("</span></td>");
+			h.append ("<td>").append ((f[2].length () > 0) ? f[2] : "<span class=\"none\">(with the one above)</span>").append ("</td>");
+			h.append ("</tr>");
+		}
+		h.append ("</table><br>");
+	}
+
 	static private void card (StringBuilder h, String anchor, String name, String clazz, String what, LuaTable t, String[][] help)
 	{
 		h.append ("<a name=\"").append (anchor).append ("\"></a>");
