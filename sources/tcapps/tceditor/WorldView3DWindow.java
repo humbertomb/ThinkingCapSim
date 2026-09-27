@@ -124,6 +124,8 @@ public class WorldView3DWindow extends JFrame
 	protected int					vmode			= Scene3D.M_MOVE;
 
 	/* GUI */
+	static private final java.awt.Font	FPS_FONT = new java.awt.Font ("SansSerif", java.awt.Font.BOLD, 12);
+
 	protected JLabel				statusLabel;
 	protected JCheckBox				floorCB;
 	protected JCheckBox				followCB;
@@ -142,7 +144,44 @@ public class WorldView3DWindow extends JFrame
 		this.world	= world;
 		this.onHide	= onHide;
 
-		canvas	= new Canvas3D (SimpleUniverse.getPreferredConfiguration ());
+		canvas	= new Canvas3D (SimpleUniverse.getPreferredConfiguration ())
+		{
+			private static final long	serialVersionUID = 1L;
+
+			// how many frames were drawn: counted as they are swapped, told once a second
+			private int		frames;
+			private long	since	= System.currentTimeMillis ();
+			private String	fps		= "";
+
+			public void postSwap ()
+			{
+				long	now = System.currentTimeMillis ();
+
+				frames++;
+				if ((now - since) >= 1000)
+				{
+					fps		= String.format ("%.0f fps", frames * 1000.0 / (now - since));
+					frames	= 0;
+					since	= now;
+				}
+			}
+
+			public void postRender ()
+			{
+				if (fps.length () == 0)		return;
+
+				javax.media.j3d.J3DGraphics2D	g = getGraphics2D ();
+
+				g.setFont (FPS_FONT);
+				int		w = g.getFontMetrics ().stringWidth (fps);
+
+				g.setColor (java.awt.Color.BLACK);
+				g.drawString (fps, getWidth () - w - 7, 17);
+				g.setColor (java.awt.Color.WHITE);
+				g.drawString (fps, getWidth () - w - 8, 16);
+				g.flush (false);
+			}
+		};
 		canvas.setPreferredSize (new Dimension (800, 600));
 		scene	= new EditorScene (canvas);
 

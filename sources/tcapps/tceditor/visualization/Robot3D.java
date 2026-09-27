@@ -41,7 +41,13 @@ public class Robot3D extends BranchGroup
 	protected Transform3D				tlabel;
 	static public final double		LABEL_GAP		= 0.25;	// m between the top of the object and its name
 	static public final double		LABEL_HEIGHT	= 2.2;	// m above the floor when the model height is unknown
+	/** The name of a robot lies on the floor, this much over it so that it is not lost in it (m). */
+	static public final double		NAME_Z			= 0.03;
+	/** How wide the name of a robot may be, as a share of the largest dimension of the robot seen from above. */
+	static public final double		NAME_SHARE		= 2.0;
 	protected double				labelHeight		= LABEL_HEIGHT;
+	protected double				nameScale		= 1.0;	// how much the name is shrunk to fit the robot
+	protected double				nameW, nameH;			// the name as drawn (m), before shrinking
 	private Matrix3d					rot = new Matrix3d ();
 	private Transform3D				mov = new Transform3D ();
 
@@ -71,6 +77,9 @@ public class Robot3D extends BranchGroup
 		setCapability (BranchGroup.ALLOW_CHILDREN_READ);	
 		setCapability (BranchGroup.ALLOW_CHILDREN_WRITE);
 
+		// how big the robot is seen from above, while its parts are still in its own frame
+		double	foot = footprint (ro, rl);
+
 		// Create robot's frame structures
 		trobot 	= new Transform3D ();
 		trobot.setIdentity ();
@@ -94,16 +103,23 @@ public class Robot3D extends BranchGroup
 			addChild (lift);
 		}
 
-		// Robot name: flat text above the robot, as the dock labels of the world
+		// Robot name: flat text on the floor under the robot, centred on it and no
+		// wider than NAME_SHARE times the robot seen from above
 		if ((name != null) && (name.length () > 0))
 		{
 			com.sun.j3d.utils.geometry.Text2D	text = new com.sun.j3d.utils.geometry.Text2D (name, new Color3f (0.1f, 0.1f, 0.6f), "Application", 140, java.awt.Font.BOLD);
+			double[]	size = size (text);
+			double		across = (foot > 0.0) ? foot : 2.0 * Math.max (0.05, rdesc.RADIUS);
+
+			nameW	= size[0];
+			nameH	= size[1];
+			if (nameW > 0.0)		nameScale = Math.min (1.0, NAME_SHARE * across / nameW);
 			labelHeight	= labelHeight (ro, rl);
 			tlabel	= new Transform3D ();
-			tlabel.setTranslation (new Vector3d (pos.x, pos.y, labelHeight));
-			label	= new TransformGroup (tlabel);
+			label	= new TransformGroup ();
 			label.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
 			label.addChild (text);
+			placeName (pt.x (), pt.y ());
 			addChild (label);
 		}
 
@@ -121,6 +137,56 @@ public class Robot3D extends BranchGroup
 		}
 	}
 	
+	/** The name on the floor, centred under (x, y), the size it was given. */
+	protected void placeName (double x, double y)
+	{
+		tlabel.setIdentity ();
+		tlabel.setScale (nameScale);
+		tlabel.setTranslation (new Vector3d (x - nameScale * nameW / 2.0, y - nameScale * nameH / 2.0, NAME_Z));
+		label.setTransform (tlabel);
+	}
+
+	/** How wide and how tall a flat text is drawn (m), from its bounds. */
+	static protected double[] size (Node text)
+	{
+		try
+		{
+			BoundingBox	box = new BoundingBox (text.getBounds ());
+			Point3d		lo = new Point3d (), up = new Point3d ();
+
+			box.getLower (lo);
+			box.getUpper (up);
+			if ((up.x > lo.x) && (up.y > lo.y))		return new double[] { up.x - lo.x, up.y - lo.y };
+		}
+		catch (Exception e)		{ }
+		return new double[] { 0.0, 0.0 };
+	}
+
+	/**
+	 * The largest dimension of the robot seen from above (m): the longer side of
+	 * the box round its parts, before they are placed anywhere. Zero when unknown.
+	 */
+	static protected double footprint (Node... parts)
+	{
+		double	d = 0.0;
+
+		for (Node n : parts)
+		{
+			if (n == null)		continue;
+			try
+			{
+				BoundingBox	box = new BoundingBox (n.getBounds ());
+				Point3d		lo = new Point3d (), up = new Point3d ();
+
+				box.getLower (lo);
+				box.getUpper (up);
+				if ((up.x > lo.x) && (up.y > lo.y))		d = Math.max (d, Math.max (up.x - lo.x, up.y - lo.y));
+			}
+			catch (Exception e)		{ }
+		}
+		return d;
+	}
+
 	// Instance methods
 	public void move (RobotData data, Point3 pt, double hl, double a)
 	{
@@ -149,11 +215,7 @@ public class Robot3D extends BranchGroup
 			tlift.set (rot, lpos, tlift.getScale ());
 			lift.setTransform (tlift);
 		}
-		if (label != null)
-		{
-			tlabel.setTranslation (new Vector3d (pt.x (), pt.y (), labelHeight));
-			label.setTransform (tlabel);
-		}
+		if (label != null)		placeName (pt.x (), pt.y ());
 		
 		if (sonarActive)		sonars.move (data.sonars, pt, a);
 		if (irActive)		irs.move (data.irs, pt, a);
