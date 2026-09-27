@@ -233,6 +233,13 @@ public class Chaos implements LuaBridge
 		behaviour	= b;
 	}
 
+	/** Another state: no behaviour until its script chooses one. */
+	public void entered ()
+	{
+		behaviour		= null;
+		behaviournew	= false;
+	}
+
 	/** Whether the behaviour was chosen in this very cycle, which a behaviour asks to set itself up. */
 	public boolean behaviourIsNew ()							{ return behaviournew; }
 

@@ -228,6 +228,7 @@ public class HFSM
 	/** Goes into a state: a meta state is entered at its initial state, and so on. */
 	protected void enter (State s)
 	{
+		if (bridge != null)			bridge.entered ();					// the behaviour of the state left goes with it
 		while (s instanceof MetaState)
 		{
 			MetaState	m = (MetaState) s;
@@ -295,8 +296,10 @@ public class HFSM
 
 	/**
 	 * One cycle of the machine: takes a transition if one is due, runs the script
-	 * of the state it is in and then the behaviour that state chose. What the
-	 * scripts commanded is left in the bridge.
+	 * of the state it is in and then the behaviour that state chose -- the one its
+	 * own script set with setBehavior, on this cycle or an earlier one of the same
+	 * stay: entering a state drops the behaviour of the one left, so a state that
+	 * chooses none runs none. What the scripts commanded is left in the bridge.
 	 */
 	public void step ()
 	{

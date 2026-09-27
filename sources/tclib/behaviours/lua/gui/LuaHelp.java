@@ -167,7 +167,8 @@ public class LuaHelp
 		{ "setVrot", "deg/s", "How fast to turn. To the left is positive." },
 		{ "setVelocities", "vlin, vlat, vrot", "The three at once: along, across and around, in mm/s and deg/s." },
 		{ "setBehavior", "name", "The behaviour to run: the file <span class=\"mono\">&lt;name&gt;.lua</span> of the folder of the "
-					+ "behaviours (BEH), which is run right after the program on the same cycle." },
+					+ "behaviours (BEH), which is run right after the program on the same cycle. In a machine of states it is kept "
+					+ "while the state that chose it lasts, and dropped on entering another state: a state whose code chooses none runs none." },
 		{ "getGameState", "", "What the referee last said: <span class=\"mono\">state</span>, one of the constants "
 					+ "<span class=\"mono\">chaos.REFEREE_INITIAL</span>, <span class=\"mono\">REFEREE_READY</span>, <span class=\"mono\">REFEREE_SET</span>, "
 					+ "<span class=\"mono\">REFEREE_PLAYING</span>, <span class=\"mono\">REFEREE_PENALIZED</span>, <span class=\"mono\">REFEREE_FINISHED</span> "

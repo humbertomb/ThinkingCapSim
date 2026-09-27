@@ -30,6 +30,13 @@ public interface LuaBridge
 	/** The behaviour a script chose on this cycle, or null when none did. */
 	public String behaviour ();
 
+	/**
+	 * The machine went into another state: what the state it left had chosen for
+	 * as long as it lasted (its behaviour) is forgotten, so that a state that
+	 * chooses none runs none.
+	 */
+	public void entered ();
+
 	/** What the scripts left for one another, by name, for whoever looks at them while they run. */
 	public Map<String, Object> globals ();
 
