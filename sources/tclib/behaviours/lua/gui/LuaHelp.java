@@ -432,7 +432,9 @@ public class LuaHelp
 	{
 		{ "state", "number", "The state of the game, as one of the constants <span class=\"mono\">chaos.REFEREE_INITIAL</span>, "
 					+ "<span class=\"mono\">REFEREE_READY</span>, <span class=\"mono\">REFEREE_SET</span>, <span class=\"mono\">REFEREE_PLAYING</span>, "
-					+ "<span class=\"mono\">REFEREE_PENALIZED</span>, <span class=\"mono\">REFEREE_FINISHED</span>; REFEREE_INITIAL while no referee has spoken." },
+					+ "<span class=\"mono\">REFEREE_PENALIZED</span>, <span class=\"mono\">REFEREE_FINISHED</span>; REFEREE_INITIAL while no referee has spoken. "
+					+ "It is the state as it stands for this robot: PENALIZED while it is sent off (its machine is held meanwhile, so the scripts do not see it), "
+					+ "whatever is said of the other players in the meantime." },
 		{ "name", "string", "The same state, by its name: INITIAL, READY, SET, PLAYING, PENALIZED, FINISHED." },
 		{ "player", "number", "The robot the state is about (its number in the simulation), -1 for all of them." },
 		{ "event", "string", "The last thing the referee decided: STATE (a change of state), KICKOFF, GOAL, KICKOFF_SHOT, BALL_OUT, ILLEGAL_DEFENDER, TIME_UP; empty while it has said nothing." },

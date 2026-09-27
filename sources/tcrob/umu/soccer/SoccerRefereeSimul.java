@@ -104,6 +104,8 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	protected String[]				teamNames	= new String[2];
 	/** How many start points past its own a penalised robot is sent to (START_1 -> START_5). */
 	static public final int			PENALTY_START	= 4;
+	/** How long a penalised robot is out of the game [ms] (the standard penalty of the 2007 rules). */
+	static public final long		PENALTY_TIME	= 30000;
 
 	protected String[][]			teamRobots	= new String[2][];		// by name, when the settings say; null for by the half they start in
 	protected double				throwIn;				// the throw-in line, in from the side line [m]
@@ -121,6 +123,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	protected long					touchSeen;				// the last touch of the ball looked at (its time), to see the new ones
 	protected int[]					teamOf		= new int[Simulator.MAX_ROBOTS];		// the team of each robot, -1 while not known
 	protected Boolean[][]			inArea		= new Boolean[Simulator.MAX_ROBOTS][2];	// which robots are in which areas
+	protected long[]				penalty		= new long[Simulator.MAX_ROBOTS];		// when the penalty of each robot ends [ms of the system], 0 for none
 
 	protected SoccerRefereeWindow	win;
 
@@ -275,10 +278,19 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 	protected void decide (Events event, int team, String robot, int player, String text)
 	{
+		decide (event, team, robot, player, text, state);
+	}
+
+	/**
+	 * The same, saying a state other than the game's: what one player is in
+	 * (PENALIZED, and the game's own when it comes back), for that player alone.
+	 */
+	protected void decide (Events event, int team, String robot, int player, String text, GameStates st)
+	{
 		ItemReferee		item = new ItemReferee ();
 
 		announce (text);
-		item.setState (state, player);
+		item.setState (st, player);
 		item.setEvent (event, team, robot, text);
 		item.setScore (score[0], score[1], elapsed ());
 		item.set (System.currentTimeMillis ());
@@ -297,6 +309,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		inNet[1]	= null;
 		kickoff		= true;
 		for (Boolean[] a : inArea)		{ a[0] = null;	a[1] = null; }
+		java.util.Arrays.fill (penalty, 0L);						// a kick-off puts everyone back in the game
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -308,6 +321,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		game ();
 		if (state != GameStates.PLAYING)			return;		// nothing is judged until the game is on
 
+		penalties ();
 		robots ();
 
 		SimObject	ball = ball ();
@@ -503,12 +517,14 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 						faults++;
 						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + who + " in " + areaNames[net] + " (" + teamNames[net] + " net): only the "
 								+ teamNames[net] + " keeper may be there" + penalize (r) + "  --  faults: " + faults);
+						expel (r);
 					}
 					else if (keeperIn (net, r))		// of the team, but the keeper is in already
 					{
 						faults++;
 						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + who + " in " + areaNames[net] + " (" + teamNames[net] + " net) with the keeper already there: only one may be"
 								+ penalize (r) + "  --  faults: " + faults);
+						expel (r);
 					}
 				}
 				inArea[r][net]	= in;
@@ -529,7 +545,32 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 		if (p == null)					return "";
 		s.placeRobot (r, p[0], p[1], p[2]);
-		return ", penalised: sent to START_" + (r + PENALTY_START + 1);
+		penalty[r]	= System.currentTimeMillis () + PENALTY_TIME;
+		return ", penalised: sent to START_" + (r + PENALTY_START + 1) + " for " + (PENALTY_TIME / 1000) + " s";
+	}
+
+	/**
+	 * Tells a robot it is out (PENALIZED, for it alone: its machine of states
+	 * stops), after the fault has been told. Its team mates and the other team
+	 * read the same tuple, and take it for what it is: a state of that player.
+	 */
+	protected void expel (int r)
+	{
+		if (penalty[r] == 0)			return;
+		decide (Events.STATE, teamOf[r], name (r), r, "State PENALIZED for robot " + robot (r), GameStates.PENALIZED);
+	}
+
+	/** The penalties that are over: the robot is told the game is on for it again, where it is. */
+	protected void penalties ()
+	{
+		long	now = System.currentTimeMillis ();
+
+		for (int r = 0; r < penalty.length; r++)
+		{
+			if ((penalty[r] == 0) || (now < penalty[r]))		continue;
+			penalty[r]	= 0;
+			decide (Events.STATE, teamOf[r], name (r), r, "Robot " + robot (r) + " back in the game", state);
+		}
 	}
 
 	/** Whether a robot of the team that owns a net, other than this one, is in its area. */
@@ -617,6 +658,13 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	}
 
 	/** A robot as it is named in the decisions: its name and its team. */
+	/** The bare name of a robot, as its modules know it (the robot of a tuple about one player). */
+	protected String name (int r)
+	{
+		return (sim != null) ? sim.robotName (r) : ("robot " + r);
+	}
+
+	/** A robot with its team, for the messages. */
 	protected String robot (int r)
 	{
 		int		t = teamOf (r);

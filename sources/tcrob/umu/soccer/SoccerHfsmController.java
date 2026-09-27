@@ -53,6 +53,8 @@ public class SoccerHfsmController extends HFSMController
 		return chaos;
 	}
 
+	protected volatile boolean		penalized;			// sent off by the referee: the machine is held until it says otherwise
+
 	public final Chaos				chaos ()			{ return chaos; }
 
 	/** What the scripts are to read: the LPS, where the robot is and where it is told to go. */
@@ -93,11 +95,50 @@ public class SoccerHfsmController extends HFSMController
 	}
 
 	/** What the referee says (REFEREE) goes to the machine through the bridge: chaos.getGameState reads it. */
+	/**
+	 * What the referee says. A tuple about one player (its player is set) changes
+	 * the state of the game for that player alone: PENALIZED stops this robot when
+	 * it is the one named, and is not undone by what is said of the others or of
+	 * the game while it lasts -- only by the referee telling this robot it is back,
+	 * or by the game leaving PLAYING (a kick-off, the end). The scripts read all of
+	 * it through chaos.getGameState ().
+	 */
 	public void notify_referee (String space, ItemReferee item)
 	{
 		if (item == null)			return;
 		chaos.referee (item);
-		if (debug)					System.out.println ("  [SoccerHfsm] " + item);
+
+		String		me = robotName ();
+		boolean		mine = (item.player < 0) || (item.robot == null) || (me == null)
+						   || item.robot.equals (me) || item.robot.startsWith (me + " ");		// the messages name the team after the robot
+
+		if (!mine)											// about another player: the game as it stands for this one does not change
+			;
+		else if (item.state == ItemReferee.GameStates.PENALIZED)
+		{
+			penalized	= true;
+			chaos.gameState (item.state);
+		}
+		else if ((item.player < 0) && penalized && (item.state == ItemReferee.GameStates.PLAYING))
+			;												// the game goes on without this robot
+		else
+		{
+			penalized	= false;
+			chaos.gameState (item.state);
+		}
+		if (debug)					System.out.println ("  [SoccerHfsm] " + item + (penalized ? "  (penalised)" : ""));
+	}
+
+	/** The name of this robot, as the referee names the players. */
+	protected String robotName ()
+	{
+		return (tdesc != null) ? tdesc.robotid : null;
+	}
+
+	/** A robot penalised does not run its machine, and stands still. */
+	protected boolean halted ()
+	{
+		return penalized;
 	}
 
 	/**

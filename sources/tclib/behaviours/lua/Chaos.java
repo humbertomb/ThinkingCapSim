@@ -88,6 +88,7 @@ public class Chaos implements LuaBridge
 	protected Position				ballvel		= new Position ();		// how fast the ball goes (m/s)
 	protected String				role		= "player";
 	protected volatile ItemReferee	referee;							// the last thing the referee said, null while nothing
+	protected volatile ItemReferee.GameStates	gstate;					// the state of the game for this robot (null: the one the referee last said)
 
 	// What the scripts commanded
 	protected double				vlin;								// mm/s
@@ -238,6 +239,20 @@ public class Chaos implements LuaBridge
 	/** What the referee last said (REFEREE), for the scripts to read (chaos.getGameState); null while nothing. */
 	public void referee (ItemReferee item)						{ referee = item; }
 	public ItemReferee referee ()								{ return referee; }
+
+	/**
+	 * The state of the game as it stands for this robot, which is not always what
+	 * the referee last said: a robot penalised stays PENALIZED while the tuples
+	 * about the others go by. Null to take the last tuple's.
+	 */
+	public void gameState (ItemReferee.GameStates s)			{ gstate = s; }
+	public ItemReferee.GameStates gameState ()
+	{
+		ItemReferee.GameStates	s = gstate;
+		ItemReferee				r = referee;
+
+		return (s != null) ? s : ((r != null) ? r.state : ItemReferee.GameStates.INITIAL);
+	}
 
 	/** The scan of the camera the scripts asked for on this cycle: none unless one said so (chaos.setScanType). */
 	public ScanTypes scanType ()								{ return scan; }
@@ -501,11 +516,12 @@ public class Chaos implements LuaBridge
 		{
 			public Object call (Object[] args)
 			{
-				ItemReferee	r = referee;
-				LuaTable	t = new LuaTable ();
+				ItemReferee				r = referee;
+				ItemReferee.GameStates	s = gameState ();
+				LuaTable				t = new LuaTable ();
 
-				t.set ("state", Double.valueOf ((r != null) ? r.state.ordinal () : 0));
-				t.set ("name", (r != null) ? r.state.name () : ItemReferee.GameStates.INITIAL.name ());
+				t.set ("state", Double.valueOf (s.ordinal ()));
+				t.set ("name", s.name ());
 				t.set ("player", Double.valueOf ((r != null) ? r.player : -1));
 				t.set ("event", (r != null) ? r.event.name () : "");
 				t.set ("team", Double.valueOf ((r != null) ? r.team : -1));
