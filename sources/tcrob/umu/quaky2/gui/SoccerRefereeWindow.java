@@ -26,7 +26,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 import tc.modules.Supervisor;
-import tcrob.umu.quaky2.SoccerSupervisorSimul;
+import tcrob.umu.quaky2.SoccerRefereeSimul;
 
 /**
  * The referee's window of a simulated soccer match, as a stadium shows it:
@@ -36,7 +36,7 @@ import tcrob.umu.quaky2.SoccerSupervisorSimul;
  * running from START, and at the bottom the decisions as they are made, one
  * line each with the time of the match, as a ticker.
  *
- * It only reads: the referee ({@link SoccerSupervisorSimul}) says when it
+ * It only reads: the referee ({@link SoccerRefereeSimul}) says when it
  * decides something, and the clock is looked at on its own every
  * {@link #PERIOD} milliseconds.
  */
@@ -55,14 +55,14 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 	static private final Color		C_TICKER_TEXT	= new Color (120, 230, 120);
 	static private final Color		C_DASH		= new Color (150, 150, 150);
 
-	protected SoccerSupervisorSimul	referee;
+	protected SoccerRefereeSimul	referee;
 	protected Scoreboard			board;
 	protected JLabel				clock;
 	protected JTextArea				ticker;
 	protected Timer					timer;
 	protected int					shown;						// how many decisions the ticker has
 
-	public SoccerRefereeWindow (JFrame host, SoccerSupervisorSimul referee)
+	public SoccerRefereeWindow (JFrame host, SoccerRefereeSimul referee)
 	{
 		super ("Soccer Referee" + ((referee.robot () != null) ? (" [" + referee.robot () + "]") : ""));
 

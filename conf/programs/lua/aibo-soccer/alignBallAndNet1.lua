@@ -3,6 +3,9 @@
 -- 20060406 Humberto Martinez
 -- 20260924 Humberto Martinez
 
+local MIN_BALL_RHO = 200
+local MAX_BALL_RHO = 500
+
 local MIN_DRHO = 50
 local MIN_DTHETA = 1
 local MAX_VROT = 60
@@ -24,7 +27,7 @@ local align_rho, align_theta
 
 -- Compute distance at invocation
 if info.isNew > 0 then
-     chaos.setGlobal("ALIGN_RHO",ball.rho)
+     chaos.setGlobal("ALIGN_RHO",math.limit (ball.rho, MIN_BALL_RHO, MAX_BALL_RHO))
 end
 align_rho = chaos.getGlobal("ALIGN_RHO")
 

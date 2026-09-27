@@ -128,7 +128,7 @@
     { "icon": "teamchaos", "image": "./conf/2dmodels/teamchaos.jpg", "x": -1, "y": -3.3, "z": 0, "orientation": 180, "color": "gray_dark" }
   ],
   "aobjects": [
-    { "label": "ball", "icon": "ball", "image": "./conf/2dmodels/ball.png", "x": 0, "y": 0, "z": 0.04, "orientation": 0, "radius": 0.04, "color": "gray_dark", "shape": "./conf/3dmodels/aibo-ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 1.0E-4 }
+    { "label": "ball", "icon": "ball", "image": "./conf/2dmodels/ball.png", "x": 0, "y": 0, "z": 0.04, "orientation": 0, "radius": 0.04, "color": "gray_dark", "shape": "./conf/3dmodels/aibo-ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0, "acceleration": 0, "mass": 0, "coef_res": 0.75, "coef_fric": 0.01 }
   ],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },

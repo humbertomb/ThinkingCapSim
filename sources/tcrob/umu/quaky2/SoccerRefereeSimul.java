@@ -48,7 +48,7 @@ import tcrob.umu.quaky2.gui.SoccerRefereeWindow;
  *   DURATION    the match, in seconds (600)
  * </pre>
  */
-public class SoccerSupervisorSimul extends Supervisor implements Simulated
+public class SoccerRefereeSimul extends Supervisor implements Simulated
 {
 	static public final Color		C_TEAM1		= new Color (200, 30, 30);
 	static public final Color		C_TEAM2		= new Color (30, 70, 200);
@@ -73,7 +73,7 @@ public class SoccerSupervisorSimul extends Supervisor implements Simulated
 
 	protected SoccerRefereeWindow	win;
 
-	public SoccerSupervisorSimul (ModuleConfig config, Linda linda)
+	public SoccerRefereeSimul (ModuleConfig config, Linda linda)
 	{
 		super (config, linda);
 	}
@@ -100,7 +100,7 @@ public class SoccerSupervisorSimul extends Supervisor implements Simulated
 				public void run ()
 				{
 					if (win != null)		return;
-					win	= new SoccerRefereeWindow (hostFrame (), SoccerSupervisorSimul.this);
+					win	= new SoccerRefereeWindow (hostFrame (), SoccerRefereeSimul.this);
 					win.setVisible (true);
 				}
 			});

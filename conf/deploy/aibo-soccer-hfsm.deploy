@@ -2,7 +2,7 @@
   "world": "./conf/maps/soccer_field_aibo_2007.world",
   "robots": [
     {
-      "name": "QUAKY2-1",
+      "name": "AIBO-1",
       "linda": {
         "address": "localhost",
         "port": 3000,
@@ -16,7 +16,7 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "./conf/programs/hfsm/aplayer.hfsm",
+            "PRG": "./conf/programs/hfsm/attacker.hfsm",
             "TYPE": "Controller",
             "AUTO": "true"
           },
@@ -60,8 +60,25 @@
               "symbol": "CAMERA",
               "itemClass": "tc.shared.linda.ItemCamera",
               "method": "notify_camera"
+            },
+            {
+              "symbol": "BEH_NEEDS",
+              "itemClass": "tc.shared.linda.ItemBehNeeds",
+              "method": "notify_beh_neeeds"
             }
           ]
+        },
+        {
+          "name": "Supervisor",
+          "properties": {
+            "TYPE": "Supervisor",
+            "MODE": "shared",
+            "PASSIVE": "false",
+            "GFX": "true",
+            "EXTIME": "100",
+            "CLASS": "tcrob.umu.quaky2.SoccerSupervisorSimul"
+          },
+          "events": []
         }
       ],
       "virtualRobot": {
@@ -78,6 +95,11 @@
             "symbol": "MOTION",
             "itemClass": "tc.shared.linda.ItemMotion",
             "method": "notify_motion"
+          },
+          {
+            "symbol": "CAMERA_CTRL",
+            "itemClass": "tc.shared.linda.ItemCameraCtrl",
+            "method": "notify_camera_ctrl"
           }
         ]
       },

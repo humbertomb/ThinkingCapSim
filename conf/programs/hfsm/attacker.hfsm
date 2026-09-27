@@ -1,0 +1,208 @@
+{
+  "name": "attacker",
+  "behpath": "./conf/programs/lua/aibo-soccer",
+  "vars": [
+    {
+      "name": "ZONE_SCORABLE",
+      "type": "int",
+      "elements": "1",
+      "value": "2300",
+      "machine": "aplayer"
+    }
+  ],
+  "machine": {
+    "name": "attacker",
+    "id": 0,
+    "x": 0,
+    "y": 0,
+    "meta": true,
+    "initial": "LookForBall",
+    "initialId": 4,
+    "states": [
+      {
+        "name": "LookForBall",
+        "id": 4,
+        "x": 466,
+        "y": -210,
+        "code": "chaos.setBehavior(\"lookForBall\")\n",
+        "transitions": [
+          {
+            "name": "BallSeen",
+            "id": 5,
+            "x": 561,
+            "y": -259,
+            "to": "GoToBall",
+            "toId": 6,
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.anchored < 0.7 then\n\treturn false\nend\nreturn true"
+          }
+        ]
+      },
+      {
+        "name": "GoToBall",
+        "id": 6,
+        "x": 769,
+        "y": -212,
+        "code": "local gs     = chaos.gsGetMyPos()\nlocal ball   = chaos.getLpo(chaos.BALL_LPO)\nlocal net1   = chaos.getLpo(chaos.NET1_LPO) \nlocal net2   = chaos.getLpo(chaos.NET2_LPO) \n\n--if (gs.quality < 0.6) and (ball.rho > 1000) then\n--\tchaos.trackLandMarks()\n--end\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"goToBall\")\n",
+        "transitions": [
+          {
+            "name": "CanScore",
+            "id": 7,
+            "x": 817,
+            "y": -105,
+            "to": "Score",
+            "toId": 8,
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.anchored > 0.7 and ball.rho < 800 then\n\treturn true\nelse\n\treturn false\nend\n"
+          },
+          {
+            "name": "BallLost",
+            "id": 18,
+            "x": 558,
+            "y": -169,
+            "to": "LookForBall",
+            "toId": 4,
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.anchored < 0.6 then\n\treturn true\nend\nreturn false"
+          },
+          {
+            "name": "Net1Lost",
+            "id": 22,
+            "x": 619,
+            "y": -87,
+            "to": "LookForNet1",
+            "toId": 20,
+            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nif net1.anchored < 0.4 then\n\treturn true\nend\nreturn false\n"
+          }
+        ]
+      },
+      {
+        "name": "Score",
+        "id": 8,
+        "x": 934,
+        "y": 55,
+        "transitions": [
+          {
+            "name": "KickDone",
+            "id": 9,
+            "x": 904,
+            "y": -168,
+            "to": "GoToBall",
+            "toId": 6,
+            "test": "KICK_DONE = chaos.getGlobal(\"KICK_DONE\")\nif (KICK_DONE == \"NULL\") or (KICK_DONE == \"FALSE\") then \n\treturn false\nelse \n\tchaos.setGlobal(\"KICK_DONE\",\"FALSE\")\n\treturn true\nend"
+          },
+          {
+            "name": "ScoreAborted",
+            "id": 10,
+            "x": 1041,
+            "y": -217,
+            "to": "GoToBall",
+            "toId": 6,
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.rho > 800 then\n\treturn true\nend\nreturn false"
+          },
+          {
+            "name": "BallLost",
+            "id": 19,
+            "x": 474,
+            "y": -13,
+            "to": "LookForBall",
+            "toId": 4,
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.anchored < 0.4 then\n\treturn true\nend\nreturn false"
+          },
+          {
+            "name": "Net1Lost",
+            "id": 23,
+            "x": 753,
+            "y": 121,
+            "to": "LookForNet1",
+            "toId": 20,
+            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nif net1.anchored < 0.4 then\n\treturn true\nend\nreturn false\n"
+          }
+        ],
+        "meta": true,
+        "initial": "Align",
+        "initialId": 14,
+        "states": [
+          {
+            "name": "ApproachBall",
+            "id": 11,
+            "x": 92,
+            "y": 11,
+            "code": "chaos.setBehavior(\"goToBall\")\n",
+            "transitions": [
+              {
+                "name": "NeedAlignment",
+                "id": 12,
+                "x": 42,
+                "y": 169,
+                "to": "Align",
+                "toId": 14,
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\n\nif math.abs(net1.theta) > 30 then \n\treturn true\nelse\n\treturn false\nend"
+              },
+              {
+                "name": "Kickable",
+                "id": 13,
+                "x": 265,
+                "y": -70,
+                "to": "DoKick",
+                "toId": 16,
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.rho < 600 then \n    return true\nelse \n    return false\nend\n"
+              }
+            ]
+          },
+          {
+            "name": "Align",
+            "id": 14,
+            "x": 71,
+            "y": 347,
+            "code": "chaos.setBehavior(\"alignBallAndNet1\")",
+            "transitions": [
+              {
+                "name": "Aligned",
+                "id": 15,
+                "x": 201,
+                "y": 173,
+                "to": "ApproachBall",
+                "toId": 11,
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\n\nif math.abs(net1.theta) <= 30 then \n\treturn true\nelse\n\treturn false\nend"
+              }
+            ]
+          },
+          {
+            "name": "DoKick",
+            "id": 16,
+            "x": 554,
+            "y": 15,
+            "code": "chaos.setBehavior(\"pushBall\")\n",
+            "transitions": [
+              {
+                "name": "NotKickable",
+                "id": 17,
+                "x": 265,
+                "y": 65,
+                "to": "ApproachBall",
+                "toId": 11,
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.rho > 600 then \n\treturn true\nelse \n\treturn false\nend\n"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "LookForNet1",
+        "id": 20,
+        "x": 675,
+        "y": 94,
+        "code": "chaos.setBehavior(\"lookForNet1\")\n",
+        "transitions": [
+          {
+            "name": "Net1Seen",
+            "id": 21,
+            "x": 761,
+            "y": 252,
+            "to": "Score",
+            "toId": 8,
+            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nif net1.anchored > 0.7 then\n\treturn true\nend\nreturn false\n"
+          }
+        ]
+      }
+    ]
+  }
+}
