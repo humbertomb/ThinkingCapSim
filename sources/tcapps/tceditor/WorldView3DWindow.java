@@ -64,6 +64,7 @@ import tc.shared.world.World;
 import tc.vrobot.RobotData;
 import tc.vrobot.RobotDesc;
 import tcapps.tceditor.visualization.Scene3D;
+import tcapps.tceditor.visualization.FloorName;
 import tcapps.tceditor.visualization.Robot3D;
 import tcapps.tceditor.visualization.World3D;
 import tcapps.tcsimulator.simulator.SimulatorDesc;
@@ -118,9 +119,10 @@ public class WorldView3DWindow extends JFrame
 	protected java.util.List<TransformGroup>	objects = new java.util.ArrayList<TransformGroup> ();
 	protected boolean				showAnimated	= true;	// draw the world's animated objects at their initial pose (off while simulating)
 	protected boolean				showStarts		= true;	// View menu: the starting positions of the robots
-	protected boolean				showLabels		= true;	// View menu: the names floating over the objects
+	protected boolean				showNames		= true;	// View menu: the names of the robots
+	protected boolean				showLabels		= true;	// View menu: the names of the objects
 	protected boolean				showFOVs		= true;	// View menu: what the cameras of the robots see
-	protected java.util.Map<BranchGroup, TransformGroup>	labels = new java.util.LinkedHashMap<BranchGroup, TransformGroup> ();	// the names of the live objects and the pose each hangs from
+	protected java.util.List<FloorName>	labels = new java.util.ArrayList<FloorName> ();	// the names of the live objects, one per object (null for an unnamed one)
 	protected int					vmode			= Scene3D.M_MOVE;
 
 	/* GUI */
@@ -272,6 +274,10 @@ public class WorldView3DWindow extends JFrame
 		{
 			public void run ()		{ showStarts = !showStarts;	scheduleRebuild (); }
 		}));
+		view.add (check ("Show robot names", showNames, new Runnable ()
+		{
+			public void run ()		{ showNames = !showNames;	updateNames (); }
+		}));
 		view.add (check ("Show object labels", showLabels, new Runnable ()
 		{
 			public void run ()		{ showLabels = !showLabels;	updateLabels ();	scheduleRebuild (); }
@@ -299,11 +305,19 @@ public class WorldView3DWindow extends JFrame
 	private void updateLabels ()
 	{
 		// they all follow the menu: every one is on when it says so, and off otherwise
-		for (java.util.Map.Entry<BranchGroup, TransformGroup> e : labels.entrySet ())
+		if (objectsBranch == null)		return;
+		for (FloorName fn : labels)
 		{
-			if (showLabels)		e.getValue ().addChild (e.getKey ());
-			else				e.getKey ().detach ();
+			if (fn == null)			continue;
+			if (showLabels)			objectsBranch.addChild (fn);
+			else					fn.detach ();
 		}
+	}
+
+	/** The names of the live robots on or off the floor, as the View menu says. */
+	private void updateNames ()
+	{
+		for (Robot3D r : robots)		r.showName (showNames);
 	}
 
 	/** What the cameras of the live robots see, on or off, as the View menu says. */
@@ -804,6 +818,7 @@ public class WorldView3DWindow extends JFrame
 		Robot3D		r3d = new Robot3D (rdesc, body, lift, new Point3 (x, y, 0.0), 0.0, a, name);
 		r3d.setCameraBounds (wallBounds ());						// what its cameras see stops at the outer walls
 		r3d.showCameras (showFOVs);
+		r3d.showName (showNames);
 		robots.add (r3d);
 		robotsBranch.addChild (r3d);
 		return robots.size () - 1;
@@ -862,18 +877,17 @@ public class WorldView3DWindow extends JFrame
 		tg.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
 		TransformGroup	model = (o.shape != null) ? scene.getCachedObject (o.shape, o.usecolor ? wucore.utils.color.ColorTool.fromWColorToColor (o.color) : null) : null;
 		TransformGroup	plate = (model == null) ? scene.getObjectImage (o) : null;
-		double			height;
+		double			across;
 		if (model != null)
 		{
+			across	= FloorName.footprint (model);					// while it is still in its own frame
 			tg.addChild (model);
-			height = Robot3D.labelHeight (model);
 		}
 		else if (plate != null)
 		{
-			// no 3D model but a picture of its own: the picture over the ground its icon
-			// covers, which lies flat and has nothing to raise the name over
+			// no 3D model but a picture of its own: the picture over the ground its icon covers
+			across	= FloorName.footprint (plate);
 			tg.addChild (plate);
-			height = Robot3D.LABEL_GAP;
 		}
 		else
 		{
@@ -882,24 +896,19 @@ public class WorldView3DWindow extends JFrame
 			Color3f			col = new Color3f (c.getRed () / 255f, c.getGreen () / 255f, c.getBlue () / 255f);
 			for (wucore.utils.geom.Line2 l : o.getLocalIcon ())
 				tg.addChild (segment (l.orig ().x (), l.orig ().y (), l.z1 () + 0.02, l.dest ().x (), l.dest ().y (), l.z2 () + 0.02, col, 2f));
-			height = Robot3D.LABEL_GAP;
+			across	= FloorName.footprint (o);
 		}
+		if (across <= 0.0)		across = FloorName.footprint (o);
+		// its name on the floor under it, in a branch of its own beside the object (it
+		// does not turn with it), so that the View menu can take it off and put it back
+		FloorName		fn = null;
 		if ((o.label != null) && (o.label.length () > 0))
 		{
-			com.sun.j3d.utils.geometry.Text2D	text = new com.sun.j3d.utils.geometry.Text2D (o.label, new Color3f (0.1f, 0.1f, 0.6f), "Application", 140, java.awt.Font.BOLD);
-			Transform3D		tl = new Transform3D ();
-			tl.setTranslation (new Vector3d (0.0, 0.0, height));
-			TransformGroup	lg = new TransformGroup (tl);
-			lg.addChild (text);
-			// the name in a branch of its own under the same pose, so that the View menu can take it off and put it back
-			BranchGroup		lb = new BranchGroup ();
-			lb.setCapability (BranchGroup.ALLOW_DETACH);
-			lb.addChild (lg);
-			tg.setCapability (TransformGroup.ALLOW_CHILDREN_EXTEND);
-			tg.setCapability (TransformGroup.ALLOW_CHILDREN_WRITE);
-			labels.put (lb, tg);
-			if (showLabels)		tg.addChild (lb);
+			fn	= new FloorName (o.label, across);
+			fn.place (x, y, z);
+			if (showLabels)		objectsBranch.addChild (fn);
 		}
+		labels.add (fn);
 		BranchGroup		bg = new BranchGroup ();
 		bg.setCapability (BranchGroup.ALLOW_DETACH);
 		bg.addChild (tg);
@@ -917,6 +926,7 @@ public class WorldView3DWindow extends JFrame
 		t.rotZ (a);
 		t.setTranslation (new Vector3d (x, y, z));
 		objects.get (index).setTransform (t);
+		if ((index < labels.size ()) && (labels.get (index) != null))		labels.get (index).place (x, y, z);
 	}
 
 	public void clearObjects ()

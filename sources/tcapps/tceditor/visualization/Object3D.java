@@ -24,6 +24,8 @@ public class Object3D extends BranchGroup
 	protected boolean				visible = true;
 	
 	protected Vector3d				pos;
+	/** The largest dimension of the object seen from above (m), in its own frame; 0 when it cannot be told. */
+	public double					across;
 	private Matrix3d					rot = new Matrix3d ();
 	private Transform3D				mov = new Transform3D ();
 
@@ -34,6 +36,7 @@ public class Object3D extends BranchGroup
 		pos			= new Vector3d ();
 		transform 	= new Transform3D ();
 		object		= obj;
+		across		= FloorName.footprint (obj);					// while it is still in its own frame
 		
 		// Set group properties
 		setCapability (BranchGroup.ALLOW_CHILDREN_READ);
