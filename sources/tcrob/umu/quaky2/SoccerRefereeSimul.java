@@ -14,20 +14,36 @@ import tc.shared.linda.Linda;
 import tc.shared.world.WMZone;
 import tcapps.tcsimulator.simulator.Simulated;
 import tcapps.tcsimulator.simulator.Simulator;
+import tcapps.tcsimulator.simulator.objects.SimMobileObject;
 import tcapps.tcsimulator.simulator.objects.SimObject;
 import tcrob.umu.quaky2.gui.SoccerRefereeWindow;
 
 /**
- * The referee of a simulated soccer match: it looks at where the simulator
- * really has the ball and the robots and decides on them. The ball leaving the
- * field (the zone FIELD) is a fault, and the ball is put back still on the line
- * of the field, at the point nearest to where it went out; the ball getting inside a net (the zones
- * NET1, NET2, Net1Inside and Net2Inside) is a goal for the team that attacks
- * that net, the red team owning the red net (Net1) and the blue team the blue
- * one (Net2). A robot in the area of a net (AREA1, AREA2, Net1Area and
- * Net2Area) is a fault unless it is the one robot that defends that net: the
- * keeper of the team that owns it. Each is decided once, when it happens, and
- * not again until the ball or the robot has left where it was.
+ * The referee of a simulated soccer match, after the rules of the RoboCup
+ * Four-Legged League of 2007: it looks at where the simulator really has the
+ * ball and the robots, and at which robot touched the ball last, and decides.
+ *
+ * <ul>
+ * <li>A goal is the whole ball inside a net (the zones NET1, NET2), scored by
+ *     the team that attacks it: the red team owns the red net (Net1) and the
+ *     blue team the blue one (Net2). A kick-off shot -- a ball that no robot
+ *     has touched outside the centre circle since the kick-off, so it was shot
+ *     from the kick-off itself -- is no goal.
+ * <li>After a goal (or a kick-off shot) the play restarts: the ball still at
+ *     the centre and every robot back at its start position.
+ * <li>The whole ball out of the field (the zone FIELD) is a fault, and the ball
+ *     is put back still where the rules say: out over a side line, on the
+ *     throw-in line at the point it went out, one metre back towards the goal
+ *     of the team that touched it last, never nearer than one metre to the
+ *     ends; out over an end line, at the corner kick point when the defending
+ *     team touched it last, on the halfway line (same side) when the attacking
+ *     team did, one metre in from the end line when nobody knows.
+ * <li>A robot in the area of a net (AREA1, AREA2) is a fault unless it is the
+ *     one robot that defends that net, the keeper of the team that owns it.
+ * </ul>
+ * Each is decided once, when it happens, and not again until the ball or the
+ * robot has left where it was. The robot that touched the ball last is named
+ * in every decision about the ball.
  *
  * Which team a robot is on is said by name (ROBOTS1, ROBOTS2) or, failing
  * that, taken from the half of the field it is first seen in: the one with
@@ -36,8 +52,7 @@ import tcrob.umu.quaky2.gui.SoccerRefereeWindow;
  * It needs the simulator ({@link Simulated}), which the execution gives it when
  * the architecture runs in one; the world it reads the zones from is the
  * simulator's. With local graphics it opens the referee's window
- * ({@link SoccerRefereeWindow}): the score, the clock of the match and the
- * decisions as they are made.
+ * ({@link SoccerRefereeWindow}).
  *
  * <pre>
  *   BALL        the animated object that is the ball (ball)
@@ -46,6 +61,9 @@ import tcrob.umu.quaky2.gui.SoccerRefereeWindow;
  *   AREA1, AREA2  the areas of the nets, where only the keeper may be (Net1Area, Net2Area)
  *   TEAM1, TEAM2  what the teams are called (Red, Blue)
  *   ROBOTS1, ROBOTS2  the robots of each team, by name, comma separated (by default, by the half they start in)
+ *   THROWIN     how far in from the side line the throw-in line is [m] (0.5)
+ *   CORNER      how far in from the end line the corner kick point is, on the throw-in line [m] (0.65)
+ *   CIRCLE      the radius of the centre circle [m] (0.18)
  *   DURATION    the match, in seconds (600)
  * </pre>
  */
@@ -54,6 +72,10 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	static public final Color		C_TEAM1		= new Color (200, 30, 30);
 	static public final Color		C_TEAM2		= new Color (30, 70, 200);
 
+	/** The rules: one metre back from where the ball went out, and never nearer than one metre to the ends. */
+	static public final double		BACK		= 1.0;
+	static public final double		END_MARGIN	= 1.0;
+
 	protected Simulator				sim;
 	protected String				ballName;
 	protected String				fieldName;
@@ -61,14 +83,19 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	protected String[]				areaNames	= new String[2];
 	protected String[]				teamNames	= new String[2];
 	protected String[][]			teamRobots	= new String[2][];		// by name, when the settings say; null for by the half they start in
+	protected double				throwIn;				// the throw-in line, in from the side line [m]
+	protected double				corner;					// the corner kick point, in from the end line [m]
+	protected double				circle;					// the centre circle [m]
 
 	// What is decided and kept
 	protected final int[]			score		= new int[2];
 	protected int					faults;
 
-	// Where the ball was last seen, to decide once on each thing that happens
+	// Where the ball and the robots were last seen, to decide once on each thing that happens
 	protected Boolean				inField;				// null: not looked at yet
 	protected Boolean[]				inNet		= new Boolean[2];
+	protected boolean				kickoff		= true;		// since the last kick-off no robot has touched the ball outside the centre circle
+	protected long					touchSeen;				// the last touch of the ball looked at (its time), to see the new ones
 	protected int[]					teamOf		= new int[Simulator.MAX_ROBOTS];		// the team of each robot, -1 while not known
 	protected Boolean[][]			inArea		= new Boolean[Simulator.MAX_ROBOTS][2];	// which robots are in which areas
 
@@ -93,6 +120,9 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		teamNames[1]	= cfg.get ("TEAM2", "Blue");
 		teamRobots[0]	= names (cfg.get ("ROBOTS1"));
 		teamRobots[1]	= names (cfg.get ("ROBOTS2"));
+		throwIn			= cfg.getDouble ("THROWIN", 0.5);
+		corner			= cfg.getDouble ("CORNER", 0.65);
+		circle			= cfg.getDouble ("CIRCLE", 0.18);
 		java.util.Arrays.fill (teamOf, -1);
 
 		if (localgfx)
@@ -126,26 +156,33 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 	/** The goals of a team (0 or 1). */
 	public int						score (int team)	{ return score[team]; }
-	/** How many times the ball has left the field. */
+	/** How many faults there have been. */
 	public int						faults ()			{ return faults; }
 	public String					teamName (int team)	{ return teamNames[team]; }
 	public Color					teamColor (int team){ return (team == 0) ? C_TEAM1 : C_TEAM2; }
+
+	/** The team of a robot (0 or 1), or -1 while it is not known. */
+	public int teamOf (int robot)
+	{
+		return ((robot >= 0) && (robot < teamOf.length)) ? teamOf[robot] : -1;
+	}
 
 	protected void restart ()
 	{
 		score[0]	= 0;
 		score[1]	= 0;
 		faults		= 0;
+		forget ();
+	}
+
+	/** Nothing is remembered of where the ball and the robots were: the play starts afresh, at a kick-off. */
+	protected void forget ()
+	{
 		inField		= null;
 		inNet[0]	= null;
 		inNet[1]	= null;
+		kickoff		= true;
 		for (Boolean[] a : inArea)		{ a[0] = null;	a[1] = null; }
-	}
-
-	/** The team of a robot (0 or 1), or -1 while it is not known. */
-	public int teamOf (int robot)
-	{
-		return ((robot >= 0) && (robot < teamOf.length)) ? teamOf[robot] : -1;
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -157,60 +194,156 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		robots ();
 
 		SimObject	ball = ball ();
+		WMZone		field = zone (fieldName);
 
-		if (ball == null)							return;
+		if ((ball == null) || (field == null))		return;
 
-		double		x = ball.odesc.pos.x (), y = ball.odesc.pos.y ();
+		double		x = ball.odesc.pos.x (), y = ball.odesc.pos.y (), r = ball.radius;
 
-		// out of the field: a fault, once, when it leaves -- a ball inside a net has
-		// not left the field, it has got into the net
-		Boolean		field = in (fieldName, x, y);
+		// the kick-off is over once a robot touches the ball with the whole of it
+		// outside the centre circle: what is shot from inside it is a kick-off shot
+		long		touch = (ball instanceof SimMobileObject) ? ((SimMobileObject) ball).touchedAt : 0;
 
-		if (field != null)
+		if (touch != touchSeen)
 		{
-			for (int net = 0; net < 2; net++)
-			{
-				Boolean	n = in (netNames[net], x, y);
-
-				if ((n != null) && n.booleanValue ())		field = Boolean.TRUE;
-			}
-			if ((inField != null) && inField.booleanValue () && !field.booleanValue ())
-			{
-				double[]	back = onTheLine (x, y, ball.radius);
-
-				faults++;
-				if (back != null)
-				{
-					sim.placeObject (index (ball), back[0], back[1], ball.odesc.a);		// still, on the line, nearest to where it went out
-					announce ("FAULT: ball out of the field at (" + fmt (x) + ", " + fmt (y) + "), put back on the line at ("
-							  + fmt (back[0]) + ", " + fmt (back[1]) + ")  --  faults: " + faults);
-					field	= Boolean.TRUE;								// it is in the field again, and nothing to say about it
-				}
-				else
-					announce ("FAULT: ball out of the field at (" + fmt (x) + ", " + fmt (y) + ")  --  faults: " + faults);
-			}
-			else if ((inField != null) && !inField.booleanValue () && field.booleanValue ())
-				announce ("Ball back in the field");
-			inField	= field;
+			touchSeen	= touch;
+			if (kickoff && (Math.hypot (x - field.area.getCenterX (), y - field.area.getCenterY ()) > circle + r))
+				kickoff	= false;
 		}
 
-		// in a net: a goal for the team that attacks it, once, when it gets in
+		// in a net, the whole of it: a goal for the team that attacks it, once, when it gets in
 		for (int net = 0; net < 2; net++)
 		{
-			Boolean		in = in (netNames[net], x, y);
+			WMZone		z = zone (netNames[net]);
 
-			if (in == null)							continue;
+			if (z == null)							continue;
+
+			Boolean		in = Boolean.valueOf (z.area.contains (x - r, y - r, 2 * r, 2 * r));
+
 			if ((inNet[net] != null) && !inNet[net].booleanValue () && in.booleanValue ())
 			{
 				int		team = 1 - net;				// the red team owns the red net (Net1): a ball in it is the blue team's goal
 
-				score[team]++;
-				announce ("GOAL for " + teamNames[team] + ": ball in " + netNames[net] + " (" + teamNames[net] + " net)"
-						  + "  --  " + teamNames[0] + " " + score[0] + " - " + score[1] + " " + teamNames[1]);
-				changed ();
+				if (kickoff)
+					announce ("NO GOAL: kick-off shot into " + netNames[net] + " (" + teamNames[net] + " net), the ball was not touched outside the centre circle" + toucher (ball));
+				else
+				{
+					score[team]++;
+					announce ("GOAL for " + teamNames[team] + ": ball in " + netNames[net] + " (" + teamNames[net] + " net)" + toucher (ball)
+							  + "  --  " + teamNames[0] + " " + score[0] + " - " + score[1] + " " + teamNames[1]);
+					changed ();
+				}
+				kickOff (ball, field);
+				return;
 			}
 			inNet[net]	= in;
 		}
+
+		// the whole ball out of the field: a fault, once, when it leaves, and the ball
+		// put back still where the rules say
+		Boolean		on = Boolean.valueOf (field.area.intersects (x - r, y - r, 2 * r, 2 * r));
+
+		if ((inField != null) && inField.booleanValue () && !on.booleanValue ())
+		{
+			double[]	back = putBack (ball, field, x, y);
+
+			faults++;
+			place (ball, back[0], back[1]);
+			announce ("FAULT: ball out over the " + (sideOut (field, x, y) ? "side" : "end") + " line at (" + fmt (x) + ", " + fmt (y) + ")"
+					  + toucher (ball) + ", put back at (" + fmt (back[0]) + ", " + fmt (back[1]) + ")  --  faults: " + faults);
+			on	= Boolean.TRUE;								// it is in the field again, and nothing to say about it
+		}
+		inField	= on;
+	}
+
+	/**
+	 * Where a ball that went out is put back, after the rules. Out over a side
+	 * line: on the throw-in line, at the point it went out moved one metre back
+	 * towards the goal of the team that touched it last, and never nearer than a
+	 * metre to the ends. Out over an end line: at the corner kick point when the
+	 * team that defends that end touched it last, on the halfway line when the
+	 * other team did, and a metre in from the end when nobody knows; on the side
+	 * the ball went out either way.
+	 */
+	protected double[] putBack (SimObject ball, WMZone field, double x, double y)
+	{
+		boolean		alongY = alongY (field);					// the nets are at the ends of the y axis (or of the x axis)
+		double		cu = alongY ? field.area.getCenterY () : field.area.getCenterX ();	// along the field, towards the nets
+		double		cv = alongY ? field.area.getCenterX () : field.area.getCenterY ();	// across it
+		double		halfU = (alongY ? field.area.getHeight () : field.area.getWidth ()) / 2.0;
+		double		halfV = (alongY ? field.area.getWidth () : field.area.getHeight ()) / 2.0;
+		double		u = (alongY ? y : x) - cu, v = (alongY ? x : y) - cv;
+		int			last = lastTeam (ball);
+		double		pu, pv;
+
+		pv	= Math.signum (v == 0.0 ? 1.0 : v) * (halfV - throwIn);		// the throw-in line, on the side the ball went out
+		if (sideOut (field, x, y))
+		{
+			pu	= u;
+			if (last >= 0)		pu += BACK * goalSide (last, field);	// back towards the goal of the team that touched it last
+			pu	= Math.max (-(halfU - END_MARGIN), Math.min (halfU - END_MARGIN, pu));
+		}
+		else
+		{
+			double	end = Math.signum (u);							// which end it went out over
+			int		defender = (end == goalSide (0, field)) ? 0 : 1;	// the team whose net is at that end
+
+			if (last < 0)					pu = end * (halfU - END_MARGIN);
+			else if (last == defender)		pu = end * (halfU - corner);
+			else							pu = 0.0;
+		}
+		return alongY ? new double[] { cv + pv, cu + pu } : new double[] { cu + pu, cv + pv };
+	}
+
+	/** Whether a ball at (x, y) is out over a side line (as against an end line, past the nets). */
+	protected boolean sideOut (WMZone field, double x, double y)
+	{
+		boolean		alongY = alongY (field);
+		double		du = alongY ? Math.abs (y - field.area.getCenterY ()) - field.area.getHeight () / 2.0
+								: Math.abs (x - field.area.getCenterX ()) - field.area.getWidth () / 2.0;
+		double		dv = alongY ? Math.abs (x - field.area.getCenterX ()) - field.area.getWidth () / 2.0
+								: Math.abs (y - field.area.getCenterY ()) - field.area.getHeight () / 2.0;
+
+		return dv > du;											// further out across the field than along it
+	}
+
+	/** Whether the nets are at the ends of the y axis of the field (else of the x axis). */
+	protected boolean alongY (WMZone field)
+	{
+		WMZone		n = zone (netNames[0]);
+
+		if (n == null)		return field.area.getHeight () >= field.area.getWidth ();
+		return Math.abs (n.area.getCenterY () - field.area.getCenterY ()) >= Math.abs (n.area.getCenterX () - field.area.getCenterX ());
+	}
+
+	/** Which end of the field (+1 or -1, along it) the net of a team is at. */
+	protected double goalSide (int team, WMZone field)
+	{
+		WMZone		n = zone (netNames[team]);
+
+		if (n == null)		return (team == 0) ? 1.0 : -1.0;
+		return alongY (field) ? Math.signum (n.area.getCenterY () - field.area.getCenterY ())
+							  : Math.signum (n.area.getCenterX () - field.area.getCenterX ());
+	}
+
+	/** A goal or a kick-off shot: the ball still at the centre, every robot back where it starts, and the kick-off on. */
+	protected void kickOff (SimObject ball, WMZone field)
+	{
+		Simulator	s = sim;
+
+		place (ball, field.area.getCenterX (), field.area.getCenterY ());
+		if (s != null)
+			for (int r = 0; r < s.numrobots; r++)		s.restartRobot (r);
+		forget ();
+		announce ("Kick-off: ball at the centre, robots at their start positions");
+	}
+
+	/** Puts the ball somewhere, still. */
+	protected void place (SimObject ball, double x, double y)
+	{
+		int		i = index (ball);
+
+		if ((sim != null) && (i >= 0))		sim.placeObject (i, x, y, ball.odesc.a);
 	}
 
 	/**
@@ -238,7 +371,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 				if (in == null)						continue;
 				if ((inArea[r][net] != null) && !inArea[r][net].booleanValue () && in.booleanValue ())
 				{
-					String	who = s.robotName (r) + ((teamOf[r] >= 0) ? (" (" + teamNames[teamOf[r]] + ")") : "");
+					String	who = robot (r);
 
 					if (teamOf[r] != net)			// not of the team that owns the net: it has no business there
 					{
@@ -278,8 +411,8 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 				for (String n : teamRobots[t])
 					if (n.equalsIgnoreCase (name))	return t;
 
-		WMZone		z0 = (world != null) ? world.zones ().at (netNames[0]) : null;
-		WMZone		z1 = (world != null) ? world.zones ().at (netNames[1]) : null;
+		WMZone		z0 = zone (netNames[0]);
+		WMZone		z1 = zone (netNames[1]);
 
 		if ((z0 == null) || (z1 == null))			return -1;
 
@@ -289,44 +422,9 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		return (d0 <= d1) ? 0 : 1;
 	}
 
-	/** Names given comma separated, or null when none were. */
-	static private String[] names (String list)
-	{
-		if ((list == null) || (list.trim ().length () == 0))		return null;
-
-		String[]	n = list.trim ().split ("[,;\\s]+");
-
-		return (n.length > 0) ? n : null;
-	}
-
-	/**
-	 * The point of the line of the field nearest to a point outside it, brought in
-	 * by the radius of the ball so that the ball rests on the line and not beyond
-	 * it; null when there is no field to speak of.
-	 */
-	protected double[] onTheLine (double x, double y, double radius)
-	{
-		WMZone		f = (world != null) ? world.zones ().at (fieldName) : null;
-
-		if (f == null)								return null;
-
-		double		in = Math.max (0.0, radius) + 0.005;
-		double		x0 = f.area.getMinX () + in, x1 = f.area.getMaxX () - in;
-		double		y0 = f.area.getMinY () + in, y1 = f.area.getMaxY () - in;
-
-		return new double[] { Math.min (Math.max (x, x0), x1), Math.min (Math.max (y, y0), y1) };
-	}
-
-	/** Which of the objects of the simulator one is, or -1. */
-	protected int index (SimObject o)
-	{
-		Simulator	s = sim;
-
-		if ((s == null) || (s.objects == null))		return -1;
-		for (int i = 0; i < s.objects.numobjects; i++)
-			if (s.objects.OBJS[i] == o)				return i;
-		return -1;
-	}
+	/* ------------------------------------------------------------------ */
+	/* What is looked at                                                   */
+	/* ------------------------------------------------------------------ */
 
 	/** The simulated ball, or null while there is none to look at. */
 	protected SimObject ball ()
@@ -343,13 +441,70 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		return null;
 	}
 
+	/** Which of the objects of the simulator one is, or -1. */
+	protected int index (SimObject o)
+	{
+		Simulator	s = sim;
+
+		if ((s == null) || (s.objects == null))		return -1;
+		for (int i = 0; i < s.objects.numobjects; i++)
+			if (s.objects.OBJS[i] == o)				return i;
+		return -1;
+	}
+
+	/** The robot that touched the ball last (its number in the simulator), or -1 for none yet. */
+	protected int lastRobot (SimObject ball)
+	{
+		return (ball instanceof SimMobileObject) ? ((SimMobileObject) ball).touchedBy : -1;
+	}
+
+	/** The team of the robot that touched the ball last, or -1 when there is none or it is not known. */
+	protected int lastTeam (SimObject ball)
+	{
+		int		r = lastRobot (ball);
+
+		return (r >= 0) ? teamOf (r) : -1;
+	}
+
+	/** ", last touched by <robot> (<team>)", or nothing when no robot has touched the ball. */
+	protected String toucher (SimObject ball)
+	{
+		int		r = lastRobot (ball);
+
+		return (r >= 0) ? (", last touched by " + robot (r)) : "";
+	}
+
+	/** A robot as it is named in the decisions: its name and its team. */
+	protected String robot (int r)
+	{
+		int		t = teamOf (r);
+
+		return ((sim != null) ? sim.robotName (r) : ("robot " + r)) + ((t >= 0) ? (" (" + teamNames[t] + ")") : "");
+	}
+
+	/** A zone of the world, or null when it has no such zone. */
+	protected WMZone zone (String name)
+	{
+		return (world != null) ? world.zones ().at (name) : null;
+	}
+
 	/** Whether a point is in a zone of the world, or null when the world has no such zone. */
 	protected Boolean in (String zone, double x, double y)
 	{
-		WMZone		z = (world != null) ? world.zones ().at (zone) : null;
+		WMZone		z = zone (zone);
 
 		if (z == null)								return null;
 		return Boolean.valueOf (z.area.contains (x, y));
+	}
+
+	/** Names given comma separated, or null when none were. */
+	static private String[] names (String list)
+	{
+		if ((list == null) || (list.trim ().length () == 0))		return null;
+
+		String[]	n = list.trim ().split ("[,;\\s]+");
+
+		return (n.length > 0) ? n : null;
 	}
 
 	static private String fmt (double v)			{ return String.format ("%.2f", v); }

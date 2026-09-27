@@ -176,7 +176,8 @@ public class SimObjects
 					// the robots: discs (of their radius) the object cannot get into
 					for (int r = 0; r < simul.numrobots; r++)
 						if ((simul.MODEL[r] != null) && (simul.RDESC[r] != null))
-							mobj.robot_collision (simul.MODEL[r].real_x, simul.MODEL[r].real_y, simul.RDESC[r].RADIUS, rvx[r], rvy[r]);
+							if (mobj.robot_collision (simul.MODEL[r].real_x, simul.MODEL[r].real_y, simul.RDESC[r].RADIUS, rvx[r], rvy[r]))
+								mobj.touched (r, ct);					// the last robot to touch it, for whoever judges the game
 
 					// the walls (and the other objects)
 					wall		= simul.closerObstacle (OBJS[i], OBJICONS[i]);

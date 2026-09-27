@@ -76,6 +76,23 @@ public class Simulator
 	public RobotDesc[]				RDESC;
 	public RobotModel[]				MODEL;
 	public String[]					NAMES		= new String[MAX_ROBOTS];		// what each robot is called (the deployment's name), or null
+	public double[][]				START		= new double[MAX_ROBOTS][];		// where each robot starts (x, y, a), as it was last put there at a reset
+
+	/** Where the i-th robot starts, as {x, y, a}: where it was put at its last reset, or null when it never was. */
+	public double[] startPose (int i)
+	{
+		return ((i >= 0) && (i < MAX_ROBOTS)) ? START[i] : null;
+	}
+
+	/** Puts a robot back where it starts (see {@link #placeRobot}: only where it is changes). Whether it could be. */
+	public boolean restartRobot (int i)
+	{
+		double[]	p = startPose (i);
+
+		if (p == null)					return false;
+		placeRobot (i, p[0], p[1], p[2]);
+		return true;
+	}
 
 	/** What the i-th robot is called, its number when it has no name. */
 	public String robotName (int i)
@@ -1156,6 +1173,7 @@ public class Simulator
 			{
 				tc.shared.world.WMStart	st = map.start (robotind);			// START_i for the i-th robot (the first one when there are fewer)
 				MODEL[robotind].position (data, st.x (), st.y (), st.orientation);
+				START[robotind]	= new double[] { st.x (), st.y (), st.orientation };
 			}
 			else
 				MODEL[robotind].position (data, 0.0, 0.0, 0.0);		
@@ -1166,6 +1184,7 @@ public class Simulator
 	public void reset (int robotind, RobotData data, double x, double y, double a)
 	{
 		if (MODEL[robotind] != null)		MODEL[robotind].position (data, x, y, a);
+		START[robotind]	= new double[] { x, y, a };
 	}
 
 	/** Change the START position for the next added robot */

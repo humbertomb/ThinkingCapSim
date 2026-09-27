@@ -29,6 +29,17 @@ public class SimMobileObject extends SimObject
 
 	public double FRIC_COEF = 0.001; // Friction coeficient
 
+	/** The last robot that touched it (its number in the simulator), -1 for none yet, and when [ms]. */
+	public int				touchedBy	= -1;
+	public long				touchedAt;
+
+	/** A robot touched it: it is the last one to have done so. */
+	public void touched (int robot, long when)
+	{
+		touchedBy	= robot;
+		touchedAt	= when;
+	}
+
 	/** The movement parameters come from the world object (movement, speed, acceleration, mass, coef_col, coef_fric). */
 	public SimMobileObject (WMAObject odesc)
 	{
