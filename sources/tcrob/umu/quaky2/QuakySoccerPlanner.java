@@ -11,7 +11,7 @@ import tclib.planning.sequence.*;
 
 import wucore.utils.math.*;
 		
-public class SoccerPlanner extends SeqPlanner
+public class QuakySoccerPlanner extends SeqPlanner
 {
 	/** What it understands (see parsePlan): stay where it is, kick the ball, or score. */
 	static public final String[]	ACTIONS		= { "kick", "score", "stay" };
@@ -36,7 +36,7 @@ public class SoccerPlanner extends SeqPlanner
 		
 	
 	// Constructors
-	public SoccerPlanner (ModuleConfig cfg, Linda linda)
+	public QuakySoccerPlanner (ModuleConfig cfg, Linda linda)
 	{
 		super (cfg, linda);
 

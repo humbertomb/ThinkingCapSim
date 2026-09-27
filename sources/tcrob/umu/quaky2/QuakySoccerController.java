@@ -16,7 +16,7 @@ import tclib.navigation.pathplanning.*;
 import devices.pos.*;
 import wucore.utils.math.*;
 		
-public class SoccerController extends BGController
+public class QuakySoccerController extends BGController
 {	
 	static public final double			WORLD_SIZE		= 8.0;					// World extent (m)
 	static public final double			CELL_SIZE		= 0.15;					// Cell size (m)
@@ -95,7 +95,7 @@ public class SoccerController extends BGController
 	protected long						stepstart		= 0;
 	
 	// Constructors
-	public SoccerController (ModuleConfig cfg, Linda linda) 
+	public QuakySoccerController (ModuleConfig cfg, Linda linda) 
 	{
 		super (cfg, linda);
 	}

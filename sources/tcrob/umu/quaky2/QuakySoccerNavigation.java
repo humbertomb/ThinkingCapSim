@@ -12,10 +12,10 @@ import tclib.navigation.mapbuilding.*;
 
 import tcrob.umu.indoor.IndoorNavigation;
 
-public class SoccerNavigation extends IndoorNavigation
+public class QuakySoccerNavigation extends IndoorNavigation
 {	
 	// Constructors
-	public SoccerNavigation (ModuleConfig cfg, Linda linda)
+	public QuakySoccerNavigation (ModuleConfig cfg, Linda linda)
 	{
 		super (cfg, linda);
 	}
