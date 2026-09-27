@@ -12,7 +12,6 @@
         {
           "name": "Controller",
           "properties": {
-            "CLASS": "tcrob.umu.quaky2.SoccerController",
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
@@ -36,7 +35,7 @@
         {
           "name": "Planner",
           "properties": {
-            "CLASS": "tcrob.umu.quaky2.SoccerPlanner",
+            "CLASS": "tcrob.umu.quaky2.QuakySoccerPlanner",
             "EXTIME": "1000",
             "GFX": "true",
             "MODE": "shared",
