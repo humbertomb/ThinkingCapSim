@@ -10,7 +10,7 @@ import java.awt.image.*;
 
 import tclib.vision.chaos.blobs.*;
 import tclib.vision.chaos.channels.*;
-import tcrob.umu.quaky2.gui.images.BufferedImageDrawing;
+import tcrob.umu.soccer.gui.images.BufferedImageDrawing;
 
 /**
  * The circle a ball makes in the image, from the edge of its blob: its centre

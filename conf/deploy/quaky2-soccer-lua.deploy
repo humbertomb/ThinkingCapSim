@@ -52,7 +52,7 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "GFX": "true",
-            "CLASS": "tcrob.umu.quaky2.SoccerVision",
+            "CLASS": "tcrob.umu.soccer.SoccerVision",
             "PARAMS": "./conf/vision/quaky2-soccer.chaos"
           },
           "events": [

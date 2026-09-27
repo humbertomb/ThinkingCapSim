@@ -52,7 +52,7 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "GFX": "true",
-            "CLASS": "tcrob.umu.quaky2.SoccerVision",
+            "CLASS": "tcrob.umu.soccer.SoccerVision",
             "PARAMS": "./conf/vision/aibo-soccer-2007.chaos"
           },
           "events": [
@@ -76,7 +76,7 @@
             "PASSIVE": "false",
             "GFX": "true",
             "EXTIME": "100",
-            "CLASS": "tcrob.umu.quaky2.SoccerRefereeSimul"
+            "CLASS": "tcrob.umu.soccer.SoccerRefereeSimul"
           },
           "events": []
         }
