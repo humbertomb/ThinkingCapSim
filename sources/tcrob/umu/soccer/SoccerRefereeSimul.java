@@ -44,8 +44,9 @@ import tc.shared.linda.Tuple;
  *     ends; out over an end line, at the corner kick point when the defending
  *     team touched it last, on the halfway line (same side) when the attacking
  *     team did, one metre in from the end line when nobody knows.
- * <li>A robot in the area of a net (AREA1, AREA2) is a fault unless it is the
- *     one robot that defends that net, the keeper of the team that owns it.
+ * <li>A robot wholly inside the area of a net (AREA1, AREA2) is a fault unless
+ *     it is the one robot that defends that net, the keeper of the team that
+ *     owns it.
  * </ul>
  * Each is decided once, when it happens, and not again until the ball or the
  * robot has left where it was. The robot that touched the ball last is named
@@ -484,10 +485,11 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	}
 
 	/**
-	 * The robots: each is put on a team the first time it is seen, and one in the
-	 * area of a net is a fault unless it is the keeper of the team that owns the
-	 * net -- the one robot of that team allowed there, the first one in; a second
-	 * one of the same team is a fault as well.
+	 * The robots: each is put on a team the first time it is seen, and one wholly
+	 * inside the area of a net (the disc of its radius, all of it) is a fault
+	 * unless it is the keeper of the team that owns the net -- the one robot of
+	 * that team allowed there, the first one in; a second one of the same team is
+	 * a fault as well. A robot with a foot over the line is not in yet.
 	 */
 	protected void robots ()
 	{
@@ -499,11 +501,12 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 			if (s.MODEL[r] == null)					continue;
 
 			double		x = s.MODEL[r].real_x, y = s.MODEL[r].real_y;
+			double		rr = (s.RDESC[r] != null) ? s.RDESC[r].RADIUS : 0.0;
 
 			if (teamOf[r] < 0)						teamOf[r] = team (r, x, y);
 			for (int net = 0; net < 2; net++)
 			{
-				Boolean		in = in (areaNames[net], x, y);
+				Boolean		in = wholeIn (areaNames[net], x, y, rr);
 
 				if (in == null)						continue;
 				if ((inArea[r][net] != null) && !inArea[r][net].booleanValue () && in.booleanValue ())
@@ -683,6 +686,15 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 		if (z == null)								return null;
 		return Boolean.valueOf (z.area.contains (x, y));
+	}
+
+	/** Whether the whole of a disc (centre, radius) is inside a zone; null when there is no such zone. */
+	protected Boolean wholeIn (String zone, double x, double y, double r)
+	{
+		WMZone		z = zone (zone);
+
+		if (z == null)								return null;
+		return Boolean.valueOf (z.area.contains (x - r, y - r, 2 * r, 2 * r));
 	}
 
 	/** Names given comma separated, or null when none were. */
