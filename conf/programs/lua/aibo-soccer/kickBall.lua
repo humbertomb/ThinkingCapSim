@@ -1,11 +1,11 @@
 -- Behaviour: GoToBall
 --
--- 20260928 Humberto Martinez
+-- 20260925 Humberto Martinez
 
 local ball = chaos.getLpo(chaos.BALL_LPO)
 
 -- PID-like controllers
-local vlin = 0.75 * ball.rho + 10
+local vlin = 1.5 * ball.rho + 100
 local vrot = 0.9 * ball.theta
 local vlat = 0
 	

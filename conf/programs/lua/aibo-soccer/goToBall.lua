@@ -6,8 +6,8 @@
 local ANGLE_LARGE = 50
 local ANGLE_SMALL = 25
 
-local RHO_MIN = 250
-local RHO_SLOWDOWN = 600
+local RHO_MIN = 150
+local RHO_SLOWDOWN = 500
 
 local vlin = 0
 local vlat = 0

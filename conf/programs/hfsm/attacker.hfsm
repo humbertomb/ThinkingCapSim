@@ -143,7 +143,16 @@
                 "y": -70,
                 "to": "DoKick",
                 "toId": 16,
-                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.rho < 600 then \n    return true\nelse \n    return false\nend\n"
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\nif ball.rho < 600 and net1.rho < 1000 then \n    return true\nelse \n    return false\nend\n"
+              },
+              {
+                "name": "BallNear",
+                "id": 25,
+                "x": 94,
+                "y": -116,
+                "to": "PushBall",
+                "toId": 24,
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\nif ball.rho < 600 and net1.rho > 1000 then \n    return true\nelse \n    return false\nend\n"
               }
             ]
           },
@@ -161,7 +170,7 @@
                 "y": 173,
                 "to": "ApproachBall",
                 "toId": 11,
-                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\n\nif math.abs(net1.theta) <= 30 then \n\treturn true\nelse\n\treturn false\nend"
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\n\nif math.abs(net1.theta) <= 5 then \n\treturn true\nelse\n\treturn false\nend"
               }
             ]
           },
@@ -170,7 +179,7 @@
             "id": 16,
             "x": 554,
             "y": 15,
-            "code": "chaos.setBehavior(\"pushBall\")\n",
+            "code": "chaos.setBehavior(\"kickBall\")\n",
             "transitions": [
               {
                 "name": "NotKickable",
@@ -180,6 +189,33 @@
                 "to": "ApproachBall",
                 "toId": 11,
                 "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.rho > 600 then \n\treturn true\nelse \n\treturn false\nend\n"
+              }
+            ]
+          },
+          {
+            "name": "PushBall",
+            "id": 24,
+            "x": 87,
+            "y": -215,
+            "code": "chaos.setBehavior(\"pushBall\")\n",
+            "transitions": [
+              {
+                "name": "Kickable",
+                "id": 26,
+                "x": 268,
+                "y": -166,
+                "to": "DoKick",
+                "toId": 16,
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\nif ball.rho < 600 and net1.rho < 1000 then \n    return true\nelse \n    return false\nend\n"
+              },
+              {
+                "name": "BallFar",
+                "id": 27,
+                "x": -55,
+                "y": -119,
+                "to": "ApproachBall",
+                "toId": 11,
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.rho > 600 then \n    return true\nelse \n    return false\nend\n"
               }
             ]
           }
