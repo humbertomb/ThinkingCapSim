@@ -135,12 +135,6 @@ public class SoccerHfsmController extends HFSMController
 		return (tdesc != null) ? tdesc.robotid : null;
 	}
 
-	/** A robot penalised does not run its machine, and stands still. */
-	protected boolean halted ()
-	{
-		return penalized;
-	}
-
 	/**
 	 * Tells the vision what the scripts of the machine need of it (BEH_NEEDS): the
 	 * scan of the camera asked for on this cycle (chaos.setScanType), SCAN_NONE when

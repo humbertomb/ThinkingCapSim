@@ -16,7 +16,7 @@
             "GFX": "true",
             "MODE": "shared",
             "PASSIVE": "true",
-            "PRG": "./conf/programs/hfsm/attacker.hfsm",
+            "PRG": "./conf/programs/hfsm/match_attacker.hfsm",
             "TYPE": "Controller",
             "AUTO": "true"
           },

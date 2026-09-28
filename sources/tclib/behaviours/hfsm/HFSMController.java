@@ -202,16 +202,6 @@ public class HFSMController extends Controller
 	 */
 	protected LuaBridge bridge (ModuleConfig cfg)	{ return null; }
 
-	/**
-	 * Before every cycle of the machine: what the scripts are to read (the LPS,
-	 * where the robot is, where it is told to go) is put in the bridge. Nothing here.
-	 */
-	/**
-	 * Whether the machine is to be held: not stepped, the robot still. A robot
-	 * penalised, say. Nothing holds it here.
-	 */
-	protected boolean halted ()						{ return false; }
-
 	protected void before ()						{ }
 
 	/**
@@ -317,7 +307,7 @@ public class HFSMController extends Controller
 		// may have changed for another -- and what the scripts commanded comes out
 		HFSM		m = machine;
 
-		if ((m == null) || halted ())			{ setMotion (0.0, 0.0, 0.0);	return; }
+		if (m == null)			{ setMotion (0.0, 0.0, 0.0);	return; }
 		before ();
 		m.step ();
 
