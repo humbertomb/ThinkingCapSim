@@ -35,7 +35,8 @@ import tc.shared.linda.Tuple;
  *     has touched outside the centre circle since the kick-off, so it was shot
  *     from the kick-off itself -- is no goal.
  * <li>After a goal (or a kick-off shot) the play restarts: the ball still at
- *     the centre and every robot back at its start position.
+ *     the centre and the game READY, in which the robots walk back to their
+ *     start positions on their own (chaos.getStartPos), as the rules have it.
  * <li>The whole ball out of the field (the zone FIELD) is a fault, and the ball
  *     is put back still where the rules say: out over a side line, on the
  *     throw-in line at the point it went out, one metre back towards the goal
@@ -461,19 +462,16 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	}
 
 	/**
-	 * A goal or a kick-off shot: the ball still at the centre, every robot back
-	 * where it starts, the kick-off on, and the game READY (the clock stops), to
-	 * be SET and PLAYING again after the waits.
+	 * A goal or a kick-off shot: the ball still at the centre, the kick-off on,
+	 * and the game READY (the clock stops), to be SET and PLAYING again after the
+	 * waits. The robots are not moved: READY is theirs to walk back to their
+	 * start positions in, as the rules have it.
 	 */
 	protected void kickOff (SimObject ball, WMZone field)
 	{
-		Simulator	s = sim;
-
 		place (ball, field.area.getCenterX (), field.area.getCenterY ());
-		if (s != null)
-			for (int r = 0; r < s.numrobots; r++)		s.restartRobot (r);
 		forget ();
-		decide (Events.KICKOFF, -1, null, -1, "Kick-off: ball at the centre, robots at their start positions");
+		decide (Events.KICKOFF, -1, null, -1, "Kick-off: ball at the centre, robots to their start positions");
 		enter (GameStates.READY, -1);
 	}
 
