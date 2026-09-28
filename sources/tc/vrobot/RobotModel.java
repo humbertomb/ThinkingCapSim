@@ -176,14 +176,29 @@ public abstract class RobotModel extends Object
 	}
 
 	/**
-	 * Puts the robot elsewhere, as a hand would: only where it really is changes,
-	 * the odometry going on from where it was, as it would on a robot picked up and
-	 * set down somewhere else (see {@link #position} for a start, odometry and all).
+	 * Puts the robot elsewhere while it runs, as a hand would: where it really is,
+	 * and where it thinks it is (its odometry, in the model and in the data of the
+	 * cycle when given), both go there, as on a robot set down by a referee that
+	 * is told where -- the simulation knows where its robots are, and so do they.
+	 * Its speed and everything else go on as they were (see {@link #position} for
+	 * a start).
 	 */
-	public void relocate (double x, double y, double alpha)
+	public void relocate (RobotData data, double x, double y, double alpha)
 	{
 		real_x			= x;		real_y			= y;		real_a			= alpha;
+		odom_x			= x;		odom_y			= y;		odom_a			= alpha;
 		orx				= x;		ory				= y;		ora				= alpha;	// a restore of this cycle keeps it there
+		oox				= x;		ooy				= y;		ooa				= alpha;
+		if (data != null)
+		{
+			data.odom_x	= x;		data.odom_y		= y;		data.odom_a		= alpha;
+			ox			= x;		oy				= y;		oa				= alpha;
+		}
+	}
+
+	public void relocate (double x, double y, double alpha)
+	{
+		relocate (null, x, y, alpha);
 	}
 
 	public void backup (RobotData data)

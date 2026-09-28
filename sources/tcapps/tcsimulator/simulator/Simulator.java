@@ -365,18 +365,23 @@ public class Simulator
 
 	/**
 	 * Puts a robot at a pose by hand, as one is picked up and set down while the
-	 * simulation runs: only where the simulation has it changes (its odometry goes
-	 * on from where it was), and what the visualisation shows of it follows at once.
+	 * simulation runs, or by a referee: where the simulation has it and where the
+	 * robot thinks it is (its odometry) both go there, so that what its modules
+	 * read of its position (the LPS, chaos.getCurrentPos) follows at once, as
+	 * does what the visualisation shows of it. Its speed goes on as it was.
 	 */
-	public void placeRobot (int i, double x, double y, double a)
+	synchronized public void placeRobot (int i, double x, double y, double a)
 	{
 		if ((i < 0) || (i >= numrobots) || (MODEL[i] == null))		return;
-		MODEL[i].relocate (x, y, a);
-		if (lastRobotData[i] != null)
+
+		RobotData	data = lastRobotData[i];					// the data of the cycle, which carries the odometry on
+
+		MODEL[i].relocate (data, x, y, a);
+		if (data != null)
 		{
-			lastRobotData[i].real_x	= x;
-			lastRobotData[i].real_y	= y;
-			lastRobotData[i].real_a	= a;
+			data.real_x	= x;
+			data.real_y	= y;
+			data.real_a	= a;
 		}
 	}
 

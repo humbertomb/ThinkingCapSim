@@ -606,6 +606,7 @@ public class LuaController extends Controller
 	public void notify_config (String space, ItemConfig item)
 	{
 		super.notify_config (space, item);
+		if ((item != null) && (chaos != null))		chaos.start (item.props_robot);		// where the robot starts (chaos.getStartPos)
 	}
 
 	public void notify_execution (String space, ItemExecution item)

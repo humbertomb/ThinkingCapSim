@@ -195,6 +195,24 @@ public class Chaos implements LuaBridge
 	public void pose (Position p)								{ if (p != null) pose.set (p); }
 	/** Where the robot starts, which the scripts read with chaos.getStartPos. */
 	public void start (double x, double y, double alpha)		{ start.set (x, y, alpha); }
+
+	/**
+	 * The same, from the properties of the robot the simulator sends with CONFIG
+	 * (START_X, START_Y in m, START_A in rad); nothing changes when they are not
+	 * there. Every controller with a chaos calls it from notify_config.
+	 */
+	public void start (java.util.Properties props)
+	{
+		if (props == null)					return;
+		try
+		{
+			String	x = props.getProperty ("START_X"), y = props.getProperty ("START_Y"), a = props.getProperty ("START_A");
+
+			if ((x != null) && (y != null) && (a != null))
+				start (Double.parseDouble (x), Double.parseDouble (y), Double.parseDouble (a));
+		}
+		catch (NumberFormatException e)		{ }
+	}
 	public Position start ()									{ return start; }
 	public Position pose ()										{ return pose; }
 
