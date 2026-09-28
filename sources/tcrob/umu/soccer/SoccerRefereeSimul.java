@@ -58,8 +58,9 @@ import tc.shared.linda.Tuple;
  *
  * It runs the game as the game controller of the league does, through the
  * states of {@link GameStates}: INITIAL the moment it starts, and then, once the
- * execution runs, READY, SET and PLAYING, {@link #WAIT} seconds apart; after a
- * goal (or a kick-off shot) READY again, and SET and PLAYING after it. The
+ * execution runs, READY after {@link #WAIT_INITIAL}, SET after {@link #WAIT_READY}
+ * and PLAYING after {@link #WAIT_SET}; after a goal (or a kick-off shot) READY
+ * again, and SET and PLAYING after it. The
  * clock of the match stops with READY and goes on with PLAYING; the execution's
  * START and STOP run and hold it only while the game is PLAYING. When the clock
  * runs out the game is FINISHED.
@@ -91,8 +92,12 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	static public final Color		C_TEAM1		= new Color (200, 30, 30);
 	static public final Color		C_TEAM2		= new Color (30, 70, 200);
 
-	/** How long the game stays in INITIAL, READY and SET before going on [ms]. */
-	static public final long		WAIT		= 10000;
+	/** How long the game stays in INITIAL before READY [ms]: the robots get going. */
+	static public final long		WAIT_INITIAL	= 3000;
+	/** How long it stays in READY before SET [ms]: the robots walk to their start positions. */
+	static public final long		WAIT_READY		= 10000;
+	/** How long it stays in SET before PLAYING [ms]. */
+	static public final long		WAIT_SET		= 1000;
 
 	/** The rules: one metre back from where the ball went out, and never nearer than one metre to the ends. */
 	static public final double		BACK		= 1.0;
@@ -248,15 +253,16 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		if (state == GameStates.PLAYING)		super.resume ();
 	}
 
-	/** What the game does on its own: INITIAL, READY and SET each give way to the next after WAIT. */
+	/** What the game does on its own: INITIAL, READY and SET each give way to the next after its wait. */
 	protected void game ()
 	{
-		if (System.currentTimeMillis () - stateSince < WAIT)		return;
+		long	in = System.currentTimeMillis () - stateSince;
+
 		switch (state)
 		{
-		case INITIAL:		enter (GameStates.READY, -1);		break;
-		case READY:			enter (GameStates.SET, -1);			break;
-		case SET:			enter (GameStates.PLAYING, -1);		break;
+		case INITIAL:		if (in >= WAIT_INITIAL)		enter (GameStates.READY, -1);		break;
+		case READY:			if (in >= WAIT_READY)		enter (GameStates.SET, -1);			break;
+		case SET:			if (in >= WAIT_SET)			enter (GameStates.PLAYING, -1);		break;
 		default:
 		}
 	}
