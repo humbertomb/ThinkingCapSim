@@ -104,6 +104,24 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	protected MetaState				root;
 	protected File					file;						// the .hfsm it came from, or null
 	protected List<XMLParser.PrivateVar>	vars = new ArrayList<XMLParser.PrivateVar> ();
+
+	/**
+	 * A machine set aside while an extern meta state of it is edited in its own
+	 * file: everything the panel holds of it, and where the editing was.
+	 */
+	protected static class Outer
+	{
+		MetaState						root;
+		File							file;
+		List<XMLParser.PrivateVar>		vars;
+		String							behpath;
+		boolean							dirty;
+		MetaState						level;			// the level being shown, which holds the extern meta state
+		String							path;			// where the extern meta state is, as root . meta . meta
+	}
+
+	/** The machines set aside, the one this was opened from on top (empty at the top machine). */
+	protected java.util.ArrayDeque<Outer>	outers = new java.util.ArrayDeque<Outer> ();
 	protected String				behpath;					// where the behaviours the states name are (kept in the file); null: not said
 	protected boolean				dirty;
 
@@ -214,7 +232,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		});
 		upAction		= action ("Up", HFSMIcon.UP, "Out of this meta state  [Alt+Up]", new Runnable ()
 		{
-			public void run ()		{ canvas.levelUp (); }
+			public void run ()		{ if (canvas.canGoUp ())	canvas.levelUp ();		else	leaveExtern (); }
 		});
 		deleteAction	= action ("Delete", HFSMIcon.DELETE, "Delete  [Del]", new Runnable ()
 		{
@@ -538,7 +556,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 
 	public void newFile ()
 	{
-		if (!confirmDiscard ())					return;
+		if (!leaveAll ())						return;
 		root	= newMachine ();
 		file	= null;
 		vars	= new ArrayList<XMLParser.PrivateVar> ();
@@ -551,7 +569,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	/** Loads a machine, asking which file. */
 	public void load ()
 	{
-		if (!confirmDiscard ())					return;
+		if (!leaveAll ())						return;
 
 		JFileChooser	fc = chooser (SUFFIX, "State machines (*" + SUFFIX + ")", "hfsm");
 
@@ -615,6 +633,8 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	/** Takes a machine that was just read as the one being edited. */
 	protected void took (HFSMJson.Machine machine, File f, String what)
 	{
+		outers.clear ();
+		canvas.setOuterPath (null);
 		root	= machine.root;
 		vars	= machine.vars;
 		behpath	= machine.behpath;
@@ -709,9 +729,107 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 		return true;
 	}
 
+	/* ------------------------------------------------------------------ */
+	/* In and out of extern machines                                       */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * Into an extern meta state: the machine of its file becomes the one being
+	 * edited, with its own file, its own changes to save, and the machine that
+	 * holds it set aside to come back to (double click on the background at its
+	 * top, or Up). To whoever edits it reads like going into any meta state: the
+	 * path over the diagram goes on from where the meta state is.
+	 */
+	public boolean enterExtern (MetaState m)
+	{
+		if ((m == null) || !m.isExtern ())		return false;
+
+		File		f = HFSMJson.externFile (m.getPathExtern (), file);
+
+		if (f == null)
+		{
+			JOptionPane.showMessageDialog (this, "The extern meta state " + m.getName () + " names no file yet (right click > Set filename...).", TITLE, JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
+		if (!f.isFile ())
+		{
+			JOptionPane.showMessageDialog (this, "The file of the extern meta state " + m.getName () + " is not there:\n" + f, TITLE, JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
+
+		HFSMJson.Machine	machine;
+
+		try									{ machine = HFSMJson.read (f); }
+		catch (Exception e)
+		{
+			JOptionPane.showMessageDialog (this, "Cannot load " + f + ":\n" + e, TITLE, JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+
+		Outer		o = new Outer ();
+
+		o.root		= root;
+		o.file		= file;
+		o.vars		= vars;
+		o.behpath	= behpath;
+		o.dirty		= dirty;
+		o.level		= canvas.getLevel ();
+		o.path		= canvas.levelPath () + " . " + m.getName ();
+		outers.push (o);
+
+		root	= machine.root;
+		vars	= machine.vars;
+		behpath	= machine.behpath;
+		file	= f;
+		dirty	= false;
+		canvas.setMachine (root);
+		canvas.setOuterPath (o.path);
+		refresh ();
+		status ("Editing " + f.getName () + " (the extern meta state " + m.getName () + "): " + XMLWriter.count (root, true) + " states, "
+				+ transitions () + " transitions" + (machine.problems.isEmpty () ? "" : (", " + machine.problems.size () + " problems"))
+				+ "  --  double click on the background to go back");
+		if (!machine.problems.isEmpty ())
+			JOptionPane.showMessageDialog (this, join (machine.problems), "What the file says", JOptionPane.WARNING_MESSAGE);
+		return true;
+	}
+
+	/**
+	 * Out of an extern machine, back to the one that holds it, at the level the
+	 * extern meta state is in. What was changed here is asked about first (save,
+	 * drop, or stay). False when there is nothing to go back to, or the user
+	 * stays.
+	 */
+	public boolean leaveExtern ()
+	{
+		if (outers.isEmpty ())					return false;
+		if (!confirmDiscard ())					return false;
+
+		Outer		o = outers.pop ();
+
+		root	= o.root;
+		file	= o.file;
+		vars	= o.vars;
+		behpath	= o.behpath;
+		dirty	= o.dirty;
+		canvas.setMachine (root);
+		canvas.setOuterPath (outers.isEmpty () ? null : outers.peek ().path);
+		canvas.setLevel (o.level);
+		refresh ();
+		status ("Back in " + ((file != null) ? file.getName () : root.getName ()) + ", showing " + canvas.levelPath ());
+		return true;
+	}
+
+	/** Out of every extern machine and, at the top, past its own changes: whether all of it may be left. */
+	protected boolean leaveAll ()
+	{
+		while (!outers.isEmpty ())
+			if (!leaveExtern ())				return false;
+		return confirmDiscard ();
+	}
+
 	protected void close ()
 	{
-		if (!confirmDiscard ())					return;
+		if (!leaveAll ())						return;
 
 		java.awt.Window	w = SwingUtilities.getWindowAncestor (this);
 
@@ -867,7 +985,7 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 	/** The title, the buttons and the scripts of whatever is selected. */
 	protected void refresh ()
 	{
-		upAction.setEnabled (canvas.canGoUp ());
+		upAction.setEnabled (canvas.canGoUp () || canvas.canGoOut ());
 
 		Object			sel = canvas.getSelection ();				// the one block selected; null with none, or several
 		List<Object>	all = canvas.getSelected ();
@@ -943,9 +1061,14 @@ public class HFSMPanel extends JPanel implements HFSMCanvas.Listener, CodeEditor
 
 	public void selectionChanged (Object selection)		{ refresh (); }
 
+	public boolean leaveRoot ()
+	{
+		return leaveExtern ();
+	}
+
 	public void levelChanged (MetaState level)
 	{
-		upAction.setEnabled (canvas.canGoUp ());
+		upAction.setEnabled (canvas.canGoUp () || canvas.canGoOut ());
 		status ("Showing " + canvas.levelPath ());
 	}
 

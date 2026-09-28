@@ -98,6 +98,10 @@ public class HFSMCanvas extends JPanel
 		public void usageChanged (String text);
 		/** The right button on a state or a meta state: whoever edits may offer a menu there (screen coordinates of the canvas). */
 		default public void nodeMenu (State s, int x, int y)		{ }
+		/** A double click on an extern meta state: whoever edits may open its file in this canvas. Whether it did. */
+		default public boolean enterExtern (MetaState m)			{ return false; }
+		/** A double click on the background at the top of the machine: whoever edits may go back to the machine that holds this one. Whether it did. */
+		default public boolean leaveRoot ()							{ return false; }
 		/** A tool finished what it was for (back to Select). */
 		public void toolFinished ();
 	}
@@ -105,6 +109,7 @@ public class HFSMCanvas extends JPanel
 	/* Model */
 	protected MetaState				root;
 	protected File					file;							// the file of the root machine (null: none yet)
+	protected String				outerPath;						// where the root is inside the machine that holds it (an extern machine being edited), shown in its stead; null at the top
 	protected MetaState				level;						// the machine being shown
 	protected Object				selection;					// the one block selected (a State or a Transition); null when none, or several
 	protected LinkedHashSet<Object>	selected = new LinkedHashSet<Object> ();	// every block selected: one, or several dragged an area around
@@ -211,12 +216,30 @@ public class HFSMCanvas extends JPanel
 
 	public boolean canGoUp ()			{ return HFSMEdit.parent (root, level) != null; }
 
-	/** Where the level being shown is, as <code>root.meta.meta</code>. */
+	/**
+	 * Where the root of this machine is inside the machine that holds it, as
+	 * <code>outer . meta</code>, when it is an extern machine opened from it;
+	 * null when it is the top. Shown in the place of the root's own name, so that
+	 * going into an extern meta state reads like going into any other.
+	 */
+	public void setOuterPath (String path)
+	{
+		outerPath	= path;
+		repaint ();
+	}
+
+	public String outerPath ()			{ return outerPath; }
+
+	/** Whether there is a machine that holds this one to go back to (see {@link #setOuterPath}). */
+	public boolean canGoOut ()			{ return outerPath != null; }
+
+	/** Where the level being shown is, as <code>root.meta.meta</code> (the root as the machine that holds it names it, when one does). */
 	public String levelPath ()
 	{
 		List<String>	names = new ArrayList<String> ();
 
 		for (State s = level; s != null; s = HFSMEdit.parent (root, s))		names.add (0, s.getName ());
+		if ((outerPath != null) && !names.isEmpty ())		names.set (0, outerPath);
 
 		StringBuffer	sb = new StringBuffer ();
 
@@ -548,13 +571,20 @@ public class HFSMCanvas extends JPanel
 
 		Object		hit = pick (wx (e.getX ()), wy (e.getY ()));
 
-		// the background goes out of the level, a meta state goes into it, and anything
-		// else is renamed -- but not while the machine is only being watched. An extern
-		// meta state has nothing inside while it is edited (its states are in its file),
-		// so it is renamed as a plain state is; watched, it holds them and is entered
-		if (hit == null)						{ if (canGoUp ())	levelUp ();		return; }
+		// the background goes out of the level (and out of an extern machine, back to
+		// the one that holds it, at its top), a meta state goes into it -- an extern one
+		// through its file, which whoever edits opens here -- and anything else is
+		// renamed, but not while the machine is only being watched (then an extern meta
+		// state holds its linked states, and is entered as any other)
+		if (hit == null)
+		{
+			if (canGoUp ())						levelUp ();
+			else if (listener != null)			listener.leaveRoot ();
+			return;
+		}
 		if ((hit instanceof MetaState) && (watch || !((MetaState) hit).isExtern ()))
 												{ setLevel ((MetaState) hit);		return; }
+		if (hit instanceof MetaState)			{ if (listener != null)	listener.enterExtern ((MetaState) hit);	return; }
 		if (!watch)								rename (hit);
 	}
 
@@ -935,7 +965,7 @@ public class HFSMCanvas extends JPanel
 	{
 		g.setFont (g.getFont ().deriveFont (Font.BOLD, 12f));
 		g.setColor (C_LEVEL);
-		g.drawString (levelPath () + (canGoUp () ? "     (double click on the background to go up)" : ""), 10, 18);
+		g.drawString (levelPath () + ((canGoUp () || canGoOut ()) ? "     (double click on the background to go up)" : ""), 10, 18);
 	}
 
 	static private void arrow (Graphics2D g, double x1, double y1, double x2, double y2, Color c)
