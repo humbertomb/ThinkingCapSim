@@ -110,13 +110,14 @@ public class ShapeLines
 		{
 			tc.vrobot.articulated.KineModel		m = tc.vrobot.articulated.KineJson.read (new java.io.File (path));
 			tc.vrobot.articulated.WalkingModel	w = tc.vrobot.articulated.WalkingModel.create (walking, m);
-			double								lift;
 
-			if (w != null)		{ w.setVelocities (0.0, 0.0, 0.0);	w.stand ();	lift = w.height (); }
-			else				lift = -m.lowest ();
-			lift	+= 0.012;																	// the paws are drawn a little below their link
-			if (m.partsAvailable (parts))		return partFaces (m, parts, lift);
-			return tc.vrobot.articulated.KineMesh.faces (m, lift).toArray (new double[0][]);
+			if (w != null)		{ w.setVelocities (0.0, 0.0, 0.0);	w.stand (); }
+			else				m.forward ();
+
+			double[][]	faces = bodyFaces (m, parts);
+			double		pitch = (w != null) ? w.pitch () : 0.0;
+
+			return posed (faces, pitch, -lowest (faces, pitch));
 		}
 		catch (Throwable e)
 		{
@@ -126,15 +127,18 @@ public class ShapeLines
 	}
 
 	/**
-	 * The faces of a kinematic model drawn from its parts: the faces of the 3D
-	 * Studio model of every link (read as any model, in robot coordinates) taken
-	 * to where the link is now, the whole robot lifted so much.
+	 * The faces of a kinematic model with the joints as they are now, in the frame
+	 * of its body: those of its parts (the 3D Studio model of every link, read as
+	 * any model and taken to where the link is) when the folder has them all, and
+	 * those of its solids otherwise.
 	 */
-	static private double[][] partFaces (tc.vrobot.articulated.KineModel m, String parts, double lift)
+	static public double[][] bodyFaces (tc.vrobot.articulated.KineModel m, String parts)
 	{
+		m.forward ();
+		if (!m.partsAvailable (parts))		return tc.vrobot.articulated.KineMesh.faces (m, 0.0).toArray (new double[0][]);
+
 		List<double[]>	out = new ArrayList<double[]> ();
 
-		m.forward ();
 		for (tc.vrobot.articulated.KineNode n : m.nodes ())
 		{
 			java.io.File	f = tc.vrobot.articulated.KineModel.part (parts, n);
@@ -150,12 +154,58 @@ public class ShapeLines
 
 					g[i]		= p[0];
 					g[i + 1]	= p[1];
-					g[i + 2]	= p[2] + lift;
+					g[i + 2]	= p[2];
 				}
 				out.add (g);
 			}
 		}
 		return out.toArray (new double[0][]);
+	}
+
+	/** The lowest point of some faces of the body once it is pitched so much (rad, about y, positive nose down): how far below the body's origin the robot reaches. */
+	static public double lowest (double[][] faces, double pitch)
+	{
+		double	s = Math.sin (pitch), c = Math.cos (pitch), low = 0.0;
+
+		for (double[] f : faces)
+			for (int i = 0; i + 2 < f.length; i += 3)		low = Math.min (low, -f[i] * s + f[i + 2] * c);
+		return low;
+	}
+
+	/** Some faces of the body pitched so much and lifted so much (m): the robot as it stands on the floor. */
+	static public double[][] posed (double[][] faces, double pitch, double lift)
+	{
+		double		s = Math.sin (pitch), c = Math.cos (pitch);
+		double[][]	out = new double[faces.length][];
+
+		for (int k = 0; k < faces.length; k++)
+		{
+			double[]	f = faces[k], g = new double[f.length];
+
+			for (int i = 0; i + 2 < f.length; i += 3)
+			{
+				g[i]		= f[i] * c + f[i + 2] * s;
+				g[i + 1]	= f[i + 1];
+				g[i + 2]	= -f[i] * s + f[i + 2] * c + lift;
+			}
+			out[k]	= g;
+		}
+		return out;
+	}
+
+	/**
+	 * How a kinematic model stands on the floor with the joints as they are now
+	 * (the walking model's standing pose, or the defaults): {pitch, height} -- the
+	 * body pitched as the walking model says (rad, nose down positive; none
+	 * without one) and its origin so high (m) that the lowest point of what it is
+	 * drawn with (its parts in the folder, or its solids) touches the floor.
+	 */
+	static public double[] standing (tc.vrobot.articulated.KineModel m, tc.vrobot.articulated.WalkingModel w, String parts)
+	{
+		double[][]	faces = bodyFaces (m, parts);
+		double		pitch = (w != null) ? w.pitch () : 0.0;
+
+		return new double[] { pitch, -lowest (faces, pitch) };
 	}
 
 	/** The sides of some faces, each once. */

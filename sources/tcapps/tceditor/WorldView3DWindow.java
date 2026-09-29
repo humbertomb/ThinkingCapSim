@@ -842,7 +842,10 @@ public class WorldView3DWindow extends JFrame
 				art		= new Articulated3D (km, sdesc.V3DPARTS);
 				walker	= tc.vrobot.articulated.WalkingModel.create (sdesc.WALKMODEL, km);
 				if (walker != null)		{ walker.stand ();	art.update (); }
-				art.move (0.0, 0.0, ((walker != null) ? walker.height () : -km.lowest ()) + 0.012, 0.0);	// the body over the feet
+
+				double[]	st = ShapeLines.standing (km, walker, sdesc.V3DPARTS);			// pitched onto its feet, the lowest of them on the floor
+
+				art.move (0.0, 0.0, st[1], 0.0, st[0]);
 			}
 			catch (Exception e)
 			{

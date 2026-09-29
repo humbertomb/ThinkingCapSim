@@ -64,6 +64,7 @@ public class KineViewer extends JFrame
 	private static final long		serialVersionUID = 1L;
 
 	protected KineModel				model;
+	protected String				parts;						// the folder of its parts, if any
 	protected Articulated3D			robot;
 	protected Canvas3D				canvas;
 	protected Scene3D				scene;
@@ -86,6 +87,7 @@ public class KineViewer extends JFrame
 	{
 		super ("Kine Viewer - " + model.name);
 		this.model	= model;
+		this.parts	= parts;
 
 		canvas	= new Canvas3D (SimpleUniverse.getPreferredConfiguration ());
 		canvas.setPreferredSize (new Dimension (900, 650));
@@ -135,13 +137,17 @@ public class KineViewer extends JFrame
 		zoom.setTransform (t);
 	}
 
-	/** The robot standing on the floor: its body as high over it as its lowest link is below the body. */
+	/** The robot standing on the floor: its body as high over it as the lowest of what it is drawn with is below the body, level. */
 	protected void stand ()
 	{
 		model.forward ();
 		robot.update ();
-		robot.move (0.0, 0.0, -model.lowest () + 0.012, 0.0);		// the paws are drawn a little below their link
+		standing	= tcapps.tceditor.ShapeLines.standing (model, null, parts);
+		robot.move (0.0, 0.0, standing[1], 0.0, 0.0);
 	}
+
+	/** The pose of the walk on the floor, {pitch, height}, worked out once the engine stands (the joints then move about it). */
+	protected double[]			standing = { 0.0, 0.0 };
 
 	/** A slider per joint, in degrees within its limits, and the walk. */
 	protected JPanel controls ()
@@ -193,7 +199,7 @@ public class KineViewer extends JFrame
 			{
 				speeds.setVisible (w.isSelected ());
 				for (JSlider s : sliders.values ())		s.setEnabled (!w.isSelected ());
-				if (w.isSelected ())		{ engine.stand ();	walk.start (); }
+				if (w.isSelected ())		{ engine.stand ();	standing = tcapps.tceditor.ShapeLines.standing (model, engine, parts);	walk.start (); }
 				else						{ walk.stop ();	model.reset ();	refreshAll (); }
 			}
 		});
@@ -232,7 +238,7 @@ public class KineViewer extends JFrame
 		if (engine == null)			return;
 		engine.step (walk.getDelay () / 1000.0);
 		robot.update ();
-		robot.move (0.0, 0.0, engine.height () + 0.012, 0.0);				// on the spot: the world does not scroll under it yet
+		robot.move (0.0, 0.0, standing[1], 0.0, standing[0]);				// on the spot: the world does not scroll under it yet
 		settingSliders	= true;
 		for (KineNode n : model.joints ())
 		{
@@ -290,7 +296,7 @@ public class KineViewer extends JFrame
 	protected void said ()
 	{
 		status.setText (model.name + ": " + model.nodes ().size () + " links, " + model.joints ().size () + " joints"
-						+ String.format ("   body %.3f m over the floor", -model.lowest () + 0.012)
+						+ String.format ("   body %.3f m over the floor", standing[1])
 						+ "   |   left drag: turn, right drag: move, wheel: zoom");
 	}
 

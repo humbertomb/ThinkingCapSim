@@ -30,8 +30,18 @@ public interface WalkingModel
 	/** Every joint where it is at rest. */
 	public void stand ();
 
-	/** How high the body of the robot is over the ground with this gait (m). */
+	/**
+	 * How high the origin of the body is over the ground with this gait (m),
+	 * the body pitched as {@link #pitch} says so that every foot is on it.
+	 */
 	public double height ();
+
+	/**
+	 * How the body pitches to stand on all its feet (rad, about y, positive nose
+	 * down): a gait that carries the front feet higher under the body than the
+	 * hind ones tilts the body forward. Zero when the feet are level.
+	 */
+	default public double pitch ()							{ return 0.0; }
 
 	/**
 	 * A walking model by the name of its class, built with a kinematic model;

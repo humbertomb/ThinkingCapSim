@@ -202,8 +202,28 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 	public double phase ()									{ return phase; }
 	public boolean walking ()								{ return (Math.abs (vlin) > 1e-4) || (Math.abs (vlat) > 1e-4) || (Math.abs (vrot) > 1e-4); }
 
-	/** How high the body is over the ground with this gait (m): the higher pair of feet counts. */
-	public double height ()									{ return Math.max (foreHeight, hindHeight); }
+	/**
+	 * How the body pitches to stand on its four feet (rad, positive nose down):
+	 * the front feet are carried higher under the body than the hind ones (or
+	 * lower), and the body tilts by the slope between them.
+	 */
+	public double pitch ()
+	{
+		Leg		f = null, h = null;
+
+		for (Leg l : legs)		{ if (l.front && (f == null)) f = l;	if (!l.front && (h == null)) h = l; }
+		if ((f == null) || (h == null))		return 0.0;
+		return Math.atan2 (f.rest[2] - h.rest[2], f.rest[0] - h.rest[0]);
+	}
+
+	/** How high the origin of the body is over the ground with this gait (m), pitched as {@link #pitch} says: the feet at rest touch it. */
+	public double height ()
+	{
+		double	p = pitch (), s = Math.sin (p), c = Math.cos (p), low = 0.0;
+
+		for (Leg l : legs)		low = Math.min (low, -l.rest[0] * s + l.rest[2] * c);
+		return -low;
+	}
 
 	/** Where a foot is now in the frame of the body (m), by leg (see {@link #LEGS}). */
 	public double[] foot (int leg)							{ return feet[leg]; }

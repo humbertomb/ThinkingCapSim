@@ -218,7 +218,17 @@ public class Articulated3D extends BranchGroup
 	/** The whole robot at a pose in the world: where its body is (m) and how it heads (rad, about z). */
 	public void move (double x, double y, double z, double a)
 	{
+		move (x, y, z, a, 0.0);
+	}
+
+	/** The same, the body pitched as well (rad, about its own y, positive nose down): how it stands on its feet. */
+	public void move (double x, double y, double z, double a, double pitch)
+	{
+		Transform3D		p = new Transform3D ();
+
 		t.rotZ (a);
+		p.rotY (pitch);
+		t.mul (p);
 		t.setTranslation (new Vector3d (x, y, z));
 		pose.setTransform (t);
 	}
