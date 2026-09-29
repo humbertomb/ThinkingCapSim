@@ -602,7 +602,7 @@ public class RobotCanvas extends JPanel
 			}
 		if (shapeVisible)
 			for (String path : shapePaths ())
-				for (double[] l : ShapeLines.get (path, robot.kinematics.walking))
+				for (double[] l : ShapeLines.get (path, robot.kinematics.walking, robot.shapeParts))
 				{
 					b	= grow3 (b, l[0], l[1], l[2]);		b = grow3 (b, l[3], l[4], l[5]);	any = true;
 				}
@@ -1635,7 +1635,7 @@ public class RobotCanvas extends JPanel
 		g.setStroke (stroke (1f));
 		g.setColor (C_SHAPE);
 		for (String path : shapePaths ())
-			for (double[] l : ShapeLines.get (path, robot.kinematics.walking))
+			for (double[] l : ShapeLines.get (path, robot.kinematics.walking, robot.shapeParts))
 				g.draw (new Line2D.Double (ph (l[0], l[1], l[2]), pv (l[0], l[1], l[2]),
 										   ph (l[3], l[4], l[5]), pv (l[3], l[4], l[5])));
 	}
@@ -1649,7 +1649,7 @@ public class RobotCanvas extends JPanel
 	{
 		boolean		has3ds = (robot.shapeRobot != null) && (robot.shapeRobot.trim ().length () > 0);
 
-		return new String[] { has3ds ? robot.shapeRobot : robot.shapeArticulated, robot.shapeActuator };
+		return new String[] { has3ds ? robot.shapeRobot : robot.kinematics.model, robot.shapeActuator };
 	}
 
 	private void drawIcon (Graphics2D g)

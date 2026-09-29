@@ -1,64 +1,60 @@
 {
   "name": "aibo",
-  "description": "Sony AIBO ERS-7 as the Webots model has it: joints, axes, limits and defaults from its Model Reference Guide; sizes from the published ERS-7 kinematics (approximate). Frame x forward, y left, z up; m and rad. The fore and hind legs are mirror images: a positive J1 swings a foreleg forward and a hind leg back, a positive J3 folds the forearm forward (elbow back) and the hind shank back (knee forward).",
+  "description": "Sony AIBO ERS-7 from the Webots model (AiboErs7.proto, Cyberbotics): the joints where the proto has them, its meshes as one .3ds per link (mesh: the file, in the folder of the robot parts, Z up in the frame of the link) and its bounding solids as the fallback drawing. Frame x forward, y left, z up; m and rad. Every link frame is its parent's, translated to the joint and turned by the joint alone. Joint limits and defaults from the Model Reference Guide. Legs: a positive J1 swings a foreleg forward and a hind leg back; a positive J3 folds the forearm forward (elbow back) and the hind shank back (knee forward). Neck: 0 is vertical, negative leans forward; head tilt: positive looks up, and +30 deg on a -30 deg neck is level.",
   "root": {
     "name": "ERS7",
     "translation": [0.0, 0.0, 0.0],
+    "mesh": "ers7_body.3ds",
     "shapes": [
       {
+        "translation": [0.0, 0.0, -0.001],
+        "rotation": [0.0, 1.0, 0.0, 1.57],
         "type": "capsule",
-        "radius": 0.047,
-        "height": 0.13,
-        "axis": "x",
-        "translation": [0.0, 0.0, 0.0],
-        "color": [0.92, 0.92, 0.94]
+        "radius": 0.045,
+        "height": 0.1,
+        "axis": "y",
+        "color": [1.0, 1.0, 1.0]
       },
       {
-        "type": "box",
-        "size": [0.15, 0.104, 0.05],
-        "translation": [0.0, 0.0, 0.018],
-        "color": [0.92, 0.92, 0.94]
+        "translation": [0.058, 0.0, 0.005],
+        "type": "sphere",
+        "radius": 0.064,
+        "color": [1.0, 1.0, 1.0]
       },
       {
-        "type": "box",
-        "size": [0.024, 0.034, 0.004],
-        "translation": [0.0, 0.0, 0.045],
-        "color": [0.35, 0.36, 0.4]
+        "translation": [-0.061, 0.0, 0.002],
+        "type": "sphere",
+        "radius": 0.062,
+        "color": [1.0, 1.0, 1.0]
       }
     ],
     "children": [
       {
         "name": "NECK_TILT",
-        "translation": [0.071, 0.0, 0.031],
+        "translation": [0.0675, 0.0, 0.0195],
         "joint": {
           "type": "revolute",
-          "axis": [0, 1, 0],
+          "axis": [0, -1, 0],
           "min": -1.3963,
           "max": 0.0524,
           "def": -0.5236
         },
+        "mesh": "ers7_neck.3ds",
         "shapes": [
           {
-            "type": "cylinder",
-            "radius": 0.02,
-            "height": 0.03,
-            "axis": "y",
-            "translation": [0, 0, 0],
-            "color": [0.35, 0.36, 0.4]
-          },
-          {
+            "translation": [-0.0, -0.0, 0.04],
+            "rotation": [-0.707107, 0.707106, 1e-06, 3.14158],
             "type": "capsule",
-            "radius": 0.018,
-            "height": 0.05,
-            "axis": "x",
-            "translation": [0.038, 0.0, 0.0],
-            "color": [0.92, 0.92, 0.94]
+            "radius": 0.0117,
+            "height": 0.08,
+            "axis": "y",
+            "color": [0.0, 0.0, 0.0]
           }
         ],
         "children": [
           {
             "name": "HEAD_PAN",
-            "translation": [0.076, 0.0, 0.0],
+            "translation": [0.0, 0.0, 0.08],
             "joint": {
               "type": "revolute",
               "axis": [0, 0, 1],
@@ -68,10 +64,11 @@
             },
             "shapes": [
               {
+                "translation": [-0.0, 0.0, -0.0],
+                "rotation": [0.577354, -0.577347, -0.57735, 2.094402],
                 "type": "sphere",
-                "radius": 0.022,
-                "translation": [0, 0, 0],
-                "color": [0.35, 0.36, 0.4]
+                "radius": 0.033,
+                "color": [0.9, 0.9, 0.9]
               }
             ],
             "children": [
@@ -80,57 +77,27 @@
                 "translation": [0.0, 0.0, 0.0],
                 "joint": {
                   "type": "revolute",
-                  "axis": [0, 1, 0],
+                  "axis": [0, -1, 0],
                   "min": -0.3491,
                   "max": 0.8727,
                   "def": 0.5236
                 },
+                "mesh": "ers7_head.3ds",
                 "shapes": [
                   {
-                    "type": "sphere",
-                    "radius": 0.038,
-                    "translation": [0.022, 0.0, 0.012],
-                    "color": [0.92, 0.92, 0.94]
-                  },
-                  {
-                    "type": "box",
-                    "size": [0.068, 0.05, 0.036],
-                    "translation": [0.056, 0.0, -0.004],
-                    "color": [0.92, 0.92, 0.94]
-                  },
-                  {
+                    "translation": [0.02, -0.0, 0.0014],
+                    "rotation": [-0.626676, 0.626683, -0.46319, 2.274049],
                     "type": "capsule",
-                    "radius": 0.014,
-                    "height": 0.05,
+                    "radius": 0.034,
+                    "height": 0.066,
                     "axis": "y",
-                    "translation": [0.075, 0.0, 0.015],
-                    "color": [0.75, 0.75, 0.78]
+                    "color": [1.0, 1.0, 1.0]
                   }
                 ],
                 "children": [
                   {
-                    "name": "JAW",
-                    "translation": [0.048, 0.0, -0.022],
-                    "joint": {
-                      "type": "revolute",
-                      "axis": [0, 1, 0],
-                      "min": -1.0472,
-                      "max": 0.0,
-                      "def": 0.0
-                    },
-                    "shapes": [
-                      {
-                        "type": "box",
-                        "size": [0.05, 0.036, 0.008],
-                        "translation": [0.026, 0.0, -0.004],
-                        "color": [0.35, 0.36, 0.4]
-                      }
-                    ],
-                    "children": []
-                  },
-                  {
                     "name": "LEFT_EAR",
-                    "translation": [0.005, 0.036, 0.024],
+                    "translation": [-0.011, 0.042, 0.0145],
                     "joint": {
                       "type": "revolute",
                       "axis": [1, 0, 0],
@@ -138,19 +105,20 @@
                       "max": 0.2618,
                       "def": 0.0
                     },
+                    "mesh": "ers7_ear_left.3ds",
                     "shapes": [
                       {
+                        "translation": [-0.0008, 0.007, -0.026],
+                        "rotation": [0.539442, -0.582591, -0.607939, 2.19188],
                         "type": "box",
-                        "size": [0.048, 0.005, 0.03],
-                        "translation": [-0.012, 0.004, -0.008],
-                        "color": [0.75, 0.75, 0.78]
+                        "size": [0.006, 0.083, 0.045],
+                        "color": [1.0, 1.0, 1.0]
                       }
-                    ],
-                    "children": []
+                    ]
                   },
                   {
                     "name": "RIGHT_EAR",
-                    "translation": [0.005, -0.036, 0.024],
+                    "translation": [-0.011, -0.042, 0.0145],
                     "joint": {
                       "type": "revolute",
                       "axis": [-1, 0, 0],
@@ -158,392 +126,32 @@
                       "max": 0.2618,
                       "def": 0.0
                     },
+                    "mesh": "ers7_ear_right.3ds",
                     "shapes": [
                       {
+                        "translation": [-0.0008, -0.007, -0.026],
+                        "rotation": [0.615923, -0.570298, -0.543507, 1.999129],
                         "type": "box",
-                        "size": [0.048, 0.005, 0.03],
-                        "translation": [-0.012, -0.004, -0.008],
-                        "color": [0.75, 0.75, 0.78]
+                        "size": [0.006, 0.083, 0.045],
+                        "color": [1.0, 1.0, 1.0]
                       }
-                    ],
-                    "children": []
+                    ]
+                  },
+                  {
+                    "name": "JAW",
+                    "translation": [0.04, 0.0, -0.0175],
+                    "joint": {
+                      "type": "revolute",
+                      "axis": [0, -1, 0],
+                      "min": -1.0472,
+                      "max": 0.0,
+                      "def": 0.0
+                    },
+                    "mesh": "ers7_jaw.3ds"
                   },
                   {
                     "name": "HEAD_CAM",
-                    "translation": [0.092, 0.0, -0.004],
-                    "shapes": [
-                      {
-                        "type": "box",
-                        "size": [0.008, 0.016, 0.012],
-                        "translation": [0, 0, 0],
-                        "color": [0.12, 0.12, 0.14]
-                      }
-                    ],
-                    "children": []
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "LEFT_FORELEG_J1",
-        "translation": [0.0625, 0.0595, 0.0],
-        "joint": {
-          "type": "revolute",
-          "axis": [0, -1, 0],
-          "min": -2.0944,
-          "max": 2.3562,
-          "def": 0.0
-        },
-        "shapes": [
-          {
-            "type": "cylinder",
-            "radius": 0.021,
-            "height": 0.028,
-            "axis": "y",
-            "translation": [0, 0, 0],
-            "color": [0.35, 0.36, 0.4]
-          }
-        ],
-        "children": [
-          {
-            "name": "LEFT_FORELEG_J2",
-            "translation": [0.0, 0.017, 0.0],
-            "joint": {
-              "type": "revolute",
-              "axis": [1, 0, 0],
-              "min": -0.2618,
-              "max": 1.6232,
-              "def": 0.0
-            },
-            "shapes": [
-              {
-                "type": "box",
-                "size": [0.036, 0.032, 0.0695],
-                "translation": [0.0, 0.0, -0.03475],
-                "color": [0.92, 0.92, 0.94]
-              },
-              {
-                "type": "sphere",
-                "radius": 0.019,
-                "translation": [0, 0, 0],
-                "color": [0.75, 0.75, 0.78]
-              }
-            ],
-            "children": [
-              {
-                "name": "LEFT_FORELEG_J3",
-                "translation": [0.0, 0.0, -0.0695],
-                "joint": {
-                  "type": "revolute",
-                  "axis": [0, -1, 0],
-                  "min": -0.5236,
-                  "max": 2.2166,
-                  "def": 0.5236
-                },
-                "shapes": [
-                  {
-                    "type": "cylinder",
-                    "radius": 0.017,
-                    "height": 0.036,
-                    "axis": "y",
-                    "translation": [0, 0, 0],
-                    "color": [0.35, 0.36, 0.4]
-                  },
-                  {
-                    "type": "box",
-                    "size": [0.03, 0.028, 0.0764],
-                    "translation": [0.0, 0.0, -0.0382],
-                    "color": [0.92, 0.92, 0.94]
-                  },
-                  {
-                    "type": "sphere",
-                    "radius": 0.019,
-                    "translation": [0.006, 0.0, -0.0764],
-                    "color": [0.12, 0.12, 0.14]
-                  }
-                ],
-                "children": [
-                  {
-                    "name": "LEFT_FOREPAW_SENSOR",
-                    "translation": [0.006, 0.0, -0.0764],
-                    "shapes": [],
-                    "children": []
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "RIGHT_FORELEG_J1",
-        "translation": [0.0625, -0.0595, 0.0],
-        "joint": {
-          "type": "revolute",
-          "axis": [0, -1, 0],
-          "min": -2.0944,
-          "max": 2.3562,
-          "def": 0.0
-        },
-        "shapes": [
-          {
-            "type": "cylinder",
-            "radius": 0.021,
-            "height": 0.028,
-            "axis": "y",
-            "translation": [0, 0, 0],
-            "color": [0.35, 0.36, 0.4]
-          }
-        ],
-        "children": [
-          {
-            "name": "RIGHT_FORELEG_J2",
-            "translation": [0.0, -0.017, 0.0],
-            "joint": {
-              "type": "revolute",
-              "axis": [-1, 0, 0],
-              "min": -0.2618,
-              "max": 1.6232,
-              "def": 0.0
-            },
-            "shapes": [
-              {
-                "type": "box",
-                "size": [0.036, 0.032, 0.0695],
-                "translation": [0.0, 0.0, -0.03475],
-                "color": [0.92, 0.92, 0.94]
-              },
-              {
-                "type": "sphere",
-                "radius": 0.019,
-                "translation": [0, 0, 0],
-                "color": [0.75, 0.75, 0.78]
-              }
-            ],
-            "children": [
-              {
-                "name": "RIGHT_FORELEG_J3",
-                "translation": [0.0, 0.0, -0.0695],
-                "joint": {
-                  "type": "revolute",
-                  "axis": [0, -1, 0],
-                  "min": -0.5236,
-                  "max": 2.2166,
-                  "def": 0.5236
-                },
-                "shapes": [
-                  {
-                    "type": "cylinder",
-                    "radius": 0.017,
-                    "height": 0.036,
-                    "axis": "y",
-                    "translation": [0, 0, 0],
-                    "color": [0.35, 0.36, 0.4]
-                  },
-                  {
-                    "type": "box",
-                    "size": [0.03, 0.028, 0.0764],
-                    "translation": [0.0, 0.0, -0.0382],
-                    "color": [0.92, 0.92, 0.94]
-                  },
-                  {
-                    "type": "sphere",
-                    "radius": 0.019,
-                    "translation": [0.006, 0.0, -0.0764],
-                    "color": [0.12, 0.12, 0.14]
-                  }
-                ],
-                "children": [
-                  {
-                    "name": "RIGHT_FOREPAW_SENSOR",
-                    "translation": [0.006, 0.0, -0.0764],
-                    "shapes": [],
-                    "children": []
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "LEFT_HINDLEG_J1",
-        "translation": [-0.0625, 0.0595, 0.0],
-        "joint": {
-          "type": "revolute",
-          "axis": [0, 1, 0],
-          "min": -2.3562,
-          "max": 2.0944,
-          "def": 0.0
-        },
-        "shapes": [
-          {
-            "type": "cylinder",
-            "radius": 0.021,
-            "height": 0.028,
-            "axis": "y",
-            "translation": [0, 0, 0],
-            "color": [0.35, 0.36, 0.4]
-          }
-        ],
-        "children": [
-          {
-            "name": "LEFT_HINDLEG_J2",
-            "translation": [0.0, 0.017, 0.0],
-            "joint": {
-              "type": "revolute",
-              "axis": [1, 0, 0],
-              "min": -0.2618,
-              "max": 1.6232,
-              "def": 0.0
-            },
-            "shapes": [
-              {
-                "type": "box",
-                "size": [0.036, 0.032, 0.0765],
-                "translation": [0.0, 0.0, -0.03825],
-                "color": [0.92, 0.92, 0.94]
-              },
-              {
-                "type": "sphere",
-                "radius": 0.019,
-                "translation": [0, 0, 0],
-                "color": [0.75, 0.75, 0.78]
-              }
-            ],
-            "children": [
-              {
-                "name": "LEFT_HINDLEG_J3",
-                "translation": [0.0, 0.0, -0.0765],
-                "joint": {
-                  "type": "revolute",
-                  "axis": [0, 1, 0],
-                  "min": -0.5236,
-                  "max": 2.2166,
-                  "def": 0.5236
-                },
-                "shapes": [
-                  {
-                    "type": "cylinder",
-                    "radius": 0.017,
-                    "height": 0.036,
-                    "axis": "y",
-                    "translation": [0, 0, 0],
-                    "color": [0.35, 0.36, 0.4]
-                  },
-                  {
-                    "type": "box",
-                    "size": [0.03, 0.028, 0.0796],
-                    "translation": [0.0, 0.0, -0.0398],
-                    "color": [0.92, 0.92, 0.94]
-                  },
-                  {
-                    "type": "sphere",
-                    "radius": 0.019,
-                    "translation": [0.006, 0.0, -0.0796],
-                    "color": [0.12, 0.12, 0.14]
-                  }
-                ],
-                "children": [
-                  {
-                    "name": "LEFT_HINDPAW_SENSOR",
-                    "translation": [0.006, 0.0, -0.0796],
-                    "shapes": [],
-                    "children": []
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "RIGHT_HINDLEG_J1",
-        "translation": [-0.0625, -0.0595, 0.0],
-        "joint": {
-          "type": "revolute",
-          "axis": [0, 1, 0],
-          "min": -2.3562,
-          "max": 2.0944,
-          "def": 0.0
-        },
-        "shapes": [
-          {
-            "type": "cylinder",
-            "radius": 0.021,
-            "height": 0.028,
-            "axis": "y",
-            "translation": [0, 0, 0],
-            "color": [0.35, 0.36, 0.4]
-          }
-        ],
-        "children": [
-          {
-            "name": "RIGHT_HINDLEG_J2",
-            "translation": [0.0, -0.017, 0.0],
-            "joint": {
-              "type": "revolute",
-              "axis": [-1, 0, 0],
-              "min": -0.2618,
-              "max": 1.6232,
-              "def": 0.0
-            },
-            "shapes": [
-              {
-                "type": "box",
-                "size": [0.036, 0.032, 0.0765],
-                "translation": [0.0, 0.0, -0.03825],
-                "color": [0.92, 0.92, 0.94]
-              },
-              {
-                "type": "sphere",
-                "radius": 0.019,
-                "translation": [0, 0, 0],
-                "color": [0.75, 0.75, 0.78]
-              }
-            ],
-            "children": [
-              {
-                "name": "RIGHT_HINDLEG_J3",
-                "translation": [0.0, 0.0, -0.0765],
-                "joint": {
-                  "type": "revolute",
-                  "axis": [0, 1, 0],
-                  "min": -0.5236,
-                  "max": 2.2166,
-                  "def": 0.5236
-                },
-                "shapes": [
-                  {
-                    "type": "cylinder",
-                    "radius": 0.017,
-                    "height": 0.036,
-                    "axis": "y",
-                    "translation": [0, 0, 0],
-                    "color": [0.35, 0.36, 0.4]
-                  },
-                  {
-                    "type": "box",
-                    "size": [0.03, 0.028, 0.0796],
-                    "translation": [0.0, 0.0, -0.0398],
-                    "color": [0.92, 0.92, 0.94]
-                  },
-                  {
-                    "type": "sphere",
-                    "radius": 0.019,
-                    "translation": [0.006, 0.0, -0.0796],
-                    "color": [0.12, 0.12, 0.14]
-                  }
-                ],
-                "children": [
-                  {
-                    "name": "RIGHT_HINDPAW_SENSOR",
-                    "translation": [0.006, 0.0, -0.0796],
-                    "shapes": [],
-                    "children": []
+                    "translation": [0.08106, -0.0, -0.0146]
                   }
                 ]
               }
@@ -553,7 +161,7 @@
       },
       {
         "name": "TAIL_TILT",
-        "translation": [-0.086, 0.0, 0.026],
+        "translation": [-0.102, 0.0, 0.033],
         "joint": {
           "type": "revolute",
           "axis": [0, 1, 0],
@@ -561,14 +169,13 @@
           "max": 1.1345,
           "def": 0.0
         },
+        "mesh": "ers7_tail_base.3ds",
         "shapes": [
           {
-            "type": "cylinder",
-            "radius": 0.011,
-            "height": 0.02,
-            "axis": "y",
-            "translation": [0, 0, 0],
-            "color": [0.35, 0.36, 0.4]
+            "translation": [0.0, 0.0, 0.0],
+            "type": "sphere",
+            "radius": 0.003,
+            "color": [0.502, 0.502, 0.502]
           }
         ],
         "children": [
@@ -577,42 +184,390 @@
             "translation": [0.0, 0.0, 0.0],
             "joint": {
               "type": "revolute",
-              "axis": [0, 0, 1],
+              "axis": [1, 0, 0],
               "min": -1.0472,
               "max": 1.0472,
               "def": 0.0
             },
+            "mesh": "ers7_tail.3ds",
             "shapes": [
               {
+                "translation": [-0.0175, 0.0, 0.0125],
+                "rotation": [0.557123, -0.557119, -0.615819, 2.037665],
                 "type": "box",
-                "size": [0.076, 0.012, 0.012],
-                "translation": [-0.038, 0.0, 0.0],
-                "color": [0.92, 0.92, 0.94]
+                "size": [0.027, 0.05, 0.006],
+                "color": [1.0, 1.0, 1.0]
               },
               {
-                "type": "sphere",
-                "radius": 0.009,
-                "translation": [-0.076, 0, 0],
-                "color": [0.75, 0.75, 0.78]
+                "translation": [-0.001, 0.0, 0.061],
+                "rotation": [0.442101, -0.442095, -0.780448, 1.816193],
+                "type": "box",
+                "size": [0.027, 0.0544, 0.006],
+                "color": [1.0, 1.0, 1.0]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "RIGHT_FORELEG_J1",
+        "translation": [0.065, 0.0, 0.0],
+        "joint": {
+          "type": "revolute",
+          "axis": [0, -1, 0],
+          "min": -2.0944,
+          "max": 2.3562,
+          "def": 0.0
+        },
+        "mesh": "ers7_shoulder_rf.3ds",
+        "shapes": [
+          {
+            "translation": [0.0, -0.049, 0.0],
+            "rotation": [-1.0, 0.0, 0.0, 1.57],
+            "type": "cylinder",
+            "radius": 0.032,
+            "height": 0.01,
+            "axis": "y",
+            "color": [1.0, 1.0, 1.0]
+          }
+        ],
+        "children": [
+          {
+            "name": "RIGHT_FORELEG_J2",
+            "translation": [0.0, -0.0625, 0.0],
+            "joint": {
+              "type": "revolute",
+              "axis": [-1, 0, 0],
+              "min": -0.2618,
+              "max": 1.6232,
+              "def": 0.0
+            },
+            "mesh": "ers7_upperleg_rf.3ds",
+            "shapes": [
+              {
+                "translation": [-0.0001, -0.006, -0.021],
+                "type": "box",
+                "size": [0.033, 0.028, 0.065],
+                "color": [1.0, 1.0, 1.0]
               }
             ],
-            "children": []
+            "children": [
+              {
+                "name": "RIGHT_FORELEG_J3",
+                "translation": [0.009, -0.0047, -0.0695],
+                "joint": {
+                  "type": "revolute",
+                  "axis": [0, -1, 0],
+                  "min": -0.5236,
+                  "max": 2.2166,
+                  "def": 0.5236
+                },
+                "mesh": "ers7_lowerleg_rf.3ds",
+                "shapes": [
+                  {
+                    "translation": [-0.0019, 0.0, -0.06],
+                    "rotation": [0.577349, -0.57735, -0.577352, 2.094406],
+                    "type": "sphere",
+                    "radius": 0.017,
+                    "color": [1.0, 1.0, 1.0]
+                  },
+                  {
+                    "translation": [0.009, 0.0, -0.066],
+                    "rotation": [1.0, -0.000404, -0.0004, 1.570804],
+                    "type": "cylinder",
+                    "radius": 0.009,
+                    "height": 0.015,
+                    "axis": "y",
+                    "color": [1.0, 1.0, 1.0]
+                  },
+                  {
+                    "translation": [-0.004, 0.0, -0.04],
+                    "rotation": [0.616232, -0.616233, -0.490424, 2.229692],
+                    "type": "box",
+                    "size": [0.037, 0.046, 0.035],
+                    "color": [1.0, 1.0, 1.0]
+                  },
+                  {
+                    "translation": [-0.005, 0.0, -0.0089],
+                    "rotation": [0.454458, -0.454455, -0.766119, 1.834129],
+                    "type": "box",
+                    "size": [0.033, 0.04, 0.026],
+                    "color": [1.0, 1.0, 1.0]
+                  }
+                ],
+                "children": [
+                  {
+                    "name": "RIGHT_FOREPAW_SENSOR",
+                    "translation": [-0.0055, 0.0, -0.0658]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "RIGHT_HINDLEG_J1",
+        "translation": [-0.065, 0.0, 0.0],
+        "joint": {
+          "type": "revolute",
+          "axis": [0, 1, 0],
+          "min": -2.3562,
+          "max": 2.0944,
+          "def": 0.0
+        },
+        "mesh": "ers7_shoulder_rh.3ds",
+        "shapes": [
+          {
+            "translation": [0.0, -0.049, 0.0],
+            "rotation": [1.0, 0.0, 0.0, 1.57],
+            "type": "cylinder",
+            "radius": 0.032,
+            "height": 0.01,
+            "axis": "y",
+            "color": [1.0, 1.0, 1.0]
+          }
+        ],
+        "children": [
+          {
+            "name": "RIGHT_HINDLEG_J2",
+            "translation": [0.0, -0.0625, 0.0],
+            "joint": {
+              "type": "revolute",
+              "axis": [-1, 0, 0],
+              "min": -0.2618,
+              "max": 1.6232,
+              "def": 0.0
+            },
+            "mesh": "ers7_upperleg_rh.3ds",
+            "shapes": [
+              {
+                "translation": [0.0, -0.006, -0.021],
+                "type": "box",
+                "size": [0.035, 0.028, 0.065],
+                "color": [1.0, 1.0, 1.0]
+              }
+            ],
+            "children": [
+              {
+                "name": "RIGHT_HINDLEG_J3",
+                "translation": [-0.009, -0.0047, -0.0695],
+                "joint": {
+                  "type": "revolute",
+                  "axis": [0, 1, 0],
+                  "min": -0.5236,
+                  "max": 2.2166,
+                  "def": 0.5236
+                },
+                "mesh": "ers7_lowerleg_rh.3ds",
+                "shapes": [
+                  {
+                    "translation": [0.01297, 0.0, -0.06453],
+                    "rotation": [0.577354, -0.577346, -0.577351, 2.094402],
+                    "type": "sphere",
+                    "radius": 0.017,
+                    "color": [1.0, 1.0, 1.0]
+                  },
+                  {
+                    "translation": [0.00459, 0.0, -0.029],
+                    "rotation": [0.588052, -0.588044, -0.555337, 2.127738],
+                    "type": "box",
+                    "size": [0.037, 0.08, 0.035],
+                    "color": [1.0, 1.0, 1.0]
+                  }
+                ],
+                "children": [
+                  {
+                    "name": "RIGHT_HINDPAW_SENSOR",
+                    "translation": [0.01409, 0.0, -0.0676]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "LEFT_FORELEG_J1",
+        "translation": [0.065, 0.0, 0.0],
+        "joint": {
+          "type": "revolute",
+          "axis": [0, -1, 0],
+          "min": -2.0944,
+          "max": 2.3562,
+          "def": 0.0
+        },
+        "mesh": "ers7_shoulder_lf.3ds",
+        "shapes": [
+          {
+            "translation": [0.0, 0.049, 0.0],
+            "rotation": [1.0, 0.0, 0.0, 1.57],
+            "type": "cylinder",
+            "radius": 0.032,
+            "height": 0.01,
+            "axis": "y",
+            "color": [1.0, 1.0, 1.0]
+          }
+        ],
+        "children": [
+          {
+            "name": "LEFT_FORELEG_J2",
+            "translation": [0.0, 0.0625, 0.0],
+            "joint": {
+              "type": "revolute",
+              "axis": [1, 0, 0],
+              "min": -0.2618,
+              "max": 1.6232,
+              "def": 0.0
+            },
+            "mesh": "ers7_upperleg_lf.3ds",
+            "shapes": [
+              {
+                "translation": [-0.0001, 0.006, -0.021],
+                "type": "box",
+                "size": [0.033, 0.028, 0.065],
+                "color": [1.0, 1.0, 1.0]
+              }
+            ],
+            "children": [
+              {
+                "name": "LEFT_FORELEG_J3",
+                "translation": [0.009, 0.0047, -0.0695],
+                "joint": {
+                  "type": "revolute",
+                  "axis": [0, -1, 0],
+                  "min": -0.5236,
+                  "max": 2.2166,
+                  "def": 0.5236
+                },
+                "mesh": "ers7_lowerleg_lf.3ds",
+                "shapes": [
+                  {
+                    "translation": [-0.0019, 0.0, -0.06],
+                    "rotation": [0.57735, -0.57735, -0.577352, 2.094406],
+                    "type": "sphere",
+                    "radius": 0.017,
+                    "color": [1.0, 1.0, 1.0]
+                  },
+                  {
+                    "translation": [0.009, 0.0, -0.066],
+                    "rotation": [1.0, -0.000404, -0.0004, 1.570804],
+                    "type": "cylinder",
+                    "radius": 0.009,
+                    "height": 0.015,
+                    "axis": "y",
+                    "color": [1.0, 1.0, 1.0]
+                  },
+                  {
+                    "translation": [-0.004, 0.0, -0.04],
+                    "rotation": [0.616232, -0.616233, -0.490423, 2.229692],
+                    "type": "box",
+                    "size": [0.037, 0.046, 0.035],
+                    "color": [1.0, 1.0, 1.0]
+                  },
+                  {
+                    "translation": [-0.005, 0.0, -0.0089],
+                    "rotation": [0.454458, -0.454456, -0.766119, 1.834129],
+                    "type": "box",
+                    "size": [0.033, 0.04, 0.026],
+                    "color": [1.0, 1.0, 1.0]
+                  }
+                ],
+                "children": [
+                  {
+                    "name": "LEFT_FOREPAW_SENSOR",
+                    "translation": [-0.0055, 0.0, -0.0658]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "LEFT_HINDLEG_J1",
+        "translation": [-0.065, 0.0, 0.0],
+        "joint": {
+          "type": "revolute",
+          "axis": [0, 1, 0],
+          "min": -2.3562,
+          "max": 2.0944,
+          "def": 0.0
+        },
+        "mesh": "ers7_shoulder_lh.3ds",
+        "shapes": [
+          {
+            "translation": [0.0, 0.049, 0.0],
+            "rotation": [-1.0, 0.0, 0.0, 1.57],
+            "type": "cylinder",
+            "radius": 0.032,
+            "height": 0.01,
+            "axis": "y",
+            "color": [1.0, 1.0, 1.0]
+          }
+        ],
+        "children": [
+          {
+            "name": "LEFT_HINDLEG_J2",
+            "translation": [0.0, 0.0625, 0.0],
+            "joint": {
+              "type": "revolute",
+              "axis": [1, 0, 0],
+              "min": -0.2618,
+              "max": 1.6232,
+              "def": 0.0
+            },
+            "mesh": "ers7_upperleg_lh.3ds",
+            "shapes": [
+              {
+                "translation": [0.0, 0.006, -0.021],
+                "type": "box",
+                "size": [0.035, 0.028, 0.065],
+                "color": [1.0, 1.0, 1.0]
+              }
+            ],
+            "children": [
+              {
+                "name": "LEFT_HINDLEG_J3",
+                "translation": [-0.009, 0.0047, -0.0695],
+                "joint": {
+                  "type": "revolute",
+                  "axis": [0, 1, 0],
+                  "min": -0.5236,
+                  "max": 2.2166,
+                  "def": 0.5236
+                },
+                "mesh": "ers7_lowerleg_lh.3ds",
+                "shapes": [
+                  {
+                    "translation": [0.01297, 0.0, -0.06453],
+                    "rotation": [0.577354, -0.577346, -0.577351, 2.094402],
+                    "type": "sphere",
+                    "radius": 0.017,
+                    "color": [1.0, 1.0, 1.0]
+                  },
+                  {
+                    "translation": [0.00459, 0.0, -0.029],
+                    "rotation": [0.588052, -0.588044, -0.555337, 2.127738],
+                    "type": "box",
+                    "size": [0.037, 0.08, 0.035],
+                    "color": [1.0, 1.0, 1.0]
+                  }
+                ],
+                "children": [
+                  {
+                    "name": "LEFT_HINDPAW_SENSOR",
+                    "translation": [0.01409, 0.0, -0.0676]
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
       {
         "name": "CHEST_DISTANCE_SENSOR",
-        "translation": [0.078, 0.0, -0.028],
-        "rotation": [0, 1, 0, 0.523599],
-        "shapes": [
-          {
-            "type": "box",
-            "size": [0.006, 0.014, 0.008],
-            "translation": [0, 0, 0],
-            "color": [0.12, 0.12, 0.14]
-          }
-        ],
-        "children": []
+        "translation": [0.10864, 0.0, -0.00425]
       }
     ]
   }

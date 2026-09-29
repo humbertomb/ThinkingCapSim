@@ -30,7 +30,9 @@ import tc.vrobot.articulated.KineShape;
  * An articulated robot in the 3D world, from its kinematic model
  * ({@link KineModel}): the tree of its links as a tree of transform groups,
  * each link placed on its parent as the model says and turned by its joint,
- * with the solids the model draws it with. {@link #update} takes the angles
+ * with the parts the robot is made of (a 3D Studio file per link, from the
+ * folder of its parts) when they are all there, and with the solids the model
+ * draws it with otherwise. {@link #update} takes the angles
  * the model has now to the scene, so that a robot that moves its legs in the
  * model moves them here; {@link #move} puts the whole robot at a pose in the
  * world. The frame of the robot is the simulator's: x forward, y left, z up.
@@ -41,13 +43,21 @@ public class Articulated3D extends BranchGroup
 	static public final int			DIVISIONS	= 24;
 
 	protected KineModel				model;
+	protected String				parts;						// the folder of its parts, when it is drawn from them
 	protected TransformGroup		pose;						// the robot in the world
 	protected Map<String, TransformGroup>	joints = new HashMap<String, TransformGroup> ();	// the turning part of each link, by name
 	private Transform3D				t = new Transform3D ();
 
 	public Articulated3D (KineModel model)
 	{
+		this (model, null);
+	}
+
+	/** The same, drawn from the parts in a folder when the model names them and they are all there. */
+	public Articulated3D (KineModel model, String parts)
+	{
 		this.model	= model;
+		this.parts	= model.partsAvailable (parts) ? parts.trim () : null;
 		setCapability (BranchGroup.ALLOW_DETACH);
 		pose	= new TransformGroup ();
 		pose.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
@@ -71,9 +81,65 @@ public class Articulated3D extends BranchGroup
 		turn.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
 		fixed.addChild (turn);
 		if (n.name != null)			joints.put (n.name, turn);
-		for (KineShape s : n.shapes)		turn.addChild (shape (s));
+
+		javax.media.j3d.Node	part = (parts != null) ? part (n) : null;
+
+		if (part != null)					turn.addChild (part);
+		else								for (KineShape s : n.shapes)		turn.addChild (shape (s));
 		for (KineNode c : n.children)		turn.addChild (build (c));
 		return fixed;
+	}
+
+	/** Whether the robot is drawn from its parts (or from its solids). */
+	public boolean fromParts ()								{ return parts != null; }
+
+	/* The parts read once, by file: what a link is drawn with is a copy of them */
+	static private final Map<String, BranchGroup>	PARTS = new HashMap<String, BranchGroup> ();
+
+	/**
+	 * The part of a link: its 3D Studio file, written Y up as every .3ds and
+	 * turned a quarter turn about x here to stand in the frame of the link (z up),
+	 * as the models of the robots are placed in the scene. Null when the link has
+	 * none or it cannot be read.
+	 */
+	protected javax.media.j3d.Node part (KineNode n)
+	{
+		java.io.File	f = KineModel.part (parts, n);
+
+		if (f == null)				return null;
+
+		String			key = f.getPath ();
+		BranchGroup		bg;
+
+		synchronized (PARTS)
+		{
+			bg	= PARTS.get (key);
+			if (bg == null)
+			{
+				try
+				{
+					com.sun.j3d.loaders.Scene	scene = new com.mnstarfire.loaders3d.Loader3DS ().load (key);
+
+					bg	= scene.getSceneGroup ();
+					PARTS.put (key, bg);
+				}
+				catch (Exception e)
+				{
+					System.out.println ("--[Articulated3D] Cannot read the part <" + key + ">: " + e);
+					return null;
+				}
+			}
+			bg	= (BranchGroup) bg.cloneTree (true);
+		}
+
+		Transform3D		r = new Transform3D ();
+
+		r.rotX (Math.PI / 2.0);
+
+		TransformGroup	tg = new TransformGroup (r);
+
+		tg.addChild (bg);
+		return tg;
 	}
 
 	/** One solid of a link, where the link has it. */

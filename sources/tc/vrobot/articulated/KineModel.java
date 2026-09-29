@@ -186,4 +186,34 @@ public class KineModel
 		}
 		return sb.toString ();
 	}
+
+	/**
+	 * Whether the robot can be drawn from its parts: a folder given, and in it
+	 * the file of every link that names one (a single one missing, and the whole
+	 * robot falls back to its solids, so that it is never half one thing and half
+	 * the other). False when no link names a part.
+	 */
+	public boolean partsAvailable (String folder)
+	{
+		if ((folder == null) || (folder.trim ().length () == 0))		return false;
+
+		java.io.File	dir = new java.io.File (folder.trim ());
+		int				n = 0;
+
+		if (!dir.isDirectory ())			return false;
+		for (KineNode k : nodes ())
+		{
+			if ((k.mesh == null) || (k.mesh.trim ().length () == 0))	continue;
+			if (!new java.io.File (dir, k.mesh.trim ()).isFile ())		return false;
+			n++;
+		}
+		return n > 0;
+	}
+
+	/** The file of the part of a link, in a folder; null when the link names none. */
+	static public java.io.File part (String folder, KineNode k)
+	{
+		if ((folder == null) || (k == null) || (k.mesh == null) || (k.mesh.trim ().length () == 0))		return null;
+		return new java.io.File (folder.trim (), k.mesh.trim ());
+	}
 }

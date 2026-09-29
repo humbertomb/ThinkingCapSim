@@ -225,7 +225,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				if (column == 1)
 				{
 					String	name = propsModel.nameAt (row);
-					if (name.equals (ARTICULATED))	return FileCellEditor.KINE;
+					if (name.equals (KINEMODEL))	return FileCellEditor.KINE;
+					if (name.equals (PARTS))		return FileCellEditor.PARTS;
 					if (isShapeProperty (name))		return FileCellEditor.SHAPE;
 					if (isImageProperty (name))		return FileCellEditor.IMAGE;
 					if (isBooleanProperty (name))	return boolEditor;
@@ -439,7 +440,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	{
 		return ((robot.shapeRobot != null) && (robot.shapeRobot.trim ().length () > 0))
 			|| ((robot.shapeActuator != null) && (robot.shapeActuator.trim ().length () > 0))
-			|| ((robot.shapeArticulated != null) && (robot.shapeArticulated.trim ().length () > 0));
+			|| ((robot.kinematics.model != null) && (robot.kinematics.model.trim ().length () > 0));
 	}
 
 	/** Enables the projections the description allows, and comes back to the one from above when it has to. */
@@ -1052,7 +1053,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	 */
 	private String[] kinematicsNames ()
 	{
-		String[]		all = { DRIVE, WALKING, MAX_SPEED, MAX_LAT_SPEED, MAX_TURN_RATE, MAX_STEER_RATE, MAX_ACCEL, MAX_DECEL,
+		String[]		all = { DRIVE, KINEMODEL, WALKING, MAX_SPEED, MAX_LAT_SPEED, MAX_TURN_RATE, MAX_STEER_RATE, MAX_ACCEL, MAX_DECEL,
 								WHEEL_BASE, baseLabel (), STEER_OFFSET, SKID_FACTOR, WHEEL_DIAM,
 								GEAR_RATIO, ENCODER_PULSES,
 								"odom et", "odom er", "odom bias" };
@@ -1100,7 +1101,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		if (it == null)				return new String[0];
 		switch (it.kind)
 		{
-		case RobotItem.PLATFORM:	return new String[] { "name", "radius", "image", "robot shape", "actuator shape", ARTICULATED };
+		case RobotItem.PLATFORM:	return new String[] { "name", "radius", "image", "robot shape", "actuator shape", PARTS };
 		case RobotItem.KINEMATICS:	return kinematicsNames ();
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
@@ -1193,7 +1194,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("image"))			return (robot.image != null) ? robot.image : "";
 			if (name.equals ("robot shape"))	return (robot.shapeRobot != null) ? robot.shapeRobot : "";
 			if (name.equals ("actuator shape"))	return (robot.shapeActuator != null) ? robot.shapeActuator : "";
-			if (name.equals (ARTICULATED))		return (robot.shapeArticulated != null) ? robot.shapeArticulated : "";
+			if (name.equals (PARTS))			return (robot.shapeParts != null) ? robot.shapeParts : "";
 			break;
 		case RobotItem.KINEMATICS:
 		{
@@ -1201,6 +1202,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 			if (name.equals (DRIVE))		return (k.drive != null) ? k.drive : "";
 			if (name.equals (WALKING))		return (k.walking != null) ? k.walking : "";
+			if (name.equals (KINEMODEL))	return (k.model != null) ? k.model : "";
 			if (robot.isDerived (key))								// the drive train says these
 				return RobotDef.fmt (robot.derived (key).doubleValue ());
 			if (key.equals ("vmax"))		return RobotDef.fmt (k.vmax);
@@ -1348,8 +1350,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		DRIVE					= "drive type";
 	/** And to the walking model of an articulated platform: how its joints move with its velocities. */
 	static public final String		WALKING					= "walking model";
-	/** And to the kinematic model (.kine) an articulated platform is drawn with. */
-	static public final String		ARTICULATED				= "articulated shape";
+	/** And to the kinematic model (.kine) of an articulated platform: its links and joints. */
+	static public final String		KINEMODEL				= "kinematics model";
+	/** The name the editor gives to the folder of the parts of an articulated platform (a 3D model per link). */
+	static public final String		PARTS					= "robot parts";
 	/** The walking models there are to choose from, by class. */
 	static public final String[]	WALKING_MODELS			= { "tcrob.umu.soccer.walking.AiboWalking" };
 	/** The names the editor gives to what a wheel can do. */
@@ -1429,7 +1433,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/** True for the properties naming an image file. */
 	static public boolean isImageProperty (String name)		{ return name.equals ("image"); }
 	/** True for the properties naming a file. */
-	static public boolean isFileProperty (String name)		{ return isShapeProperty (name) || isImageProperty (name); }
+	static public boolean isFileProperty (String name)		{ return isShapeProperty (name) || isImageProperty (name) || name.equals (PARTS) || name.equals (KINEMODEL); }
 
 	/**
 	 * Writes every file a description names the same way ("./conf/..." for the ones
@@ -1441,7 +1445,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		r.image				= FileCellEditor.normalise (r.image);
 		r.shapeRobot		= FileCellEditor.normalise (r.shapeRobot);
 		r.shapeActuator		= FileCellEditor.normalise (r.shapeActuator);
-		r.shapeArticulated	= FileCellEditor.normalise (r.shapeArticulated);
+		r.shapeParts		= FileCellEditor.normalise (r.shapeParts);
+		r.kinematics.model	= FileCellEditor.normalise (r.kinematics.model);
 	}
 
 	/** The value of a property as it is shown and stored: paths always as "./conf/...". */
@@ -1465,7 +1470,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		JComboBox<String>	cb = new JComboBox<String> (names.toArray (new String[0]));
 
 		cb.setSelectedItem ((current.length () > 0) ? current : names.get (0));
-		cb.setToolTipText ("The walking model that moves the joints of the articulated shape");
+		cb.setToolTipText ("The walking model that moves the joints of the kinematics model");
 		return new DefaultCellEditor (cb);
 	}
 
@@ -1667,10 +1672,10 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				robot.shapeActuator = token (value);
 				updateViewBar ();
 			}
-			else if (name.equals (ARTICULATED))
+			else if (name.equals (PARTS))
 			{
-				ShapeLines.flush (robot.shapeArticulated);		// the views read the new model
-				robot.shapeArticulated = token (value);
+				ShapeLines.flush (robot.kinematics.model);		// the views draw the model from its parts, or not
+				robot.shapeParts = token (value);
 				updateViewBar ();
 			}
 			break;
@@ -1679,7 +1684,13 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			String	key = kinKey (name);					// what the description calls it
 
 			if (name.equals (DRIVE))			k.drive = token (value);
-			else if (name.equals (WALKING))		{ k.walking = token (value);	ShapeLines.flush (robot.shapeArticulated); }	// the standing pose is the walking model's
+			else if (name.equals (WALKING))		{ k.walking = token (value);	ShapeLines.flush (k.model); }	// the standing pose is the walking model's
+			else if (name.equals (KINEMODEL))
+			{
+				ShapeLines.flush (k.model);						// the views read the new model
+				k.model = token (value);
+				updateViewBar ();
+			}
 			else if (key.equals ("vmax"))		k.vmax = num (value);
 			else if (key.equals ("umax"))		k.umax = num (value);
 			else if (key.equals ("rmax"))		k.rmax = num (value);

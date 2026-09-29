@@ -40,6 +40,7 @@ public class SimulatorDesc
 	public String 				V3DFILE;					// File with the robot 3D representation in Wavefront format (.obj)
 	public String 				V3DLIFT;					// File with the robot-lift/grip 3D representation in Wavefront format (.obj)
 	public String				KINEFILE;					// The kinematic model of an articulated robot (.kine), drawn instead of V3DFILE when there is one
+	public String				V3DPARTS;					// The folder of the 3D models of its parts (one per link of the kinematic model), drawn when they are all there
 	public String				WALKMODEL;					// The class of its walking model, which moves its joints
 	public float					V3DCOLORR;				// Red level of the robot 3D representation
 	public float					V3DCOLORG;				// Green level of the robot 3D representation
@@ -78,6 +79,7 @@ public class SimulatorDesc
 		try { V3DFILE		= props.getProperty("V3DFILE"); } catch (Exception e) 											{ V3DFILE = null; };
 		try { V3DLIFT		= props.getProperty("V3DLIFT"); } catch (Exception e) 											{ V3DLIFT = null; };
 		try { KINEFILE		= props.getProperty("KINEFILE"); } catch (Exception e) 											{ KINEFILE = null; };
+		try { V3DPARTS		= props.getProperty("V3DPARTS"); } catch (Exception e) 											{ V3DPARTS = null; };
 		try { WALKMODEL		= props.getProperty("WALKMODEL"); } catch (Exception e) 										{ WALKMODEL = null; };
 		try { V3DCOLORR		= Float.valueOf (props.getProperty("V3DCOLORR")).floatValue(); } catch (Exception e)					{ V3DCOLORR = 255.0f; };
 		try { V3DCOLORG		= Float.valueOf (props.getProperty("V3DCOLORG")).floatValue(); } catch (Exception e)					{ V3DCOLORG = 0.0f;	};

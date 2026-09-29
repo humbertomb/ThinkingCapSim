@@ -592,9 +592,10 @@
     }
   ],
   "image": "./conf/2dmodels/aibo.png",
-  "shapeArticulated": "./conf/robots/aibo.kine",
+  "shapeParts": "./conf/3dmodels/aibo",
   "kinematics": {
     "drive": "tc.vrobot.models.ArticulatedDrive",
+    "model": "./conf/robots/aibo.kine",
     "walking": "tcrob.umu.soccer.walking.AiboWalking",
     "vmax": 0.451,
     "umax": 0.344,

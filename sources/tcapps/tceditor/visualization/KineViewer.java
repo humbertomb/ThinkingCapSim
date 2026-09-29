@@ -78,6 +78,12 @@ public class KineViewer extends JFrame
 
 	public KineViewer (KineModel model)
 	{
+		this (model, null);
+	}
+
+	/** The same, the robot drawn from its parts in a folder when it names them and they are all there. */
+	public KineViewer (KineModel model, String parts)
+	{
 		super ("Kine Viewer - " + model.name);
 		this.model	= model;
 
@@ -97,7 +103,7 @@ public class KineViewer extends JFrame
 		zoom	= new TransformGroup ();
 		zoom.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
 		zoom.addChild (grid (1.0, 0.1));
-		robot	= new Articulated3D (model);
+		robot	= new Articulated3D (model, parts);
 		zoom.addChild (robot);
 		bg.addChild (zoom);
 		bg.compile ();
@@ -336,6 +342,6 @@ public class KineViewer extends JFrame
 		KineModel	m = KineJson.read (f);
 
 		System.out.println (m);
-		new KineViewer (m).setVisible (true);
+		new KineViewer (m, (args.length > 1) ? args[1] : null).setVisible (true);
 	}
 }

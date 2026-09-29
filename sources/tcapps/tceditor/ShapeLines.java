@@ -59,15 +59,25 @@ public class ShapeLines
 	 */
 	static public synchronized double[][] get (String path, String walking)
 	{
+		return get (path, walking, null);
+	}
+
+	/**
+	 * The same, for a kinematic model drawn from its parts: the folder of the 3D
+	 * Studio models of its links, used when the model names them and they are all
+	 * there, and ignored otherwise (the solids of the model are drawn instead).
+	 */
+	static public synchronized double[][] get (String path, String walking, String parts)
+	{
 		double[][]		lines;
 		String			key;
 
 		if ((path == null) || (path.trim ().length () == 0))		return new double[0][];
 		path	= path.trim ();
-		key		= isKine (path) ? (path + "|" + ((walking != null) ? walking.trim () : "")) : path;
+		key		= isKine (path) ? (path + "|" + ((walking != null) ? walking.trim () : "") + "|" + ((parts != null) ? parts.trim () : "")) : path;
 		if (CACHE.containsKey (key))		return CACHE.get (key);
 
-		lines	= isKine (path) ? edges (kineFaces (path, walking)) : read (path);
+		lines	= isKine (path) ? edges (kineFaces (path, walking, parts)) : read (path);
 		CACHE.put (key, lines);
 		return lines;
 	}
@@ -94,7 +104,7 @@ public class ShapeLines
 	 * pose and says how high the body is; without one the joints rest at their
 	 * defaults and the body is as high as the lowest link is below it.
 	 */
-	static private double[][] kineFaces (String path, String walking)
+	static private double[][] kineFaces (String path, String walking, String parts)
 	{
 		try
 		{
@@ -104,13 +114,48 @@ public class ShapeLines
 
 			if (w != null)		{ w.setVelocities (0.0, 0.0, 0.0);	w.stand ();	lift = w.height (); }
 			else				lift = -m.lowest ();
-			return tc.vrobot.articulated.KineMesh.faces (m, lift + 0.012).toArray (new double[0][]);		// the paws are drawn a little below their link
+			lift	+= 0.012;																	// the paws are drawn a little below their link
+			if (m.partsAvailable (parts))		return partFaces (m, parts, lift);
+			return tc.vrobot.articulated.KineMesh.faces (m, lift).toArray (new double[0][]);
 		}
 		catch (Throwable e)
 		{
 			System.out.println ("--[ShapeLines] Cannot read the kinematic model <" + path + ">: " + e);
 			return new double[0][];
 		}
+	}
+
+	/**
+	 * The faces of a kinematic model drawn from its parts: the faces of the 3D
+	 * Studio model of every link (read as any model, in robot coordinates) taken
+	 * to where the link is now, the whole robot lifted so much.
+	 */
+	static private double[][] partFaces (tc.vrobot.articulated.KineModel m, String parts, double lift)
+	{
+		List<double[]>	out = new ArrayList<double[]> ();
+
+		m.forward ();
+		for (tc.vrobot.articulated.KineNode n : m.nodes ())
+		{
+			java.io.File	f = tc.vrobot.articulated.KineModel.part (parts, n);
+
+			if ((f == null) || (n.world () == null))		continue;
+			for (double[] face : faces (f.getPath ()))
+			{
+				double[]	g = new double[face.length];
+
+				for (int i = 0; i + 2 < face.length; i += 3)
+				{
+					double[]	p = n.world ().apply (face[i], face[i + 1], face[i + 2]);
+
+					g[i]		= p[0];
+					g[i + 1]	= p[1];
+					g[i + 2]	= p[2] + lift;
+				}
+				out.add (g);
+			}
+		}
+		return out.toArray (new double[0][]);
 	}
 
 	/** The sides of some faces, each once. */
@@ -184,7 +229,7 @@ public class ShapeLines
 		final List<double[]>	out = new ArrayList<double[]> ();
 
 		if ((path == null) || !new java.io.File (path.trim ()).isFile ())		return new double[0][];
-		if (isKine (path))				return kineFaces (path.trim (), walking);
+		if (isKine (path))				return kineFaces (path.trim (), walking, null);
 		try
 		{
 			com.sun.j3d.loaders.Scene	scene = new Loader3DS ().load (path.trim ());

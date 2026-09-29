@@ -24,7 +24,10 @@ import java.util.List;
  *   translation  {x, y, z} of its frame on its parent's (0 0 0)
  *   rotation     {ax, ay, az, angle}, a fixed turn of its frame on its parent's (none)
  *   joint        how it turns (none: fixed)
- *   shapes       what it is drawn with, in its frame
+ *   mesh         the 3D Studio file it is drawn with when the robot has its parts (a file name,
+ *                in the folder of the parts of the robot; the model is in the frame of the link,
+ *                Z up as the robot), or nothing
+ *   shapes       the solids it is drawn with otherwise (or when a part is missing), in its frame
  *   children     the links that hang from it
  * </pre>
  */
@@ -34,6 +37,7 @@ public class KineNode
 	public double[]					translation;
 	public double[]					rotation;
 	public KineJoint				joint;
+	public String					mesh;
 	public List<KineShape>			shapes		= new ArrayList<KineShape> ();
 	public List<KineNode>			children	= new ArrayList<KineNode> ();
 

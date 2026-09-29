@@ -27,7 +27,8 @@ import tc.vrobot.*;
  *   UMAX       how fast it goes sideways (m/s)
  *   RMAX       how fast it turns (deg/s in the description, radians a second here)
  *   WALKMODEL  the class of the walking model (tcrob.umu.soccer.walking.AiboWalking)
- *   KINEFILE   the .kine file of the platform (the articulated shape, in the platform's group)
+ *   KINEFILE   the .kine file of the platform (the kinematics model, beside the drive type)
+ *   V3DPARTS   the folder of the 3D models of its parts (the robot parts, in the platform's group)
  * </pre>
  *
  * The kinematics itself is that of {@link LeggedOmniDrive}: nothing is worked

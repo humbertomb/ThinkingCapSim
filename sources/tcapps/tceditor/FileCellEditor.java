@@ -43,6 +43,8 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 	/** Kinematic models of the articulated robots (.kine files, beside the .robot ones) */
 	static public final FileCellEditor	KINE	= new FileCellEditor ("Select kinematic model", "./conf/robots",
 																	new FileNameExtensionFilter ("Kinematic models (*.kine)", "kine"));
+	/** The folder of the parts of an articulated robot (a 3D Studio model per link, under the 3D models) */
+	static public final FileCellEditor	PARTS	= new FileCellEditor ("Select the folder of the robot parts", "./conf/3dmodels", null, true);
 	/** Textures (images) */
 	static public final FileCellEditor	TEXTURE	= new FileCellEditor ("Select texture", "./conf/3dmodels/textures",
 																	new FileNameExtensionFilter ("Images (*.jpg, *.gif, *.png)", "jpg", "jpeg", "gif", "png"));
@@ -74,12 +76,20 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 	protected String				title;
 	protected String				defaultDir;
 	protected FileNameExtensionFilter	filter;
+	protected boolean				folders;					// it chooses a folder, not a file
 
 	public FileCellEditor (String title, String defaultDir, FileNameExtensionFilter filter)
+	{
+		this (title, defaultDir, filter, false);
+	}
+
+	/** The same, choosing folders when asked to. */
+	public FileCellEditor (String title, String defaultDir, FileNameExtensionFilter filter, boolean folders)
 	{
 		this.title		= title;
 		this.defaultDir	= defaultDir;
 		this.filter		= filter;
+		this.folders	= folders;
 
 		field	= new JTextField ();
 		field.setBorder (null);
@@ -89,7 +99,7 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 		});
 
 		button	= createButton ();
-		button.setToolTipText ("Choose a file...");
+		button.setToolTipText (folders ? "Choose a folder..." : "Choose a file...");
 		button.addActionListener (new ActionListener ()
 		{
 			public void actionPerformed (ActionEvent e)		{ browse (); }
@@ -123,9 +133,10 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 
 	protected void browse ()
 	{
-		File			start = resolve (field.getText ());
+		File			start = folders ? resolveFolder (field.getText ()) : resolve (field.getText ());
 		JFileChooser	fc = new JFileChooser ((start != null) ? start.getParentFile () : startDir ());
 		fc.setDialogTitle (title);
+		if (folders)			fc.setFileSelectionMode (JFileChooser.DIRECTORIES_ONLY);
 		if (filter != null)		fc.setFileFilter (filter);		// none: any file will do
 		fc.setAcceptAllFileFilterUsed (true);
 		if (start != null)		fc.setSelectedFile (start);
@@ -143,6 +154,14 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 		if (d.isDirectory ())		return d;
 		d = new File ("./conf");
 		return d.isDirectory () ? d : new File (".");
+	}
+
+	/** Existing folder referenced by the current text, or null. */
+	static private File resolveFolder (String text)
+	{
+		if ((text == null) || (text.trim ().length () == 0))		return null;
+		File	f = new File (text.trim ());
+		return f.isDirectory () ? f.getAbsoluteFile () : null;
 	}
 
 	/** Existing file referenced by the current text, or null. */

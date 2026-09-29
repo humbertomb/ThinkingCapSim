@@ -80,7 +80,9 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 		boolean						front;					// a foreleg: the elbow points back, the forearm forward
 		boolean						mirror;					// its outward side is -y of its frame
 		double						s1, s3;					// the sense of J1 and J3: +1 when a positive angle turns about +y (the leg swings back), -1 about -y
-		double						d, l1, l2;				// J2 out from J1, upper and lower leg
+		double						d;						// J2 out from J1, along its own axis (the flap)
+		double						kx, ky, kz;				// the knee (J3) in the frame of J2, its outward side +y
+		double						fx, fz;					// the foot in the frame of J3 (in the plane of the leg)
 		double[]					rest = new double[3];	// where the foot rests, on the body
 		double						ph;						// its phase in the cycle
 
@@ -100,10 +102,13 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 			s1			= (j1.joint.axis[1] < 0.0) ? -1.0 : 1.0;
 			s3			= (j3.joint.axis[1] < 0.0) ? -1.0 : 1.0;
 			d			= Math.abs (j2.translation[1]);
-			l1			= j3.length ();
-			l2			= (paw != null) ? Math.abs (paw.translation[2]) : l1;
+			kx			= j3.translation[0];
+			ky			= mirror ? -j3.translation[1] : j3.translation[1];
+			kz			= j3.translation[2];
+			fx			= (paw != null) ? paw.translation[0] : 0.0;
+			fz			= (paw != null) ? paw.translation[2] : -j3.length ();
 
-			boolean	left = origin[1] > 0.0;
+			boolean	left = (origin[1] + j2.translation[1]) > 0.0;			// J1 may sit on the middle of the body: J2 says which side
 
 			rest[0]		= origin[0] + (front ? foreCenterX : hindCenterX);
 			rest[1]		= (left ? 1.0 : -1.0) * (front ? foreWidth : hindWidth);
@@ -114,8 +119,10 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 		 * The joints that put the foot at a point of the body's frame: the target
 		 * taken to the frame of J1 (mirrored for a leg whose outward side is -y, so
 		 * that one solution serves all four), then the inverse kinematics of a swing
-		 * (J1, about y), a flap (J2, about x) and a knee (J3, about y) with the upper
-		 * leg l1 and the lower l2. The angles are worked out about +y (positive: the
+		 * (J1, about y), a flap (J2, about x) and a knee (J3, about y), the knee and
+		 * the foot where the model has them in their frames -- a little forward or
+		 * back and out of the axis of the segment, as the Aibo's are -- and not on
+		 * a straight line. The angles are worked out about +y (positive: the
 		 * leg swings back, the shank folds back) and given to each joint in its own
 		 * sense. The knee folds the way the GermanTeam walks the Aibo: a hind leg
 		 * bends its knee forward, the shank going back to the paw; a foreleg bends
@@ -128,22 +135,28 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 
 			if (mirror)		y = -y;
 
-			// the knee, from how far the foot is from the shoulder (the flap offset d taken out)
-			double	r2 = x * x + z * z;
-			double	dy = d - y;
-			double	s = r2 + dy * dy;											// |q|^2, the leg in its own plane
-			double	c3 = (s - l1 * l1 - l2 * l2) / (2.0 * l1 * l2);
+			// how far the foot is from J2, which J1 (about y, through J2's own axis) does not change:
+			// the knee bends so that the knee and the foot, both offset in the frame of J2, span it
+			double	S = x * x + y * y + z * z - 2.0 * d * y + d * d;								// |q|^2, from J2 to the foot in its frame
+			double	A = Math.hypot (kx, kz), B = Math.hypot (fx, fz);								// upper and lower leg, in the plane of the leg
+			double	pa = Math.atan2 (kx, -kz), pb = Math.atan2 (fx, -fz);							// where each points from straight down (forward positive)
+			double	c3 = (S - ky * ky - A * A - B * B) / (2.0 * A * B);
 
 			c3	= Math.max (-1.0, Math.min (1.0, c3));
 
-			double	t3 = (front ? -1.0 : 1.0) * Math.acos (c3);					// the shank folds back (hind) or forward (fore)
-			double	qx = -l2 * Math.sin (t3), qz = -l1 - l2 * Math.cos (t3);
-			// the flap, from how far out the foot is
-			double	s2 = (qz != 0.0) ? Math.max (-1.0, Math.min (1.0, dy / qz)) : 0.0;
-			double	t2 = Math.asin (s2);
-			// the swing, from where the leg's plane points
-			double	ax = qx, az = qz * Math.cos (t2);
-			double	t1 = Math.atan2 (az, ax) - Math.atan2 (z, x);
+			double	bend = (front ? -1.0 : 1.0) * Math.acos (c3);									// the shank folds back (hind) or forward (fore)
+			double	t3 = bend - (pa - pb);															// the knee, the offsets of the two segments taken out
+			// the foot in the frame of J2 before the flap: the knee, and the shank turned by the knee
+			double	qx = kx + fx * Math.cos (t3) + fz * Math.sin (t3);
+			double	qz = kz - fx * Math.sin (t3) + fz * Math.cos (t3);
+			double	qy = ky;
+			// the flap, from how far out the foot is: y - d = qy cos t2 - qz sin t2
+			double	R = Math.hypot (qy, qz);
+			double	c2 = (R > 1e-9) ? Math.max (-1.0, Math.min (1.0, (y - d) / R)) : 0.0;
+			double	t2 = Math.atan2 (-qz, qy) - Math.acos (c2);
+			// the swing, from where the whole leg points against where the foot is asked for
+			double	vx = qx, vz = qy * Math.sin (t2) + qz * Math.cos (t2);
+			double	t1 = Math.atan2 (vx, -vz) - Math.atan2 (x, -z);
 
 			model.setAngle (j1.name, s1 * t1);
 			model.setAngle (j2.name, t2);
@@ -294,8 +307,9 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 
 	/**
 	 * The head where the camera is pointed: the pan on HEAD_PAN; the tilt on
-	 * HEAD_TILT from the level (where it makes up for the slant of the neck), and
-	 * what that joint cannot take on NECK_TILT.
+	 * HEAD_TILT from the level (where it makes up for the lean of the neck: +30
+	 * deg on a neck at -30), and what that joint cannot take on NECK_TILT. Both
+	 * joints look up when turned positive, as the Aibo's do.
 	 */
 	protected void head ()
 	{
@@ -305,7 +319,7 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 		if ((neck == null) || (ht == null))		return;
 
 		double	level = -neck.joint.def;											// the head tilt that levels the head on the neck at rest
-		double	want = level - tilt;												// a positive turn of HEAD_TILT looks down
+		double	want = level + tilt;												// a positive turn of HEAD_TILT looks up
 		double	got = ht.joint.clamp (want);
 
 		model.setAngle (ht.name, got);
