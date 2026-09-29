@@ -321,6 +321,7 @@ public class RobotDef
 	static public class Kinematics
 	{
 		public String	drive		= "tc.vrobot.models.DifferentialDrive";	// DRIVEMODEL
+		public String	walking;					// WALKMODEL: the walking model of an articulated platform (a class), null for none
 		// How fast the platform goes each way, for a platform whose drive train cannot
 		// say it (one with no wheels at all): what the wheels say comes before these,
 		// and zero is nothing said
@@ -338,7 +339,7 @@ public class RobotDef
 		public Kinematics copy ()
 		{
 			Kinematics	k = new Kinematics ();
-			k.drive = drive;	k.lamax = lamax;	k.ldmax = ldmax;
+			k.drive = drive;	k.walking = walking;	k.lamax = lamax;	k.ldmax = ldmax;
 			k.vmax = vmax;		k.umax = umax;		k.rmax = rmax;
 			k.rwheel = rwheel;	k.skid = skid;		k.gear = gear;		k.pulses = pulses;
 			k.odomET = odomET;	k.odomER = odomER;	k.odomBias = odomBias;
@@ -354,6 +355,7 @@ public class RobotDef
 	public String				image;												// IMAGE (2D bitmap, optional)
 	public String				shapeRobot;											// V3DFILE (3D model of the platform)
 	public String				shapeActuator;										// V3DLIFT (3D model of its actuator: the fork, the arm, ...)
+	public String				shapeArticulated;									// KINEFILE (kinematic model of its links and joints, a .kine file: drawn articulated instead of the 3D model)
 	public Kinematics			kinematics	= new Kinematics ();
 	public Map<String, Family>	sensors		= new LinkedHashMap<String, Family> ();	// by family prefix: son, ir, lrf, lsb, trk, vis
 	public List<Bumper>			bumpers		= new ArrayList<Bumper> ();
@@ -479,6 +481,7 @@ public class RobotDef
 		m.put ("tc.vrobot.models.TricycleDrive",		new String[] { "samax", "lamax", "ldmax",
 																	   "length", "base", "rwheel" });
 		m.put ("tc.vrobot.models.LeggedOmniDrive",	new String[] { "umax" });
+		m.put ("tc.vrobot.models.ArticulatedDrive",	new String[] { "umax", "walkingmodel" });
 		return m;
 	}
 
@@ -1007,6 +1010,7 @@ public class RobotDef
 		d.image			= image;
 		d.shapeRobot	= shapeRobot;
 		d.shapeActuator	= shapeActuator;
+		d.shapeArticulated	= shapeArticulated;
 		d.kinematics	= kinematics.copy ();
 		for (Map.Entry<String, Family> e : sensors.entrySet ())		d.sensors.put (e.getKey (), e.getValue ().copy ());
 		for (Bumper b : bumpers)		d.bumpers.add (b.copy ());
@@ -1474,6 +1478,7 @@ public class RobotDef
 		if (image != null)			p.setProperty ("IMAGE", image);
 		if (shapeRobot != null)		p.setProperty ("V3DFILE", shapeRobot);
 		if (shapeActuator != null)	p.setProperty ("V3DLIFT", shapeActuator);
+		if ((shapeArticulated != null) && (shapeArticulated.trim ().length () > 0))		p.setProperty ("KINEFILE", shapeArticulated);
 
 		p.setProperty ("LINES", String.valueOf (icon.size ()));
 		for (int i = 0; i < icon.size (); i++)
@@ -1484,6 +1489,7 @@ public class RobotDef
 		}
 
 		if (kinematics.drive != null)		p.setProperty ("DRIVEMODEL", kinematics.drive);
+		if ((kinematics.walking != null) && (kinematics.walking.trim ().length () > 0))		p.setProperty ("WALKMODEL", kinematics.walking);
 		// what the drive train says is asked for, not stored, and what it cannot say
 		// is what the platform was given (a platform with no wheels)
 		setNZ (p, "VMAX", given ("vmax"));			setNZ (p, "RMAX", given ("rmax"));

@@ -160,6 +160,12 @@ public class View3DController
 		if (view3d != null)		view3d.updateRobot (index, data, pans, tilts);
 	}
 
+	/** The same, with the control action the robot carries out ({vlin, vlat, vrot}), which an articulated robot walks with. */
+	public void updateRobot (int index, tc.vrobot.RobotData data, double[] pans, double[] tilts, double[] vel)
+	{
+		if (view3d != null)		view3d.updateRobot (index, data, pans, tilts, vel);
+	}
+
 	public void clearRobots ()
 	{
 		if (view3d != null)		view3d.clearRobots ();

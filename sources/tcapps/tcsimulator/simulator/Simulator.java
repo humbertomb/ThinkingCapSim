@@ -84,6 +84,13 @@ public class Simulator
 	public RobotModel[]				MODEL;
 	public String[]					NAMES		= new String[MAX_ROBOTS];		// what each robot is called (the deployment's name), or null
 	protected double[][][]			BODY		= new double[MAX_ROBOTS][][];	// what each robot collides as (see body ()), made when first needed
+	protected double[][]			CMD			= new double[MAX_ROBOTS][3];	// the last control action of each robot: vlin, vlat (m/s), vrot (rad/s)
+
+	/** The last control action of a robot, {vlin, vlat, vrot} (m/s, m/s, rad/s): what an articulated robot is seen walking with. */
+	public double[] commands (int i)
+	{
+		return ((i >= 0) && (i < MAX_ROBOTS)) ? CMD[i] : new double[3];
+	}
 
 	/**
 	 * Whether the actuators of the robots (the fork of a forklift, the arm of a
@@ -1301,6 +1308,7 @@ public class Simulator
 //		boolean		collision;
 		
 		roboindex = robotind;        
+		CMD[robotind][0] = vlin;	CMD[robotind][1] = vlat;	CMD[robotind][2] = vrot;
 		
 		// Compute model based displacement        
 		MODEL[robotind].backup (data);

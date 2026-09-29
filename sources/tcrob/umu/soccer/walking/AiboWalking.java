@@ -40,7 +40,7 @@ import tc.vrobot.articulated.KineNode;
  *   maxSpeed, maxTurn          what the robot is asked for beyond this is cut down to it (m/s, rad/s)
  * </pre>
  */
-public class AiboWalking
+public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 {
 	/* The legs, in the order of the phases of a trot */
 	static public final String[]	LEGS	= { "LEFT_FORELEG", "RIGHT_HINDLEG", "RIGHT_FORELEG", "LEFT_HINDLEG" };

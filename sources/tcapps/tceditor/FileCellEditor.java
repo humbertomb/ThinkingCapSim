@@ -40,6 +40,9 @@ public class FileCellEditor extends AbstractCellEditor implements TableCellEdito
 	/** 2D bitmaps of the robots and of the objects of a world */
 	static public final FileCellEditor	IMAGE	= new FileCellEditor ("Select image", "./conf/2dmodels",
 																	new FileNameExtensionFilter ("Images (*.jpg, *.gif, *.png)", "jpg", "jpeg", "gif", "png"));
+	/** Kinematic models of the articulated robots (.kine files, beside the .robot ones) */
+	static public final FileCellEditor	KINE	= new FileCellEditor ("Select kinematic model", "./conf/robots",
+																	new FileNameExtensionFilter ("Kinematic models (*.kine)", "kine"));
 	/** Textures (images) */
 	static public final FileCellEditor	TEXTURE	= new FileCellEditor ("Select texture", "./conf/3dmodels/textures",
 																	new FileNameExtensionFilter ("Images (*.jpg, *.gif, *.png)", "jpg", "jpeg", "gif", "png"));
