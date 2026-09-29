@@ -438,7 +438,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	public boolean hasShape ()
 	{
 		return ((robot.shapeRobot != null) && (robot.shapeRobot.trim ().length () > 0))
-			|| ((robot.shapeActuator != null) && (robot.shapeActuator.trim ().length () > 0));
+			|| ((robot.shapeActuator != null) && (robot.shapeActuator.trim ().length () > 0))
+			|| ((robot.shapeArticulated != null) && (robot.shapeArticulated.trim ().length () > 0));
 	}
 
 	/** Enables the projections the description allows, and comes back to the one from above when it has to. */
@@ -1458,13 +1459,12 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		List<String>	names = new ArrayList<String> ();
 		String			current = (it != null) ? getProperty (it, WALKING) : "";
 
-		names.add ("");
 		for (String w : WALKING_MODELS)		names.add (w);
 		if ((current.length () > 0) && !names.contains (current))	names.add (current);
 
 		JComboBox<String>	cb = new JComboBox<String> (names.toArray (new String[0]));
 
-		cb.setSelectedItem (current);
+		cb.setSelectedItem ((current.length () > 0) ? current : names.get (0));
 		cb.setToolTipText ("The walking model that moves the joints of the articulated shape");
 		return new DefaultCellEditor (cb);
 	}
@@ -1667,14 +1667,19 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 				robot.shapeActuator = token (value);
 				updateViewBar ();
 			}
-			else if (name.equals (ARTICULATED))	robot.shapeArticulated = token (value);
+			else if (name.equals (ARTICULATED))
+			{
+				ShapeLines.flush (robot.shapeArticulated);		// the views read the new model
+				robot.shapeArticulated = token (value);
+				updateViewBar ();
+			}
 			break;
 		case RobotItem.KINEMATICS:
 		{
 			String	key = kinKey (name);					// what the description calls it
 
 			if (name.equals (DRIVE))			k.drive = token (value);
-			else if (name.equals (WALKING))		k.walking = token (value);
+			else if (name.equals (WALKING))		{ k.walking = token (value);	ShapeLines.flush (robot.shapeArticulated); }	// the standing pose is the walking model's
 			else if (key.equals ("vmax"))		k.vmax = num (value);
 			else if (key.equals ("umax"))		k.umax = num (value);
 			else if (key.equals ("rmax"))		k.rmax = num (value);

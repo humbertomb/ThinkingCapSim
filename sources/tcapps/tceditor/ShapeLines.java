@@ -49,20 +49,89 @@ public class ShapeLines
 	 */
 	static public synchronized double[][] get (String path)
 	{
+		return get (path, null);
+	}
+
+	/**
+	 * The same for a kinematic model (.kine) standing still with the walking model
+	 * named (a class; null for the joints at their defaults): the edges of its
+	 * solids with the feet on the floor. A 3D Studio model ignores the walking.
+	 */
+	static public synchronized double[][] get (String path, String walking)
+	{
 		double[][]		lines;
+		String			key;
 
 		if ((path == null) || (path.trim ().length () == 0))		return new double[0][];
 		path	= path.trim ();
-		if (CACHE.containsKey (path))		return CACHE.get (path);
+		key		= isKine (path) ? (path + "|" + ((walking != null) ? walking.trim () : "")) : path;
+		if (CACHE.containsKey (key))		return CACHE.get (key);
 
-		lines	= read (path);
-		CACHE.put (path, lines);
+		lines	= isKine (path) ? edges (kineFaces (path, walking)) : read (path);
+		CACHE.put (key, lines);
 		return lines;
+	}
+
+	/** Whether a path names a kinematic model rather than a 3D Studio one. */
+	static public boolean isKine (String path)
+	{
+		return (path != null) && path.trim ().toLowerCase ().endsWith (tc.vrobot.articulated.KineJson.SUFFIX);
 	}
 
 	/** Forgets what was read (the editor choosing another model, for instance). */
 	static public synchronized void flush ()					{ CACHE.clear (); }
-	static public synchronized void flush (String path)			{ if (path != null)		CACHE.remove (path.trim ()); }
+	static public synchronized void flush (String path)
+	{
+		if (path == null)				return;
+		path	= path.trim ();
+		CACHE.remove (path);
+		for (String k : new ArrayList<String> (CACHE.keySet ()))	if (k.startsWith (path + "|"))	CACHE.remove (k);	// a .kine, with whatever walking
+	}
+
+	/**
+	 * The faces of a kinematic model standing still: the walking model named
+	 * (when there is one and it can be built) puts the joints in its standing
+	 * pose and says how high the body is; without one the joints rest at their
+	 * defaults and the body is as high as the lowest link is below it.
+	 */
+	static private double[][] kineFaces (String path, String walking)
+	{
+		try
+		{
+			tc.vrobot.articulated.KineModel		m = tc.vrobot.articulated.KineJson.read (new java.io.File (path));
+			tc.vrobot.articulated.WalkingModel	w = tc.vrobot.articulated.WalkingModel.create (walking, m);
+			double								lift;
+
+			if (w != null)		{ w.setVelocities (0.0, 0.0, 0.0);	w.stand ();	lift = w.height (); }
+			else				lift = -m.lowest ();
+			return tc.vrobot.articulated.KineMesh.faces (m, lift + 0.012).toArray (new double[0][]);		// the paws are drawn a little below their link
+		}
+		catch (Throwable e)
+		{
+			System.out.println ("--[ShapeLines] Cannot read the kinematic model <" + path + ">: " + e);
+			return new double[0][];
+		}
+	}
+
+	/** The sides of some faces, each once. */
+	static private double[][] edges (double[][] faces)
+	{
+		List<double[]>	out = new ArrayList<double[]> ();
+		Set<String>		seen = new HashSet<String> ();
+
+		for (double[] f : faces)
+		{
+			int		n = f.length / 3;
+
+			for (int i = 0; i < n; i++)
+			{
+				int	j = (i + 1) % n;
+
+				edge (new Point3d (f[3 * i], f[3 * i + 1], f[3 * i + 2]), new Point3d (f[3 * j], f[3 * j + 1], f[3 * j + 2]), out, seen);
+			}
+		}
+		return out.toArray (new double[0][]);
+	}
 
 	/** What is done with every face of a model: a triangle or a quad, its corners in robot coordinates. */
 	interface Faces
@@ -106,9 +175,16 @@ public class ShapeLines
 	 */
 	static public double[][] faces (String path)
 	{
+		return faces (path, null);
+	}
+
+	/** The same for a kinematic model standing still with a walking model (see {@link #get(String, String)}). */
+	static public double[][] faces (String path, String walking)
+	{
 		final List<double[]>	out = new ArrayList<double[]> ();
 
 		if ((path == null) || !new java.io.File (path.trim ()).isFile ())		return new double[0][];
+		if (isKine (path))				return kineFaces (path.trim (), walking);
 		try
 		{
 			com.sun.j3d.loaders.Scene	scene = new Loader3DS ().load (path.trim ());

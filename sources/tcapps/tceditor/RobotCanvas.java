@@ -601,8 +601,8 @@ public class RobotCanvas extends JPanel
 				b	= grow3 (b, sx (s), sy (s), sz (s));		any = true;
 			}
 		if (shapeVisible)
-			for (String path : new String[] { robot.shapeRobot, robot.shapeActuator })
-				for (double[] l : ShapeLines.get (path))
+			for (String path : shapePaths ())
+				for (double[] l : ShapeLines.get (path, robot.kinematics.walking))
 				{
 					b	= grow3 (b, l[0], l[1], l[2]);		b = grow3 (b, l[3], l[4], l[5]);	any = true;
 				}
@@ -1634,10 +1634,22 @@ public class RobotCanvas extends JPanel
 	{
 		g.setStroke (stroke (1f));
 		g.setColor (C_SHAPE);
-		for (String path : new String[] { robot.shapeRobot, robot.shapeActuator })
-			for (double[] l : ShapeLines.get (path))
+		for (String path : shapePaths ())
+			for (double[] l : ShapeLines.get (path, robot.kinematics.walking))
 				g.draw (new Line2D.Double (ph (l[0], l[1], l[2]), pv (l[0], l[1], l[2]),
 										   ph (l[3], l[4], l[5]), pv (l[3], l[4], l[5])));
+	}
+
+	/**
+	 * The models the robot is drawn with: its 3D Studio models, and in the place
+	 * of a missing model of the platform its kinematic model (.kine), standing
+	 * still (see ShapeLines).
+	 */
+	protected String[] shapePaths ()
+	{
+		boolean		has3ds = (robot.shapeRobot != null) && (robot.shapeRobot.trim ().length () > 0);
+
+		return new String[] { has3ds ? robot.shapeRobot : robot.shapeArticulated, robot.shapeActuator };
 	}
 
 	private void drawIcon (Graphics2D g)
