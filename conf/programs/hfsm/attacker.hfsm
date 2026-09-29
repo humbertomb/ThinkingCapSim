@@ -51,7 +51,7 @@
             "y": -105,
             "to": "Score",
             "toId": 8,
-            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.anchored > 0.7 and ball.rho < 800 then\n\treturn true\nelse\n\treturn false\nend\n"
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.anchored > 0.7 and ball.rho < 600 then\n\treturn true\nelse\n\treturn false\nend\n"
           },
           {
             "name": "BallLost",
@@ -86,7 +86,7 @@
             "y": -168,
             "to": "GoToBall",
             "toId": 6,
-            "test": "KICK_DONE = chaos.getGlobal(\"KICK_DONE\")\nif (KICK_DONE == \"NULL\") or (KICK_DONE == \"FALSE\") then \n\treturn false\nelse \n\tchaos.setGlobal(\"KICK_DONE\",\"FALSE\")\n\treturn true\nend"
+            "test": "local KICK_DONE = chaos.getGlobal(\"KICK_DONE\")\nif (KICK_DONE == \"NULL\") or (KICK_DONE == \"FALSE\") then \n\treturn false\nelse \n\tchaos.setGlobal(\"KICK_DONE\",\"FALSE\")\n\treturn true\nend"
           },
           {
             "name": "ScoreAborted",
@@ -95,7 +95,7 @@
             "y": -217,
             "to": "GoToBall",
             "toId": 6,
-            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.rho > 800 then\n\treturn true\nend\nreturn false"
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.rho > 600 then\n\treturn true\nend\nreturn false"
           },
           {
             "name": "BallLost",
@@ -108,12 +108,13 @@
           },
           {
             "name": "Net1Lost",
-            "id": 23,
-            "x": 753,
-            "y": 121,
-            "to": "LookForNet1",
-            "toId": 20,
-            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nif net1.anchored < 0.4 then\n\treturn true\nend\nreturn false\n"
+            "id": 29,
+            "x": 1106,
+            "y": 141,
+            "to": "ScanNet1",
+            "toId": 28,
+            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nif net1.anchored < 0.4 then\n\treturn true\nend\nreturn false\n",
+            "action": "chaos.setGlobal(\"NET1_SCAN\", 0)\n"
           }
         ],
         "meta": true,
@@ -143,7 +144,8 @@
                 "y": -70,
                 "to": "DoKick",
                 "toId": 16,
-                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\nif ball.rho < 600 and net1.rho < 1000 then \n    return true\nelse \n    return false\nend\n"
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\nif ball.rho < 600 and net1.rho < 1200 then \n    return true\nelse \n    return false\nend\n",
+                "action": "chaos.setGlobal(\"KICK_STEPS\",0)"
               },
               {
                 "name": "BallNear",
@@ -206,7 +208,8 @@
                 "y": -166,
                 "to": "DoKick",
                 "toId": 16,
-                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\nif ball.rho < 600 and net1.rho < 1000 then \n    return true\nelse \n    return false\nend\n"
+                "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nlocal net1 = chaos.getLpo(chaos.NET1_LPO)\nif ball.rho < 600 and net1.rho < 1200 then \n    return true\nelse \n    return false\nend\n",
+                "action": "chaos.setGlobal(\"KICK_STEPS\",0)"
               },
               {
                 "name": "BallFar",
@@ -231,11 +234,38 @@
           {
             "name": "Net1Seen",
             "id": 21,
-            "x": 761,
-            "y": 252,
+            "x": 799,
+            "y": 146,
             "to": "Score",
             "toId": 8,
             "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nif net1.anchored > 0.7 then\n\treturn true\nend\nreturn false\n"
+          }
+        ]
+      },
+      {
+        "name": "ScanNet1",
+        "id": 28,
+        "x": 1016,
+        "y": 257,
+        "code": "local step = chaos.getGlobal(\"NET1_SCAN\")\n\nchaos.setGlobal(\"NET1_SCAN\", step+1)\nchaos.setScanType (chaos.SCAN_FULL)\nchaos.setNeeded (chaos.NET1_LPO, 1.0)\n",
+        "transitions": [
+          {
+            "name": "Net1Seen",
+            "id": 30,
+            "x": 956,
+            "y": 144,
+            "to": "Score",
+            "toId": 8,
+            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nif net1.anchored > 0.7 then\n\treturn true\nend\nreturn false\n"
+          },
+          {
+            "name": "Net1Forgotten",
+            "id": 31,
+            "x": 746,
+            "y": 242,
+            "to": "LookForNet1",
+            "toId": 20,
+            "test": "if chaos.getGlobal(\"NET1_SCAN\") > 6 then\n\treturn true\nend\nreturn false\n"
           }
         ]
       }

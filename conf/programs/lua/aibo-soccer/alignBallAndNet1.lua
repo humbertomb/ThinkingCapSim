@@ -3,8 +3,8 @@
 -- 20060406 Humberto Martinez
 -- 20260924 Humberto Martinez
 
-local MIN_BALL_RHO = 200
-local MAX_BALL_RHO = 500
+local MIN_BALL_RHO = 150
+local MAX_BALL_RHO = 350
 
 local MIN_DRHO = 50
 local MIN_DTHETA = 1
