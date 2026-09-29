@@ -35,9 +35,10 @@ import tc.shared.linda.Tuple;
  *     blue team the blue one (Net2). A kick-off shot -- a ball that no robot
  *     has touched outside the centre circle since the kick-off, so it was shot
  *     from the kick-off itself -- is no goal.
- * <li>After a goal (or a kick-off shot) the play restarts: the ball still at
- *     the centre and the game READY, in which the robots walk back to their
- *     start positions on their own (chaos.getStartPos), as the rules have it.
+ * <li>After a goal (or a kick-off shot) the play restarts: the game READY, in
+ *     which the robots walk back to their start positions on their own
+ *     (chaos.getStartPos), as the rules have it, and the ball put still at the
+ *     centre on SET, once they are there (in READY they would knock it away).
  * <li>The whole ball out of the field (the zone FIELD) is a fault, and the ball
  *     is put back still where the rules say: out over a side line, on the
  *     throw-in line at the point it went out, one metre back towards the goal
@@ -240,8 +241,8 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		stateSince	= System.currentTimeMillis ();
 		switch (s)
 		{
+		case SET:			pause ();		centreBall ();		break;		// the robots are in place: the ball to the centre
 		case READY:
-		case SET:
 		case INITIAL:
 		case FINISHED:		pause ();		break;
 		case PLAYING:		if (running)	super.resume ();		break;
@@ -474,17 +475,29 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	}
 
 	/**
-	 * A goal or a kick-off shot: the ball still at the centre, the kick-off on,
-	 * and the game READY (the clock stops), to be SET and PLAYING again after the
-	 * waits. The robots are not moved: READY is theirs to walk back to their
-	 * start positions in, as the rules have it.
+	 * A goal or a kick-off shot: the kick-off on, and the game READY (the clock
+	 * stops), to be SET and PLAYING again after the waits. The robots are not
+	 * moved: READY is theirs to walk back to their start positions in, as the
+	 * rules have it; the ball goes to the centre on SET (see {@link #centreBall}).
 	 */
 	protected void kickOff (SimObject ball, WMZone field)
 	{
-		place (ball, field.area.getCenterX (), field.area.getCenterY ());
 		forget ();
-		decide (Events.KICKOFF, -1, null, -1, "Kick-off: ball at the centre, robots to their start positions");
+		decide (Events.KICKOFF, -1, null, -1, "Kick-off: robots to their start positions, the ball to the centre when they are set");
 		enter (GameStates.READY, -1);
+	}
+
+	/**
+	 * The ball to the centre of the field, still: done on entering SET, once the
+	 * robots have walked to their start positions, and not before -- in READY
+	 * they are still on the move and would knock it away.
+	 */
+	protected void centreBall ()
+	{
+		SimObject	ball = ball ();
+		WMZone		field = zone (fieldName);
+
+		if ((ball != null) && (field != null))		place (ball, field.area.getCenterX (), field.area.getCenterY ());
 	}
 
 	/** Puts the ball somewhere, still. */
