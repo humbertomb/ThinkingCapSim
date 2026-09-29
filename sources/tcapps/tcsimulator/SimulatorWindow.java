@@ -794,10 +794,28 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		}
 	}
 
+	/**
+	 * All the live objects go (the simulator loads a world, or another one): the
+	 * 3D view is emptied on the event thread, and whatever object was added and
+	 * drawn between this call and that moment (a refresh of the simulator may be
+	 * queued already) is marked as not drawn, so that the next refresh puts it
+	 * back -- or it would be gone from the 3D view for the rest of the run, as
+	 * the ball was on the second execution of an architecture.
+	 */
 	public void removeAllObjects ()
 	{
 		synchronized (objects) { objects.clear (); }
-		SwingUtilities.invokeLater (new Runnable () { public void run () { view3d.clearObjects (); } });
+		SwingUtilities.invokeLater (new Runnable ()
+		{
+			public void run ()
+			{
+				view3d.clearObjects ();
+				synchronized (objects)
+				{
+					for (ObjectView ov : objects)		if (ov != null)		ov.index3d = -1;
+				}
+			}
+		});
 	}
 
 	public void updateObjectData (int objindex, Point3 pt, double a)
