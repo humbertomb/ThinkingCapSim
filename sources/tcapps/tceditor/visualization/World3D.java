@@ -412,7 +412,7 @@ public class World3D extends BranchGroup
 	{
 		FloorName	fn = new FloorName (name);
 
-		fn.place (pos.x (), pos.y (), pos.z ());
+		fn.place (pos.x (), pos.y (), 0.0);								// on the floor, not at the height of the object (which would hide a small one, the ball)
 		names.add (fn);
 		return fn;
 	}

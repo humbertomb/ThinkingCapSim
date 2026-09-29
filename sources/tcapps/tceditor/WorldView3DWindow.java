@@ -985,7 +985,7 @@ public class WorldView3DWindow extends JFrame
 		if ((o.label != null) && (o.label.length () > 0))
 		{
 			fn	= new FloorName (o.label, nameScale);
-			fn.place (x, y, z);
+			fn.place (x, y, 0.0);									// on the floor: at the height of the object it would lie over a small one (the ball)
 			if (showLabels)		objectsBranch.addChild (fn);
 		}
 		labels.add (fn);
@@ -1006,7 +1006,7 @@ public class WorldView3DWindow extends JFrame
 		t.rotZ (a);
 		t.setTranslation (new Vector3d (x, y, z));
 		objects.get (index).setTransform (t);
-		if ((index < labels.size ()) && (labels.get (index) != null))		labels.get (index).place (x, y, z);
+		if ((index < labels.size ()) && (labels.get (index) != null))		labels.get (index).place (x, y, 0.0);
 	}
 
 	public void clearObjects ()
