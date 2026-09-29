@@ -47,7 +47,7 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 	static public final double[]	PHASES	= { 0.0, 0.0, 0.5, 0.5 };
 
 	/* The parameters of the gait, close to the GermanTeam's 2007 fast walk (m, s) */
-	public double					foreHeight		= 0.105;
+	public double					foreHeight		= 0.088;
 	public double					hindHeight		= 0.100;
 	public double					foreWidth		= 0.087;
 	public double					hindWidth		= 0.085;
