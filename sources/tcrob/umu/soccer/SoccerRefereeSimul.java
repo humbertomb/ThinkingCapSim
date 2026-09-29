@@ -133,6 +133,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	protected int[]					teamOf		= new int[Simulator.MAX_ROBOTS];		// the team of each robot, -1 while not known
 	protected long[][]				inArea		= new long[Simulator.MAX_ROBOTS][2];		// since when each robot is wholly in each area [ms of the system]; 0 when it is not
 	protected boolean[][]			areaFault	= new boolean[Simulator.MAX_ROBOTS][2];	// whether its stay there was called already
+	protected boolean[][]			robotInNet	= new boolean[Simulator.MAX_ROBOTS][2];	// whether each robot touches the inside of each net (called at once, once per entry)
 	/** How long a robot may be wholly inside the area of a net it has no business in before it is a fault [ms]. */
 	static public final long		AREA_TIME	= 3000;
 	protected long[]				penalty		= new long[Simulator.MAX_ROBOTS];		// when the penalty of each robot ends [ms of the system], 0 for none
@@ -323,6 +324,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		kickoff		= true;
 		for (long[] a : inArea)			{ a[0] = 0;	a[1] = 0; }
 		for (boolean[] a : areaFault)	{ a[0] = false;	a[1] = false; }
+		for (boolean[] a : robotInNet)	{ a[0] = false;	a[1] = false; }
 		java.util.Arrays.fill (penalty, 0L);						// a kick-off puts everyone back in the game
 	}
 
@@ -516,6 +518,10 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	 * second one of the same team is a fault as well. A robot with a foot over
 	 * the line is not in, and one that goes through and out again in time is
 	 * left alone: a match with faults at every touch of the area is no match.
+	 * The inside of the net is another matter: a robot that gets into it at all
+	 * (any part of its disc over the zone), keeper or not, is a fault at once --
+	 * otherwise one could cross the area in less than the time allowed and end
+	 * up in the goal.
 	 */
 	protected void robots ()
 	{
@@ -533,8 +539,25 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 			for (int net = 0; net < 2; net++)
 			{
 				Boolean		in = wholeIn (areaNames[net], x, y, rr);
+				Boolean		net_ = touches (netNames[net], x, y, rr);
 				long		now = System.currentTimeMillis ();
 
+				// into the net itself, however little: a fault at once, whoever it is
+				if ((net_ != null) && net_.booleanValue ())
+				{
+					if (!robotInNet[r][net])
+					{
+						robotInNet[r][net]	= true;
+						faults++;
+						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + robot (r) + " inside the " + teamNames[net] + " net (" + netNames[net] + "): no robot may enter it"
+								+ penalize (r) + "  --  faults: " + faults);
+						expel (r);
+						inArea[r][net]	= 0;
+						areaFault[r][net]	= false;
+						continue;
+					}
+				}
+				else								robotInNet[r][net] = false;
 				if (in == null)						continue;
 				if (!in.booleanValue ())			{ inArea[r][net] = 0;	areaFault[r][net] = false;	continue; }
 				if (inArea[r][net] == 0)			inArea[r][net] = now;						// just in: the clock of its stay starts
@@ -736,6 +759,15 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 		if (z == null)								return null;
 		return Boolean.valueOf (z.area.contains (x, y));
+	}
+
+	/** Whether any of a disc (centre, radius) is over a zone (its bounding square, near enough); null when there is no such zone. */
+	protected Boolean touches (String zone, double x, double y, double r)
+	{
+		WMZone		z = zone (zone);
+
+		if (z == null)								return null;
+		return Boolean.valueOf (z.area.intersects (x - r, y - r, 2 * r, 2 * r));
 	}
 
 	/** Whether the whole of a disc (centre, radius) is inside a zone; null when there is no such zone. */
