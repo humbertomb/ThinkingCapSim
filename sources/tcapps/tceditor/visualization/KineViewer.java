@@ -48,8 +48,9 @@ import tc.vrobot.articulated.KineNode;
 
 /**
  * A look at a kinematic model (.kine): the robot drawn from it over a floor
- * grid, a slider for every joint to turn it by hand, and a walk that swings
- * the legs, to see it articulate. A tool to check a model with while the
+ * grid, a slider for every joint to turn it by hand, and the walking engine of
+ * the Aibo (Walking) with sliders for the speeds asked of it and for where the
+ * camera looks, to see it articulate. A tool to check a model with while the
  * articulated robots find their way into the simulator.
  *
  * <pre>
@@ -69,9 +70,10 @@ public class KineViewer extends JFrame
 	protected Map<String, JSlider>	sliders = new HashMap<String, JSlider> ();
 	protected JLabel				status;
 	protected Timer					walk;
+	protected tcrob.umu.soccer.walking.AiboWalking	engine;		// the walk of the Aibo, when the model has its legs
+	protected double				vlinCmd, vlatCmd, vrotCmd, panCmd, tiltCmd;
 	protected TransformGroup		zoom;
 	protected double				scale;
-	protected double				phase;
 	protected boolean				settingSliders;
 
 	public KineViewer (KineModel model)
@@ -170,13 +172,40 @@ public class KineViewer extends JFrame
 			row++;
 		}
 
-		final JCheckBox		w = new JCheckBox ("Walk", false);
+		// the walk: the engine of the Aibo when the model has its legs, with the speeds
+		// asked of it and where the camera looks; the joints' sliders then only show
+		final JCheckBox		w = new JCheckBox ("Walking", false);
+		final JPanel		speeds = new JPanel (new GridBagLayout ());
 
+		try			{ engine = new tcrob.umu.soccer.walking.AiboWalking (model); }
+		catch (Exception e)		{ engine = null; }
+		w.setEnabled (engine != null);
+		w.setToolTipText ((engine != null) ? "The walking engine of the Aibo moves the legs and the head" : "The model has not the legs of the Aibo");
 		w.addChangeListener (new ChangeListener ()
 		{
-			public void stateChanged (ChangeEvent e)		{ if (w.isSelected ()) walk.start (); else { walk.stop (); model.reset (); refreshAll (); } }
+			public void stateChanged (ChangeEvent e)
+			{
+				speeds.setVisible (w.isSelected ());
+				for (JSlider s : sliders.values ())		s.setEnabled (!w.isSelected ());
+				if (w.isSelected ())		{ engine.stand ();	walk.start (); }
+				else						{ walk.stop ();	model.reset ();	refreshAll (); }
+			}
 		});
-		c.gridx = 0;	c.gridy = row;	c.gridwidth = 3;	p.add (w, c);
+		c.gridx = 0;	c.gridy = row++;	c.gridwidth = 3;	p.add (w, c);
+
+		GridBagConstraints	g = new GridBagConstraints ();
+		int					r = 0;
+
+		g.insets	= new Insets (1, 6, 1, 6);
+		g.anchor	= GridBagConstraints.WEST;
+		speed (speeds, g, r++, "vlin  [cm/s]", -35, 35, 0, new Setter () { public void set (double v) { vlinCmd = v / 100.0;	velocities (); } });
+		speed (speeds, g, r++, "vlat  [cm/s]", -35, 35, 0, new Setter () { public void set (double v) { vlatCmd = v / 100.0;	velocities (); } });
+		speed (speeds, g, r++, "vrot  [deg/s]", -160, 160, 0, new Setter () { public void set (double v) { vrotCmd = Math.toRadians (v);	velocities (); } });
+		speed (speeds, g, r++, "pan   [deg]", -93, 93, 0, new Setter () { public void set (double v) { panCmd = Math.toRadians (v);	velocities (); } });
+		speed (speeds, g, r++, "tilt  [deg]", -70, 50, 0, new Setter () { public void set (double v) { tiltCmd = Math.toRadians (v);	velocities (); } });
+		speeds.setBorder (BorderFactory.createTitledBorder ("Walking"));
+		speeds.setVisible (false);
+		c.gridx = 0;	c.gridy = row;		c.gridwidth = 3;	p.add (speeds, c);
 
 		JPanel	box = new JPanel ();
 
@@ -191,33 +220,50 @@ public class KineViewer extends JFrame
 		return box;
 	}
 
-	/**
-	 * One step of a trot: the diagonal pairs of legs swing in opposite phase, the
-	 * knees bending as the leg comes forward, the head nodding a little with it.
-	 * Whatever joints the model has with the names of the Aibo are moved; a model
-	 * with other names just stands.
-	 */
+	/** One tick of the walk: the engine goes on so much time, and the scene and the sliders follow the model. */
 	protected void step ()
 	{
-		phase	+= 2 * Math.PI * 0.04 / 1.2;								// a stride every 1.2 s
+		if (engine == null)			return;
+		engine.step (walk.getDelay () / 1000.0);
+		robot.update ();
+		robot.move (0.0, 0.0, engine.height () + 0.012, 0.0);				// on the spot: the world does not scroll under it yet
+		settingSliders	= true;
+		for (KineNode n : model.joints ())
+		{
+			JSlider	s = sliders.get (n.name);
 
-		double	s = Math.sin (phase), c = Math.cos (phase);
-
-		swing ("LEFT_FORELEG",   s,  c);
-		swing ("RIGHT_HINDLEG",  s,  c);
-		swing ("RIGHT_FORELEG", -s, -c);
-		swing ("LEFT_HINDLEG",  -s, -c);
-		model.setAngle ("HEAD_TILT", model.node ("HEAD_TILT") != null ? model.node ("HEAD_TILT").joint.def + 0.06 * Math.sin (2 * phase) : 0.0);
-		model.setAngle ("TAIL_PAN", 0.5 * Math.sin (phase));
-		refreshAll ();
+			if (s != null)		s.setValue ((int) Math.round (Math.toDegrees (n.angle ())));
+		}
+		settingSliders	= false;
+		status.setText (String.format ("%s: vlin %.2f m/s, vlat %.2f m/s, vrot %.2f rad/s, pan %.0f deg, tilt %.0f deg  --  phase %.2f, %s",
+									   model.name, engine.vlin (), engine.vlat (), engine.vrot (), Math.toDegrees (panCmd), Math.toDegrees (tiltCmd),
+									   engine.phase (), engine.walking () ? "walking" : "standing"));
 	}
 
-	private void swing (String leg, double s, double c)
+	/** What is asked of the engine, from the sliders. */
+	protected void velocities ()
 	{
-		KineNode	j1 = model.node (leg + "_J1"), j3 = model.node (leg + "_J3");
+		if (engine == null)			return;
+		engine.setVelocities (vlinCmd, vlatCmd, vrotCmd);
+		engine.setHead (panCmd, tiltCmd);
+	}
 
-		if (j1 != null)			model.setAngle (j1.name, j1.joint.def + 0.35 * s);
-		if (j3 != null)			model.setAngle (j3.name, j3.joint.def + 0.45 * Math.max (0.0, c));		// the knee lifts while the leg comes forward
+	/** A slider of a speed, with its value beside it. */
+	private interface Setter			{ void set (double v); }
+
+	private void speed (JPanel p, GridBagConstraints g, int row, String name, int lo, int hi, int at, final Setter setter)
+	{
+		final JSlider	s = new JSlider (lo, hi, at);
+		final JLabel	v = new JLabel (String.format ("%5d", at));
+
+		s.setPreferredSize (new Dimension (170, 20));
+		s.addChangeListener (new ChangeListener ()
+		{
+			public void stateChanged (ChangeEvent e)		{ v.setText (String.format ("%5d", s.getValue ()));	setter.set (s.getValue ()); }
+		});
+		g.gridx = 0;	g.gridy = row;		p.add (new JLabel (name), g);
+		g.gridx = 1;						p.add (s, g);
+		g.gridx = 2;						p.add (v, g);
 	}
 
 	/** The scene and the sliders as the model is now. */
