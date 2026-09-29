@@ -4,41 +4,77 @@
 
 package tcrob.umu.soccer.gui;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
 
 import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.SourceDataLine;
 
 /**
- * What a match sounds like, made up rather than read from files: the whistle
- * of a football referee -- a pea whistle, a shrill note trilled by the pea --
- * and the applause of a crowd. One whistle at a kick-off, a short one at a
- * fault, and two short and a long, then the applause, when the time is up
- * ({@link #play}). The sounds are made once, when first asked for, and played
- * one after the other on a thread of their own; where there is nothing to
- * play them on (no sound card, a headless run) nothing happens.
+ * What a match sounds like: the whistle of the referee and the applause of the
+ * crowd, read from the WAV files of <code>resources/sounds</code> (on the
+ * class path, or under the working directory) and played one after the other
+ * on a thread of their own. One long blow at a kick-off; a short one at a
+ * fault; a blow and a couple of seconds of applause at a goal; two short blows
+ * and a long one, then the applause, when the time is up ({@link #play}). A
+ * sound may be played for only so long, fading out where it is cut. Where
+ * there is nothing to play on (no sound card, a headless run), or the files
+ * are not there, it says so once and keeps quiet.
+ *
+ * <pre>
+ *   resources/sounds/whistle_short.wav   a short blow of a referee's whistle
+ *   resources/sounds/whistle_long.wav    a long one
+ *   resources/sounds/applause.wav        a crowd clapping, a few seconds of it
+ * </pre>
  */
 public class SoccerSounds
 {
-	/** The cues a decision may carry: a kick-off, a fault, the end of the match. */
+	/** The cues a decision may carry: a kick-off, a fault, a goal, the end of the match. */
 	static public final String		START	= "start";
 	static public final String		FAULT	= "fault";
+	static public final String		GOAL	= "goal";
 	static public final String		END		= "end";
 
-	static public final float		RATE	= 44100f;
-	static public final int			SHORT	= 220;					// a short blow [ms]
-	static public final int			KICKOFF	= 750;					// the blow of a kick-off [ms]
-	static public final int			LONG	= 1100;					// the long blow of the end [ms]
-	static public final int			GAP		= 130;					// between the blows of the end [ms]
-	static public final int			APPLAUSE = 4200;				// how long the crowd claps [ms]
+	/** Where the files are: as a resource of the class path, or under the working directory. */
+	static public final String		FOLDER	= "resources/sounds";
+	static public final String		WHISTLE_SHORT	= "whistle_short.wav";
+	static public final String		WHISTLE_LONG	= "whistle_long.wav";
+	static public final String		APPLAUSE		= "applause.wav";
 
-	static private byte[]			shortBlow, kickoffBlow, longBlow, applause, silence;
-	static private final List<byte[]>	queue = new ArrayList<byte[]> ();
+	static public final int			GAP				= 150;		// between the blows of the end [ms]
+	static public final int			GOAL_APPLAUSE	= 2500;		// how long the crowd claps a goal [ms]
+	static public final int			END_APPLAUSE	= 4500;		// and the end of the match [ms]
+	static public final int			FADE			= 200;		// the fade out where a sound is cut short [ms]
+
+	/** A sound as read: its samples (signed 16 bit little endian PCM) and their format. */
+	static protected class Sound
+	{
+		AudioFormat					format;
+		byte[]						pcm;
+	}
+
+	/** One thing to play: a sound, for so long (0: all of it); or a silence, when the sound is null. */
+	static private class Item
+	{
+		Sound						sound;
+		int							ms;
+
+		Item (Sound sound, int ms)	{ this.sound = sound;	this.ms = ms; }
+	}
+
+	static private final Map<String, Sound>	sounds = new HashMap<String, Sound> ();
+	static private final List<Item>	queue = new ArrayList<Item> ();
 	static private Thread			player;
-	static private boolean			mute;							// no line to play on: found out once, and kept quiet after
+	static private boolean			mute;							// nothing to play on, or no files: found out once, and quiet after
 
 	/** Plays what a cue says, after whatever is playing; an unknown or null cue plays nothing. */
 	static public void play (String cue)
@@ -46,15 +82,18 @@ public class SoccerSounds
 		if ((cue == null) || mute)				return;
 		synchronized (SoccerSounds.class)
 		{
-			make ();
-			if (START.equals (cue))				queue.add (kickoffBlow);
-			else if (FAULT.equals (cue))		queue.add (shortBlow);
+			Sound	shortBlow = sound (WHISTLE_SHORT), longBlow = sound (WHISTLE_LONG), applause = sound (APPLAUSE);
+
+			if (mute)							return;
+			if (START.equals (cue))				queue.add (new Item (longBlow, 0));
+			else if (FAULT.equals (cue))		queue.add (new Item (shortBlow, 0));
+			else if (GOAL.equals (cue))			{ queue.add (new Item (longBlow, 0));	queue.add (new Item (applause, GOAL_APPLAUSE)); }
 			else if (END.equals (cue))
 			{
-				queue.add (shortBlow);	queue.add (silence);
-				queue.add (shortBlow);	queue.add (silence);
-				queue.add (longBlow);	queue.add (silence);
-				queue.add (applause);
+				queue.add (new Item (shortBlow, 0));	queue.add (new Item (null, GAP));
+				queue.add (new Item (shortBlow, 0));	queue.add (new Item (null, GAP));
+				queue.add (new Item (longBlow, 0));		queue.add (new Item (null, GAP));
+				queue.add (new Item (applause, END_APPLAUSE));
 			}
 			else								return;
 			if ((player == null) || !player.isAlive ())
@@ -66,10 +105,69 @@ public class SoccerSounds
 		}
 	}
 
-	/** Nothing is played from now on (and whatever is queued is dropped). */
+	/** Nothing is played from now on (and whatever is queued is dropped); false lets it play again. */
 	static public void mute (boolean m)
 	{
 		synchronized (SoccerSounds.class)		{ mute = m;	if (m) queue.clear (); }
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Reading the files                                                   */
+	/* ------------------------------------------------------------------ */
+
+	/** A sound by its file name, read the first time and kept; null (and everything muted) when it cannot be. */
+	static protected Sound sound (String name)
+	{
+		Sound	s = sounds.get (name);
+
+		if (s != null)							return s;
+		try
+		{
+			InputStream		in = open (name);
+
+			if (in == null)						throw new java.io.FileNotFoundException (FOLDER + "/" + name + " (class path or working directory)");
+
+			AudioInputStream	ais = AudioSystem.getAudioInputStream (new BufferedInputStream (in));
+			AudioFormat			base = ais.getFormat ();
+			AudioFormat			fmt = new AudioFormat (AudioFormat.Encoding.PCM_SIGNED, base.getSampleRate (), 16, base.getChannels (),
+													   2 * base.getChannels (), base.getSampleRate (), false);
+
+			if (!fmt.matches (base))			ais = AudioSystem.getAudioInputStream (fmt, ais);		// whatever it was written as, 16 bit PCM
+
+			ByteArrayOutputStream	out = new ByteArrayOutputStream ();
+			byte[]					buf = new byte[1 << 14];
+			int						n;
+
+			while ((n = ais.read (buf)) > 0)	out.write (buf, 0, n);
+			ais.close ();
+			s			= new Sound ();
+			s.format	= fmt;
+			s.pcm		= out.toByteArray ();
+			sounds.put (name, s);
+			return s;
+		}
+		catch (Throwable e)
+		{
+			System.out.println ("  [SoccerSounds] No sound: cannot read " + name + ": " + e);
+			mute	= true;
+			queue.clear ();
+			return null;
+		}
+	}
+
+	/** The file, from the class path first (resources/sounds/... next to the classes) and then from the working directory. */
+	static protected InputStream open (String name) throws Exception
+	{
+		InputStream		in = SoccerSounds.class.getResourceAsStream ("/" + FOLDER + "/" + name);
+
+		if (in != null)							return in;
+		for (String dir : new String[] { FOLDER, "sources/" + FOLDER, "./conf/" + FOLDER })
+		{
+			File	f = new File (dir, name);
+
+			if (f.isFile ())					return new FileInputStream (f);
+		}
+		return null;
 	}
 
 	/* ------------------------------------------------------------------ */
@@ -78,26 +176,40 @@ public class SoccerSounds
 
 	static private void drain ()
 	{
-		AudioFormat		fmt = new AudioFormat (RATE, 16, 1, true, false);
 		SourceDataLine	line = null;
+		AudioFormat		fmt = null;
 
 		try
 		{
-			line	= AudioSystem.getSourceDataLine (fmt);
-			line.open (fmt, 1 << 16);
-			line.start ();
 			while (true)
 			{
-				byte[]		next;
+				Item		next;
 
 				synchronized (SoccerSounds.class)
 				{
 					if (queue.isEmpty ())		break;
 					next	= queue.remove (0);
 				}
-				line.write (next, 0, next.length);
+				if (next.sound == null)								// a silence, in the format of whatever was last played
+				{
+					if (fmt == null)			{ Thread.sleep (next.ms);	continue; }
+					line.write (new byte[frames (fmt, next.ms) * fmt.getFrameSize ()], 0, frames (fmt, next.ms) * fmt.getFrameSize ());
+					continue;
+				}
+				if ((line == null) || !next.sound.format.matches (fmt))	// another format: another line
+				{
+					if (line != null)			{ line.drain ();	line.close (); }
+					fmt		= next.sound.format;
+					line	= AudioSystem.getSourceDataLine (fmt);
+					line.open (fmt, 1 << 16);
+					line.start ();
+				}
+
+				byte[]		pcm = cut (next.sound, next.ms);
+
+				line.write (pcm, 0, pcm.length);
 			}
-			line.drain ();
+			if (line != null)					line.drain ();
 		}
 		catch (Throwable e)
 		{
@@ -110,101 +222,46 @@ public class SoccerSounds
 		}
 	}
 
-	/* ------------------------------------------------------------------ */
-	/* Making the sounds                                                   */
-	/* ------------------------------------------------------------------ */
-
-	static private void make ()
+	static private int frames (AudioFormat fmt, int ms)
 	{
-		if (shortBlow != null)		return;
-		shortBlow	= whistle (SHORT);
-		kickoffBlow	= whistle (KICKOFF);
-		longBlow	= whistle (LONG);
-		applause	= applause (APPLAUSE);
-		silence		= pcm (new double[(int) (RATE * GAP / 1000)]);
+		return (int) (fmt.getSampleRate () * ms / 1000.0);
 	}
 
-	/**
-	 * A pea whistle blown for so long: a shrill note (a fundamental and two
-	 * partials) that the pea trills at about 40 times a second, a little breath
-	 * noise under it, a quick attack and a short tail.
-	 */
-	static protected byte[] whistle (int ms)
+	/** The first so many ms of a sound, faded out at the cut; all of it for 0 or more than it has. */
+	static protected byte[] cut (Sound s, int ms)
 	{
-		int			n = (int) (RATE * ms / 1000);
-		double[]	s = new double[n];
-		Random		rnd = new Random (7);
-		double		f0 = 2650.0, trill = 42.0;
+		int		size = s.format.getFrameSize (), total = s.pcm.length / size;
+		int		n = (ms <= 0) ? total : Math.min (total, frames (s.format, ms));
 
-		for (int i = 0; i < n; i++)
+		if (n >= total)							return s.pcm;
+
+		byte[]	out = new byte[n * size];
+		int		fade = Math.min (n, frames (s.format, FADE)), ch = s.format.getChannels ();
+
+		System.arraycopy (s.pcm, 0, out, 0, out.length);
+		for (int i = n - fade; i < n; i++)
 		{
-			double	t = i / RATE;
-			double	env = Math.min (1.0, t / 0.012) * Math.min (1.0, (ms / 1000.0 - t) / 0.05);
-			double	pea = 0.55 + 0.45 * Math.sin (2 * Math.PI * trill * t + 0.6 * Math.sin (2 * Math.PI * 5.0 * t));	// the trill, itself a little uneven
-			double	f = f0 * (1.0 + 0.012 * Math.sin (2 * Math.PI * trill * t));								// and a little pitch wobble with it
-			double	tone = Math.sin (2 * Math.PI * f * t) + 0.45 * Math.sin (2 * Math.PI * 2 * f * t) + 0.18 * Math.sin (2 * Math.PI * 3 * f * t);
+			double	g = (n - 1 - i) / (double) fade;
 
-			s[i]	= env * (0.55 * pea * tone + 0.04 * (rnd.nextDouble () - 0.5));
-		}
-		return pcm (s);
-	}
-
-	/**
-	 * A crowd clapping for so long: many claps, each a short burst of noise with
-	 * a body of its own, falling at random, the crowd joining in over the first
-	 * half second and dying away over the last second and a half.
-	 */
-	static protected byte[] applause (int ms)
-	{
-		int			n = (int) (RATE * ms / 1000);
-		double[]	s = new double[n];
-		Random		rnd = new Random (11);
-		double		len = ms / 1000.0;
-		double		t = 0.0;
-
-		while (t < len)
-		{
-			double	env = Math.min (1.0, t / 0.5) * Math.min (1.0, (len - t) / 1.5);
-			double	amp = env * (0.25 + 0.5 * rnd.nextDouble ());
-			double	decay = 0.006 + 0.010 * rnd.nextDouble ();										// how long the clap rings [s]
-			double	tone = 900.0 + 1400.0 * rnd.nextDouble ();										// the body of the clap (a big hand, a small one)
-			int		at = (int) (t * RATE), k = (int) (RATE * decay * 5);
-			double	ph = rnd.nextDouble () * 2 * Math.PI;
-
-			for (int i = 0; (i < k) && (at + i < n); i++)
+			for (int c = 0; c < ch; c++)
 			{
-				double	tt = i / RATE;
+				int		k = (i * ch + c) * 2;
+				int		v = (short) ((out[k] & 0xff) | (out[k + 1] << 8));
 
-				s[at + i]	+= amp * Math.exp (-tt / decay) * ((rnd.nextDouble () - 0.5) * 1.2 + 0.5 * Math.sin (2 * Math.PI * tone * tt + ph));
+				v		= (int) Math.round (v * g);
+				out[k]		= (byte) (v & 0xff);
+				out[k + 1]	= (byte) ((v >> 8) & 0xff);
 			}
-			t	+= 0.004 + 0.020 * rnd.nextDouble () / Math.max (0.15, env);						// a denser crowd while it is at full clap
 		}
-		// a light hall to it: the sound smeared a little
-		double	y = 0.0;
-		for (int i = 0; i < n; i++)		{ y = 0.6 * y + 0.4 * s[i];	s[i] = 0.5 * s[i] + 0.5 * y; }
-		return pcm (s);
+		return out;
 	}
 
-	/** Samples (about -1..1, clipped) as 16 bit little endian PCM. */
-	static protected byte[] pcm (double[] s)
-	{
-		byte[]	b = new byte[2 * s.length];
-
-		for (int i = 0; i < s.length; i++)
-		{
-			int		v = (int) Math.round (Math.max (-1.0, Math.min (1.0, s[i])) * 32000.0);
-
-			b[2 * i]		= (byte) (v & 0xff);
-			b[2 * i + 1]	= (byte) ((v >> 8) & 0xff);
-		}
-		return b;
-	}
-
-	/** Blows the three of them and claps, to hear what they are like. */
+	/** Blows them all and claps, to hear what they are like. */
 	static public void main (String[] args) throws Exception
 	{
-		play (START);	Thread.sleep (1500);
+		play (START);	Thread.sleep (2000);
 		play (FAULT);	Thread.sleep (1000);
+		play (GOAL);	Thread.sleep (5000);
 		play (END);
 		Thread.sleep (9000);
 	}

@@ -553,13 +553,15 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	/**
 	 * What a decision sounds like (SoccerSounds): the whistle of a kick-off when
 	 * the game goes PLAYING, a short one at a fault of a player or the ball out,
-	 * the whistles of the end and the applause when the time is up; nothing else.
+	 * a whistle and applause at a goal, the whistles of the end and the applause
+	 * when the time is up; nothing else.
 	 */
 	protected String cue (Events event, GameStates st, int player)
 	{
 		switch (event)
 		{
 		case STATE:				return ((st == GameStates.PLAYING) && (player < 0)) ? SoccerSounds.START : null;
+		case GOAL:				return SoccerSounds.GOAL;
 		case ILLEGAL_DEFENDER:
 		case BALL_OUT:
 		case KICKOFF_SHOT:		return SoccerSounds.FAULT;
