@@ -77,8 +77,9 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 		String						name;
 		KineNode					j1, j2, j3, paw;
 		double[]					origin;					// J1 on the body
-		boolean						rear;					// its frame turned 180 deg about z
+		boolean						front;					// a foreleg: the elbow points back, the forearm forward
 		boolean						mirror;					// its outward side is -y of its frame
+		double						s1, s3;					// the sense of J1 and J3: +1 when a positive angle turns about +y (the leg swings back), -1 about -y
 		double						d, l1, l2;				// J2 out from J1, upper and lower leg
 		double[]					rest = new double[3];	// where the foot rests, on the body
 		double						ph;						// its phase in the cycle
@@ -94,13 +95,15 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 			if ((j1 == null) || (j2 == null) || (j3 == null))
 				throw new IllegalArgumentException ("The model has no leg " + name + " (J1, J2, J3)");
 			origin		= j1.translation;
-			rear		= (j1.rotation != null) && (Math.abs (Math.abs (j1.rotation[3]) - Math.PI) < 1e-3);
+			front		= origin[0] > 0.0;
 			mirror		= j2.translation[1] < 0.0;
+			s1			= (j1.joint.axis[1] < 0.0) ? -1.0 : 1.0;
+			s3			= (j3.joint.axis[1] < 0.0) ? -1.0 : 1.0;
 			d			= Math.abs (j2.translation[1]);
 			l1			= j3.length ();
 			l2			= (paw != null) ? Math.abs (paw.translation[2]) : l1;
 
-			boolean	front = origin[0] > 0.0, left = origin[1] > 0.0;
+			boolean	left = origin[1] > 0.0;
 
 			rest[0]		= origin[0] + (front ? foreCenterX : hindCenterX);
 			rest[1]		= (left ? 1.0 : -1.0) * (front ? foreWidth : hindWidth);
@@ -109,17 +112,20 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 
 		/**
 		 * The joints that put the foot at a point of the body's frame: the target
-		 * taken to the frame of J1 (turned round for a hind leg, mirrored for a leg
-		 * whose outward side is -y, so that one solution serves all four), then the
-		 * inverse kinematics of a swing (J1, about y), a flap (J2, about x) and a
-		 * knee (J3, about y) with the upper leg l1 and the lower l2. Out of reach,
-		 * the leg stretches towards the point.
+		 * taken to the frame of J1 (mirrored for a leg whose outward side is -y, so
+		 * that one solution serves all four), then the inverse kinematics of a swing
+		 * (J1, about y), a flap (J2, about x) and a knee (J3, about y) with the upper
+		 * leg l1 and the lower l2. The angles are worked out about +y (positive: the
+		 * leg swings back, the shank folds back) and given to each joint in its own
+		 * sense. The knee folds the way the GermanTeam walks the Aibo: a hind leg
+		 * bends its knee forward, the shank going back to the paw; a foreleg bends
+		 * its elbow back, the forearm going forward to the paw, so that it lies on
+		 * the ground. Out of reach, the leg stretches towards the point.
 		 */
 		void reach (double[] p)
 		{
 			double	x = p[0] - origin[0], y = p[1] - origin[1], z = p[2] - origin[2];
 
-			if (rear)		{ x = -x;	y = -y; }
 			if (mirror)		y = -y;
 
 			// the knee, from how far the foot is from the shoulder (the flap offset d taken out)
@@ -130,7 +136,7 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 
 			c3	= Math.max (-1.0, Math.min (1.0, c3));
 
-			double	t3 = Math.acos (c3);											// the knee bends back (positive)
+			double	t3 = (front ? -1.0 : 1.0) * Math.acos (c3);					// the shank folds back (hind) or forward (fore)
 			double	qx = -l2 * Math.sin (t3), qz = -l1 - l2 * Math.cos (t3);
 			// the flap, from how far out the foot is
 			double	s2 = (qz != 0.0) ? Math.max (-1.0, Math.min (1.0, dy / qz)) : 0.0;
@@ -139,9 +145,9 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 			double	ax = qx, az = qz * Math.cos (t2);
 			double	t1 = Math.atan2 (az, ax) - Math.atan2 (z, x);
 
-			model.setAngle (j1.name, t1);
+			model.setAngle (j1.name, s1 * t1);
 			model.setAngle (j2.name, t2);
-			model.setAngle (j3.name, t3);
+			model.setAngle (j3.name, s3 * t3);
 		}
 	}
 
@@ -253,21 +259,21 @@ public class AiboWalking implements tc.vrobot.articulated.WalkingModel
 
 			if (p < groundRatio)
 			{
-				// on the ground: from half a step ahead to half a step behind, dragged with the body's speed
+				// on the ground: dragged at the speed a foot has there (against the body's), from half a step before rest to half a step after
 				double	s = p / groundRatio;
 
-				feet[i][0]	= leg.rest[0] - dx * (s - 0.5);
-				feet[i][1]	= leg.rest[1] - dy * (s - 0.5);
+				feet[i][0]	= leg.rest[0] + dx * (s - 0.5);
+				feet[i][1]	= leg.rest[1] + dy * (s - 0.5);
 				feet[i][2]	= leg.rest[2];
 			}
 			else
 			{
-				// in the air: back round to the front along a lifted arc, eased at the ends
+				// in the air: back the other way along a lifted arc, eased at the ends, to where the next step starts
 				double	s = (p - groundRatio) / (1.0 - groundRatio);
 				double	e = 0.5 - 0.5 * Math.cos (Math.PI * s);
 
-				feet[i][0]	= leg.rest[0] + dx * (e - 0.5);
-				feet[i][1]	= leg.rest[1] + dy * (e - 0.5);
+				feet[i][0]	= leg.rest[0] - dx * (e - 0.5);
+				feet[i][1]	= leg.rest[1] - dy * (e - 0.5);
 				feet[i][2]	= leg.rest[2] + footLift * Math.sin (Math.PI * s);
 			}
 			leg.reach (feet[i]);

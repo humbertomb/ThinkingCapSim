@@ -1,6 +1,6 @@
 {
   "name": "aibo",
-  "description": "Sony AIBO ERS-7 as the Webots model has it: joints, axes, limits and defaults from its Model Reference Guide; sizes from the published ERS-7 kinematics (approximate). Frame x forward, y left, z up; m and rad.",
+  "description": "Sony AIBO ERS-7 as the Webots model has it: joints, axes, limits and defaults from its Model Reference Guide; sizes from the published ERS-7 kinematics (approximate). Frame x forward, y left, z up; m and rad. The fore and hind legs are mirror images: a positive J1 swings a foreleg forward and a hind leg back, a positive J3 folds the forearm forward (elbow back) and the hind shank back (knee forward).",
   "root": {
     "name": "ERS7",
     "translation": [0.0, 0.0, 0.0],
@@ -192,7 +192,7 @@
         "translation": [0.0625, 0.0595, 0.0],
         "joint": {
           "type": "revolute",
-          "axis": [0, 1, 0],
+          "axis": [0, -1, 0],
           "min": -2.0944,
           "max": 2.3562,
           "def": 0.0
@@ -238,7 +238,7 @@
                 "translation": [0.0, 0.0, -0.0695],
                 "joint": {
                   "type": "revolute",
-                  "axis": [0, 1, 0],
+                  "axis": [0, -1, 0],
                   "min": -0.5236,
                   "max": 2.2166,
                   "def": 0.5236
@@ -283,7 +283,7 @@
         "translation": [0.0625, -0.0595, 0.0],
         "joint": {
           "type": "revolute",
-          "axis": [0, 1, 0],
+          "axis": [0, -1, 0],
           "min": -2.0944,
           "max": 2.3562,
           "def": 0.0
@@ -329,7 +329,7 @@
                 "translation": [0.0, 0.0, -0.0695],
                 "joint": {
                   "type": "revolute",
-                  "axis": [0, 1, 0],
+                  "axis": [0, -1, 0],
                   "min": -0.5236,
                   "max": 2.2166,
                   "def": 0.5236
