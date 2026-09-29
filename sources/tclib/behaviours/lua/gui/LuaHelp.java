@@ -192,6 +192,10 @@ public class LuaHelp
 		{ "releaseBookedBall", "", "Gives the ball back to the team." },
 		{ "setGlobal", "name, value", "Keeps a value in the bridge under that name, where every script finds it." },
 		{ "getGlobal", "name", "What was kept under that name, or nil." },
+		{ "initializeTimer", "name", "Starts a timer: keeps the clock of the execution (ms) in the global of the bridge of that name, "
+					+ "as <span class=\"mono\">setGlobal</span> would, so that every script and every state finds it." },
+		{ "getTimer", "name", "How long it is (ms) since <span class=\"mono\">initializeTimer</span> was called with that name. "
+					+ "A timer that was never started reads 0 and says so once on the console." },
 	};
 
 	static private final String[][]	MATH_HELP	=

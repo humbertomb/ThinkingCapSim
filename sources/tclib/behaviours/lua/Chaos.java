@@ -104,6 +104,8 @@ public class Chaos implements LuaBridge
 
 	// What the scripts left for one another
 	protected Map<String, Object>	globals		= new HashMap<String, Object> ();
+	// The clock of the execution (ms): when this bridge was made, from which the timers of the scripts count
+	protected long					created		= System.currentTimeMillis ();
 	protected Map<Integer, Double>	needed		= new HashMap<Integer, Double> ();
 
 	protected LuaTable				table;
@@ -636,8 +638,47 @@ public class Chaos implements LuaBridge
 			}
 		});
 
+		/* ---- timers, kept as globals of the bridge ---- */
+
+		// initializeTimer (name) keeps the clock of the execution (ms) in the global of
+		// that name; getTimer (name) is how long it is since then (ms). A timer that
+		// was never initialised (or a global that is not a number) reads 0, and it is said.
+		c.set ("initializeTimer", new LuaFunction ("chaos.initializeTimer")
+		{
+			public Object call (Object[] args)
+			{
+				String	n = str (args, 0);
+
+				if (n == null)		{ complain (name + " wants the name of a global");	return null; }
+				globals.put (n, Double.valueOf ((double) executionTime ()));
+				return null;
+			}
+		});
+
+		c.set ("getTimer", new LuaFunction ("chaos.getTimer")
+		{
+			public Object call (Object[] args)
+			{
+				String	n = str (args, 0);
+				Double	t0 = (n != null) ? Lua.tonumber (globals.get (n)) : null;
+
+				if (t0 == null)
+				{
+					String	what = name + " (" + Lua.tostring (arg (args, 0)) + "): no such timer, initializeTimer it first; reads 0";
+
+					complain (what);
+					if (warned.add (name + "/" + n))		System.out.println ("  [CHAOS] " + what);
+					return Double.valueOf (0.0);
+				}
+				return Double.valueOf ((double) executionTime () - t0.doubleValue ());
+			}
+		});
+
 		return c;
 	}
+
+	/** The clock of the execution (ms): how long this bridge has been alive, what the timers of the scripts count from. */
+	public long executionTime ()						{ return System.currentTimeMillis () - created; }
 
 	public String toString ()
 	{
