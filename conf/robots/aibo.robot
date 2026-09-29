@@ -592,9 +592,10 @@
     }
   ],
   "image": "./conf/2dmodels/aibo.png",
-  "shapeRobot": "./conf/3dmodels/aibo.3ds",
+  "shapeArticulated": "./conf/robots/aibo.kine",
   "kinematics": {
-    "drive": "tc.vrobot.models.LeggedOmniDrive",
+    "drive": "tc.vrobot.models.ArticulatedDrive",
+    "walking": "tcrob.umu.soccer.walking.AiboWalking",
     "vmax": 0.451,
     "umax": 0.344,
     "rmax": 200.0,
@@ -634,9 +635,9 @@
     "camera": {
       "sensors": [
         {
-          "rho": 0.093614054391489,
-          "theta": 0.5397755970709055,
-          "height": 0.27290665299711325,
+          "rho": 0.15962740887495236,
+          "theta": 0.3165502219909179,
+          "height": 0.2076091356523957,
           "orientation": 0.0,
           "elevation": -29.054604099077228,
           "rangemax": 6.0,

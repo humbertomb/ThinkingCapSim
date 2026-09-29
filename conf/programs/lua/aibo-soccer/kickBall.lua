@@ -2,12 +2,6 @@
 --
 -- 20260925 Humberto Martinez
 
-local steps = chaos.getGlobal("KICK_STEPS")
-if steps > 6 then
-	return
-end
-chaos.setGlobal("KICK_STEPS", steps+1)
-
 local ball = chaos.getLpo(chaos.BALL_LPO)
 
 -- PID-like controllers
