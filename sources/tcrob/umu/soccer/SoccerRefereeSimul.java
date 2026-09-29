@@ -17,6 +17,7 @@ import tcapps.tcsimulator.simulator.Simulator;
 import tcapps.tcsimulator.simulator.objects.SimMobileObject;
 import tcapps.tcsimulator.simulator.objects.SimObject;
 import tcrob.umu.soccer.gui.SoccerRefereeWindow;
+import tcrob.umu.soccer.gui.SoccerSounds;
 import tcrob.umu.soccer.linda.ItemReferee;
 import tcrob.umu.soccer.linda.ItemReferee.Events;
 import tcrob.umu.soccer.linda.ItemReferee.GameStates;
@@ -44,9 +45,9 @@ import tc.shared.linda.Tuple;
  *     ends; out over an end line, at the corner kick point when the defending
  *     team touched it last, on the halfway line (same side) when the attacking
  *     team did, one metre in from the end line when nobody knows.
- * <li>A robot wholly inside the area of a net (AREA1, AREA2) is a fault unless
- *     it is the one robot that defends that net, the keeper of the team that
- *     owns it.
+ * <li>A robot wholly inside the area of a net (AREA1, AREA2) for more than
+ *     {@link #AREA_TIME} is a fault unless it is the one robot that defends
+ *     that net, the keeper of the team that owns it.
  * </ul>
  * Each is decided once, when it happens, and not again until the ball or the
  * robot has left where it was. The robot that touched the ball last is named
@@ -129,7 +130,10 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	protected boolean				kickoff		= true;		// since the last kick-off no robot has touched the ball outside the centre circle
 	protected long					touchSeen;				// the last touch of the ball looked at (its time), to see the new ones
 	protected int[]					teamOf		= new int[Simulator.MAX_ROBOTS];		// the team of each robot, -1 while not known
-	protected Boolean[][]			inArea		= new Boolean[Simulator.MAX_ROBOTS][2];	// which robots are in which areas
+	protected long[][]				inArea		= new long[Simulator.MAX_ROBOTS][2];		// since when each robot is wholly in each area [ms of the system]; 0 when it is not
+	protected boolean[][]			areaFault	= new boolean[Simulator.MAX_ROBOTS][2];	// whether its stay there was called already
+	/** How long a robot may be wholly inside the area of a net it has no business in before it is a fault [ms]. */
+	static public final long		AREA_TIME	= 3000;
 	protected long[]				penalty		= new long[Simulator.MAX_ROBOTS];		// when the penalty of each robot ends [ms of the system], 0 for none
 
 	protected SoccerRefereeWindow	win;
@@ -297,7 +301,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	{
 		ItemReferee		item = new ItemReferee ();
 
-		announce (text);
+		announce (text, cue (event, st, player));
 		item.setState (st, player);
 		item.setEvent (event, team, robot, text);
 		item.setScore (score[0], score[1], elapsed ());
@@ -316,7 +320,8 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		inNet[0]	= null;
 		inNet[1]	= null;
 		kickoff		= true;
-		for (Boolean[] a : inArea)		{ a[0] = null;	a[1] = null; }
+		for (long[] a : inArea)			{ a[0] = 0;	a[1] = 0; }
+		for (boolean[] a : areaFault)	{ a[0] = false;	a[1] = false; }
 		java.util.Arrays.fill (penalty, 0L);						// a kick-off puts everyone back in the game
 	}
 
@@ -492,10 +497,12 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 	/**
 	 * The robots: each is put on a team the first time it is seen, and one wholly
-	 * inside the area of a net (the disc of its radius, all of it) is a fault
-	 * unless it is the keeper of the team that owns the net -- the one robot of
-	 * that team allowed there, the first one in; a second one of the same team is
-	 * a fault as well. A robot with a foot over the line is not in yet.
+	 * inside the area of a net (the disc of its radius, all of it) for more than
+	 * {@link #AREA_TIME} is a fault unless it is the keeper of the team that owns
+	 * the net -- the one robot of that team allowed there, the first one in; a
+	 * second one of the same team is a fault as well. A robot with a foot over
+	 * the line is not in, and one that goes through and out again in time is
+	 * left alone: a match with faults at every touch of the area is no match.
 	 */
 	protected void robots ()
 	{
@@ -513,29 +520,51 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 			for (int net = 0; net < 2; net++)
 			{
 				Boolean		in = wholeIn (areaNames[net], x, y, rr);
+				long		now = System.currentTimeMillis ();
 
 				if (in == null)						continue;
-				if ((inArea[r][net] != null) && !inArea[r][net].booleanValue () && in.booleanValue ())
+				if (!in.booleanValue ())			{ inArea[r][net] = 0;	areaFault[r][net] = false;	continue; }
+				if (inArea[r][net] == 0)			inArea[r][net] = now;						// just in: the clock of its stay starts
+				if (!areaFault[r][net] && (now - inArea[r][net] >= AREA_TIME))
 				{
 					String	who = robot (r);
+
+					areaFault[r][net]	= true;										// called once per stay
 
 					if (teamOf[r] != net)			// not of the team that owns the net: it has no business there
 					{
 						faults++;
-						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + who + " in " + areaNames[net] + " (" + teamNames[net] + " net): only the "
+						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + who + " over " + (AREA_TIME / 1000) + " s in " + areaNames[net] + " (" + teamNames[net] + " net): only the "
 								+ teamNames[net] + " keeper may be there" + penalize (r) + "  --  faults: " + faults);
 						expel (r);
 					}
 					else if (keeperIn (net, r))		// of the team, but the keeper is in already
 					{
 						faults++;
-						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + who + " in " + areaNames[net] + " (" + teamNames[net] + " net) with the keeper already there: only one may be"
+						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + who + " over " + (AREA_TIME / 1000) + " s in " + areaNames[net] + " (" + teamNames[net] + " net) with the keeper already there: only one may be"
 								+ penalize (r) + "  --  faults: " + faults);
 						expel (r);
 					}
 				}
-				inArea[r][net]	= in;
 			}
+		}
+	}
+
+	/**
+	 * What a decision sounds like (SoccerSounds): the whistle of a kick-off when
+	 * the game goes PLAYING, a short one at a fault of a player or the ball out,
+	 * the whistles of the end and the applause when the time is up; nothing else.
+	 */
+	protected String cue (Events event, GameStates st, int player)
+	{
+		switch (event)
+		{
+		case STATE:				return ((st == GameStates.PLAYING) && (player < 0)) ? SoccerSounds.START : null;
+		case ILLEGAL_DEFENDER:
+		case BALL_OUT:
+		case KICKOFF_SHOT:		return SoccerSounds.FAULT;
+		case TIME_UP:			return SoccerSounds.END;
+		default:				return null;
 		}
 	}
 
@@ -584,7 +613,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	protected boolean keeperIn (int net, int robot)
 	{
 		for (int r = 0; r < inArea.length; r++)
-			if ((r != robot) && (teamOf[r] == net) && (inArea[r][net] != null) && inArea[r][net].booleanValue ())		return true;
+			if ((r != robot) && (teamOf[r] == net) && (inArea[r][net] != 0))		return true;
 		return false;
 	}
 

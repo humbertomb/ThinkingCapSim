@@ -38,11 +38,19 @@ public abstract class Supervisor extends StdThread
 	{
 		public final long			at;
 		public final String			text;
+		/** What it sounds like, for whoever plays sounds (a whistle, say); null for nothing. What it means is the subclass's. */
+		public final String			cue;
 
 		public Decision (long at, String text)
 		{
+			this (at, text, null);
+		}
+
+		public Decision (long at, String text, String cue)
+		{
 			this.at		= at;
 			this.text	= text;
+			this.cue	= cue;
 		}
 
 		/** When, as m:ss. */
@@ -214,7 +222,13 @@ public abstract class Supervisor extends StdThread
 	/** Something was decided: it is kept, said on the console and given to whoever listens. */
 	protected Decision announce (String text)
 	{
-		Decision	d = new Decision (elapsed (), text);
+		return announce (text, null);
+	}
+
+	/** The same, with what it sounds like (see {@link Decision#cue}). */
+	protected Decision announce (String text, String cue)
+	{
+		Decision	d = new Decision (elapsed (), text, cue);
 
 		synchronized (decisions)		{ decisions.add (d); }
 		System.out.println ("  [" + ((tdesc != null) ? tdesc.preffix : "Supervisor") + "] " + d);

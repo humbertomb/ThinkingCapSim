@@ -153,6 +153,7 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 
 	public void decided (final Supervisor.Decision d)
 	{
+		SoccerSounds.play (d.cue);									// the whistle, when the decision has one
 		SwingUtilities.invokeLater (new Runnable ()
 		{
 			public void run ()		{ line (d);	board.repaint (); }
