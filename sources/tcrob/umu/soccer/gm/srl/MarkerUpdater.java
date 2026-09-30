@@ -35,7 +35,7 @@ public class MarkerUpdater
 		markerY = obj.getPosY ();
 	}
 	
-	public void updateSamples (Lpo lpo, double rhoStdDev, double thetaStdDev, LocaleSampled locale) 
+	public void updateSamples (LocLpo lpo, double rhoStdDev, double thetaStdDev, LocaleSampled locale) 
 	{
 		gaussianEvaluator.setMeanDev (0, lpo.getRho (), rhoStdDev);
 		gaussianEvaluator.setMeanDev (1, lpo.getTheta (), thetaStdDev);

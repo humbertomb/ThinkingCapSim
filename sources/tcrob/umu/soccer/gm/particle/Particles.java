@@ -41,8 +41,8 @@ public class Particles implements Localisation
 	{
 		this.nSamples = nSamples;
 		
-		mLastAnchored	= new int[Lps.LPS_SIZE];
-		mLastUpdated		= new boolean[Lps.LPS_SIZE];
+		mLastAnchored	= new int[LocLps.LPS_SIZE];
+		mLastUpdated		= new boolean[LocLps.LPS_SIZE];
 
 		wm			= new WorldModel (name);
 		gs			= new Gs ();
@@ -113,7 +113,7 @@ public class Particles implements Localisation
 		updatePosition ();
 	}
 	
-	public void updateMotionAndSensors (Odometry odo, Lps lps)
+	public void updateMotionAndSensors (Odometry odo, LocLps lps)
 	{
 		// Update motion
 		motion.updateMotion (odo, samples);
@@ -125,18 +125,18 @@ public class Particles implements Localisation
 		updatePosition ();
 	}
 
-	protected void updateSensors (Lps lps)
+	protected void updateSensors (LocLps lps)
 	{
-		Lpo			lpo;
+		LocLpo			lpo;
 		double		errorDepth;
 		double		errorAzimuthal;
 		boolean		resample = false;
 		
-		for (int index = 0; index < Lps.LPS_SIZE; index++)
+		for (int index = 0; index < LocLps.LPS_SIZE; index++)
 			mLastUpdated[index]	= false;	
 
 		// Landmarks
-		for (int index = Lps.INIT_LMS; index < (Lps.INIT_LMS + Lps.NUM_LMS); index++)
+		for (int index = LocLps.INIT_LMS; index < (LocLps.INIT_LMS + LocLps.NUM_LMS); index++)
 		{
 			lpo = lps.getLpo(index);
 			if (lpo.getLastAnchored() > mLastAnchored[index])
@@ -148,12 +148,12 @@ public class Particles implements Localisation
 				errorDepth		= 0.3 * lpo.getRho();
 				errorAzimuthal	= 5.0 * Angles.DTOR;
 						
-				addLandmark (lpo, errorAzimuthal, errorDepth, wm.getLM (index-Lps.INIT_LMS));
+				addLandmark (lpo, errorAzimuthal, errorDepth, wm.getLM (index-LocLps.INIT_LMS));
 			}
 		}
 		
 		// Nets
-		for (int index = Lps.INIT_NETS; index < (Lps.INIT_NETS + Lps.NUM_NETS); index++)
+		for (int index = LocLps.INIT_NETS; index < (LocLps.INIT_NETS + LocLps.NUM_NETS); index++)
 		{
 			lpo = lps.getLpo(index);
 			if (lpo.getLastAnchored() > mLastAnchored[index])
@@ -172,7 +172,7 @@ public class Particles implements Localisation
 					errorAzimuthal	= 5.0 * Angles.DTOR;
 				}
 
-				addLandmark (lpo, errorAzimuthal, errorDepth, wm.getNet (index-Lps.INIT_NETS));
+				addLandmark (lpo, errorAzimuthal, errorDepth, wm.getNet (index-LocLps.INIT_NETS));
 			}
 		}
 		
@@ -180,7 +180,7 @@ public class Particles implements Localisation
 			resampleParticles ();
 	}
 	
-	private void addLandmark (Lpo lpo, double covx, double covy, ObjectModel landmark)
+	private void addLandmark (LocLpo lpo, double covx, double covy, ObjectModel landmark)
 	{
 		double		rho, theta;
 		double		xpos, ypos;

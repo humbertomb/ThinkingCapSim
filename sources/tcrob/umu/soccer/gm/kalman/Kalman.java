@@ -90,9 +90,9 @@ public class Kalman implements Localisation
 	
 	public Kalman (String name, int toler, double odolinNoise, double odorotNoise, double distNoise, double angleNoise)
 	{
-		mLastAnchored	= new int[Lps.LPS_SIZE];
-		mLastUpdated		= new boolean[Lps.LPS_SIZE];
-		mNewLandmarks	= new int[Lps.NUM_LMS + Lps.NUM_NETS];
+		mLastAnchored	= new int[LocLps.LPS_SIZE];
+		mLastUpdated		= new boolean[LocLps.LPS_SIZE];
+		mNewLandmarks	= new int[LocLps.NUM_LMS + LocLps.NUM_NETS];
 
 		setToleranceSettings(toler);
 		
@@ -220,7 +220,7 @@ public class Kalman implements Localisation
 		updatePosition ();
 	}
 	
-	public void updateMotionAndSensors (Odometry odo, Lps lps)
+	public void updateMotionAndSensors (Odometry odo, LocLps lps)
 	{
 		//System.out.print("MS ");
 		// Update motion
@@ -263,14 +263,14 @@ public class Kalman implements Localisation
 		P	= A.times (P).times (A.transpose()).plus (W.times (Q).times (W.transpose()));
 	}
 	
-	protected void updateSensors (Lps lps)
+	protected void updateSensors (LocLps lps)
 	{
 		int m;
-		Lpo				objlpo;
+		LocLpo				objlpo;
 		Matrix			K;
 		Matrix			S1, S2;
 		
-		for (int index = 0; index < Lps.LPS_SIZE; index++)
+		for (int index = 0; index < LocLps.LPS_SIZE; index++)
 			mLastUpdated[index]	= false;	
 
 		m = newLandmarks (lps, mNewLandmarks);
@@ -300,13 +300,13 @@ public class Kalman implements Localisation
 			Z.set(2*i, 0, objlpo.getRho());
 			Z.set(2*i+1, 0, objlpo.getTheta());
 			
-			if ((mNewLandmarks[i] >= Lps.INIT_LMS) && (mNewLandmarks[i] < Lps.INIT_LMS + Lps.NUM_LMS)) 
+			if ((mNewLandmarks[i] >= LocLps.INIT_LMS) && (mNewLandmarks[i] < LocLps.INIT_LMS + LocLps.NUM_LMS)) 
 			{
 				//System.out.print("lm");
-				omaux = wm.getLM (mNewLandmarks[i] - Lps.INIT_LMS);
-			}else if ((mNewLandmarks[i] >= Lps.INIT_NETS) && (mNewLandmarks[i] < Lps.INIT_NETS + Lps.NUM_NETS)){
+				omaux = wm.getLM (mNewLandmarks[i] - LocLps.INIT_LMS);
+			}else if ((mNewLandmarks[i] >= LocLps.INIT_NETS) && (mNewLandmarks[i] < LocLps.INIT_NETS + LocLps.NUM_NETS)){
 				//System.out.print("red");
-				omaux = wm.getNet (mNewLandmarks[i] - Lps.INIT_NETS);
+				omaux = wm.getNet (mNewLandmarks[i] - LocLps.INIT_NETS);
 			}
 			//System.out.print("oma"+mNewLandmarks[i]);
 			if (omaux == null)			continue;
@@ -470,12 +470,12 @@ public class Kalman implements Localisation
 	
 	
 	
-	private int newLandmarks (Lps lps, int[] element)
+	private int newLandmarks (LocLps lps, int[] element)
 	{
-		Lpo		lpo;	
+		LocLpo		lpo;	
 		int		numelem = 0;
 		
-		for (int index = Lps.INIT_LMS; index < (Lps.INIT_LMS + Lps.NUM_LMS + Lps.NUM_NETS); index++)
+		for (int index = LocLps.INIT_LMS; index < (LocLps.INIT_LMS + LocLps.NUM_LMS + LocLps.NUM_NETS); index++)
 		{
 			lpo = lps.getLpo(index);		
 			
@@ -504,11 +504,11 @@ public class Kalman implements Localisation
 		return numelem;
 	}
 	
-	private void processLandmark (Lps lps, Matrix Z, Matrix H, Matrix ZV, int numlps)
+	private void processLandmark (LocLps lps, Matrix Z, Matrix H, Matrix ZV, int numlps)
 	{
 		int				i;
 		ObjectModel		omaux = null;
-		Lpo				objlpo;
+		LocLpo				objlpo;
 		double			delta;
 
 		Z.zero ();
@@ -523,10 +523,10 @@ public class Kalman implements Localisation
 		Z.set(0, 0, (double)objlpo.getRho());
 		Z.set(1, 0, (double)objlpo.getTheta());
 		
-		if ((numlps >= Lps.INIT_LMS) && (numlps < Lps.INIT_LMS + Lps.NUM_LMS)) 
-			omaux = wm.getLM (numlps - Lps.INIT_LMS);
-		else if ((numlps >= Lps.INIT_NETS) && (numlps < Lps.INIT_NETS + Lps.NUM_NETS))
-			omaux = wm.getNet (numlps - Lps.INIT_NETS);
+		if ((numlps >= LocLps.INIT_LMS) && (numlps < LocLps.INIT_LMS + LocLps.NUM_LMS)) 
+			omaux = wm.getLM (numlps - LocLps.INIT_LMS);
+		else if ((numlps >= LocLps.INIT_NETS) && (numlps < LocLps.INIT_NETS + LocLps.NUM_NETS))
+			omaux = wm.getNet (numlps - LocLps.INIT_NETS);
 
 		if (omaux == null)			return;
 				

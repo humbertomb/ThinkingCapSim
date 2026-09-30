@@ -26,7 +26,7 @@ public class OdometryErrors
 			fd.close ();
 		} catch (Exception e) { }
 		
-		nsets		= new Integer (props.getProperty("ODO_COUNT")).intValue ()+1;
+		nsets		= Integer.valueOf (props.getProperty("ODO_COUNT"))+1;
 		errors		= new Odometry[nsets];
 		
 		errors[0]	= new Odometry ();
@@ -47,24 +47,24 @@ public class OdometryErrors
 			errors[ndx]			= new Odometry ();
 			
 			st					= new StringTokenizer (props.getProperty ("ODO_LIN_"+i), " ");
-			reqspeed				= new Double (st.nextToken ()).doubleValue ();
-			obtspeed				= new Double (st.nextToken ()).doubleValue ();
-			errspeed				= new Double (st.nextToken ()).doubleValue ();
+			reqspeed				= Double.valueOf (st.nextToken ());
+			obtspeed				= Double.valueOf (st.nextToken ());
+			errspeed				= Double.valueOf (st.nextToken ());
 			errors[ndx].dlin		= (float) (obtspeed / reqspeed); 
 			errors[ndx].elin		= (float) (errspeed * 1000.0); 
 
 			
 			st					= new StringTokenizer (props.getProperty ("ODO_LAT_"+i), " ");
-			reqspeed				= new Double (st.nextToken ()).doubleValue ();
-			obtspeed				= new Double (st.nextToken ()).doubleValue ();
-			errspeed				= new Double (st.nextToken ()).doubleValue ();
+			reqspeed				= Double.valueOf (st.nextToken ());
+			obtspeed				= Double.valueOf (st.nextToken ());
+			errspeed				= Double.valueOf (st.nextToken ());
 			errors[ndx].dlat		= (float) (obtspeed / reqspeed); 
 			errors[ndx].elat		= (float) (errspeed * 1000.0); 
 			
 			st					= new StringTokenizer (props.getProperty ("ODO_ROT_"+i), " ");
-			reqspeed				= new Double (st.nextToken ()).doubleValue ();
-			obtspeed				= new Double (st.nextToken ()).doubleValue ();
-			errspeed				= new Double (st.nextToken ()).doubleValue ();
+			reqspeed				= Double.valueOf (st.nextToken ());
+			obtspeed				= Double.valueOf (st.nextToken ());
+			errspeed				= Double.valueOf (st.nextToken ());
 			errors[ndx].drot		= (float) (obtspeed / reqspeed); 
 			errors[ndx].erot		= (float) (errspeed * 1.5 * Angles.DTOR); 
 		}

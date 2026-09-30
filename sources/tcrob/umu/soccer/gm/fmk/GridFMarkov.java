@@ -108,8 +108,8 @@ public class GridFMarkov implements Localisation
 			mMap[i]		= new GridCell ();
 			mTempMap[i]	= new GridCell ();
 		}
-		mLastAnchored	= new int[Lps.LPS_SIZE];
-		mLastUpdated		= new boolean[Lps.LPS_SIZE];
+		mLastAnchored	= new int[LocLps.LPS_SIZE];
+		mLastUpdated		= new boolean[LocLps.LPS_SIZE];
 		perception		= new PerceptionModel ();
 		cell				= new GridCell();
 		
@@ -275,7 +275,7 @@ public class GridFMarkov implements Localisation
 		gs.getPosition().translate (odo);
 	}
 	
-	public void updateMotionAndSensors (Odometry odo, Lps lps)
+	public void updateMotionAndSensors (Odometry odo, LocLps lps)
 	{
 		// Update motion
 		updateMotionOnly (odo);
@@ -696,15 +696,15 @@ public class GridFMarkov implements Localisation
 	
 	//	 Fuse the information into the grid: For each cell, compute the measurement
 	//	 trapezoid from sensor model and intersect it into the existing cell
-	protected void updateSensors (Lps lps)
+	protected void updateSensors (LocLps lps)
 	{
-		Lpo			lpo;
+		LocLpo			lpo;
 		
-		for (int index = 0; index < Lps.LPS_SIZE; index++)
+		for (int index = 0; index < LocLps.LPS_SIZE; index++)
 			mLastUpdated[index]	= false;	
 
 		// Landmarks
-		for (int index = Lps.INIT_LMS; index < (Lps.INIT_LMS + Lps.NUM_LMS); index++)
+		for (int index = LocLps.INIT_LMS; index < (LocLps.INIT_LMS + LocLps.NUM_LMS); index++)
 		{
 			lpo = lps.getLpo(index);
 						
@@ -718,7 +718,7 @@ public class GridFMarkov implements Localisation
 		}
 		
 		// Nets
-		for (int index = Lps.INIT_NETS; index < (Lps.INIT_NETS + Lps.NUM_NETS); index++)
+		for (int index = LocLps.INIT_NETS; index < (LocLps.INIT_NETS + LocLps.NUM_NETS); index++)
 		{
 			lpo = lps.getLpo(index);
 			if (lpo.getLastAnchored() > mLastAnchored[index])
@@ -731,7 +731,7 @@ public class GridFMarkov implements Localisation
 		}
 	}
 	
-	private void updateLMGrid (int index, Lpo objlpo)
+	private void updateLMGrid (int index, LocLpo objlpo)
 	{
 		perception.index		= index;
 		perception.rho		= (float)objlpo.getRho();
@@ -792,7 +792,7 @@ public class GridFMarkov implements Localisation
 		
 	}
 
-	private void updateNetGrid (int index, Lpo objlpo)
+	private void updateNetGrid (int index, LocLpo objlpo)
 	{
 		perception.model 	= PerceptionModel.DISTANCE_BEARING;
 		perception.index 	= index;

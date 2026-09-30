@@ -43,8 +43,8 @@ public class SensorResetting implements Localisation
 	
 	public SensorResetting (String name, int numSamples)
 	{
-		mLastAnchored	= new int[Lps.LPS_SIZE];
-		mLastUpdated		= new boolean[Lps.LPS_SIZE];
+		mLastAnchored	= new int[LocLps.LPS_SIZE];
+		mLastUpdated		= new boolean[LocLps.LPS_SIZE];
 
 		wm				= new WorldModel (name);
 		gs				= new Gs ();
@@ -67,8 +67,8 @@ public class SensorResetting implements Localisation
 		dual_lm_sampler	= new DualMarkerSampler (wm);
 		cum_weights		= new double[numSamples+1];
 
-		lm_updater	= new MarkerUpdater[Lps.NUM_NETS + Lps.NUM_LMS];
-		for (int i = 0; i < Lps.NUM_NETS + Lps.NUM_LMS; i++)
+		lm_updater	= new MarkerUpdater[LocLps.NUM_NETS + LocLps.NUM_LMS];
+		for (int i = 0; i < LocLps.NUM_NETS + LocLps.NUM_LMS; i++)
 			lm_updater[i] 	= new MarkerUpdater ();
 		
 		// Initialise position with uncertainly
@@ -92,7 +92,7 @@ public class SensorResetting implements Localisation
 
 	public void updateMotionOnly (Odometry odo)
 	{
-		for (int index = 0; index < Lps.LPS_SIZE; index++)
+		for (int index = 0; index < LocLps.LPS_SIZE; index++)
 			mLastUpdated[index]	= false;	
 
 		// Update motion
@@ -102,9 +102,9 @@ public class SensorResetting implements Localisation
 		updatePosition ();
 	}
 	
-	public void updateMotionAndSensors (Odometry odo, Lps lps)
+	public void updateMotionAndSensors (Odometry odo, LocLps lps)
 	{
-		for (int index = 0; index < Lps.LPS_SIZE; index++)
+		for (int index = 0; index < LocLps.LPS_SIZE; index++)
 			mLastUpdated[index]	= false;	
 
 		// Update motion
@@ -141,9 +141,9 @@ public class SensorResetting implements Localisation
 		}
 	}
 
-	protected void updateSensors (Lps lps)
+	protected void updateSensors (LocLps lps)
 	{
-		Lpo			lpo;
+		LocLpo			lpo;
 		int			curLandmarks;
 		double		errorRho;
 		double		errorTheta;		
@@ -151,7 +151,7 @@ public class SensorResetting implements Localisation
 		curLandmarks = 0;
 		
 		// Landmarks
-		for (int index = Lps.INIT_LMS; index < (Lps.INIT_LMS + Lps.NUM_LMS); index++)
+		for (int index = LocLps.INIT_LMS; index < (LocLps.INIT_LMS + LocLps.NUM_LMS); index++)
 		{
 			lpo = lps.getLpo(index);
 			if (lpo.getLastAnchored() > mLastAnchored[index])
@@ -166,7 +166,7 @@ public class SensorResetting implements Localisation
 				errorRho		= 50;
 				errorTheta	= 2.0 * Angles.DTOR;
 
-				lm_updater[curLandmarks].setMarkerLoc (wm.getLM (index-Lps.INIT_LMS));
+				lm_updater[curLandmarks].setMarkerLoc (wm.getLM (index-LocLps.INIT_LMS));
 				lm_updater[curLandmarks].setMinProb (MIN_PROB_SENSE);
 				lm_updater[curLandmarks].updateSamples (lpo, errorRho, errorTheta, locale);
 				
@@ -175,7 +175,7 @@ public class SensorResetting implements Localisation
 		}
 		
 		// Nets
-		for (int index = Lps.INIT_NETS; index < (Lps.INIT_NETS + Lps.NUM_NETS); index++)
+		for (int index = LocLps.INIT_NETS; index < (LocLps.INIT_NETS + LocLps.NUM_NETS); index++)
 		{
 			lpo = lps.getLpo(index);
 			if (lpo.getLastAnchored() > mLastAnchored[index])
@@ -201,7 +201,7 @@ public class SensorResetting implements Localisation
 				errorRho		= 100.0;
 				errorTheta	= 1.0 * Angles.DTOR;
 
-				lm_updater[curLandmarks].setMarkerLoc (wm.getNet (index-Lps.INIT_NETS));
+				lm_updater[curLandmarks].setMarkerLoc (wm.getNet (index-LocLps.INIT_NETS));
 				lm_updater[curLandmarks].setMinProb (MIN_PROB_SENSE);
 				lm_updater[curLandmarks].updateSamples (lpo, errorRho, errorTheta, locale);
 				

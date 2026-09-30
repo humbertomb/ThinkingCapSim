@@ -15,7 +15,7 @@ public interface Localisation
 	public boolean getLastUpdated (int index);
 
 	public void updateMotionOnly (Odometry odo);
-	public void updateMotionAndSensors (Odometry odo, Lps lps);
+	public void updateMotionAndSensors (Odometry odo, LocLps lps);
 	public void drawElements (Model2D model);
 	
 	public void setGT(GsPosition pos);

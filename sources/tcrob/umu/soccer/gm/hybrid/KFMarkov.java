@@ -40,7 +40,7 @@ public class KFMarkov implements Localisation
 		kalman.updateMotionOnly (odo);
 	}
 	
-	public void updateMotionAndSensors (Odometry odo, Lps lps)
+	public void updateMotionAndSensors (Odometry odo, LocLps lps)
 	{
 
 		double auxvalue=0.0;

@@ -26,7 +26,7 @@ public class NKFMK implements Localisation
 	protected Kalman[]			ekf;
 	protected GridFMarkov		fmk;
 		
-	Lps lastLps;
+	LocLps lastLps;
 	
 	String _name;
 	int _toler;
@@ -86,7 +86,7 @@ public class NKFMK implements Localisation
 		
 	}
 	
-	public void updateMotionAndSensors (Odometry odo, Lps lps)
+	public void updateMotionAndSensors (Odometry odo, LocLps lps)
 	{
 		double auxvalue;
 		double valuechosen = 1.0;
