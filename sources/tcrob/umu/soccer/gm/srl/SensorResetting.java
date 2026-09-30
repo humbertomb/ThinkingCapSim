@@ -154,15 +154,15 @@ public class SensorResetting implements Localisation
 		for (int index = LocLps.INIT_LMS; index < (LocLps.INIT_LMS + LocLps.NUM_LMS); index++)
 		{
 			lpo = lps.getLpo(index);
-			if (lpo.getLastAnchored() > mLastAnchored[index])
+			if (lpo.last_anchored > mLastAnchored[index])
 			{
-				mLastAnchored[index]	= lpo.getLastAnchored();				
+				mLastAnchored[index]	= lpo.last_anchored;				
 				mLastUpdated[index]	= true;					
 				
-				if (lpo.getRho () < 2000)
-					errorRho		= 50 + 0.05 * lpo.getRho ();
+				if (lpo.rho < 2000)
+					errorRho		= 50 + 0.05 * lpo.rho;
 				else
-					errorRho		= 200 + 0.05 * lpo.getRho ();
+					errorRho		= 200 + 0.05 * lpo.rho;
 				errorRho		= 50;
 				errorTheta	= 2.0 * Angles.DTOR;
 
@@ -178,19 +178,19 @@ public class SensorResetting implements Localisation
 		for (int index = LocLps.INIT_NETS; index < (LocLps.INIT_NETS + LocLps.NUM_NETS); index++)
 		{
 			lpo = lps.getLpo(index);
-			if (lpo.getLastAnchored() > mLastAnchored[index])
+			if (lpo.last_anchored > mLastAnchored[index])
 			{
-				mLastAnchored[index]	= lpo.getLastAnchored();				
+				mLastAnchored[index]	= lpo.last_anchored;				
 				mLastUpdated[index]	= true;									
 				
-				if (lpo.getRho() < 1000)
+				if (lpo.rho < 1000)
 				{
 					errorRho		= 500.0;
 					errorTheta	= 25.0 * Angles.DTOR;
 				} 
-				else if (lpo.getRho() < 3000)
+				else if (lpo.rho < 3000)
 				{
-					errorRho		= 0.3 * lpo.getRho();
+					errorRho		= 0.3 * lpo.rho;
 					errorTheta	= 15.0 * Angles.DTOR;
 				} 
 				else

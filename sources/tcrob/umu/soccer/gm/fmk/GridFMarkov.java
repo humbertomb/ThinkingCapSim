@@ -708,9 +708,9 @@ public class GridFMarkov implements Localisation
 		{
 			lpo = lps.getLpo(index);
 						
-			if (lpo.getLastAnchored() > mLastAnchored[index])
+			if (lpo.last_anchored > mLastAnchored[index])
 			{
-				mLastAnchored[index]	= lpo.getLastAnchored();				
+				mLastAnchored[index]	= lpo.last_anchored;				
 				mLastUpdated[index]	= true;	
 				
 				updateLMGrid (index, lpo);
@@ -721,9 +721,9 @@ public class GridFMarkov implements Localisation
 		for (int index = LocLps.INIT_NETS; index < (LocLps.INIT_NETS + LocLps.NUM_NETS); index++)
 		{
 			lpo = lps.getLpo(index);
-			if (lpo.getLastAnchored() > mLastAnchored[index])
+			if (lpo.last_anchored > mLastAnchored[index])
 			{
-				mLastAnchored[index]	= lpo.getLastAnchored();				
+				mLastAnchored[index]	= lpo.last_anchored;				
 				mLastUpdated[index]	= true;	
 				
 				updateNetGrid (index, lpo);
@@ -734,8 +734,8 @@ public class GridFMarkov implements Localisation
 	private void updateLMGrid (int index, LocLpo objlpo)
 	{
 		perception.index		= index;
-		perception.rho		= (float)objlpo.getRho();
-		perception.theta		= objlpo.getTheta();
+		perception.rho		= objlpo.rho;
+		perception.theta		= objlpo.theta;
 		
 		if (perception.rho < 1500)
 		{
@@ -796,8 +796,8 @@ public class GridFMarkov implements Localisation
 	{
 		perception.model 	= PerceptionModel.DISTANCE_BEARING;
 		perception.index 	= index;
-		perception.rho		= (float)objlpo.getRho();
-		perception.theta		= objlpo.getTheta();
+		perception.rho		= objlpo.rho;
+		perception.theta		= objlpo.theta;
 
 		if(perception.rho < 3000)
 		{
@@ -827,7 +827,7 @@ public class GridFMarkov implements Localisation
 	{
 		int pos;
 		int gx, gy;
-		float angle, delta;
+		double angle, delta;
 		
 		for (pos = 0, gx = 0; gx < gwidth; gx++)
 			for (gy = 0; gy < gheight; gy++, pos++)
@@ -836,7 +836,7 @@ public class GridFMarkov implements Localisation
 				
 				//System.out.println("("+gx+","+gy+") es "+Angles.RTOD*gridconst[gx][gy][perception.index - 1].getAngle()+"-"+Angles.RTOD*perception.theta);
 				
-				angle = (float) Angles.radnorm_180 (gridconst[gx][gy][perception.index - 1].getAngle() - perception.theta);
+				angle = Angles.radnorm_180 (gridconst[gx][gy][perception.index - 1].getAngle() - perception.theta);
 				
 				switch (perception.model)
 				{
@@ -849,7 +849,7 @@ public class GridFMarkov implements Localisation
 					if (delta < perception.dcore) // Core. Highest value
 						cell.setHeight(1.0f);
 					else if (delta < (perception.dslope + perception.dcore)) // Slope
-						cell.setHeight(1.0f - ((delta - perception.dcore) * 0.9f / perception.dslope));
+						cell.setHeight((float) (1.0 - ((delta - perception.dcore) * 0.9 / perception.dslope)));
 					else
 						cell.setHeight(GridCell.BIAS); // Bias value. Outside fuzzy area
 					break;
@@ -866,16 +866,16 @@ public class GridFMarkov implements Localisation
 					if (delta < (perception.mrho - perception.dslope))
 						cell.setHeight(GridCell.BIAS);
 					else if (delta < perception.mrho)
-						cell.setHeight(1.0f - (((1 - GridCell.BIAS)*(perception.mrho - delta))/perception.dslope));
+						cell.setHeight((float) (1.0 - (((1 - GridCell.BIAS)*(perception.mrho - delta))/perception.dslope)));
 					else
 						cell.setHeight(1.0f);
 					break;						
 				}
 				
 				cell.setBias(GridCell.BIAS);
-				cell.setCore(perception.acore);
-				cell.setSupport(perception.acore + perception.aslope);
-				cell.setCenter(angle);
+				cell.setCore((float) perception.acore);					// the grid keeps its cells in float
+				cell.setSupport((float) (perception.acore + perception.aslope));
+				cell.setCenter((float) angle);
 				
 				mMap[pos].intersectionEnveloped(cell);
 			}

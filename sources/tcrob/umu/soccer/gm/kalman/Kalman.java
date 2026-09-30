@@ -297,8 +297,8 @@ public class Kalman implements Localisation
 			ObjectModel		omaux = null;
 			
 			objlpo = lps.getLpo(mNewLandmarks[i]);
-			Z.set(2*i, 0, objlpo.getRho());
-			Z.set(2*i+1, 0, objlpo.getTheta());
+			Z.set(2*i, 0, objlpo.rho);
+			Z.set(2*i+1, 0, objlpo.theta);
 			
 			if ((mNewLandmarks[i] >= LocLps.INIT_LMS) && (mNewLandmarks[i] < LocLps.INIT_LMS + LocLps.NUM_LMS)) 
 			{
@@ -479,9 +479,9 @@ public class Kalman implements Localisation
 		{
 			lpo = lps.getLpo(index);		
 			
-			if ((lpo.getLastAnchored() > mLastAnchored[index]) && (lpo.getAnchored() > 0.95))
+			if ((lpo.last_anchored > mLastAnchored[index]) && (lpo.anchored > 0.95))
 			{
-				mLastAnchored[index]	= lpo.getLastAnchored();
+				mLastAnchored[index]	= lpo.last_anchored;
 				mLastUpdated[index]	= true;	
 				element[numelem++]	= index;
 			}
@@ -493,7 +493,7 @@ public class Kalman implements Localisation
 			for (i=0; i<numelem-1; i++)
 			{
 				for (j=0; j<numelem-1-i; j++)
-					if (lps.getLpo(element[j+1]).getAnchored() > lps.getLpo(element[j]).getAnchored())
+					if (lps.getLpo(element[j+1]).anchored > lps.getLpo(element[j]).anchored)
 					{ 
 						tmp = element[j];   
 						element[j] = element[j+1];
@@ -520,8 +520,8 @@ public class Kalman implements Localisation
 		
 		objlpo = lps.getLpo(numlps);
 		
-		Z.set(0, 0, (double)objlpo.getRho());
-		Z.set(1, 0, (double)objlpo.getTheta());
+		Z.set(0, 0, objlpo.rho);
+		Z.set(1, 0, objlpo.theta);
 		
 		if ((numlps >= LocLps.INIT_LMS) && (numlps < LocLps.INIT_LMS + LocLps.NUM_LMS)) 
 			omaux = wm.getLM (numlps - LocLps.INIT_LMS);

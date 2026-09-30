@@ -139,13 +139,13 @@ public class Particles implements Localisation
 		for (int index = LocLps.INIT_LMS; index < (LocLps.INIT_LMS + LocLps.NUM_LMS); index++)
 		{
 			lpo = lps.getLpo(index);
-			if (lpo.getLastAnchored() > mLastAnchored[index])
+			if (lpo.last_anchored > mLastAnchored[index])
 			{
-				mLastAnchored[index]	= lpo.getLastAnchored();				
+				mLastAnchored[index]	= lpo.last_anchored;				
 				mLastUpdated[index]	= true;				
 				resample				= true;	
 				
-				errorDepth		= 0.3 * lpo.getRho();
+				errorDepth		= 0.3 * lpo.rho;
 				errorAzimuthal	= 5.0 * Angles.DTOR;
 						
 				addLandmark (lpo, errorAzimuthal, errorDepth, wm.getLM (index-LocLps.INIT_LMS));
@@ -156,15 +156,15 @@ public class Particles implements Localisation
 		for (int index = LocLps.INIT_NETS; index < (LocLps.INIT_NETS + LocLps.NUM_NETS); index++)
 		{
 			lpo = lps.getLpo(index);
-			if (lpo.getLastAnchored() > mLastAnchored[index])
+			if (lpo.last_anchored > mLastAnchored[index])
 			{
-				mLastAnchored[index]	= lpo.getLastAnchored();				
+				mLastAnchored[index]	= lpo.last_anchored;				
 				mLastUpdated[index]	= true;									
 				resample				= true;
 				
-				if (lpo.getRho() < 3000)
+				if (lpo.rho < 3000)
 				{
-					errorDepth		= 0.3 * lpo.getRho();
+					errorDepth		= 0.3 * lpo.rho;
 					errorAzimuthal	= 25.0 * Angles.DTOR;
 				} else
 				{
@@ -185,8 +185,8 @@ public class Particles implements Localisation
 		double		rho, theta;
 		double		xpos, ypos;
 		
-		rho		= lpo.getRho ();
-		theta	= lpo.getTheta ();
+		rho		= lpo.rho;
+		theta	= lpo.theta;
 		xpos		= rho * Math.cos (theta);
 		ypos		= rho * Math.sin (theta);
 

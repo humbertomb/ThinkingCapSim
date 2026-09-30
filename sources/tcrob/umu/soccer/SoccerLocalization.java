@@ -62,6 +62,7 @@ public class SoccerLocalization extends Navigation
 	public void notify_lps (String space, ItemLPS item) 
 	{ 
 		super.notify_lps (space, item);
+		if (!initialised || (item == null) || (item.lps == null))		return;		// no method of localisation yet (it comes with the configuration)
 		
 		loclps.updateFromLps (item.lps);
 		loc.updateMotionAndSensors (odom, loclps);

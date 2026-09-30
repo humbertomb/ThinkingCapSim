@@ -37,8 +37,8 @@ public class MarkerUpdater
 	
 	public void updateSamples (LocLpo lpo, double rhoStdDev, double thetaStdDev, LocaleSampled locale) 
 	{
-		gaussianEvaluator.setMeanDev (0, lpo.getRho (), rhoStdDev);
-		gaussianEvaluator.setMeanDev (1, lpo.getTheta (), thetaStdDev);
+		gaussianEvaluator.setMeanDev (0, lpo.rho, rhoStdDev);
+		gaussianEvaluator.setMeanDev (1, lpo.theta, thetaStdDev);
 		
 		for (int i = 0; i < locale.numSamples; i++)
 			updateSample (locale.sample[i].data);

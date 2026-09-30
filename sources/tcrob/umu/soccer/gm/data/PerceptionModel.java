@@ -14,11 +14,11 @@ public class PerceptionModel
 
 	public int model;		// perception model
 	public int index;		// object id
-	public float rho;		// distance to object
-	public float mrho;		// distance to object for aplied the sensor model
-	public float theta;		// angle to object
-	public float dcore;		// uncertainly distance (core of fuzzy trapezoid)
-	public float dslope;		// uncertainly distance (slope of fuzzy trapezoid)
-	public float acore;		// uncertainly angle (core of fuzzy trapezoid)
-	public float aslope;		// uncertainly angle (slope of fuzzy trapezoid)
+	public double rho;		// distance to object
+	public double mrho;		// distance to object for aplied the sensor model
+	public double theta;		// angle to object
+	public double dcore;		// uncertainly distance (core of fuzzy trapezoid)
+	public double dslope;		// uncertainly distance (slope of fuzzy trapezoid)
+	public double acore;		// uncertainly angle (core of fuzzy trapezoid)
+	public double aslope;		// uncertainly angle (slope of fuzzy trapezoid)
 }
