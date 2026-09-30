@@ -77,13 +77,13 @@
         "color": {
           "value": -256
         },
-        "segmented": false,
-        "blobbed": false,
+        "segmented": true,
+        "blobbed": true,
         "threshold": 5,
         "gap": 3,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "seeds": "EMPTY"
+        "seeds": " 38,255,194 42,221,255 42,201,255 42,190,255 38,255,113 38,255,127 38,255,155"
       },
       {
         "id": 6,
@@ -101,17 +101,17 @@
       },
       {
         "id": 7,
-        "name": "GRAY",
+        "name": "CYAN",
         "color": {
-          "value": -6908266
+          "value": -16711681
         },
-        "segmented": false,
-        "blobbed": false,
-        "threshold": 0,
-        "gap": 0,
+        "segmented": true,
+        "blobbed": true,
+        "threshold": 5,
+        "gap": 3,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "seeds": "EMPTY"
+        "seeds": " 127,213,255 127,198,255 127,255,255 127,196,255 136,255,155 136,255,114 134,250,253 135,255,168"
       }
     ]
   },
@@ -121,9 +121,10 @@
   "recognizer": {
     "carpet_channel": 4,
     "ball_channel": 6,
-    "net1_channel": 2,
-    "net2_channel": 3,
-    "lm_channel": -1,
+    "net1_channel": 5,
+    "net2_channel": 7,
+    "lm1_channel": 5,
+    "lm2_channel": 7,
     "ball_sx_min": 2,
     "ball_sy_min": 2,
     "ball_horiz_hgt": 20,
