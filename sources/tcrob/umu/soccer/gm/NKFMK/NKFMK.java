@@ -35,7 +35,7 @@ public class NKFMK implements Localisation
 	double _distNoise; 
 	double _angleNoise;
 	
-	public NKFMK (String name, int gsize, float rBlurPosBias, float rBlurAngleBias,
+	public NKFMK (String name, int gsize, double rBlurPosBias, double rBlurAngleBias,
 			int toler, double odolinNoise, double odorotNoise, double distNoise, double angleNoise,
 			int numberEkfs, int minAge, double chithld, int posDetStrgy, int resetEKF, int resetFMK)
 	{
@@ -65,7 +65,7 @@ public class NKFMK implements Localisation
 		pos.theta = 0;
 		pos.dx = 4000;
 		pos.dy = 6000;
-		pos.dtheta = (float) (180.0 * Angles.DTOR);
+		pos.dtheta = (double) (180.0 * Angles.DTOR);
 			
 		gs.setPosition(pos);
 		ekf[0].initialPosition(pos);
@@ -180,7 +180,7 @@ public class NKFMK implements Localisation
 							pos.theta = 0;
 							pos.dx = 4000;
 							pos.dy = 6000;
-							pos.dtheta = (float) (180.0 * Angles.DTOR);
+							pos.dtheta = (double) (180.0 * Angles.DTOR);
 
 							ekf[i].initialPosition (fmk.getGs().getPosition());
 							System.out.println("Iniciado en "+i);
@@ -245,7 +245,7 @@ public class NKFMK implements Localisation
 		minpos.dx = 10;
 		minpos.dy = 10;
 		
-		minpos.dtheta = (float) RAD(10.0);
+		minpos.dtheta = (double) RAD(10.0);
 		
 		gs.setPosition(minpos);
 		

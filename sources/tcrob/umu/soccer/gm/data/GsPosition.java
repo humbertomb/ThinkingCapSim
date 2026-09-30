@@ -11,10 +11,10 @@ public class GsPosition
 {
 	public int		x;
 	public int		y;
-	public float		theta;
+	public double		theta;
 	public int		dx;
 	public int		dy;
-	public float		dtheta;
+	public double		dtheta;
 	
 	public void set (GsPosition other)
 	{
@@ -46,6 +46,6 @@ public class GsPosition
 		
 		x		= (int) xx;
 		y		= (int) yy;
-		theta	= (float) tt;
+		theta	= (double) tt;
 	}
 }

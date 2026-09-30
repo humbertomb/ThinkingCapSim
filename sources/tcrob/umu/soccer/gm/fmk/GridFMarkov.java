@@ -19,37 +19,37 @@ public class GridFMarkov implements Localisation
 {
 	private String ID = new String("FMK"); 
 	
-	static public final float CoGThreshold				= 0.8f;			// use all cells above this to compute CoG of grid
-	public float BlurPosBias      		= 0.08f;			// always blur position at least by this amount
-	public float BlurAngleBias    		= RAD(1.0f);		// always blur angle at least by this amount
-	public float BlurAngleMax     		= RAD(10.0f);	// blur angle at most by this amount
+	static public final double CoGThreshold				= 0.8;			// use all cells above this to compute CoG of grid
+	public double BlurPosBias      		= 0.08;			// always blur position at least by this amount
+	public double BlurAngleBias    		= RAD(1.0);		// always blur angle at least by this amount
+	public double BlurAngleMax     		= RAD(10.0);	// blur angle at most by this amount
 
-	static public final float MinDisplacement  		= 10.0f;			// don't bother updating if motion less than this...
-	static public final float MinRotation      		= RAD(1.0f);		// ...or this
-	public float MaxDisplacement  		= 400.0f;		// max uncertainty at this displacement...
-	public float MaxRotation			= RAD(60.0f);	// ...and this rotation (2003)
+	static public final double MinDisplacement  		= 10.0;			// don't bother updating if motion less than this...
+	static public final double MinRotation      		= RAD(1.0);		// ...or this
+	public double MaxDisplacement  		= 400.0;		// max uncertainty at this displacement...
+	public double MaxRotation			= RAD(60.0);	// ...and this rotation (2003)
 
-	static public final float PI2						= (float) Angles.PI2;
-	static public final float PIq						= 0.7853981633f;
-	static public final float INV_SQRT_2				= 1.0f / (float) Math.sqrt (2.0);
-	public final float INV_MAX_DISP				= 1.0f / MaxDisplacement;
-	public final float INV_MAX_ROT				= 1.0f / MaxRotation;
+	static public final double PI2						= (double) Angles.PI2;
+	static public final double PIq						= 0.7853981633;
+	static public final double INV_SQRT_2				= 1.0 / (double) Math.sqrt (2.0);
+	public final double INV_MAX_DISP				= 1.0 / MaxDisplacement;
+	public final double INV_MAX_ROT				= 1.0 / MaxRotation;
 
 	//	 bias to account for mis-identification
-	static public final float FUZZY_BIAS 				= 0.01f;
+	static public final double FUZZY_BIAS 				= 0.01;
 
 	//	 Net uncertainty
-	static public final float FUZZY_CORE_WIDTH_NET		= 0.1f;
-	static public final float FUZZY_SLOPE_WIDTH_NET	= 0.4f;
-	static public final float FUZZY_ANGLE_WIDTH_NET	= (float)(10.0 * Angles.DTOR);
-	static public final float FUZZY_ANGLE_SLOPE_NET	= (float)(20.0 * Angles.DTOR);
-	static public final float MIN_ANGLE_WIDTH_NET		= (float)(30.0 * Angles.DTOR);
+	static public final double FUZZY_CORE_WIDTH_NET		= 0.1;
+	static public final double FUZZY_SLOPE_WIDTH_NET	= 0.4;
+	static public final double FUZZY_ANGLE_WIDTH_NET	= (double)(10.0 * Angles.DTOR);
+	static public final double FUZZY_ANGLE_SLOPE_NET	= (double)(20.0 * Angles.DTOR);
+	static public final double MIN_ANGLE_WIDTH_NET		= (double)(30.0 * Angles.DTOR);
 
 	//	 Landmark uncertainty
-	static public final float FUZZY_CORE_WIDTH_LM		= 0.05f;
-	static public final float FUZZY_SLOPE_WIDTH_LM		= 0.3f;
-	static public final float FUZZY_ANGLE_WIDTH_LM		= (float)(10.0 * Angles.DTOR);
-	static public final float FUZZY_ANGLE_SLOPE_LM		= (float)(20.0 * Angles.DTOR);
+	static public final double FUZZY_CORE_WIDTH_LM		= 0.05;
+	static public final double FUZZY_SLOPE_WIDTH_LM		= 0.3;
+	static public final double FUZZY_ANGLE_WIDTH_LM		= (double)(10.0 * Angles.DTOR);
+	static public final double FUZZY_ANGLE_SLOPE_LM		= (double)(20.0 * Angles.DTOR);
 
 	protected int gwidth, gheight, gtotal;		// World dimensions (grids)
 	protected int gsize;						// Size of cell side (mm)
@@ -69,9 +69,9 @@ public class GridFMarkov implements Localisation
 	protected Odometry				motion;
 	
 	// structuring element for motion blurring
-	private float[][]				mSE = new float[3][3];
+	private double[][]				mSE = new double[3][3];
 
-	public GridFMarkov (String name, int gsize, float rBlurPosBias, float rBlurAngleBias)
+	public GridFMarkov (String name, int gsize, double rBlurPosBias, double rBlurAngleBias)
 	{
 		this.gsize	= gsize;		// Size per cell (mm)
 		this.BlurPosBias = rBlurPosBias;
@@ -84,8 +84,8 @@ public class GridFMarkov implements Localisation
 		initPos.y		= 0;
 		initPos.dx		= 2000;
 		initPos.dy		= 2000;	// 1000
-		initPos.theta	= (float) (90.0 * Angles.DTOR);
-		initPos.dtheta	= (float) (90.0 * Angles.DTOR);
+		initPos.theta	= (double) (90.0 * Angles.DTOR);
+		initPos.dtheta	= (double) (90.0 * Angles.DTOR);
 		
 		// Initialise odometry information
 		motion	= new Odometry ();
@@ -129,9 +129,9 @@ public class GridFMarkov implements Localisation
 	public int getGridSide ()						{ return gsize; }
 	public boolean getLastUpdated (int index)		{ return mLastUpdated[index]; }
 
-	static protected float RAD (float deg)			{ return (float) (deg * Angles.DTOR); }
+	static protected double RAD (double deg)			{ return (double) (deg * Angles.DTOR); }
 
-	public void setBlurSettings(float rBlurPosBias, float rBlurAngleBias)
+	public void setBlurSettings(double rBlurPosBias, double rBlurAngleBias)
 	{	
 		this.BlurPosBias = rBlurPosBias;
 		this.BlurAngleBias = rBlurAngleBias;
@@ -174,15 +174,15 @@ public class GridFMarkov implements Localisation
 		int			xstart, xend, ystart, yend;
 		int			gx, gy, cxpos, cypos;
 		int			pos;
-		float		dist, distx, disty;
-		float		height;
+		double		dist, distx, disty;
+		double		height;
 		
 		xstart	= ipos.x - (ipos.dx >> 1);
 		xend		= ipos.x + (ipos.dx >> 1);
 		ystart	= ipos.y - (ipos.dy >> 1);
 		yend		= ipos.y + (ipos.dy >> 1);
 		
-		cell.set (1.0f, (float) ipos.theta, (float) ipos.dtheta, (float) (ipos.dtheta + 40 * Angles.DTOR), GridCell.BIAS);
+		cell.set (1.0, (double) ipos.theta, (double) ipos.dtheta, (double) (ipos.dtheta + 40 * Angles.DTOR), GridCell.BIAS);
 		for (pos = 0, gx = 0; gx < gwidth; gx++)
 			for (gy = 0; gy < gheight; gy++, pos++)
 			{
@@ -192,25 +192,25 @@ public class GridFMarkov implements Localisation
 				
 				// Get distances to position "blob" for this cell
 				if (cxpos < xstart)
-					distx = (float)(xstart - cxpos);
+					distx = (double)(xstart - cxpos);
 				else if (cxpos > xend)
-					distx = (float)(cxpos - xend);
+					distx = (double)(cxpos - xend);
 				else
-					distx = 0.0f;
+					distx = 0.0;
 				
 				if (cypos < ystart)
-					disty = (float)(ystart - cypos);
+					disty = (double)(ystart - cypos);
 				else if (cypos > yend)
-					disty = (float)(cypos - yend);
+					disty = (double)(cypos - yend);
 				else
-					disty = 0.0f;
+					disty = 0.0;
 				
-				dist = (float) Math.sqrt((double)(distx * distx + disty * disty));
+				dist = (double) Math.sqrt((double)(distx * distx + disty * disty));
 				
 				// Calculate height as a function of distance from position "blob"
 				// Slope is such that height reaches bias one
 				// half meter away... (hack!!!)
-				height = 1.0f - dist * 0.002f; 
+				height = 1.0 - dist * 0.002; 
 				
 				// And no lower than bias!
 				if (height < GridCell.BIAS)
@@ -312,12 +312,12 @@ public class GridFMarkov implements Localisation
 	private void blur (double rho, double theta)
 	{
 		// Set up an omnidirectional blurring element
-		float blurD, blurA;
-		float blur1, blur2;
+		double blurD, blurA;
+		double blur1, blur2;
 		int maxX, maxY;
 		
-		blurD = Math.abs ((float) rho); //* 3; //*INV_MAX_DISP;		// displacement component
-		blurA = Math.abs ((float) theta) * 3.0f; //*INV_MAX_ROT;		// rotation component
+		blurD = Math.abs ((double) rho); //* 3; //*INV_MAX_DISP;		// displacement component
+		blurA = Math.abs ((double) theta) * 3.0; //*INV_MAX_ROT;		// rotation component
 		
 		/* Dejo esto de momento, por si hay que volver a lo anterior: 
 		blurD = fabs(rho)  *INV_MAX_DISP;		// displacement component
@@ -332,7 +332,7 @@ public class GridFMarkov implements Localisation
 		blur2 = blur1 * INV_SQRT_2;	// diagonal neighbors
 		
 		mSE[0][0] = blur2;	mSE[0][1] = blur1;	mSE[0][2] = blur2;
-		mSE[1][0] = blur1;	mSE[1][1] = 1.0f;	mSE[1][2] = blur1;
+		mSE[1][0] = blur1;	mSE[1][1] = 1.0;	mSE[1][2] = blur1;
 		mSE[2][0] = blur2;	mSE[2][1] = blur1;	mSE[2][2] = blur2;
 		
 //	#ifdef TraceSE
@@ -352,9 +352,9 @@ public class GridFMarkov implements Localisation
 		int index_cell;
 		GridCell out;				// pointers to source and destination grids
 		GridCell cell;				// pointer to grid cell for inner loop
-		float seVal;					// cache its value
-		float val;
-		float height, bias;			// cumulative result of dilation
+		double seVal;					// cache its value
+		double val;
+		double height, bias;			// cumulative result of dilation
 		
 		// map row scan (left-to-right in GS)
 		for (int x = 0; x < maxX; ++x)
@@ -367,8 +367,8 @@ public class GridFMarkov implements Localisation
 			{
 				out = mMap[index_out];
 				
-				height = 0.0f;
-				bias = 0.0f;
+				height = 0.0;
+				bias = 0.0;
 				
 				// SE row scan
 				for (int row = 0; row < 3; ++row)
@@ -403,7 +403,7 @@ public class GridFMarkov implements Localisation
 				
 				// blur the angle as well (old angle still in out map)
 				out.setCore(out.getCore() + (blurA * BlurAngleMax + BlurAngleBias));
-				out.setSupport(out.getSupport() + (blurA * BlurAngleMax * 2.0f + BlurAngleBias));
+				out.setSupport(out.getSupport() + (blurA * BlurAngleMax * 2.0 + BlurAngleBias));
 				
 				if (out.getCore () > PI2)
 					out.setCore (PI2);
@@ -522,9 +522,9 @@ public class GridFMarkov implements Localisation
 			double side  = (double)gsize;
 			double side2 = side * side;
 			
-			mSE[0][0] = 0.0f; mSE[0][1] = 0.0f; mSE[0][2] = 0.0f;
-			mSE[1][0] = 0.0f; mSE[1][1] = 0.0f; mSE[1][2] = 0.0f;
-			mSE[2][0] = 0.0f; mSE[2][1] = 0.0f; mSE[2][2] = 0.0f;
+			mSE[0][0] = 0.0; mSE[0][1] = 0.0; mSE[0][2] = 0.0;
+			mSE[1][0] = 0.0; mSE[1][1] = 0.0; mSE[1][2] = 0.0;
+			mSE[2][0] = 0.0; mSE[2][1] = 0.0; mSE[2][2] = 0.0;
 			
 			if ((dx > 0.0) && (dy < 0.0))	// motion in 2nd quadrant
 			{
@@ -567,10 +567,10 @@ public class GridFMarkov implements Localisation
 				uprightx	= 2;		uprighty	= 2;	
 			}
 			
-			mSE[1][1]				= (float) ((side - dx) * (side - dy) / side2);
-			mSE[upx][upy]			= (float) ((side - dx) * dy / side2);
-			mSE[rightx][righty]		= (float) ((side - dy) * dx / side2);
-			mSE[uprightx][uprighty]	= (float) (dx * dy / side2);
+			mSE[1][1]				= (double) ((side - dx) * (side - dy) / side2);
+			mSE[upx][upy]			= (double) ((side - dx) * dy / side2);
+			mSE[rightx][righty]		= (double) ((side - dy) * dx / side2);
+			mSE[uprightx][uprighty]	= (double) (dx * dy / side2);
 			
 			// Do the convolution
 			int maxX = gwidth - 2; // max column to scan
@@ -585,10 +585,10 @@ public class GridFMarkov implements Localisation
 			
 			GridCell out;			// pointers to source and destination grids
 			GridCell cell;				// pointer to grid cell for inner loop
-			float seVal;		// cache its value
-			float height, bias;			// cumulative result of convolution
-			float center, core, supp;	// for angle convolution
-			float oldcenter;
+			double seVal;		// cache its value
+			double height, bias;			// cumulative result of convolution
+			double center, core, supp;	// for angle convolution
+			double oldcenter;
 			
 			for (int x = 0; x < maxX; ++x)	// map row scan (left-to-right in GS)
 			{
@@ -599,11 +599,11 @@ public class GridFMarkov implements Localisation
 				{
 					out = mMap[index_out];
 					
-					height = 0.0f;
-					bias = 0.0f;
-					center = 0.0f;
-					core = 0.0f;
-					supp = 0.0f;
+					height = 0.0;
+					bias = 0.0;
+					center = 0.0;
+					core = 0.0;
+					supp = 0.0;
 					
 					// old angle is still in out map
 					oldcenter = out.getCenter();
@@ -631,7 +631,7 @@ public class GridFMarkov implements Localisation
 					
 					// set result in grid
 					if (height > 1.0)
-						height = 1.0f;
+						height = 1.0;
 					
 					if (height < GridCell.BIAS)
 						height = FUZZY_BIAS;
@@ -740,26 +740,26 @@ public class GridFMarkov implements Localisation
 		if (perception.rho < 1500)
 		{
 			perception.model		= PerceptionModel.DISTANCE_BEARING;			
-			perception.dcore		= 0.05f * perception.rho;
-			perception.dslope	= 0.6f * perception.rho;			
-			perception.acore		= RAD(10.0f);
-			perception.aslope	= RAD(30.0f);
+			perception.dcore		= 0.05 * perception.rho;
+			perception.dslope	= 0.6 * perception.rho;			
+			perception.acore		= RAD(10.0);
+			perception.aslope	= RAD(30.0);
 		}
 		else if (perception.rho < 2500) 
 		{
 			perception.model		= PerceptionModel.DISTANCE_BEARING;		
-			perception.dcore		= 0.2f * perception.rho;
-			perception.dslope	= 0.75f * perception.rho;		
-			perception.acore		= RAD(20.0f);
-			perception.aslope	= RAD(35.0f);
+			perception.dcore		= 0.2 * perception.rho;
+			perception.dslope	= 0.75 * perception.rho;		
+			perception.acore		= RAD(20.0);
+			perception.aslope	= RAD(35.0);
 		} 
 		else 
 		{
 			perception.model		= PerceptionModel.DISTANCE_BEARING;			
-			perception.dcore		= 0.3f * perception.rho;
-			perception.dslope	= 0.9f * perception.rho;			
-			perception.acore		= RAD(20.0f);
-			perception.aslope	= RAD(40.0f);
+			perception.dcore		= 0.3 * perception.rho;
+			perception.dslope	= 0.9 * perception.rho;			
+			perception.acore		= RAD(20.0);
+			perception.aslope	= RAD(40.0);
 		}
 		
 		updateGrid (perception);
@@ -812,9 +812,9 @@ public class GridFMarkov implements Localisation
 		
 		// if net is close, we are more uncertain about its angle
 		if (perception.rho < wm.getDogRadius())
-			perception.acore = (float) (Math.PI * 2.0);
+			perception.acore = (double) (Math.PI * 2.0);
 		else
-			perception.acore = ((float)wm.getNet(0).getWidth() / (float)perception.rho);
+			perception.acore = ((double)wm.getNet(0).getWidth() / (double)perception.rho);
 		
 		if (perception.acore < MIN_ANGLE_WIDTH_NET)
 			perception.acore = MIN_ANGLE_WIDTH_NET;	
@@ -847,15 +847,15 @@ public class GridFMarkov implements Localisation
 					
 					// Set value depending on delta value
 					if (delta < perception.dcore) // Core. Highest value
-						cell.setHeight(1.0f);
+						cell.setHeight(1.0);
 					else if (delta < (perception.dslope + perception.dcore)) // Slope
-						cell.setHeight((float) (1.0 - ((delta - perception.dcore) * 0.9 / perception.dslope)));
+						cell.setHeight(1.0 - ((delta - perception.dcore) * 0.9 / perception.dslope));
 					else
 						cell.setHeight(GridCell.BIAS); // Bias value. Outside fuzzy area
 					break;
 					
 				case PerceptionModel.BEARING_ONLY:
-					cell.setHeight(1.0f);
+					cell.setHeight(1.0);
 					break;
 					
 				case PerceptionModel.BEARING_WITH_THRESHOLD:
@@ -866,16 +866,16 @@ public class GridFMarkov implements Localisation
 					if (delta < (perception.mrho - perception.dslope))
 						cell.setHeight(GridCell.BIAS);
 					else if (delta < perception.mrho)
-						cell.setHeight((float) (1.0 - (((1 - GridCell.BIAS)*(perception.mrho - delta))/perception.dslope)));
+						cell.setHeight(1.0 - (((1 - GridCell.BIAS)*(perception.mrho - delta))/perception.dslope));
 					else
-						cell.setHeight(1.0f);
+						cell.setHeight(1.0);
 					break;						
 				}
 				
 				cell.setBias(GridCell.BIAS);
-				cell.setCore((float) perception.acore);					// the grid keeps its cells in float
-				cell.setSupport((float) (perception.acore + perception.aslope));
-				cell.setCenter((float) angle);
+				cell.setCore(perception.acore);
+				cell.setSupport(perception.acore + perception.aslope);
+				cell.setCenter(angle);
 				
 				mMap[pos].intersectionEnveloped(cell);
 			}
@@ -888,14 +888,14 @@ public class GridFMarkov implements Localisation
 	protected void updatePosition ()
 	{
 		int			i;
-		float		highest, bias, current;
+		double		highest, bias, current;
 		
 		// Get the center of gravity for the highest values in the grid.
 		// We start with a normalize, by finding highest value
 		
 		// First pass. Find highest value
-		highest = 0.0001f;
-		bias = 0.0f;
+		highest = 0.0001;
+		bias = 0.0;
 		for (i = 0; i < gtotal; i++)
 		{
 			current = mMap[i].getHeight();
@@ -910,16 +910,16 @@ public class GridFMarkov implements Localisation
 		if (highest > bias)
 			gs.setReliability (highest-bias);
 		else
-			gs.setReliability (0.0f);
+			gs.setReliability (0.0);
 		
-		if (highest <= 0.000101f)
+		if (highest <= 0.000101)
 		{
 			// We have a problem here. All values are (almost) zero.
 			// So we will reset all values...
 			for(i = 0; i < gtotal; i++)
 				mMap[i].clear();
 			
-			highest = 1.0f;
+			highest = 1.0;
 		}
 		
 		// Second pass. Normalize so that highest value is 1.0
@@ -929,22 +929,22 @@ public class GridFMarkov implements Localisation
 		// compute CoG for the area above a given threshold
 		// together with the bounding box of this area
 		
-		float sumMu    = 0.0f;		// possibility degree
-		float sumX     = 0.0f;		// X index
-		float sumY     = 0.0f;		// Y index
+		double sumMu    = 0.0;		// possibility degree
+		double sumX     = 0.0;		// X index
+		double sumY     = 0.0;		// Y index
 		
-		float minX = (float)gwidth;
-		float maxX = 0.0f;
-		float minY = (float)gheight;
-		float maxY = 0.0f;
+		double minX = (double)gwidth;
+		double maxX = 0.0;
+		double minY = (double)gheight;
+		double maxY = 0.0;
 		
-		float boundX = (float)gwidth;
-		float boundY = (float)gheight;
+		double boundX = (double)gwidth;
+		double boundY = (double)gheight;
 		
-		float		x, y;
+		double		x, y;
 		
-		for (x = 0.0f, i = 0; x < boundX; ++x) {
-			for (y = 0.0f; y < boundY; ++y, i++)
+		for (x = 0.0, i = 0; x < boundX; ++x) {
+			for (y = 0.0; y < boundY; ++y, i++)
 			{
 				GridCell 	cell;
 
@@ -971,37 +971,37 @@ public class GridFMarkov implements Localisation
 		
 		// find indexes of the two cells nearest to the CoG
 		int idx1, idx2;
-		float w1, w2;
+		double w1, w2;
 		
 		sumX /= sumMu;
 		idx1  = (int)sumX;
 		idx2  = (idx1 < (gwidth-1)) ? (idx1 + 1) : idx1;
-		w2    = sumX - (float)idx1;
-		w1    = 1.0f - w2;
+		w2    = sumX - (double)idx1;
+		w1    = 1.0 - w2;
 		
 		int XVal, YVal;
-		float angle, angleVariance;
+		double angle, angleVariance;
 		
 		// and make weighted average of their coordinates
-		XVal = (int)((((float)getWorldCoordinateX(idx1)) * w1) + (((float)getWorldCoordinateX(idx2)) * w2));
+		XVal = (int)((((double)getWorldCoordinateX(idx1)) * w1) + (((double)getWorldCoordinateX(idx2)) * w2));
 		
 		// do the same for Y
 		sumY /= sumMu;
 		idx1  = (int)sumY;
 		idx2  = (idx1 < (gheight-1)) ? (idx1 + 1) : idx1;
-		w2    = sumY - (float)idx1;
-		w1    = 1.0f - w2;
+		w2    = sumY - (double)idx1;
+		w1    = 1.0 - w2;
 		
 		// and make weighted average of their coordinates
-		YVal = (int)((((float)getWorldCoordinateY(idx1)) * w1) + (((float)getWorldCoordinateY(idx2)) * w2));
+		YVal = (int)((((double)getWorldCoordinateY(idx1)) * w1) + (((double)getWorldCoordinateY(idx2)) * w2));
 				
 		// for the orientation, just take the one of the closest cell
 		idx1 = ((int)(sumX + 0.5) * gheight) + (int)(sumY + 0.5);
 		
-		angle  = (float) Angles.radnorm_180 (mMap[idx1].getCenter());
+		angle  = (double) Angles.radnorm_180 (mMap[idx1].getCenter());
 		
 		// for variance, take width of the alpha-cut at CoGThreshold
-		angleVariance = mMap[idx1].getCore() * CoGThreshold + mMap[idx1].getSupport() * (1.0f - CoGThreshold);
+		angleVariance = mMap[idx1].getCore() * CoGThreshold + mMap[idx1].getSupport() * (1.0 - CoGThreshold);
 		
 		// Put values in global space regarding own position
 		GsPosition myposition;
@@ -1026,8 +1026,8 @@ public class GridFMarkov implements Localisation
 		if (myposition.x < -fieldMaxX) myposition.x = -fieldMaxX;
 		if (myposition.y < -fieldMaxY) myposition.y = -fieldMaxY;
 		
-		gs.setFocus(1.0f - ((float)(myposition.dx * myposition.dy) / (float)(wm.getTotalXSize() * wm.getTotalYSize())));
-		if (gs.getFocus() < 0.0) gs.setFocus(0.0f);
+		gs.setFocus(1.0 - ((double)(myposition.dx * myposition.dy) / (double)(wm.getTotalXSize() * wm.getTotalYSize())));
+		if (gs.getFocus() < 0.0) gs.setFocus(0.0);
 		
 		gs.updateQuality ();
 	}
@@ -1041,7 +1041,7 @@ public class GridFMarkov implements Localisation
 		for(int i = 0; i < gtotal; i++)
 			mMap[i].clear ();
 		
-		gs.setReliability (1.0f); 
+		gs.setReliability (1.0); 
 	}
 	
 	public void drawElements (Model2D model)
@@ -1080,12 +1080,12 @@ public class GridFMarkov implements Localisation
 	}
 
 	
-	public float getValueXY(int x, int y) {
+	public double getValueXY(int x, int y) {
 		int i,j;
 		int idx;
 		
-		i = (int) (((float)x/(float)gsize) + ((float)wm.getTotalXSize()/(2.0*(float)gsize)));
-		j = (int) (((float)y/(float)gsize) + ((float)wm.getTotalYSize()/(2.0*(float)gsize)));
+		i = (int) (((double)x/(double)gsize) + ((double)wm.getTotalXSize()/(2.0*(double)gsize)));
+		j = (int) (((double)y/(double)gsize) + ((double)wm.getTotalYSize()/(2.0*(double)gsize)));
 		
 //		i = (2 * x - wm.getTotalXSize())/(2*gsize);
 //		j = (2 * y - wm.getTotalYSize())/(2*gsize);

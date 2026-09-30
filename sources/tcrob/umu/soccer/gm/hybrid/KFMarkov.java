@@ -21,7 +21,7 @@ public class KFMarkov implements Localisation
 	protected GridFMarkov				fmk;
 	protected Kalman					kalman;
 	
-	public KFMarkov (String name, int gsize, float rBlurPosBias, float rBlurAngleBias,
+	public KFMarkov (String name, int gsize, double rBlurPosBias, double rBlurAngleBias,
 			int toler, double odolinNoise, double odorotNoise, double distNoise, double angleNoise)
 	{
 		fmk	= new GridFMarkov(name, gsize, rBlurPosBias, rBlurAngleBias);

@@ -74,8 +74,8 @@ public class Particles implements Localisation
 		initPos.y		= -1500;
 		initPos.dx		= 100;
 		initPos.dy		= 100;
-		initPos.theta	= (float) (90.0 * Angles.DTOR);
-		initPos.dtheta	= (float) (40.0 * Angles.DTOR);
+		initPos.theta	= (double) (90.0 * Angles.DTOR);
+		initPos.dtheta	= (double) (40.0 * Angles.DTOR);
 		
 		initialPosition (initPos);
 	}
@@ -291,10 +291,10 @@ public class Particles implements Localisation
 		pos			= gs.getPosition ();
 		pos.x		= (int) xMean;
 		pos.y		= (int) yMean;
-		pos.theta	= (float) aMean;
+		pos.theta	= (double) aMean;
 		pos.dx		= (int) Math.sqrt (xVar);
 		pos.dy		= (int) Math.sqrt (yVar);
-		pos.dtheta	= (float) Math.sqrt (aVar);
+		pos.dtheta	= (double) Math.sqrt (aVar);
 	}
 	
 	public void drawElements (Model2D model)

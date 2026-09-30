@@ -77,9 +77,9 @@ public class Kalman implements Localisation
 	
 	
 	private int		tolerance	= MEDIUM_TOLERANCE;
-	private double	limit		= 20.0f;
-	private double	max_filter	= 100.0f;
-	private double	min_filter	= 5.0f;
+	private double	limit		= 20.0;
+	private double	max_filter	= 100.0;
+	private double	min_filter	= 5.0;
 	private double	filter_mult = 1.5;
 	private double	filter_div 	= 2.0;
 	
@@ -103,8 +103,8 @@ public class Kalman implements Localisation
 		initPos.y		= -1500;
 		initPos.dx		= 100;
 		initPos.dy		= 100;
-		initPos.theta	= (float) (90.0 * Angles.DTOR);
-		initPos.dtheta	= (float) (90.0 * Angles.DTOR);
+		initPos.theta	= (double) (90.0 * Angles.DTOR);
+		initPos.dtheta	= (double) (90.0 * Angles.DTOR);
 		
 		wm	= new WorldModel (name);
 		gs	= new Gs ();
@@ -443,10 +443,10 @@ public class Kalman implements Localisation
 	  	eigenvalues	= P.jacobian ();
 //	  	pos.dx		= (int) Math.sqrt(eigenvalues.get (0, 0)); 
 //	  	pos.dy		= (int) Math.sqrt(eigenvalues.get (0, 1)); 
-//	  	pos.dtheta	= (float) Math.sqrt(eigenvalues.get (0, 2)); 
+//	  	pos.dtheta	= (double) Math.sqrt(eigenvalues.get (0, 2)); 
 	  	pos.dx		= (int) Math.sqrt(eigenvalues.get (0, 0)); 
 	  	pos.dy		= (int) Math.sqrt(eigenvalues.get (0, 1)); 
-	  	pos.dtheta	= (float) Math.sqrt(eigenvalues.get (0, 2)); 
+	  	pos.dtheta	= (double) Math.sqrt(eigenvalues.get (0, 2)); 
 		
 //	  	System.out.println("P=");
 //	  	P.print(5, 5);
@@ -458,13 +458,13 @@ public class Kalman implements Localisation
 	  	// Update current position
 		pos.x		= (int) S.get (0, 0);
 		pos.y		= (int) S.get (1, 0);
-		pos.theta	= (float) S.get (2, 0);
+		pos.theta	= (double) S.get (2, 0);
 		
 	  	// Compute overall quality of the position
 		quality		= ((1.0 -(pos.dx/1000.0)) * (1.0 -(pos.dy/1000.0)) * (1.0 -(pos.dtheta/RAD(180.0))));
 		if (quality < 0.0)		quality = 0.0;
 		if (quality > 1.0)		quality = 1.0;
-		gs.setQuality ((float) quality);
+		gs.setQuality ((double) quality);
 		
 	}
 	
@@ -673,23 +673,23 @@ public class Kalman implements Localisation
 		switch (selectedIndex)
 		{
 		case LOW_TOLERANCE:
-			limit		= 25.0f;
-			max_filter	= 300.0f;
-			min_filter	= 20.0f;
+			limit		= 25.0;
+			max_filter	= 300.0;
+			min_filter	= 20.0;
 			filter_mult = 2.0;
 			filter_div 	= 1.5;
 			break;
 		case MEDIUM_TOLERANCE:
-			limit		= 35.0f;
-			max_filter	= 500.0f;
-			min_filter	= 30.0f;
+			limit		= 35.0;
+			max_filter	= 500.0;
+			min_filter	= 30.0;
 			filter_mult = 2.5;
 			filter_div 	= 1.3;
 			break;
 		case HIGH_TOLERANCE:
-			limit		= 50.0f;
-			max_filter	= 800.0f;
-			min_filter	= 40.0f;
+			limit		= 50.0;
+			max_filter	= 800.0;
+			min_filter	= 40.0;
 			filter_mult = 4.0;
 			filter_div 	= 1.1;
 			break;

@@ -11,18 +11,18 @@ public class Velocity
 	static public final int		VxMaxBackward    = 300;			// backward (mm/sec)
 	static public final int		VyMaxLeft        = 300;			// lateral  (mm/sec)
 	static public final int		VyMaxRight       = VyMaxLeft;
-	static public final float		VthMaxLeft       = 90.0f;			// rotational (deg/sec)
-	static public final float		VthMaxRight      = VthMaxLeft;
+	static public final double		VthMaxLeft       = 90.0;			// rotational (deg/sec)
+	static public final double		VthMaxRight      = VthMaxLeft;
 
 	static public final int		VxMin			 = 5;
 	static public final int		VyMin			 = 4;
-	static public final float		VthMin			 = 2.0f;
+	static public final double		VthMin			 = 2.0;
 	
 	public int					vlin;
 	public int					vlat;
-	public float					vrot;
+	public double					vrot;
 
-	public void set (int vx, int vy, float vtheta)
+	public void set (int vx, int vy, double vtheta)
 	{
 		// Check upper limits
 		if (vx > VxMaxForward)
@@ -48,7 +48,7 @@ public class Velocity
 			vy = 0;
 
 		if (Math.abs (vtheta) < VthMin)
-			vtheta = 0.0f;
+			vtheta = 0.0;
 
 		// Update velocities
 		vlin		= vx;

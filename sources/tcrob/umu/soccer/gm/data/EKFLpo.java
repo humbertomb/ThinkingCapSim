@@ -64,7 +64,7 @@ public class EKFLpo {
 		P = P.plus(W(odom).times(Q(odom)).times(W(odom).transpose()));
 	}
 	
-	public void correct(int rho, float theta) {
+	public void correct(int rho, double theta) {
 		Matrix z, zv, zzv;
 		Matrix K;
 		
@@ -203,8 +203,8 @@ public class EKFLpo {
 		return (int) S.get(0,0);
 	}
 	
-	public float getTheta() {
-		return (float) Angles.radnorm_180(S.get(1,0));
+	public double getTheta() {
+		return (double) Angles.radnorm_180(S.get(1,0));
 	}
 	
 	public static int calculateRho(int x, int y) {
@@ -216,17 +216,17 @@ public class EKFLpo {
 		return (int) Math.sqrt(Math.pow(i-x, 2.0)+Math.pow(j-y, 2.0));
 	}
 	
-	public static float calculateTheta(int x, int y) {
-		return calculateTheta(x, y, (float) (90.0*Angles.DTOR));
+	public static double calculateTheta(int x, int y) {
+		return calculateTheta(x, y, (double) (90.0*Angles.DTOR));
 	}
 	
-	public static float calculateTheta(int x, int y, float theta) {
+	public static double calculateTheta(int x, int y, double theta) {
 		int i, j;
 		
 		i = 1950;
 		j = 0;
 		
-		return (float) Angles.radnorm_180(Math.atan2(j-y, i-x)-theta);
+		return (double) Angles.radnorm_180(Math.atan2(j-y, i-x)-theta);
 	}
 	
 	public Matrix getP() {
@@ -240,16 +240,16 @@ public class EKFLpo {
 //		int[][] pnts = {{0,-1000}, {0, -500}, {0, 0},{0, 500},{0, 1000}};
 		Odometry odoaux = new Odometry();
 		int lastx=0, lasty=-1500;
-		float lastt;
+		double lastt;
 		Random random = new Random();;
 		int rho;
-		float theta;
+		double theta;
 		int newx, newy;
-		float newt;
+		double newt;
 		
 		lastx = (int) (random.nextGaussian() * 1000);
 		lasty = (int) (random.nextGaussian() * 1000);
-		lastt = (float) (90.0 * Angles.DTOR) ;//(float) (random.nextGaussian() * Angles.DTOR * 30.0);
+		lastt = (double) (90.0 * Angles.DTOR) ;//(double) (random.nextGaussian() * Angles.DTOR * 30.0);
 		
 		s0.set(0, 0, calculateRho(lastx, lasty));
 		s0.set(1, 0, calculateTheta(lastx, lasty, lastt));
@@ -259,20 +259,20 @@ public class EKFLpo {
 		
 		for(int i=0; i<30;i++) {
 			
-			odoaux.dlin = (float) (random.nextGaussian() * 300);
-			odoaux.dlat = (float) (random.nextGaussian() * 300);		
-			odoaux.drot = (float) (random.nextGaussian() * Angles.DTOR * 30.0);
-			odoaux.elin = (float) (odoaux.dlin * 0.3);
-			odoaux.elat = (float) (odoaux.dlat * 0.3);
-			odoaux.erot = (float) (odoaux.drot * 0.3);
+			odoaux.dlin = (double) (random.nextGaussian() * 300);
+			odoaux.dlat = (double) (random.nextGaussian() * 300);		
+			odoaux.drot = (double) (random.nextGaussian() * Angles.DTOR * 30.0);
+			odoaux.elin = (double) (odoaux.dlin * 0.3);
+			odoaux.elat = (double) (odoaux.dlat * 0.3);
+			odoaux.erot = (double) (odoaux.drot * 0.3);
 			
 			newx = (int) (lastx + (odoaux.dlin * Math.cos(lastt)) -  (odoaux.dlat * Math.sin(lastt)));		
 			newy = (int) (lasty + (odoaux.dlin * Math.sin(lastt)) +  (odoaux.dlat * Math.cos(lastt)));		
-			newt = (float) Angles.radnorm_180(lastt + odoaux.drot);
+			newt = (double) Angles.radnorm_180(lastt + odoaux.drot);
 
-			odoaux.dlin = (float) (odoaux.dlin + (random.nextGaussian() * 0.3 * odoaux.dlin));
-			odoaux.dlat = (float) (odoaux.dlat + (random.nextGaussian() * 0.3 * odoaux.dlat));
-			odoaux.drot = (float) (odoaux.drot + (random.nextGaussian() * 0.3 * odoaux.drot));
+			odoaux.dlin = (double) (odoaux.dlin + (random.nextGaussian() * 0.3 * odoaux.dlin));
+			odoaux.dlat = (double) (odoaux.dlat + (random.nextGaussian() * 0.3 * odoaux.dlat));
+			odoaux.drot = (double) (odoaux.drot + (random.nextGaussian() * 0.3 * odoaux.drot));
 			
 				
 			//System.out.println("Robot en "+lastx+","+lasty+","+Angles.RTOD*lastt);
@@ -283,7 +283,7 @@ public class EKFLpo {
 
 //			newx = (int) (newx + random.nextGaussian() * 50.0);
 //			newy = (int) (newy + random.nextGaussian() * 50.0);
-//			newt = (float) (newt + random.nextGaussian() * 2 * Angles.DTOR);
+//			newt = (double) (newt + random.nextGaussian() * 2 * Angles.DTOR);
 
 			System.out.println("CORRECT ("+calculateRho(newx, newy)+", "+ Angles.RTOD*calculateTheta(newx, newy, newt)+")");
 
@@ -295,14 +295,14 @@ public class EKFLpo {
 			if(random.nextInt(100)>50) {
 				System.out.print("FP: ");
 				rho 	= (int) (rho + (random.nextGaussian() * 4000));
-				theta 	= (float) Angles.radnorm_180(theta + (random.nextGaussian() * 360 * Angles.DTOR));
+				theta 	= (double) Angles.radnorm_180(theta + (random.nextGaussian() * 360 * Angles.DTOR));
 			}
 			else
 			{
 				System.out.print("VP: ");
 
 				rho 	= (int) (rho + (random.nextGaussian() * 500));
-				theta 	= (float) (theta + (random.nextGaussian() * 5 * Angles.DTOR));
+				theta 	= (double) (theta + (random.nextGaussian() * 5 * Angles.DTOR));
 				miekf.correct(rho, theta);
 			}
 			//System.out.println("(con ruido) rho = "+rho+"   theta = "+theta*Angles.RTOD);
