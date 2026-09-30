@@ -11,11 +11,11 @@ import tcrob.umu.soccer.lpo.*;
 
 public class LocLps
 {
-	public final static int			INIT_LMS		= 1;
-	public final static int			NUM_LMS			= 2;
-	public final static int			INIT_NETS		= 3;
-	public final static int			NUM_NETS		= 2;
-	public final static int			LPS_SIZE		= (1 + NUM_LMS + NUM_NETS);
+	public final static int			INIT_LMS	= 1;
+	public final static int			NUM_LMS		= 2;
+	public final static int			INIT_NETS	= 3;
+	public final static int			NUM_NETS	= 2;
+	public final static int			LPS_SIZE	= (1 + NUM_LMS + NUM_NETS);
 
 	static public final int[]		TYPE		= { LocLpo.BALL, LocLpo.LANDMARK, LocLpo.LANDMARK, LocLpo.NET, LocLpo.NET };
 
