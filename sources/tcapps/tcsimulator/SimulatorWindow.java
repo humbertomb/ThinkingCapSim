@@ -185,6 +185,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		statusBar	= new StatusBar ();
 		view3d		= new View3DController (this, canvas);
 		view3d.setHandlesShown (false);								// what is picked here is looked at, not edited: no markers over the 3D world
+		view3d.setOverlays (false, false);							// no starting positions nor names of the objects, unless the View menu asks for them
 
 		// world view on top, Robots / Events tables below (as the monitor's main panel)
 		monitorPanel	= new RobotMonitorPanel ();

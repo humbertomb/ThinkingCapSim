@@ -66,6 +66,19 @@ public class View3DController
 	}
 
 	protected boolean			animatedVisible	= true;
+	protected boolean			showStarts		= true;		// what the View menu of the window starts with
+	protected boolean			showLabels		= true;
+
+	/**
+	 * Whether the window, once it is made, starts showing the starting positions
+	 * of the robots and the names of the objects (View menu; both on unless said).
+	 */
+	public void setOverlays (boolean starts, boolean labels)
+	{
+		showStarts	= starts;
+		showLabels	= labels;
+		if (view3d != null)		view3d.setOverlays (starts, labels);
+	}
 
 	public boolean isVisible ()		{ return (view3d != null) && view3d.isVisible (); }
 
@@ -84,6 +97,7 @@ public class View3DController
 				view3d.setSize (900, 700);
 				view3d.setAnimatedVisible (animatedVisible);
 				view3d.setHandlesShown (handlesShown);
+				view3d.setOverlays (showStarts, showLabels);
 				// place it beside the owner when there is room
 				java.awt.Window	win = (owner instanceof java.awt.Window) ? (java.awt.Window) owner : SwingUtilities.getWindowAncestor (owner);
 				Rectangle	r = (win != null) ? win.getBounds () : new Rectangle (0, 0, 0, 0);

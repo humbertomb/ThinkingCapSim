@@ -125,6 +125,7 @@ public class WorldView3DWindow extends JFrame
 	protected boolean				showStarts		= true;	// View menu: the starting positions of the robots
 	protected boolean				showNames		= true;	// View menu: the names of the robots
 	protected boolean				showLabels		= true;	// View menu: the names of the objects
+	protected JCheckBoxMenuItem		startsItem, labelsItem;	// ... and their items, which follow setOverlays
 	protected boolean				showFOVs		= true;	// View menu: what the cameras of the robots see
 	protected java.util.List<FloorName>	labels = new java.util.ArrayList<FloorName> ();	// the names of the live objects, one per object (null for an unnamed one)
 	protected World3D				world3d;				// the world as drawn now (its names take the size of letter of the scene)
@@ -276,7 +277,7 @@ public class WorldView3DWindow extends JFrame
 		JMenuBar	mb = new JMenuBar ();
 		JMenu		view = new JMenu ("View");
 
-		view.add (check ("Show starting positions", showStarts, new Runnable ()
+		view.add (startsItem = check ("Show starting positions", showStarts, new Runnable ()
 		{
 			public void run ()		{ showStarts = !showStarts;	scheduleRebuild (); }
 		}));
@@ -284,7 +285,7 @@ public class WorldView3DWindow extends JFrame
 		{
 			public void run ()		{ showNames = !showNames;	updateNames (); }
 		}));
-		view.add (check ("Show object labels", showLabels, new Runnable ()
+		view.add (labelsItem = check ("Show object labels", showLabels, new Runnable ()
 		{
 			public void run ()		{ showLabels = !showLabels;	updateLabels ();	scheduleRebuild (); }
 		}));
@@ -455,6 +456,19 @@ public class WorldView3DWindow extends JFrame
 	public void worldChanged ()
 	{
 		scheduleRebuild ();
+	}
+
+	/**
+	 * What the View menu starts with: the starting positions of the robots and
+	 * the names of the objects, on or off (both on by default; the simulator
+	 * starts with both off). The menu follows, and can turn them on again.
+	 */
+	public void setOverlays (boolean starts, boolean labels)
+	{
+		if (showStarts != starts)		{ showStarts = starts;	scheduleRebuild (); }
+		if (showLabels != labels)		{ showLabels = labels;	updateLabels ();	scheduleRebuild (); }
+		if (startsItem != null)			startsItem.setSelected (showStarts);
+		if (labelsItem != null)			labelsItem.setSelected (showLabels);
 	}
 
 	/**
