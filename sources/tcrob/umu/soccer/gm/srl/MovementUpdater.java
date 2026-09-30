@@ -7,6 +7,7 @@
 package tcrob.umu.soccer.gm.srl;
 
 import tcrob.umu.soccer.gm.data.*;
+import tcrob.umu.soccer.gm.*;
 import wucore.utils.math.*;
 import wucore.utils.math.stat.*;
 
@@ -16,15 +17,12 @@ public class MovementUpdater
 	static public final double		SIDE_STDDEV		= 40.0;
 	static public final double		DIR_STDDEV		= 5.0 * Angles.DTOR;
 	
-	protected WorldModel				field;
 	protected GaussianSampler			odometrySampler;	
 	protected GaussianSampler			noiseSampler;
 	protected double[]				noise;
 	
-	public MovementUpdater (WorldModel field)
+	public MovementUpdater ()
 	{
-		this.field		= field;
-		
 		odometrySampler	= new GaussianSampler (3);
 		odometrySampler.setRange (0,-Double.MAX_VALUE,+Double.MAX_VALUE);
 		odometrySampler.setRange (1,-Double.MAX_VALUE,+Double.MAX_VALUE);
@@ -61,7 +59,7 @@ public class MovementUpdater
 		pos[2]	= Angles.radnorm_180 (pos[2] + noise[2]);
 
 		// Force the robot to be inside the field limits
-		boolean moved	= field.placeOnField (pos, SIDE_OFFSET);
+		boolean moved	= Localisation.placeOnField (pos, SIDE_OFFSET);
 		if (!moved)		return;
 		
 		// Add Gaussian noise

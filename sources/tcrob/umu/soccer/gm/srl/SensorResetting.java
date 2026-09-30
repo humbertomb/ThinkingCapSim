@@ -35,36 +35,34 @@ public class SensorResetting implements Localisation
 	protected double[]				params = new double[6];
 	protected double[]				cum_weights;
 	
-	protected WorldModel				wm;
 	protected Gs						gs;
 
 	protected int[]					mLastAnchored;
 	protected boolean[]				mLastUpdated;
 	
-	public SensorResetting (String name, int numSamples)
+	public SensorResetting (int numSamples)
 	{
 		mLastAnchored	= new int[LocLps.LPS_SIZE];
 		mLastUpdated		= new boolean[LocLps.LPS_SIZE];
 
-		wm				= new WorldModel (name);
 		gs				= new Gs ();
 
 		fieldSampler		= new UniformSampler (3);
-		fieldSampler.setRange (0, -wm.getTotalXSize()*0.5, wm.getTotalXSize()*0.5);
-		fieldSampler.setRange (1, -wm.getTotalYSize()*0.5, wm.getTotalYSize()*0.5);
+		fieldSampler.setRange (0, -TOTAL_X_SIZE*0.5, TOTAL_X_SIZE*0.5);
+		fieldSampler.setRange (1, -TOTAL_Y_SIZE*0.5, TOTAL_Y_SIZE*0.5);
 		fieldSampler.setRange (2, -Math.PI, Math.PI);
 
 		posSampler		= new GaussianSampler (3);
-		posSampler.setRange (0, -wm.getTotalXSize()*0.5, wm.getTotalXSize()*0.5);
-		posSampler.setRange (1, -wm.getTotalYSize()*0.5, wm.getTotalYSize()*0.5);
+		posSampler.setRange (0, -TOTAL_X_SIZE*0.5, TOTAL_X_SIZE*0.5);
+		posSampler.setRange (1, -TOTAL_Y_SIZE*0.5, TOTAL_Y_SIZE*0.5);
 		posSampler.setRange (2, -Math.PI, Math.PI);
 		
 		random			= new RandomNumberGenerator ();
 		locale			= new LocaleSampled (numSamples);
 		newLocale		= new LocaleSampled (numSamples);
-		move_updater		= new MovementUpdater (wm);
-		single_lm_sampler= new MarkerSampler (wm);
-		dual_lm_sampler	= new DualMarkerSampler (wm);
+		move_updater		= new MovementUpdater ();
+		single_lm_sampler= new MarkerSampler ();
+		dual_lm_sampler	= new DualMarkerSampler ();
 		cum_weights		= new double[numSamples+1];
 
 		lm_updater	= new MarkerUpdater[LocLps.NUM_NETS + LocLps.NUM_LMS];
@@ -85,7 +83,6 @@ public class SensorResetting implements Localisation
 	}
 
 	public Gs				getGs ()						{ return gs; }
-	public WorldModel		getWorldModel ()				{ return wm; }
 	public LocaleSampled		getSamples ()				{ return locale; }
 	public int				getSampleNumber ()			{ return locale.numSamples; }
 	public boolean			getLastUpdated (int index)	{ return mLastUpdated[index]; }
@@ -166,7 +163,7 @@ public class SensorResetting implements Localisation
 				errorRho		= 50;
 				errorTheta	= 2.0 * Angles.DTOR;
 
-				lm_updater[curLandmarks].setMarkerLoc (wm.getLM (index-LocLps.INIT_LMS));
+				lm_updater[curLandmarks].setMarkerLoc (LM_X[index-LocLps.INIT_LMS], LM_Y[index-LocLps.INIT_LMS]);
 				lm_updater[curLandmarks].setMinProb (MIN_PROB_SENSE);
 				lm_updater[curLandmarks].updateSamples (lpo, errorRho, errorTheta, locale);
 				
@@ -201,7 +198,7 @@ public class SensorResetting implements Localisation
 				errorRho		= 100.0;
 				errorTheta	= 1.0 * Angles.DTOR;
 
-				lm_updater[curLandmarks].setMarkerLoc (wm.getNet (index-LocLps.INIT_NETS));
+				lm_updater[curLandmarks].setMarkerLoc (NET_X[index-LocLps.INIT_NETS], NET_Y[index-LocLps.INIT_NETS]);
 				lm_updater[curLandmarks].setMinProb (MIN_PROB_SENSE);
 				lm_updater[curLandmarks].updateSamples (lpo, errorRho, errorTheta, locale);
 				

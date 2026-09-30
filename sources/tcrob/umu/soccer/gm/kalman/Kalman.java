@@ -61,7 +61,6 @@ public class Kalman implements Localisation
 	protected double			corr_delta_dist;
 	protected double			corr_delta_ang;
 	
-	protected WorldModel		wm;
 	protected Gs				gs;
 
 	protected int[]			mLastAnchored;
@@ -88,7 +87,7 @@ public class Kalman implements Localisation
 	private double	distNoise;
 	private double	angleNoise;
 	
-	public Kalman (String name, int toler, double odolinNoise, double odorotNoise, double distNoise, double angleNoise)
+	public Kalman (int toler, double odolinNoise, double odorotNoise, double distNoise, double angleNoise)
 	{
 		mLastAnchored	= new int[LocLps.LPS_SIZE];
 		mLastUpdated		= new boolean[LocLps.LPS_SIZE];
@@ -106,7 +105,6 @@ public class Kalman implements Localisation
 		initPos.theta	= (double) (90.0 * Angles.DTOR);
 		initPos.dtheta	= (double) (90.0 * Angles.DTOR);
 		
-		wm	= new WorldModel (name);
 		gs	= new Gs ();
 		
 		S	= new Matrix (3, 1);
@@ -154,7 +152,6 @@ public class Kalman implements Localisation
 	}
 
 	public Gs getGs ()							{ return gs; }
-	public WorldModel getWorldModel ()			{ return wm; }
 	public double getNISHeading ()				{ return hnis; }
 	public double getNISPosition ()				{ return pnis; }
 	public boolean getLastUpdated (int index)		{ return mLastUpdated[index]; }
@@ -294,25 +291,17 @@ public class Kalman implements Localisation
 		
 		for (int i = 0; i < m; i++)
 		{
-			ObjectModel		omaux = null;
+			int[]			omaux;
 			
 			objlpo = lps.getLpo(mNewLandmarks[i]);
 			Z.set(2*i, 0, objlpo.rho);
 			Z.set(2*i+1, 0, objlpo.theta);
 			
-			if ((mNewLandmarks[i] >= LocLps.INIT_LMS) && (mNewLandmarks[i] < LocLps.INIT_LMS + LocLps.NUM_LMS)) 
-			{
-				//System.out.print("lm");
-				omaux = wm.getLM (mNewLandmarks[i] - LocLps.INIT_LMS);
-			}else if ((mNewLandmarks[i] >= LocLps.INIT_NETS) && (mNewLandmarks[i] < LocLps.INIT_NETS + LocLps.NUM_NETS)){
-				//System.out.print("red");
-				omaux = wm.getNet (mNewLandmarks[i] - LocLps.INIT_NETS);
-			}
-			//System.out.print("oma"+mNewLandmarks[i]);
+			omaux = Localisation.markAt (mNewLandmarks[i]);
 			if (omaux == null)			continue;
 			
-			objaux.set(0, 0, (double)omaux.getPosX());
-			objaux.set(1, 0, (double)omaux.getPosY());
+			objaux.set(0, 0, (double)omaux[0]);
+			objaux.set(1, 0, (double)omaux[1]);
 			objaux.set(2, 0, 0.0);
 			
 			ZV.set(2*i, 0, distance (S, objaux));
@@ -321,8 +310,8 @@ public class Kalman implements Localisation
 			
 	 		double rx = S.get(0, 0);
 	  		double ry = S.get(1, 0);
-	  		double lx = (double)omaux.getPosX();
-	  		double ly = (double)omaux.getPosY();
+	  		double lx = (double)omaux[0];
+	  		double ly = (double)omaux[1];
 	   	 	
 	   	 	double den = Math.pow(lx-rx,2.0)+Math.pow(ly-ry,2.0);
 	    		
@@ -431,8 +420,8 @@ public class Kalman implements Localisation
 		pos			= gs.getPosition ();
 
 		// Check field limits
-		double		fieldMaxX = wm.getTotalXSize() * 0.5;
-	    double		fieldMaxY = wm.getTotalYSize() * 0.5 + wm.getNet(0).getHeight();
+		double		fieldMaxX = TOTAL_X_SIZE * 0.5;
+	    double		fieldMaxY = TOTAL_Y_SIZE * 0.5 + NET_DEPTH;
 	  
 		if (S.get (0, 0) > fieldMaxX)			S.set (0, 0, fieldMaxX);
 	  	if (S.get (1, 0) > fieldMaxY)			S.set (1, 0, fieldMaxY);
@@ -507,7 +496,7 @@ public class Kalman implements Localisation
 	private void processLandmark (LocLps lps, Matrix Z, Matrix H, Matrix ZV, int numlps)
 	{
 		int				i;
-		ObjectModel		omaux = null;
+		int[]			omaux;
 		LocLpo				objlpo;
 		double			delta;
 
@@ -523,10 +512,7 @@ public class Kalman implements Localisation
 		Z.set(0, 0, objlpo.rho);
 		Z.set(1, 0, objlpo.theta);
 		
-		if ((numlps >= LocLps.INIT_LMS) && (numlps < LocLps.INIT_LMS + LocLps.NUM_LMS)) 
-			omaux = wm.getLM (numlps - LocLps.INIT_LMS);
-		else if ((numlps >= LocLps.INIT_NETS) && (numlps < LocLps.INIT_NETS + LocLps.NUM_NETS))
-			omaux = wm.getNet (numlps - LocLps.INIT_NETS);
+		omaux = Localisation.markAt (numlps);
 
 		if (omaux == null)			return;
 				
@@ -550,8 +536,8 @@ public class Kalman implements Localisation
 			
 
 			
-			objaux.set(0, 0, (double)omaux.getPosX());
-			objaux.set(1, 0, (double)omaux.getPosY());
+			objaux.set(0, 0, (double)omaux[0]);
+			objaux.set(1, 0, (double)omaux[1]);
 			objaux.set(2, 0, 0.0);
 			
 			ZV.set(0, 0, distance (S, objaux));

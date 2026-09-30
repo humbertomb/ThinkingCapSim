@@ -31,20 +31,18 @@ public class Particles implements Localisation
 	private Gaussian2D				gtmp;
 	private double[]					w;
 
-	protected WorldModel				wm;
 	protected Gs						gs;
 
 	protected int[]					mLastAnchored;
 	protected boolean[]				mLastUpdated;
 		
-	public Particles (String name, int nSamples)
+	public Particles (int nSamples)
 	{
 		this.nSamples = nSamples;
 		
 		mLastAnchored	= new int[LocLps.LPS_SIZE];
 		mLastUpdated		= new boolean[LocLps.LPS_SIZE];
 
-		wm			= new WorldModel (name);
 		gs			= new Gs ();
 				
 		samples		= new GaussianSample[nSamples];
@@ -59,11 +57,11 @@ public class Particles implements Localisation
 		}		
 		
 		random		= new RandomNumberGenerator ();
-		motion		= new MovementUpdater (wm);
+		motion		= new MovementUpdater ();
 		bufpos		= new double[3];
 		posSampler	= new GaussianSampler (3);
-		posSampler.setRange (0, -wm.getTotalXSize()*0.5, wm.getTotalXSize()*0.5);
-		posSampler.setRange (1, -wm.getTotalYSize()*0.5, wm.getTotalYSize()*0.5);
+		posSampler.setRange (0, -TOTAL_X_SIZE*0.5, TOTAL_X_SIZE*0.5);
+		posSampler.setRange (1, -TOTAL_Y_SIZE*0.5, TOTAL_Y_SIZE*0.5);
 		posSampler.setRange (2, -Math.PI, Math.PI);
 		
 
@@ -81,7 +79,6 @@ public class Particles implements Localisation
 	}
 
 	public Gs				getGs ()						{ return gs; }
-	public WorldModel		getWorldModel ()				{ return wm; }
 	public GaussianSample[]	getParticles ()				{ return samples; }
 	public int				getParticleNumber ()			{ return nSamples; }
 	public boolean			getLastUpdated (int index)	{ return mLastUpdated[index]; }
@@ -148,7 +145,7 @@ public class Particles implements Localisation
 				errorDepth		= 0.3 * lpo.rho;
 				errorAzimuthal	= 5.0 * Angles.DTOR;
 						
-				addLandmark (lpo, errorAzimuthal, errorDepth, wm.getLM (index-LocLps.INIT_LMS));
+				addLandmark (lpo, errorAzimuthal, errorDepth, LM_X[index-LocLps.INIT_LMS], LM_Y[index-LocLps.INIT_LMS]);
 			}
 		}
 		
@@ -172,7 +169,7 @@ public class Particles implements Localisation
 					errorAzimuthal	= 5.0 * Angles.DTOR;
 				}
 
-				addLandmark (lpo, errorAzimuthal, errorDepth, wm.getNet (index-LocLps.INIT_NETS));
+				addLandmark (lpo, errorAzimuthal, errorDepth, NET_X[index-LocLps.INIT_NETS], NET_Y[index-LocLps.INIT_NETS]);
 			}
 		}
 		
@@ -180,7 +177,7 @@ public class Particles implements Localisation
 			resampleParticles ();
 	}
 	
-	private void addLandmark (LocLpo lpo, double covx, double covy, ObjectModel landmark)
+	private void addLandmark (LocLpo lpo, double covx, double covy, double lmx, double lmy)
 	{
 		double		rho, theta;
 		double		xpos, ypos;
@@ -197,7 +194,7 @@ public class Particles implements Localisation
 			gtmp.setCovarianceAxis (Math.sqrt (covx), Math.sqrt (covy), theta);		
 			gtmp.invertMean ();
 			gtmp.rotate (samples[i].a);
-			gtmp.translate (landmark.getPosX (), landmark.getPosY ());
+			gtmp.translate (lmx, lmy);
 
 //			System.out.println ("lm<"+gtmp+"> part("+i+")<"+g[i]+">");
 			samples[i].g.multiply (gtmp);

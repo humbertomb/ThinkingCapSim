@@ -8,13 +8,13 @@
 package tcrob.umu.soccer.gm.srl;
 
 import tcrob.umu.soccer.gm.data.*;
+import tcrob.umu.soccer.gm.*;
 
 import wucore.utils.math.*;
 import wucore.utils.math.stat.*;
 
 public class DualMarkerSampler 
 {
-	protected WorldModel				field;
 	protected GaussianSampler			gaussianSampler;
 	protected GaussianEvaluator		gaussianEvaluator;
 	protected RandomNumberGenerator	random;
@@ -31,10 +31,8 @@ public class DualMarkerSampler
 	private double					next_y;
 	private double					next_theta;
 	
-	public DualMarkerSampler (WorldModel field)
+	public DualMarkerSampler ()
 	{
-		this.field			= field; 
-		
 		random				= new RandomNumberGenerator ();
 		gaussianSampler		= new GaussianSampler (3);
 		gaussianEvaluator	= new GaussianEvaluator(1);
@@ -127,11 +125,11 @@ public class DualMarkerSampler
 				
 				x0		= markerX0 - rho0 * Math.cos (allo_angle0);
 				y0		= markerY0 - rho0 * Math.sin (allo_angle0);					
-				onField0	= field.onField (x0, y0);
+				onField0	= Localisation.onField (x0, y0);
 				
 				x1		= markerX0 - rho0 * Math.cos (allo_angle1);
 				y1		= markerY0 - rho0 * Math.sin (allo_angle1);					
-				onField1	= field.onField (x1, y1);
+				onField1	= Localisation.onField (x1, y1);
 
 				if (onField0 && !onField1)
 				{

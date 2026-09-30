@@ -20,7 +20,6 @@ public class NKFMK implements Localisation
 	static final int MAX_EKFS = 10;
 	int actives = 0;
 	
-	protected WorldModel		wm;
 	protected Gs				gs;
 
 	protected Kalman[]			ekf;
@@ -28,26 +27,23 @@ public class NKFMK implements Localisation
 		
 	LocLps lastLps;
 	
-	String _name;
 	int _toler;
 	double _odolinNoise;
 	double _odorotNoise; 
 	double _distNoise; 
 	double _angleNoise;
 	
-	public NKFMK (String name, int gsize, double rBlurPosBias, double rBlurAngleBias,
+	public NKFMK (int gsize, double rBlurPosBias, double rBlurAngleBias,
 			int toler, double odolinNoise, double odorotNoise, double distNoise, double angleNoise,
 			int numberEkfs, int minAge, double chithld, int posDetStrgy, int resetEKF, int resetFMK)
 	{
 		
-		_name 			= name;
 		_toler 			= toler;
 		_odolinNoise	= odolinNoise;
 		_odorotNoise	= odorotNoise; 
 		_distNoise		= distNoise; 
 		_angleNoise		= angleNoise;
 		
-		wm	= new WorldModel (name);
 		gs	= new Gs ();
 		
 		ekf = new Kalman[MAX_EKFS];
@@ -55,8 +51,8 @@ public class NKFMK implements Localisation
 		for(int i=0; i<MAX_EKFS;i++)
 			ekf[i] = null;
 
-		ekf[0] 	= new Kalman(name, toler, odolinNoise, odorotNoise, distNoise, angleNoise);
-		fmk 	= new GridFMarkov(name, gsize, rBlurPosBias, rBlurAngleBias);
+		ekf[0] 	= new Kalman(toler, odolinNoise, odorotNoise, distNoise, angleNoise);
+		fmk 	= new GridFMarkov(gsize, rBlurPosBias, rBlurAngleBias);
 						
 		GsPosition pos = new GsPosition();
 			
@@ -74,8 +70,6 @@ public class NKFMK implements Localisation
 	}
 
 	static protected double RAD (double deg)		{ return deg * Angles.DTOR; }
-	
-	public WorldModel getWorldModel ()			{ return wm; }
 	
 	public void updateMotionOnly (Odometry odo)
 	{
@@ -171,7 +165,7 @@ public class NKFMK implements Localisation
 					for(int i=0; i<MAX_EKFS;i++)  
 						if(ekf[i] == null) { 
 							actives++;
-							ekf[i] 	= new Kalman(_name, _toler, _odolinNoise, _odorotNoise, _distNoise, _angleNoise);
+							ekf[i] 	= new Kalman(_toler, _odolinNoise, _odorotNoise, _distNoise, _angleNoise);
 
 							GsPosition pos = new GsPosition();
 

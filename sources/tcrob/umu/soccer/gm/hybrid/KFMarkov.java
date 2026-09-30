@@ -21,15 +21,14 @@ public class KFMarkov implements Localisation
 	protected GridFMarkov				fmk;
 	protected Kalman					kalman;
 	
-	public KFMarkov (String name, int gsize, double rBlurPosBias, double rBlurAngleBias,
+	public KFMarkov (int gsize, double rBlurPosBias, double rBlurAngleBias,
 			int toler, double odolinNoise, double odorotNoise, double distNoise, double angleNoise)
 	{
-		fmk	= new GridFMarkov(name, gsize, rBlurPosBias, rBlurAngleBias);
-		kalman = new Kalman(name, toler, odolinNoise, odorotNoise, distNoise, angleNoise);
+		fmk	= new GridFMarkov(gsize, rBlurPosBias, rBlurAngleBias);
+		kalman = new Kalman(toler, odolinNoise, odorotNoise, distNoise, angleNoise);
 	}
 
 	public Gs getGs ()							{ return kalman.getGs (); }
-	public WorldModel getWorldModel ()			{ return kalman.getWorldModel (); }
 	public boolean getLastUpdated (int index)		{ return fmk.getLastUpdated (index); }
 	public Kalman getKalman ()					{ return kalman; }
 	public GridFMarkov getGridFMarkov ()			{ return fmk; }

@@ -7,6 +7,7 @@
 package tcrob.umu.soccer.gm.srl;
 
 import tcrob.umu.soccer.gm.data.*;
+import tcrob.umu.soccer.gm.*;
 
 import wucore.utils.math.*;
 import wucore.utils.math.stat.*;
@@ -15,7 +16,6 @@ public class MarkerSampler
 {
 	static public final double		PAN_VIEW		= RobotModel.HEAD_PAN + RobotModel.CAMERA_FOV * 0.5;
 
-	protected WorldModel				field;
 	protected GaussianSampler			gaussianSampler;
 	protected RandomNumberGenerator	random;
 	
@@ -24,9 +24,8 @@ public class MarkerSampler
 	protected double					markerTH;		// Global heading to marker
 	protected double					markerTHi;		// Inverted heading to marker
 	
-	public MarkerSampler (WorldModel field) 
+	public MarkerSampler ()
 	{
-		this.field		= field;
 		gaussianSampler	= new GaussianSampler (2);
 		random			= new RandomNumberGenerator ();
 	}
@@ -61,7 +60,7 @@ public class MarkerSampler
 			y		= markerY + pos[0] * Math.sin (from);
 			theta	= Angles.radnorm_180 (markerTH + pan - pos[1]);
 		}
-		while (!field.onField (x, y));
+		while (!Localisation.onField (x, y));
 		
 		pos[0] = x;
 		pos[1] = y;

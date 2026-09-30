@@ -65,13 +65,12 @@ public class GridFMarkov implements Localisation
 	private GridCell					cell;
 	
 	protected Gs						gs;
-	protected WorldModel				wm;
 	protected Odometry				motion;
 	
 	// structuring element for motion blurring
 	private double[][]				mSE = new double[3][3];
 
-	public GridFMarkov (String name, int gsize, double rBlurPosBias, double rBlurAngleBias)
+	public GridFMarkov (int gsize, double rBlurPosBias, double rBlurAngleBias)
 	{
 		this.gsize	= gsize;		// Size per cell (mm)
 		this.BlurPosBias = rBlurPosBias;
@@ -91,14 +90,11 @@ public class GridFMarkov implements Localisation
 		motion	= new Odometry ();
 		motion.reset ();
 
-//		System.out.println(name + "\n");
-		
-		wm = new WorldModel (name);
 		gs = new Gs ();
 
 		// World dimensions (grids)
-		gwidth	= wm.getTotalXSize()/gsize;
-		gheight	= wm.getTotalYSize()/gsize;
+		gwidth	= TOTAL_X_SIZE/gsize;
+		gheight	= TOTAL_Y_SIZE/gsize;
 		gtotal	= gwidth * gheight;
 				
 		mMap		= new GridCell[gtotal];
@@ -123,7 +119,6 @@ public class GridFMarkov implements Localisation
 	public int getWorldCoordinateX (int index)		{ return ((index - (gwidth >> 1)) * gsize) + (gsize >> 1); }
 	public int getWorldCoordinateY (int index)		{ return ((index - (gheight >> 1)) * gsize) + (gsize >> 1); }
 	public Gs getGs ()							{ return gs; }
-	public WorldModel getWorldModel ()			{ return wm; }
 	public int getGridSizeX ()					{ return gwidth; }
 	public int getGridSizeY ()					{ return gheight; }
 	public int getGridSide ()						{ return gsize; }
@@ -143,9 +138,8 @@ public class GridFMarkov implements Localisation
 		int			num_marks;
 		int			pos;
 		int			gx, gy;
-		ObjectModel	objm;
 		
-		num_marks = wm.getMarks ();
+		num_marks = NUM_MARKS;
 		gridconst = new GridConstraint[gwidth][gheight][num_marks];
 		for (i = 0; i < gwidth; i++)
 			for (j = 0; j < gheight; j++)
@@ -155,17 +149,11 @@ public class GridFMarkov implements Localisation
 		for (gx = 0; gx < gwidth; gx++)
 			for (gy = 0; gy < gheight; gy++)
 			{
-				for (pos = 0, i = 0; i < wm.getLMNumber(); i++, pos++)
-				{
-					objm = wm.getLM (i);
-					gridconst[gx][gy][pos].setConstraint (gx, gy, getXGridIndex(objm.getPosX()), getYGridIndex(objm.getPosY()), gsize);
-				}
+				for (pos = 0, i = 0; i < NUM_LANDMARKS; i++, pos++)
+					gridconst[gx][gy][pos].setConstraint (gx, gy, getXGridIndex(LM_X[i]), getYGridIndex(LM_Y[i]), gsize);
 				
-				for (i = 0; i < wm.getNetNumber(); i++, pos++)
-				{
-					objm = wm.getNet (i);
-					gridconst[gx][gy][pos].setConstraint (gx, gy, getXGridIndex(objm.getPosX()), getYGridIndex(objm.getPosY()), gsize);
-				}
+				for (i = 0; i < NUM_NETS; i++, pos++)
+					gridconst[gx][gy][pos].setConstraint (gx, gy, getXGridIndex(NET_X[i]), getYGridIndex(NET_Y[i]), gsize);
 			}
 	}
 	
@@ -811,10 +799,10 @@ public class GridFMarkov implements Localisation
 		}
 		
 		// if net is close, we are more uncertain about its angle
-		if (perception.rho < wm.getDogRadius())
+		if (perception.rho < DOG_RADIUS)
 			perception.acore = (double) (Math.PI * 2.0);
 		else
-			perception.acore = ((double)wm.getNet(0).getWidth() / (double)perception.rho);
+			perception.acore = ((double)NET_WIDTH / (double)perception.rho);
 		
 		if (perception.acore < MIN_ANGLE_WIDTH_NET)
 			perception.acore = MIN_ANGLE_WIDTH_NET;	
@@ -1018,15 +1006,15 @@ public class GridFMarkov implements Localisation
 		
 		// make sure we do not set our position outside the field
 		// (including nets)
-		int fieldMaxX = (wm.getTotalXSize() >> 1);
-		int fieldMaxY = (wm.getTotalYSize() >> 1) + wm.getNet(0).getHeight();
+		int fieldMaxX = (TOTAL_X_SIZE >> 1);
+		int fieldMaxY = (TOTAL_Y_SIZE >> 1) + NET_DEPTH;
 		
 		if (myposition.x >  fieldMaxX) myposition.x =  fieldMaxX;
 		if (myposition.y >  fieldMaxY) myposition.y =  fieldMaxY;
 		if (myposition.x < -fieldMaxX) myposition.x = -fieldMaxX;
 		if (myposition.y < -fieldMaxY) myposition.y = -fieldMaxY;
 		
-		gs.setFocus(1.0 - ((double)(myposition.dx * myposition.dy) / (double)(wm.getTotalXSize() * wm.getTotalYSize())));
+		gs.setFocus(1.0 - ((double)(myposition.dx * myposition.dy) / (double)(TOTAL_X_SIZE * TOTAL_Y_SIZE)));
 		if (gs.getFocus() < 0.0) gs.setFocus(0.0);
 		
 		gs.updateQuality ();
@@ -1084,14 +1072,14 @@ public class GridFMarkov implements Localisation
 		int i,j;
 		int idx;
 		
-		i = (int) (((double)x/(double)gsize) + ((double)wm.getTotalXSize()/(2.0*(double)gsize)));
-		j = (int) (((double)y/(double)gsize) + ((double)wm.getTotalYSize()/(2.0*(double)gsize)));
+		i = (int) (((double)x/(double)gsize) + ((double)TOTAL_X_SIZE/(2.0*(double)gsize)));
+		j = (int) (((double)y/(double)gsize) + ((double)TOTAL_Y_SIZE/(2.0*(double)gsize)));
 		
-//		i = (2 * x - wm.getTotalXSize())/(2*gsize);
-//		j = (2 * y - wm.getTotalYSize())/(2*gsize);
+//		i = (2 * x - TOTAL_X_SIZE)/(2*gsize);
+//		j = (2 * y - TOTAL_Y_SIZE)/(2*gsize);
 		
-		//System.out.println("x = "+x+"  i = ("+x+"/"+gsize+") +"+wm.getTotalXSize()+" / 2*"+gsize+"="+i);
-		//System.out.println("y = "+y+"  j = ("+y+"/"+gsize+") +"+wm.getTotalYSize()+" / 2*"+gsize+"="+j);
+		//System.out.println("x = "+x+"  i = ("+x+"/"+gsize+") +"+TOTAL_X_SIZE+" / 2*"+gsize+"="+i);
+		//System.out.println("y = "+y+"  j = ("+y+"/"+gsize+") +"+TOTAL_Y_SIZE+" / 2*"+gsize+"="+j);
 		
 		if(i>(gwidth-1))
 			i = gwidth-1;

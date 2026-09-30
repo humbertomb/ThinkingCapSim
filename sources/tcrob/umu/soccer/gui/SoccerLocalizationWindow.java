@@ -11,6 +11,7 @@ import javax.swing.table.*;
 
 import devices.pos.Position;
 import tcrob.umu.soccer.gm.Localisation;
+import static tcrob.umu.soccer.gm.Localisation.*;
 import tcrob.umu.soccer.gm.data.*;
 import wucore.utils.math.Angles;
 import wucore.widgets.*;
@@ -242,23 +243,22 @@ public class SoccerLocalizationWindow extends JFrame
 	/* The drawings                                                        */
 	/* ------------------------------------------------------------------ */
 
-	/** The lines of the field, the nets and the landmarks of a world model (mm), as ChaosManager draws them. */
-	static protected void drawField (Model2D model, WorldModel wm)
+	/** The lines of the field, the nets and the landmarks (mm), as ChaosManager draws them. */
+	static protected void drawField (Model2D model)
 	{
 		double			xborder, yborder, xgoal, ygoal, xnet, ynet;
-		ObjectModel		net;
 
-		xborder	= wm.getFieldXSize () * 0.5;
-		yborder	= wm.getFieldYSize () * 0.5;
-		xgoal	= wm.getAreaWidth () * 0.5;
-		ygoal	= yborder - wm.getAreaHeight ();
+		xborder	= FIELD_X_SIZE * 0.5;
+		yborder	= FIELD_Y_SIZE * 0.5;
+		xgoal	= AREA_WIDTH * 0.5;
+		ygoal	= yborder - AREA_HEIGHT;
 
 		model.addRawLine (xborder, yborder, -xborder, yborder, Model2D.THICK, Color.WHITE);
 		model.addRawLine (-xborder, yborder, -xborder, -yborder, Model2D.THICK, Color.WHITE);
 		model.addRawLine (-xborder, -yborder, xborder, -yborder, Model2D.THICK, Color.WHITE);
 		model.addRawLine (xborder, -yborder, xborder, yborder, Model2D.THICK, Color.WHITE);
 		model.addRawLine (-xborder, 0, xborder, 0, Model2D.THICK, Color.WHITE);
-		model.addRawCircle (0.0, 0.0, wm.getCircleRadius (), Model2D.THICK, Color.WHITE);
+		model.addRawCircle (0.0, 0.0, CIRCLE_RADIUS, Model2D.THICK, Color.WHITE);
 
 		model.addRawLine (xgoal, yborder, xgoal, ygoal, Model2D.THICK, Color.WHITE);
 		model.addRawLine (-xgoal, yborder, -xgoal, ygoal, Model2D.THICK, Color.WHITE);
@@ -267,9 +267,8 @@ public class SoccerLocalizationWindow extends JFrame
 		model.addRawLine (-xgoal, -yborder, -xgoal, -ygoal, Model2D.THICK, Color.WHITE);
 		model.addRawLine (-xgoal, -ygoal, xgoal, -ygoal, Model2D.THICK, Color.WHITE);
 
-		net		= wm.getNet (0);
-		xnet	= net.getWidth () * 0.5;
-		ynet	= yborder + net.getHeight ();
+		xnet	= NET_WIDTH * 0.5;
+		ynet	= yborder + NET_DEPTH;
 		model.addRawLine (xnet, yborder, xnet, ynet, Model2D.THICK, NET1);
 		model.addRawLine (-xnet, yborder, -xnet, ynet, Model2D.THICK, NET1);
 		model.addRawLine (-xnet, ynet, xnet, ynet, Model2D.THICK, NET1);
@@ -278,13 +277,12 @@ public class SoccerLocalizationWindow extends JFrame
 		model.addRawLine (-xnet, -ynet, xnet, -ynet, Model2D.THICK, NET2);
 
 		// the landmarks: the colour of their top band ringed by the one below (LM0 is Landmark1)
-		for (int i = 0; i < wm.getLMNumber (); i++)
+		for (int i = 0; i < NUM_LANDMARKS; i++)
 		{
-			ObjectModel		lm = wm.getLM (i);
 			Color			top = COLORS[LocLps.INIT_LMS + (i % 2)], below = COLORS[LocLps.INIT_LMS + ((i + 1) % 2)];
 
-			model.addRawCircle (lm.getPosX (), lm.getPosY (), wm.getLMRadius (), Model2D.FILLED, below);
-			model.addRawCircle (lm.getPosX (), lm.getPosY (), wm.getLMRadius () * 0.6, Model2D.FILLED, top);
+			model.addRawCircle (LM_X[i], LM_Y[i], LM_RADIUS, Model2D.FILLED, below);
+			model.addRawCircle (LM_X[i], LM_Y[i], LM_RADIUS * 0.6, Model2D.FILLED, top);
 		}
 	}
 
@@ -345,29 +343,22 @@ public class SoccerLocalizationWindow extends JFrame
 		/** The method as it is now and the reduced LPS it was fed with (the caller holds the method). */
 		void redraw (Localisation loc, LocLps lps)
 		{
-			WorldModel		wm = loc.getWorldModel ();
-			double			xb = wm.getTotalXSize () * 0.5, yb = wm.getTotalYSize () * 0.5, r = wm.getDogRadius ();
+			double			xb = TOTAL_X_SIZE * 0.5, yb = TOTAL_Y_SIZE * 0.5, r = DOG_RADIUS;
 
 			this.loc	= loc;
 			this.lps	= lps;
 			model.clearView ();
 			model.addRawBox (-xb, -yb, xb, yb, Model2D.FILLED, Color.GREEN.darker ());
 			loc.drawElements (model);
-			drawField (model, wm);
+			drawField (model);
 			if (lps != null)
 			{
 				for (int i = 0; i < LocLps.NUM_LMS; i++)
 					if (loc.getLastUpdated (LocLps.INIT_LMS + i))
-					{
-						ObjectModel		o = wm.getLM (i);
-						model.addRawCircle (o.getPosX (), o.getPosY (), lps.getLpo (LocLps.INIT_LMS + i).rho, Model2D.PLAIN, Color.MAGENTA);
-					}
+						model.addRawCircle (LM_X[i], LM_Y[i], lps.getLpo (LocLps.INIT_LMS + i).rho, Model2D.PLAIN, Color.MAGENTA);
 				for (int i = 0; i < LocLps.NUM_NETS; i++)
 					if (loc.getLastUpdated (LocLps.INIT_NETS + i))
-					{
-						ObjectModel		o = wm.getNet (i);
-						model.addRawCircle (o.getPosX (), o.getPosY (), lps.getLpo (LocLps.INIT_NETS + i).rho, Model2D.PLAIN, Color.MAGENTA.darker ());
-					}
+						model.addRawCircle (NET_X[i], NET_Y[i], lps.getLpo (LocLps.INIT_NETS + i).rho, Model2D.PLAIN, Color.MAGENTA.darker ());
 			}
 			if (showPaths)
 			{

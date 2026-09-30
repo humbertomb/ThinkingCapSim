@@ -29,10 +29,10 @@ public class MarkerUpdater
 		gaussianEvaluator.setMinProb (min_prob);
 	}
 	
-	public void setMarkerLoc (ObjectModel obj) 
+	public void setMarkerLoc (double x, double y) 
 	{
-		markerX = obj.getPosX ();
-		markerY = obj.getPosY ();
+		markerX = x;
+		markerY = y;
 	}
 	
 	public void updateSamples (LocLpo lpo, double rhoStdDev, double thetaStdDev, LocaleSampled locale) 
