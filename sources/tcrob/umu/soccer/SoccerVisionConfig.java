@@ -43,7 +43,8 @@ public class SoccerVisionConfig
 		public int						ball_channel	= 0;
 		public int						net1_channel	= 1;
 		public int						net2_channel	= 2;
-		public int						lm_channel		= 4;				// the pink of the landmarks
+		public int						lm1_channel		= 1;				// the landmarks: the colour on top of landmark 1 (below it, lm2's)
+		public int						lm2_channel		= 2;				// ... and the one on top of landmark 2 (lm1's below it)
 
 		public int 						ball_sx_min		= 2;				// Minimum reliable size in image (pix)
 		public int 						ball_sy_min		= 2;				// was 5 --AS 020618

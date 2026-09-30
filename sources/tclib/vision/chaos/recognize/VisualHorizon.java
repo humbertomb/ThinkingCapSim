@@ -146,16 +146,20 @@ public class VisualHorizon
 		}
 	}
 	
+	/** Whether a blob is below the horizon (by k pixels at least); true when no horizon was found, which rules nothing out. */
 	public boolean isBelowHorizont (Blob blob, int k)
 	{
 		int y;
+		if (top == null)		return true;
 		y = (int) (top.m * blob.getX () + top.n) - k;
 		return (blob.getY () > y);
 	}
 
+	/** Whether a blob is above the horizon (up to k pixels below it); true when no horizon was found. */
 	public boolean isAboveHorizont (Blob blob, int k)
 	{
 		int y;
+		if (top == null)		return true;
 		y = (int) (top.m * blob.getX () + top.n) + k;
 		return (blob.getY () < y);
 	}

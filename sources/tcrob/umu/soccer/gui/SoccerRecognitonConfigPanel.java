@@ -39,7 +39,8 @@ public class SoccerRecognitonConfigPanel extends JPanel
 	private ChannelSelector ballch;
 	private ChannelSelector net1ch;
 	private ChannelSelector net2ch;
-	private ChannelSelector lmch;
+	private ChannelSelector lm1ch;
+	private ChannelSelector lm2ch;
 
 	public SoccerRecognizer			recognizer;
 	protected Channels				channels;
@@ -56,7 +57,8 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		ballch		= new ChannelSelector (recognizer.params.ball_channel, ch -> recognizer.params.ball_channel = ch);
 		net1ch		= new ChannelSelector (recognizer.params.net1_channel, ch -> recognizer.params.net1_channel = ch);
 		net2ch		= new ChannelSelector (recognizer.params.net2_channel, ch -> recognizer.params.net2_channel = ch);
-		lmch		= new ChannelSelector (recognizer.params.lm_channel, ch -> recognizer.params.lm_channel = ch);
+		lm1ch		= new ChannelSelector (recognizer.params.lm1_channel, ch -> recognizer.params.lm1_channel = ch);
+		lm2ch		= new ChannelSelector (recognizer.params.lm2_channel, ch -> recognizer.params.lm2_channel = ch);
 		
 		ballsxmin 	= new JTextField (Integer.valueOf (recognizer.params.ball_sx_min).toString ());
 		ballsymin 	= new JTextField (Integer.valueOf (recognizer.params.ball_sy_min).toString ());
@@ -112,8 +114,9 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		ballch.current		= recognizer.params.ball_channel;
 		net1ch.current		= recognizer.params.net1_channel;
 		net2ch.current		= recognizer.params.net2_channel;
-		lmch.current		= recognizer.params.lm_channel;
-		for (ChannelSelector s : new ChannelSelector[] { carpetch, ballch, net1ch, net2ch, lmch })
+		lm1ch.current		= recognizer.params.lm1_channel;
+		lm2ch.current		= recognizer.params.lm2_channel;
+		for (ChannelSelector s : new ChannelSelector[] { carpetch, ballch, net1ch, net2ch, lm1ch, lm2ch })
 			s.refresh ();
 	}
 
@@ -365,7 +368,8 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		panel = new JPanel();
 		panel.setBorder(new javax.swing.plaf.BorderUIResource.TitledBorderUIResource(new javax.swing.border.LineBorder(new java.awt.Color(153, 153, 153), 1, false), "Landmark Recognition", 4, 2, new java.awt.Font("Application", 1, 12), new java.awt.Color(102, 102, 153)));
 		panel.setLayout(new BorderLayout ());
-		panel.add (channelLines (new String[] { "Channel" }, lmch), BorderLayout.NORTH);
+		// the two landmarks have the same two bands, one of them on top of each: the channel of the one on top says which
+		panel.add (channelLines (new String[] { "Landmark 1 top channel", "Landmark 2 top channel" }, lm1ch, lm2ch), BorderLayout.NORTH);
 		panel.add (left, BorderLayout.WEST);
 		panel.add (right, BorderLayout.CENTER);
 

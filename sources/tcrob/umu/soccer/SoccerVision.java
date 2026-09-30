@@ -30,9 +30,12 @@ public class SoccerVision extends Perception
 	
 	static public final double			BALL_RADIUS	= 0.11;			// Ball radius (m)
 	static public final double			NET_SIZE	= 0.2;			// Net size (m)
+	static public final double			LM_RADIUS	= 0.12;			// Landmark (beacon) radius as drawn in the LPS (m; it is 0.05, but so it is seen, as the ball)
+	static public final double			LM_BAND		= 0.30;			// How high its two bands of colour meet (m): what it is placed by
 
 	static public final double			BALL_FADING	= 8.0;
 	static public final double			NET_FADING	= 15.0;
+	static public final double			LM_FADING	= 15.0;
 
 	static public final int				SCAN_STEPS	= 10;
 
@@ -52,6 +55,8 @@ public class SoccerVision extends Perception
 	protected LPOBall					ball;
 	protected LPONet					net1;
 	protected LPONet					net2;
+	protected LPOLandmark				landmark1;
+	protected LPOLandmark				landmark2;
 	protected LPOAlign					align;
 
 	// Vision processing
@@ -220,6 +225,16 @@ public class SoccerVision extends Perception
 		net2.anchor_fade = NET_FADING;
 		net2.color (WColor.BLUE);
 		
+		landmark1	= new LPOLandmark (LM_RADIUS, "Landmark1", LPOSource.PERCEPT);
+		landmark1.anchor_fade = LM_FADING;
+		landmark1.color (WColor.YELLOW);
+		landmark1.below (WColor.CYAN);
+
+		landmark2	= new LPOLandmark (LM_RADIUS, "Landmark2", LPOSource.PERCEPT);
+		landmark2.anchor_fade = LM_FADING;
+		landmark2.color (WColor.CYAN);
+		landmark2.below (WColor.YELLOW);
+		
 		align	= new LPOAlign ("Align", LPOSource.ARTIFACT);
 		align.anchor_fade = NET_FADING;
 		align.color (WColor.MAGENTA);
@@ -378,7 +393,7 @@ public class SoccerVision extends Perception
 		if (d != null)
 			foveate (frame, d, o == ball);
 		else if ((o != null) && (needOf (what) - o.anchor () <= SLACK * needOf (what)))
-			turnTo (frame.device, o, (o == ball) ? BALL_RADIUS : NET_AIM);
+			turnTo (frame.device, o, (o == ball) ? BALL_RADIUS : (o instanceof LPOLandmark) ? LM_BAND : NET_AIM);
 		else
 			do_scan_pattern ();
 	}
@@ -390,6 +405,8 @@ public class SoccerVision extends Perception
 		if ((ball != null) && name.equals (ball.label ()))	return recognizer.ball;
 		if ((net1 != null) && name.equals (net1.label ()))	return recognizer.net1;
 		if ((net2 != null) && name.equals (net2.label ()))	return recognizer.net2;
+		if ((landmark1 != null) && name.equals (landmark1.label ()))	return recognizer.landmark1;
+		if ((landmark2 != null) && name.equals (landmark2.label ()))	return recognizer.landmark2;
 		return null;
 	}
 
@@ -487,7 +504,7 @@ public class SoccerVision extends Perception
 	/* ------------------------------------------------------------------ */
 
 	/**
-	 * Places the objects the recognizer found in the frame (ball, nets) around
+	 * Places the objects the recognizer found in the frame (ball, nets, landmarks) around
 	 * the robot, in their LPOs, and from them the point to align the ball with
 	 * the net from. The LPOs are in the LPS of the robot (the one of its
 	 * perception module, IndoorPerception), which keeps them (moves them with
@@ -508,6 +525,8 @@ public class SoccerVision extends Perception
 			see (ball, recognizer.ball, false, BALL_RADIUS, recognizer.params.ball_channel, item, w, h);
 			see (net1, recognizer.net1, true, 0.0, recognizer.params.net1_channel, item, w, h);
 			see (net2, recognizer.net2, true, 0.0, recognizer.params.net2_channel, item, w, h);
+			seeLandmark (landmark1, recognizer.landmark1, recognizer.params.lm1_channel, recognizer.params.lm2_channel, item, w, h);
+			seeLandmark (landmark2, recognizer.landmark2, recognizer.params.lm2_channel, recognizer.params.lm1_channel, item, w, h);
 		}
 	}
 
@@ -525,7 +544,7 @@ public class SoccerVision extends Perception
 	protected void attach (LPS l)
 	{
 		if (l == attached)		return;
-		for (LPO o : new LPO[] { ball, net1, net2, align })
+		for (LPO o : new LPO[] { ball, net1, net2, landmark1, landmark2, align })
 		{
 			if (o == null)			continue;
 
@@ -576,6 +595,31 @@ public class SoccerVision extends Perception
 		lpo.locate_polar (p[0], p[1], 0.0);
 		if ((channel >= 0) && (channel < vconfig.channels.size ()) && (vconfig.channels.at (channel).color != null))
 			lpo.color (ColorTool.fromColorToWColor (vconfig.channels.at (channel).color));
+		lpo.active (true);
+		lpo.anchor (1.0);
+		lpo.ageing (0);
+	}
+
+	/**
+	 * A landmark seen in the frame: its LPO goes where the ray through the
+	 * middle of the row where its two bands meet reaches the height they meet at
+	 * ({@link #LM_BAND}) -- the white below them is not looked for, so its foot
+	 * is not seen --, in the colours of the channels of its two bands (the top
+	 * one first), and the LPS is sure of it again.
+	 */
+	protected void seeLandmark (LPOLandmark lpo, SoccerRecognizer.Detection d, int top, int below, ItemCamera frame, int w, int h)
+	{
+		double[]		p;
+
+		if ((d == null) || (lpo == null))		return;
+		p	= floor (frame.device, frame.pan, frame.tilt, d.x, d.band, w, h, LM_BAND);
+		if (p == null)							return;
+
+		lpo.locate_polar (p[0], p[1], 0.0);
+		if ((top >= 0) && (top < vconfig.channels.size ()) && (vconfig.channels.at (top).color != null))
+			lpo.color (ColorTool.fromColorToWColor (vconfig.channels.at (top).color));
+		if ((below >= 0) && (below < vconfig.channels.size ()) && (vconfig.channels.at (below).color != null))
+			lpo.below (ColorTool.fromColorToWColor (vconfig.channels.at (below).color));
 		lpo.active (true);
 		lpo.anchor (1.0);
 		lpo.ageing (0);

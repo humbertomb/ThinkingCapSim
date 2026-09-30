@@ -43,6 +43,7 @@ public class SoccerRecognizer
 		public int		pixels;						// how many pixels it has
 		public double	cx, cy, radius;				// the circle of a ball (its centre may be out of the frame)
 		public boolean	round;						// whether that circle was fitted to its edge (or is its box)
+		public int		band = -1;					// a landmark: the row where its top band meets the one below (-1: none)
 
 		Detection (Blob b)
 		{
@@ -65,10 +66,24 @@ public class SoccerRecognizer
 			round	= c.fitted;
 		}
 
+		/** A landmark: the box of its two bands, the row where they meet, and the pixels of both. */
+		Detection (Blob top, Blob below)
+		{
+			xmin	= Math.min (top.getXMin (), below.getXMin ());		xmax	= Math.max (top.getXMax (), below.getXMax ());
+			ymin	= Math.min (top.getYMin (), below.getYMin ());		ymax	= Math.max (top.getYMax (), below.getYMax ());
+			x		= (xmin + xmax) / 2;
+			y		= (ymin + ymax) / 2;
+			pixels	= top.getNumPixels () + below.getNumPixels ();
+			band	= (top.getYMax () + below.getYMin ()) / 2;
+			cx		= x;
+			cy		= band;
+			radius	= (xmax - xmin) / 2.0;
+		}
+
 		public String toString ()
 		{
 			return "(" + x + "," + y + ") [" + xmin + ".." + xmax + " x " + ymin + ".." + ymax + "] " + pixels + " px"
-					+ String.format (" circle (%.0f,%.0f) r=%.0f%s", cx, cy, radius, round ? "" : " (box)");
+					+ ((band >= 0) ? " band at " + band : String.format (" circle (%.0f,%.0f) r=%.0f%s", cx, cy, radius, round ? "" : " (box)"));
 		}
 	}
 
@@ -76,6 +91,8 @@ public class SoccerRecognizer
 	public Detection				ball;
 	public Detection				net1;
 	public Detection				net2;
+	public Detection				landmark1;			// the landmark with the colour of lm1_channel on top (that of lm2_channel below it)
+	public Detection				landmark2;			// ... and the one the other way up
 
 	private BufferedImageDrawing	dwg = new BufferedImageDrawing ();
 
@@ -89,15 +106,16 @@ public class SoccerRecognizer
 	{
 		BufferedImage		output;
 		VisualHorizon		horizon;
-		Blobs				pinks;
 		
 		output	= new BufferedImage (input.getWidth(), input.getHeight(), BufferedImage.TYPE_INT_RGB);
 		output.setData (input.getData ());
 		dwg.updateImage (output);
 		
-		ball	= null;
-		net1	= null;
-		net2	= null;
+		ball		= null;
+		net1		= null;
+		net2		= null;
+		landmark1	= null;
+		landmark2	= null;
 
 		computeFovea (output, dwg);
 		dwg.setThickness (BufferedImageDrawing.MARK);			// what is recognised is marked thick, to be seen at a glance
@@ -121,7 +139,11 @@ public class SoccerRecognizer
 			}
 		}
 		
-		pinks	= has (channels, blobs, params.lm_channel) ? blobs[params.lm_channel] : NO_BLOBS;
+		// the landmarks first: a blob of each of their two channels, one on top of the
+		// other, is one of them -- and those blobs are not nets, though they are of
+		// the colours of the nets
+		java.util.List<Blob>	parts = landmarks (blobs, channels, horizon);
+
 		for (int n : new int[] { params.net1_channel, params.net2_channel })
 		{
 			NetFitting	net = new NetFitting ();
@@ -132,7 +154,7 @@ public class SoccerRecognizer
 			for (int i = 0; i < blobs[n].getBlobNumber (); i++)
 			{
 				Blob		blob = blobs[n].getBlob (i);
-				if (!testPinkOverlap (blob, pinks) && testValidNet (blob, config, horizon, dwg, color))
+				if (!partOf (blob, parts) && testValidNet (blob, config, horizon, dwg, color))
 				{
 					net.doFitting (output, segmented, blobs[n], channels.at (n), channels.at (params.carpet_channel));
 					if (n == params.net1_channel)
@@ -141,8 +163,6 @@ public class SoccerRecognizer
 					}
 					else if ((net2 == null) || (blob.getNumPixels () > net2.pixels))	net2 = new Detection (blob);
 				}
-				else
-					testValidLandmark (blob, pinks, config, horizon, dwg, color);
 			}
 		}
 				
@@ -191,188 +211,109 @@ public class SoccerRecognizer
 		return true;
 	}
 	
-	protected boolean testValidLandmark (Blob blob, Blobs pinks, SoccerVisionConfig config, VisualHorizon horizon, BufferedImageDrawing dwg, int color)
+	/**
+	 * The landmarks in the frame: every blob of one of their two channels (lm1,
+	 * lm2) that could be a band of one ({@link #testValidLandmark}) is paired
+	 * with every one of the other channel that could, and a pair of bands one
+	 * right on top of the other, about as wide ({@link #checkBlobPair}), is a
+	 * landmark -- the first one when the lm1 colour is on top, the second when
+	 * the lm2 one is. The largest of each is the one taken. Returns the blobs
+	 * that made up a landmark (whichever was taken), which are not nets.
+	 */
+	protected java.util.List<Blob> landmarks (Blobs[] blobs, Channels channels, VisualHorizon horizon)
 	{
-		Blob			lmark;
-		
+		java.util.List<Blob>	parts = new java.util.ArrayList<Blob> ();
+		int						c1 = params.lm1_channel, c2 = params.lm2_channel;
+
+		if ((c1 == c2) || !has (channels, blobs, c1) || !has (channels, blobs, c2))		return parts;
+		for (int i = 0; i < blobs[c1].getBlobNumber (); i++)
+		{
+			Blob	a = blobs[c1].getBlob (i);
+
+			if (!testValidLandmark (a, horizon))		continue;
+			for (int k = 0; k < blobs[c2].getBlobNumber (); k++)
+			{
+				Blob	b = blobs[c2].getBlob (k);
+
+				if (!testValidLandmark (b, horizon) || !checkBlobPair (a, b))		continue;
+
+				boolean		first = a.getY () < b.getY ();					// the lm1 colour on top: landmark 1
+				Blob		top = first ? a : b, below = first ? b : a;
+				Detection	d = new Detection (top, below);
+
+				parts.add (a);
+				parts.add (b);
+				dwg.drawBox (d.xmin, d.ymin, d.xmax, d.ymax, channels.at (first ? c1 : c2).color.getRGB ());
+				dwg.drawLine (d.xmin, d.band, d.xmax, d.band, channels.at (first ? c2 : c1).color.getRGB ());
+				if (first)
+				{
+					if ((landmark1 == null) || (d.pixels > landmark1.pixels))		landmark1 = d;
+				}
+				else if ((landmark2 == null) || (d.pixels > landmark2.pixels))		landmark2 = d;
+			}
+		}
+		return parts;
+	}
+
+	/** Whether a blob is one of some (the same one, not an equal one). */
+	static protected boolean partOf (Blob blob, java.util.List<Blob> parts)
+	{
+		for (Blob p : parts)		if (p == blob)		return true;
+		return false;
+	}
+
+	/** Whether a blob can be a band of a landmark: big enough, dense enough, and above the horizon (by so much). */
+	protected boolean testValidLandmark (Blob blob, VisualHorizon horizon)
+	{
 		if ((blob.getSizeX() < params.lm_sx_min) || (blob.getSizeY() < params.lm_sy_min))
 			return false;
 		if (	blob.getArea () / blob.getNumPixels () > params.lm_density)
 			return false;
 		if (!horizon.isAboveHorizont (blob, params.lm_horiz_hgt))
 			return false;
-	
-		for (int i = 0; i < pinks.getBlobNumber(); ++i)
-		{
-			Blob			pink;
-			
-			pink		= pinks.getBlob (i);
-			lmark	= checkBlobPair (blob, pink, config);
-			if (lmark != null)
-			{
-				dwg.drawBox (lmark.getXMin(), lmark.getYMin(), lmark.getXMax(), lmark.getYMax(), Color.PINK.getRGB ());
-				dwg.drawLine (lmark.getXMin(), lmark.getY(), lmark.getXMax(), lmark.getY(), color);
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	protected boolean testPinkOverlap (Blob blob, Blobs pinks)
-	{
-		for (int i = 0; i < pinks.getBlobNumber(); ++i)
-		{
-			Blob			pink;
-			int			xoverlap, temp;
-			int			minsizx, relation;
-			
-			pink		= pinks.getBlob (i);
-			minsizx	= Math.min (blob.getSizeX(), pink.getSizeX());
-			xoverlap	= blob.getXMax() - pink.getXMin();
-			temp		= pink.getXMax() - blob.getXMin();
-			
-			if (pink.getSizeY() == 0)					continue;
-			relation	= blob.getSizeY() / pink.getSizeY();
-			
-			
-			if (temp < xoverlap)		xoverlap = temp;
-			
-			if (minsizx < xoverlap)
-				xoverlap = minsizx;
-			else if (xoverlap < 0)
-				xoverlap = 0;
-			
-			if ((xoverlap != 0) && (relation < 3))		return true;
-		}
-		
-		return false;
+		return true;
 	}
 
-	protected Blob checkBlobPair (Blob blob_color, Blob blob_pink, SoccerVisionConfig config)
+	/**
+	 * Whether two blobs are the two bands of a landmark: about as wide and as
+	 * high as each other, overlapping enough across, and one right on top of the
+	 * other (a small gap between them, or a small overlap).
+	 */
+	protected boolean checkBlobPair (Blob a, Blob b)
 	{
-		// If blob is TOO SMALL for this object, reject it
-		if (((blob_pink.getSizeX()) < params.lm_sx_min) || ((blob_pink.getSizeY()) < params.lm_sy_min ))
-		{
-			return null;
-		}
-		
-		// If density is too small for this object, reject it
-		if (blob_pink.getArea () / blob_pink.getNumPixels () > params.lm_density)
-		{
-			return null;
-		}
-		
-		// Calculate differences between blobs
-		int xsizediff, ysizediff, xoverlap, xgap, yoverlap, ygap, temp;
-		int min_sizex = Math.min(blob_color.getSizeX(), blob_pink.getSizeX());
-		int min_sizey = Math.min(blob_color.getSizeY(), blob_pink.getSizeY());
-				
-		xsizediff = (blob_color.getSizeX())-(blob_pink.getSizeX());
-		if (xsizediff < 0) xsizediff = -xsizediff;
-		
-		ysizediff = (blob_color.getSizeY())-(blob_pink.getSizeY());
-		if (ysizediff < 0) ysizediff = -ysizediff;
-		
-		xoverlap	= (blob_color.getXMax()) - (blob_pink.getXMin());
-		temp		= (blob_pink.getXMax()) - (blob_color.getXMin());
+		int		xsizediff, ysizediff, xoverlap, xgap, yoverlap, ygap, temp;
+		int		min_sizex = Math.min (a.getSizeX (), b.getSizeX ());
+		int		min_sizey = Math.min (a.getSizeY (), b.getSizeY ());
+
+		if ((min_sizex <= 0) || (min_sizey <= 0))		return false;
+
+		xsizediff	= Math.abs (a.getSizeX () - b.getSizeX ());
+		ysizediff	= Math.abs (a.getSizeY () - b.getSizeY ());
+
+		xoverlap	= a.getXMax () - b.getXMin ();
+		temp		= b.getXMax () - a.getXMin ();
 		if (temp < xoverlap)			xoverlap = temp;
-		
-		if (min_sizex < xoverlap)
-			xoverlap = min_sizex;
-		else if (xoverlap < 0)
-			xoverlap = 0;
-		
-		yoverlap	= (blob_color.getYMax()) - (blob_pink.getYMin());
-		temp		= (blob_pink.getYMax()) - (blob_color.getYMin());
-		if (temp < yoverlap)			yoverlap = temp;
-		
-		if (min_sizey < yoverlap)
-			yoverlap = min_sizey;
-		else if (yoverlap < 0)
-			yoverlap = 0;
-		
-		xgap = (blob_color.getXMin()) - (blob_pink.getXMax());
-		temp = (blob_pink.getXMin()) - (blob_color.getXMax());
-		if (temp > xgap)				xgap = temp;
-		if (xgap < 0)				xgap = 0;
-		
-		ygap = (blob_color.getYMin()) - (blob_pink.getYMax());
-		temp = (blob_pink.getYMin()) - (blob_color.getYMax());
-		if (temp > ygap)				ygap = temp;
-		if (ygap < 0)				ygap = 0;
-				
-		// Size of two blobs should be similar
-		if((xsizediff*100) > (XSIZEDIFF_MAX * min_sizex))
-		{
-			return null;
-		}
-		
-		if((ysizediff*100) > (YSIZEDIFF_MAX * min_sizey))
-		{
-			return null;
-		}
-		
-		// Check for gap or lack of overlap in x direction
-		if ((xoverlap*100) < (XOVERLAP_MIN*min_sizex))
-		{
-			return null;
-		}
-		
-		if ((xgap*100) > (XGAP_MAX*min_sizex))
-		{
-			return null;
-		}
-		
-		// Check for gap or overlap in y direction
-		if ((yoverlap*100) > (YOVERLAP_MAX*min_sizey))
-		{
-			return null;
-		}
-		
-		if (ygap > YGAP_MAX)
-		{
-			return null;
-		}
+		if (min_sizex < xoverlap)		xoverlap = min_sizex;
+		else if (xoverlap < 0)			xoverlap = 0;
 
-		// Ok. It is possible to make new blob of wanted LM.
-		Blob		blob;
-		Blob		blob_up, blob_down;
-		int		mymin, mymax;
-		
-		if (blob_color.getY () < blob_pink.getY ())
-		{
-			blob_up	= blob_color;
-			blob_down = blob_pink;
-		}
-		else
-		{
-			blob_up	= blob_pink;
-			blob_down = blob_color;
-		}
-		
-		if (blob_down.getSizeY() < blob_up.getSizeY())
-		{
-			mymin = blob_up.getYMin();
-			mymax = mymin + 2 * blob_up.getSizeY();
-		}
-		else
-		{
-			mymax = blob_down.getYMax();
-			mymin = mymax - 2 * blob_down.getSizeY();
-		}
-		
-		blob = new Blob ();
-		blob.setXMin (Math.min (blob_down.getXMin(), blob_up.getXMin()));
-		blob.setXMax (Math.max (blob_down.getXMax(), blob_up.getXMax()));	
-		blob.setYMin (mymin);
-		blob.setYMax (mymax);
-		blob.setSizeY (blob.getYMax()-blob.getYMin());
-		blob.setSizeX (blob.getXMax()-blob.getXMin());
-		blob.setX ((blob_down.getX() + blob_up.getX()) >> 1);
-		blob.setY ((blob_down.getY() + blob_up.getY()) >> 1);
-		
-		return blob;
+		yoverlap	= a.getYMax () - b.getYMin ();
+		temp		= b.getYMax () - a.getYMin ();
+		if (temp < yoverlap)			yoverlap = temp;
+		if (min_sizey < yoverlap)		yoverlap = min_sizey;
+		else if (yoverlap < 0)			yoverlap = 0;
+
+		xgap		= Math.max (a.getXMin () - b.getXMax (), b.getXMin () - a.getXMax ());
+		if (xgap < 0)					xgap = 0;
+		ygap		= Math.max (a.getYMin () - b.getYMax (), b.getYMin () - a.getYMax ());
+		if (ygap < 0)					ygap = 0;
+
+		if ((xsizediff * 100) > (XSIZEDIFF_MAX * min_sizex))		return false;		// the two about as big
+		if ((ysizediff * 100) > (YSIZEDIFF_MAX * min_sizey))		return false;
+		if ((xoverlap * 100) < (XOVERLAP_MIN * min_sizex))			return false;		// one over the other
+		if ((xgap * 100) > (XGAP_MAX * min_sizex))					return false;
+		if ((yoverlap * 100) > (YOVERLAP_MAX * min_sizey))			return false;		// on top, not across each other
+		if (ygap > YGAP_MAX)										return false;
+		return true;
 	}
 	
 	protected void computeFovea (BufferedImage output, BufferedImageDrawing dwg)
