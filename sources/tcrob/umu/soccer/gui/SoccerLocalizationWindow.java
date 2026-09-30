@@ -19,10 +19,10 @@ import wucore.widgets.*;
  * The window of the localisation of a soccer robot (SoccerLocalization), after
  * the simulator of ChaosManager: the current position (the global state the
  * method estimates, and the true one of the simulation), the reduced LPS the
- * method is fed with (a row per object), the inside of the method (its
- * drawing: the grid, the particles...) over the field with what was just used
- * of each object, and the field of the RoboCup 2007 with the estimated robot,
- * its uncertainty and the true one, and the path of both.
+ * method is fed with (a row per object), and the inside of the method (its
+ * drawing: the grid, the particles...) over the field of the RoboCup 2007, with
+ * what was just used of each object, the estimated robot (its uncertainty) and
+ * the true one, and the path of both (View, Show robot path).
  *
  * {@link #update} is called from the thread of the module with the method as it
  * is, and the window draws it on the event thread, holding the method (the
@@ -32,7 +32,7 @@ public class SoccerLocalizationWindow extends JFrame
 {
 	private static final long			serialVersionUID = 1L;
 
-	static public final int				WIN_WIDTH		= 1000;
+	static public final int				WIN_WIDTH		= 800;
 	static public final int				WIN_HEIGHT		= 640;
 	static public final int				PATH_SIZE		= 2000;			// the positions kept of each path
 
@@ -48,7 +48,7 @@ public class SoccerLocalizationWindow extends JFrame
 	protected LpsTableModel				lpsModel;
 	protected JTable					lpsTable;
 	protected LocalisationView			locView;
-	protected FieldView					fieldView;
+	protected boolean					showPaths		= true;		// View menu: the paths of the robots
 
 	protected LocLps					lps;				// what is shown
 	protected Localisation				loc;
@@ -56,15 +56,14 @@ public class SoccerLocalizationWindow extends JFrame
 	public SoccerLocalizationWindow (JFrame frame, String title)
 	{
 		JPanel		pane = (JPanel) getContentPane ();
-		JPanel		left, table, local, field;
+		JPanel		left, table, local;
 
 		pane.setLayout (new BorderLayout ());
 
 		// Current position
-		positionArea	= new JTextArea (2, 40);
+		positionArea	= new JTextArea (5, 30);
 		positionArea.setEditable (false);
 		positionArea.setFont (new Font (Font.MONOSPACED, Font.PLAIN, 12));
-		pane.add (titled ("Current Position", positionArea), BorderLayout.NORTH);
 
 		// The reduced LPS and the localisation method
 		lpsModel	= new LpsTableModel ();
@@ -73,26 +72,23 @@ public class SoccerLocalizationWindow extends JFrame
 		lpsTable.setGridColor (Color.LIGHT_GRAY);
 		lpsTable.setFillsViewportHeight (true);
 		table		= titled ("LPS", new JScrollPane (lpsTable));
-		table.setPreferredSize (new Dimension (360, 140));
+		table.setPreferredSize (new Dimension (360, 150));
 
 		locView		= new LocalisationView ();
 		local		= titled ("Localisation", locView);
 
+		// on the left the position and the LPS, one over the other; the rest, the localisation
 		left		= new JPanel (new BorderLayout ());
-		left.add (table, BorderLayout.NORTH);
-		left.add (local, BorderLayout.CENTER);
-		left.setPreferredSize (new Dimension (380, WIN_HEIGHT));
+		left.add (titled ("Current Position", positionArea), BorderLayout.NORTH);
+		left.add (table, BorderLayout.CENTER);
+		left.setPreferredSize (new Dimension (360, WIN_HEIGHT));
 
-		// The field (RoboCup 2007) with the estimate and the ground truth
-		fieldView	= new FieldView ();
-		field		= titled ("GS & Ground Truth (RoboCup 2007)", fieldView);
+		JPanel		column = new JPanel (new BorderLayout ());
+		column.add (left, BorderLayout.NORTH);
 
-		JButton		clear = new JButton ("Clear paths");
-		clear.addActionListener (_ -> { fieldView.clearPaths (); fieldView.redraw (); });
-		field.add (clear, BorderLayout.SOUTH);
-
-		pane.add (left, BorderLayout.WEST);
-		pane.add (field, BorderLayout.CENTER);
+		pane.add (column, BorderLayout.WEST);
+		pane.add (local, BorderLayout.CENTER);
+		setJMenuBar (menuBar ());
 
 		setTitle (title);
 		setSize (new Dimension (WIN_WIDTH, WIN_HEIGHT));
@@ -113,6 +109,22 @@ public class SoccerLocalizationWindow extends JFrame
 		{
 			public void windowClosing (WindowEvent e)		{ setVisible (false); }
 		});
+	}
+
+	/** The View menu: whether the paths of the robots are drawn (and forgetting them). */
+	protected JMenuBar menuBar ()
+	{
+		JMenuBar			mb = new JMenuBar ();
+		JMenu				view = new JMenu ("View");
+		JCheckBoxMenuItem	paths = new JCheckBoxMenuItem ("Show robot path", showPaths);
+		JMenuItem			clear = new JMenuItem ("Clear robot path");
+
+		paths.addActionListener (_ -> { showPaths = paths.isSelected ();	locView.repaintAll (); });
+		clear.addActionListener (_ -> { locView.clearPaths ();	locView.repaintAll (); });
+		view.add (paths);
+		view.add (clear);
+		mb.add (view);
+		return mb;
 	}
 
 	static protected JPanel titled (String title, Component c)
@@ -146,11 +158,9 @@ public class SoccerLocalizationWindow extends JFrame
 			synchronized (loc)
 			{
 				gs	= loc.getGs ();
+				locView.track (gs, gt);
 				locView.redraw (loc, lps);
-				fieldView.redraw (loc.getWorldModel (), gs, gt);
 			}
-		else
-			fieldView.redraw (null, null, gt);
 		lpsModel.fireTableDataChanged ();
 		positionArea.setText (position (gs, gt));
 	}
@@ -161,15 +171,17 @@ public class SoccerLocalizationWindow extends JFrame
 		StringBuilder	sb = new StringBuilder ();
 
 		if (gs != null)
-			sb.append (String.format ("GS   x %6d  y %6d mm  theta %5.0f deg   +-  %4d  %4d mm  %4.0f deg   quality %.2f",
-									  gs.getX (), gs.getY (), gs.getTheta () * Angles.RTOD, gs.getDX (), gs.getDY (), gs.getDTheta () * Angles.RTOD, gs.getQuality ()));
+		{
+			sb.append (String.format ("GS  x %6d  y %6d mm  %4.0f deg%n", gs.getX (), gs.getY (), gs.getTheta () * Angles.RTOD));
+			sb.append (String.format (" +- x %6d  y %6d mm  %4.0f deg%n", gs.getDX (), gs.getDY (), gs.getDTheta () * Angles.RTOD));
+			sb.append (String.format ("    quality %.2f%n", gs.getQuality ()));
+		}
 		else
-			sb.append ("GS   -");
-		sb.append ('\n');
+			sb.append ("GS  -\n\n\n");
 		if (gt != null)
-			sb.append (String.format ("GT   x %6.0f  y %6.0f mm  theta %5.0f deg", gt.x (), gt.y (), gt.alpha () * Angles.RTOD));
+			sb.append (String.format ("GT  x %6.0f  y %6.0f mm  %4.0f deg", gt.x (), gt.y (), gt.alpha () * Angles.RTOD));
 		else
-			sb.append ("GT   -");
+			sb.append ("GT  -");
 		return sb.toString ();
 	}
 
@@ -286,24 +298,58 @@ public class SoccerLocalizationWindow extends JFrame
 	/**
 	 * The inside of the localisation method (what it draws of itself: its grid,
 	 * its particles, its ellipse...) over the field, and, round each landmark and
-	 * net it has just taken in, a circle as far from it as the robot saw it.
+	 * net it has just taken in, a circle as far from it as the robot saw it; over
+	 * all of it, the path of the robot where the method has it (blue) and where it
+	 * really is (green), when the View menu says so, and the two robots: the
+	 * estimated one with its uncertainty (an orange box, and ringed in white when
+	 * the method is sure of it) and the true one.
 	 */
 	protected class LocalisationView extends Component2D
 	{
 		private static final long	serialVersionUID = 1L;
+
+		protected Localisation		loc;
+		protected LocLps			lps;
+		protected Gs				gs;
+		protected Position			gt;
+		protected java.util.ArrayDeque<double[]>	gspath = new java.util.ArrayDeque<double[]> ();	// {x, y, a} (mm, rad), oldest first
+		protected java.util.ArrayDeque<double[]>	gtpath = new java.util.ArrayDeque<double[]> ();
 
 		LocalisationView ()
 		{
 			setClipping (false);
 			setBackground (Color.GRAY);
 			setOpaque (true);
+			setPreferredSize (new Dimension (420, 560));
 		}
 
+		void clearPaths ()				{ gspath.clear ();	gtpath.clear (); }
+
+		/** Where the robots are now: the estimate (a copy of it) and the true pose (mm, rad), onto the end of their paths. */
+		void track (Gs gs, Position gt)
+		{
+			if (gs != null)		{ this.gs = new Gs (gs.getX (), gs.getY (), gs.getTheta (), gs.getDX (), gs.getDY (), gs.getDTheta (), gs.getQuality ());	add (gspath, gs.getX (), gs.getY (), gs.getTheta ()); }
+			if (gt != null)		{ this.gt = new Position (gt);	add (gtpath, gt.x (), gt.y (), gt.alpha ()); }
+		}
+
+		/** A position onto the end of a path, when it has moved from the last one (the oldest go when it is full). */
+		protected void add (java.util.ArrayDeque<double[]> path, double x, double y, double a)
+		{
+			double[]	last = path.peekLast ();
+
+			if ((last != null) && (Math.hypot (x - last[0], y - last[1]) < 10.0) && (Math.abs (Angles.radnorm_180 (a - last[2])) < 0.05))		return;
+			if (path.size () >= PATH_SIZE)		path.pollFirst ();
+			path.addLast (new double[] { x, y, a });
+		}
+
+		/** The method as it is now and the reduced LPS it was fed with (the caller holds the method). */
 		void redraw (Localisation loc, LocLps lps)
 		{
 			WorldModel		wm = loc.getWorldModel ();
-			double			xb = wm.getTotalXSize () * 0.5, yb = wm.getTotalYSize () * 0.5;
+			double			xb = wm.getTotalXSize () * 0.5, yb = wm.getTotalYSize () * 0.5, r = wm.getDogRadius ();
 
+			this.loc	= loc;
+			this.lps	= lps;
 			model.clearView ();
 			model.addRawBox (-xb, -yb, xb, yb, Model2D.FILLED, Color.GREEN.darker ());
 			loc.drawElements (model);
@@ -323,69 +369,11 @@ public class SoccerLocalizationWindow extends JFrame
 						model.addRawCircle (o.getPosX (), o.getPosY (), lps.getLpo (LocLps.INIT_NETS + i).rho, Model2D.PLAIN, Color.MAGENTA.darker ());
 					}
 			}
-			model.setBB (-xb, -yb, xb, yb);
-			repaint ();
-		}
-	}
-
-	/**
-	 * The field of the RoboCup 2007 (the world model of the method), with the
-	 * robot where the method has it (blue; its uncertainty as an orange box, and
-	 * ringed in white when it is sure of it) and where it really is (green), and
-	 * the path of each.
-	 */
-	protected class FieldView extends Component2D
-	{
-		private static final long	serialVersionUID = 1L;
-
-		protected WorldModel		wm;
-		protected Gs				gs;
-		protected Position			gt;
-		protected java.util.ArrayDeque<double[]>	gspath = new java.util.ArrayDeque<double[]> ();	// {x, y, a} (mm, rad), oldest first
-		protected java.util.ArrayDeque<double[]>	gtpath = new java.util.ArrayDeque<double[]> ();
-
-		FieldView ()
-		{
-			setClipping (false);
-			setBackground (Color.GRAY);
-			setOpaque (true);
-			setPreferredSize (new Dimension (500, 560));
-		}
-
-		void clearPaths ()				{ gspath.clear ();	gtpath.clear (); }
-
-		void redraw (WorldModel wm, Gs gs, Position gt)
-		{
-			if (wm != null)		this.wm = wm;
-			if (gs != null)		{ this.gs = new Gs (gs.getX (), gs.getY (), gs.getTheta (), gs.getDX (), gs.getDY (), gs.getDTheta (), gs.getQuality ());	add (gspath, gs.getX (), gs.getY (), gs.getTheta ()); }
-			if (gt != null)		{ this.gt = new Position (gt);	add (gtpath, gt.x (), gt.y (), gt.alpha ()); }
-			redraw ();
-		}
-
-		/** A position onto the end of a path, when it has moved from the last one (the oldest go when it is full). */
-		protected void add (java.util.ArrayDeque<double[]> path, double x, double y, double a)
-		{
-			double[]	last = path.peekLast ();
-
-			if ((last != null) && (Math.hypot (x - last[0], y - last[1]) < 10.0) && (Math.abs (Angles.radnorm_180 (a - last[2])) < 0.05))		return;
-			if (path.size () >= PATH_SIZE)		path.pollFirst ();
-			path.addLast (new double[] { x, y, a });
-		}
-
-		void redraw ()
-		{
-			double			xb, yb, r;
-
-			if (wm == null)		return;
-			xb	= wm.getTotalXSize () * 0.5;
-			yb	= wm.getTotalYSize () * 0.5;
-			r	= wm.getDogRadius ();
-
-			model.clearView ();
-			model.addRawBox (-xb, -yb, xb, yb, Model2D.FILLED, Color.GREEN);
-			drawField (model, wm);
-			drawPath (gtpath, GT_COLOR);
-			drawPath (gspath, GS_COLOR);
+			if (showPaths)
+			{
+				drawPath (gtpath, GT_COLOR);
+				drawPath (gspath, GS_COLOR);
+			}
 			if (gt != null)
 				drawRobot (model, gt.x (), gt.y (), gt.alpha (), r, GT_COLOR);
 			if (gs != null)
@@ -399,6 +387,15 @@ public class SoccerLocalizationWindow extends JFrame
 			}
 			model.setBB (-xb, -yb, xb, yb);
 			repaint ();
+		}
+
+		/** Everything drawn again as it was last (the View menu changed): the method is held while it is read. */
+		void repaintAll ()
+		{
+			Localisation	l = loc;
+
+			if (l == null)		return;
+			synchronized (l)	{ redraw (l, lps); }
 		}
 
 		protected void drawPath (java.util.ArrayDeque<double[]> path, Color color)
