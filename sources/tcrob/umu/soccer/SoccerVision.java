@@ -599,6 +599,7 @@ public class SoccerVision extends Perception
 		lpo.active (true);
 		lpo.anchor (1.0);
 		lpo.ageing (0);
+		lpo.sighted ();
 	}
 
 	/**
@@ -624,6 +625,7 @@ public class SoccerVision extends Perception
 		lpo.active (true);
 		lpo.anchor (1.0);
 		lpo.ageing (0);
+		lpo.sighted ();
 	}
 
 	/**

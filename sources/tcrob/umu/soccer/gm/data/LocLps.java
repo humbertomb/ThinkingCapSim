@@ -40,9 +40,10 @@ public class LocLps
 	 * the left of the heading of the robot) as the LPS has it now, and as sure
 	 * (anchored, 0 to 1). The methods take an object in only when it has been
 	 * seen again since they last did (last_anchored grows): that is when the
-	 * vision has just placed it (ageing 0) and it was not already that one --
-	 * it had aged since, or it is somewhere else. An object the LPS does not
-	 * have, or has never seen, is not anchored at all.
+	 * vision has placed it again where it saw it (its sightings went up; the
+	 * anchor and the ageing cannot tell, as the LPS ages every object before it
+	 * hands itself over and keeps an anchoring whole for a while). An object the
+	 * LPS does not have, or has never seen, is not anchored at all.
 	 */
 	public void updateFromLps (LPS lps)
 	{
@@ -70,39 +71,28 @@ public class LocLps
 		}
 	}
 
-	/* When each object was last taken as seen again (the count of updates), and how it was then */
+	/* The count of updates (what last_anchored is), and the sightings of each object when last taken in */
 	protected int					clock;
-	protected int[]					ageing		= new int[LPS_SIZE];
-	protected double[]				seenRho		= new double[LPS_SIZE];
-	protected double[]				seenTheta	= new double[LPS_SIZE];
+	protected int[]					sightings	= new int[LPS_SIZE];
 
 	/** One object of the reduced LPS from the LPO of the LPS that stands for it (null: none). */
 	protected void update (int i, LPO o)
 	{
 		LocLpo			l = lpo[i];
-		double			rho, theta;
-		boolean			fresh;
 
 		if ((o == null) || !o.active () || !o.anchored ())
 		{
 			l.anchored	= 0.0;
-			ageing[i]	= Integer.MAX_VALUE;
 			return;
 		}
 
-		rho			= o.rho () * 1000.0;									// the LPS is in m, the methods in mm
-		theta		= o.theta ();
-		fresh		= (o.ageing () == 0) && ((ageing[i] != 0) || (Math.abs (rho - seenRho[i]) > 1e-6) || (Math.abs (theta - seenTheta[i]) > 1e-9));
-
-		l.rho		= rho;
-		l.theta		= theta;
+		l.rho		= o.rho () * 1000.0;									// the LPS is in m, the methods in mm
+		l.theta		= o.theta ();
 		l.anchored	= o.anchor ();
-		if (fresh)
+		if (o.sightings () != sightings[i])									// seen again since it was last taken in
 		{
 			l.last_anchored	= clock;
-			seenRho[i]		= rho;
-			seenTheta[i]	= theta;
+			sightings[i]	= o.sightings ();
 		}
-		ageing[i]	= o.ageing ();
 	}
 }

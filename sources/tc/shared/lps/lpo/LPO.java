@@ -35,6 +35,7 @@ public abstract class LPO extends Object implements Serializable
 	public double					anchor_fade;
 	public int						ageing;			// How old the perception is
 	public boolean					anchored;		// Has it ever been anchored (seen)? The sensor percepts never are
+	public int						sightings;		// How many times it has been placed where it was seen (see sighted)
 	
 	// Object features	
 	public String					label;
@@ -116,6 +117,16 @@ public abstract class LPO extends Object implements Serializable
 		this.anchor	= Math.max (Math.min (anchor, 1.0), 0.0);
 		if (this.anchor > 0.0)		anchored = true;
 	}
+
+	/**
+	 * It has just been placed where a sensor saw it (as the vision does with what
+	 * it recognises in a frame): one more sighting. Whoever reads the LPS tells a
+	 * new observation from an old one kept and moved with the robot by this count,
+	 * which the anchor and the ageing cannot tell (the LPS ages every object
+	 * before it hands itself over, and keeps an anchoring whole for a while).
+	 */
+	public void				sighted ()				{ sightings++; }
+	public int				sightings ()			{ return sightings; }
 
 	/** Whether it has ever been anchored: it is an object the robot perceives, not a sensor reading. */
 	public boolean			anchored ()				{ return anchored; }
