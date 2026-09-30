@@ -46,9 +46,12 @@ public class SoccerSounds
 
 	/** Where the files are: as a resource of the class path, or under the working directory. */
 	static public final String		FOLDER	= "resources/sounds";
-	static public final String		WHISTLE_SHORT	= "whistle_short.wav";
-	static public final String		WHISTLE_LONG	= "whistle_long.wav";
-	static public final String		APPLAUSE		= "applause.wav";
+//	static public final String		WHISTLE_SHORT	= "whistle_short.wav";
+//	static public final String		WHISTLE_LONG	= "whistle_long.wav";
+//	static public final String		APPLAUSE		= "applause.wav";
+	static public final String		WHISTLE_SHORT	= "whistle_short_toot.wav";
+	static public final String		WHISTLE_LONG	= "wistle_short_blow.wav";
+	static public final String		APPLAUSE		= "crowd_cheer.wav";
 
 	static public final int			GAP				= 150;		// between the blows of the end [ms]
 	static public final int			GOAL_APPLAUSE	= 2500;		// how long the crowd claps a goal [ms]
