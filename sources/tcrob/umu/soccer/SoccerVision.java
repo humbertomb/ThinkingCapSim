@@ -391,7 +391,7 @@ public class SoccerVision extends Perception
 		d	= detection (what);
 		o	= object (what);
 		if (d != null)
-			foveate (frame, d, o == ball);
+			foveate (frame, d, (o == ball) || (o instanceof LPOLandmark));
 		else if ((o != null) && (needOf (what) - o.anchor () <= SLACK * needOf (what)))
 			turnTo (frame.device, o, (o == ball) ? BALL_RADIUS : (o instanceof LPOLandmark) ? LM_BAND : NET_AIM);
 		else
@@ -425,7 +425,8 @@ public class SoccerVision extends Perception
 	 * of the ray through it (the two fields of view spread over the frame), and
 	 * those go on top of the pan and tilt the frame was taken with. A ball is
 	 * followed by the centre of its circle, which may be out of the frame when the
-	 * ball is cut by it; a net by the centre of its blob.
+	 * ball is cut by it; a landmark by where its two bands meet (the centre of its
+	 * box across, its band row up and down); a net by the centre of its blob.
 	 */
 	protected void foveate (ItemCamera frame, SoccerRecognizer.Detection d, boolean round)
 	{
