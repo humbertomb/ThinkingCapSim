@@ -153,7 +153,11 @@ public class LuaHelp
 					+ "<span class=\"mono\">SCAN_NONE</span>: the camera stays where the description points it." },
 		{ "setNeeded", "index, weight", "Says that the behaviour needs to keep seeing that object, and how much (0 to 1). "
 					+ "The vision of the simulation looks everywhere at once, so it is taken note of and no more." },
-		{ "getCurrentPos", "", "Where the robot is now: x and y in mm, theta in degrees, in the field." },
+		{ "getCurrentPos", "", "Where the robot is now: x and y in mm, theta in degrees, in the field. "
+					+ "<span class=\"mono\">quality</span> is how sure the localisation is of it [0..1], "
+					+ "<span class=\"mono\">anchored</span> 1 when it is a valid position, and "
+					+ "<span class=\"mono\">dx</span>, <span class=\"mono\">dy</span> (mm) and "
+					+ "<span class=\"mono\">dtheta</span> (degrees) its uncertainty, when there is one." },
 		{ "getStartPos", "", "Where the robot starts, the position it is put at for a kick-off: x and y in mm, theta in degrees, in the field." },
 		{ "getBallVel", "", "How fast the ball is going, x and y in mm a second." },
 		{ "setVlin", "mm/s", "How fast to go forward. Backwards is negative." },

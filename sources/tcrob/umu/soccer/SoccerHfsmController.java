@@ -58,11 +58,10 @@ public class SoccerHfsmController extends HFSMController
 
 	public final Chaos				chaos ()			{ return chaos; }
 
-	/** What the scripts are to read: the LPS, where the robot is and where it is told to go. */
+	/** What the scripts are to read: the LPS and where the robot is told to go (where it is comes from the localisation, see notify_navigation). */
 	protected void before ()
 	{
 		chaos.lps (lps);
-		chaos.pose (pos);
 		if (has_plan && (plan.tpos != null))
 			chaos.desired ().set (plan.tpos);
 	}
@@ -130,9 +129,13 @@ public class SoccerHfsmController extends HFSMController
 		if (debug)					System.out.println ("  [SoccerHfsm] " + item + (penalized ? "  (penalised)" : ""));
 	}
 
+	/** Where the localisation (SoccerLocalization) makes the robot to be, as it is, to the scripts (chaos.getCurrentPos). */
 	public void notify_navigation (String space, ItemNavigation item)
 	{
-		System.out.println ("---> "+item.robot.quality);
+		if ((item == null) || (item.robot == null) || (chaos == null))		return;
+
+		chaos.pose (item.robot);
+		if (debug)					System.out.println ("  [SoccerHfsm] position " + item.robot + " quality " + item.robot.quality);
 	}
 
 	/** The name of this robot, as the referee names the players. */

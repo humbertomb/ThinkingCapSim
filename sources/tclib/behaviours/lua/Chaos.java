@@ -194,7 +194,8 @@ public class Chaos implements LuaBridge
 		return ((name != null) ? name.toUpperCase () : "?") + "_LPO";
 	}
 
-	public void pose (Position p)								{ if (p != null) pose.set (p); }
+	/** Where the robot is, with how sure it is of it (quality) and its uncertainty, which the scripts read with chaos.getCurrentPos. */
+	public void pose (Position p)								{ if (p != null) synchronized (pose) { pose.set (p); } }
 	/** Where the robot starts, which the scripts read with chaos.getStartPos. */
 	public void start (double x, double y, double alpha)		{ start.set (x, y, alpha); }
 
@@ -453,7 +454,26 @@ public class Chaos implements LuaBridge
 		// where the robot is now (it was getMyPos, and gsGetMyPos)
 		c.set ("getCurrentPos", new LuaFunction ("chaos.getCurrentPos")
 		{
-			public Object call (Object[] args)		{ return point (pose.x (), pose.y (), pose.alpha); }
+			public Object call (Object[] args)
+			{
+				LuaTable	t;
+				double[][]	u;
+
+				synchronized (pose)
+				{
+					t	= point (pose.x (), pose.y (), pose.alpha);
+					u	= pose.uncert;
+					t.set ("quality", Double.valueOf (pose.quality));
+					t.set ("anchored", Double.valueOf (pose.valid ? 1.0 : 0.0));
+					if ((u != null) && (u.length > 2))			// the standard deviations (mm, mm, degrees)
+					{
+						t.set ("dx", Double.valueOf (Math.sqrt (Math.max (0.0, u[0][0])) * MM));
+						t.set ("dy", Double.valueOf (Math.sqrt (Math.max (0.0, u[1][1])) * MM));
+						t.set ("dtheta", Double.valueOf (degrees (Math.sqrt (Math.max (0.0, u[2][2])))));
+					}
+				}
+				return t;
+			}
 		});
 
 		// where the robot starts: the position it is put at for a kick-off
