@@ -16,7 +16,7 @@ import tc.shared.linda.*;
 
 import devices.data.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class PositioningProducer extends StdThread
 {
@@ -157,7 +157,7 @@ public class PositioningProducer extends StdThread
 		// Compute ground speed
 		pose.set_spd ((prevx - x) / dt, (prevy - y) / dt, (prevz - z) / dt);
 		pos.set (x, y, z, pose.yaw ());
-		pos.valid (valid);
+		pos.valid = valid;
 		
 		// Update filtered vehicle data
 		data.update (pos, pose, qlty, payload);

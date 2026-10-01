@@ -13,7 +13,7 @@ import tclib.navigation.mapbuilding.visualization.*;
 
 import tc.vrobot.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 import wucore.widgets.*;
 import wucore.gui.*;

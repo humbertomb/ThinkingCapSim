@@ -11,7 +11,7 @@ import tc.vrobot.*;
 import tc.shared.lps.lpo.*;
 import tc.shared.world.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.geom.*;
 
 public abstract class Grid extends Object implements MapBuilding

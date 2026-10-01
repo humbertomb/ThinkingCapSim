@@ -9,7 +9,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import tc.shared.lps.*;
-import devices.pos.Path;
+import tclib.utils.pos.Path;
 
 import wucore.gui.*;
 

@@ -12,7 +12,7 @@ import tc.vrobot.*;
 import tclib.utils.fusion.*;
 import tc.shared.world.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 import wucore.utils.geom.*;
 import wucore.utils.color.*;
@@ -290,7 +290,7 @@ public class World2D extends Object2D
 			y1 = map.wps().get(i).pos.y();	
 			
 			model.addRawCircle(x1, y1, 0.1, Color.ORANGE);
-			model.addRawArrow (x1, y1, map.G_LENGHT, map.wps().get(i).pos.alpha(), Color.ORANGE);
+			model.addRawArrow (x1, y1, map.G_LENGHT, map.wps().get(i).pos.alpha, Color.ORANGE);
 			if (drawlabels)
 				model.addRawText (x1+0.25, y1+0.25, map.wps().get(i).label, Color.ORANGE);	
 		} 
@@ -522,7 +522,7 @@ public class World2D extends Object2D
 		if (goal != null)
 		{
 			model.addRawCircle (goal.x (), goal.y (), map.G_RADIUS, color);
-			model.addRawArrow (goal.x (), goal.y (), map.G_LENGHT, goal.alpha (), color);
+			model.addRawArrow (goal.x (), goal.y (), map.G_LENGHT, goal.alpha, color);
 		}
 	}
 	

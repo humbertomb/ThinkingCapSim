@@ -9,7 +9,7 @@
  * &minus;180&deg; &le; &lambda; &le; 180&deg;
  */
 
-package devices.pos;
+package tclib.utils.pos;
 
 import java.io.*;
 

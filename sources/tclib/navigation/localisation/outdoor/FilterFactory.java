@@ -10,7 +10,7 @@ import java.util.*;
 
 import devices.data.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.logs.*;
 import wucore.utils.geom.*;
 

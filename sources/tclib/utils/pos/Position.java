@@ -2,7 +2,7 @@
 	(c) 2001-2003 Humberto Martinez Barbera
    ---------------------------------------- */
 
-package devices.pos;
+package tclib.utils.pos;
 
 import java.io.*;
 
@@ -12,11 +12,11 @@ import wucore.utils.math.jama.*;
 
 public class Position extends Object implements Serializable
 {	
-	protected Point3				pt;				// Position 3D coordinates (m, m, m)
-	protected double				alpha;			// Position heading (rad)
-	protected double[][]			uncert;			// Position uncertainty
+	public Point3					pt;				// Position 3D coordinates (m, m, m)
+	public double					alpha;			// Position heading (rad)
+	public double[][]				uncert;			// Position uncertainty
 
-	protected boolean				valid;
+	public boolean					valid;
 
 	/* Constructors */
 	public Position ()
@@ -54,15 +54,9 @@ public class Position extends Object implements Serializable
 	public final void 			x (double x)			{ pt.x (x); }
 	public final void 			y (double y)			{ pt.y (y); }
 	public final void 			z (double z)			{ pt.z (z); }
-	public final void 			alpha (double alpha)	{ this.alpha = alpha; }
 
-	public final double 		alpha ()				{ return alpha; }
-	public final double[][] 	uncert ()				{ return uncert; }
 	public final double 		phi ()					{ return Math.atan2 (pt.y (), pt.x ()); }
 	public final double 		rho ()					{ return Math.sqrt ((pt.x () * pt.x ()) + (pt.y () * pt.y ())); }
-
-	public final void	 		valid (boolean valid)	{ this.valid = valid; }
-	public final boolean	 	valid ()				{ return valid; }
 
 	/* Instance methods */
 

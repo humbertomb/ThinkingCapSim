@@ -14,7 +14,7 @@ import tclib.navigation.pathplanning.*;
 
 import tc.vrobot.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 import wucore.widgets.*;
 import wucore.gui.*;

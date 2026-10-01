@@ -5,7 +5,7 @@
 
 package tclib.navigation.localisation.outdoor;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.math.jama.*;
 
 /********************************************* filtrado ***************************

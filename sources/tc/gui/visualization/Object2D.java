@@ -9,7 +9,7 @@ import java.awt.*;
 
 import tc.fleet.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 
 public class Object2D extends Object implements Component2DWider
@@ -119,7 +119,7 @@ public class Object2D extends Object implements Component2DWider
 			
 			xx	= pos.x ();
 			yy	= pos.y ();
-			aa	= pos.alpha ();
+			aa	= pos.alpha;
 			
 			x1	= xx + l2 * Math.cos (aa);
 			y1	= yy + l2 * Math.sin (aa);

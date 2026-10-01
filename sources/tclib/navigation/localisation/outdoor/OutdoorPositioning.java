@@ -11,7 +11,7 @@ import tc.shared.lps.*;
 import tc.vrobot.*;
 import tc.modules.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 /**
 * Outdoor Positioning Module Implementation

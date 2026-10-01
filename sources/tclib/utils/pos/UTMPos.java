@@ -8,7 +8,7 @@
  * @version 1.0
  */
 
-package devices.pos;
+package tclib.utils.pos;
 
 import java.io.*;
 

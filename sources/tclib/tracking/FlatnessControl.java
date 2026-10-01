@@ -1,8 +1,8 @@
 package tclib.tracking;
 
 import tc.vrobot.models.TricycleDrive;
-import devices.pos.Path;
-import devices.pos.Position;
+import tclib.utils.pos.Path;
+import tclib.utils.pos.Position;
 import wucore.utils.math.Angles;
 
 public class FlatnessControl {

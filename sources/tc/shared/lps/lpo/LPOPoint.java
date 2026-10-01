@@ -6,7 +6,7 @@ package tc.shared.lps.lpo;
 
 import java.io.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 import wucore.utils.color.*;
 
@@ -43,8 +43,8 @@ public class LPOPoint extends LPO implements Serializable
 		cy	= point.y () - cur.y ();
 		ll	= Math.sqrt (cx * cx + cy * cy);
 		aa	= Math.atan2 (cy, cx);
-		cx	= ll * Math.cos (aa - cur.alpha ());
-		cy	= ll * Math.sin (aa - cur.alpha ());
+		cx	= ll * Math.cos (aa - cur.alpha);
+		cy	= ll * Math.sin (aa - cur.alpha);
 		
 		locate (cx, cy, 0.0);
 		active (true);		

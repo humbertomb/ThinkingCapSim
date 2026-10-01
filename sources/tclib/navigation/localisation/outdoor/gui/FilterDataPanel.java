@@ -5,7 +5,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import devices.data.*;
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 import wucore.utils.math.*;
 
 

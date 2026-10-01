@@ -7,7 +7,7 @@ package devices.data;
 import java.io.*;
 import java.awt.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class VisionData extends Object implements Serializable 
 {

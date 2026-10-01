@@ -6,7 +6,7 @@ package tc.fleet;
 
 import java.io.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class VehicleData extends Object implements Serializable 
 {

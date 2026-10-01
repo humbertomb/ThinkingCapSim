@@ -20,7 +20,7 @@ import tc.shared.lps.lpo.*;
 import tc.vrobot.*;
 import tclib.navigation.pathplanning.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.geom.*;
 import wucore.widgets.*;
 
@@ -289,7 +289,7 @@ public class LPSPanel extends JPanel
 			{
 				xf	= pos.x () - lps.cur.x ();
 				yf	= pos.y () - lps.cur.y ();
-				model.addRawTransRotLine (xi, yi, xf, yf, 0.0, 0.0, view.rotation - lps.cur.alpha (), C_PATH);
+				model.addRawTransRotLine (xi, yi, xf, yf, 0.0, 0.0, view.rotation - lps.cur.alpha, C_PATH);
 				xi	= xf;
 				yi	= yf;
 			}
@@ -303,11 +303,11 @@ public class LPSPanel extends JPanel
 				if (k % 2 != 0)			continue;
 				xx	= pos.x () - lps.cur.x ();
 				yy	= pos.y () - lps.cur.y ();
-				aa	= pos.alpha () - lps.cur.alpha ();
+				aa	= pos.alpha - lps.cur.alpha;
 				rho	= Math.sqrt (xx * xx + yy * yy);
 				phi	= Math.atan2 (yy, xx);
-				xx	= rho * Math.cos (view.rotation + phi - lps.cur.alpha ());
-				yy	= rho * Math.sin (view.rotation + phi - lps.cur.alpha ());
+				xx	= rho * Math.cos (view.rotation + phi - lps.cur.alpha);
+				yy	= rho * Math.sin (view.rotation + phi - lps.cur.alpha);
 				model.addRawArrow (xx, yy, path.step () * 0.75, view.rotation + aa, C_PATH);
 			}
 		}

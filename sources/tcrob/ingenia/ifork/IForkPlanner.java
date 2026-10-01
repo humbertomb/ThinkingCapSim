@@ -25,7 +25,7 @@ import tclib.utils.petrinets.*;
 import tcrob.ingenia.ifork.gui.*;
 import tcrob.ingenia.ifork.linda.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.geom.*;
 import wucore.utils.math.*;
 		
@@ -251,7 +251,7 @@ public class IForkPlanner extends SeqPlanner
 
 		if(lps!=null)
 		{
-			pout.println(gtime + "\t" + lps.cur.x() + "\t" + lps.cur.y() + "\t" + Math.toDegrees(lps.cur.alpha()) + "\t" + myPriority + "\t" + igivenway + "\t" + istopped + "\t" + ilaserexception);
+			pout.println(gtime + "\t" + lps.cur.x() + "\t" + lps.cur.y() + "\t" + Math.toDegrees(lps.cur.alpha) + "\t" + myPriority + "\t" + igivenway + "\t" + istopped + "\t" + ilaserexception);
 			pout.flush();
 		}
 	}
@@ -767,7 +767,7 @@ public class IForkPlanner extends SeqPlanner
 		Position			tpos;
 
 		// Undock the vehicle
-		a	= task[task_k].tpos.alpha ();
+		a	= task[task_k].tpos.alpha;
 		x	= task[task_k].tpos.x () + UNDOCK_DIST * Math.cos (a);
 		y	= task[task_k].tpos.y () + UNDOCK_DIST * Math.sin (a);			
 		subplan[subplan_n].place		= task[task_k].place;				
@@ -1552,9 +1552,9 @@ public class IForkPlanner extends SeqPlanner
 	        double ang2 = ang1 + Math.PI;
 	        
 	        // Si pos2 esta por delante de pos1
-	        if(Math.abs(Angles.radnorm_180(ang1-pos1.alpha())) < Math.PI/2) return true;
+	        if(Math.abs(Angles.radnorm_180(ang1-pos1.alpha)) < Math.PI/2) return true;
 	        // Si pos1 esta por delante de pos2
-	        if(Math.abs(Angles.radnorm_180(ang2-pos2.alpha())) < Math.PI/2) return true;
+	        if(Math.abs(Angles.radnorm_180(ang2-pos2.alpha)) < Math.PI/2) return true;
 	        
 	        return false; // Estan las dos por detras
 	    }
@@ -1562,8 +1562,8 @@ public class IForkPlanner extends SeqPlanner
 	}
 	
 	public double iforkdist(Position pos1, Position pos2){
-	    Line2[] ifork1 = Transform2.rotTrans(limits, pos1.x(), pos1.y(), pos1.alpha());
-	    Line2[] ifork2 = Transform2.rotTrans(limits, pos2.x(), pos2.y(), pos2.alpha());
+	    Line2[] ifork1 = Transform2.rotTrans(limits, pos1.x(), pos1.y(), pos1.alpha);
+	    Line2[] ifork2 = Transform2.rotTrans(limits, pos2.x(), pos2.y(), pos2.alpha);
 	    double d, mind;
 	    mind = Double.MAX_VALUE;
 	    for(int i = 0; i<limits.length; i++){

@@ -9,7 +9,7 @@ package devices.data;
 
 import java.io.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class BeaconData implements Serializable
 {

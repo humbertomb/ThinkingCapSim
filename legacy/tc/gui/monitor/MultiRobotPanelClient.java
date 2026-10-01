@@ -21,7 +21,7 @@ import tc.gui.visualization.*;
 import tclib.planning.sequence.Sequence;
 import tclib.utils.fusion.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 import wucore.utils.geom.*;
 

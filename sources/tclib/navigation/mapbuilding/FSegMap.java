@@ -15,7 +15,7 @@ package tclib.navigation.mapbuilding;
 
 import tclib.navigation.mapbuilding.lpo.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class FSegMap extends Object
 {	

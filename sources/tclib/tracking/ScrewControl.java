@@ -1,7 +1,7 @@
 package tclib.tracking;
 
-import devices.pos.Path;
-import devices.pos.Position;
+import tclib.utils.pos.Path;
+import tclib.utils.pos.Position;
 import wucore.utils.math.Angles;
 
 import tc.vrobot.models.*;
@@ -85,14 +85,14 @@ public class ScrewControl {
 		
 		pos.set (robot);
 		looka.set (pos);
-		looka.valid (false);
+		looka.valid = false;
 		
 		rpath.check_lookahead (pos, looka_dst);
 		if (rpath.lookahead () != null)
 		{
 			path_dst = rpath.distance ();
 			looka.set (rpath.lookahead ());
-			looka.valid (true);
+			looka.valid = true;
 		}
 		
 		double dx, dy, dist, heading, delta;
@@ -139,10 +139,10 @@ public class ScrewControl {
 		dx		= looka.x () - pos.x ();
 		dy		= looka.y () - pos.y ();
 		dist	= Math.sqrt (dx * dx + dy * dy);
-		vy = dy * Math.cos(pos.alpha()) - dx * Math.sin(pos.alpha());
-		vx = dx * Math.cos(pos.alpha()) + dy * Math.sin(pos.alpha());
+		vy = dy * Math.cos(pos.alpha) - dx * Math.sin(pos.alpha);
+		vx = dx * Math.cos(pos.alpha) + dy * Math.sin(pos.alpha);
 		heading	= Math.atan2 (dy, dx);									// [rad]
-		delta	= Angles.radnorm_180 (heading - pos.alpha ());			// [rad]
+		delta	= Angles.radnorm_180 (heading - pos.alpha);			// [rad]
 		delta	= Angles.radnorm_180 (Math.PI + delta);
 		
 		if(vy != 0.0)
@@ -152,24 +152,24 @@ public class ScrewControl {
 			
 			//km = (k * phi) / ((k-1) * phi + Angles.radnorm_180(looka.alpha() - pos.alpha() - Math.PI));
 			if(vy>0)
-				km =(-k * Angles.radnorm_360b(-phi))/ ((-k  * Angles.radnorm_360b(-phi)) + Angles.radnorm_180(looka.alpha() - pos.alpha() - Math.PI - phi));
+				km =(-k * Angles.radnorm_360b(-phi))/ ((-k  * Angles.radnorm_360b(-phi)) + Angles.radnorm_180(looka.alpha - pos.alpha - Math.PI - phi));
 			else
-				km =(k * Angles.radnorm_360b(phi))/ ((k  * Angles.radnorm_360b(phi)) + Angles.radnorm_180(looka.alpha() - pos.alpha() - Math.PI - phi));
+				km =(k * Angles.radnorm_360b(phi))/ ((k  * Angles.radnorm_360b(phi)) + Angles.radnorm_180(looka.alpha - pos.alpha - Math.PI - phi));
 			
-			wxd = pos.x() - (dist * dist * Math.sin(pos.alpha()) / (2*vy )) * km; 
-			wyd = pos.y() + (dist * dist * Math.cos(pos.alpha()) / (2*vy )) * km;		
+			wxd = pos.x() - (dist * dist * Math.sin(pos.alpha) / (2*vy )) * km; 
+			wyd = pos.y() + (dist * dist * Math.cos(pos.alpha) / (2*vy )) * km;		
 			
-		} else if(looka.alpha() != pos.alpha()) {
+		} else if(looka.alpha != pos.alpha) {
 			
 			double dangles;
-			dangles = Angles.radnorm_180(looka.alpha()-pos.alpha()+Math.PI);
+			dangles = Angles.radnorm_180(looka.alpha-pos.alpha+Math.PI);
 			
 			wxd = pos.x() - k * (looka.y() - pos.y())/dangles;
 			wyd = pos.y() - k * (looka.x() - pos.x())/dangles;
 			
 		}
 		
-		if ((vy == 0.0) && (looka.alpha() == pos.alpha()))
+		if ((vy == 0.0) && (looka.alpha == pos.alpha))
 		{
 			vr = vel; // Velocidad de la Carretilla constante 0.1m/s	
 			wr = 0;
@@ -178,7 +178,7 @@ public class ScrewControl {
 		}
 		else
 		{
-			vyd = (wyd-pos.y()) * Math.cos(pos.alpha()) - (wxd-pos.x()) * Math.sin(pos.alpha());
+			vyd = (wyd-pos.y()) * Math.cos(pos.alpha) - (wxd-pos.x()) * Math.sin(pos.alpha);
 			
 			// Control con wr, vr(constante)
 			//vr = v_dock;			

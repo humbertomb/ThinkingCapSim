@@ -9,7 +9,7 @@ package tc.shared.world;
 import com.google.gson.JsonObject;
 
 
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 import wucore.utils.geom.Line2;
 
 /**
@@ -40,14 +40,14 @@ public class WMBeacon extends WMElement
     
     public Line2 getLine(){
         double Ax,Ay;
-        Ax = (width*Math.cos(pos.alpha())/2);
-        Ay = (width*Math.sin(pos.alpha())/2);
+        Ax = (width*Math.cos(pos.alpha)/2);
+        Ay = (width*Math.sin(pos.alpha)/2);
         
         return new Line2(pos.x()-Ax,pos.y()-Ay,pos.x()+Ax,pos.y()+Ay);	
     }
         
     public double getAng(){
-        return pos.alpha();
+        return pos.alpha;
     }
     
 
@@ -66,7 +66,7 @@ public class WMBeacon extends WMElement
         JsonObject	o = new JsonObject ();
         o.addProperty ("label", label);
         World.putPoint (o, pos.x (), pos.y (), pos.z ());
-        o.addProperty ("orientation", World.num (Math.toDegrees (pos.alpha ())));
+        o.addProperty ("orientation", World.num (Math.toDegrees (pos.alpha)));
         o.addProperty ("width", World.num (width));
         o.addProperty ("height", World.num (height));
         return o;

@@ -12,7 +12,7 @@ package tcrob.ingenia.ifork.linda;
 import java.io.*;
 
 import tc.shared.linda.*;
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 /**
  * @author Juan Pedro Canovas Quiñonero

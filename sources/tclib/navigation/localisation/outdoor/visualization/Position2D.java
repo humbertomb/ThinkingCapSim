@@ -8,7 +8,7 @@ package tclib.navigation.localisation.outdoor.visualization;
 
 import java.awt.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 
 import tc.gui.visualization.*;

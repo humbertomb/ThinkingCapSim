@@ -15,7 +15,7 @@ import java.util.StringTokenizer;
 import devices.drivers.gps.GPS;
 import devices.data.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.geom.*;
 import wucore.utils.math.*;
 

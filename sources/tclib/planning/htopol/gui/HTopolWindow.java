@@ -15,7 +15,7 @@ import tclib.planning.htopol.visualization.*;
 
 import tc.vrobot.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.geom.*;
 import wucore.widgets.*;
 import wucore.gui.*;

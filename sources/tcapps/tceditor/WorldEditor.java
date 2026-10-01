@@ -48,7 +48,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 import tc.shared.world.WMAObject;
 import tc.shared.world.WMBeacon;
 import tc.shared.world.WMCBeacon;
@@ -1876,12 +1876,12 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		case WorldItem.WAYPOINT:
 		{
 			Position	p = w.wps ().get (it.index).pos;
-			return new Point2[] { new Point2 (p.x (), p.y ()), arrow (p.x (), p.y (), p.alpha ()) };
+			return new Point2[] { new Point2 (p.x (), p.y ()), arrow (p.x (), p.y (), p.alpha) };
 		}
 		case WorldItem.DOCK:
 		{
 			Position	p = w.docks ().get (it.index).pos;
-			return new Point2[] { new Point2 (p.x (), p.y ()), arrow (p.x (), p.y (), p.alpha ()) };
+			return new Point2[] { new Point2 (p.x (), p.y ()), arrow (p.x (), p.y (), p.alpha) };
 		}
 		case WorldItem.START:
 		{
@@ -1983,7 +1983,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (h == 0)		{ b.pos.x (x);	b.pos.y (y); }
 			else
 			{
-				b.pos.alpha (Math.atan2 (y - b.pos.y (), x - b.pos.x ()));
+				b.pos.alpha = Math.atan2 (y - b.pos.y (), x - b.pos.x ());
 				b.width = 2.0 * b.pos.distance (x, y);
 			}
 			break;
@@ -2000,7 +2000,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		{
 			Position	p = (it.kind == WorldItem.WAYPOINT) ? w.wps ().get (it.index).pos : w.docks ().get (it.index).pos;
 			if (h == 0)		{ p.x (x);	p.y (y); }
-			else			p.alpha (Math.atan2 (y - p.y (), x - p.x ()));
+			else			p.alpha = Math.atan2 (y - p.y (), x - p.x ());
 			break;
 		}
 		case WorldItem.START:
@@ -2255,7 +2255,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (name.equals ("x"))			return fmt (b.pos.x ());
 			if (name.equals ("y"))			return fmt (b.pos.y ());
 			if (name.equals ("z"))			return fmt (b.pos.z ());
-			if (name.equals ("orientation"))		return fmt (Math.toDegrees (b.pos.alpha ()));
+			if (name.equals ("orientation"))		return fmt (Math.toDegrees (b.pos.alpha));
 			if (name.equals ("width"))		return fmt (b.width);
 			if (name.equals ("height"))		return fmt (b.height);
 			break;
@@ -2278,7 +2278,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (name.equals ("x"))			return fmt (p.pos.x ());
 			if (name.equals ("y"))			return fmt (p.pos.y ());
 			if (name.equals ("z"))			return fmt (p.pos.z ());
-			if (name.equals ("orientation"))		return fmt (Math.toDegrees (p.pos.alpha ()));
+			if (name.equals ("orientation"))		return fmt (Math.toDegrees (p.pos.alpha));
 			break;
 		}
 		case WorldItem.DOCK:
@@ -2288,7 +2288,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			if (name.equals ("x"))			return fmt (d.pos.x ());
 			if (name.equals ("y"))			return fmt (d.pos.y ());
 			if (name.equals ("z"))			return fmt (d.pos.z ());
-			if (name.equals ("orientation"))		return fmt (Math.toDegrees (d.pos.alpha ()));
+			if (name.equals ("orientation"))		return fmt (Math.toDegrees (d.pos.alpha));
 			if (name.equals ("flow"))		return d.flow.name ();
 			break;
 		}
@@ -2486,7 +2486,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			else if (name.equals ("x"))			b.pos.x (num (value));
 			else if (name.equals ("y"))			b.pos.y (num (value));
 			else if (name.equals ("z"))			b.pos.z (num (value));
-			else if (name.equals ("orientation"))		b.pos.alpha (Math.toRadians (num (value)));
+			else if (name.equals ("orientation"))		b.pos.alpha = Math.toRadians (num (value));
 			else if (name.equals ("width"))		b.width = Math.abs (num (value));
 			else if (name.equals ("height"))	b.height = Math.abs (num (value));
 			return;
@@ -2509,7 +2509,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			else if (name.equals ("x"))			p.pos.x (num (value));
 			else if (name.equals ("y"))			p.pos.y (num (value));
 			else if (name.equals ("z"))			p.pos.z (num (value));
-			else if (name.equals ("orientation"))		p.pos.alpha (Math.toRadians (num (value)));
+			else if (name.equals ("orientation"))		p.pos.alpha = Math.toRadians (num (value));
 			return;
 		}
 		case WorldItem.DOCK:
@@ -2519,7 +2519,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			else if (name.equals ("x"))			d.pos.x (num (value));
 			else if (name.equals ("y"))			d.pos.y (num (value));
 			else if (name.equals ("z"))			d.pos.z (num (value));
-			else if (name.equals ("orientation"))		d.pos.alpha (Math.toRadians (num (value)));
+			else if (name.equals ("orientation"))		d.pos.alpha = Math.toRadians (num (value));
 			else if (name.equals ("flow"))		d.flow = WMDock.parseFlow (value);
 			return;
 		}

@@ -2,7 +2,7 @@
  * (c) 2003 Humberto Martinez
  */
 
-package devices.pos;
+package tclib.utils.pos;
 
 import java.io.File;
 

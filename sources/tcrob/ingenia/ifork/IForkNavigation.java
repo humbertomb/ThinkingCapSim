@@ -14,7 +14,7 @@ import tclib.planning.htopol.gui.*;
 
 import tcrob.ingenia.ifork.linda.*;
 import tcrob.umu.indoor.IndoorNavigation;
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.geom.Point2;
 
 public class IForkNavigation extends IndoorNavigation

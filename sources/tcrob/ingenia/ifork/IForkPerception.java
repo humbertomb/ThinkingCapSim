@@ -13,7 +13,7 @@ import tcrob.ingenia.ifork.linda.*;
 import tcrob.ingenia.ifork.lpo.*;
 import tcrob.umu.indoor.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class IForkPerception extends IndoorPerception
 {

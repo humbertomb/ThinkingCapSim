@@ -14,7 +14,7 @@ import tclib.navigation.mapbuilding.*;
 import tclib.navigation.mapbuilding.lpo.*;
 import tclib.utils.fusion.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 import wucore.utils.geom.*;
 import wucore.utils.math.*;
@@ -99,8 +99,8 @@ public class FMap2D extends World2D
 		{
 			rx 		= pos.x ();
 			ry	 	= pos.y ();
-			ra	 	= pos.alpha ();
-			uncert	= pos.uncert ();
+			ra	 	= pos.alpha;
+			uncert	= pos.uncert;
 		}
 		else
 		{
@@ -117,7 +117,7 @@ public class FMap2D extends World2D
 			compo.hud_label[H_GLOBAL]	= "Global: " + global.numseg () + " segs";
 			
 			if ((paths != null) && ((dpos = paths.correction ()) != null))
-				compo.hud_label[H_COR]	= "Corr:   [" + ((int) Math.round (dpos.x () * 1000.0)) + ", " + ((int) Math.round (dpos.y () * 1000.0)) + ", " + ((int) Math.round (dpos.alpha ()*Angles.RTOD)) + "] mm, deg";
+				compo.hud_label[H_COR]	= "Corr:   [" + ((int) Math.round (dpos.x () * 1000.0)) + ", " + ((int) Math.round (dpos.y () * 1000.0)) + ", " + ((int) Math.round (dpos.alpha*Angles.RTOD)) + "] mm, deg";
 			else
 				compo.hud_label[H_COR]	= "Corr:   N/A";
 		}

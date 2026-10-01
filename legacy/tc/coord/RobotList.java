@@ -11,7 +11,7 @@ import tc.fleet.*;
 
 import tclib.utils.fusion.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class RobotList extends VehicleList
 {

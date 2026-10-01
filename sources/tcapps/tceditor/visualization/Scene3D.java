@@ -15,7 +15,7 @@ import com.sun.j3d.loaders.*;
 import com.sun.j3d.utils.image.*;
 import com.sun.j3d.utils.universe.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class Scene3D extends Object
 {

@@ -44,8 +44,8 @@ import tc.shared.world.WMWaypoint;
 import tc.shared.world.WMZone;
 import tc.shared.world.World;
 import tclib.navigation.pathplanning.DockingPath;
-import devices.pos.Path;
-import devices.pos.Position;
+import tclib.utils.pos.Path;
+import tclib.utils.pos.Position;
 import wucore.utils.color.ColorTool;
 import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
@@ -1285,7 +1285,7 @@ public class WorldCanvas extends JPanel
 		g.setStroke (stroke (sel ? 4f : 3f));
 		g.draw (new Line2D.Double (px (l.orig ().x ()), py (l.orig ().y ()), px (l.dest ().x ()), py (l.dest ().y ())));
 		// normal (facing side)
-		double	nx = -Math.sin (b.pos.alpha ()), ny = Math.cos (b.pos.alpha ());
+		double	nx = -Math.sin (b.pos.alpha), ny = Math.cos (b.pos.alpha);
 		g.setStroke (stroke (1f));
 		g.draw (new Line2D.Double (px (b.pos.x ()), py (b.pos.y ()), px (b.pos.x () + 0.15 * nx), py (b.pos.y () + 0.15 * ny)));
 		label (g, b.label, b.pos.x (), b.pos.y (), sel ? C_SEL : C_BEACON);
@@ -1343,7 +1343,7 @@ public class WorldCanvas extends JPanel
 	{
 		if ((world.topology () == null) || (wpIndex < 0) || (wpIndex >= world.wps ().size ()))		return;
 		WMWaypoint	wp = world.wps ().get (wpIndex);
-		Position	robot = new Position (wp.pos.x (), wp.pos.y (), wp.pos.z (), wp.pos.alpha ());		// the vehicle reaches the waypoint with its heading
+		Position	robot = new Position (wp.pos.x (), wp.pos.y (), wp.pos.z (), wp.pos.alpha);		// the vehicle reaches the waypoint with its heading
 
 		g.setColor (C_DOCK);
 		g.setStroke (dashed (1.5f));
@@ -1352,7 +1352,7 @@ public class WorldCanvas extends JPanel
 			WMDock	d = world.dock (dockLabel);
 			if (d == null)		continue;
 			Path	path;
-			try { path = DockingPath.generate (robot, new Position (d.pos.x (), d.pos.y (), d.pos.z (), d.pos.alpha ()), DockingPath.NAV_EXTENSION); }
+			try { path = DockingPath.generate (robot, new Position (d.pos.x (), d.pos.y (), d.pos.z (), d.pos.alpha), DockingPath.NAV_EXTENSION); }
 			catch (RuntimeException e)		{ continue; }			// degenerate geometry: no preview
 			Path2D	shape = new Path2D.Double ();
 			int		n = path.num ();
@@ -1373,13 +1373,13 @@ public class WorldCanvas extends JPanel
 
 	private void drawWaypoint (Graphics2D g, WMWaypoint p, boolean sel)
 	{
-		drawPose (g, p.pos.x (), p.pos.y (), p.pos.alpha (), world.G_RADIUS, C_WP, sel, false);
+		drawPose (g, p.pos.x (), p.pos.y (), p.pos.alpha, world.G_RADIUS, C_WP, sel, false);
 		label (g, p.label, p.pos.x (), p.pos.y (), sel ? C_SEL : C_WP);
 	}
 
 	private void drawDock (Graphics2D g, WMDock d, boolean sel)
 	{
-		double	a = d.pos.alpha ();
+		double	a = d.pos.alpha;
 		double	cxp = px (d.pos.x ()), cyp = py (d.pos.y ());
 		double	rp = Math.max (5.0, (world.D_LENGHT / 2.0) * scale);
 		g.setColor (sel ? C_SEL : C_DOCK);

@@ -9,7 +9,7 @@ package tc.shared.world;
 import com.google.gson.JsonObject;
 
 
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 import wucore.utils.geom.Point3;
 
 /**
@@ -63,7 +63,7 @@ public class WMDock extends WMElement
         return new Point3(pos.x(),pos.y(),pos.z());
     }
     public double getAng(){
-        return pos.alpha();
+        return pos.alpha;
     }
 
     /* JSON: {label, x, y, z, orientation (deg), flow} */
@@ -80,7 +80,7 @@ public class WMDock extends WMElement
         JsonObject	o = new JsonObject ();
         o.addProperty ("label", label);
         World.putPoint (o, pos.x (), pos.y (), pos.z ());
-        o.addProperty ("orientation", World.num (Math.toDegrees (pos.alpha ())));
+        o.addProperty ("orientation", World.num (Math.toDegrees (pos.alpha)));
         o.addProperty ("flow", flow.name ());
         return o;
     }

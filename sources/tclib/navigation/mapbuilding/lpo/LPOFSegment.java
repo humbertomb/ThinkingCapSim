@@ -16,7 +16,7 @@ import java.io.*;
 
 import tc.shared.lps.lpo.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 import wucore.utils.math.*;
 import wucore.utils.color.*;
@@ -265,15 +265,15 @@ public class LPOFSegment extends LPO implements Serializable
 		lrho	= Math.sqrt (xi * xi + yi * yi);
 		lphi	= Math.atan2 (yi, xi);
 		
-		xi		= pos.x () + lrho * Math.cos (lphi + pos.alpha ());
-		yi		= pos.y () + lrho * Math.sin (lphi + pos.alpha ());
+		xi		= pos.x () + lrho * Math.cos (lphi + pos.alpha);
+		yi		= pos.y () + lrho * Math.sin (lphi + pos.alpha);
 		
 		// Compute last limit (xf, yf)
 		lrho	= Math.sqrt (xf * xf + yf * yf);
 		lphi	= Math.atan2 (yf, xf);
 
-		xf		= pos.x () + lrho * Math.cos (lphi + pos.alpha ());
-		yf		= pos.y () + lrho * Math.sin (lphi + pos.alpha ());
+		xf		= pos.x () + lrho * Math.cos (lphi + pos.alpha);
+		yf		= pos.y () + lrho * Math.sin (lphi + pos.alpha);
 
 		// Compute segment (phi, rho) parameters: x*cos(phi) + y*sin(phi) = rho
 		if ((yi - yf) == 0.0)

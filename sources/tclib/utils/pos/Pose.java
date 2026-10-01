@@ -2,7 +2,7 @@
 	(c) 2002-2003 Humberto Martinez Barbera
    ---------------------------------------- */
 
-package devices.pos;
+package tclib.utils.pos;
 
 import java.io.*;
 

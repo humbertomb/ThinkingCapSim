@@ -21,7 +21,7 @@ import tclib.behaviours.lua.interpreter.LuaScript;
 import tclib.behaviours.lua.interpreter.LuaState;
 import tclib.planning.sequence.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.logs.*;
 import wucore.utils.math.*;
 
@@ -287,7 +287,7 @@ public class LuaController extends Controller
 		dx		= plan.tpos.x () - pos.x ();
 		dy		= plan.tpos.y () - pos.y ();
 		dist	= Math.sqrt (dx * dx + dy * dy);										// [m]
-		delta	= Math.abs (Angles.radnorm_180 (plan.tpos.alpha () - pos.alpha ()));	// [rad]
+		delta	= Math.abs (Angles.radnorm_180 (plan.tpos.alpha - pos.alpha));	// [rad]
 
 		if ((dist < plan.tol_pos) && (delta < plan.tol_head))
 			return ItemBehResult.T_FINISHED;
@@ -346,7 +346,7 @@ public class LuaController extends Controller
 		// Compute look-ahead point (there may be no LPS at all yet, when running on its own)
 		if (lps != null)			pos.set (lps.cur);
 		looka.set (pos);
-		looka.valid (false);
+		looka.valid = false;
 		if (!new_goal && (path != null))
 		{
 			path.check_lookahead (pos, looka_pts);
@@ -354,7 +354,7 @@ public class LuaController extends Controller
 			{
 				path_dst = path.distance ();
 				looka.set (path.lookahead ());
-				looka.valid (true);
+				looka.valid = true;
 			}
 		}
 
@@ -362,8 +362,8 @@ public class LuaController extends Controller
 		l_looka = (lps != null) ? lps.find ("Looka") : null;
 		if (l_looka != null)
 		{
-			l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (), pos.alpha ());
-			l_looka.active (looka.valid ());
+			l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (), pos.alpha);
+			l_looka.active (looka.valid);
 		}
 
 		/* ------- */
@@ -411,7 +411,7 @@ public class LuaController extends Controller
 
 		case ItemBehResult.T_NOTYET:
 		default:
-			if (need_looka && !looka.valid ())
+			if (need_looka && !looka.valid)
 			{
 				vlin 	= 0.0;
 				vlat	= 0.0;

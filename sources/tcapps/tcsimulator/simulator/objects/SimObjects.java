@@ -12,7 +12,7 @@ import tc.shared.world.World;
 
 import tcapps.tcsimulator.simulator.Simulator;
 
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 import wucore.utils.geom.Line2;
 
 /**

@@ -11,7 +11,7 @@ import java.awt.*;
 
 import devices.data.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 /**
  * @author Juan Pedro Canovas Quiñonero

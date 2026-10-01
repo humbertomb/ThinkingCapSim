@@ -13,7 +13,7 @@ import tc.gui.visualization.*;
 import tclib.navigation.mapbuilding.*;
 import tclib.navigation.pathplanning.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 import wucore.utils.geom.*;
 
@@ -317,13 +317,13 @@ public class Grid2D extends World2D
 			if (icon == null)
 			{
 				model.addRawCircle (rx, ry, rdesc.RADIUS, Color.RED);
-				model.addRawArrow (rx, ry, rdesc.RADIUS, pos.alpha (), Color.RED);	
+				model.addRawArrow (rx, ry, rdesc.RADIUS, pos.alpha, Color.RED);	
 			}
 			else
 			{
-				model.addRawArrow (rx, ry, rdesc.RADIUS, pos.alpha (), Color.ORANGE);	
+				model.addRawArrow (rx, ry, rdesc.RADIUS, pos.alpha, Color.ORANGE);	
 				for (i = 0; i < icon.length; i++)
-					model.addRawTransRotLine (icon[i], rx, ry, pos.alpha (), Color.RED);
+					model.addRawTransRotLine (icon[i], rx, ry, pos.alpha, Color.RED);
 			}
 		}
 		

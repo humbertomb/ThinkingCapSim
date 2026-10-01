@@ -1,6 +1,6 @@
 package tclib.navigation.pathplanning;
 
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 import wucore.utils.math.poly.Complex;
 import wucore.utils.math.poly.Polynomial;
 
@@ -2739,7 +2739,7 @@ public class PathFinder {
 	
 	public void calculatePath (Position pos_i, Position pos_e, double k_max, double sigma_max, double spacement, double th_sp, double extension, double post_extension)
 	{
-		this.calculatePath(pos_i.x(), pos_i.y(), pos_i.alpha(), pos_e.x(), pos_e.y(), pos_e.alpha(), k_max, sigma_max, spacement, th_sp, extension, post_extension);
+		this.calculatePath(pos_i.x(), pos_i.y(), pos_i.alpha, pos_e.x(), pos_e.y(), pos_e.alpha, k_max, sigma_max, spacement, th_sp, extension, post_extension);
 	}
 	
 	public void calculatePath (double x_i, double y_i, double theta_i, double x_e, double y_e, double theta_e, double k_max, double sigma_max, double spacement, double th_sp, double pre_extension, double post_extension)

@@ -16,7 +16,7 @@ import tclib.navigation.mapbuilding.lpo.*;
 import tclib.navigation.pathplanning.*;
 
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class IndoorNavigation extends Navigation
 {

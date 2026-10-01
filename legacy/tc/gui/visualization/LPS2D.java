@@ -11,7 +11,7 @@ import tc.shared.lps.lpo.*;
 import tc.vrobot.*;
 import tclib.navigation.pathplanning.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 import wucore.utils.geom.*;
 

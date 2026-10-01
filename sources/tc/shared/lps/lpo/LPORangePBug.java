@@ -8,10 +8,10 @@ package tc.shared.lps.lpo;
 
 import java.util.LinkedList;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import tc.shared.world.WMZone;
 import tc.shared.world.World;
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 import wucore.utils.geom.*;
 import wucore.utils.math.Angles;
 import wucore.utils.math.Matrix3D;
@@ -139,7 +139,7 @@ public class LPORangePBug extends LPORangeBuffer
 		boolean intersection = false;
 		radius = 0;
 		
-		szone = world.zones().inZone(Transform2.toGlobal(gx,gy,0,pos.x(),pos.y(),pos.alpha()));
+		szone = world.zones().inZone(Transform2.toGlobal(gx,gy,0,pos.x(),pos.y(),pos.alpha));
 		if(szone!=null)
 			zone = world.zones().at(szone).toLines();
 		//System.out.println("zone = "+szone+" goal["+gx+","+gy+"] pos ="+pos+" transf="+Transform2.toGlobal(gx,gy,0,pos.x(),pos.y(),pos.alpha()));
@@ -164,8 +164,8 @@ public class LPORangePBug extends LPORangeBuffer
 		// Detecta una colision con los valores obtenidos del laser
 		for(int i = 0; i<size; i++){
 			if(onlyInZone && zone != null){	// Si un punto esta fuera de la zona actual, colisiona
-				global.x(pos.x()+dist*Math.cos(buffer[i].theta() + pos.alpha()));
-				global.y(pos.y()+dist*Math.sin(buffer[i].theta() + pos.alpha()));
+				global.x(pos.x()+dist*Math.cos(buffer[i].theta() + pos.alpha));
+				global.y(pos.y()+dist*Math.sin(buffer[i].theta() + pos.alpha));
 				
 				intersection = false;
 				inters = null;

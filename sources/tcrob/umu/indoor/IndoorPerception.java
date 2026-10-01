@@ -14,7 +14,7 @@ import tc.modules.*;
 import tclib.navigation.mapbuilding.lpo.*;
 import tc.shared.lps.gui.LPSWindow;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.geom.*;
 import wucore.utils.math.*;
 import wucore.utils.math.jama.*;
@@ -309,7 +309,7 @@ public class IndoorPerception extends Perception
 	public void notify_navigation (String space, ItemNavigation item) 
 	{ 
 		// Update corrected robot position and its uncertainty matrix
-		if (item.robot.valid ())
+		if (item.robot.valid)
 		{
 			pos_upd		= item.timestamp.longValue ();
 			cpos.set (item.robot);

@@ -10,7 +10,7 @@ import tc.modules.*;
 import tc.shared.lps.lpo.*;
 import tc.shared.linda.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public interface GUIMonitor
 {

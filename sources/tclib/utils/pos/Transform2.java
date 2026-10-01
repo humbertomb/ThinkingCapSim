@@ -1,4 +1,4 @@
-package devices.pos;
+package tclib.utils.pos;
 
 import wucore.utils.geom.*;
 
@@ -236,7 +236,7 @@ public class Transform2 {
      * @return			Posicion respecto al sistema local
      */
     static public Position toLocal(Position pg, Position po){
-        return toLocal(pg.x(),pg.y(),pg.alpha(),po.x(),po.y(),po.alpha());
+        return toLocal(pg.x(),pg.y(),pg.alpha,po.x(),po.y(),po.alpha);
     }
     
     /** Transformacion de coordenadas Globales a coordenadas Locales 
@@ -245,7 +245,7 @@ public class Transform2 {
      * @return			Linea respecto al sistema local
      */
     static public Line2 toLocal(Line2 line, Position po){
-        return transRot(line, -po.x(),-po.y(),-po.alpha());
+        return transRot(line, -po.x(),-po.y(),-po.alpha);
     }
     
     /** Transformacion de coordenadas Globales a coordenadas Locales 
@@ -254,7 +254,7 @@ public class Transform2 {
      * @return			Linea respecto al sistema local
      */
     static public Line2[] toLocal(Line2[] line, Position po){
-        return transRot(line, -po.x(),-po.y(),-po.alpha());
+        return transRot(line, -po.x(),-po.y(),-po.alpha);
     }
     
     /** Transformacion de coordenadas Locales a coordenadas Globales
@@ -280,7 +280,7 @@ public class Transform2 {
      * @return			Posicion respecto al sistema global
      */
     static public Position toGlobal(Position pl, Position orig){
-        return toGlobal(pl.x(),pl.y(),pl.alpha(),orig.x(),orig.y(),orig.alpha());
+        return toGlobal(pl.x(),pl.y(),pl.alpha,orig.x(),orig.y(),orig.alpha);
     }
     
     
@@ -290,7 +290,7 @@ public class Transform2 {
      * @return			Linea pasada al sistema global
      */
     static public Line2 toGlobal(Line2 line, Position orig){
-        return rotTrans(line,orig.x(),orig.y(),orig.alpha());
+        return rotTrans(line,orig.x(),orig.y(),orig.alpha);
     }
     
     /** Transformacion de coordenadas Locales a coordenadas Globales 
@@ -299,7 +299,7 @@ public class Transform2 {
      * @return			Lineas pasadas al sistema global
      */
     static public Line2[] toGlobal(Line2[] lines, Position orig){
-        return rotTrans(lines,orig.x(),orig.y(),orig.alpha());
+        return rotTrans(lines,orig.x(),orig.y(),orig.alpha);
     }
     
 }

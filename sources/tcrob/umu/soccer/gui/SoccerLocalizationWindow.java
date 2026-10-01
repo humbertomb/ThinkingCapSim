@@ -9,7 +9,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 import tcrob.umu.soccer.gm.Localisation;
 import static tcrob.umu.soccer.gm.Localisation.*;
 import tcrob.umu.soccer.gm.data.*;
@@ -144,7 +144,7 @@ public class SoccerLocalizationWindow extends JFrame
 	 */
 	public void update (final Localisation loc, final LocLps lps, final Position real)
 	{
-		final Position		gt = (real != null) ? new Position (real.x () * 1000.0, real.y () * 1000.0, real.alpha ()) : null;
+		final Position		gt = (real != null) ? new Position (real.x () * 1000.0, real.y () * 1000.0, real.alpha) : null;
 
 		SwingUtilities.invokeLater (() -> show (loc, lps, gt));
 	}
@@ -180,7 +180,7 @@ public class SoccerLocalizationWindow extends JFrame
 		else
 			sb.append ("GS  -\n\n\n");
 		if (gt != null)
-			sb.append (String.format ("GT  x %6.0f  y %6.0f mm  %4.0f deg", gt.x (), gt.y (), gt.alpha () * Angles.RTOD));
+			sb.append (String.format ("GT  x %6.0f  y %6.0f mm  %4.0f deg", gt.x (), gt.y (), gt.alpha * Angles.RTOD));
 		else
 			sb.append ("GT  -");
 		return sb.toString ();
@@ -327,7 +327,7 @@ public class SoccerLocalizationWindow extends JFrame
 		void track (Gs gs, Position gt)
 		{
 			if (gs != null)		{ this.gs = new Gs (gs.getX (), gs.getY (), gs.getTheta (), gs.getDX (), gs.getDY (), gs.getDTheta (), gs.getQuality ());	add (gspath, gs.getX (), gs.getY (), gs.getTheta ()); }
-			if (gt != null)		{ this.gt = new Position (gt);	add (gtpath, gt.x (), gt.y (), gt.alpha ()); }
+			if (gt != null)		{ this.gt = new Position (gt);	add (gtpath, gt.x (), gt.y (), gt.alpha); }
 		}
 
 		/** A position onto the end of a path, when it has moved from the last one (the oldest go when it is full). */
@@ -366,7 +366,7 @@ public class SoccerLocalizationWindow extends JFrame
 				drawPath (gspath, GS_COLOR);
 			}
 			if (gt != null)
-				drawRobot (model, gt.x (), gt.y (), gt.alpha (), r, GT_COLOR);
+				drawRobot (model, gt.x (), gt.y (), gt.alpha, r, GT_COLOR);
 			if (gs != null)
 			{
 				double		w2 = gs.getDX () * 0.5, h2 = gs.getDY () * 0.5;

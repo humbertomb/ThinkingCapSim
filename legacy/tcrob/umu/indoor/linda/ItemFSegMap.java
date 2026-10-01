@@ -8,7 +8,7 @@ import tc.shared.linda.*;
 
 import tclib.navigation.mapbuilding.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class ItemFSegMap extends Item
 {

@@ -13,7 +13,7 @@ import java.util.*;
 import devices.data.*;
 import devices.drivers.gps.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.math.*;
 import wucore.utils.geom.*;
 

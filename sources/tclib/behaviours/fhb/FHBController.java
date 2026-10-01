@@ -16,7 +16,7 @@ import tc.shared.lps.lpo.*;
 import tclib.behaviours.fhb.exceptions.*;
 import tclib.planning.sequence.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.logs.*;
 import wucore.utils.math.*;
 
@@ -156,7 +156,7 @@ public class FHBController extends Controller
 		dx		= plan.tpos.x () - pos.x ();
 		dy		= plan.tpos.y () - pos.y ();
 		dist		= Math.sqrt (dx * dx + dy * dy);										// [m]
-		delta	= Math.abs (Angles.radnorm_180 (plan.tpos.alpha () - pos.alpha ()));	// [rad]	
+		delta	= Math.abs (Angles.radnorm_180 (plan.tpos.alpha - pos.alpha));	// [rad]	
 
 		if ((dist < plan.tol_pos) && (delta < plan.tol_head))		
 			return ItemBehResult.T_FINISHED;
@@ -177,7 +177,7 @@ public class FHBController extends Controller
 		// Compute look-ahead point
 		pos.set (lps.cur);
 		looka.set (pos);
-		looka.valid (false);
+		looka.valid = false;
 		if (!new_goal && (path != null))
 		{
 			path.check_lookahead (pos, looka_dst);
@@ -185,7 +185,7 @@ public class FHBController extends Controller
 			{
 				path_dst	= path.distance ();
 				looka.set (path.lookahead ());
-				looka.valid (true);
+				looka.valid = true;
 			}
 		}
 
@@ -193,8 +193,8 @@ public class FHBController extends Controller
 		l_looka		= lps.find ("Looka");
 		if (l_looka != null)
 		{
-			l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (), pos.alpha ());
-			l_looka.active (looka.valid ());
+			l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (), pos.alpha);
+			l_looka.active (looka.valid);
 		}
 
 		// Put percepts into FHB executor (read all LPOs)
@@ -217,7 +217,7 @@ public class FHBController extends Controller
 
 		beh.setParam ("x", Double.valueOf (pos.x ()));
 		beh.setParam ("y", Double.valueOf (pos.y ()));
-		beh.setParam ("alpha", Double.valueOf (pos.alpha ()));
+		beh.setParam ("alpha", Double.valueOf (pos.alpha));
 		beh.setParam ("heading", Double.valueOf (Math.atan2 ((looka.y () - pos.y ()), (looka.x () - pos.x ()))));
 
 		// Invoke the FHB executor		
@@ -257,7 +257,7 @@ public class FHBController extends Controller
 			
 		case ItemBehResult.T_NOTYET:
 		default:
-			if (!looka.valid ())
+			if (!looka.valid)
 			{
 				vlin 	= 0.0;
 				vlat	= 0.0;

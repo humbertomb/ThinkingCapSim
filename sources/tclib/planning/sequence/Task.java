@@ -7,7 +7,7 @@ package tclib.planning.sequence;
 
 import java.io.*;
 import tclib.navigation.pathplanning.*;
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class Task implements Serializable
 {

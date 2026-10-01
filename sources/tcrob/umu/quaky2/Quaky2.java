@@ -10,7 +10,7 @@ import tc.vrobot.*;
 import tc.vrobot.models.*;
 import tc.shared.linda.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 import devices.data.*;
 import devices.drivers.vision.*;

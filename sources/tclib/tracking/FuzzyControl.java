@@ -4,7 +4,7 @@ import tc.vrobot.models.*;
 
 import tclib.utils.fuzzy.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.math.*;
 
 public class FuzzyControl {
@@ -306,14 +306,14 @@ public class FuzzyControl {
 		
 		pos.set (robot);
 		looka.set (pos);
-		looka.valid (false);
+		looka.valid = false;
 		
 		rpath.check_lookahead (pos, looka_dst);
 		if (rpath.lookahead () != null)
 		{
 			path_dst = rpath.distance ();
 			looka.set (rpath.lookahead ());
-			looka.valid (true);
+			looka.valid = true;
 		}
 		
 		double	dx, dy;
@@ -326,7 +326,7 @@ public class FuzzyControl {
 		dy		= looka.y () - pos.y ();
 		//dist	= Math.sqrt (dx * dx + dy * dy);				// [m]
 		heading	= Math.atan2 (dy, dx);							// [rad]
-		delta	= Angles.radnorm_180 (heading - pos.alpha ());	// [rad]
+		delta	= Angles.radnorm_180 (heading - pos.alpha);	// [rad]
 		delta	= Angles.radnorm_180 (Math.PI + delta);
 		
 		// Check wether the robot is close to the goal

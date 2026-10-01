@@ -11,7 +11,7 @@ import java.awt.*;
 
 import tc.vrobot.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 import wucore.utils.geom.*;
 
@@ -69,7 +69,7 @@ public class LPOMate extends LPOPoint implements Serializable
 	{
 		super.update (cur, point);
 		
-		phi	= point.alpha () - cur.alpha ();
+		phi	= point.alpha - cur.alpha;
 	}
 	
 	public void draw (Model2D model, LPOView view)

@@ -6,7 +6,7 @@ package tclib.navigation.pathplanning;
 
 import tclib.navigation.mapbuilding.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 class PathNode extends Object
 {
@@ -169,7 +169,7 @@ public abstract class GridPath extends Object
 		goal_x (grid.ctog_x (pos.x ()));
 		goal_y (grid.ctog_y (pos.y ()));
 		
-		if(pos.valid())
+		if(pos.valid)
 			goal.set (pos);
 		else{
 			goal.set(grid.gtoc_x(goal_x), grid.gtoc_y(goal_y));
@@ -274,7 +274,7 @@ public abstract class GridPath extends Object
 			x	= p2.x () + extension * Math.cos (a);
 			y	= m * x + n;
 		}
-		p3	= new Position (x, y, p2.alpha ());
+		p3	= new Position (x, y, p2.alpha);
 		
 		return p3;
 	}
@@ -310,13 +310,13 @@ public abstract class GridPath extends Object
 			for(int i = 1; i < n; i++)
 				path.add (robot.x()+ i*0.1 * Math.cos(alf), robot.y()+ i*0.1 * Math.sin(alf), alf);		
 			path.add (goal);				
-			firstang = robot.alpha ();
+			firstang = robot.alpha;
 		break;
 		
 		case POINTS:
 			plast		= DockingPath.controlPoints (path, robot, goal);
 			path.add (generate_extension (path.last (-plast/2-1), goal, EXTENSION));	
-			firstang 	= robot.alpha ()+Math.PI;
+			firstang 	= robot.alpha+Math.PI;
 			
 			break;
 			
@@ -327,9 +327,9 @@ public abstract class GridPath extends Object
 			Position[] pfinder_path;
 			Position fpoint, lpoint;
 			
-			fpoint = new Position(robot.x(), robot.y(), robot.alpha()+Math.PI);
+			fpoint = new Position(robot.x(), robot.y(), robot.alpha+Math.PI);
 			//lpoint = new Position(robot.x()-8.0*Math.cos(robot.alpha()), robot.y()-8.0*Math.sin(robot.alpha()), robot.alpha()+Math.PI);
-			lpoint = new Position(goal.x(), goal.y(), goal.alpha()+Math.PI);
+			lpoint = new Position(goal.x(), goal.y(), goal.alpha+Math.PI);
 			
 			double k_max, sigma_max;
 			
@@ -361,7 +361,7 @@ public abstract class GridPath extends Object
 			for(int i = 0; i < pfinder_path.length; i++)
 				path.add (pfinder_path[i]);
 			
-			firstang = robot.alpha () + Math.PI;
+			firstang = robot.alpha + Math.PI;
 			
 			break;
 		

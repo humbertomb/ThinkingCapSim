@@ -6,7 +6,7 @@
  */
 package devices.data;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 /**
  * @author Humberto Martinez Barbera

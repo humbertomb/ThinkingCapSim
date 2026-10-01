@@ -8,7 +8,7 @@ package devices.data;
 
 import java.awt.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 /**
  * @author Humberto Martinez Barbera

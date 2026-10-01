@@ -6,7 +6,7 @@ package tclib.navigation.pathplanning;
 
 import tclib.navigation.mapbuilding.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.math.*;
 
 public class GridPathA extends GridPath
@@ -463,7 +463,7 @@ public class GridPathA extends GridPath
 		pa = Angles.radnorm_180 (Math.atan2 (path.last(-1).y()-path.last(-2).y(),path.last(-1).x()-path.last(-2).x()));			
 		path.at(path.num()-1,px,py,pa);
 		
-		return path.at(0).alpha();
+		return path.at(0).alpha;
 	}
 
 	/* Genera el path siguiendo el minimo valor de fn. Es el metodo normal,
@@ -504,6 +504,6 @@ public class GridPathA extends GridPath
 		}
 		
 		path.add (goal);		
-		return robot.alpha ();
+		return robot.alpha;
 	}
 }

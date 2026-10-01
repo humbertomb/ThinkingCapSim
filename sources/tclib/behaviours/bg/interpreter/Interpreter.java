@@ -9,7 +9,7 @@ import java.util.*;
 import tclib.behaviours.bg.*;
 import tclib.utils.fuzzy.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class Interpreter extends Object
 {

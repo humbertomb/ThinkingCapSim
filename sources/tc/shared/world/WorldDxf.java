@@ -8,7 +8,7 @@ package tc.shared.world;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 
 import wucore.utils.color.ColorTool;
 import wucore.utils.color.WColor;
@@ -419,7 +419,7 @@ public class WorldDxf
 		{
 			WMWaypoint	wp = w.wps ().get (i);
 			TextDxf		text = new TextDxf (wp.label, wp.getPos (), TEXT_H, "WAYPOINTS");
-			text.addExtDouble (Math.toDegrees (wp.pos.alpha ()));
+			text.addExtDouble (Math.toDegrees (wp.pos.alpha));
 			dxf.addEntity (text);
 		}
 	}
@@ -456,7 +456,7 @@ public class WorldDxf
 		{
 			WMBeacon	b = w.beacons ().get (i);
 			TextDxf		text = new TextDxf (b.label, new Point3 (b.pos.x (), b.pos.y (), 0.0), TEXT_H, "BEACONS");
-			text.addExtDouble (Math.toDegrees (b.pos.alpha ()));
+			text.addExtDouble (Math.toDegrees (b.pos.alpha));
 			text.addExtDouble (b.width);
 			text.addExtDouble (b.height);
 			dxf.addEntity (text);

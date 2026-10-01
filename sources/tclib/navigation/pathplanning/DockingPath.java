@@ -4,8 +4,8 @@
 
 package tclib.navigation.pathplanning;
 
-import devices.pos.Path;
-import devices.pos.Position;
+import tclib.utils.pos.Path;
+import tclib.utils.pos.Position;
 import wucore.utils.math.Angles;
 
 /**
@@ -68,11 +68,11 @@ public final class DockingPath
 
 		//  CALCULO PRIMER SEMICIRCULO RMIN	//
 
-		alf     = Math.atan2(robot.y()-goal.y(),robot.x()-goal.x()) - goal.alpha();
+		alf     = Math.atan2(robot.y()-goal.y(),robot.x()-goal.x()) - goal.alpha;
 		dst		= robot.distance (goal);
 //			distx   = dst * Math.cos (alf);
 		disty   = dst * Math.sin (alf);
-		del = Angles.radnorm_180(goal.alpha() - robot.alpha()) * Angles.RTOD;
+		del = Angles.radnorm_180(goal.alpha - robot.alpha) * Angles.RTOD;
 
 		// CASO GIRO 270°-360°
 		if( ((del > -90.0)&&(del < 0.0)&&(disty>0)) || ((del > 0.0)&&(del < 90.0)&&(disty<0)) ){		
@@ -105,9 +105,9 @@ public final class DockingPath
 			
 			// Linea
 			if(disty < 0)
-			    ang = goal.alpha() + Math.PI / 2;
+			    ang = goal.alpha + Math.PI / 2;
 			else
-			    ang = goal.alpha() - Math.PI / 2;
+			    ang = goal.alpha - Math.PI / 2;
 			dst = Math.abs(disty) - radio;
 			x = robot.x() + dst * Math.cos(ang);
 			y = robot.y() + dst * Math.sin(ang);
@@ -125,12 +125,12 @@ public final class DockingPath
 			x = robot.x() + dst * Math.cos(ang);
 			y = robot.y() + dst * Math.sin(ang);
 			//	Calculo del radio del segundo semicirculo		
-			rx = x + radio * Math.cos(goal.alpha()+Math.PI);
-			ry = y + radio * Math.sin(goal.alpha()+Math.PI);
+			rx = x + radio * Math.cos(goal.alpha+Math.PI);
+			ry = y + radio * Math.sin(goal.alpha+Math.PI);
 			
 			// Genera segundo semicirculo
 			puntos = 10;
-			alpha = goal.alpha();
+			alpha = goal.alpha;
 			dif = Math.PI /2;
 			for(int i = 0; i < puntos; i++){
 				path.add(rx+radio*Math.cos(alpha),ry+radio*Math.sin(alpha),0.0);
@@ -142,9 +142,9 @@ public final class DockingPath
 			dst		= path.last(-1).distance (goal);
 			plast	= (int)(dst/0.2); //puntos cada 0.2m
 			for(int i = 1;i < plast; i++){
-				x = goal.x() + (1-(double)i/(double)plast) * dst * Math.cos(goal.alpha());
-				y = goal.y() + (1-(double)i/(double)plast) * dst * Math.sin(goal.alpha());
-				path.add(x, y, goal.alpha());	
+				x = goal.x() + (1-(double)i/(double)plast) * dst * Math.cos(goal.alpha);
+				y = goal.y() + (1-(double)i/(double)plast) * dst * Math.sin(goal.alpha);
+				path.add(x, y, goal.alpha);	
 			}
 		}		
 		// // CASO dy MENOR A 0.5 METROS
@@ -155,9 +155,9 @@ public final class DockingPath
 			path.reset();
 			path.add(robot.x(),robot.y(),0.0);
 			for(int i = 1;i < plast; i++){
-				x = goal.x() + (1-(double)i/(double)plast) * dst * Math.cos(goal.alpha());
-				y = goal.y() + (1-(double)i/(double)plast) * dst * Math.sin(goal.alpha());
-				path.add(x, y, goal.alpha());	
+				x = goal.x() + (1-(double)i/(double)plast) * dst * Math.cos(goal.alpha);
+				y = goal.y() + (1-(double)i/(double)plast) * dst * Math.sin(goal.alpha);
+				path.add(x, y, goal.alpha);	
 			}
 		}		
 		else	// CASO GIRO NORMAL
@@ -170,17 +170,17 @@ public final class DockingPath
 		
 			// Calculo del radio							
 			if(disty<0){
-				rx = robot.x() + radio * Math.cos(robot.alpha()-Math.PI/2);
-				ry = robot.y() + radio * Math.sin(robot.alpha()-Math.PI/2);
+				rx = robot.x() + radio * Math.cos(robot.alpha-Math.PI/2);
+				ry = robot.y() + radio * Math.sin(robot.alpha-Math.PI/2);
 				inicio = Math.atan2(robot.y()-ry,robot.x()-rx);
-				fin = goal.alpha();
+				fin = goal.alpha;
 				dif = fin-inicio; 
 			}
 			else{
-				rx = robot.x() + radio * Math.cos(robot.alpha()+Math.PI/2);
-				ry = robot.y() + radio * Math.sin(robot.alpha()+Math.PI/2);
+				rx = robot.x() + radio * Math.cos(robot.alpha+Math.PI/2);
+				ry = robot.y() + radio * Math.sin(robot.alpha+Math.PI/2);
 				inicio = Math.atan2(robot.y()-ry,robot.x()-rx);
-				fin = goal.alpha();
+				fin = goal.alpha;
 				dif = -(fin-inicio);			
 			}
 			if (dif<0) dif+= Math.PI *2;
@@ -196,7 +196,7 @@ public final class DockingPath
 			}
 
 			//// Segundo Semicirculo ////
-			alf     = Math.atan2(path.at(puntos-1).y()-goal.y(),path.at(puntos-1).x()-goal.x()) - goal.alpha();
+			alf     = Math.atan2(path.at(puntos-1).y()-goal.y(),path.at(puntos-1).x()-goal.x()) - goal.alpha;
 			dst		= path.at(puntos-1).distance (goal);
 //				distx   = dst * Math.cos (alf);
 			disty   = dst * Math.sin (alf);
@@ -209,21 +209,21 @@ public final class DockingPath
 			// Calculo del radio del segundo semicirculo		
 			fin = 0;
 			if(disty<0){
-				x = path.at(puntos-1).x() + dst * Math.cos(goal.alpha()+Math.PI/2);
-				y = path.at(puntos-1).y() + dst * Math.sin(goal.alpha()+Math.PI/2);
-				rx = x + radio * Math.cos(goal.alpha()+Math.PI);
-				ry = y + radio * Math.sin(goal.alpha()+Math.PI);
+				x = path.at(puntos-1).x() + dst * Math.cos(goal.alpha+Math.PI/2);
+				y = path.at(puntos-1).y() + dst * Math.sin(goal.alpha+Math.PI/2);
+				rx = x + radio * Math.cos(goal.alpha+Math.PI);
+				ry = y + radio * Math.sin(goal.alpha+Math.PI);
 				inicio = Math.atan2(y-ry,x-rx);
-				fin = goal.alpha()+Math.PI/2;
+				fin = goal.alpha+Math.PI/2;
 				dif = fin-inicio;
 			}
 			else{
-				x = path.at(puntos-1).x() + dst * Math.cos(goal.alpha()-Math.PI/2);
-				y = path.at(puntos-1).y() + dst * Math.sin(goal.alpha()-Math.PI/2);
-				rx = x + radio * Math.cos(goal.alpha()-Math.PI);
-				ry = y + radio * Math.sin(goal.alpha()-Math.PI);
+				x = path.at(puntos-1).x() + dst * Math.cos(goal.alpha-Math.PI/2);
+				y = path.at(puntos-1).y() + dst * Math.sin(goal.alpha-Math.PI/2);
+				rx = x + radio * Math.cos(goal.alpha-Math.PI);
+				ry = y + radio * Math.sin(goal.alpha-Math.PI);
 				inicio = Math.atan2(y-ry,x-rx);
-				fin = goal.alpha()-Math.PI/2;
+				fin = goal.alpha-Math.PI/2;
 				dif = -(fin-inicio);
 			}
 			if (dif<0) dif+= Math.PI *2;
@@ -237,7 +237,7 @@ public final class DockingPath
 			for(int i = 1;i < puntos; i++){
 				x = pi.x() + ((double)i/(double)puntos) * pi.distance (pf) * Math.cos(ang);
 				y = pi.y() + ((double)i/(double)puntos) * pi.distance (pf) * Math.sin(ang);
-				path.add(x, y, goal.alpha());	
+				path.add(x, y, goal.alpha);	
 			}
 
 			// Genera segundo semicirculo
@@ -253,9 +253,9 @@ public final class DockingPath
 			dst		= path.last(-1).distance (goal);
 			plast	= (int)(dst/0.2); //puntos cada 0.2m
 			for(int i = 1;i < plast; i++){
-				x = goal.x() + (1-(double)i/(double)plast) * dst * Math.cos(goal.alpha());
-				y = goal.y() + (1-(double)i/(double)plast) * dst * Math.sin(goal.alpha());
-				path.add(x, y, goal.alpha());	
+				x = goal.x() + (1-(double)i/(double)plast) * dst * Math.cos(goal.alpha);
+				y = goal.y() + (1-(double)i/(double)plast) * dst * Math.sin(goal.alpha);
+				path.add(x, y, goal.alpha);	
 			}
 		}
 		path.add (goal);
@@ -272,6 +272,6 @@ public final class DockingPath
 		Path	path = new Path (1000);
 		int		plast = controlPoints (path, robot, goal);
 		path.add (GridPath.generate_extension (path.last (-plast/2-1), goal, extension));
-		return new BSpline (path, robot.alpha () + Math.PI);
+		return new BSpline (path, robot.alpha + Math.PI);
 	}
 }

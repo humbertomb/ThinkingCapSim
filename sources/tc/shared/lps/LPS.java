@@ -23,7 +23,7 @@ import tclib.utils.fusion.*;
 import tc.shared.lps.lpo.*;
 import tc.shared.world.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 import wucore.utils.math.*;
 import wucore.utils.color.*;
@@ -223,8 +223,8 @@ public class LPS extends Object
 			y	= y1 - cur.y ();
 			ll	= Math.sqrt (x * x + y * y);
 			aa	= Math.atan2 (y, x);
-			x	= ll * Math.cos (aa - cur.alpha ());
-			y	= ll * Math.sin (aa - cur.alpha ());
+			x	= ll * Math.cos (aa - cur.alpha);
+			y	= ll * Math.sin (aa - cur.alpha);
 
 			lpos[i]	= new LPODock (x, y, ra, map.D_LENGHT, map.docks().get(i).label, LPOSource.MAP);
 			lpos[i].active (true);
@@ -244,20 +244,20 @@ public class LPS extends Object
 			if (data.id.equals (lpos[i].label ()))
 			{
 				// Compute sensor absolute position (where the objects were captured)
-				pos.set (cur.x (), cur.y (), cur.alpha ());
+				pos.set (cur.x (), cur.y (), cur.alpha);
 				pos.untranslate (data.cpos);
 				
 				// Compute object absolute positions (where captured)
-				x	= pos.x () + data.rho * Math.cos (pos.alpha () + data.phi);
-				y	= pos.y () + data.rho * Math.sin (pos.alpha () + data.phi);
+				x	= pos.x () + data.rho * Math.cos (pos.alpha + data.phi);
+				y	= pos.y () + data.rho * Math.sin (pos.alpha + data.phi);
 
 				// Compute object relative positions (current robot frame)
 				x	= x - cur.x ();
 				y	= y - cur.y ();
 				ll	= Math.sqrt (x * x + y * y);
 				aa	= Math.atan2 (y, x);
-				x	= ll * Math.cos (aa - cur.alpha ());
-				y	= ll * Math.sin (aa - cur.alpha ());
+				x	= ll * Math.cos (aa - cur.alpha);
+				y	= ll * Math.sin (aa - cur.alpha);
 				
 				// Update LPS data
 				lpos[i].locate (x, y, 0.0);
@@ -305,7 +305,7 @@ public class LPS extends Object
 			// Compute increment in absolute position
 			dx	= cur.x () - last_x;
 			dy	= cur.y () - last_y;
-			dth	= Angles.radnorm_180 (cur.alpha () - last_a);
+			dth	= Angles.radnorm_180 (cur.alpha - last_a);
 		
 		  	// Rotate to local increment
 			rotm.toFrame (0.0, 0.0, last_a);
@@ -323,7 +323,7 @@ public class LPS extends Object
 		
 		last_x	= cur.x ();
 		last_y	= cur.y ();
-		last_a	= cur.alpha ();
+		last_a	= cur.alpha;
 	}
 	
 	public void clamp (Position pos)

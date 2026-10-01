@@ -19,7 +19,7 @@ import devices.drivers.ins.*;
 import devices.drivers.gps.*;
 import devices.gui.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.widgets.*;
 import tclib.navigation.localisation.outdoor.visualization.*;
 import tclib.navigation.localisation.outdoor.*;

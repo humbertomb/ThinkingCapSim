@@ -10,7 +10,7 @@ import java.awt.*;
 import devices.data.*;
 import devices.drivers.gps.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.math.*;
 
 public class Garmin extends GPS

@@ -2,7 +2,7 @@
 	(c) 2001 Humberto Martinez Barbera
    ---------------------------------------- */
 
-package devices.pos;
+package tclib.utils.pos;
 
 public class Velocity extends Object
 {	

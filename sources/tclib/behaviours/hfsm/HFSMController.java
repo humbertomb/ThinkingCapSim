@@ -13,7 +13,7 @@ import tc.shared.linda.*;
 import tclib.behaviours.lua.LuaBridge;
 import tclib.planning.sequence.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.logs.*;
 import wucore.utils.math.*;
 
@@ -230,7 +230,7 @@ public class HFSMController extends Controller
 		dx		= plan.tpos.x () - pos.x ();
 		dy		= plan.tpos.y () - pos.y ();
 		dist	= Math.sqrt (dx * dx + dy * dy);										// [m]
-		delta	= Math.abs (Angles.radnorm_180 (plan.tpos.alpha () - pos.alpha ()));	// [rad]
+		delta	= Math.abs (Angles.radnorm_180 (plan.tpos.alpha - pos.alpha));	// [rad]
 
 		if ((dist < plan.tol_pos) && (delta < plan.tol_head))
 			return ItemBehResult.T_FINISHED;
@@ -277,7 +277,7 @@ public class HFSMController extends Controller
 		// Compute look-ahead point
 		pos.set (lps.cur);
 		looka.set (pos);
-		looka.valid (false);
+		looka.valid = false;
 		if (!new_goal && (path != null))
 		{
 			path.check_lookahead (pos, looka_pts);
@@ -285,7 +285,7 @@ public class HFSMController extends Controller
 			{
 				path_dst = path.distance ();
 				looka.set (path.lookahead ());
-				looka.valid (true);
+				looka.valid = true;
 			}
 		}
 
@@ -293,8 +293,8 @@ public class HFSMController extends Controller
 		l_looka = lps.find ("Looka");
 		if (l_looka != null)
 		{
-			l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (), pos.alpha ());
-			l_looka.active (looka.valid ());
+			l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (), pos.alpha);
+			l_looka.active (looka.valid);
 		}
 
 		/* ------- */
@@ -341,7 +341,7 @@ public class HFSMController extends Controller
 
 		case ItemBehResult.T_NOTYET:
 		default:
-			if (need_looka && !looka.valid ())
+			if (need_looka && !looka.valid)
 			{
 				vlin 	= 0.0;
 				vlat	= 0.0;

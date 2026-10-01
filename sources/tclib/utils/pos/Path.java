@@ -2,7 +2,7 @@
  * (c) 2000-2001 Humberto Martinez
  */
 
-package devices.pos;
+package tclib.utils.pos;
 
 import java.io.*;
 
@@ -114,7 +114,7 @@ public class Path extends Object
 	
 			for (Position pos = first (); pos != null; pos = next ())
 			{
-				file.println (pos.x() + "\t" + pos.y() + "\t" + pos.alpha());
+				file.println (pos.x() + "\t" + pos.y() + "\t" + pos.alpha);
 			}
 
 			file.flush ();
@@ -223,7 +223,7 @@ public class Path extends Object
 
 	public void add (Position pos)
 	{
-		add (pos.x (), pos.y (), pos.z (), pos.alpha ());
+		add (pos.x (), pos.y (), pos.z (), pos.alpha);
 	}
 
 	public void add (double x, double y, double a)
@@ -408,7 +408,7 @@ public class Path extends Object
 	{
 		String ret = "Path = [";
 		for (Position pos = first (); pos != null; pos = next ())
-			ret += pos.x() + "\t" + pos.y() + "\t" + pos.alpha();
+			ret += pos.x() + "\t" + pos.y() + "\t" + pos.alpha;
 		ret += "] beg="+p_beg+" end="+p_end+" p_num="+p_num;
 		return ret;
 	}
@@ -418,7 +418,7 @@ public class Path extends Object
 		LogFile logfile = new LogFile(preffix,suffix);
 		logfile.open();
 		for (Position pos = first (); pos != null; pos = next ())
-			logfile.writeln (pos.x() + "\t" + pos.y() + "\t" + pos.alpha());
+			logfile.writeln (pos.x() + "\t" + pos.y() + "\t" + pos.alpha);
 		logfile.close();
 	}
 }

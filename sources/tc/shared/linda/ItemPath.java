@@ -6,7 +6,7 @@
 
 package tc.shared.linda;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class ItemPath extends Item
 {

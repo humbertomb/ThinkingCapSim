@@ -21,7 +21,7 @@ import tclib.planning.sequence.*;
 import tc.shared.linda.*;
 import tc.modules.*;
 import tc.shared.lps.lpo.*;
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 
 /**
@@ -221,7 +221,7 @@ public class RasmusControl_with_Planner extends Controller
 		// Compute look-ahead point
 		pos.set (lps.cur);
 		looka.set (pos);
-		looka.valid (false);
+		looka.valid = false;
 		if (!new_goal && (path != null))
 		{
 			path.check_lookahead (pos, looka_dst);
@@ -229,18 +229,18 @@ public class RasmusControl_with_Planner extends Controller
 			{
 				path_dst	= path.distance ();
 				looka.set (path.lookahead ());
-				looka.valid (true);
+				looka.valid = true;
 				
 			}
 		}
 		// we do not want to move the robot until the path is calculated
-		if (looka.valid() == false)
+		if (looka.valid == false)
 			return;
 		// Update LPS
 		LPO l_looka;
 		l_looka		= lps.find ("Looka");
-		l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (),pos.alpha());
-		l_looka.active (looka.valid ());
+		l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (),pos.alpha);
+		l_looka.active (looka.valid);
 		/* LOOK-AHEAD END */
 		
 		/* behaviour's parameters updating */

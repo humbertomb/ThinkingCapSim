@@ -7,7 +7,7 @@ package tclib.behaviours.lua;
 import java.util.HashMap;
 import java.util.Map;
 
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 
 import tc.shared.linda.ItemBehNeeds.ScanTypes;
 import tcrob.umu.soccer.linda.ItemReferee;
@@ -453,13 +453,13 @@ public class Chaos implements LuaBridge
 		// where the robot is now (it was getMyPos, and gsGetMyPos)
 		c.set ("getCurrentPos", new LuaFunction ("chaos.getCurrentPos")
 		{
-			public Object call (Object[] args)		{ return point (pose.x (), pose.y (), pose.alpha ()); }
+			public Object call (Object[] args)		{ return point (pose.x (), pose.y (), pose.alpha); }
 		});
 
 		// where the robot starts: the position it is put at for a kick-off
 		c.set ("getStartPos", new LuaFunction ("chaos.getStartPos")
 		{
-			public Object call (Object[] args)		{ return point (start.x (), start.y (), start.alpha ()); }
+			public Object call (Object[] args)		{ return point (start.x (), start.y (), start.alpha); }
 		});
 
 		c.set ("getBallVel", new LuaFunction ("chaos.getBallVel")
@@ -549,7 +549,7 @@ public class Chaos implements LuaBridge
 			{
 				double		x = sane (name, num (args, 0, 0.0), desired.x () * MM);
 				double		y = sane (name, num (args, 1, 0.0), desired.y () * MM);
-				double		a = sane (name, num (args, 2, 0.0), degrees (desired.alpha ()));
+				double		a = sane (name, num (args, 2, 0.0), degrees (desired.alpha));
 
 				desired.set (x / MM, y / MM, radians (a));
 				return null;
@@ -558,7 +558,7 @@ public class Chaos implements LuaBridge
 
 		c.set ("getDesiredPos", new LuaFunction ("chaos.getDesiredPos")
 		{
-			public Object call (Object[] args)		{ return point (desired.x (), desired.y (), desired.alpha ()); }
+			public Object call (Object[] args)		{ return point (desired.x (), desired.y (), desired.alpha); }
 		});
 
 		c.set ("setKick", new LuaFunction ("chaos.setKick")
@@ -586,12 +586,12 @@ public class Chaos implements LuaBridge
 
 		c.set ("getOptimalPose", new LuaFunction ("chaos.getOptimalPose")
 		{
-			public Object call (Object[] args)		{ return point (desired.x (), desired.y (), desired.alpha ()); }
+			public Object call (Object[] args)		{ return point (desired.x (), desired.y (), desired.alpha); }
 		});
 
 		c.set ("getDefPose", new LuaFunction ("chaos.getDefPose")
 		{
-			public Object call (Object[] args)		{ return point (desired.x (), desired.y (), desired.alpha ()); }
+			public Object call (Object[] args)		{ return point (desired.x (), desired.y (), desired.alpha); }
 		});
 
 		c.set ("bookBall", new LuaFunction ("chaos.bookBall")

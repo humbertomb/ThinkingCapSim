@@ -6,7 +6,7 @@
  */
 package tclib.navigation.localisation.outdoor;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 /**
  * @author Humberto Martinez Barbera

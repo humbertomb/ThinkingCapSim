@@ -30,7 +30,7 @@ public class IForkPerceptionMarkov extends IForkPerception
 	{
 		super.position_correction ();
 		
-		mkgrid.convolve (dodom.x(), dodom.y(), dodom.alpha());
+		mkgrid.convolve (dodom.x(), dodom.y(), dodom.alpha);
 	}
 	
 	protected void lowlevel_fusion ()

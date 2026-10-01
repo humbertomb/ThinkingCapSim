@@ -16,7 +16,7 @@ import tc.shared.linda.*;
 import tc.shared.lps.*;
 import tc.vrobot.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 /**
  * 

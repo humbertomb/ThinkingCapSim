@@ -6,7 +6,7 @@ package tclib.navigation.pathplanning;
 
 import tclib.navigation.mapbuilding.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.math.*;
 
 public class GridPathD extends GridPath
@@ -283,7 +283,7 @@ public class GridPathD extends GridPath
 		path.at(path.num()-1,px,py,pa);
 		
 		if(debug) System.out.println("  [GridPathD] PathGn Calculado Correctamente");
-		return path.at(0).alpha();
+		return path.at(0).alpha;
 	}
 
 	/* Genera el path siguiendo el minimo valor de fn. Es el metodo normal,
@@ -329,7 +329,7 @@ public class GridPathD extends GridPath
 		path.add (goal);
 		
 		if(debug) System.out.println("  [GridPathD] PathFn Calculado Correctamente");
-		return robot.alpha ();
+		return robot.alpha;
 	}
 
 

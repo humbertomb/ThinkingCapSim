@@ -13,7 +13,7 @@ import tclib.behaviours.bg.*;
 import tclib.navigation.mapbuilding.*;
 import tclib.navigation.pathplanning.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.math.*;
 		
 public class QuakySoccerController extends BGController
@@ -153,7 +153,7 @@ public class QuakySoccerController extends BGController
 	/** Where something of the frame of the odometry is, as the robot sees it. */
 	protected void relative (Position p, Position out)
 	{
-		double		aa = lps.cur.alpha ();
+		double		aa = lps.cur.alpha;
 		double		dx = p.x () - lps.cur.x (), dy = p.y () - lps.cur.y ();
 
 		out.set ((dx * Math.cos (aa)) + (dy * Math.sin (aa)), (-dx * Math.sin (aa)) + (dy * Math.cos (aa)));
@@ -172,7 +172,7 @@ public class QuakySoccerController extends BGController
 	/** Where something of the LPS is in the frame of the odometry, which does not turn with the robot. */
 	protected void absolute (Position p, Position out)
 	{
-		double		aa = lps.cur.alpha ();
+		double		aa = lps.cur.alpha;
 
 		out.set (lps.cur.x () + (p.x () * Math.cos (aa)) - (p.y () * Math.sin (aa)),
 				 lps.cur.y () + (p.x () * Math.sin (aa)) + (p.y () * Math.cos (aa)));
@@ -189,7 +189,7 @@ public class QuakySoccerController extends BGController
 
 		if (Double.isNaN (axis))		{ p.set (0.0, 0.0); return; }
 
-		aa	= axis - lps.cur.alpha ();
+		aa	= axis - lps.cur.alpha;
 		if (target.endsWith ("2"))		aa += Math.PI;			// Net2 looks the other way
 		p.set (Math.cos (aa), Math.sin (aa));
 	}
@@ -388,13 +388,13 @@ double n1anchor, n2anchor;
 		path	= gpath.path ();
 
 		// Compute look-ahead point
-		looka.valid (false);
+		looka.valid = false;
 		path.check_lookahead (robot, LOOKA_DIST);
 		if (path.lookahead () != null)
 		{
 			path_dst	= path.distance ();
 			looka.set (path.lookahead ());
-			looka.valid (true);
+			looka.valid = true;
 		}
 		
 		// Compute heading to look-ahead
@@ -405,7 +405,7 @@ double n1anchor, n2anchor;
 		if (lpo != null)
 		{
 			lpo.locate (looka.x (), looka.y (), 0.0);
-			lpo.active (looka.valid ());
+			lpo.active (looka.valid);
 		}
 
 		/* ----------- */

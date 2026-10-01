@@ -14,7 +14,7 @@ import tclib.navigation.mapbuilding.*;
 import tclib.navigation.mapbuilding.lpo.*;
 import tclib.utils.fusion.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.math.*;
 import wucore.utils.math.jama.*;
 
@@ -200,21 +200,21 @@ public class KFSegLoc extends Object
 			
 			X.set (0, 0, posk.x ());
 			X.set (1, 0, posk.y ());
-			X.set (2, 0, posk.alpha ());
+			X.set (2, 0, posk.alpha);
 			firstime	= false;
 		}
 		else
 		{
 			// Update current linear/rotational speeds
 			drho	= Math.sqrt ((posk.x () - posk1.x ())*(posk.x () - posk1.x ())+(posk.y () - posk1.y ())*(posk.y () - posk1.y ()));
-			dphi	= Angles.radnorm_180 (posk.alpha () - posk1.alpha ());
+			dphi	= Angles.radnorm_180 (posk.alpha - posk1.alpha);
 				
 			try
 			{
 				// Fx												[3x3]
 				Fx.identity ();
-				Fx.set (0, 2, -drho * Math.sin (posk.alpha ()));
-				Fx.set (1, 2, drho * Math.cos (posk.alpha ()));
+				Fx.set (0, 2, -drho * Math.sin (posk.alpha));
+				Fx.set (1, 2, drho * Math.cos (posk.alpha));
 				
 				// Qu												[2x2]
 				Qu.identity ();
@@ -222,10 +222,10 @@ public class KFSegLoc extends Object
 				Qu.set (1, 1, var_w * dphi * dphi);
 
 				// Fu												[3x2]
-				Fu.set (0, 0, dt * Math.cos (posk.alpha ()));
-				Fu.set (0, 1, -drho * dt * Math.sin (posk.alpha ()));
-				Fu.set (1, 0, dt * Math.sin (posk.alpha ()));
-				Fu.set (1, 1, drho * dt * Math.cos (posk.alpha ()));
+				Fu.set (0, 0, dt * Math.cos (posk.alpha));
+				Fu.set (0, 1, -drho * dt * Math.sin (posk.alpha));
+				Fu.set (1, 0, dt * Math.sin (posk.alpha));
+				Fu.set (1, 1, drho * dt * Math.cos (posk.alpha));
 				Fu.set (2, 0, 0);
 				Fu.set (2, 1, dt);
 
@@ -243,7 +243,7 @@ public class KFSegLoc extends Object
 				// X												[3x1]
 				X.set (0, 0, posk.x ());
 				X.set (1, 0, posk.y ());
-				X.set (2, 0, posk.alpha ());
+				X.set (2, 0, posk.alpha);
 
 			} catch (Exception e) { e.printStackTrace (); }
 		}
@@ -275,10 +275,10 @@ public class KFSegLoc extends Object
 			sr		= fdesc.virtufeat[i].rho ();
 			
 			// Get current sensor global position
-			sga		= Angles.radnorm_180 (fdesc.virtufeat[i].orientation () + posk.alpha ());
+			sga		= Angles.radnorm_180 (fdesc.virtufeat[i].orientation () + posk.alpha);
 						
 			// Compute current sensor global position
-			sgr		= Angles.radnorm_180 (fdesc.virtufeat[i].theta () + posk.alpha ());
+			sgr		= Angles.radnorm_180 (fdesc.virtufeat[i].theta () + posk.alpha);
 			xs		= posk.x () + sr * Math.cos (sgr);
 			ys		= posk.y () + sr * Math.sin (sgr);
 

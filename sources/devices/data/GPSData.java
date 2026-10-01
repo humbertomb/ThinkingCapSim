@@ -7,7 +7,7 @@ package devices.data;
 
 import java.io.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.geom.*;
 
 public class GPSData implements Serializable, LoggableData

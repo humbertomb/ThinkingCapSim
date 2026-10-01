@@ -2,7 +2,7 @@
  * (c) 2000-2001 Humberto Martinez
  */
 
-package devices.pos;
+package tclib.utils.pos;
 
 public class Paths extends Object 
 {

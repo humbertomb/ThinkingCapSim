@@ -4,7 +4,7 @@
 
 package tclib.navigation.pathplanning;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 
 public class BSpline extends Path
 {

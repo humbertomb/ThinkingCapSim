@@ -11,7 +11,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 import wucore.utils.geom.Point2;
 
 /**

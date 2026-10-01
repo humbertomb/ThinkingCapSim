@@ -14,7 +14,7 @@ import java.io.*;
 import devices.data.*;
 import devices.drivers.gps.*;
 
-import devices.pos. *;
+import tclib.utils.pos. *;
 import wucore.utils.geom.*;
 
 public class TrimbleInterpreter

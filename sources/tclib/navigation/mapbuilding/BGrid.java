@@ -8,7 +8,7 @@ import tc.vrobot.*;
 import tclib.utils.fusion.*;
 import tc.shared.lps.lpo.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 		
 public class BGrid extends Grid
 {
@@ -57,8 +57,8 @@ public class BGrid extends Grid
 		
 		s	= fdesc.scanfeat;
 			
-		xs 	= pos.x () + s.rho () * Math.cos (pos.alpha () + s.rho());			
-		ys 	= pos.y () + s.rho () * Math.sin (pos.alpha () + s.rho());
+		xs 	= pos.x () + s.rho () * Math.cos (pos.alpha + s.rho());			
+		ys 	= pos.y () + s.rho () * Math.sin (pos.alpha + s.rho());
 			
 		for (int j = 0; j < fdesc.RAYSCAN; j++){
 					
@@ -66,18 +66,18 @@ public class BGrid extends Grid
 				
 			if(j < ((fdesc.RAYSCAN-1)/2)){
 																																	
-				xm	= xs + scan.range[j] * Math.cos ((s.orientation() - a + j*da )  + pos.alpha ());
-				ym	= ys + scan.range[j] * Math.sin ((s.orientation() - a + j*da )  + pos.alpha ());
+				xm	= xs + scan.range[j] * Math.cos ((s.orientation() - a + j*da )  + pos.alpha);
+				ym	= ys + scan.range[j] * Math.sin ((s.orientation() - a + j*da )  + pos.alpha);
 										
 			}else if (j==((fdesc.RAYSCAN-1)/2)){
 				
-				xm	= xs + scan.range[j] * Math.cos (s.orientation ()  + pos.alpha ());
-				ym	= ys + scan.range[j] * Math.sin (s.orientation ()  + pos.alpha ());	
+				xm	= xs + scan.range[j] * Math.cos (s.orientation ()  + pos.alpha);
+				ym	= ys + scan.range[j] * Math.sin (s.orientation ()  + pos.alpha);	
 								
 			}else{
 																										
-				xm	= xs + scan.range[j] * Math.cos ((s.orientation() + (j-((fdesc.RAYSCAN-1)/2))*da )  + pos.alpha ());
-				ym	= ys + scan.range[j] * Math.sin ((s.orientation() + (j-((fdesc.RAYSCAN-1)/2))*da )  + pos.alpha ());			
+				xm	= xs + scan.range[j] * Math.cos ((s.orientation() + (j-((fdesc.RAYSCAN-1)/2))*da )  + pos.alpha);
+				ym	= ys + scan.range[j] * Math.sin ((s.orientation() + (j-((fdesc.RAYSCAN-1)/2))*da )  + pos.alpha);			
 				
 			}	
 				

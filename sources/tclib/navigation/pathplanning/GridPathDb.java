@@ -6,7 +6,7 @@ package tclib.navigation.pathplanning;
 
 import tclib.navigation.mapbuilding.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.math.*;
 
 public class GridPathDb extends GridPath
@@ -227,7 +227,7 @@ public class GridPathDb extends GridPath
 
 		path.add (goal);
 	
-		return robot.alpha ();
+		return robot.alpha;
 	}
 
 	// Move the robot from state S through the environment to G along an optimal traverse

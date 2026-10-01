@@ -26,7 +26,7 @@ import tc.vrobot.models.TricycleDrive;
 import tclib.tracking.*;
 import tcrob.ingenia.ifork.linda.ItemIForkMotion;
 import tcrob.ingenia.ifork.lpo.LPOIForkData;
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.geom.Polygon2;
 import wucore.utils.logs.LogFile;
 import wucore.utils.logs.LogPlot;
@@ -240,7 +240,7 @@ public class IForkController extends Controller
 		dx		= iplan.tpos.x () - pos.x ();
 		dy		= iplan.tpos.y () - pos.y ();
 		dist		= Math.sqrt (dx * dx + dy * dy);											// [m]
-		delta	= Math.abs (Angles.radnorm_180 (iplan.tpos.alpha () - pos.alpha ()));		// [rad]	
+		delta	= Math.abs (Angles.radnorm_180 (iplan.tpos.alpha - pos.alpha));		// [rad]	
 		
 		if( (lastiplan.task != iplan.task) || (lastiplan.tpos.distance(iplan.tpos)>0.0))
 		{
@@ -386,7 +386,7 @@ public class IForkController extends Controller
 		// Compute look-ahead point
 		pos.set (lps.cur);
 		looka.set (pos);
-		looka.valid (false);
+		looka.valid = false;
 		
 		if(new_goal && (path != null))
 		{
@@ -405,7 +405,7 @@ public class IForkController extends Controller
 				pout = null;
 			}
 			
-			initialpos = new Position(pos.x(), pos.y(), pos.alpha());
+			initialpos = new Position(pos.x(), pos.y(), pos.alpha);
 			
 		}
 		
@@ -416,7 +416,7 @@ public class IForkController extends Controller
 			{
 				path_dst	= path.distance ();
 				looka.set (path.lookahead ());
-				looka.valid (true);
+				looka.valid = true;
 			}
 			else if(debug){
 				System.out.println("  [IforkController] pos="+pos+" looka_dst="+looka_dst+" path = "+path.toString());
@@ -430,8 +430,8 @@ public class IForkController extends Controller
 		l_looka		= lps.find ("Looka");
 		if (l_looka != null)
 		{
-			l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (), pos.alpha ());
-			l_looka.active (looka.valid ());
+			l_looka.locate (looka.x () - pos.x (), looka.y () - pos.y (), pos.alpha);
+			l_looka.active (looka.valid);
 		}
 
 		// Execute current active task/behaviour	
@@ -602,7 +602,7 @@ public class IForkController extends Controller
 		dy		= looka.y () - pos.y ();
 		dist		= Math.sqrt (dx * dx + dy * dy);										// [m]
 		heading	= Math.atan2 (dy, dx);								// [rad]
-		delta	= Angles.radnorm_180 (heading - pos.alpha ());		// [rad]
+		delta	= Angles.radnorm_180 (heading - pos.alpha);		// [rad]
 	
 		// Collision avoidance
 		if (avoid)
@@ -718,7 +718,7 @@ public class IForkController extends Controller
 		dx		= looka.x () - pos.x ();
 		dy		= looka.y () - pos.y ();
 		dist	= Math.sqrt (dx * dx + dy * dy);
-		delta	= Angles.radnorm_180 (Math.atan2 (dy, dx) - pos.alpha ());
+		delta	= Angles.radnorm_180 (Math.atan2 (dy, dx) - pos.alpha);
 		
 		dxl		= dist * Math.cos (delta);
 		dyl		= dist * Math.sin (delta);
@@ -766,7 +766,7 @@ public class IForkController extends Controller
 			else {
 				del = Math.atan(2*dyl*model.l/(dist*dist));
 				if(debug){
-					System.out.println("del="+Math.toDegrees(del)+" dyl="+dyl+" L="+model.l+" dist="+dist+" alpha="+Math.toDegrees(pos.alpha())+" p1="+(dx * Math.sin(-pos.alpha()))+" p2="+(dy * Math.cos(-pos.alpha())));
+					System.out.println("del="+Math.toDegrees(del)+" dyl="+dyl+" L="+model.l+" dist="+dist+" alpha="+Math.toDegrees(pos.alpha)+" p1="+(dx * Math.sin(-pos.alpha))+" p2="+(dy * Math.cos(-pos.alpha)));
 				}
 				del	= Math.max (Math.min (del, Math.toRadians(60)), Math.toRadians(-60));
 				
@@ -1109,10 +1109,10 @@ public class IForkController extends Controller
 			//pangle = Math.atan2( pos1.y()-pos2.y(), pos1.x()-pos2.x() );
 			//pangle = Math.atan2( pos1.x()-pos2.x(), pos1.y()-pos2.y() );
 		} else {
-			pangle = exp_path.at(0).alpha() + Math.PI;
+			pangle = exp_path.at(0).alpha + Math.PI;
 		}
 		
-		aerror = pos_vehicle.alpha() - pangle;
+		aerror = pos_vehicle.alpha - pangle;
 		
 		// Angle normalisation
 		while(aerror >= Math.toRadians(180))	aerror -= Math.toRadians(360);
@@ -1150,7 +1150,7 @@ public class IForkController extends Controller
 		default:
 			brk	= false;
 			
-			if (!looka.valid ())
+			if (!looka.valid)
 			{
 				vr 	= 0.0;
 				wr	= 0.0;
@@ -1175,7 +1175,7 @@ public class IForkController extends Controller
 		mifitem.setCoordLight (coord);
 		
 		if(debug)
-			System.out.println("  [IForkController] Item:"+mifitem+" look_valid="+looka.valid());
+			System.out.println("  [IForkController] Item:"+mifitem+" look_valid="+looka.valid);
 		linda.write (miftuple);
 	}
 	

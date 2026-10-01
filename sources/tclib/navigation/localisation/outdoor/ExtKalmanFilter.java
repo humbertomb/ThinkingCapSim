@@ -11,7 +11,7 @@ import java.util.StringTokenizer;
 
 import devices.data.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.math.jama.*;
 
 

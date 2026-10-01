@@ -592,7 +592,7 @@ public class WorldView3DWindow extends JFrame
 		{
 			WMBeacon		b = world.beacons ().get (i);
 			Transform3D		t = new Transform3D ();
-			t.rotZ (b.pos.alpha ());
+			t.rotZ (b.pos.alpha);
 			double			h = Math.max (0.02, b.height);
 			t.setTranslation (new Vector3d (b.pos.x (), b.pos.y (), b.pos.z () + h / 2.0));
 			TransformGroup	tg = new TransformGroup (t);

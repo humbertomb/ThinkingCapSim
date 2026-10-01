@@ -13,7 +13,7 @@ import tc.vrobot.models.*;
 
 import java.io.*;
 
-import devices.pos.*;
+import tclib.utils.pos.*;
 import wucore.utils.math.jama.*;
 import wucore.utils.math.*;
 
@@ -210,7 +210,7 @@ public class IForkKLoc extends Object
 	public void						posInit(Position pos)	{ 
 	POSX_INIT=pos.x();
 	POSY_INIT=pos.y();
-	ANG_INIT=pos.alpha();
+	ANG_INIT=pos.alpha;
 	X.set (0, 0, POSX_INIT);
 	X.set (1, 0, POSY_INIT);
 	X.set (2, 0, ANG_INIT);
@@ -248,11 +248,11 @@ public class IForkKLoc extends Object
 			v	= (posOdom.x () - posk.x ()) / (dt * Math.cos (posk.alpha ()+dt*w/2));		
 		*/
 		
-		w	= Angles.radnorm_180(posOdom.alpha() - posk.alpha())/dt;
-		if ( Math.abs(Math.sin(posOdom.alpha())) > 0.5)
-			v	= (posOdom.y () - posk.y ()) / (dt * Math.sin (posOdom.alpha()));
+		w	= Angles.radnorm_180(posOdom.alpha - posk.alpha)/dt;
+		if ( Math.abs(Math.sin(posOdom.alpha)) > 0.5)
+			v	= (posOdom.y () - posk.y ()) / (dt * Math.sin (posOdom.alpha));
 		else
-			v	= (posOdom.x () - posk.x ()) / (dt * Math.cos (posOdom.alpha()));	
+			v	= (posOdom.x () - posk.x ()) / (dt * Math.cos (posOdom.alpha));	
 
 		if(debugLog == true){
 			try{
@@ -262,7 +262,7 @@ public class IForkKLoc extends Object
 					debugLog = false;
 				}
 				else
-					file.print("\n"+(System.currentTimeMillis()-st)+"\t"+posOdom.x()+"\t"+posOdom.y()+"\t"+posOdom.alpha()*Angles.RTOD+"\t");
+					file.print("\n"+(System.currentTimeMillis()-st)+"\t"+posOdom.x()+"\t"+posOdom.y()+"\t"+posOdom.alpha*Angles.RTOD+"\t");
 			}catch(Exception e){}
 		}
 	
@@ -375,7 +375,7 @@ public class IForkKLoc extends Object
 		
 		if (debug)
 		{
-			System.out.println ("Position (k) = ["+posk.x()+", "+posk.y()+", "+posk.alpha()*Angles.RTOD+"]");
+			System.out.println ("Position (k) = ["+posk.x()+", "+posk.y()+", "+posk.alpha*Angles.RTOD+"]");
 			System.out.println ("Matrix P (prediction)");
 			P.print (12, 5);
 		}
@@ -482,7 +482,7 @@ public class IForkKLoc extends Object
 	
 		if (debug)
 		{
-			System.out.println ("Position (k) = ["+posk.x()+", "+posk.y()+", "+posk.alpha()*Angles.RTOD+"]");
+			System.out.println ("Position (k) = ["+posk.x()+", "+posk.y()+", "+posk.alpha*Angles.RTOD+"]");
 			System.out.println ("Matrix P (prediction)");
 			P.print (12, 5);
 		}
@@ -549,15 +549,15 @@ public class IForkKLoc extends Object
 			// Initialise estimated state
 			X.set (0, 0, Pos.x());
 			X.set (1, 0, Pos.y());
-			X.set (2, 0, Pos.alpha());
+			X.set (2, 0, Pos.alpha);
 			posk.set (X.get(0,0), X.get(1,0), X.get(2,0));
 
 			initialized = true;
-			System.out.println("  [iFrkKLoc] Initialized filter position ("+posk.x()+","+posk.y()+","+posk.alpha()*Angles.RTOD+")");
+			System.out.println("  [iFrkKLoc] Initialized filter position ("+posk.x()+","+posk.y()+","+posk.alpha*Angles.RTOD+")");
 		
 			if(debugLog == true){
-				file.print((System.currentTimeMillis()-st)+"\t"+Pos.x()+"\t"+Pos.y()+"\t"+Pos.alpha()*Angles.RTOD+"\t");
-				file.print((System.currentTimeMillis()-st)+"\t"+posk.x()+"\t"+posk.y()+"\t"+posk.alpha()*Angles.RTOD);
+				file.print((System.currentTimeMillis()-st)+"\t"+Pos.x()+"\t"+Pos.y()+"\t"+Pos.alpha*Angles.RTOD+"\t");
+				file.print((System.currentTimeMillis()-st)+"\t"+posk.x()+"\t"+posk.y()+"\t"+posk.alpha*Angles.RTOD);
 			}			
 			index = 0;
 			return;
@@ -575,7 +575,7 @@ public class IForkKLoc extends Object
 			// Initialise estimated state
 			X.set (0, 0, Pos.x());
 			X.set (1, 0, Pos.y());
-			X.set (2, 0, Pos.alpha());
+			X.set (2, 0, Pos.alpha);
 			posk.set (X.get(0,0), X.get(1,0), X.get(2,0));
 			index = 0;
 
@@ -625,7 +625,7 @@ public class IForkKLoc extends Object
 					// Initialise estimated state
 					X.set (0, 0, Pos.x());
 					X.set (1, 0, Pos.y());
-					X.set (2, 0, Pos.alpha());
+					X.set (2, 0, Pos.alpha);
 					posk.set (X.get(0,0), X.get(1,0), X.get(2,0));
 					index = 0;
 				}
@@ -662,7 +662,7 @@ public class IForkKLoc extends Object
 				// Initialise estimated state
 				X.set (0, 0, Pos.x());
 				X.set (1, 0, Pos.y());
-				X.set (2, 0, Pos.alpha());
+				X.set (2, 0, Pos.alpha);
 				posk.set (X.get(0,0), X.get(1,0), X.get(2,0));
 				index = 0;
 			}			
@@ -671,8 +671,8 @@ public class IForkKLoc extends Object
 		
 				
 		if(debugLog == true){
-			file.print((System.currentTimeMillis()-st)+"\t"+Pos.x()+"\t"+Pos.y()+"\t"+Pos.alpha()*Angles.RTOD+"\t");
-			file.print((System.currentTimeMillis()-st)+"\t"+posk.x()+"\t"+posk.y()+"\t"+posk.alpha()*Angles.RTOD);
+			file.print((System.currentTimeMillis()-st)+"\t"+Pos.x()+"\t"+Pos.y()+"\t"+Pos.alpha*Angles.RTOD+"\t");
+			file.print((System.currentTimeMillis()-st)+"\t"+posk.x()+"\t"+posk.y()+"\t"+posk.alpha*Angles.RTOD);
 		}
 		
 		maxvelAng = 0;
@@ -695,18 +695,18 @@ public class IForkKLoc extends Object
 			rAng = Math.toRadians(1);		
 		}
 		else if(velLin < 0.5 && velAng < Math.toRadians(5)){
-			rx = rPos + Math.abs(0.02 * Math.cos(posk.alpha()));
-			ry = rPos + Math.abs(0.02 * Math.sin(posk.alpha()));
+			rx = rPos + Math.abs(0.02 * Math.cos(posk.alpha));
+			ry = rPos + Math.abs(0.02 * Math.sin(posk.alpha));
 			rAng = Math.toRadians(5);
 		}
 		else if(velAng < Math.toRadians(5)){
-			rx = rPos + Math.abs(0.05 * Math.cos(posk.alpha()));
-			ry = rPos + Math.abs(0.05 * Math.sin(posk.alpha()));
+			rx = rPos + Math.abs(0.05 * Math.cos(posk.alpha));
+			ry = rPos + Math.abs(0.05 * Math.sin(posk.alpha));
 			rAng = Math.toRadians(5);
 		}
 		else{
-			rx = rPos + Math.abs(0.1 * Math.cos(posk.alpha()));
-			ry = rPos + Math.abs(0.1 * Math.sin(posk.alpha()));
+			rx = rPos + Math.abs(0.1 * Math.cos(posk.alpha));
+			ry = rPos + Math.abs(0.1 * Math.sin(posk.alpha));
 			rAng = Math.toRadians(20);
 		}
 		
@@ -722,15 +722,15 @@ public class IForkKLoc extends Object
 			// Initialise estimated state
 			X.set (0, 0, Pos.x());
 			X.set (1, 0, Pos.y());
-			X.set (2, 0, Pos.alpha());
+			X.set (2, 0, Pos.alpha);
 			posk.set (X.get(0,0), X.get(1,0), X.get(2,0));
 
 			initialized = true;
-			System.out.println("  [iFrkKLoc] Initialized filter position ("+posk.x()+","+posk.y()+","+posk.alpha()*Angles.RTOD+")");
+			System.out.println("  [iFrkKLoc] Initialized filter position ("+posk.x()+","+posk.y()+","+posk.alpha*Angles.RTOD+")");
 		
 			if(debugLog == true){
-				file.print((System.currentTimeMillis()-st)+"\t"+Pos.x()+"\t"+Pos.y()+"\t"+Pos.alpha()*Angles.RTOD+"\t");
-				file.print((System.currentTimeMillis()-st)+"\t"+posk.x()+"\t"+posk.y()+"\t"+posk.alpha()*Angles.RTOD);
+				file.print((System.currentTimeMillis()-st)+"\t"+Pos.x()+"\t"+Pos.y()+"\t"+Pos.alpha*Angles.RTOD+"\t");
+				file.print((System.currentTimeMillis()-st)+"\t"+posk.x()+"\t"+posk.y()+"\t"+posk.alpha*Angles.RTOD);
 			}			
 			index = 0;
 			return;
@@ -748,7 +748,7 @@ public class IForkKLoc extends Object
 			// Initialise estimated state
 			X.set (0, 0, Pos.x());
 			X.set (1, 0, Pos.y());
-			X.set (2, 0, Pos.alpha());
+			X.set (2, 0, Pos.alpha);
 			posk.set (X.get(0,0), X.get(1,0), X.get(2,0));
 			index = 0;
 
@@ -798,7 +798,7 @@ public class IForkKLoc extends Object
 					// Initialise estimated state
 					X.set (0, 0, Pos.x());
 					X.set (1, 0, Pos.y());
-					X.set (2, 0, Pos.alpha());
+					X.set (2, 0, Pos.alpha);
 					posk.set (X.get(0,0), X.get(1,0), X.get(2,0));
 					index = 0;
 				}
@@ -834,7 +834,7 @@ public class IForkKLoc extends Object
 				// Initialise estimated state
 				X.set (0, 0, Pos.x());
 				X.set (1, 0, Pos.y());
-				X.set (2, 0, Pos.alpha());
+				X.set (2, 0, Pos.alpha);
 				posk.set (X.get(0,0), X.get(1,0), X.get(2,0));
 				index = 0;
 			}			
@@ -843,8 +843,8 @@ public class IForkKLoc extends Object
 		
 				
 		if(debugLog == true){
-			file.print((System.currentTimeMillis()-st)+"\t"+Pos.x()+"\t"+Pos.y()+"\t"+Pos.alpha()*Angles.RTOD+"\t");
-			file.print((System.currentTimeMillis()-st)+"\t"+posk.x()+"\t"+posk.y()+"\t"+posk.alpha()*Angles.RTOD);
+			file.print((System.currentTimeMillis()-st)+"\t"+Pos.x()+"\t"+Pos.y()+"\t"+Pos.alpha*Angles.RTOD+"\t");
+			file.print((System.currentTimeMillis()-st)+"\t"+posk.x()+"\t"+posk.y()+"\t"+posk.alpha*Angles.RTOD);
 		}		
 	}
 
@@ -930,7 +930,7 @@ public class IForkKLoc extends Object
 		// Varianza de la observacion
 		r.set (0, 0, Math.pow(rAng,2.0));
 				
-		v.set(0,0,Angles.radnorm_180(pos.alpha()-zp.get(0,0)));
+		v.set(0,0,Angles.radnorm_180(pos.alpha-zp.get(0,0)));
 
 		s		= hx.times (P).times (hx.transpose ()).plus (r);
 				
