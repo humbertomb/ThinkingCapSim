@@ -1,8 +1,4 @@
--- IASF: exercise 1, the same controller as IasfJavaController
---
--- Run once every cycle. It reads the sensor groups of the LPS
--- (tc.getGroups, in metres) and leaves the control action in three globals:
---   vlin  [m/s]   vlat  [m/s]   vrot  [deg/s]
+-- IASF: ejercicio 1
 --
 -- 20261001 Humberto Martinez
 
@@ -15,9 +11,9 @@ local group3 = groups.group3
 local group4 = groups.group4
 
 -- Set action values
-vlin = 0.30
-vlat = 0.0
-vrot = 0.0
+local vlin = 0.30
+local vlat = 0.0
+local vrot = 0.0
 
 if group2 == nil then
 	-- no groups in the LPS yet: stand still
@@ -38,3 +34,6 @@ elseif group4 < 0.5 then
 	vlin = 0.2
 	vrot = 15.0
 end
+
+-- Set action
+tc.setVelocities (vlin, vlat, vrot)

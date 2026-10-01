@@ -61,7 +61,7 @@
             "id": 15,
             "x": 164,
             "y": -45,
-            "code": "local pos = chaos.getStartPos()\nchaos.setDesiredPos(pos.x, pos.y, 90)\nchaos.setScanType (chaos.SCAN_FULL)\nchaos.setBehavior(\"goToPos\")\n\n",
+            "code": "local pos = chaos.getStartPos()\nchaos.setDesiredPos(pos.x, pos.y, 90)\nchaos.setBehavior(\"goToPos\")\n\n",
             "transitions": [
               {
                 "name": "IAmLost",
@@ -79,7 +79,7 @@
             "id": 16,
             "x": -182,
             "y": -44,
-            "code": "local lm1 = chaos.getLpo (chaos.LANDMARK1_LPO)\nlocal lm2 = chaos.getLpo (chaos.LANDMARK2_LPO)\n\nchaos.setScanType (chaos.SCAN_FULL)\nif lm1.anchored < lm2.anchored then\n\tchaos.setBehavior (\"lookForLandmark1\")\nelse\n\tchaos.setBehavior (\"lookForLandmark2\")\nend",
+            "code": "local lm1 = chaos.getLpo (chaos.LANDMARK1_LPO)\nlocal lm2 = chaos.getLpo (chaos.LANDMARK2_LPO)\n\nif lm1.anchored < lm2.anchored then\n\tchaos.setBehavior (\"lookForLandmark1\")\nelse\n\tchaos.setBehavior (\"lookForLandmark2\")\nend",
             "transitions": [
               {
                 "name": "IAmLocalized",
@@ -99,6 +99,7 @@
         "id": 3,
         "x": 157,
         "y": -144,
+        "code": "chaos.setNeeded (chaos.BALL_LPO, 1.0)",
         "transitions": [
           {
             "name": "RefereePlaying",

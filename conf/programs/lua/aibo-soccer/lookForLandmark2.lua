@@ -21,7 +21,7 @@ else
 	vrot = 65 * sgn
 end
 
-chaos.setScanType(chaos.SCAN_FULL)
+chaos.setScanType(chaos.SCAN_HIGH)
 chaos.setNeeded(chaos.LANDMARK2_LPO,1.0)
 chaos.setVlin(vlin)
 chaos.setVlat(vlat)

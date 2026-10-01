@@ -1,0 +1,69 @@
+{
+  "world": "./conf/maps/iasf_ejercicio_1.world",
+  "robots": [
+    {
+      "name": "Roombo",
+      "linda": {
+        "address": "localhost",
+        "port": 3000,
+        "instantiate": true
+      },
+      "modules": [
+        {
+          "name": "Controller",
+          "properties": {
+            "TYPE": "Controller",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "GFX": "true",
+            "AUTO": "false",
+            "CLASS": "tcrob.umu.iasf.IasfLuaController",
+            "PRG": "./conf/programs/lua/iasf/ejercicio1.lua"
+          },
+          "events": [
+            {
+              "symbol": "LPS",
+              "itemClass": "tc.shared.linda.ItemLPS",
+              "method": "notify_lps"
+            }
+          ]
+        },
+        {
+          "name": "Perception",
+          "properties": {
+            "TYPE": "Perception",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "GFX": "true",
+            "CLASS": "tcrob.umu.indoor.IndoorPerception"
+          },
+          "events": [
+            {
+              "symbol": "SENSORS",
+              "itemClass": "tc.shared.linda.ItemSensors",
+              "method": "notify_sensors"
+            }
+          ]
+        }
+      ],
+      "virtualRobot": {
+        "name": "Virtual Robot",
+        "properties": {
+          "MODE": "shared",
+          "PASSIVE": "false",
+          "EXTIME": "100",
+          "GFX": "true",
+          "DESC": "./conf/robots/dreamex40.robot"
+        },
+        "events": [
+          {
+            "symbol": "MOTION",
+            "itemClass": "tc.shared.linda.ItemMotion",
+            "method": "notify_motion"
+          }
+        ]
+      },
+      "properties": {}
+    }
+  ]
+}
