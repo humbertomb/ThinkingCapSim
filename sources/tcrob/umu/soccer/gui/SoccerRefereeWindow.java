@@ -8,6 +8,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -59,6 +61,7 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 	protected Scoreboard			board;
 	protected JLabel				clock;
 	protected JLabel				state;						// the state of the game, over the clock
+	protected JLabel				countdown;					// the seconds left of INITIAL, READY and SET, at the right of the clock
 	protected JTextArea				ticker;
 	protected Timer					timer;
 	protected int					shown;						// how many decisions the ticker has
@@ -99,11 +102,33 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 		state.setOpaque (true);
 		state.setBackground (C_BOARD);
 
+		// the seconds left of INITIAL, READY and SET, small, at the right of the clock and on its baseline
+		countdown	= new JLabel ("", SwingConstants.LEFT);
+		countdown.setFont (new Font (Font.MONOSPACED, Font.BOLD, 36));
+		countdown.setForeground (Color.WHITE);
+
+		FontMetrics	cm = countdown.getFontMetrics (countdown.getFont ());
+		Dimension	room = new Dimension (cm.stringWidth ("888") + 12, cm.getHeight ());		// for up to three digits, also while it says nothing
+		JLabel		filler = new JLabel ("");							// as wide as the countdown, at the left, so the clock stays centred
+
+		countdown.setPreferredSize (room);
+		filler.setPreferredSize (new Dimension (room.width, 1));
+
+		JPanel		row = new JPanel (new GridBagLayout ());
+		GridBagConstraints	gc = new GridBagConstraints ();
+
+		row.setBackground (C_BOARD);
+		gc.anchor	= GridBagConstraints.BASELINE;
+		gc.gridx	= 0;		row.add (filler, gc);
+		gc.gridx	= 1;		row.add (clock, gc);
+		gc.anchor	= GridBagConstraints.BASELINE_LEADING;
+		gc.gridx	= 2;		row.add (countdown, gc);
+
 		JPanel		clocks = new JPanel (new BorderLayout ());
 
 		clocks.setBackground (C_BOARD);
 		clocks.add (state, BorderLayout.NORTH);
-		clocks.add (clock, BorderLayout.CENTER);
+		clocks.add (row, BorderLayout.CENTER);
 
 		JPanel		top = new JPanel (new BorderLayout ());
 
@@ -192,6 +217,10 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 		clock.setText ((left >= 0) ? Supervisor.clock (left) : Supervisor.clock (referee.elapsed ()));
 		clock.setForeground (referee.isOver () ? C_CLOCK_OVER : C_CLOCK);
 		state.setText (referee.state ().name ());
+
+		long		wait = referee.stateLeft ();
+
+		countdown.setText ((wait >= 0) ? Long.toString ((wait + 999) / 1000) : "");
 		board.repaint ();
 	}
 

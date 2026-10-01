@@ -212,6 +212,21 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	/** The state of the game, as the game controller has it. */
 	public GameStates				state ()			{ return state; }
 
+	/** How long is left [ms] before INITIAL, READY or SET gives way to the next state on its own; -1 in the others. */
+	public long stateLeft ()
+	{
+		long		wait;
+
+		switch (state)
+		{
+		case INITIAL:		wait = WAIT_INITIAL;	break;
+		case READY:			wait = WAIT_READY;		break;
+		case SET:			wait = WAIT_SET;		break;
+		default:			return -1;
+		}
+		return Math.max (0L, wait - (System.currentTimeMillis () - stateSince));
+	}
+
 	/** The team of a robot (0 or 1), or -1 while it is not known. */
 	public int teamOf (int robot)
 	{
