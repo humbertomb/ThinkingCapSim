@@ -697,13 +697,25 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		select (new RobotItem (RobotItem.BUMPER, robot.bumpers.size () - 1));
 	}
 
+	/**
+	 * Adds a sensor to the family selected. In a family read on the cycle of the
+	 * runtime, the first sensor sets it going: the family is fired every cycle
+	 * (cycle 1) and the sensor read on it (step 1), so that it is always updated;
+	 * the ones after it are read on every cycle too while the family keeps that one.
+	 */
 	private void addSensor ()
 	{
 		String				fam = currentFamily ();
+		RobotDef.Family		f = robot.family (fam);
 		RobotDef.Sensor		s = new RobotDef.Sensor ();
 
 		s.rho	= (robot.radius > 0.0) ? robot.radius : 0.25;
-		robot.family (fam).sensors.add (s);
+		if (RobotDef.hasFiring (fam))
+		{
+			if (f.n () == 0)			f.cycle = 1;
+			if (f.cycle == 1)			s.step = 1;
+		}
+		f.sensors.add (s);
 		changed ();
 		refreshTree ();
 		select (new RobotItem (RobotItem.SENSOR, robot.family (fam).n () - 1, fam));
