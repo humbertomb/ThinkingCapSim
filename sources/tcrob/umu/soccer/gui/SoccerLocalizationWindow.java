@@ -48,7 +48,7 @@ public class SoccerLocalizationWindow extends JFrame
 	static public final Color			NET1			= Color.YELLOW;		// the net at +y, as the world has it
 	static public final Color			NET2			= Color.CYAN;
 	static public final Color			GS_COLOR		= Color.BLUE;
-	static public final Color			GT_COLOR		= Color.GREEN.darker ();
+	static public final Color			GT_COLOR		= Color.CYAN;
 
 	protected JTextArea					positionArea;
 	protected LpsTableModel				lpsModel;
@@ -467,7 +467,7 @@ public class SoccerLocalizationWindow extends JFrame
 	 * its particles, its ellipse...) over the field, and, round each landmark and
 	 * net it has just taken in, a circle as far from it as the robot saw it; over
 	 * all of it, the path of the robot where the method has it (blue) and where it
-	 * really is (green), when the View menu says so, and the two robots: the
+	 * really is (cyan), when the View menu says so, and the two robots: the
 	 * estimated one with its uncertainty (an orange box, and ringed in white when
 	 * the method is sure of it) and the true one.
 	 */
