@@ -21,6 +21,14 @@ public class Particles implements Localisation
 	static public final double	EPS_WEIGHT		= 1E-250;
 	static public final double	MIN_STDDEV		= 10.0;			// the least error of what is seen (mm)
 
+	// Where the particles start: spread round INIT_X, INIT_Y, INIT_THETA (mm, mm, rad), by default with these deviations
+	// (wide enough for the particles to cover where the robot may be, so they settle on it at the first sightings)
+	static public final double	INIT_X			= 0.0;
+	static public final double	INIT_Y			= -1500.0;
+	static public final double	INIT_THETA		= 90.0 * Angles.DTOR;
+	static public final double	INIT_DXY		= 500.0;
+	static public final double	INIT_DTHETA		= 40.0 * Angles.DTOR;
+
 	protected int					nSamples;
 	protected GaussianSample[]		samples;
 	protected GaussianSample[]		newSamples;
@@ -39,6 +47,12 @@ public class Particles implements Localisation
 	protected boolean[]				mLastUpdated;
 		
 	public Particles (int nSamples)
+	{
+		this (nSamples, INIT_DXY, INIT_DTHETA);
+	}
+
+	/** With the particles spread round where they start with these deviations: of the position (mm) and of the heading (rad). */
+	public Particles (int nSamples, double spread, double spreadAngle)
 	{
 		this.nSamples = nSamples;
 		
@@ -71,12 +85,12 @@ public class Particles implements Localisation
 		// Initialise position with uncertainly
 		GsPosition	initPos;
 		initPos			= new GsPosition ();
-		initPos.x		= 0;
-		initPos.y		= -1500;
-		initPos.dx		= 100;
-		initPos.dy		= 100;
-		initPos.theta	= (double) (90.0 * Angles.DTOR);
-		initPos.dtheta	= (double) (40.0 * Angles.DTOR);
+		initPos.x		= (int) INIT_X;
+		initPos.y		= (int) INIT_Y;
+		initPos.dx		= (int) spread;
+		initPos.dy		= (int) spread;
+		initPos.theta	= INIT_THETA;
+		initPos.dtheta	= spreadAngle;
 		
 		initialPosition (initPos);
 	}

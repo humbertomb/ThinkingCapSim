@@ -84,6 +84,8 @@ public class SoccerLocalization extends Navigation
 
 	// Particles (particle filter)
 	static public int				PF_SAMPLES		= 100;
+	static public double			PF_SPREAD		= 500.0;		// how far the particles are spread round where they start (mm)
+	static public double			PF_SPREAD_ANGLE	= 40.0;			// and their headings (deg)
 
 	// SensorResetting (sensor resetting localisation)
 	static public int				SRL_SAMPLES		= 500;
@@ -130,6 +132,8 @@ public class SoccerLocalization extends Navigation
 		{ "NKFMK",				"NKFMK_RESET_FMK",	"Reset by the grid (%)" },
 
 		{ "Particles",			"PF_SAMPLES",		"Number of samples" },
+		{ "Particles",			"PF_SPREAD",		"Initial spread (mm)" },
+		{ "Particles",			"PF_SPREAD_ANGLE",	"Initial angle spread (deg)" },
 
 		{ "SensorResetting",	"SRL_SAMPLES",		"Number of samples" },
 	};
@@ -147,7 +151,7 @@ public class SoccerLocalization extends Navigation
 		case "NKFMK":				return new NKFMK (NKFMK_CELL, NKFMK_BLUR_POS, NKFMK_BLUR_ANGLE * Angles.DTOR,
 											NKFMK_TOLERANCE, NKFMK_ODO_LIN, NKFMK_ODO_ROT, NKFMK_OBS_DIST, NKFMK_OBS_ANGLE * Angles.DTOR,
 											NKFMK_EKFS, NKFMK_MIN_AGE, NKFMK_CHI, NKFMK_POSITION, NKFMK_RESET_EKF, NKFMK_RESET_FMK);
-		case "Particles":			return new Particles (PF_SAMPLES);
+		case "Particles":			return new Particles (PF_SAMPLES, PF_SPREAD, PF_SPREAD_ANGLE * Angles.DTOR);
 		case "SensorResetting":		return new SensorResetting (SRL_SAMPLES);
 		default:					return null;
 		}
