@@ -65,6 +65,7 @@ if (math.abs(net1.theta) < ANGLESMALL) then		-- small angle
 --
 end
 
+chaos.setScanType (chaos.SCAN_FULL)
 chaos.setNeeded(chaos.NET1_LPO, 1.0-net1.anchored)
 chaos.setNeeded(chaos.LANDMARK1_LPO, 1.0-lm1.anchored)
 chaos.setNeeded(chaos.LANDMARK2_LPO, 1.0-lm2.anchored)

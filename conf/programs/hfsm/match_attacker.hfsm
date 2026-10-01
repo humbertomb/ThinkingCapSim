@@ -41,7 +41,6 @@
         "id": 2,
         "x": -71,
         "y": -321,
-        "code": "local pos = chaos.getStartPos()\nchaos.setDesiredPos(pos.x, pos.y, 90)\nchaos.setBehavior(\"goToPos\")\n\nlocal gs = chaos.getCurrentPos ()\nprint (gs.quality)",
         "transitions": [
           {
             "name": "RefereeSet",
@@ -51,6 +50,47 @@
             "to": "Set",
             "toId": 3,
             "test": "local referee = chaos.getGameState ()\nif referee.state == chaos.REFEREE_SET then\n\treturn true\nend\nreturn false\n"
+          }
+        ],
+        "meta": true,
+        "initial": "Localize",
+        "initialId": 16,
+        "states": [
+          {
+            "name": "GoToPos",
+            "id": 15,
+            "x": 164,
+            "y": -45,
+            "code": "local pos = chaos.getStartPos()\nchaos.setDesiredPos(pos.x, pos.y, 90)\nchaos.setScanType (chaos.SCAN_FULL)\nchaos.setBehavior(\"goToPos\")\n\n",
+            "transitions": [
+              {
+                "name": "IAmLost",
+                "id": 17,
+                "x": -58,
+                "y": -140,
+                "to": "Localize",
+                "toId": 16,
+                "test": "local gs = chaos.getCurrentPos ()\nif gs.quality < 0.7 then\n\treturn true\nend\nreturn false"
+              }
+            ]
+          },
+          {
+            "name": "Localize",
+            "id": 16,
+            "x": -182,
+            "y": -44,
+            "code": "local lm1 = chaos.getLpo (chaos.LANDMARK1_LPO)\nlocal lm2 = chaos.getLpo (chaos.LANDMARK2_LPO)\n\nchaos.setScanType (chaos.SCAN_FULL)\nif lm1.anchored < lm2.anchored then\n\tchaos.setBehavior (\"lookForLandmark1\")\nelse\n\tchaos.setBehavior (\"lookForLandmark2\")\nend",
+            "transitions": [
+              {
+                "name": "IAmLocalized",
+                "id": 18,
+                "x": -58,
+                "y": 27,
+                "to": "GoToPos",
+                "toId": 15,
+                "test": "local gs = chaos.getCurrentPos ()\nif gs.quality >= 0.8 then\n\treturn true\nend\nreturn false"
+              }
+            ]
           }
         ]
       },

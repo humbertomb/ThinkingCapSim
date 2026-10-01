@@ -40,7 +40,7 @@ public class SoccerLocalization extends Navigation
 	/** The localisation methods there are (all those of tcrob.umu.soccer.gm). */
 	static public final String[]	METHODS			= { "GridFMarkov", "Kalman", "KFMarkov", "NKFMK", "Particles", "SensorResetting" };
 	/** The method the module starts with. */
-	static public String			METHOD			= "GridFMarkov";
+	static public String			METHOD			= "Particles";
 
 	/* ---- the initial parameters of each method ---- */
 

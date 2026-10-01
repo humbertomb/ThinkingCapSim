@@ -49,6 +49,12 @@ import tc.shared.linda.Tuple;
  * <li>A robot wholly inside the area of a net (AREA1, AREA2) for more than
  *     {@link #AREA_TIME} is a fault unless it is the one robot that defends
  *     that net, the keeper of the team that owns it.
+ * <li>A robot that is not in its own half of the field when the game is to be
+ *     SET (its centre on the other side of the halfway line) is put back in its
+ *     half, where it was across the field and {@link #OFFSIDE_BACK} of the way
+ *     from the halfway line to its end line, and told it is PENALIZED for it;
+ *     but it is not out of the game for {@link #PENALTY_TIME}: the SET that
+ *     follows puts it back in, and it plays from there.
  * </ul>
  * Each is decided once, when it happens, and not again until the ball or the
  * robot has left where it was. The robot that touched the ball last is named
@@ -61,6 +67,7 @@ import tc.shared.linda.Tuple;
  * It runs the game as the game controller of the league does, through the
  * states of {@link GameStates}: INITIAL the moment it starts, and then, once the
  * execution runs, READY after {@link #WAIT_INITIAL}, SET after {@link #WAIT_READY}
+ * (or as soon as all the robots stand still in their own halves, see {@link #settled})
  * and PLAYING after {@link #WAIT_SET}; after a goal (or a kick-off shot) READY
  * again, and SET and PLAYING after it. The
  * clock of the match stops with READY and goes on with PLAYING; the execution's
@@ -96,8 +103,12 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 	/** How long the game stays in INITIAL before READY [ms]: the robots get going. */
 	static public final long		WAIT_INITIAL	= 3000;
-	/** How long it stays in READY before SET [ms]: the robots walk to their start positions. */
-	static public final long		WAIT_READY		= 10000;
+	/** How long it stays in READY before SET at most [ms]: the robots walk to their start positions (30 s, as the rules have it). */
+	static public final long		WAIT_READY		= 30000;
+	/** How far a robot may wander and still be standing on a position (m): it may turn, and shuffle that much. */
+	static public final double		STILL_DIST		= 0.10;
+	/** How long it has to stay so to be standing (ms). */
+	static public final long		STILL_TIME		= 2000;
 	/** How long it stays in SET before PLAYING [ms]. */
 	static public final long		WAIT_SET		= 1000;
 
@@ -113,6 +124,8 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	protected String[]				teamNames	= new String[2];
 	/** How many start points past its own a penalised robot is sent to (START_1 -> START_5). */
 	static public final int			PENALTY_START	= 4;
+	/** How far back into its half a robot out of it on SET is put: this part of the way from the halfway line to its end line. */
+	static public final double		OFFSIDE_BACK	= 3.0 / 5.0;
 	/** How long a penalised robot is out of the game [ms] (the standard penalty of the 2007 rules). */
 	static public final long		PENALTY_TIME	= 30000;
 
@@ -137,6 +150,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	/** How long a robot may be wholly inside the area of a net it has no business in before it is a fault [ms]. */
 	static public final long		AREA_TIME	= 3000;
 	protected long[]				penalty		= new long[Simulator.MAX_ROBOTS];		// when the penalty of each robot ends [ms of the system], 0 for none
+	protected double[][]			still		= new double[Simulator.MAX_ROBOTS][];	// where each robot has been standing in READY {x, y, since [ms of the system]}, null: not yet looked at
 
 	protected SoccerRefereeWindow	win;
 
@@ -257,8 +271,8 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		stateSince	= System.currentTimeMillis ();
 		switch (s)
 		{
-		case SET:			pause ();		centreBall ();		break;		// the robots are in place: the ball to the centre
-		case READY:
+		case SET:			pause ();		centreBall ();		offside ();		break;		// the robots are in place: the ball to the centre, and those out of their half off it
+		case READY:			pause ();		java.util.Arrays.fill (still, null);		break;		// where they stand is looked at afresh
 		case INITIAL:
 		case FINISHED:		pause ();		break;
 		case PLAYING:		if (running)	super.resume ();		break;
@@ -282,10 +296,51 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		switch (state)
 		{
 		case INITIAL:		if (in >= WAIT_INITIAL)		enter (GameStates.READY, -1);		break;
-		case READY:			if (in >= WAIT_READY)		enter (GameStates.SET, -1);			break;
+		case READY:			if ((in >= WAIT_READY) || settled ())		enter (GameStates.SET, -1);			break;
 		case SET:			if (in >= WAIT_SET)			enter (GameStates.PLAYING, -1);		break;
 		default:
 		}
+	}
+
+	/**
+	 * Whether all the robots are ready in READY, so the game need not wait for the
+	 * whole of it to be SET: each in its own half of the field and standing on a
+	 * position -- it may turn, and shuffle within {@link #STILL_DIST} of where it
+	 * stopped -- for {@link #STILL_TIME}. What it is looked at is where each robot
+	 * stands now, against where it stopped, every time this is asked.
+	 */
+	protected boolean settled ()
+	{
+		Simulator	s = sim;
+		WMZone		field = zone (fieldName);
+		long		now = System.currentTimeMillis ();
+		boolean		all = true;
+		int			seen = 0;
+
+		if ((s == null) || (field == null))			return false;
+
+		boolean		along = alongY (field);
+
+		for (int r = 0; r < s.numrobots; r++)
+		{
+			if (s.MODEL[r] == null)					continue;
+
+			double		x = s.MODEL[r].real_x, y = s.MODEL[r].real_y;
+			double[]	at = still[r];
+
+			seen++;
+			if ((at == null) || (Math.hypot (x - at[0], y - at[1]) > STILL_DIST))
+				still[r]	= at = new double[] { x, y, now };			// it moved: it stands here from now on, if it does
+			if (now - at[2] < STILL_TIME)			all = false;		// not standing long enough yet
+
+			if (teamOf[r] < 0)						teamOf[r] = team (r, x, y);
+			if (teamOf[r] < 0)						{ all = false;	continue; }
+
+			double		u = along ? (y - field.area.getCenterY ()) : (x - field.area.getCenterX ());
+
+			if (u * goalSide (teamOf[r], field) < 0.0)		all = false;	// not in its own half
+		}
+		return all && (seen > 0);
 	}
 
 	/** The clock ran out: the game is over. */
@@ -349,6 +404,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 	protected void supervise (long ctime)
 	{
+		teams ();
 		game ();
 		if (state != GameStates.PLAYING)			return;		// nothing is judged until the game is on
 
@@ -629,13 +685,75 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	 */
 	protected String penalize (int r)
 	{
+		if (!toPenaltyPoint (r))		return "";
+		penalty[r]	= System.currentTimeMillis () + PENALTY_TIME;
+		return ", penalised: sent to START_" + (r + PENALTY_START + 1) + " for " + (PENALTY_TIME / 1000) + " s";
+	}
+
+	/** A robot to where the penalised ones go (see {@link #penalize}); false when the world has no such point. */
+	protected boolean toPenaltyPoint (int r)
+	{
 		Simulator	s = sim;
 		double[]	p = (s != null) ? s.worldStart (r + PENALTY_START) : null;
 
-		if (p == null)					return "";
+		if (p == null)					return false;
 		s.placeRobot (r, p[0], p[1], p[2]);
-		penalty[r]	= System.currentTimeMillis () + PENALTY_TIME;
-		return ", penalised: sent to START_" + (r + PENALTY_START + 1) + " for " + (PENALTY_TIME / 1000) + " s";
+		return true;
+	}
+
+	/** The team of each robot not known yet, from where it is first seen (where it starts, before it moves). */
+	protected void teams ()
+	{
+		Simulator	s = sim;
+
+		if (s == null)								return;
+		for (int r = 0; r < s.numrobots; r++)
+			if ((s.MODEL[r] != null) && (teamOf[r] < 0))
+				teamOf[r] = team (r, s.MODEL[r].real_x, s.MODEL[r].real_y);
+	}
+
+	/**
+	 * When the game is to be SET, the robots that are not in their own half of the
+	 * field (their centre past the halfway line, towards the net of the other team)
+	 * are put back in their half -- where they were across the field, and
+	 * {@link #OFFSIDE_BACK} of the way from the halfway line to their end line,
+	 * heading as they were -- and told they are PENALIZED for it, but without the
+	 * time out of a penalty: the SET said right after (see {@link #enter}) puts
+	 * them back in the game, and they play from there.
+	 */
+	protected void offside ()
+	{
+		Simulator	s = sim;
+		WMZone		field = zone (fieldName);
+
+		if ((s == null) || (field == null))			return;
+
+		boolean		along = alongY (field);
+
+		for (int r = 0; r < s.numrobots; r++)
+		{
+			if (s.MODEL[r] == null)					continue;
+
+			double		x = s.MODEL[r].real_x, y = s.MODEL[r].real_y;
+
+			if (teamOf[r] < 0)						teamOf[r] = team (r, x, y);
+			if (teamOf[r] < 0)						continue;
+
+			double		cu = along ? field.area.getCenterY () : field.area.getCenterX ();
+			double		halfU = (along ? field.area.getHeight () : field.area.getWidth ()) / 2.0;
+			double		u = (along ? y : x) - cu;
+			double		side = goalSide (teamOf[r], field);			// towards its own net
+
+			if (u * side >= 0.0)					continue;		// in its own half (or on the line)
+
+			double		nu = cu + side * OFFSIDE_BACK * halfU;
+
+			if (along)		y = nu;
+			else			x = nu;
+			s.placeRobot (r, x, y, s.MODEL[r].real_a);
+			decide (Events.STATE, teamOf[r], name (r), r, "State PENALIZED for robot " + robot (r) + ": not in its half on SET, put back in it at ("
+					+ String.format (java.util.Locale.US, "%.2f, %.2f", x, y) + ") (back in the game with the SET)", GameStates.PENALIZED);
+		}
 	}
 
 	/**
