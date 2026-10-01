@@ -14,7 +14,11 @@
 	<classpathentry kind="lib" path="jarlibs/jfreechart/jfreechart-1.5.4.jar"/>
 	<classpathentry kind="lib" path="jarlibs/jogl/gluegen-rt.jar"/>
 	<classpathentry kind="lib" path="jarlibs/jogl/gluegen-rt-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/gluegen-rt-natives-linux-amd64.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/gluegen-rt-natives-windows-amd64.jar"/>
 	<classpathentry kind="lib" path="jarlibs/jogl/jogl-all.jar"/>
 	<classpathentry kind="lib" path="jarlibs/jogl/jogl-all-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/jogl-all-natives-linux-amd64.jar"/>
+	<classpathentry kind="lib" path="jarlibs/jogl/jogl-all-natives-windows-amd64.jar"/>
 	<classpathentry kind="output" path="output"/>
 </classpath>
