@@ -33,10 +33,13 @@ import tcrob.umu.soccer.SoccerRefereeSimul;
 /**
  * The referee's window of a simulated soccer match, as a stadium shows it:
  * the score at the top, in big figures under the flags of the two teams (the
- * red team's all red, the blue team's all blue, as their nets are), the clock
- * of the match in the middle, counting down from what the match lasts and
- * running from START, and at the bottom the decisions as they are made, one
- * line each with the time of the match, as a ticker.
+ * red team's all red, the blue team's all blue, as their nets are, with the
+ * name of the team in a corner), the clock of the match in the middle,
+ * counting down from what the match lasts and running from START, with the
+ * robots penalised at its left (each with what it has left of its penalty)
+ * and the seconds left of INITIAL, READY and SET at its right, and at the
+ * bottom the decisions as they are made, one line each with the time of the
+ * match, as a ticker.
  *
  * It only reads: the referee ({@link SoccerRefereeSimul}) says when it
  * decides something, and the clock is looked at on its own every
@@ -62,6 +65,7 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 	protected JLabel				clock;
 	protected JLabel				state;						// the state of the game, over the clock
 	protected JLabel				countdown;					// the seconds left of INITIAL, READY and SET, at the right of the clock
+	protected Penalties				penalties;					// the robots penalised and what they have left, at the left of the clock
 	protected JTextArea				ticker;
 	protected Timer					timer;
 	protected int					shown;						// how many decisions the ticker has
@@ -109,21 +113,24 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 
 		FontMetrics	cm = countdown.getFontMetrics (countdown.getFont ());
 		Dimension	room = new Dimension (cm.stringWidth ("888") + 12, cm.getHeight ());		// for up to three digits, also while it says nothing
-		JLabel		filler = new JLabel ("");							// as wide as the room at the right of the clock, so the clock stays centred
 
+		penalties	= new Penalties ();
+		room.width	= Math.max (room.width, penalties.getPreferredSize ().width);	// both sides as wide, so the clock stays centred
 		countdown.setPreferredSize (room);
 		countdown.setHorizontalAlignment (SwingConstants.CENTER);
-		filler.setPreferredSize (new Dimension (room.width, 1));
+		penalties.setPreferredSize (new Dimension (room.width, penalties.getPreferredSize ().height));
 
 		JPanel		row = new JPanel (new GridBagLayout ());
 		GridBagConstraints	gc = new GridBagConstraints ();
 
 		row.setBackground (C_BOARD);
 		// the clock in the middle, and the countdown half way between it and the right side of the panel:
-		// the two sides share what room is left over alike, and the countdown sits in the middle of its own
-		gc.anchor	= GridBagConstraints.BASELINE;
+		// the two sides share what room is left over alike, and the countdown sits in the middle of its own;
+		// the penalised robots on the left side, against the side of the panel
+		gc.anchor	= GridBagConstraints.WEST;
 		gc.weightx	= 1.0;
-		gc.gridx	= 0;		row.add (filler, gc);
+		gc.gridx	= 0;		row.add (penalties, gc);
+		gc.anchor	= GridBagConstraints.BASELINE;
 		gc.weightx	= 0.0;
 		gc.gridx	= 1;		row.add (clock, gc);
 		gc.weightx	= 1.0;
@@ -227,6 +234,7 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 
 		countdown.setText ((wait >= 0) ? Long.toString ((wait + 999) / 1000) : "");
 		board.repaint ();
+		penalties.repaint ();
 	}
 
 	public void dispose ()
@@ -245,10 +253,13 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 	{
 		private static final long	serialVersionUID = 1L;
 
+		/** How far over the bottom of the board the baseline of the goals is [px]: the descent of the figures, and no more. */
+		static final int			DIGITS_LOW	= 2;
+
 		Scoreboard ()
 		{
 			setBackground (C_BOARD);
-			setPreferredSize (new Dimension (640, 210));
+			setPreferredSize (new Dimension (640, 230));
 		}
 
 		protected void paintComponent (Graphics g0)
@@ -275,21 +286,21 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 				g.setColor (new Color (255, 255, 255, 90));
 				g.drawRoundRect (cx - flagW / 2, top, flagW, flagH, 8, 8);
 
-				// the name under it
+				// the name in it, by its top left corner
 				g.setFont (new Font (Font.SANS_SERIF, Font.BOLD, 16));
-				g.setColor (C_DASH);
-				centred (g, referee.teamName (team), cx, top + flagH + 20);
+				g.setColor (Color.WHITE);
+				g.drawString (referee.teamName (team), cx - flagW / 2 + 8, top + 6 + g.getFontMetrics ().getAscent ());
 
-				// and the goals, in big figures
+				// and the goals, in big figures, low: close to the clock and well clear of the flag
 				g.setFont (new Font (Font.SANS_SERIF, Font.BOLD, 96));
 				g.setColor (C_DIGITS);
-				centred (g, String.valueOf (referee.score (team)), cx, h - 12);
+				centred (g, String.valueOf (referee.score (team)), cx, h - DIGITS_LOW);
 			}
 
 			// the dash between the two
 			g.setFont (new Font (Font.SANS_SERIF, Font.BOLD, 64));
 			g.setColor (C_DASH);
-			centred (g, "-", half, h - 24);
+			centred (g, "-", half, h - DIGITS_LOW - 12);
 		}
 
 		private void centred (Graphics2D g, String s, int cx, int baseline)
@@ -297,6 +308,96 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 			FontMetrics	fm = g.getFontMetrics ();
 
 			g.drawString (s, cx - fm.stringWidth (s) / 2, baseline);
+		}
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* The penalised robots                                                */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * The robots out of the game, one row each and up to {@link #ROWS} of them,
+	 * the ones whose penalty ends first at the top: a square of the colour of its
+	 * team with its number in it (AIBO-1 is the 1), and what it has left of its
+	 * penalty, counting down, at its right.
+	 */
+	protected class Penalties extends JPanel
+	{
+		private static final long	serialVersionUID = 1L;
+
+		static final int			ROWS		= 3;
+		static final int			SQUARE		= 28;
+		static final int			GAP			= 6;			// between two rows
+		static final int			MARGIN		= 16;			// from the left side of the window
+		final Font					f_number	= new Font (Font.SANS_SERIF, Font.BOLD, 18);
+		final Font					f_time		= new Font (Font.MONOSPACED, Font.BOLD, 24);
+
+		Penalties ()
+		{
+			setOpaque (false);
+
+			FontMetrics	fm = getFontMetrics (f_time);
+
+			setPreferredSize (new Dimension (MARGIN + SQUARE + 10 + fm.stringWidth ("88") + 8, ROWS * SQUARE + (ROWS - 1) * GAP));
+		}
+
+		protected void paintComponent (Graphics g0)
+		{
+			super.paintComponent (g0);
+
+			java.util.List<long[]>	out = new java.util.ArrayList<long[]> ();		// {robot, ms left}
+
+			for (int r = 0; r < referee.maxRobots (); r++)
+			{
+				long		left = referee.penaltyLeft (r);
+
+				if (left >= 0)			out.add (new long[] { r, left });
+			}
+			if (out.isEmpty ())			return;
+			out.sort ((a, b) -> Long.compare (a[1], b[1]));
+
+			Graphics2D	g = (Graphics2D) g0;
+
+			g.setRenderingHint (RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setRenderingHint (RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+			int			rows = Math.min (ROWS, out.size ());
+			int			y = (getHeight () - (ROWS * SQUARE + (ROWS - 1) * GAP)) / 2;
+
+			for (int i = 0; i < rows; i++, y += SQUARE + GAP)
+			{
+				int			r = (int) out.get (i)[0];
+				int			team = referee.teamOf (r);
+
+				// the square, of the colour of the team, and the number of the robot in it
+				g.setColor ((team >= 0) ? referee.teamColor (team) : C_DASH);
+				g.fillRoundRect (MARGIN, y, SQUARE, SQUARE, 6, 6);
+				g.setColor (new Color (255, 255, 255, 90));
+				g.drawRoundRect (MARGIN, y, SQUARE, SQUARE, 6, 6);
+
+				g.setFont (f_number);
+				g.setColor (Color.WHITE);
+
+				FontMetrics	fm = g.getFontMetrics ();
+				String		n = number (r);
+
+				g.drawString (n, MARGIN + (SQUARE - fm.stringWidth (n)) / 2, y + (SQUARE - fm.getHeight ()) / 2 + fm.getAscent ());
+
+				// and what it has left, in seconds
+				g.setFont (f_time);
+				fm	= g.getFontMetrics ();
+				g.drawString (Long.toString ((out.get (i)[1] + 999) / 1000), MARGIN + SQUARE + 10,
+							  y + (SQUARE - fm.getHeight ()) / 2 + fm.getAscent ());
+			}
+		}
+
+		/** The number of a robot: the one at the end of its name (AIBO-1 is the 1), or its place counting from 1 when the name has none. */
+		String number (int r)
+		{
+			String		name = referee.robotName (r);
+			java.util.regex.Matcher	m = java.util.regex.Pattern.compile ("(\\d+)\\s*$").matcher ((name != null) ? name : "");
+
+			return m.find () ? m.group (1) : Integer.toString (r + 1);
 		}
 	}
 }

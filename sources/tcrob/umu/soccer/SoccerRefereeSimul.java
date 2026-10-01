@@ -241,6 +241,19 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		return Math.max (0L, wait - (System.currentTimeMillis () - stateSince));
 	}
 
+	/** How long a robot has left of its penalty [ms], or -1 when it is not penalised. */
+	public long penaltyLeft (int robot)
+	{
+		if ((robot < 0) || (robot >= penalty.length) || (penalty[robot] == 0))		return -1;
+		return Math.max (0L, penalty[robot] - System.currentTimeMillis ());
+	}
+
+	/** How many robots the referee can keep track of. */
+	public int maxRobots ()								{ return penalty.length; }
+
+	/** The name of a robot, as the simulator has it (AIBO-1, say). */
+	public String robotName (int robot)					{ return name (robot); }
+
 	/** The team of a robot (0 or 1), or -1 while it is not known. */
 	public int teamOf (int robot)
 	{
