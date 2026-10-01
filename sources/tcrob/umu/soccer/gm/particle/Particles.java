@@ -21,6 +21,13 @@ public class Particles implements Localisation
 	static public final double	EPS_WEIGHT		= 1E-250;
 	static public final double	MIN_STDDEV		= 10.0;			// the least error of what is seen (mm)
 
+	// The error of what is seen, landmarks and nets alike (the deviations): of the distance, OBS_DEPTH_MIN mm and a part of it,
+	// and of the bearing. The vision is within 3 % of the distance and 2 deg of the bearing (simulated camera, 1.2 to 4.6 m):
+	// this leaves some room over that for the camera as the robot walks
+	static public final double	OBS_DEPTH_MIN		= 50.0;
+	static public final double	OBS_DEPTH_FACTOR	= 0.05;
+	static public final double	OBS_BEARING			= 3.0 * Angles.DTOR;
+
 	// The quality of the estimate [0..1] (see updatePosition): how close together the particles are, in
 	// position and heading, and how well what is seen agrees with them (smoothed over the sightings)
 	static public final double	QUALITY_DEV		= 250.0;				// a spread of the position that halves it (mm)
@@ -169,8 +176,8 @@ public class Particles implements Localisation
 				mLastUpdated[index]	= true;				
 				resample				= true;	
 				
-				errorDepth		= 0.3 * lpo.rho;
-				errorAzimuthal	= 5.0 * Angles.DTOR;
+				errorDepth		= OBS_DEPTH_MIN + OBS_DEPTH_FACTOR * lpo.rho;
+				errorAzimuthal	= OBS_BEARING;
 						
 				addLandmark (lpo, errorAzimuthal, errorDepth, LM_X[index-LocLps.INIT_LMS], LM_Y[index-LocLps.INIT_LMS]);
 			}
@@ -186,15 +193,8 @@ public class Particles implements Localisation
 				mLastUpdated[index]	= true;									
 				resample				= true;
 				
-				if (lpo.rho < 3000)
-				{
-					errorDepth		= 0.3 * lpo.rho;
-					errorAzimuthal	= 25.0 * Angles.DTOR;
-				} else
-				{
-					errorDepth		= 1500.0;
-					errorAzimuthal	= 5.0 * Angles.DTOR;
-				}
+				errorDepth		= OBS_DEPTH_MIN + OBS_DEPTH_FACTOR * lpo.rho;
+				errorAzimuthal	= OBS_BEARING;
 
 				addLandmark (lpo, errorAzimuthal, errorDepth, NET_X[index-LocLps.INIT_NETS], NET_Y[index-LocLps.INIT_NETS]);
 			}
