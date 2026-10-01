@@ -88,7 +88,30 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
 	protected javax.swing.JToggleButton[]		viewBT;					// the three flat projections
-	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, snapMI, snapVertexMI, imageMI;
+	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, snapMI, snapVertexMI, imageMI, shapeMI;
+
+	// Undo and redo: the description as it was before each change, and as it was before each undo
+	static public final int			UNDO_MAX		= 200;		// changes remembered
+	static public final long		MERGE_TIME		= 600;		// changes of a drag closer than this are one [ms]
+	protected java.util.ArrayDeque<RobotDef>	undos	= new java.util.ArrayDeque<RobotDef> ();
+	protected java.util.ArrayDeque<RobotDef>	redos	= new java.util.ArrayDeque<RobotDef> ();
+	protected RobotDef				snapshot;					// the description as it was after the last change
+	protected long					lastChange;					// when it was [ms]
+	protected boolean				lastDrag;					// and whether it was made on the view
+	protected JMenuItem				undoMI, redoMI, cutMI, copyMI, pasteMI;
+
+	// Copy and paste: copies of the elements, as they were when copied
+	protected List<Clip>			clipboard	= new ArrayList<Clip> ();
+
+	/** An element copied: what it is, the family of a sensor, and a copy of it. */
+	static protected class Clip
+	{
+		int			kind;
+		String		family;
+		Object		value;
+
+		Clip (int kind, String family, Object value)	{ this.kind = kind;	this.family = family;	this.value = value; }
+	}
 
 	/* ------------------------------------------------------------------ */
 
@@ -97,6 +120,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		super (new BorderLayout ());
 		this.robot	= robot;
 		this.host	= host;
+		snapshot	= robot.copy ();
 		buildGUI ();
 		refreshTree ();
 		updateTitle ();
@@ -297,6 +321,19 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			c.getActionMap ().put ("delete", deleteAC);
 		}
 
+		// the tree and the table copy and paste text of their own on these keys: here they are the Edit menu's
+		{
+			int		m = java.awt.Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ();
+
+			for (JComponent c : new JComponent[] { tree, propsTB })
+				for (int k : new int[] { KeyEvent.VK_C, KeyEvent.VK_X, KeyEvent.VK_V, KeyEvent.VK_Z, KeyEvent.VK_Y })
+				{
+					c.getInputMap (JComponent.WHEN_FOCUSED).put (KeyStroke.getKeyStroke (k, m), "none");
+					c.getInputMap (JComponent.WHEN_FOCUSED).put (KeyStroke.getKeyStroke (k, m | KeyEvent.SHIFT_DOWN_MASK), "none");
+					c.getInputMap (JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put (KeyStroke.getKeyStroke (k, m), "none");
+				}
+		}
+
 		add (tb, BorderLayout.WEST);
 		add (mainSP, BorderLayout.CENTER);
 		add (statusBar, BorderLayout.SOUTH);
@@ -333,6 +370,30 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		}
 		mb.add (mfile);
 
+		JMenu		medit = new JMenu ("Edit");
+
+		undoMI	= menuItem ("Undo", KeyEvent.VK_Z, mask, new Runnable () { public void run () { undo (); } });
+		redoMI	= menuItem ("Redo", KeyEvent.VK_Z, mask | KeyEvent.SHIFT_DOWN_MASK, new Runnable () { public void run () { redo (); } });
+		cutMI	= menuItem ("Cut", KeyEvent.VK_X, mask, new Runnable () { public void run () { cutSelection (); } });
+		copyMI	= menuItem ("Copy", KeyEvent.VK_C, mask, new Runnable () { public void run () { copySelection (); } });
+		pasteMI	= menuItem ("Paste", KeyEvent.VK_V, mask, new Runnable () { public void run () { paste (); } });
+		medit.add (undoMI);
+		medit.add (redoMI);
+		medit.addSeparator ();
+		medit.add (cutMI);
+		medit.add (copyMI);
+		medit.add (pasteMI);
+		mb.add (medit);
+		updateEditMenu ();
+
+		// redo also as most programs of the other systems have it
+		getInputMap (JComponent.WHEN_IN_FOCUSED_WINDOW).put (KeyStroke.getKeyStroke (KeyEvent.VK_Y, mask), "redo");
+		getActionMap ().put ("redo", new javax.swing.AbstractAction ()
+		{
+			private static final long	serialVersionUID = 1L;
+			public void actionPerformed (ActionEvent e)		{ redo (); }
+		});
+
 		JMenu		mview = new JMenu ("View");
 		mview.add (menuItem ("Zoom to Fit", KeyEvent.VK_0, mask, new Runnable () { public void run () { canvas.zoomToFit (); } }));
 		mview.add (menuItem ("Zoom In", KeyEvent.VK_PLUS, mask, new Runnable () { public void run () { canvas.zoomIn (); } }));
@@ -358,6 +419,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			public void run ()		{ canvas.setImageVisible (imageMI.isSelected ()); }
 		});
 		mview.add (imageMI);
+		shapeMI	= checkItem ("Robot Shape", KeyEvent.VK_I, mask | java.awt.event.InputEvent.SHIFT_DOWN_MASK, canvas.isShapeVisible (), new Runnable ()
+		{
+			public void run ()		{ canvas.setShapeVisible (shapeMI.isSelected ()); }
+		});
+		mview.add (shapeMI);
 		mview.addSeparator ();
 		mview.add (view3dMenuItem (mask));
 		mb.add (mview);
@@ -546,6 +612,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		normalisePaths (r);				// old files may name their resources without the leading "./"
 		robot	= r;
 		dirty	= false;
+		undos.clear ();
+		redos.clear ();
+		snapshot	= robot.copy ();
+		lastDrag	= false;
+		updateEditMenu ();
 		canvas.setRobot (robot);
 		updateViewBar ();
 		if (view3d != null)		view3d.setRobot (robot);
@@ -636,9 +707,19 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		if (host != null)		host.robotStateChanged (this);
 	}
 
-	/** The description changed: the view, the tree and the title follow. */
+	/** The description changed: the view, the tree and the title follow, and the change can be undone. */
 	private void changed ()
 	{
+		changed (false);
+	}
+
+	/**
+	 * The same, telling whether the change was made on the view: the many small
+	 * changes of one drag are taken as one, to be undone at once.
+	 */
+	private void changed (boolean drag)
+	{
+		remember (drag);
 		dirty	= true;
 		canvas.robotChanged ();
 		if (view3d != null)		view3d.robotChanged ();
@@ -968,7 +1049,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/** The view moved or turned an element: the model changed and the table follows. */
 	public void elementChanged (RobotItem item)
 	{
-		changed ();
+		changed (true);
 		propsModel.refresh ();
 	}
 
@@ -989,6 +1070,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		showProperties (item);
 		if (view3d != null)		view3d.setSelection (item);		// a sensor draws what it covers
 		deleteAC.setEnabled (removable () > 0);
+		updateEditMenu ();
 	}
 
 	/** How many of the selected elements can be removed. */
@@ -998,11 +1080,251 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 		if (canvas.isCollectionSelected ())			return 0;
 		for (RobotItem it : canvas.selected ())
-			if ((it.kind == RobotItem.LINE) || (it.kind == RobotItem.BUMPER)
-					|| (it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.WHEEL)
-					|| (it.kind == RobotItem.GROUP) || (it.kind == RobotItem.FUSED))
+			if (isElement (it))
 				n++;
 		return n;
+	}
+
+	/** Whether an item is one element of the description, which can be removed, copied and pasted, and not a section of it. */
+	static private boolean isElement (RobotItem it)
+	{
+		return (it != null) && ((it.kind == RobotItem.LINE) || (it.kind == RobotItem.BUMPER)
+				|| (it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.WHEEL)
+				|| (it.kind == RobotItem.GROUP) || (it.kind == RobotItem.FUSED) || (it.kind == RobotItem.SCAN));
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Undo and redo                                                       */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * Keeps the description as it was before this change, unless the change goes
+	 * with the one before (the same drag on the view) or changed nothing at all.
+	 * Whatever was undone cannot be redone after a change of the user's.
+	 */
+	private void remember (boolean drag)
+	{
+		long		now = System.currentTimeMillis ();
+		boolean		join = drag && lastDrag && ((now - lastChange) < MERGE_TIME);
+
+		if (!join && (snapshot != null) && !snapshot.toJson ().equals (robot.toJson ()))
+		{
+			undos.push (snapshot);
+			while (undos.size () > UNDO_MAX)		undos.removeLast ();
+			redos.clear ();
+		}
+		snapshot	= robot.copy ();
+		lastChange	= now;
+		lastDrag	= drag;
+		updateEditMenu ();
+	}
+
+	/**
+	 * Takes back the last change. What is being typed in the table of properties
+	 * and not yet entered is what is taken back first: it is dropped.
+	 */
+	public void undo ()
+	{
+		if (propsTB.isEditing ())		{ propsTB.getCellEditor ().cancelCellEditing ();	return; }
+		if (undos.isEmpty ())			return;
+		redos.push (robot.copy ());
+		restore (undos.pop ());
+	}
+
+	/** Makes again the last change taken back. */
+	public void redo ()
+	{
+		if (propsTB.isEditing ())		{ propsTB.getCellEditor ().cancelCellEditing ();	return; }
+		if (redos.isEmpty ())			return;
+		undos.push (robot.copy ());
+		restore (redos.pop ());
+	}
+
+	/**
+	 * Puts the description back as it was in a copy: in the very description the
+	 * view, the 3D view and the table are showing, so that they all follow. What
+	 * was selected stays selected while it is still there.
+	 */
+	private void restore (RobotDef was)
+	{
+		RobotDef	c = was.copy ();
+		RobotItem	sel = canvas.getSelection ();
+
+		robot.name			= c.name;
+		robot.radius		= c.radius;
+		robot.icon			= c.icon;
+		robot.image			= c.image;
+		robot.shapeRobot	= c.shapeRobot;
+		robot.shapeActuator	= c.shapeActuator;
+		robot.shapeParts	= c.shapeParts;
+		robot.kinematics	= c.kinematics;
+		robot.sensors		= c.sensors;
+		robot.bumpers		= c.bumpers;
+		robot.wheels		= c.wheels;
+		robot.groups		= c.groups;
+		robot.fused			= c.fused;
+		robot.fusionmode	= c.fusionmode;
+		robot.scans			= c.scans;
+		robot.extra			= c.extra;
+
+		snapshot	= robot.copy ();
+		lastDrag	= false;
+		dirty		= false;							// unsaved or not is what the file says now
+		canvas.robotChanged ();
+		if (view3d != null)		view3d.robotChanged ();
+		updateViewBar ();
+		refreshTree ();
+		select (exists (sel) ? sel : null);
+		showProperties (canvas.getSelection ());
+		updateTitle ();
+		updateEditMenu ();
+	}
+
+	/** Whether an item is still in the description. */
+	private boolean exists (RobotItem it)
+	{
+		if (it == null)						return false;
+		switch (it.kind)
+		{
+		case RobotItem.LINE:		return it.index < robot.icon.size ();
+		case RobotItem.BUMPER:		return it.index < robot.bumpers.size ();
+		case RobotItem.WHEEL:		return it.index < robot.wheels.size ();
+		case RobotItem.SENSOR:		return it.index < robot.family (it.family).n ();
+		case RobotItem.GROUP:		return it.index < robot.groups.size ();
+		case RobotItem.FUSED:		return it.index < robot.fused.size ();
+		case RobotItem.SCAN:		return it.index < robot.scans.size ();
+		default:					return true;			// the sections are always there
+		}
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* Copy, cut and paste                                                 */
+	/* ------------------------------------------------------------------ */
+
+	/** The text field being typed in, when there is one: copy, cut and paste are its own then. */
+	private javax.swing.text.JTextComponent typing ()
+	{
+		java.awt.Component	c = java.awt.KeyboardFocusManager.getCurrentKeyboardFocusManager ().getFocusOwner ();
+
+		return ((c instanceof javax.swing.text.JTextComponent) && SwingUtilities.isDescendingFrom (c, this))
+				? (javax.swing.text.JTextComponent) c : null;
+	}
+
+	/** The elements selected, the ones a whole section holds when a section is. */
+	private List<RobotItem> elements ()
+	{
+		List<RobotItem>		all = new ArrayList<RobotItem> ();
+
+		for (RobotItem it : canvas.selected ())
+			if (isElement (it))			all.add (it);
+		return all;
+	}
+
+	/** Copies the elements selected, as they are now. */
+	public void copySelection ()
+	{
+		javax.swing.text.JTextComponent	t = typing ();
+		List<RobotItem>					all;
+
+		if (t != null)				{ t.copy ();	return; }
+		all	= elements ();
+		if (all.isEmpty ())			return;
+		clipboard.clear ();
+		for (RobotItem it : all)
+		{
+			Object		v = null;
+
+			switch (it.kind)
+			{
+			case RobotItem.LINE:		v = robot.icon.get (it.index).copy ();						break;
+			case RobotItem.BUMPER:		v = robot.bumpers.get (it.index).copy ();					break;
+			case RobotItem.WHEEL:		v = robot.wheels.get (it.index).copy ();					break;
+			case RobotItem.SENSOR:		v = robot.family (it.family).sensors.get (it.index).copy ();	break;
+			case RobotItem.GROUP:		v = robot.groups.get (it.index).copy ();					break;
+			case RobotItem.FUSED:		v = robot.fused.get (it.index).copy ();						break;
+			case RobotItem.SCAN:		v = robot.scans.get (it.index).copy ();						break;
+			}
+			if (v != null)			clipboard.add (new Clip (it.kind, it.family, v));
+		}
+		updateEditMenu ();
+	}
+
+	/** Copies the elements selected and removes them. */
+	public void cutSelection ()
+	{
+		javax.swing.text.JTextComponent	t = typing ();
+
+		if (t != null)				{ t.cut ();		return; }
+		if (canvas.isCollectionSelected () || elements ().isEmpty ())		return;		// a section is copied, not cut
+		copySelection ();
+		deleteSelection ();
+	}
+
+	/**
+	 * Adds a copy of what was copied, where it was, and selects it so it can be
+	 * dragged away. A sensor goes into the family selected when one is (a sensor of
+	 * a family, or the family), and into its own otherwise.
+	 */
+	public void paste ()
+	{
+		javax.swing.text.JTextComponent	t = typing ();
+		RobotItem						sel = canvas.getSelection ();
+		String							into = ((sel != null) && (sel.family != null)
+												&& ((sel.kind == RobotItem.SENSOR) || (sel.kind == RobotItem.FAMILY))) ? sel.family : null;
+		List<RobotItem>					made = new ArrayList<RobotItem> ();
+
+		if (t != null)				{ t.paste ();	return; }
+		if (clipboard.isEmpty ())	return;
+		for (Clip c : clipboard)
+			switch (c.kind)
+			{
+			case RobotItem.LINE:
+				robot.icon.add (((RobotDef.IconLine) c.value).copy ());
+				made.add (new RobotItem (c.kind, robot.icon.size () - 1));			break;
+			case RobotItem.BUMPER:
+				robot.bumpers.add (((RobotDef.Bumper) c.value).copy ());
+				made.add (new RobotItem (c.kind, robot.bumpers.size () - 1));		break;
+			case RobotItem.WHEEL:
+				robot.wheels.add (((RobotDef.Wheel) c.value).copy ());
+				made.add (new RobotItem (c.kind, robot.wheels.size () - 1));		break;
+			case RobotItem.GROUP:
+				robot.groups.add (((RobotDef.Group) c.value).copy ());
+				made.add (new RobotItem (c.kind, robot.groups.size () - 1));		break;
+			case RobotItem.FUSED:
+				robot.fused.add (((RobotDef.Fused) c.value).copy ());
+				made.add (new RobotItem (c.kind, robot.fused.size () - 1));			break;
+			case RobotItem.SCAN:
+				robot.scans.add (((RobotDef.Scanner) c.value).copy ());
+				made.add (new RobotItem (c.kind, robot.scans.size () - 1));			break;
+			case RobotItem.SENSOR:
+			{
+				String				fam = (into != null) ? into : c.family;
+				RobotDef.Family		f = robot.family (fam);
+				RobotDef.Sensor		s = ((RobotDef.Sensor) c.value).copy ();
+
+				// the first sensor of a family read on the cycle sets it going, as a new one does
+				if (RobotDef.hasFiring (fam) && (f.n () == 0))		{ f.cycle = 1;	s.step = 1; }
+				f.sensors.add (s);
+				made.add (new RobotItem (c.kind, f.n () - 1, fam));
+				break;
+			}
+			}
+		if (made.isEmpty ())		return;
+		changed ();
+		refreshTree ();
+		canvas.setSelection (made);
+	}
+
+	/** Enables what the Edit menu can do now. */
+	private void updateEditMenu ()
+	{
+		boolean		some = (canvas != null) && !elements ().isEmpty ();
+
+		if (undoMI != null)			undoMI.setEnabled (!undos.isEmpty ());
+		if (redoMI != null)			redoMI.setEnabled (!redos.isEmpty ());
+		if (copyMI != null)			copyMI.setEnabled (some);
+		if (cutMI != null)			cutMI.setEnabled (some && !canvas.isCollectionSelected ());
+		if (pasteMI != null)		pasteMI.setEnabled (!clipboard.isEmpty ());
 	}
 
 	/* ------------------------------------------------------------------ */

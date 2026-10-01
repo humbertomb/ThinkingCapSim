@@ -276,6 +276,17 @@ public class RobotCanvas extends JPanel
 		if (listener != null)		listener.selectionChanged (item);
 	}
 
+	/** Selects several elements at once, as a band would (one alone is selected as a click would). */
+	public void setSelection (java.util.List<RobotItem> items)
+	{
+		if (items.size () == 1)			{ setSelection (items.get (0));	return; }
+		group.clear ();
+		selection	= null;
+		group.addAll (items);
+		repaint ();
+		if (listener != null)			listener.selectionChanged (null);
+	}
+
 	/**
 	 * True when what is selected is a whole family, and its group therefore holds
 	 * the sensors it is made of rather than elements picked one by one.
