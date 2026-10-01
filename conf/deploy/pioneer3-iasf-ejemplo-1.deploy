@@ -1,5 +1,5 @@
 {
-  "world": "conf/maps/iasf_ejemplo_1.world",
+  "world": "./conf/maps/iasf_ejercicio_1.world",
   "robots": [
     {
       "name": "IASF-1",
