@@ -13,6 +13,7 @@ import tc.shared.lps.lpo.LPO;
 import tc.shared.lps.lpo.LPOSensorGroup;
 import tclib.behaviours.lua.interpreter.LuaFunction;
 import tclib.behaviours.lua.interpreter.LuaTable;
+import wucore.utils.math.Angles;
 
 /**
  * The elements of a controller of ThinkingCap as a Lua script sees them: the
@@ -23,12 +24,15 @@ import tclib.behaviours.lua.interpreter.LuaTable;
  *   tc.getGroups ()     the groups of sensors of the LPS (the object Group), as a
  *                       table: group0, group1 ... groupN, in metres; an empty
  *                       table when the LPS has no groups yet
+ *   tc.setVlin (v)      how fast to go forward [m/s]
+ *   tc.setVlat (v)      how fast to go sideways, to the left [m/s]
+ *   tc.setVrot (v)      how fast to turn, to the left [deg/s]
+ *   tc.setVelocities (vlin, vlat, vrot)   the three at once
  * </pre>
  *
- * The controller fills it in before every cycle ({@link #lps}). What the script
- * commands is not asked of it: a controller reads it from the globals the script
- * leaves (see {@link tcrob.umu.iasf.IasfLuaController}), and tells it back here
- * ({@link #commanded}) for the monitors to show.
+ * The controller fills it in before every cycle ({@link #lps}), forgets what was
+ * commanded ({@link #clear}: a velocity not said on a cycle is 0) and reads the
+ * velocities out afterwards ({@link #linear}, {@link #lateral}, {@link #rotation}).
  */
 public class Tc implements LuaBridge
 {
@@ -39,7 +43,12 @@ public class Tc implements LuaBridge
 
 	protected LPS					lps;
 	protected LuaTable				table;
-	protected Map<String, Object>	commands	= new LinkedHashMap<String, Object> ();
+	protected java.util.Set<String>	warned		= new java.util.HashSet<String> ();
+
+	// What the script commanded
+	protected double				vlin;								// m/s
+	protected double				vlat;								// m/s
+	protected double				vrot;								// deg/s
 
 	public Tc ()
 	{
@@ -56,14 +65,54 @@ public class Tc implements LuaBridge
 	public void lps (LPS lps)									{ this.lps = lps; }
 	public LPS lps ()											{ return lps; }
 
-	/** What the script commanded on this cycle, as the controller read it, for the monitors. */
-	public void commanded (String name, Object value)			{ commands.put (name, value); }
+	/** Forgets what the script commanded, before a new cycle: the robot stands still unless it says otherwise. */
+	public void clear ()
+	{
+		vlin	= 0.0;
+		vlat	= 0.0;
+		vrot	= 0.0;
+	}
 
-	public void clear ()										{ commands.clear (); }
+	/** How fast the script asked to go forward [m/s]. */
+	public double linear ()										{ return vlin; }
+	/** How fast the script asked to go sideways, to the left of the robot [m/s]. */
+	public double lateral ()									{ return vlat; }
+	/** How fast the script asked to turn [rad/s], which is what the controller commands. */
+	public double rotation ()									{ return vrot * Angles.DTOR; }
+
+	/* The same three as the script said them: m/s, m/s and deg/s. */
+	public double vlin ()										{ return vlin; }
+	public double vlat ()										{ return vlat; }
+	public double vrot ()										{ return vrot; }
+
 	public String behaviour ()									{ return null; }
 	public void entered ()										{ }
 	public Map<String, Object> globals ()						{ return new TreeMap<String, Object> (); }
-	public Map<String, Object> commands ()						{ return new LinkedHashMap<String, Object> (commands); }
+
+	/** What the script asked of the robot on this cycle, as the monitors show it. */
+	public Map<String, Object> commands ()
+	{
+		Map<String, Object>		c = new LinkedHashMap<String, Object> ();
+
+		c.put ("vlin", Double.valueOf (vlin));
+		c.put ("vlat", Double.valueOf (vlat));
+		c.put ("vrot", Double.valueOf (vrot));
+		return c;
+	}
+
+	/**
+	 * A velocity a script gave, or the one there was when it is not a number: a
+	 * script that divided by zero asks for a speed that is not one, and a robot
+	 * commanded with one loses its pose for good. It is said once.
+	 */
+	protected double sane (String what, double value, double old)
+	{
+		if (Double.isFinite (value))			return value;
+
+		if (warned.add (what))
+			System.out.println ("  [TC] " + what + " was given " + value + " and ignored");
+		return old;
+	}
 
 	/* ------------------------------------------------------------------ */
 	/* What a script can call                                              */
@@ -95,6 +144,35 @@ public class Tc implements LuaBridge
 			public Object call (Object[] args)
 			{
 				return groups ();
+			}
+		});
+
+		/* ---- what the robot is to do ---- */
+
+		c.set ("setVlin", new LuaFunction ("tc.setVlin")
+		{
+			public Object call (Object[] args)		{ vlin = sane (name (), num (args, 0, 0.0), vlin);	return null; }
+		});
+
+		c.set ("setVlat", new LuaFunction ("tc.setVlat")
+		{
+			public Object call (Object[] args)		{ vlat = sane (name (), num (args, 0, 0.0), vlat);	return null; }
+		});
+
+		c.set ("setVrot", new LuaFunction ("tc.setVrot")
+		{
+			public Object call (Object[] args)		{ vrot = sane (name (), num (args, 0, 0.0), vrot);	return null; }
+		});
+
+		// the three at once: along, across and around (vlin, vlat, vrot)
+		c.set ("setVelocities", new LuaFunction ("tc.setVelocities")
+		{
+			public Object call (Object[] args)
+			{
+				vlin	= sane (name (), num (args, 0, 0.0), vlin);
+				vlat	= sane (name (), num (args, 1, 0.0), vlat);
+				vrot	= sane (name (), num (args, 2, 0.0), vrot);
+				return null;
 			}
 		});
 

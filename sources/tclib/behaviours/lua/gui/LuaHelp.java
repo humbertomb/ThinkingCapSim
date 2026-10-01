@@ -205,10 +205,13 @@ public class LuaHelp
 	{
 		{ "getGroups", "", "The groups of sensors of the LPS, as a table with one field to a group: <span class=\"mono\">group0</span>, "
 					+ "<span class=\"mono\">group1</span> ... <span class=\"mono\">groupN</span>, each the distance it measures in "
-					+ "<b>metres</b>. It is an empty table while the LPS has no groups. A controller of the IASF "
-					+ "(<span class=\"mono\">tcrob.umu.iasf.IasfLuaController</span>) reads what to do from the globals "
-					+ "<span class=\"mono\">vlin</span>, <span class=\"mono\">vlat</span> (m/s) and "
-					+ "<span class=\"mono\">vrot</span> (degrees a second) the program leaves." },
+					+ "<b>metres</b>. It is an empty table while the LPS has no groups." },
+		{ "setVlin", "m/s", "How fast to go forward. Backwards is negative." },
+		{ "setVlat", "m/s", "How fast to go sideways, to the left of the robot. A platform whose wheels point where they are "
+					+ "built (a differential drive, a tricycle) makes nothing of it." },
+		{ "setVrot", "deg/s", "How fast to turn. To the left is positive." },
+		{ "setVelocities", "vlin, vlat, vrot", "The three at once: along, across and around, in m/s and deg/s. A velocity "
+					+ "not said on a cycle is 0." },
 	};
 
 	static private final String[][]	MATH_HELP	=

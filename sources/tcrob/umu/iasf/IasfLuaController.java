@@ -11,30 +11,22 @@ import tc.runtime.thread.ModuleConfig;
 import tc.modules.*;
 import tc.shared.linda.*;
 import tclib.behaviours.lua.Tc;
-import tclib.behaviours.lua.interpreter.Lua;
 import tclib.behaviours.lua.interpreter.LuaError;
 import tclib.behaviours.lua.interpreter.LuaScript;
 import tclib.behaviours.lua.interpreter.LuaState;
 
 import wucore.utils.logs.*;
-import wucore.utils.math.*;
 
 /**
  * The same controller as {@link IasfJavaController}, written in Lua: the
  * <code>PRG</code> of the module is a <code>.lua</code> file, run once on every
- * cycle, which reads the LPS through the table <code>tc</code> ({@link Tc}) and
- * leaves what the robot is to do in three globals:
+ * cycle, which reads the LPS and says what the robot is to do through the table
+ * <code>tc</code> ({@link Tc}): <code>tc.setVlin</code>, <code>tc.setVlat</code>
+ * [m/s], <code>tc.setVrot</code> [deg/s] or <code>tc.setVelocities</code>.
  *
- * <pre>
- *   vlin    forward speed [m/s]
- *   vlat    sideways speed, to the left [m/s]
- *   vrot    turn rate [deg/s]
- * </pre>
- *
- * A global the program did not set, or that is not a number, is 0. The globals
- * stay from one cycle to the next, so a program that wants the robot to stop
- * says so, and one that wants to remember something leaves it in a global.
- * A program that fails is said out loud and the robot stands still on that cycle.
+ * A velocity the program does not set on a cycle is 0. What the program wants to
+ * remember from one cycle to the next it leaves in a global. A program that fails
+ * is said out loud and the robot stands still on that cycle.
  *
  * Settings:
  * <pre>
@@ -184,21 +176,15 @@ public class IasfLuaController extends Controller
 		tc.clear ();
 
 		// One cycle of the program; one that fails stops the robot
-		vlin	= 0.0;
-		vlat	= 0.0;
-		vrot	= 0.0;
-		if (run (program))
-		{
-			vlin	= velocity ("vlin");
-			vlat	= velocity ("vlat");
-			vrot	= velocity ("vrot");
-		}
-		tc.commanded ("vlin", Double.valueOf (vlin));
-		tc.commanded ("vlat", Double.valueOf (vlat));
-		tc.commanded ("vrot", Double.valueOf (vrot));
+		if (!run (program))
+			tc.clear ();
 
-		// Set action (the program says deg/s, the platform takes rad/s)
-		vrot	*= Angles.DTOR;
+		// What the program commanded (it says deg/s, the platform takes rad/s)
+		vlin	= tc.linear ();
+		vlat	= tc.lateral ();
+		vrot	= tc.rotation ();
+
+		// Set action
 		setMotion (vlin, vlat, vrot);
 
 		// Plot current control commands
@@ -207,14 +193,6 @@ public class IasfLuaController extends Controller
 			motionValues (c_buffer, vlin, vlat, vrot);
 			c_plot.draw (c_buffer);
 		}
-	}
-
-	/** A velocity the program left in a global, 0 when there is none or it is not a number. */
-	protected double velocity (String name)
-	{
-		Double			v = Lua.tonumber (lua.get (name));
-
-		return ((v != null) && !v.isNaN () && !v.isInfinite ()) ? v.doubleValue () : 0.0;
 	}
 
 	/** Runs the program once; whether it ran to the end. */
