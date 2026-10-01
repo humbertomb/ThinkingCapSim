@@ -138,6 +138,7 @@ public class Simulator
 	}
 	public RobotDataCtrl[]			DATA_CTRL;
 	public int[]					ROBOINDEX;
+	protected Line2[][]				OUTLINE;		// what each robot occupies in the simulation (collisions, what the sensors of the others meet): its icon, or the circle of its radius when it has none
 	public Position[][]				VISOBJS;
 	public Position[]				VISPOS;
 	public int						numrobots;
@@ -198,6 +199,7 @@ public class Simulator
 		MODEL		= new RobotModel[MAX_ROBOTS];
 		DATA_CTRL	= new RobotDataCtrl[MAX_ROBOTS];
 		ROBOINDEX	= new int[MAX_ROBOTS];
+		OUTLINE		= new Line2[MAX_ROBOTS][];
 		VISOBJS		= new Position[MAX_ROBOTS][];
 //		VISOBJS		= new Hashtable[MAX_ROBOTS];
 		VISPOS		= new Position[MAX_ROBOTS];
@@ -410,6 +412,34 @@ public class Simulator
 			objects.OBJS[i].idsimul = win.addObject (objects.OBJS[i]);
 	}
 	
+	/** Segments of the circle of the radius of a robot that has no icon (a robot drawn by its image or its 3D model alone). */
+	static public final int			OUTLINE_SIDES	= 24;
+
+	/**
+	 * What a robot occupies in the simulation, in its own frame: the segments of its
+	 * icon, or, when it has none (a robot shown by its image or its 3D model), the
+	 * circle of its radius as a polygon of {@link #OUTLINE_SIDES} sides -- the same
+	 * circle the views draw it as then. Nothing when it has neither.
+	 */
+	static public Line2[] outline (RobotDesc rdesc)
+	{
+		Line2[]		o;
+		double		r;
+
+		if ((rdesc.icon != null) && (rdesc.icon.length > 0))		return rdesc.icon;
+		r	= rdesc.RADIUS;
+		if (r <= 0.0)							return new Line2[0];
+		o	= new Line2[OUTLINE_SIDES];
+		for (int i = 0; i < OUTLINE_SIDES; i++)
+		{
+			double	a0 = 2.0 * Math.PI * i / OUTLINE_SIDES, a1 = 2.0 * Math.PI * (i + 1) / OUTLINE_SIDES;
+
+			o[i]	= new Line2 ();
+			o[i].set (r * Math.cos (a0), r * Math.sin (a0), r * Math.cos (a1), r * Math.sin (a1));
+		}
+		return o;
+	}
+
 	synchronized public int add_robot (RobotDesc rdesc, SimulatorDesc sdesc, RobotModel model, RobotDataCtrl datactrl)
 	{
 		return add_robot (rdesc, sdesc, model, datactrl, null);
@@ -424,7 +454,8 @@ public class Simulator
 		MODEL[numrobots] = model;
 		DATA_CTRL[numrobots] = datactrl;
 		ROBOINDEX[numrobots] = allocIcon ();		
-		moveIcon (ROBOINDEX[numrobots], rdesc.icon,model.real_x, model.real_y, model.real_a);;
+		OUTLINE[numrobots] = outline (rdesc);
+		moveIcon (ROBOINDEX[numrobots], OUTLINE[numrobots], model.real_x, model.real_y, model.real_a);
 		
 		if (win!=null)
 			win.addRobot (rdesc, sdesc, name);
@@ -1486,6 +1517,6 @@ public class Simulator
 				}
 		}     
 		
-		moveIcon (ROBOINDEX[robotind], RDESC[robotind].icon,MODEL[robotind].real_x, MODEL[robotind].real_y, MODEL[robotind].real_a);	
+		moveIcon (ROBOINDEX[robotind], OUTLINE[robotind], MODEL[robotind].real_x, MODEL[robotind].real_y, MODEL[robotind].real_a);	
 	}
 }
