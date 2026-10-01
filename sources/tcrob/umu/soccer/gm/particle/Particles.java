@@ -21,6 +21,13 @@ public class Particles implements Localisation
 	static public final double	EPS_WEIGHT		= 1E-250;
 	static public final double	MIN_STDDEV		= 10.0;			// the least error of what is seen (mm)
 
+	// The quality of the estimate [0..1] (see updatePosition): how close together the particles are, in
+	// position and heading, and how well what is seen agrees with them (smoothed over the sightings)
+	static public final double	QUALITY_DEV		= 250.0;				// a spread of the position that halves it (mm)
+	static public final double	QUALITY_ANGLE	= 15.0 * Angles.DTOR;	// a spread of the heading that halves it (rad)
+	static public final double	QUALITY_FIT		= 0.3;					// how much each sighting weighs in the agreement
+	static public final double	QUALITY_GATE	= 9.21;					// a sighting agrees with a particle within this (squared deviations: 99 %)
+
 	// Where the particles start: spread round INIT_X, INIT_Y, INIT_THETA (mm, mm, rad), by default with these deviations
 	// (wide enough for the particles to cover where the robot may be, so they settle on it at the first sightings)
 	static public final double	INIT_X			= 0.0;
@@ -40,6 +47,7 @@ public class Particles implements Localisation
 	private Gaussian2D				gtmp;
 	private double[]					w;
 	private double[]					lw;				// the log of the weight of each particle, from what is seen on this update
+	protected double					fit;			// how well what is seen agrees with the particles [0..1], smoothed: 0 until something is seen
 
 	protected Gs						gs;
 
@@ -102,6 +110,7 @@ public class Particles implements Localisation
 
 	public void initialPosition (GsPosition pos)
 	{
+		fit		= 0.0;													// nothing seen yet
 		posSampler.setMeanDev (0, pos.x, pos.dx);
 		posSampler.setMeanDev (1, pos.y, pos.dy);
 		posSampler.setMeanDev (2, pos.theta, pos.dtheta);
@@ -213,6 +222,8 @@ public class Particles implements Localisation
 		theta	= lpo.theta;
 		xpos		= rho * Math.cos (theta);
 		ypos		= rho * Math.sin (theta);
+		double		agree = 0.0;
+
 		sDepth	= Math.max (MIN_STDDEV, errDepth);						// along the line of sight
 		sAcross	= Math.max (MIN_STDDEV, rho * errAzimuth);				// across it
 
@@ -226,8 +237,12 @@ public class Particles implements Localisation
 			gtmp.translate (lmx, lmy);
 
 			lw[i]	+= samples[i].g.logOverlap (gtmp);
+			if (samples[i].g.distance2 (gtmp) < QUALITY_GATE)		agree += 1.0;
 			samples[i].g.multiply (gtmp);
 		}
+
+		// how well this sighting agrees with the particles: the share of them it falls in with (1: all, 0: none)
+		fit		= (1.0 - QUALITY_FIT) * fit + QUALITY_FIT * (agree / nSamples);
 	}
 
 	/**
@@ -313,6 +328,26 @@ public class Particles implements Localisation
 		pos.dx		= (int) Math.sqrt (xVar);
 		pos.dy		= (int) Math.sqrt (yVar);
 		pos.dtheta	= (double) Math.sqrt (aVar);
+
+		gs.setQuality (quality (Math.sqrt (0.5 * (Math.max (0.0, xVar) + Math.max (0.0, yVar))), Functions.hypot (aSin, aCos)));
+	}
+
+	/**
+	 * A figure of merit of the estimate, 0 when nothing is known and 1 when the
+	 * position is certain: the product of how close together the particles are
+	 * (their spread of the position, sd, mm), how much their headings agree (the
+	 * length of the mean of them, r, 1 when they are all the same) and how well
+	 * what has been seen agrees with them ({@link #fit}). Each spread halves its
+	 * part when it is QUALITY_DEV or QUALITY_ANGLE.
+	 */
+	protected double quality (double sd, double r)
+	{
+		double		sa, qPos, qAng;
+
+		sa		= Math.sqrt (-2.0 * Math.log (Math.max (1E-9, Math.min (1.0, r))));		// the deviation of the headings (rad)
+		qPos	= 1.0 / (1.0 + (sd / QUALITY_DEV) * (sd / QUALITY_DEV));
+		qAng	= 1.0 / (1.0 + (sa / QUALITY_ANGLE) * (sa / QUALITY_ANGLE));
+		return Math.max (0.0, Math.min (1.0, qPos * qAng * fit));
 	}
 	
 	public void drawElements (Model2D model)

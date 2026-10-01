@@ -233,10 +233,24 @@ public class Gaussian2D
 	{
 		double		sxx = cxx + rhs.cxx, syy = cyy + rhs.cyy, sxy = cxy + rhs.cxy;
 		double		det = sxx * syy - sxy * sxy;
-		double		dx = x - rhs.x, dy = y - rhs.y;
 
 		if (det <= 0.0)			return Double.NEGATIVE_INFINITY;
-		return -0.5 * (syy * dx * dx - 2.0 * sxy * dx * dy + sxx * dy * dy) / det - 0.5 * Math.log (det) - Math.log (2.0 * Math.PI);
+		return -0.5 * distance2 (rhs) - 0.5 * Math.log (det) - Math.log (2.0 * Math.PI);
+	}
+
+	/**
+	 * How far apart two Gaussians are, in deviations: the squared Mahalanobis
+	 * distance of the difference of their means under the sum of their
+	 * covariances (around 2 when they agree, much more when they do not).
+	 */
+	public double distance2 (Gaussian2D rhs)
+	{
+		double		sxx = cxx + rhs.cxx, syy = cyy + rhs.cyy, sxy = cxy + rhs.cxy;
+		double		det = sxx * syy - sxy * sxy;
+		double		dx = x - rhs.x, dy = y - rhs.y;
+
+		if (det <= 0.0)			return Double.POSITIVE_INFINITY;
+		return (syy * dx * dx - 2.0 * sxy * dx * dy + sxx * dy * dy) / det;
 	}
 
 	/**
