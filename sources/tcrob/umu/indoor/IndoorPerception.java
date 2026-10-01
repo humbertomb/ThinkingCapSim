@@ -126,7 +126,7 @@ public class IndoorPerception extends Perception
 		
 		if (fusion.scans_flg)
 		{
-			delta	= fdesc.CONESCAN / (double) (fdesc.RAYSCAN - 1);
+			delta	= (fdesc.RAYSCAN > 1) ? fdesc.CONESCAN / (double) (fdesc.RAYSCAN - 1) : 0.0;
 			alpha	= -fdesc.CONESCAN / 2.0;		
 			
 			for (i = 0; i < fdesc.RAYSCAN; i++, alpha += delta)

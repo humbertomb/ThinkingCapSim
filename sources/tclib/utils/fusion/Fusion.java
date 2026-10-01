@@ -200,41 +200,43 @@ public class Fusion extends Object
 		groups_flg[s]	= (groups[s] < f.range ());
 	}		
 	
-	// OJO: this does not take into account more than one LRF sensor. To be modified
+	/**
+	 * The virtual scanner: the rays of the first laser scanner of the robot
+	 * (RAYLRF) brought down to the ones of the fusion (RAYSCAN), each the mean or
+	 * the least of the ones it takes in. Nothing when the robot has no laser, the
+	 * fusion asks for no scanner, or there is no scan in the data: then no scan is
+	 * there (scans_flg false).
+	 * OJO: this does not take into account more than one LRF sensor.
+	 */
 	protected void scanner (RobotData data, SensorPos f)
 	{
-		int				i, j;
+		int				i, j, k;
 		int				ratio;
 		double			out;
+		double[]		lrf;
 		
-		if (rdesc.MAXLRF <= 0)					return;
+		scans_flg	= false;
+		if ((rdesc.MAXLRF <= 0) || (rdesc.RAYLRF <= 0) || (fdesc.RAYSCAN <= 0) || (scans == null))		return;
+		if ((data.lrfs == null) || (data.lrfs.length == 0) || ((lrf = data.lrfs[0]) == null))			return;
 
-		switch (f.mode ())
+		ratio	= Math.max (1, rdesc.RAYLRF / fdesc.RAYSCAN);			// a fusion with more rays than the laser takes one each
+		for (i = 0; i < Math.min (fdesc.RAYSCAN, scans.length); i++)
 		{
-			case FusionDesc.S_AVG:
-				ratio	= rdesc.RAYLRF / fdesc.RAYSCAN;
-				for (i = 0; i < fdesc.RAYSCAN; i++)
-				{
-					out		= 0.0;
-					for (j = 0; j < ratio; j++)
-						if (data.lrfs[0] != null)
-							out += data.lrfs[0][i*ratio+j];
-					scans[i] = out / (double) ratio;
-				}
-				break;
-			case FusionDesc.S_MIN:
-			default:
-				ratio	= rdesc.RAYLRF / fdesc.RAYSCAN;
-				for (i = 0; i < fdesc.RAYSCAN; i++)
-				{
-					out		= Double.MAX_VALUE;
-					for (j = 0; j < ratio; j++)
-						if (data.lrfs[0] != null)
-							out = Math.min (out, data.lrfs[0][i*ratio+j]);
-					scans[i] = out;
-				}
+			boolean		avg = (f != null) && (f.mode () == FusionDesc.S_AVG);
+			int			n = 0;
+
+			out		= avg ? 0.0 : Double.MAX_VALUE;
+			for (j = 0; j < ratio; j++)
+			{
+				k	= Math.min (i * ratio + j, lrf.length - 1);
+				if (k < 0)		break;
+				if (avg)		out += lrf[k];
+				else			out = Math.min (out, lrf[k]);
+				n ++;
+			}
+			scans[i]	= (n == 0) ? 0.0 : (avg ? out / n : out);
 		}
-		scans_flg	= data.lrfs_flg[0];
+		scans_flg	= (data.lrfs_flg != null) && (data.lrfs_flg.length > 0) && data.lrfs_flg[0];
 	}		
 	
 	public void fuse_signal (RobotData data)
