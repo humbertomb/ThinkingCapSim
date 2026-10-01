@@ -4,6 +4,8 @@
  
 package tclib.utils.fusion;
 
+import wucore.utils.math.Angles;
+
 import tc.vrobot.*;
 import tc.shared.lps.*;
 import tc.shared.lps.lpo.*;
@@ -201,40 +203,76 @@ public class Fusion extends Object
 	}		
 	
 	/**
-	 * The virtual scanner: the rays of the first laser scanner of the robot
-	 * (RAYLRF) brought down to the ones of the fusion (RAYSCAN), each the mean or
-	 * the least of the ones it takes in. Nothing when the robot has no laser, the
-	 * fusion asks for no scanner, or there is no scan in the data: then no scan is
-	 * there (scans_flg false).
+	 * The virtual scanner: the fan of the fusion (RAYSCAN rays over CONESCAN,
+	 * looking where its own feature looks) made out of the rays of the first laser
+	 * scanner of the robot (RAYLRF rays over CONELRF, looking where it looks). Each
+	 * ray of the fan takes the laser rays that fall within its share of the fan,
+	 * by their bearing, and keeps the least of them or their mean, as its mode says;
+	 * one that no laser ray falls on (outside what the laser covers) reads the
+	 * range of the fan, as one that sees nothing. A laser that goes all the way
+	 * round is taken round. The rays of the two are as the simulator and the
+	 * perception take them: from one end of the cone to the other, both included.
+	 *
+	 * Nothing when the robot has no laser, the fusion asks for no scanner, or there
+	 * is no scan in the data: then no scan is there (scans_flg false).
 	 * OJO: this does not take into account more than one LRF sensor.
 	 */
 	protected void scanner (RobotData data, SensorPos f)
 	{
-		int				i, j, k;
-		int				ratio;
-		double			out;
+		int				i, j, k, n, nl;
+		int				j0, j1;
+		double			out, v;
 		double[]		lrf;
+		double			sStep, sStart, lStep, lStart, half, a;
+		boolean			avg, round;
 		
 		scans_flg	= false;
 		if ((rdesc.MAXLRF <= 0) || (rdesc.RAYLRF <= 0) || (fdesc.RAYSCAN <= 0) || (scans == null))		return;
 		if ((data.lrfs == null) || (data.lrfs.length == 0) || ((lrf = data.lrfs[0]) == null))			return;
 
-		ratio	= Math.max (1, rdesc.RAYLRF / fdesc.RAYSCAN);			// a fusion with more rays than the laser takes one each
+		nl		= Math.min (rdesc.RAYLRF, lrf.length);
+		avg		= (f != null) && (f.mode () == FusionDesc.S_AVG);
+		// where each fan begins and how far apart its rays are, in the frame of the robot
+		sStep	= (fdesc.RAYSCAN > 1) ? fdesc.CONESCAN / (double) (fdesc.RAYSCAN - 1) : 0.0;
+		sStart	= ((f != null) ? f.orientation () : 0.0) - fdesc.CONESCAN * 0.5;
+		lStep	= (nl > 1) ? rdesc.CONELRF / (double) (nl - 1) : 0.0;
+		lStart	= (((rdesc.lrffeat != null) && (rdesc.lrffeat.length > 0) && (rdesc.lrffeat[0] != null)) ? rdesc.lrffeat[0].orientation () : 0.0)
+				  - rdesc.CONELRF * 0.5;
+		round	= rdesc.CONELRF >= 2.0 * Math.PI - 1E-6;
+		half	= Math.max (sStep, lStep) * 0.5;					// each ray of the fan takes what is within half a ray of it
+
 		for (i = 0; i < Math.min (fdesc.RAYSCAN, scans.length); i++)
 		{
-			boolean		avg = (f != null) && (f.mode () == FusionDesc.S_AVG);
-			int			n = 0;
-
+			a		= sStart + i * sStep;							// the bearing of this ray of the fan
 			out		= avg ? 0.0 : Double.MAX_VALUE;
-			for (j = 0; j < ratio; j++)
+			n		= 0;
+			if (lStep > 0.0)
 			{
-				k	= Math.min (i * ratio + j, lrf.length - 1);
-				if (k < 0)		break;
-				if (avg)		out += lrf[k];
-				else			out = Math.min (out, lrf[k]);
-				n ++;
+				// the laser rays within half a ray either side, by their index (as near as it goes)
+				double	c = Angles.radnorm_180 (a - lStart - (round ? 0.0 : Math.PI)) + (round ? 0.0 : Math.PI);
+
+				if (round && (c < 0.0))		c += 2.0 * Math.PI;
+				j0		= (int) Math.ceil ((c - half) / lStep - 1E-9);
+				j1		= (int) Math.floor ((c + half) / lStep + 1E-9);
+				if (j1 < j0)			j1 = j0 = (int) Math.round (c / lStep);
+				for (j = j0; j <= j1; j++)
+				{
+					k	= j;
+					if (round)			k = ((k % nl) + nl) % nl;
+					else if ((k < 0) || (k >= nl))		continue;		// outside what the laser covers
+					v	= lrf[k];
+					if (avg)			out += v;
+					else				out = Math.min (out, v);
+					n ++;
+				}
 			}
-			scans[i]	= (n == 0) ? 0.0 : (avg ? out / n : out);
+			else
+			{
+				v	= lrf[0];
+				out	= v;
+				n	= 1;
+			}
+			scans[i]	= (n == 0) ? fdesc.RANGESCAN : (avg ? out / n : out);
 		}
 		scans_flg	= (data.lrfs_flg != null) && (data.lrfs_flg.length > 0) && data.lrfs_flg[0];
 	}		
