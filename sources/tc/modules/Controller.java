@@ -122,8 +122,8 @@ public abstract class Controller extends StdThread
 			return;
 		}
 
-		double		vmax = Math.max (rdesc.model.Vmax, rdesc.model.Umax);
-		double		rmax = Math.toDegrees (rdesc.model.Rmax);
+		double		vmax = Math.max (rdesc.model.Vmax, rdesc.model.Umax) * PLOT_MARGIN;
+		double		rmax = Math.toDegrees (rdesc.model.Rmax) * PLOT_MARGIN;
 
 		mplot.rescale (-vmax, vmax, -rmax, rmax);
 	}
@@ -137,6 +137,9 @@ public abstract class Controller extends StdThread
 		buffer[1]	= vlat;										// [m/s]
 		buffer[2]	= Math.toDegrees (vrot);					// [deg/s]
 	}
+
+	/** How much further than the platform goes the scales of a plot of commands reach: a command at the limit is seen, not lost on the border. */
+	static public final double		PLOT_MARGIN		= 1.1;
 
 	/** How many times a command that is not a number is said out loud before it is only counted. */
 	static protected final int		INSANE_SAID		= 5;

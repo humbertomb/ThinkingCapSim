@@ -1411,6 +1411,16 @@ public class Simulator
 			((SimCargo) objects.OBJS[objectPicked[robotind]]).move (data.real_x, data.real_y, data.fork, data.real_a);
 	}
 	
+	/**
+	 * Whether a sensor reads on this step of the firing cycle of its family: on the
+	 * step it says it reads on, or on every one when it says none (0, as a
+	 * description that does not care about the firing order leaves it).
+	 */
+	static protected boolean fires (int step, int cycle)
+	{
+		return (step <= 0) || (step == cycle);
+	}
+
 	synchronized public void simulate (int robotind, RobotData data, int cycson, int cycir, int cyclrf, int cyclsb, int cycvis)
 	{
 		int			i,j;
@@ -1419,7 +1429,7 @@ public class Simulator
 		
 		// Compute simulated SONAR data
 		for (i = 0; i < RDESC[robotind].MAXSONAR; i++)
-			if ((RDESC[robotind].sonfeat[i].step () == cycson) && (DATA_CTRL[robotind].sonar))
+			if (fires (RDESC[robotind].sonfeat[i].step (), cycson) && (DATA_CTRL[robotind].sonar))
 			{
 				data.sonars[i]		= sonar (RDESC[robotind].sonfeat[i]);  
 				data.sonars_flg[i]	= true;
@@ -1429,7 +1439,7 @@ public class Simulator
 		
 		// Compute simulated INFRARED data
 		for (i = 0; i < RDESC[robotind].MAXIR; i++)
-			if ((RDESC[robotind].irfeat[i].step () == cycir) && (DATA_CTRL[robotind].ir))
+			if (fires (RDESC[robotind].irfeat[i].step (), cycir) && (DATA_CTRL[robotind].ir))
 			{
 				data.irs[i]			= ir (RDESC[robotind].irfeat[i]);
 				data.irs_flg[i]		= true;
@@ -1439,7 +1449,7 @@ public class Simulator
 		
 		// Compute simulated LASER RANGE data
 		for (i = 0; i < RDESC[robotind].MAXLRF; i++)
-			if ((RDESC[robotind].lrffeat[i].step () == cyclrf) && (DATA_CTRL[robotind].lrf))
+			if (fires (RDESC[robotind].lrffeat[i].step (), cyclrf) && (DATA_CTRL[robotind].lrf))
 			{
 				data.lrfs[i]		= lrf (RDESC[robotind].lrffeat[i]);       
 				data.lrfs_flg[i]	= true;
@@ -1449,7 +1459,7 @@ public class Simulator
 		
 		// Compute simulated LASER BEACON data
 		for (i = 0; i < RDESC[robotind].MAXLSB; i++)
-			if ((RDESC[robotind].lsbfeat[i].step () == cyclsb) && (DATA_CTRL[robotind].lsb))
+			if (fires (RDESC[robotind].lsbfeat[i].step (), cyclsb) && (DATA_CTRL[robotind].lsb))
 			{
 //				data.beacon[i]		= lsb (RDESC[robotind].lsbfeat[i]);  
 				

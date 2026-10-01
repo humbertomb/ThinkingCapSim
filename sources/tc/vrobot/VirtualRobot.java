@@ -167,9 +167,10 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 				
 				// what it was asked for, as it was asked for: the two speeds against the
 				// left scale in metres a second and the turn rate against the right one in
-				// degrees a second, each as far as the platform goes that way
-				double		vmax = Math.max (rdesc.model.Vmax, rdesc.model.Umax);
-				double		rmax = Math.toDegrees (rdesc.model.Rmax);
+				// degrees a second, each as far as the platform goes that way and a little
+				// more, so that a command at the limit (or past it) is seen and not lost on the border
+				double		vmax = Math.max (rdesc.model.Vmax, rdesc.model.Umax) * tc.modules.Controller.PLOT_MARGIN;
+				double		rmax = Math.toDegrees (rdesc.model.Rmax) * tc.modules.Controller.PLOT_MARGIN;
 
 				plot.setLegend (labels);
 				plot.setLabels ("time", "m/s");
