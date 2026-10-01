@@ -556,8 +556,6 @@ public class Chaos implements LuaBridge
 			}
 		});
 
-		c.set ("setTargetPos", (LuaFunction) c.get ("setDesiredPos"));
-
 		c.set ("getDesiredPos", new LuaFunction ("chaos.getDesiredPos")
 		{
 			public Object call (Object[] args)		{ return point (desired.x (), desired.y (), desired.alpha ()); }
@@ -571,11 +569,6 @@ public class Chaos implements LuaBridge
 		c.set ("setSynchroKick", new LuaFunction ("chaos.setSynchroKick")
 		{
 			public Object call (Object[] args)		{ synchrokick = Lua.truth (arg (args, 0));	kick = synchrokick;	return null; }
-		});
-
-		c.set ("trackLandMarks", new LuaFunction ("chaos.trackLandMarks")
-		{
-			public Object call (Object[] args)		{ return null; }			// the camera of the simulation looks everywhere
 		});
 
 		/* ---- the team ---- */

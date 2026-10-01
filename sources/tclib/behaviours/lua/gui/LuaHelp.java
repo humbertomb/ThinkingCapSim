@@ -179,11 +179,9 @@ public class LuaHelp
 					+ "and <span class=\"mono\">time</span> (ms since it started), <span class=\"mono\">finished</span> and "
 					+ "<span class=\"mono\">failed</span>. A behaviour that sets itself up does it when isNew is 1." },
 		{ "setDesiredPos", "x, y, theta", "Where the robot is to end up: mm and degrees." },
-		{ "setTargetPos", "x, y, theta", "The same as setDesiredPos, under the name some scripts use." },
 		{ "getDesiredPos", "", "Where it was told to end up, as a point." },
 		{ "setKick", "", "Kick now." },
 		{ "setSynchroKick", "on", "Kick when the ball is where it should be (true or false)." },
-		{ "trackLandMarks", "", "Point the camera at the landmarks. The camera of the simulation sees everywhere, so it does nothing." },
 		{ "getRole", "", "The part this robot plays in the team, in <span class=\"mono\">role</span>." },
 		{ "getOptimalPose", "", "Where the team would have this robot be, as a point." },
 		{ "getDefPose", "", "Where it defends from, as a point." },
