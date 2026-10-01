@@ -10,6 +10,7 @@ import javax.swing.*;
 import javax.swing.table.*;
 
 import tclib.utils.pos.Position;
+import tcrob.umu.soccer.SoccerLocalization;
 import tcrob.umu.soccer.gm.Localisation;
 import static tcrob.umu.soccer.gm.Localisation.*;
 import tcrob.umu.soccer.gm.data.*;
@@ -24,7 +25,10 @@ import wucore.widgets.*;
  * drawing: the grid, the particles...) over the field of the RoboCup 2007, with
  * what was just used of each object, the estimated robot (its uncertainty) and
  * the true one, and the path of both (View, Show robot path). The green of the
- * field can be left out (View, Show green field).
+ * field can be left out (View, Show green field). Under the LPS, the method of
+ * the module can be changed (Methods): the one chosen is made anew with the
+ * initial parameters shown under it, which are the static variables of
+ * SoccerLocalization (and Restart makes it anew with them as they are).
  *
  * {@link #update} is called from the thread of the module with the method as it
  * is, and the window draws it on the event thread, holding the method (the
@@ -35,7 +39,7 @@ public class SoccerLocalizationWindow extends JFrame
 	private static final long			serialVersionUID = 1L;
 
 	static public final int				WIN_WIDTH		= 800;
-	static public final int				WIN_HEIGHT		= 640;
+	static public final int				WIN_HEIGHT		= 760;
 	static public final int				PATH_SIZE		= 2000;			// the positions kept of each path
 
 	/** The objects of the reduced LPS, by their index there (LocLps). */
@@ -53,12 +57,25 @@ public class SoccerLocalizationWindow extends JFrame
 	protected boolean					showPaths		= true;		// View menu: the paths of the robots
 	protected boolean					showGreen		= true;		// View menu: the green of the field
 
+	protected SoccerLocalization		module;				// the module whose method is shown (null: none to change)
+	protected JComboBox<String>			methodBox;
+	protected JPanel					paramCards;			// the initial parameters of each method, one card each
+	protected CardLayout				cards;
+
 	protected LocLps					lps;				// what is shown
 	protected Localisation				loc;
 
 	public SoccerLocalizationWindow (JFrame frame, String title)
 	{
+		this (frame, title, null);
+	}
+
+	/** The window of a module, whose method can be changed in it (Methods). */
+	public SoccerLocalizationWindow (JFrame frame, String title, SoccerLocalization module)
+	{
 		JPanel		pane = (JPanel) getContentPane ();
+
+		this.module		= module;
 		JPanel		left, table, local;
 
 		pane.setLayout (new BorderLayout ());
@@ -84,10 +101,11 @@ public class SoccerLocalizationWindow extends JFrame
 		left		= new JPanel (new BorderLayout ());
 		left.add (titled ("Current Position", positionArea), BorderLayout.NORTH);
 		left.add (table, BorderLayout.CENTER);
+		left.add (methodsPanel (), BorderLayout.SOUTH);
 		left.setPreferredSize (new Dimension (360, WIN_HEIGHT));
 
 		JPanel		column = new JPanel (new BorderLayout ());
-		column.add (left, BorderLayout.NORTH);
+		column.add (left, BorderLayout.CENTER);
 
 		pane.add (column, BorderLayout.WEST);
 		pane.add (local, BorderLayout.CENTER);
@@ -132,6 +150,151 @@ public class SoccerLocalizationWindow extends JFrame
 		view.add (green);
 		mb.add (view);
 		return mb;
+	}
+
+	/**
+	 * The methods of localisation, to choose the one of the module from (it is
+	 * made anew when the choice changes), and under them the initial parameters
+	 * of the one chosen, which can be changed: they are used the next time it is
+	 * made (Restart makes it now).
+	 */
+	protected JPanel methodsPanel ()
+	{
+		JPanel		p = new JPanel (new BorderLayout (0, 4));
+		JPanel		row = new JPanel (new BorderLayout (4, 0));
+		JButton		restart = new JButton ("Restart");
+		String		current = ((module != null) && (module.method () != null)) ? module.method () : SoccerLocalization.METHOD;
+
+		methodBox	= new JComboBox<> (SoccerLocalization.METHODS);
+		methodBox.setSelectedItem (current);
+		cards		= new CardLayout ();
+		paramCards	= new WidthPanel (cards);
+		for (String m : SoccerLocalization.METHODS)
+			paramCards.add (paramsPanel (m), m);
+		cards.show (paramCards, current);
+
+		methodBox.addActionListener (_ -> { cards.show (paramCards, (String) methodBox.getSelectedItem ());	paramCards.revalidate ();	remake (); });
+		restart.addActionListener (_ -> remake ());
+		restart.setToolTipText ("The method made anew with the parameters as they are");
+		restart.setEnabled (module != null);
+		methodBox.setEnabled (module != null);
+
+		row.add (methodBox, BorderLayout.CENTER);
+		row.add (restart, BorderLayout.EAST);
+
+		JScrollPane	scroll = new JScrollPane (paramCards, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+		scroll.setBorder (BorderFactory.createEmptyBorder ());
+		scroll.setPreferredSize (new Dimension (340, 300));
+		scroll.getVerticalScrollBar ().setUnitIncrement (16);
+		p.add (row, BorderLayout.NORTH);
+		p.add (scroll, BorderLayout.CENTER);
+		p.setBorder (BorderFactory.createEmptyBorder (2, 4, 4, 4));
+		return titled ("Methods", p);
+	}
+
+	/** A panel as wide as the scroll pane it is in, which scrolls it only up and down. */
+	static protected class WidthPanel extends JPanel implements Scrollable
+	{
+		private static final long	serialVersionUID = 1L;
+
+		WidthPanel (LayoutManager layout)									{ super (layout); }
+
+		public Dimension getPreferredScrollableViewportSize ()				{ return getPreferredSize (); }
+		public int getScrollableUnitIncrement (Rectangle r, int o, int d)	{ return 16; }
+		public int getScrollableBlockIncrement (Rectangle r, int o, int d)	{ return r.height; }
+		public boolean getScrollableTracksViewportWidth ()					{ return true; }
+		public boolean getScrollableTracksViewportHeight ()					{ return false; }
+
+		/** As tall as the card shown (a card layout would have it as tall as the tallest one). */
+		public Dimension getPreferredSize ()
+		{
+			for (Component c : getComponents ())
+				if (c.isVisible ())		return c.getPreferredSize ();
+			return super.getPreferredSize ();
+		}
+	}
+
+	/** The method chosen made anew in the module, and the paths drawn so far forgotten. */
+	protected void remake ()
+	{
+		if (module == null)						return;
+		module.method ((String) methodBox.getSelectedItem ());
+		locView.clearPaths ();
+		locView.repaintAll ();
+	}
+
+	/** The initial parameters of a method (SoccerLocalization.PARAMS), each with what it is and its value, to be changed. */
+	protected JPanel paramsPanel (String method)
+	{
+		JPanel				p = new JPanel (new GridBagLayout ());
+		GridBagConstraints	gc = new GridBagConstraints ();
+		int					y = 0;
+
+		gc.insets	= new Insets (1, 2, 1, 2);
+		gc.anchor	= GridBagConstraints.WEST;
+		for (String[] d : SoccerLocalization.PARAMS)
+		{
+			if (!d[0].equals (method))			continue;
+
+			java.lang.reflect.Field		f;
+
+			try		{ f = SoccerLocalization.class.getField (d[1]); }
+			catch (Exception e)		{ continue; }
+
+			gc.gridy	= y++;
+			gc.gridx	= 0;	gc.weightx = 1.0;	gc.fill = GridBagConstraints.HORIZONTAL;
+			p.add (new JLabel (d[2]), gc);
+			gc.gridx	= 1;	gc.weightx = 0.0;
+			p.add ((d.length > 3) ? choice (f, d[3].split (",")) : field (f), gc);
+		}
+		gc.gridy	= y;	gc.gridx = 0;	gc.weighty = 1.0;
+		p.add (Box.createVerticalGlue (), gc);								// the parameters at the top
+		return p;
+	}
+
+	/** A parameter that is a number: what is typed in is taken when it is one (Enter, or leaving the field), and put back as it was when not. */
+	static protected JTextField field (final java.lang.reflect.Field f)
+	{
+		final JTextField	t = new JTextField (value (f), 7);
+		Runnable			take = () ->
+		{
+			try
+			{
+				String		s = t.getText ().trim ();
+
+				if (f.getType () == int.class)		f.setInt (null, Integer.parseInt (s));
+				else								f.setDouble (null, Double.parseDouble (s));
+			} catch (Exception e) { }
+			t.setText (value (f));
+		};
+
+		t.setHorizontalAlignment (JTextField.RIGHT);
+		t.setMinimumSize (t.getPreferredSize ());
+		t.addActionListener (_ -> take.run ());
+		t.addFocusListener (new FocusAdapter ()
+		{
+			public void focusLost (FocusEvent e)		{ take.run (); }
+		});
+		return t;
+	}
+
+	/** A parameter that is one of some options: its value is the index of the one chosen. */
+	static protected JComboBox<String> choice (final java.lang.reflect.Field f, String[] options)
+	{
+		final JComboBox<String>	c = new JComboBox<> (options);
+
+		try		{ c.setSelectedIndex (Math.max (0, Math.min (options.length - 1, f.getInt (null)))); }
+		catch (Exception e) { }
+		c.addActionListener (_ -> { try { f.setInt (null, c.getSelectedIndex ()); } catch (Exception e) { } });
+		return c;
+	}
+
+	/** The value of a parameter, as text. */
+	static protected String value (java.lang.reflect.Field f)
+	{
+		try		{ return String.valueOf (f.get (null)); }
+		catch (Exception e)		{ return "?"; }
 	}
 
 	static protected JPanel titled (String title, Component c)
