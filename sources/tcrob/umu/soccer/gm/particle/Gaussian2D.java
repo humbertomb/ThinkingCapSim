@@ -224,9 +224,30 @@ public class Gaussian2D
 		checkCovariance();
 	}
 
+	/**
+	 * How well two Gaussians agree: the log of the density of the difference of
+	 * their means under the sum of their covariances, which is the likelihood of
+	 * one given the other (the log of the integral of their product).
+	 */
+	public double logOverlap (Gaussian2D rhs)
+	{
+		double		sxx = cxx + rhs.cxx, syy = cyy + rhs.cyy, sxy = cxy + rhs.cxy;
+		double		det = sxx * syy - sxy * sxy;
+		double		dx = x - rhs.x, dy = y - rhs.y;
+
+		if (det <= 0.0)			return Double.NEGATIVE_INFINITY;
+		return -0.5 * (syy * dx * dx - 2.0 * sxy * dx * dy + sxx * dy * dy) / det - 0.5 * Math.log (det) - Math.log (2.0 * Math.PI);
+	}
+
+	/**
+	 * This Gaussian times another (the fusion of two estimates of the same
+	 * position): the mean and covariance of their product, and the log amplitude
+	 * added up with how well they agreed ({@link #logOverlap}).
+	 */
 	public void multiply (Gaussian2D rhs)
 	{
 		double x0, y0, cxx0, cyy0, cxy0, cDet0;
+		double overlap = logOverlap (rhs);
 		x0 = x;
 		y0 = y;
 		cxx0 = cxx;
@@ -259,10 +280,7 @@ public class Gaussian2D
 		x = cxx*(ax+bx) + cxy*(ay+by);
 		y = cxy*(ax+bx) + cyy*(ay+by);
 		
-		double a0Add = (ax*(x-x0)+ay*(y-y0))+(bx*(x-rhs.x)+by*(y-rhs.y));
-		a0Add += Math.log(cDet) - Math.log(cDet0) - Math.log(rhs.cDet) - 2*Math.log(2*Math.PI);
-		
-		a0 += rhs.a0 + Math.abs (0.5*a0Add);
+		a0 += rhs.a0 + overlap;
 	}
 
 	public void merge (Gaussian2D rhs, double factor) // = 0.5)

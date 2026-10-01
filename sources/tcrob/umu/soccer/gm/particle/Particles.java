@@ -19,6 +19,7 @@ public class Particles implements Localisation
 	private String ID = new String("PART"); 
 
 	static public final double	EPS_WEIGHT		= 1E-250;
+	static public final double	MIN_STDDEV		= 10.0;			// the least error of what is seen (mm)
 
 	protected int					nSamples;
 	protected GaussianSample[]		samples;
@@ -30,6 +31,7 @@ public class Particles implements Localisation
 	
 	private Gaussian2D				gtmp;
 	private double[]					w;
+	private double[]					lw;				// the log of the weight of each particle, from what is seen on this update
 
 	protected Gs						gs;
 
@@ -49,6 +51,7 @@ public class Particles implements Localisation
 		newSamples	= new GaussianSample[nSamples];
 		gtmp			= new Gaussian2D ();
 		w			= new double[nSamples];
+		lw			= new double[nSamples];
 
 		for (int i = 0; i < nSamples; i++)
 		{
@@ -131,6 +134,7 @@ public class Particles implements Localisation
 		
 		for (int index = 0; index < LocLps.LPS_SIZE; index++)
 			mLastUpdated[index]	= false;	
+		java.util.Arrays.fill (lw, 0.0);
 
 		// Landmarks
 		for (int index = LocLps.INIT_LMS; index < (LocLps.INIT_LMS + LocLps.NUM_LMS); index++)
@@ -177,70 +181,73 @@ public class Particles implements Localisation
 			resampleParticles ();
 	}
 	
-	private void addLandmark (LocLpo lpo, double covx, double covy, double lmx, double lmy)
+	/**
+	 * A mark (landmark or net) at (lmx, lmy) seen at (rho, theta) from the robot,
+	 * with an error of the bearing (rad) and of the distance (mm): for each
+	 * particle, where the robot would be with its heading -- a Gaussian with
+	 * the error of the distance along the line of sight and the one of the bearing
+	 * across it --, how well that agrees with where the particle has it (its
+	 * weight) and the two put together (where it has it from now on).
+	 */
+	private void addLandmark (LocLpo lpo, double errAzimuth, double errDepth, double lmx, double lmy)
 	{
 		double		rho, theta;
 		double		xpos, ypos;
+		double		sDepth, sAcross;
 		
 		rho		= lpo.rho;
 		theta	= lpo.theta;
 		xpos		= rho * Math.cos (theta);
 		ypos		= rho * Math.sin (theta);
+		sDepth	= Math.max (MIN_STDDEV, errDepth);						// along the line of sight
+		sAcross	= Math.max (MIN_STDDEV, rho * errAzimuth);				// across it
 
 		for (int i = 0; i < nSamples; i++)
 		{
 			gtmp.clear ();
 			gtmp.setMean (xpos, ypos);
-			gtmp.setCovarianceAxis (Math.sqrt (covx), Math.sqrt (covy), theta);		
+			gtmp.setCovarianceAxis (sDepth, sAcross, theta);
 			gtmp.invertMean ();
 			gtmp.rotate (samples[i].a);
 			gtmp.translate (lmx, lmy);
 
-//			System.out.println ("lm<"+gtmp+"> part("+i+")<"+g[i]+">");
+			lw[i]	+= samples[i].g.logOverlap (gtmp);
 			samples[i].g.multiply (gtmp);
 		}
 	}
 
+	/**
+	 * The particles drawn again in proportion to their weights (the likelihood of
+	 * what was seen for each, {@link #lw}), systematically: one random offset and
+	 * evenly spaced from it, which keeps more of them than drawing each at random.
+	 */
 	private void resampleParticles ()
 	{
-		double		wSum;
-	    
-		// Compute particle weights
+		double		wSum, lwMax;
+		double		step, r;
+		int			j;
+
+		// the weights, relative to the best one (they are logs, and may be far below zero)
+		lwMax	= Double.NEGATIVE_INFINITY;
+		for (int i = 0; i < nSamples; i++)
+			if (lw[i] > lwMax)		lwMax = lw[i];
+		if (Double.isInfinite (lwMax))			return;					// nothing to tell them apart
+
 		wSum = 0;		
 		for (int i = 0; i < nSamples; i++)
 		{
-			double			wi;
-			
-			wi	= EPS_WEIGHT;
-//			if (g[i].getLogAmplitude () > Math.log (EPS_WEIGHT))
-//				wi = Math.exp (g[i].getLogAmplitude ());
-			if (samples[i].g.getLogAmplitude () > 0.0)
-				wi = samples[i].g.getLogAmplitude ();
-			
-			// Calculate cumulative distribution (w[i] should be nonnegative)
-			wSum += wi;			
-			w[i] = wSum;
+			wSum	+= Math.max (EPS_WEIGHT, Math.exp (lw[i] - lwMax));
+			w[i]	= wSum;												// the cumulative distribution
 		}
 		
-		// Normalize samples
-		for (int i = 0; i < nSamples; i++)
+		step	= wSum / nSamples;
+		r		= random.nextUniform (0.0, step);
+		for (int i = 0, k = 0; i < nSamples; i++, r += step)
 		{
-			// Uniform random variate
-			double r = random.nextUniform (0.0, wSum);
-			
-			// Binary search to find corresponding index
-			int iLow = 0;
-			int iHigh = nSamples-1;
-			
-			while (iHigh > iLow)
-			{
-				int iMid = (iLow+iHigh)/2;				
-				if (r < w[iMid])
-					iHigh = iMid;
-				else
-					iLow = iMid+1;
-			}
-			newSamples[i].set (samples[iLow]);
+			for (j = k; (j < nSamples - 1) && (w[j] < r); j++)	;
+			k	= j;
+			newSamples[i].set (samples[j]);
+			newSamples[i].g.setLogAmplitude (0.0);
 		}
 		
 		// Exchange particle data sets
