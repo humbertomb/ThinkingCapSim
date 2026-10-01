@@ -23,7 +23,8 @@ import wucore.widgets.*;
  * method is fed with (a row per object), and the inside of the method (its
  * drawing: the grid, the particles...) over the field of the RoboCup 2007, with
  * what was just used of each object, the estimated robot (its uncertainty) and
- * the true one, and the path of both (View, Show robot path).
+ * the true one, and the path of both (View, Show robot path). The green of the
+ * field can be left out (View, Show green field).
  *
  * {@link #update} is called from the thread of the module with the method as it
  * is, and the window draws it on the event thread, holding the method (the
@@ -50,6 +51,7 @@ public class SoccerLocalizationWindow extends JFrame
 	protected JTable					lpsTable;
 	protected LocalisationView			locView;
 	protected boolean					showPaths		= true;		// View menu: the paths of the robots
+	protected boolean					showGreen		= true;		// View menu: the green of the field
 
 	protected LocLps					lps;				// what is shown
 	protected Localisation				loc;
@@ -112,18 +114,22 @@ public class SoccerLocalizationWindow extends JFrame
 		});
 	}
 
-	/** The View menu: whether the paths of the robots are drawn (and forgetting them). */
+	/** The View menu: whether the paths of the robots are drawn (and forgetting them), and the green of the field. */
 	protected JMenuBar menuBar ()
 	{
 		JMenuBar			mb = new JMenuBar ();
 		JMenu				view = new JMenu ("View");
 		JCheckBoxMenuItem	paths = new JCheckBoxMenuItem ("Show robot path", showPaths);
 		JMenuItem			clear = new JMenuItem ("Clear robot path");
+		JCheckBoxMenuItem	green = new JCheckBoxMenuItem ("Show green field", showGreen);
 
 		paths.addActionListener (_ -> { showPaths = paths.isSelected ();	locView.repaintAll (); });
 		clear.addActionListener (_ -> { locView.clearPaths ();	locView.repaintAll (); });
+		green.addActionListener (_ -> { showGreen = green.isSelected ();	locView.repaintAll (); });
 		view.add (paths);
 		view.add (clear);
+		view.addSeparator ();
+		view.add (green);
 		mb.add (view);
 		return mb;
 	}
@@ -348,7 +354,8 @@ public class SoccerLocalizationWindow extends JFrame
 			this.loc	= loc;
 			this.lps	= lps;
 			model.clearView ();
-			model.addRawBox (-xb, -yb, xb, yb, Model2D.FILLED, Color.GREEN.darker ());
+			if (showGreen)
+				model.addRawBox (-xb, -yb, xb, yb, Model2D.FILLED, Color.GREEN.darker ());
 			loc.drawElements (model);
 			drawField (model);
 			if (lps != null)
