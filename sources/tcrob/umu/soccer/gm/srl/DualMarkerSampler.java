@@ -7,7 +7,6 @@
 
 package tcrob.umu.soccer.gm.srl;
 
-import tcrob.umu.soccer.gm.data.*;
 import tcrob.umu.soccer.gm.*;
 
 import wucore.utils.math.*;

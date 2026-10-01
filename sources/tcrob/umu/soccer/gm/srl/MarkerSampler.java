@@ -6,7 +6,6 @@
  */
 package tcrob.umu.soccer.gm.srl;
 
-import tcrob.umu.soccer.gm.data.*;
 import tcrob.umu.soccer.gm.*;
 
 import wucore.utils.math.*;
@@ -14,7 +13,9 @@ import wucore.utils.math.stat.*;
 
 public class MarkerSampler 
 {
-	static public final double		PAN_VIEW		= RobotModel.HEAD_PAN + RobotModel.CAMERA_FOV * 0.5;
+	static public final double		CAMERA_FOV	= 56.9 * Angles.DTOR;			// rad
+	static public final double		HEAD_PAN	= 70.0 * Angles.DTOR;			// rad
+	static public final double		PAN_VIEW	= HEAD_PAN + CAMERA_FOV * 0.5;
 
 	protected GaussianSampler			gaussianSampler;
 	protected RandomNumberGenerator	random;

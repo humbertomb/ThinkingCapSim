@@ -41,7 +41,7 @@
         "id": 2,
         "x": -71,
         "y": -321,
-        "code": "local pos = chaos.getStartPos()\nchaos.setDesiredPos(pos.x, pos.y, 90)\nchaos.setBehavior(\"goToPos\")\n",
+        "code": "local pos = chaos.getStartPos()\nchaos.setDesiredPos(pos.x, pos.y, 90)\nchaos.setBehavior(\"goToPos\")\n\nlocal gs = chaos.getCurrentPos ()\nprint (gs.quality)",
         "transitions": [
           {
             "name": "RefereeSet",

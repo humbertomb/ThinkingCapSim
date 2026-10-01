@@ -30,6 +30,11 @@
               "symbol": "REFEREE",
               "itemClass": "tcrob.umu.soccer.linda.ItemReferee",
               "method": "notify_referee"
+            },
+            {
+              "symbol": "NAVIGATION",
+              "itemClass": "tc.shared.linda.ItemNavigation",
+              "method": "notify_navigation"
             }
           ]
         },
@@ -84,6 +89,23 @@
             "CLASS": "tcrob.umu.soccer.SoccerRefereeSimul"
           },
           "events": []
+        },
+        {
+          "name": "Navigation",
+          "properties": {
+            "TYPE": "Navigation",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "GFX": "true",
+            "CLASS": "tcrob.umu.soccer.SoccerLocalization"
+          },
+          "events": [
+            {
+              "symbol": "LPS",
+              "itemClass": "tc.shared.linda.ItemLPS",
+              "method": "notify_lps"
+            }
+          ]
         }
       ],
       "virtualRobot": {

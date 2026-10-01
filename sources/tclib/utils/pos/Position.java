@@ -15,6 +15,7 @@ public class Position extends Object implements Serializable
 	public Point3					pt;				// Position 3D coordinates (m, m, m)
 	public double					alpha;			// Position heading (rad)
 	public double[][]				uncert;			// Position uncertainty
+	public double					quality;		// Merit figure for localization accuracy [0..1]
 
 	public boolean					valid;
 
@@ -64,6 +65,7 @@ public class Position extends Object implements Serializable
 	public void set (Position pos)
 	{
 		set (pos.pt.x (), pos.pt.y (), pos.pt.z (), pos.alpha, pos.valid);
+		quality	= pos.quality;
 		
 		// Update uncertainty only if a new estimate is available
 		if (pos.uncert != null)

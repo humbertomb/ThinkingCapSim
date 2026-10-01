@@ -12,13 +12,15 @@ local MAXVEL = 370
 -- Geometrical computations
 local pos = chaos.getCurrentPos()
 local dest = chaos.getDesiredPos()
---local dest = chaos.getStartPos()
 
 local vlin = 0
 local vlat = 0
 local vrot = 0
 
 local net1 = chaos.getLpo(chaos.NET1_LPO)
+local lm1 = chaos.getLpo(chaos.LANDMARK1_LPO)
+local lm2 = chaos.getLpo(chaos.LANDMARK2_LPO)
+
 dx = dest.x - pos.x
 dy = dest.y - pos.y
 dth = math.deg(math.atan2(dy,dx))
@@ -63,8 +65,9 @@ if (math.abs(net1.theta) < ANGLESMALL) then		-- small angle
 --
 end
 
-chaos.trackLandMarks()
 chaos.setNeeded(chaos.NET1_LPO, 1.0-net1.anchored)
+chaos.setNeeded(chaos.LANDMARK1_LPO, 1.0-lm1.anchored)
+chaos.setNeeded(chaos.LANDMARK2_LPO, 1.0-lm2.anchored)
 chaos.setVlin(vlin)
 chaos.setVrot(vrot)
 chaos.setVlat(-vlat)

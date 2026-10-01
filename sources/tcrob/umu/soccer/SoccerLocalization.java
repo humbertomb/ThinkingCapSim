@@ -3,7 +3,7 @@
  */
 package tcrob.umu.soccer;
 
-import devices.pos.Position;
+import tclib.utils.pos.Position;
 import tc.modules.Navigation;
 import tc.runtime.thread.ModuleConfig;
 import tc.shared.linda.ItemConfig;
@@ -20,18 +20,13 @@ import wucore.utils.math.Angles;
 /**
  * The localisation of a soccer robot on the field, with the methods of
  * ChaosManager (tcrob.umu.soccer.gm), from the LPS of the robot.
- *
- * <pre>
- *   FIELD   the world model of the field the methods work on (./conf/fields/robocup2007.ini)
- * </pre>
+ * The field is the one of the RoboCup of 2007 (the constants of Localisation).
  *
  * With local graphics, a window shows the position, the reduced LPS, the method
  * and the field (SoccerLocalizationWindow), updated with every LPS.
  */
 public class SoccerLocalization extends Navigation
 {
-	static public final String		FIELD			= "./conf/fields/robocup2007.ini";
-
 	// Navigation structures
 	protected Localisation			loc;
 	protected Odometry				odom = new Odometry ();
@@ -45,7 +40,6 @@ public class SoccerLocalization extends Navigation
 
 	// Additional local variables
 	protected boolean				initialised		= false;
-	protected String				field			= FIELD;
 
 	// Local graphics
 	protected SoccerLocalizationWindow	win;
@@ -65,7 +59,6 @@ public class SoccerLocalization extends Navigation
 		
 		// Initialise other local stuff
 		pos			= new Position ();
-		if (cfg.get ("FIELD") != null)		field = cfg.get ("FIELD");
 	}
 	
 	/** The window of the localisation goes away with the module. */
@@ -84,30 +77,51 @@ public class SoccerLocalization extends Navigation
 	public void notify_lps (String space, ItemLPS item) 
 	{ 
 		super.notify_lps (space, item);
-		if (!initialised || (item == null) || (item.lps == null))		return;		// no method of localisation yet (it comes with the configuration)
 		
-		synchronized (loc)												// the window reads it on another thread
+		if (!initialised || (item == null) || (item.lps == null))		return;
+		
+		synchronized (loc)												
 		{
 			loclps.updateFromLps (item.lps);
+			odom.setOdometry (item.lps.odom);
 			loc.updateMotionAndSensors (odom, loclps);
+			setPosition (loc.getGs ());
 		}
 
 		// what the method makes of it, to the window (with where the robot really is, the ground truth of the simulation)
-		final SoccerLocalizationWindow	shown = win;
+		if (win != null)
+			win.update (loc, loclps, (item.lps.real != null) ? new Position (item.lps.real) : null);
 
-		if (shown != null)
-			shown.update (loc, loclps, (item.lps.real != null) ? new Position (item.lps.real) : null);
-		
-		// TODO
-		// Update pos variable
-		// Send ItemNavigation
+		// where the robot is, to the rest of the architecture
+		nitem.set (pos, (item.timestamp != null) ? item.timestamp.longValue () : System.currentTimeMillis ());
+		linda.write (ntuple);
 	}	
+
+	/**
+	 * The position of the robot from the estimate of the method (mm, rad), in m and
+	 * rad. Its quality is the one of the method [0..1], and its uncertainty a
+	 * covariance (m, m, rad) with half of the box of the estimate as the standard
+	 * deviation of x and y, and its angular spread as the one of the heading.
+	 */
+	protected void setPosition (Gs gs)
+	{
+		double		sx, sy, sa;
+
+		sx		= gs.getDX () * 0.5 / 1000.0;
+		sy		= gs.getDY () * 0.5 / 1000.0;
+		sa		= gs.getDTheta ();
+
+		pos.set (gs.getX () / 1000.0, gs.getY () / 1000.0, gs.getTheta (), true);
+		pos.set (new double[][] { { sx * sx, 0.0, 0.0 }, { 0.0, sy * sy, 0.0 }, { 0.0, 0.0, sa * sa } });
+		pos.quality	= Math.max (0.0, Math.min (1.0, gs.getQuality ()));
+	}
 		
 	public void notify_config (String space, ItemConfig item)
 	{
 		super.notify_config (space, item);
 								
-		loc	= new GridFMarkov (field, 500, 0.08f, (float) (1.0*Angles.DTOR));
+		loc	= new GridFMarkov (100, 0.08f, (float) (1.0*Angles.DTOR));
+		odom.restart ();												// the displacements of the new method start from the next LPS
 
 		// with local graphics, the window of the localisation
 		if (localgfx && (win == null))

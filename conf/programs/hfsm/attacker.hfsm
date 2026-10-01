@@ -42,7 +42,7 @@
         "id": 6,
         "x": 769,
         "y": -212,
-        "code": "local gs     = chaos.getCurrentPos()\nlocal ball   = chaos.getLpo(chaos.BALL_LPO)\nlocal net1   = chaos.getLpo(chaos.NET1_LPO) \nlocal net2   = chaos.getLpo(chaos.NET2_LPO) \n\n--if (gs.quality < 0.6) and (ball.rho > 1000) then\n--\tchaos.trackLandMarks()\n--end\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n        chaos.setNeeded (3, 1.0)\nend\n\nchaos.setBehavior(\"goToBall\")\n",
+        "code": "local net1   = chaos.getLpo(chaos.NET1_LPO) \nlocal net2   = chaos.getLpo(chaos.NET2_LPO) \n\nif (net1.anchored < 0.5) and (net2.anchored < 0.5) then\n\tchaos.setNeeded (chaos.NET1_LPO, 0.7)\nend\n\nchaos.setBehavior(\"goToBall\")\n",
         "transitions": [
           {
             "name": "CanScore",

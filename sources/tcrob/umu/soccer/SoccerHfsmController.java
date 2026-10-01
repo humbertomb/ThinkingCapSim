@@ -7,6 +7,7 @@ package tcrob.umu.soccer;
 
 import tc.runtime.thread.ModuleConfig;
 import tc.shared.linda.ItemBehNeeds;
+import tc.shared.linda.ItemNavigation;
 import tc.shared.linda.Linda;
 import tc.shared.linda.Tuple;
 import tclib.behaviours.hfsm.HFSMController;
@@ -127,6 +128,11 @@ public class SoccerHfsmController extends HFSMController
 			chaos.gameState (item.state);
 		}
 		if (debug)					System.out.println ("  [SoccerHfsm] " + item + (penalized ? "  (penalised)" : ""));
+	}
+
+	public void notify_navigation (String space, ItemNavigation item)
+	{
+		System.out.println ("---> "+item.robot.quality);
 	}
 
 	/** The name of this robot, as the referee names the players. */

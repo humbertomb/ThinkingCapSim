@@ -5,84 +5,96 @@
  */
 package tcrob.umu.soccer.gm.data;
 
-import java.util.*;
-
+import tclib.utils.pos.Position;
 import wucore.utils.math.*;
 
 public class Odometry
 {
-	public float dlin;			// mm
-	public float dlat;			// mm
-	public float drot;			// rad
-	public float elin;
-	public float elat;
-	public float erot;
+	public double dlin;			// mm
+	public double dlat;			// mm
+	public double drot;			// rad
+	public double elin;
+	public double elat;
+	public double erot;
 	
 	public void reset ()
 	{
-		dlin			= 0.0f;
-		dlat			= 0.0f;
-		drot			= 0.0f;
-		elin		= 0.0f;
-		elat		= 0.0f;
-		erot		= 0.0f;
+		dlin	= 0.0;
+		dlat	= 0.0;
+		drot	= 0.0;
+		elin	= 0.0;
+		elat	= 0.0;
+		erot	= 0.0;
 	}
 	
-	public void fromVelocity (Velocity vel, OdometryErrors odomodel, float dt)
-	{
-		int indexlin = (int)(Math.abs(Math.ceil ((float) vel.vlin / Velocity.VxMaxForward * odomodel.nsets)));
-		int indexlat = (int)(Math.abs(Math.ceil ((float) vel.vlat / Velocity.VyMaxLeft * odomodel.nsets)));
-		int indexrot = (int)(Math.abs(Math.ceil (vel.vrot / Velocity.VthMaxLeft * odomodel.nsets)));
+	// Last odometric pose (m, m, rad), to get the displacement from one to the next
+	protected boolean		started	= false;
+	protected double		lastx, lasty, lasta;
 
-		// System.out.println ("Index lin="+indexlin+", lat="+indexlat+", rot="+indexrot);
-		
-		float slippage_factor_lin = odomodel.errors[indexlin].dlin;
-		float slippage_factor_lat = odomodel.errors[indexlat].dlat;
-		float slippage_factor_rot = odomodel.errors[indexrot].drot;
-		
-		dlin		= (float) vel.vlin * slippage_factor_lin * dt;
-		dlat		= (float) vel.vlat * slippage_factor_lat * dt;
-		drot		= vel.vrot * (float) Angles.DTOR * slippage_factor_rot * dt;	
-		
-		// Not correct, errors should be added proportionally to the displacement.
-		elin	= odomodel.errors[indexlin].elin * dt;
-		elat	= odomodel.errors[indexlat].elat * dt;
-		erot	= odomodel.errors[indexrot].erot * dt;
+	/**
+	 * The displacement from the last odometric pose to this one (the odometry of
+	 * the LPS, accumulated since the start: m, m, rad), in the frame of the robot
+	 * at the last one: dlin forwards and dlat to the left (mm), drot (rad). The
+	 * first time there is no last pose, so there is no displacement.
+	 */
+	public void setOdometry (Position odom)
+	{
+		double		dx, dy, ca, sa;
+
+		dlin	= 0.0;
+		dlat	= 0.0;
+		drot	= 0.0;
+		elin	= 0.0;
+		elat	= 0.0;
+		erot	= 0.0;
+
+		if (started)
+		{
+			dx		= odom.x () - lastx;
+			dy		= odom.y () - lasty;
+			ca		= Math.cos (lasta);
+			sa		= Math.sin (lasta);
+
+			dlin	= ( ca * dx + sa * dy) * 1000.0;
+			dlat	= (-sa * dx + ca * dy) * 1000.0;
+			drot	= Angles.radnorm_180 (odom.alpha - lasta);
+		}
+
+		lastx	= odom.x ();
+		lasty	= odom.y ();
+		lasta	= odom.alpha;
+		started	= true;
 	}
 
+	/** Forgets the last odometric pose: the next one gives no displacement. */
+	public void restart ()
+	{
+		started	= false;
+	}
+	
 	public void translate (Odometry odo)
 	{
 		double rho, phi;
 		
 		// Update position
 		rho		= Math.sqrt (odo.dlin * odo.dlin + odo.dlat * odo.dlat);
-		phi		= Math.atan2 (odo.dlat, odo.dlin) + 0.5f * odo.drot;
+		phi		= Math.atan2 (odo.dlat, odo.dlin) + 0.5 * odo.drot;
 		
-		dlin		= dlin + (float) (rho * Math.cos (drot + phi));
-		dlat		= dlat + (float) (rho * Math.sin (drot + phi));
-		drot		= drot + odo.drot;
-		drot		= (float) Angles.radnorm_180 (drot);
+		dlin	= dlin + (rho * Math.cos (drot + phi));
+		dlat	= dlat + (rho * Math.sin (drot + phi));
+		drot	= drot + odo.drot;
+		drot	= Angles.radnorm_180 (drot);
 		
 		// Update uncertainty
 		rho		= Math.sqrt (odo.elin * odo.elin + odo.elat * odo.elat);
 		phi		= Math.atan2 (odo.elat, odo.elin) + 0.5 * odo.erot;
 		
-		elin	= elin + (float) (rho * Math.cos (erot + phi));
-		elat	= elat + (float) (rho * Math.sin (erot + phi));
+		elin	= elin + (rho * Math.cos (erot + phi));
+		elat	= elat + (rho * Math.sin (erot + phi));
 		erot	= erot + odo.erot;
-		erot	= (float) Angles.radnorm_180 (erot);
+		erot	= Angles.radnorm_180 (erot);
 	}
-	
-	public void fromLog (StringTokenizer st)
-	{
-		dlin			= Float.parseFloat (st.nextToken ());
-		dlat			= Float.parseFloat (st.nextToken ());
-		drot			= Float.parseFloat (st.nextToken ());
-		elin		= Float.parseFloat (st.nextToken ());
-		elat		= Float.parseFloat (st.nextToken ());
-		erot		= Float.parseFloat (st.nextToken ());
-	}
-	
+		
 	public String toString ()
 	{
 		return "[" + dlin + ", " + dlat + ", " + (int) (drot * Angles.RTOD) + "]";
