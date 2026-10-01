@@ -70,7 +70,7 @@
                 "y": -140,
                 "to": "Localize",
                 "toId": 16,
-                "test": "local gs = chaos.getCurrentPos ()\nif gs.quality < 0.7 then\n\treturn true\nend\nreturn false"
+                "test": "local gs = chaos.getCurrentPos ()\nif gs.quality < 0.5 then\n\treturn true\nend\nreturn false"
               }
             ]
           },
