@@ -176,24 +176,18 @@ public abstract class RobotModel extends Object
 	}
 
 	/**
-	 * Puts the robot elsewhere while it runs, as a hand would: where it really is,
-	 * and where it thinks it is (its odometry, in the model and in the data of the
-	 * cycle when given), both go there, as on a robot set down by a referee that
-	 * is told where -- the simulation knows where its robots are, and so do they.
-	 * Its speed and everything else go on as they were (see {@link #position} for
-	 * a start).
+	 * Puts the robot elsewhere while it runs, as a hand would: only where it really
+	 * is changes. Where it thinks it is (its odometry) goes on as it was, as on a
+	 * real robot picked up and set down, which does not feel it -- it has to find
+	 * out where it is from what it sees. Its speed and everything else go on as they
+	 * were too (see {@link #position} for a start, which sets the odometry as well).
+	 * The data of the cycle is not touched: it is there for the callers that keep
+	 * the real pose in it.
 	 */
 	public void relocate (RobotData data, double x, double y, double alpha)
 	{
 		real_x			= x;		real_y			= y;		real_a			= alpha;
-		odom_x			= x;		odom_y			= y;		odom_a			= alpha;
 		orx				= x;		ory				= y;		ora				= alpha;	// a restore of this cycle keeps it there
-		oox				= x;		ooy				= y;		ooa				= alpha;
-		if (data != null)
-		{
-			data.odom_x	= x;		data.odom_y		= y;		data.odom_a		= alpha;
-			ox			= x;		oy				= y;		oa				= alpha;
-		}
 	}
 
 	public void relocate (double x, double y, double alpha)
