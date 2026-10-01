@@ -380,7 +380,7 @@ public class SensorResetting implements Localisation
 		for (int i = 0; i < locale.numSamples; i++)
 		{
 			sample	= locale.sample[i];
-			model.addRawArrow (sample.data[Sample.X], sample.data[Sample.Y], 350.0, sample.data[Sample.TH], Color.GREEN.darker());
+			model.addRawArrow (sample.data[Sample.X], sample.data[Sample.Y], 350.0, sample.data[Sample.TH], Color.MAGENTA);
 		}
 	}
 

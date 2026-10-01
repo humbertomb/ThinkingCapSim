@@ -109,19 +109,24 @@ public class SoccerRefereeWindow extends JFrame implements Supervisor.Listener
 
 		FontMetrics	cm = countdown.getFontMetrics (countdown.getFont ());
 		Dimension	room = new Dimension (cm.stringWidth ("888") + 12, cm.getHeight ());		// for up to three digits, also while it says nothing
-		JLabel		filler = new JLabel ("");							// as wide as the countdown, at the left, so the clock stays centred
+		JLabel		filler = new JLabel ("");							// as wide as the room at the right of the clock, so the clock stays centred
 
 		countdown.setPreferredSize (room);
+		countdown.setHorizontalAlignment (SwingConstants.CENTER);
 		filler.setPreferredSize (new Dimension (room.width, 1));
 
 		JPanel		row = new JPanel (new GridBagLayout ());
 		GridBagConstraints	gc = new GridBagConstraints ();
 
 		row.setBackground (C_BOARD);
+		// the clock in the middle, and the countdown half way between it and the right side of the panel:
+		// the two sides share what room is left over alike, and the countdown sits in the middle of its own
 		gc.anchor	= GridBagConstraints.BASELINE;
+		gc.weightx	= 1.0;
 		gc.gridx	= 0;		row.add (filler, gc);
+		gc.weightx	= 0.0;
 		gc.gridx	= 1;		row.add (clock, gc);
-		gc.anchor	= GridBagConstraints.BASELINE_LEADING;
+		gc.weightx	= 1.0;
 		gc.gridx	= 2;		row.add (countdown, gc);
 
 		JPanel		clocks = new JPanel (new BorderLayout ());

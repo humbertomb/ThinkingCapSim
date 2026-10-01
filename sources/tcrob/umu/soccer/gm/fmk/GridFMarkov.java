@@ -1058,7 +1058,7 @@ public class GridFMarkov implements Localisation
 				color	= (int) Math.round (255.0 - mMap[j+i*gheight].getHeight() * 255.0);
 				color	= Math.min (Math.max (color, 0), 255);
 				model.addRawBox (x1, y1, x2, y2, Model2D.FILLED, new Color (color, color, color));
-				model.addRawArrow (x1+hside, y1+hside, hside, head, Color.GREEN);
+				model.addRawArrow (x1+hside, y1+hside, hside, head, Color.MAGENTA);
 			}
 	}
 

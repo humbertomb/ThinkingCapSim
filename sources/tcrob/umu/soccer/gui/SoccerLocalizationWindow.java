@@ -525,10 +525,10 @@ public class SoccerLocalizationWindow extends JFrame
 			{
 				for (int i = 0; i < LocLps.NUM_LMS; i++)
 					if (loc.getLastUpdated (LocLps.INIT_LMS + i))
-						model.addRawCircle (LM_X[i], LM_Y[i], lps.getLpo (LocLps.INIT_LMS + i).rho, Model2D.PLAIN, Color.MAGENTA);
+						model.addRawCircle (LM_X[i], LM_Y[i], lps.getLpo (LocLps.INIT_LMS + i).rho, Model2D.THICK, Color.ORANGE);
 				for (int i = 0; i < LocLps.NUM_NETS; i++)
 					if (loc.getLastUpdated (LocLps.INIT_NETS + i))
-						model.addRawCircle (NET_X[i], NET_Y[i], lps.getLpo (LocLps.INIT_NETS + i).rho, Model2D.PLAIN, Color.MAGENTA.darker ());
+						model.addRawCircle (NET_X[i], NET_Y[i], lps.getLpo (LocLps.INIT_NETS + i).rho, Model2D.THICK, Color.ORANGE.darker ());
 			}
 			if (showPaths)
 			{

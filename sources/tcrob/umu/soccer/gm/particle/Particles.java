@@ -318,7 +318,7 @@ public class Particles implements Localisation
 	public void drawElements (Model2D model)
 	{
 		for (int i = 0; i < nSamples; i++)
-			model.addRawArrow (samples[i].g.getX (), samples[i].g.getY(), 350.0, samples[i].a, Color.GREEN.darker ());
+			model.addRawArrow (samples[i].g.getX (), samples[i].g.getY(), 350.0, samples[i].a, Color.MAGENTA);
 	}
 
 	public void setGT(GsPosition pos) {
