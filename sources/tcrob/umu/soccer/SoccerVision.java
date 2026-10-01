@@ -28,7 +28,7 @@ public class SoccerVision extends Perception
 {
 	static public final double			FACTOR		= 1.0;
 	
-	static public final double			BALL_RADIUS	= 0.11;			// Ball radius (m)
+	static public final double			BALL_RADIUS	= 0.04;			// Ball radius (m), the one of the Four-Legged League; the world's ball, when it has one, says better (see ballRadius)
 	static public final double			NET_SIZE	= 0.2;			// Net size (m)
 	static public final double			LM_RADIUS	= 0.12;			// Landmark (beacon) radius as drawn in the LPS (m; it is 0.05, but so it is seen, as the ball)
 	static public final double			LM_BAND		= 0.30;			// How high its two bands of colour meet (m): what it is placed by
@@ -50,8 +50,18 @@ public class SoccerVision extends Perception
 	static public final double			SLACK		= 0.10;
 	/** Where the camera aims at a net when it turns to it: this high up it (m), so it does not look at the floor line. */
 	static public final double			NET_AIM		= 0.15;
+	/**
+	 * How far above where a net stands the bottom of its blob is, as a part of the
+	 * height of the frame: the foot of its posts is too dark to be told as its
+	 * colour, and the blob ends some rows (3.5 of 480) above the floor. Calibrated
+	 * against the simulated camera (the net of 2007 seen from 1 to 5 m).
+	 */
+	static public final double			NET_BOTTOM	= 3.5 / 480.0;
+	/** How far behind the goal line the foot of a net that is seen is (m): half the depth of its posts, which stand on the line. */
+	static public final double			NET_FRONT	= 0.05;
 		
 	// Application LPOs
+	protected double					ballRadius	= BALL_RADIUS;	// the radius of the ball (m): the one of the world, when it has a ball
 	protected LPOBall					ball;
 	protected LPONet					net1;
 	protected LPONet					net2;
@@ -212,8 +222,14 @@ public class SoccerVision extends Perception
 			if ((rdesc.camtiltmax != null) && (rdesc.camtiltmax.length > 0))	scan_max_tilt	= rdesc.camtiltmax[0];
 		}
 
+		// The radius of the ball, as the world has it: its centre is placed at that height
+		if (world != null)
+			for (tc.shared.world.WMAObject o : world.aobjects ())
+				if ((o != null) && "ball".equalsIgnoreCase (o.label) && (o.radius > 0.0))
+					ballRadius	= o.radius;
+
 		// Add domain specific LPOs to the LPS
-		ball	= new LPOBall (BALL_RADIUS, "Ball", LPOSource.PERCEPT);
+		ball	= new LPOBall (ballRadius, "Ball", LPOSource.PERCEPT);
 		ball.anchor_fade = BALL_FADING;
 		ball.color (WColor.YELLOW.darker());
 		
@@ -393,7 +409,7 @@ public class SoccerVision extends Perception
 		if (d != null)
 			foveate (frame, d, (o == ball) || (o instanceof LPOLandmark));
 		else if ((o != null) && (needOf (what) - o.anchor () <= SLACK * needOf (what)))
-			turnTo (frame.device, o, (o == ball) ? BALL_RADIUS : (o instanceof LPOLandmark) ? LM_BAND : NET_AIM);
+			turnTo (frame.device, o, (o == ball) ? ballRadius : (o instanceof LPOLandmark) ? LM_BAND : NET_AIM);
 		else
 			do_scan_pattern ();
 	}
@@ -523,7 +539,7 @@ public class SoccerVision extends Perception
 		{
 			attach (l);
 			if (l == lps)		l.update_anchors ();			// a shared LPS is aged by its owner
-			see (ball, recognizer.ball, false, BALL_RADIUS, recognizer.params.ball_channel, item, w, h);
+			see (ball, recognizer.ball, false, ballRadius, recognizer.params.ball_channel, item, w, h);
 			see (net1, recognizer.net1, true, 0.0, recognizer.params.net1_channel, item, w, h);
 			see (net2, recognizer.net2, true, 0.0, recognizer.params.net2_channel, item, w, h);
 			seeLandmark (landmark1, recognizer.landmark1, recognizer.params.lm1_channel, recognizer.params.lm2_channel, item, w, h);
@@ -589,9 +605,12 @@ public class SoccerVision extends Perception
 		// a net stands on the floor at the bottom of its blob; the ball's centre is the one of its circle
 		// (the centre of its blob is not, when the ball is cut by the frame); the camera
 		// was turned as the frame says when it took it (the scan), so the rays go from there
-		p	= onFloor ? floor (frame.device, frame.pan, frame.tilt, d.x, d.ymax, w, h, height)
+		// (a net: where it really stands, some rows under the bottom of its blob (NET_BOTTOM), and
+		// from there to the goal line (NET_FRONT), which is where the LPS has it)
+		p	= onFloor ? floor (frame.device, frame.pan, frame.tilt, d.x, d.ymax + NET_BOTTOM * h, w, h, height)
 					  : floor (frame.device, frame.pan, frame.tilt, d.cx, d.cy, w, h, height);
 		if (p == null)							return;			// the ray does not reach that height in front of the camera
+		if (onFloor)							p[0] = Math.max (0.0, p[0] - NET_FRONT);
 
 		lpo.locate_polar (p[0], p[1], 0.0);
 		if ((channel >= 0) && (channel < vconfig.channels.size ()) && (vconfig.channels.at (channel).color != null))
