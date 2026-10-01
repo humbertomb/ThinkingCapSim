@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tclib.behaviours.lua.Chaos;
+import tclib.behaviours.lua.Tc;
 import tclib.behaviours.lua.interpreter.Lua;
 import tclib.behaviours.lua.interpreter.LuaFunction;
 import tclib.behaviours.lua.interpreter.LuaState;
@@ -200,6 +201,16 @@ public class LuaHelp
 					+ "A timer that was never started reads 0 and says so once on the console." },
 	};
 
+	static private final String[][]	TC_HELP		=
+	{
+		{ "getGroups", "", "The groups of sensors of the LPS, as a table with one field to a group: <span class=\"mono\">group0</span>, "
+					+ "<span class=\"mono\">group1</span> ... <span class=\"mono\">groupN</span>, each the distance it measures in "
+					+ "<b>metres</b>. It is an empty table while the LPS has no groups. A controller of the IASF "
+					+ "(<span class=\"mono\">tcrob.umu.iasf.IasfLuaController</span>) reads what to do from the globals "
+					+ "<span class=\"mono\">vlin</span>, <span class=\"mono\">vlat</span> (m/s) and "
+					+ "<span class=\"mono\">vrot</span> (degrees a second) the program leaves." },
+	};
+
 	static private final String[][]	MATH_HELP	=
 	{
 		{ "pi", "", "3.14159..." },
@@ -306,7 +317,7 @@ public class LuaHelp
 		 .append ("<span class=\"mono\">math.normdeg (math.deg (math.atan2 (dy, dx)))</span>.</p>");
 
 		h.append ("<h2>Contents</h2><p class=\"wire\">");
-		h.append ("<a href=\"#chaos\">chaos</a> &nbsp; <a href=\"#constants\">the constants</a> &nbsp; ")
+		h.append ("<a href=\"#chaos\">chaos</a> &nbsp; <a href=\"#tc\">tc</a> &nbsp; <a href=\"#constants\">the constants</a> &nbsp; ")
 		 .append ("<a href=\"#tables\">the tables it answers</a> &nbsp; ");
 		h.append ("<a href=\"#math\">math</a> &nbsp; <a href=\"#string\">string</a> &nbsp; <a href=\"#table\">table</a> &nbsp; ");
 		h.append ("<a href=\"#io\">io</a> &nbsp; <a href=\"#os\">os</a> &nbsp; <a href=\"#base\">the basic ones</a>");
@@ -317,6 +328,10 @@ public class LuaHelp
 			  + "and what it asks for (a speed, a turn, a behaviour). The controller fills it in before every cycle and reads out "
 			  + "of it afterwards.",
 			  chaos.table (), CHAOS_HELP);
+		card (h, "tc", "tc", "tclib.behaviours.lua.Tc",
+			  "The elements of a controller of ThinkingCap, for the programs of a controller that is not a soccer robot's: "
+			  + "it works in metres, as ThinkingCap does, and not in the millimetres of chaos.",
+			  new Tc ().table (), TC_HELP);
 
 		// the constants of the objects of the LPS, as they are now
 		h.append ("<a name=\"constants\"></a><h2>The constants</h2>");
@@ -470,13 +485,19 @@ public class LuaHelp
 		h.append ("</table><br>");
 	}
 
+	/** Whether a table is the robot itself (chaos, tc), which is shown apart from the library of Lua. */
+	static private boolean robot (String name)
+	{
+		return name.equals ("chaos") || name.equals ("tc");
+	}
+
 	static private void card (StringBuilder h, String anchor, String name, String clazz, String what, LuaTable t, String[][] help)
 	{
 		h.append ("<a name=\"").append (anchor).append ("\"></a>");
 		h.append ("<table width=\"100%\" cellpadding=\"5\" cellspacing=\"0\" bgcolor=\"")
-		 .append (name.equals ("chaos") ? "#f2f7f2" : "#eceff3").append ("\"><tr>");
-		h.append ("<td width=\"64\" align=\"center\" bgcolor=\"").append (name.equals ("chaos") ? "#2f7d4f" : "#5b6b7c").append ("\">")
-		 .append ("<font color=\"#ffffff\" face=\"monospaced\" size=\"2\"><b>").append (name.equals ("chaos") ? "ROBOT" : "TABLE")
+		 .append (robot (name) ? "#f2f7f2" : "#eceff3").append ("\"><tr>");
+		h.append ("<td width=\"64\" align=\"center\" bgcolor=\"").append (robot (name) ? "#2f7d4f" : "#5b6b7c").append ("\">")
+		 .append ("<font color=\"#ffffff\" face=\"monospaced\" size=\"2\"><b>").append (robot (name) ? "ROBOT" : "TABLE")
 		 .append ("</b></font></td>");
 		h.append ("<td><span class=\"sym\">").append (name).append ("</span></td>");
 		h.append ("<td align=\"right\"><span class=\"cls\">").append (esc (clazz)).append ("</span></td></tr>");
