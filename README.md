@@ -2,7 +2,7 @@
 
 Robots simulator written entirely in Java. It is based on the ThinkingCap functional architecture, and the ThinkingCap2 software architecture. The repository root is a Java Eclipse project for **Java 25**. Different launch configurations are included. 
 
-<img width="425" alt="Simulation of an industrial forklift" src="docs/images/ifork_simulation.png"> <img width="425" alt="Simulation of a soccer match of legged robots" src="docs/images/aibo_simulation.png">
+<img width="425" alt="Simulation of an industrial forklift" src="docs/images/ifork_simulation.png"> <img width="425" alt="Simulation of a soccer match of legged robots" src="docs/images/aibo_simulation.png"> 
 
 ## **Requirements**
 
