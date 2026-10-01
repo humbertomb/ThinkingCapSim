@@ -2,7 +2,7 @@
 
 Robots simulator written entirely in Java. It is based on the ThinkingCap functional architecture, and the ThinkingCap2 software architecture. The repository root is a Java Eclipse project for **Java 25**. Different launch configurations are included. 
 
-<img width="425" alt="simulator" src="https://github.com/user-attachments/assets/6332f792-3ff9-4670-8432-842c29486cf6">
+<img width="425" alt="Simulation of an industrial forklift" src="docs/images/ifork_simulation.png"> <img width="425" alt="Simulation of a soccer match of legged robots" src="docs/images/aibo_simulation.png">
 
 ## **Requirements**
 
@@ -25,7 +25,7 @@ https://github.com/humbertomb/ThinkingCapSim.git
 ```
 
 
-<img width="880" alt="oojjjjjjioiiii" src="https://github.com/user-attachments/assets/8af97751-a9d7-420a-bcf9-350ca72c88b0">
+<img width="600" alt="Importing the project in Eclipse" src="docs/images/eclipse_import.png">
 
 The project must keep the name **ThinkingCapSim** in the workspace: the launch configurations refer to it by that name.
 
