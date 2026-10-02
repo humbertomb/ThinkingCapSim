@@ -1042,6 +1042,19 @@ public class WorldView3DWindow extends JFrame
 	 */
 	static protected class EditorScene extends Scene3D
 	{
+		/** How close the eye can get to what it looks at (m): near enough to see the details of a small robot. */
+		static public final double		MIN_LEN		= 0.05;
+		/** The nearest the eye sees (m), at most, and how much farther than that it sees: the two set the precision of the depth buffer. */
+		static public final double		MAX_FRONT	= 0.3;
+		static public final double		DEPTH		= 5000.0;
+		/**
+		 * How far back from the eye the viewer of Java 3D stands by default (the
+		 * nominal viewing transform: 1 / tan (45 / 2 deg), in m). It is not where it
+		 * stands here any more, so that the eye can come as close as it is told; the
+		 * views that were set before are this much farther now to look the same.
+		 */
+		static public final double		NOMINAL		= 1.0 / Math.tan (Math.PI / 8.0);
+
 		protected java.util.Hashtable<String, Appearance>	missing = new java.util.Hashtable<String, Appearance> ();
 
 		public EditorScene (Canvas3D canvas)
@@ -1049,11 +1062,13 @@ public class WorldView3DWindow extends JFrame
 			super (canvas);
 			// large maps: the default clipping planes (0.1 .. 10 m) would hide most of the world
 			// (the near/far ratio also sets the depth-buffer precision: keep it moderate to avoid z-fighting)
-			universe.getViewer ().getView ().setFrontClipDistance (0.3);
-			universe.getViewer ().getView ().setBackClipDistance (1500.0);
+			// the viewer stands where the eye is, and not 2.4 m behind it (the
+			// nominal viewing transform): otherwise no zoom brings it any closer
+			universe.getViewingPlatform ().getViewPlatformTransform ().setTransform (new Transform3D ());
+			clip ();
 			rho		= 0.7;
 			theta	= -Math.PI / 2.0;
-			len		= 20.0;
+			len		= 20.0 + NOMINAL;
 			setViewpoint ();
 		}
 
@@ -1079,7 +1094,7 @@ public class WorldView3DWindow extends JFrame
 		public void fit (double[] b)
 		{
 			focus.set ((b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0, 0.0);
-			len = Math.max (4.0, 0.9 * Math.max (b[2] - b[0], b[3] - b[1]));
+			len = Math.max (4.0, 0.9 * Math.max (b[2] - b[0], b[3] - b[1])) + NOMINAL;
 			setViewpoint ();
 		}
 
@@ -1098,8 +1113,62 @@ public class WorldView3DWindow extends JFrame
 
 		public void zoom (double factor)
 		{
-			len = Math.max (0.5, len * factor);
+			len = Math.max (MIN_LEN, len * factor);
 			setViewpoint ();
+		}
+
+		/**
+		 * The clipping planes follow the zoom: the near one comes closer with the
+		 * eye, so that a robot seen from a few centimetres is not cut away, and the
+		 * far one keeps the same ratio to it (the precision of the depth buffer).
+		 */
+		protected void clip ()
+		{
+			if (universe == null)			return;
+
+			double		front = Math.max (0.002, Math.min (MAX_FRONT, 0.1 * len));
+
+			universe.getViewer ().getView ().setFrontClipDistance (front);
+			universe.getViewer ().getView ().setBackClipDistance (front * DEPTH);
+		}
+
+		public void setViewpoint ()
+		{
+			clip ();
+			super.setViewpoint ();
+		}
+
+		/**
+		 * Zooming by dragging goes by a share of the distance, and moving by an amount
+		 * that grows with it, so that both are as fine close to a small robot as they
+		 * are coarse over a whole map; rotating is as it was.
+		 */
+		public void mouseDrag (int mode, int x, int y)
+		{
+			int			dx = x - prevx, dy = y - prevy;
+
+			switch (mode)
+			{
+			case M_ZOOM:
+				len		= Math.max (MIN_LEN, len * Math.exp (dy * 0.0025));
+				break;
+			case M_MOVE:
+			{
+				double	a = Math.atan2 (focus.y - eye.y, focus.x - eye.x) - Math.PI / 2;
+				double	k = 0.0025 * len;							// m a pixel: 0.05 at 20 m, as it was there
+				double	lx = -dx, ly = dy;
+
+				focus.x	+= (lx * Math.cos (a) - ly * Math.sin (a)) * k;
+				focus.y	+= (lx * Math.sin (a) + ly * Math.cos (a)) * k;
+				break;
+			}
+			default:
+				super.mouseDrag (mode, x, y);
+				return;
+			}
+			setViewpoint ();
+			prevx	= x;
+			prevy	= y;
 		}
 	}
 
