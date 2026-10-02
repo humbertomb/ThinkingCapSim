@@ -481,6 +481,37 @@ public class WorldCanvas extends JPanel
 		}
 	}
 
+	/** Remembers the selected element, as it is now, for any editor of worlds to paste. */
+	public void copySelection ()
+	{
+		if ((selection == null) || WorldItem.isSettings (selection.kind))		return;
+		WorldEditor.clip (WorldEditor.snapshot (world), selection, false, this);
+	}
+
+	/** Remembers the selected element and deletes it: pasted, it comes back where it was. */
+	public void cutSelection ()
+	{
+		WorldItem	it = selection;
+		String		snap;
+
+		if ((it == null) || !editable || WorldItem.isSettings (it.kind))		return;
+		snap	= WorldEditor.snapshot (world);
+		deleteSelection ();
+		if (selection == null)						WorldEditor.clip (snap, it, true, this);		// only when it went
+	}
+
+	/** Adds a copy of the element copied or cut last and selects it. */
+	public void paste ()
+	{
+		WorldItem	copy;
+
+		if (!editable)					return;
+		copy	= WorldEditor.paste (world, this);
+		if (copy == null)				return;
+		changed ("Paste " + WorldItem.NAMES[copy.kind].toLowerCase ());
+		setSelection (copy);
+	}
+
 	/** Duplicates the selected element and selects the copy. */
 	public void duplicateSelection ()
 	{

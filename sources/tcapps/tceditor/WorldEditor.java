@@ -116,7 +116,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	protected StatusBar				statusBar;
 	protected JLabel				selLabel;
 	protected JToggleButton[]		toolButtons	= new JToggleButton[WorldCanvas.NTOOLS];
-	protected Action				undoAction, redoAction, deleteAction, duplicateAction;
+	protected Action				undoAction, redoAction, deleteAction, duplicateAction, cutAction, copyAction, pasteAction;
 	protected JCheckBoxMenuItem[]	layerItems	= new JCheckBoxMenuItem[WorldItem.NKINDS];
 	protected boolean				collapseTree	= true;		// the tree starts closed (and closes again with every world loaded)
 	protected JCheckBoxMenuItem		gridItem, snapItem, labelsItem, shapesItem;
@@ -197,6 +197,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			}
 		});
 		JScrollPane		treeScroll = new JScrollPane (tree);
+		unbindClipKeys (tree);
 		treeScroll.setBorder (BorderFactory.createTitledBorder ("Elements"));
 
 		// --- property table
@@ -257,6 +258,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			}
 		};
 		propTable.setRowHeight (22);
+		unbindClipKeys (propTable);
 		propTable.getColumnModel ().getColumn (0).setPreferredWidth (90);
 		propTable.getColumnModel ().getColumn (1).setPreferredWidth (200);
 		propTable.getColumnModel ().getColumn (2).setPreferredWidth (UNITS_WIDTH);
@@ -470,6 +472,22 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		medit.add (item (undoAction, KeyStroke.getKeyStroke (KeyEvent.VK_Z, mask)));
 		medit.add (item (redoAction, KeyStroke.getKeyStroke (KeyEvent.VK_Z, mask | InputEvent.SHIFT_DOWN_MASK)));
 		medit.addSeparator ();
+		cutAction = new AbstractAction ("Cut")
+		{
+			public void actionPerformed (ActionEvent e)		{ if (!text ("cut")) canvas.cutSelection (); }
+		};
+		copyAction = new AbstractAction ("Copy")
+		{
+			public void actionPerformed (ActionEvent e)		{ if (!text ("copy")) { canvas.copySelection (); updateClipActions (); } }
+		};
+		pasteAction = new AbstractAction ("Paste")
+		{
+			public void actionPerformed (ActionEvent e)		{ if (!text ("paste")) canvas.paste (); }
+		};
+		medit.add (item (cutAction, KeyStroke.getKeyStroke (KeyEvent.VK_X, mask)));
+		medit.add (item (copyAction, KeyStroke.getKeyStroke (KeyEvent.VK_C, mask)));
+		medit.add (item (pasteAction, KeyStroke.getKeyStroke (KeyEvent.VK_V, mask)));
+		updateClipActions ();
 		duplicateAction = new AbstractAction ("Duplicate")
 		{
 			public void actionPerformed (ActionEvent e)		{ canvas.duplicateSelection (); }
@@ -613,7 +631,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			"       The 'New icon' button (Ctrl+I) creates an icon; its first click sets the reference point.\n" +
 			"  Right click with a creation tool returns to Select.\n\n" +
 			"Keyboard:  Del deletes, arrows nudge the selection, Esc deselects / cancels,\n" +
-			"  Ctrl+Z / Ctrl+Shift+Z undo / redo, mouse wheel zooms, Ctrl+0 zoom to fit.\n\n" +
+			"  Ctrl+Z / Ctrl+Shift+Z undo / redo, Ctrl+X / Ctrl+C / Ctrl+V cut / copy / paste (also between\n" +
+			"  worlds), mouse wheel zooms, Ctrl+0 zoom to fit.\n\n" +
 			"3D view: the button at the bottom of the toolbar (or Ctrl+3) opens a Java 3D window that\n" +
 			"  follows every change and highlights the selection.\n\n" +
 			"Properties: edit any value in the table and press Enter. Labels of zones, connectors,\n" +
@@ -633,6 +652,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		selLabel.setText ((item == null) ? " " : WorldItem.NAMES[item.kind] + ":  " + describe (world, item));
 		deleteAction.setEnabled ((item != null) && !WorldItem.isSettings (item.kind) && ((item.kind != WorldItem.START) || (world.n_starts () > 1)));
 		if (duplicateAction != null)		duplicateAction.setEnabled ((item != null) && !WorldItem.isSettings (item.kind));
+		updateClipActions ();
 		// the icon tool only applies to elements that have an icon (objects) or to icons themselves
 		boolean	hasIcon = (item != null) && (WorldItem.isObject (item.kind) || (item.kind == WorldItem.ICON));
 		toolButtons[WorldCanvas.T_ICON].setEnabled (hasIcon);
@@ -644,6 +664,47 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 			selectInTree (item);
 			syncing = false;
 		}
+	}
+
+	/** The tree and the table copy and paste text of their own on these keys: here they are the Edit menu's. */
+	static private void unbindClipKeys (javax.swing.JComponent c)
+	{
+		int		m = java.awt.Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ();
+
+		for (int k : new int[] { KeyEvent.VK_C, KeyEvent.VK_X, KeyEvent.VK_V })
+		{
+			c.getInputMap (javax.swing.JComponent.WHEN_FOCUSED).put (KeyStroke.getKeyStroke (k, m), "none");
+			c.getInputMap (javax.swing.JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put (KeyStroke.getKeyStroke (k, m), "none");
+		}
+	}
+
+	/** Enables what can be cut, copied and pasted now. */
+	protected void updateClipActions ()
+	{
+		WorldItem	item = (canvas != null) ? canvas.getSelection () : null;
+		boolean		some = (item != null) && !WorldItem.isSettings (item.kind);
+
+		if (cutAction != null)			cutAction.setEnabled (some && (deleteAction == null || deleteAction.isEnabled ()));
+		if (copyAction != null)			copyAction.setEnabled (some);
+		if (pasteAction != null)		pasteAction.setEnabled (canPaste ());
+	}
+
+	/**
+	 * Cut, copy and paste of the text being typed, when a text field has the
+	 * keyboard (the value of a property being edited): true when it took them.
+	 */
+	protected boolean text (String what)
+	{
+		java.awt.Component	c = java.awt.KeyboardFocusManager.getCurrentKeyboardFocusManager ().getFocusOwner ();
+
+		if (!(c instanceof javax.swing.text.JTextComponent) || !SwingUtilities.isDescendingFrom (c, this))		return false;
+
+		javax.swing.text.JTextComponent	t = (javax.swing.text.JTextComponent) c;
+
+		if (what.equals ("cut"))			t.cut ();
+		else if (what.equals ("copy"))		t.copy ();
+		else								t.paste ();
+		return true;
 	}
 
 	public void worldChanged (String what)
@@ -1444,95 +1505,170 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	 * that no other element of the same group uses. Returns the item of the
 	 * copy, or null when the element cannot be duplicated.
 	 */
-	static public WorldItem duplicate (World w, WorldItem it)
+	/**
+	 * Adds a copy of an element of a world (deep, as it is) to another world, or
+	 * to the same one, at the end of its own group and where it was. An object
+	 * takes its icon along when the other world has none of that name. Returns
+	 * the item of the copy, or null when the element cannot be copied (the
+	 * settings of the world).
+	 */
+	static public WorldItem transfer (World from, WorldItem it, World to)
 	{
 		WorldItem	n = null;
 
-		if (!valid (w, it))				return null;
+		if (!valid (from, it))			return null;
 
 		switch (it.kind)
 		{
 		case WorldItem.ZONE:
 		{
-			String	dt = w.zones ().defaultTexture ();
-			w.zones ().add (new WMZone (w.zones ().at (it.index).toJson (dt), dt));
-			n = new WorldItem (WorldItem.ZONE, w.zones ().n () - 1);
+			String	dt = to.zones ().defaultTexture ();
+			to.zones ().add (new WMZone (from.zones ().at (it.index).toJson ((String) null), dt));
+			n = new WorldItem (WorldItem.ZONE, to.zones ().n () - 1);
 			break;
 		}
 		case WorldItem.FAREA:
 		{
-			String	dt = w.fareas ().defaultTexture ();
-			w.fareas ().add (new WMFArea (w.fareas ().at (it.index).toJson (dt), dt));
-			n = new WorldItem (WorldItem.FAREA, w.fareas ().n () - 1);
+			String	dt = to.fareas ().defaultTexture ();
+			to.fareas ().add (new WMFArea (from.fareas ().at (it.index).toJson ((String) null), dt));
+			n = new WorldItem (WorldItem.FAREA, to.fareas ().n () - 1);
 			break;
 		}
 		case WorldItem.MARKING:
 		{
-			WColor	dc = w.markings ().defaultColor ();
-			double	dw = w.markings ().defaultWidth ();
-			w.markings ().add (new WMMarking (w.markings ().at (it.index).toJson (dc, dw), dc, dw));
-			n = new WorldItem (WorldItem.MARKING, w.markings ().n () - 1);
+			WColor	dc = to.markings ().defaultColor ();
+			double	dw = to.markings ().defaultWidth ();
+			to.markings ().add (new WMMarking (from.markings ().at (it.index).toJson (null, Double.NaN), dc, dw));
+			n = new WorldItem (WorldItem.MARKING, to.markings ().n () - 1);
 			break;
 		}
 		case WorldItem.WALL:
 		{
-			double	dw = w.walls ().defaultWidth (), dh = w.walls ().defaultHeight ();
-			String	dt = w.walls ().defaultTexture ();
-			w.walls ().add (new WMWall (w.walls ().at (it.index).toJson (dw, dh, dt), dw, dh, dt));
-			n = new WorldItem (WorldItem.WALL, w.walls ().n () - 1);
+			double	dw = to.walls ().defaultWidth (), dh = to.walls ().defaultHeight ();
+			String	dt = to.walls ().defaultTexture ();
+			to.walls ().add (new WMWall (from.walls ().at (it.index).toJson (Double.NaN, Double.NaN, null), dw, dh, dt));
+			n = new WorldItem (WorldItem.WALL, to.walls ().n () - 1);
 			break;
 		}
 		case WorldItem.CONNECTOR:
 		{
-			double	dw = w.connectors ().defaultWidth (), dh = w.connectors ().defaultHeight ();
-			String	dt = w.connectors ().defaultTexture ();
-			w.connectors ().add (new WMConnector (w.connectors ().at (it.index).toJson (dw, dh, dt), dw, dh, dt));
-			n = new WorldItem (WorldItem.CONNECTOR, w.connectors ().n () - 1);
+			double	dw = to.connectors ().defaultWidth (), dh = to.connectors ().defaultHeight ();
+			String	dt = to.connectors ().defaultTexture ();
+			to.connectors ().add (new WMConnector (from.connectors ().at (it.index).toJson (Double.NaN, Double.NaN, null), dw, dh, dt));
+			n = new WorldItem (WorldItem.CONNECTOR, to.connectors ().n () - 1);
 			break;
 		}
 		case WorldItem.OBJECT:
-			w.objects ().add (new WMObject (w.objects ().get (it.index).toJson (), w.icons ()));
-			n = new WorldItem (WorldItem.OBJECT, w.objects ().size () - 1);
+			icon (from, to, from.objects ().get (it.index).iconId);
+			to.objects ().add (new WMObject (from.objects ().get (it.index).toJson (), to.icons ()));
+			n = new WorldItem (WorldItem.OBJECT, to.objects ().size () - 1);
 			break;
 		case WorldItem.AOBJECT:
-			w.aobjects ().add (new WMAObject (w.aobjects ().get (it.index).toJson (), w.icons ()));
-			n = new WorldItem (WorldItem.AOBJECT, w.aobjects ().size () - 1);
+			icon (from, to, from.aobjects ().get (it.index).iconId);
+			to.aobjects ().add (new WMAObject (from.aobjects ().get (it.index).toJson (), to.icons ()));
+			n = new WorldItem (WorldItem.AOBJECT, to.aobjects ().size () - 1);
 			break;
 		case WorldItem.BEACON:
-			w.beacons ().add (new WMBeacon (w.beacons ().get (it.index).toJson ()));
-			n = new WorldItem (WorldItem.BEACON, w.beacons ().size () - 1);
+			to.beacons ().add (new WMBeacon (from.beacons ().get (it.index).toJson ()));
+			n = new WorldItem (WorldItem.BEACON, to.beacons ().size () - 1);
 			break;
 		case WorldItem.CBEACON:
-			w.cbeacons ().add (new WMCBeacon (w.cbeacons ().get (it.index).toJson ()));
-			n = new WorldItem (WorldItem.CBEACON, w.cbeacons ().size () - 1);
+			to.cbeacons ().add (new WMCBeacon (from.cbeacons ().get (it.index).toJson ()));
+			n = new WorldItem (WorldItem.CBEACON, to.cbeacons ().size () - 1);
 			break;
 		case WorldItem.WAYPOINT:
-			w.wps ().add (new WMWaypoint (w.wps ().get (it.index).toJson ()));
-			n = new WorldItem (WorldItem.WAYPOINT, w.wps ().size () - 1);
+			to.wps ().add (new WMWaypoint (from.wps ().get (it.index).toJson ()));
+			n = new WorldItem (WorldItem.WAYPOINT, to.wps ().size () - 1);
 			break;
 		case WorldItem.DOCK:
-			w.docks ().add (new WMDock (w.docks ().get (it.index).toJson ()));
-			n = new WorldItem (WorldItem.DOCK, w.docks ().size () - 1);
+			to.docks ().add (new WMDock (from.docks ().get (it.index).toJson ()));
+			n = new WorldItem (WorldItem.DOCK, to.docks ().size () - 1);
 			break;
 		case WorldItem.ICON:
-			w.icons ().add (new WMIcon (w.icons ().get (it.index).toJson ()));
-			n = new WorldItem (WorldItem.ICON, w.icons ().size () - 1);
+			to.icons ().add (new WMIcon (from.icons ().get (it.index).toJson ()));
+			n = new WorldItem (WorldItem.ICON, to.icons ().size () - 1);
 			break;
 		case WorldItem.PATH:
 		{
-			Point2	p = w.path ().get (it.index);
-			w.path ().add (new Point3 (p.x (), p.y (), World.z (p)));
-			n = new WorldItem (WorldItem.PATH, w.path ().size () - 1);
+			Point2	p = from.path ().get (it.index);
+			to.path ().add (new Point3 (p.x (), p.y (), World.z (p)));
+			n = new WorldItem (WorldItem.PATH, to.path ().size () - 1);
 			break;
 		}
 		case WorldItem.START:
 		{
-			WMStart	st = w.start (it.index);
-			w.addStart (st.x (), st.y (), st.z (), st.orientation);
-			n = new WorldItem (WorldItem.START, w.n_starts () - 1);
+			WMStart	st = from.start (it.index);
+			to.addStart (st.x (), st.y (), st.z (), st.orientation);
+			n = new WorldItem (WorldItem.START, to.n_starts () - 1);
 			break;
 		}
 		}
+		return n;
+	}
+
+	/** The icon of that name of a world, copied to another that has none of it. */
+	static private void icon (World from, World to, String label)
+	{
+		if ((label == null) || (to.icon (label) != null) || (from.icon (label) == null))		return;
+		to.icons ().add (new WMIcon (from.icon (label).toJson ()));
+	}
+
+	/* The elements copied or cut, for any editor of worlds to paste: the world they were in, as text, and which */
+	static protected String			clipWorld;
+	static protected WorldItem		clipItem;
+	// how many copies are where it is pasted, by the editor (its view) it is pasted in: each one goes further away
+	static protected java.util.Map<Object, Integer>	clipPastes	= new java.util.WeakHashMap<Object, Integer> ();
+
+	/**
+	 * Remembers an element to paste: as it is now in a world (a snapshot of it),
+	 * copied in an editor (its view, <code>owner</code>), and whether it is not
+	 * there any more (cut). Pasted in the same editor, a copy goes
+	 * {@link #DUP_OFFSET} away from the element; after a cut, or in another
+	 * editor, the first one goes where the element was.
+	 */
+	static public void clip (String world, WorldItem it, boolean cut, Object owner)
+	{
+		clipWorld	= world;
+		clipItem	= new WorldItem (it.kind, it.index);
+		clipPastes.clear ();
+		clipPastes.put (owner, cut ? 0 : 1);
+	}
+
+	/** Whether there is something to paste. */
+	static public boolean canPaste ()						{ return (clipWorld != null) && (clipItem != null); }
+
+	/**
+	 * Adds to a world a copy of the element copied or cut last, in any editor
+	 * (see {@link #clip}): {@link #DUP_OFFSET} further every time, so that pastes
+	 * do not hide one another. It keeps
+	 * its label unless another element of the world uses it already. Returns the
+	 * item of the copy, or null when there is nothing to paste.
+	 */
+	static public WorldItem paste (World w, Object owner)
+	{
+		Integer		k = clipPastes.get (owner);
+		int			done = (k != null) ? k.intValue () : 0;
+		World		src;
+		WorldItem	n;
+		String		label;
+		boolean		clash;
+
+		if (!canPaste ())				return null;
+		src		= restore (clipWorld);
+		label	= (clipItem.kind == WorldItem.ICON) ? (valid (src, clipItem) ? src.icons ().get (clipItem.index).label : null) : label (src, clipItem);
+		clash	= (label != null) && usedLabel (w, new WorldItem (clipItem.kind, -1), label);
+		n		= transfer (src, clipItem, w);
+		if (n == null)					return null;
+		if (done > 0)					translate (w, n, done * DUP_OFFSET, done * DUP_OFFSET);
+		clipPastes.put (owner, done + 1);
+		if (clash)						renameCopy (w, n);
+		return n;
+	}
+
+	static public WorldItem duplicate (World w, WorldItem it)
+	{
+		WorldItem	n = transfer (w, it, w);
+
 		if (n == null)					return null;		// settings and unknown kinds
 
 		translate (w, n, DUP_OFFSET, DUP_OFFSET);
