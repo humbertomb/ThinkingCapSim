@@ -1052,8 +1052,8 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			g.setStroke (new BasicStroke (1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1f, new float[] { 5f, 4f }, 0f));
 			g.draw (new java.awt.geom.Ellipse2D.Double (c.toPixelX (x) - r, c.toPixelY (y) - r, 2 * r, 2 * r));
 		}
+		// no dot at its centre: at some zooms it is taken for the object itself
 		g.setColor (col);
-		g.fillOval (c.toPixelX (x) - 3, c.toPixelY (y) - 3, 6, 6);
 		if (o.label != null)
 		{
 			double	r = Math.max (ov.obj.radius, 0.15);
