@@ -29,6 +29,8 @@ public class Robot3D extends BranchGroup
 	protected Range3D				sonars;
 	protected Scan3D					lasers;
 	protected Camera3D				cameras;			// what its cameras see, turned as they are (null: it has none)
+	protected Profiles3D			profiles;			// what its sensors measure now, where they measure it
+	protected boolean				profilesShown	= false;
 
 	protected boolean				camerasShown = true;	// whether the prisms of the cameras are on the scene
 	protected boolean 				sonarActive = false;
@@ -114,6 +116,9 @@ public class Robot3D extends BranchGroup
 		irs		= new Range3D (rdesc.irfeat, rdesc.CONEIR, Color3D.orange, rdesc.MAXIR);
 		lasers	= new Scan3D (rdesc.lrffeat, rdesc.CONELRF, rdesc.RAYLRF, Color3D.blue, rdesc.MAXLRF);
 
+		// what the sensors measure, when it is asked for (showProfiles)
+		profiles	= new Profiles3D (rdesc);
+
 		// and what the cameras see, always shown: the prism of each one, turned with it
 		if (rdesc.MAXCAMERA > 0)
 		{
@@ -175,7 +180,20 @@ public class Robot3D extends BranchGroup
 		if (irActive)		irs.move (data.irs, pt, a);
 		if (laserActive)		lasers.move (data.lrfs, pt, a);
 		if (cameras != null)	cameras.move (pt, a, pans, tilts);
+		if (profilesShown)		profiles.update (data, pt.x (), pt.y (), a);
 	}	
+
+	/** Whether what the sensors measure now (the profile of each, see Profiles3D) is drawn. */
+	public void showProfiles (boolean show)
+	{
+		if (profilesShown == show)		return;
+		profilesShown	= show;
+		if (show)		addChild (profiles);
+		else			profiles.detach ();
+	}
+
+	/** The world the reflectors the laser beacon scanners look for are in. */
+	public void setWorld (tc.shared.world.World world)		{ profiles.setWorld (world); }
 		
 	/** Whether what the cameras see (the prism of each) is drawn. */
 	public void showCameras (boolean show)

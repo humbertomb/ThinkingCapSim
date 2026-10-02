@@ -127,6 +127,7 @@ public class WorldView3DWindow extends JFrame
 	protected boolean				showLabels		= false;	// View menu: the names of the objects (off unless asked for)
 	protected JCheckBoxMenuItem		startsItem, labelsItem;	// ... and their items, which follow setOverlays
 	protected boolean				showFOVs		= true;	// View menu: what the cameras of the robots see
+	protected boolean				showProfiles	= false;	// View menu: what the sensors of the robots measure now
 	protected java.util.List<FloorName>	labels = new java.util.ArrayList<FloorName> ();	// the names of the live objects, one per object (null for an unnamed one)
 	protected World3D				world3d;				// the world as drawn now (its names take the size of letter of the scene)
 	protected double				nameScale		= 1.0;	// the size of letter of every name, set by the robots (see FloorName.fit)
@@ -293,6 +294,10 @@ public class WorldView3DWindow extends JFrame
 		{
 			public void run ()		{ showFOVs = !showFOVs;	updateFOVs (); }
 		}));
+		view.add (check ("Show sensor profiles", showProfiles, new Runnable ()
+		{
+			public void run ()		{ showProfiles = !showProfiles;	for (Robot3D r : robots)	r.showProfiles (showProfiles); }
+		}));
 		mb.add (view);
 		return mb;
 	}
@@ -449,6 +454,7 @@ public class WorldView3DWindow extends JFrame
 			if ((floorCB != null) && (world != null))		floorCB.setSelected (world.zones ().n () == 0);
 		}
 		this.world	= world;
+		for (Robot3D r : robots)		r.setWorld (world);				// the reflectors their beacon scanners look for
 		scheduleRebuild ();
 	}
 
@@ -889,6 +895,8 @@ public class WorldView3DWindow extends JFrame
 		Robot3D		r3d = new Robot3D (rdesc, body, lift, new Point3 (x, y, 0.0), 0.0, a, name);
 		r3d.setCameraBounds (wallBounds ());						// what its cameras see stops at the outer walls
 		r3d.showCameras (showFOVs);
+		r3d.setWorld (world);										// the reflectors its beacon scanners look for
+		r3d.showProfiles (showProfiles);
 		r3d.showName (showNames);
 		robots.add (r3d);
 		articulated.add (art);
