@@ -195,8 +195,6 @@ public class ArchModel
 		new Property ("PASSIVE","Passive",		P_BOOLEAN).fixedTo ("false", "A robot, simulated or physical, is never passive: it runs on its own cycle"),
 		new Property ("EXTIME",	"Exec. time (ms)"),
 		new Property ("GFX",	"Graphics",	P_BOOLEAN),
-		// the variant of its 3D parts it wears: the uniform of its team (red, blue)
-		new Property ("UNIFORM","Uniform"),
 	};
 
 	/** Suffixes that exist in the ADF but are not shown in the editor, per kind. */

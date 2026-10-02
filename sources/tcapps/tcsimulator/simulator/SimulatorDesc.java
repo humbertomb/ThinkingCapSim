@@ -42,7 +42,7 @@ public class SimulatorDesc
 	public String				KINEFILE;					// The kinematic model of an articulated robot (.kine), drawn instead of V3DFILE when there is one
 	public String				V3DPARTS;					// The folder of the 3D models of its parts (one per link of the kinematic model), drawn when they are all there
 	public String				WALKMODEL;					// The class of its walking model, which moves its joints
-	public String				UNIFORM;					// The variant of its parts it wears, as the uniform of its team (red, blue): <part>-<UNIFORM>.3ds where there is one
+	public String				V3DTEAM;					// The team whose uniform its parts wear (BLUE, RED): <part>-<team>.3ds where there is one
 	public float					V3DCOLORR;				// Red level of the robot 3D representation
 	public float					V3DCOLORG;				// Green level of the robot 3D representation
 	public float					V3DCOLORB;				// Blue level of the robot 3D representation
@@ -82,7 +82,7 @@ public class SimulatorDesc
 		try { KINEFILE		= props.getProperty("KINEFILE"); } catch (Exception e) 											{ KINEFILE = null; };
 		try { V3DPARTS		= props.getProperty("V3DPARTS"); } catch (Exception e) 											{ V3DPARTS = null; };
 		try { WALKMODEL		= props.getProperty("WALKMODEL"); } catch (Exception e) 										{ WALKMODEL = null; };
-		try { UNIFORM		= props.getProperty("UNIFORM"); } catch (Exception e) 											{ UNIFORM = null; };
+		try { V3DTEAM		= props.getProperty("V3DTEAM"); } catch (Exception e) 											{ V3DTEAM = null; };
 		try { V3DCOLORR		= Float.valueOf (props.getProperty("V3DCOLORR")).floatValue(); } catch (Exception e)					{ V3DCOLORR = 255.0f; };
 		try { V3DCOLORG		= Float.valueOf (props.getProperty("V3DCOLORG")).floatValue(); } catch (Exception e)					{ V3DCOLORG = 0.0f;	};
 		try { V3DCOLORB		= Float.valueOf (props.getProperty("V3DCOLORB")).floatValue(); } catch (Exception e)					{ V3DCOLORB = 0.0f; };

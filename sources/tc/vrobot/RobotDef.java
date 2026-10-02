@@ -357,6 +357,7 @@ public class RobotDef
 	public String				shapeRobot;											// V3DFILE (3D model of the platform)
 	public String				shapeActuator;										// V3DLIFT (3D model of its actuator: the fork, the arm, ...)
 	public String				shapeParts;											// V3DPARTS (the folder of the 3D models of the parts of an articulated platform, one per link of its kinematic model)
+	public String				team;												// V3DTEAM: the team whose uniform its parts wear (BLUE, RED), only with shapeParts; null is BLUE
 	@Deprecated
 	private String				shapeArticulated;									// what the kinematic model was called before it moved to the kinematics (read and moved, never written)
 	public Kinematics			kinematics	= new Kinematics ();
@@ -1001,6 +1002,19 @@ public class RobotDef
 		finally { wheels = w;	groups = g;		fused = u;		scans = s; }
 	}
 
+	/** The teams a robot made of parts can wear the uniform of. */
+	static public final String[]	TEAMS			= { "BLUE", "RED" };
+
+	/**
+	 * The team whose uniform the parts of the robot wear: the parts with its
+	 * name after a dash (ers7_body-red.3ds), where the folder has them. Blue
+	 * unless it says otherwise.
+	 */
+	public String team ()
+	{
+		return ((team != null) && (team.trim ().length () > 0)) ? team.trim ().toUpperCase () : TEAMS[0];
+	}
+
 	public File getFile ()					{ return file; }
 	public boolean isModified ()			{ return (original == null) || !original.equals (toJson ()); }
 
@@ -1014,6 +1028,7 @@ public class RobotDef
 		d.shapeRobot	= shapeRobot;
 		d.shapeActuator	= shapeActuator;
 		d.shapeParts	= shapeParts;
+		d.team			= team;
 		d.kinematics	= kinematics.copy ();
 		for (Map.Entry<String, Family> e : sensors.entrySet ())		d.sensors.put (e.getKey (), e.getValue ().copy ());
 		for (Bumper b : bumpers)		d.bumpers.add (b.copy ());
@@ -1487,7 +1502,11 @@ public class RobotDef
 		if (image != null)			p.setProperty ("IMAGE", image);
 		if (shapeRobot != null)		p.setProperty ("V3DFILE", shapeRobot);
 		if (shapeActuator != null)	p.setProperty ("V3DLIFT", shapeActuator);
-		if ((shapeParts != null) && (shapeParts.trim ().length () > 0))				p.setProperty ("V3DPARTS", shapeParts);
+		if ((shapeParts != null) && (shapeParts.trim ().length () > 0))
+		{
+			p.setProperty ("V3DPARTS", shapeParts);
+			p.setProperty ("V3DTEAM", team ());
+		}
 
 		p.setProperty ("LINES", String.valueOf (icon.size ()));
 		for (int i = 0; i < icon.size (); i++)

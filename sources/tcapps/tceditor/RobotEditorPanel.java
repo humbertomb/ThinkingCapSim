@@ -267,6 +267,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 					}
 					if (name.equals (RESOLUTION))		return resolutionEditor (propsModel.item);
 					if (name.equals (FUSION_MODE))		return fusionModeEditor ();
+					if (name.equals (TEAM))				return new DefaultCellEditor (new JComboBox<String> (RobotDef.TEAMS));
 					if (name.equals (SCAN_MODE) && (propsModel.item != null))
 						return reductionEditor (propsModel.item.index);
 				}
@@ -499,6 +500,12 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		canvas.setView (v);
 		canvas.zoomToFit ();
 		if ((viewBT != null) && !viewBT[v].isSelected ())	viewBT[v].setSelected (true);
+	}
+
+	/** True when the robot is drawn from its parts (a folder of them is named). */
+	public boolean hasParts ()
+	{
+		return (robot.shapeParts != null) && (robot.shapeParts.trim ().length () > 0);
 	}
 
 	/** True when the description names a 3D model: without one there is nothing to see from the front or the side. */
@@ -1157,6 +1164,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		robot.shapeRobot	= c.shapeRobot;
 		robot.shapeActuator	= c.shapeActuator;
 		robot.shapeParts	= c.shapeParts;
+		robot.team			= c.team;
 		robot.kinematics	= c.kinematics;
 		robot.sensors		= c.sensors;
 		robot.bumpers		= c.bumpers;
@@ -1435,7 +1443,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		if (it == null)				return new String[0];
 		switch (it.kind)
 		{
-		case RobotItem.PLATFORM:	return new String[] { "name", "radius", "image", "robot shape", "actuator shape", PARTS };
+		case RobotItem.PLATFORM:	return new String[] { "name", "radius", "image", "robot shape", "actuator shape", PARTS, TEAM };
 		case RobotItem.KINEMATICS:	return kinematicsNames ();
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
@@ -1529,6 +1537,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (name.equals ("robot shape"))	return (robot.shapeRobot != null) ? robot.shapeRobot : "";
 			if (name.equals ("actuator shape"))	return (robot.shapeActuator != null) ? robot.shapeActuator : "";
 			if (name.equals (PARTS))			return (robot.shapeParts != null) ? robot.shapeParts : "";
+			if (name.equals (TEAM))				return hasParts () ? robot.team () : "";
 			break;
 		case RobotItem.KINEMATICS:
 		{
@@ -1688,6 +1697,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		KINEMODEL				= "kinematics model";
 	/** The name the editor gives to the folder of the parts of an articulated platform (a 3D model per link). */
 	static public final String		PARTS					= "robot parts";
+	/** The team whose uniform the parts wear: only for a robot made of parts (the articulated ones, the AIBO for now). */
+	static public final String		TEAM					= "robot team";
 	/** The walking models there are to choose from, by class. */
 	static public final String[]	WALKING_MODELS			= { "tcrob.umu.soccer.walking.AiboWalking" };
 	/** The names the editor gives to what a wheel can do. */
@@ -1956,6 +1967,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	public boolean isEditable (RobotItem it, String name)
 	{
 		if (isCalculated (it, name))		return false;
+		if ((it != null) && (it.kind == RobotItem.PLATFORM) && name.equals (TEAM))
+			return hasParts ();				// only a robot made of parts wears a uniform
 		if ((it != null) && (it.kind == RobotItem.FAMILY) && name.equals (SIM_ERROR))
 			return usesSimError (it.family);
 		if ((it != null) && (it.kind == RobotItem.WHEEL) && (it.index < robot.wheels.size ()))
@@ -2010,8 +2023,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			{
 				ShapeLines.flush (robot.kinematics.model);		// the views draw the model from its parts, or not
 				robot.shapeParts = token (value);
+				if ((robot.shapeParts != null) && (robot.team == null))		robot.team = RobotDef.TEAMS[0];
 				updateViewBar ();
 			}
+			else if (name.equals (TEAM) && hasParts () && (token (value) != null))
+				robot.team = token (value).toUpperCase ();
 			break;
 		case RobotItem.KINEMATICS:
 		{
