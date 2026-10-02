@@ -789,7 +789,13 @@ public class Simulator
 			default:
 				lrf = lrf_geom (a1);
 		}
-		
+
+		// what it reads is never beyond its range nor short of its minimum, as for the
+		// sonars and the infrared: a wall farther away is not seen, the ray reads the
+		// most it can (the rays are traced twice as far as the range, and the noise
+		// of the models may take a reading past it either way)
+		for (int i = 0; i < lrf.length; i++)
+			lrf[i]	= Math.min (Math.max (lrf[i], RDESC[roboindex].MINIMLRF), RDESC[roboindex].RANGELRF);
 		return lrf;
 	}
 	
