@@ -52,6 +52,10 @@ import tcapps.tceditor.visualization.Scene3D;
  * Java 3D view of the models a robot description carries: the platform
  * (<code>shapeRobot</code>) and its actuator (<code>shapeActuator</code>),
  * each one drawn where the description places it, over the axes of the robot.
+ * An articulated platform (one with a kinematic model) is drawn from its
+ * parts, wearing the uniform of its team, or from the solids of its model when
+ * it has no parts, standing as its walking model stands it, as the simulator
+ * draws it.
  * The scene is rebuilt every time the editor reports a change, so choosing
  * another 3D file shows it right away.
  */
@@ -280,7 +284,8 @@ public class RobotView3DWindow extends JFrame
 
 		bg.setCapability (BranchGroup.ALLOW_DETACH);
 		if (axesCB.isSelected ())		bg.addChild (axes ());
-		st.append (model (bg, robot.shapeRobot, robotCB.isSelected (), "Robot"));
+		if (hasKine ())		st.append (articulated (bg, robotCB.isSelected ()));
+		else				st.append (model (bg, robot.shapeRobot, robotCB.isSelected (), "Robot"));
 		st.append (model (bg, robot.shapeActuator, actuatorCB.isSelected (), "Actuator"));
 		st.append (coverage (bg));
 
@@ -288,6 +293,51 @@ public class RobotView3DWindow extends JFrame
 		branch	= bg;
 		scene.addBranch (bg);
 		statusLabel.setText ((st.length () > 0) ? st.toString ().trim () : "The robot has no 3D models");
+	}
+
+	/** Whether the platform is articulated: it names a kinematic model that is there. */
+	private boolean hasKine ()
+	{
+		String		k = robot.kinematics.model;
+
+		return (k != null) && (k.trim ().length () > 0) && new File (k.trim ()).isFile ();
+	}
+
+	/**
+	 * Adds the articulated platform: its kinematic model drawn from its parts
+	 * (the ones of its team, where there are) or from its solids, with the joints
+	 * where its walking model stands it and the body on its feet -- pitched as the
+	 * walking model says and as high as the lowest of them reaches the floor.
+	 * Returns what to say about it.
+	 */
+	private String articulated (BranchGroup bg, boolean show)
+	{
+		String		k = robot.kinematics.model.trim ();
+		String		parts = robot.shapeParts;
+
+		if (!show)							return "Robot: hidden.   ";
+		try
+		{
+			tc.vrobot.articulated.KineModel		km = tc.vrobot.articulated.KineJson.read (new File (k));
+			tc.vrobot.articulated.WalkingModel	walker = tc.vrobot.articulated.WalkingModel.create (robot.kinematics.walking, km);
+			String								team = ((parts != null) && (parts.trim ().length () > 0)) ? robot.team ().toLowerCase () : null;
+			tcapps.tceditor.visualization.Articulated3D		art;
+			double[]							st;
+
+			if (walker != null)				walker.stand ();
+			art		= new tcapps.tceditor.visualization.Articulated3D (km, parts, team);
+			art.update ();
+			st		= ShapeLines.standing (km, walker, parts);
+			art.move (0.0, 0.0, st[1], 0.0, st[0]);
+			bg.addChild (art);
+			return "Robot: " + new File (k).getName () + (art.fromParts () ? ", from its parts" + ((team != null) ? " (" + robot.team () + ")" : "")
+															  : ", from its solids")
+					+ ((walker != null) ? ", standing" : ", at rest") + ".   ";
+		}
+		catch (Exception e)
+		{
+			return "Robot: <" + k + "> cannot be read (" + e.getMessage () + ").   ";
+		}
 	}
 
 	/** Adds one of the models of the robot; returns what to say about it. */
@@ -590,10 +640,10 @@ public class RobotView3DWindow extends JFrame
 	/** Centres the view on the robot and on what the selection covers. */
 	public void fitView ()
 	{
-		double	size = Math.max (2 * Math.max (robot.radius, 0.25), 1.0);
+		double	size = Math.max (2 * robot.radius, 0.4);			// a small robot is framed close, to be seen
 
 		size	= Math.max (size, 2 * coverExtent ());
-		scene.lookAt (0.0, 0.0, 0.0, 2.5 * size);
+		scene.lookAt (0.0, 0.0, 0.1 * size, 2.5 * size + 0.3);
 	}
 
 	/** How far from the robot what the selection covers reaches (m); zero when nothing is shown. */
@@ -668,9 +718,15 @@ public class RobotView3DWindow extends JFrame
 	/** The scene of this window: closer clipping planes, and a viewpoint over the robot. */
 	static protected class RobotScene extends Scene3D
 	{
+		/** How close the eye can get to what it looks at (m): near enough to see the details of a small robot. */
+		static public final double		MIN_LEN		= 0.05;
+
 		public RobotScene (Canvas3D canvas)
 		{
 			super (canvas);
+			// the viewer stands where the eye is, and not 2.4 m behind it (the nominal
+			// viewing transform): otherwise no zoom brings it any closer to a small robot
+			universe.getViewingPlatform ().getViewPlatformTransform ().setTransform (new javax.media.j3d.Transform3D ());
 			rho		= 0.6;
 			theta	= -Math.PI / 2.0;
 			len		= 5.0;
@@ -685,7 +741,7 @@ public class RobotView3DWindow extends JFrame
 		 */
 		private void updateClips ()
 		{
-			universe.getViewer ().getView ().setFrontClipDistance (Math.max (0.05, len / 1000.0));
+			universe.getViewer ().getView ().setFrontClipDistance (Math.max (0.005, Math.min (0.1 * len, Math.max (0.05, len / 1000.0))));
 			universe.getViewer ().getView ().setBackClipDistance (Math.max (100.0, 10.0 * len));
 		}
 
@@ -695,7 +751,7 @@ public class RobotView3DWindow extends JFrame
 		public void lookAt (double x, double y, double z, double distance)
 		{
 			focus.set (x, y, z);
-			len		= Math.max (0.5, distance);
+			len		= Math.max (MIN_LEN, distance);
 			updateClips ();
 			setViewpoint ();
 		}
@@ -709,9 +765,43 @@ public class RobotView3DWindow extends JFrame
 
 		public void zoom (double factor)
 		{
-			len		= Math.max (0.2, Math.min (5000.0, len * factor));
+			len		= Math.max (MIN_LEN, Math.min (5000.0, len * factor));
 			updateClips ();
 			setViewpoint ();
+		}
+
+		/**
+		 * Zooming by dragging goes by a share of the distance, and moving by an amount
+		 * that grows with it, so that both are as fine close to a small robot as they
+		 * are coarse around a radar's reach; rotating is as it was.
+		 */
+		public void mouseDrag (int mode, int x, int y)
+		{
+			int			dx = x - prevx, dy = y - prevy;
+
+			switch (mode)
+			{
+			case M_ZOOM:
+				len		= Math.max (MIN_LEN, Math.min (5000.0, len * Math.exp (dy * 0.0025)));
+				updateClips ();
+				break;
+			case M_MOVE:
+			{
+				double	a = Math.atan2 (focus.y - eye.y, focus.x - eye.x) - Math.PI / 2;
+				double	k = 0.0025 * len;
+				double	lx = -dx, ly = dy;
+
+				focus.x	+= (lx * Math.cos (a) - ly * Math.sin (a)) * k;
+				focus.y	+= (lx * Math.sin (a) + ly * Math.cos (a)) * k;
+				break;
+			}
+			default:
+				super.mouseDrag (mode, x, y);
+				return;
+			}
+			setViewpoint ();
+			prevx	= x;
+			prevy	= y;
 		}
 	}
 }
