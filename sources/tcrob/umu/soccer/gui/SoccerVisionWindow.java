@@ -17,7 +17,7 @@ public class SoccerVisionWindow extends JFrame
 	static public final int				GUI_IMAGE_WIDTH		= 275;
 	static public final int				GUI_IMAGE_HEIGHT	= 155;		// the image canvases (CPImageCanvas and the others take it as their size)
 	static public final int				WIN_WIDTH			= 275;		// the window, with all its panels
-	static public final int				WIN_HEIGHT			= 720;		// 690 and the toolbar
+	static public final int				WIN_HEIGHT			= 770;		// 690, the toolbar, and 50 more for the tabs (colour tables, recognizer)
 	
 	protected SoccerVisionPanel			panel;
 

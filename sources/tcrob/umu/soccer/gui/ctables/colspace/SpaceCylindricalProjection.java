@@ -63,10 +63,14 @@ public class SpaceCylindricalProjection extends SpaceOrtoProjection
 					theta	= ((double) co0 / 255.0) * Math.PI * 2.0;
 					break;
 				}
+				// counterclockwise, as the 3D view and the colour wheels have it (the rows of an image go down)
 				xx		= (int) (offset + rho * Math.cos (theta));
-				yy		= (int) (offset + rho * Math.sin (theta));
-				if ((xx >= 0) && (xx < SIZE) && (yy >= 0) && (yy < SIZE))
-					output.setRGB (xx, yy, irgb.getRGB (x, y));
+				yy		= (int) (offset - rho * Math.sin (theta));
+				// a dot of two by two: the hues are 256 steps round, and a pixel each leaves the rim in dashes
+				for (int dy = 0; dy < 2; dy++)
+					for (int dx = 0; dx < 2; dx++)
+						if ((xx + dx >= 0) && (xx + dx < SIZE) && (yy + dy >= 0) && (yy + dy < SIZE))
+							output.setRGB (xx + dx, yy + dy, irgb.getRGB (x, y));
 			}
 
 		
@@ -127,7 +131,7 @@ public class SpaceCylindricalProjection extends SpaceOrtoProjection
 					thmax	= ((double) prism.getMax0 () / 255.0) * Math.PI * 2.0;
 					break;
 				}
-				dwg.drawSector (offset, offset, (int) rhmin, thmin, (int) rhmax, thmax, color);
+				dwg.drawSector (offset, offset, (int) rhmin, -thmax, (int) rhmax, -thmin, color);		// mirrored, as the points are
 			}
 		}	
 	}

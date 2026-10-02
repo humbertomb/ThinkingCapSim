@@ -50,16 +50,17 @@ public class SpaceOrtoProjection
 				co1	= Pixel.getComponent1 (pix);
 				co2	= Pixel.getComponent2 (pix);
 				
+				// the second component goes up, as the axes of a plot do (the rows of an image go down)
 				switch (mode)
 				{
 				case PROJ12:
-					output.setRGB (co1, co2, irgb.getRGB (x, y));
+					output.setRGB (co1, SIZE - 1 - co2, irgb.getRGB (x, y));
 					break;				
 				case PROJ02:
-					output.setRGB (co0, co2, irgb.getRGB (x, y));
+					output.setRGB (co0, SIZE - 1 - co2, irgb.getRGB (x, y));
 					break;				
 				case PROJ01:
-					output.setRGB (co0, co1, irgb.getRGB (x, y));
+					output.setRGB (co0, SIZE - 1 - co1, irgb.getRGB (x, y));
 					break;
 				}
 			}
@@ -89,13 +90,13 @@ public class SpaceOrtoProjection
 				switch (mode)
 				{
 				case PROJ12:
-					dwg.drawBox (prism.getMin1 (), prism.getMin2 (), prism.getMax1 (), prism.getMax2 (), color);
+					dwg.drawBox (prism.getMin1 (), SIZE - 1 - prism.getMax2 (), prism.getMax1 (), SIZE - 1 - prism.getMin2 (), color);
 					break;					
 				case PROJ02:
-					dwg.drawBox (prism.getMin0 (), prism.getMin2 (), prism.getMax0 (), prism.getMax2 (), color);
+					dwg.drawBox (prism.getMin0 (), SIZE - 1 - prism.getMax2 (), prism.getMax0 (), SIZE - 1 - prism.getMin2 (), color);
 					break;				
 				case PROJ01:
-					dwg.drawBox (prism.getMin0 (), prism.getMin1 (), prism.getMax0 (), prism.getMax1 (), color);
+					dwg.drawBox (prism.getMin0 (), SIZE - 1 - prism.getMax1 (), prism.getMax0 (), SIZE - 1 - prism.getMin1 (), color);
 					break;
 				}
 			}

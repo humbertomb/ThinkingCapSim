@@ -26,9 +26,9 @@ public class CPColorTable extends JPanel
 	private JButton btundo;
 	private JButton btredo;
 	
-	private JCheckBox viewSeeds;
-	private JCheckBox addSeeds;	
-	private JCheckBox subSeeds;	
+	private JToggleButton viewSeeds;
+	private JToggleButton addSeeds;	
+	private JToggleButton subSeeds;	
 	
 	private int selectedChannel = 0;
 	private int action = ACT_NONE;	
@@ -55,17 +55,76 @@ public class CPColorTable extends JPanel
 		panel.add (clusters, BorderLayout.CENTER);
 
 		setLayout (new BorderLayout());
+		add (createControlsPanel(), BorderLayout.NORTH); 
 		add (cpchannelsconf, BorderLayout.CENTER);
-		add (createControlsPanel(), BorderLayout.EAST); 
 		add (panel, BorderLayout.SOUTH); 
 		
 		setVisible(true);
 	}
 
-	private JPanel createControlsPanel()
+	/** A button of the toolbar: small, so that they all fit across the window. */
+	static private <B extends AbstractButton> B small (B b)
 	{
-		JPanel panelbuttons = new JPanel();
-		panelbuttons.setLayout(new GridLayout(11, 1));
+		b.setFont (b.getFont ().deriveFont (10.5f));
+		b.setMargin (new Insets (2, 3, 2, 3));
+		b.setFocusable (false);
+		return b;
+	}
+
+	/**
+	 * A FlowLayout that asks for as many rows as its components need at the width
+	 * it has, so that a toolbar wider than its window goes on in a second row
+	 * instead of losing the buttons at its right.
+	 */
+	static private class Wrap extends FlowLayout
+	{
+		Wrap ()								{ super (FlowLayout.LEFT, 1, 1); }
+
+		public Dimension preferredLayoutSize (Container target)	{ return size (target, true); }
+		public Dimension minimumLayoutSize (Container target)	{ Dimension d = size (target, false); d.width -= getHgap () + 1; return d; }
+
+		private Dimension size (Container target, boolean preferred)
+		{
+			synchronized (target.getTreeLock ())
+			{
+				Container	c = target;
+				int			width;
+				Insets		in = target.getInsets ();
+				int			max, w = 0, h = 0, rw = 0, rh = 0;
+
+				while ((c.getSize ().width == 0) && (c.getParent () != null))	c = c.getParent ();
+				width	= c.getSize ().width;
+				if (width == 0)					width = Integer.MAX_VALUE;
+				max		= width - (in.left + in.right + getHgap () * 2);
+
+				for (Component m : target.getComponents ())
+				{
+					if (!m.isVisible ())		continue;
+					Dimension	d = preferred ? m.getPreferredSize () : m.getMinimumSize ();
+					if ((rw > 0) && (rw + getHgap () + d.width > max))
+					{
+						w	= Math.max (w, rw);
+						h	+= rh + getVgap ();
+						rw	= 0;
+						rh	= 0;
+					}
+					rw	+= (rw > 0 ? getHgap () : 0) + d.width;
+					rh	= Math.max (rh, d.height);
+				}
+				w	= Math.max (w, rw);
+				h	+= rh;
+				return new Dimension (w + in.left + in.right + getHgap () * 2, h + in.top + in.bottom + getVgap () * 2);
+			}
+		}
+	}
+
+	/** The toolbar over the table: the seeds of the channels (new, reset), the colour space, undo and redo, and what the image shows and the clicks do. */
+	private JToolBar createControlsPanel()
+	{
+		JToolBar panelbuttons = new JToolBar ();
+		panelbuttons.setFloatable (false);
+		panelbuttons.setRollover (true);
+		panelbuttons.setLayout (new Wrap ());					// the window is narrower than the buttons: they go on as many rows as needed
 				
 		JButton btResetChannels = new JButton("Reset");
 		btResetChannels.setToolTipText("Create new seeds in ALL CHANNELS");
@@ -79,14 +138,14 @@ public class CPColorTable extends JPanel
 		newSeeds.setToolTipText("Create new seeds in current channel");
 		newSeeds.setSelected(false);
 		
-		viewSeeds = new JCheckBox("View");
+		viewSeeds = new JToggleButton("View");
 		viewSeeds.setToolTipText("View seeds in image");
 		viewSeeds.setSelected(false);	
-		addSeeds = new JCheckBox("Add");
+		addSeeds = new JToggleButton("Add");
 		addSeeds.setToolTipText ("Add seed to current channel");
 		addSeeds.setSelected(false);
 		addSeeds.setEnabled (viewSeeds.isSelected ());
-		subSeeds = new JCheckBox("Remove");
+		subSeeds = new JToggleButton("Remove");
 		subSeeds.setToolTipText ("Remove seed from current channel");
 		subSeeds.setSelected(false);
 		subSeeds.setEnabled (viewSeeds.isSelected ());
@@ -153,6 +212,8 @@ public class CPColorTable extends JPanel
 					subSeeds.setSelected (false);
 					action = ACT_ADD;
 				}
+				else
+					action = ACT_NONE;							// let go: the clicks do nothing again
 			}
 		});	
 		subSeeds.addActionListener(new java.awt.event.ActionListener() {
@@ -163,17 +224,21 @@ public class CPColorTable extends JPanel
 					addSeeds.setSelected (false);
 					action = ACT_REMOVE;
 				}
+				else
+					action = ACT_NONE;
 			}
 		});	
 		
-		panelbuttons.add(newSeeds);
-		panelbuttons.add(btResetChannels);
-		panelbuttons.add(btcolspc);
-		panelbuttons.add(btundo);
-		panelbuttons.add(btredo);		
-		panelbuttons.add(viewSeeds);
-		panelbuttons.add(addSeeds);	
-		panelbuttons.add(subSeeds);	
+		panelbuttons.add(small (newSeeds));
+		panelbuttons.add(small (btResetChannels));
+		panelbuttons.add(small (btcolspc));
+		panelbuttons.addSeparator (new Dimension (4, 4));
+		panelbuttons.add(small (btundo));
+		panelbuttons.add(small (btredo));		
+		panelbuttons.addSeparator (new Dimension (4, 4));
+		panelbuttons.add(small (viewSeeds));
+		panelbuttons.add(small (addSeeds));	
+		panelbuttons.add(small (subSeeds));	
 
 		return panelbuttons;
 	}

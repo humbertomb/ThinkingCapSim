@@ -232,11 +232,15 @@ public class CPSpaceWindow extends JFrame
 			SpaceOrtoProjection			proj1;
 			SpaceCylindricalProjection	proj2;
 		
+			// as the 3D view has the space: a cylinder, the hue round it, the saturation out
+			// from its axis and the value up it. Looking down it, the colour wheel (HS);
+			// from its side, the saturation against the value of every hue (SV); and its
+			// side unrolled, the hue against the value (HV)
 			proj1	= new SpaceOrtoProjection (chs, Color.GRAY.brighter ());
 			cpproj12.updateImage (proj1.project (conv, rgb, SpaceOrtoProjection.PROJ12, dchans));
+			cpproj02.updateImage (proj1.project (conv, rgb, SpaceOrtoProjection.PROJ02, dchans));
 
 			proj2	= new SpaceCylindricalProjection (chs, Color.GRAY.brighter ());
-			cpproj02.updateImage (proj2.project (conv, rgb, SpaceCylindricalProjection.PROJ02, dchans));
 			cpproj01.updateImage (proj2.project (conv, rgb, SpaceCylindricalProjection.PROJ01, dchans));
 		}
 		
