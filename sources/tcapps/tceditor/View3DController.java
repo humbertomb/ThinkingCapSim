@@ -67,11 +67,12 @@ public class View3DController
 
 	protected boolean			animatedVisible	= true;
 	protected boolean			showStarts		= true;		// what the View menu of the window starts with
-	protected boolean			showLabels		= true;
+	protected boolean			showLabels		= false;
 
 	/**
 	 * Whether the window, once it is made, starts showing the starting positions
-	 * of the robots and the names of the objects (View menu; both on unless said).
+	 * of the robots and the names of the objects (View menu; the starting positions
+	 * on and the names off unless said).
 	 */
 	public void setOverlays (boolean starts, boolean labels)
 	{

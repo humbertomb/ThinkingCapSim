@@ -124,7 +124,7 @@ public class WorldView3DWindow extends JFrame
 	protected boolean				showAnimated	= true;	// draw the world's animated objects at their initial pose (off while simulating)
 	protected boolean				showStarts		= true;	// View menu: the starting positions of the robots
 	protected boolean				showNames		= true;	// View menu: the names of the robots
-	protected boolean				showLabels		= true;	// View menu: the names of the objects
+	protected boolean				showLabels		= false;	// View menu: the names of the objects (off unless asked for)
 	protected JCheckBoxMenuItem		startsItem, labelsItem;	// ... and their items, which follow setOverlays
 	protected boolean				showFOVs		= true;	// View menu: what the cameras of the robots see
 	protected java.util.List<FloorName>	labels = new java.util.ArrayList<FloorName> ();	// the names of the live objects, one per object (null for an unnamed one)
