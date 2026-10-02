@@ -60,7 +60,7 @@ public class Chaos implements LuaBridge
 	}
 
 	/** The objects of the LPS the scripts ask for by number (chaos.getLpo). */
-	static public final String[]	LPOS		= { "Ball", "Net1", "Net2", "Align", "Looka", "Landmark1", "Landmark2" };
+	static public final String[]	LPOS		= { "Ball", "Net1", "Net2", "Align", "Looka", "Landmark1", "Landmark2", "Robot1", "Robot2" };
 
 	/**
 	 * The kinds of scan of the camera a script may ask for (chaos.setScanType), as

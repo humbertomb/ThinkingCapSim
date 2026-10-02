@@ -28,7 +28,8 @@ import tcrob.umu.soccer.linda.ItemReferee;
  * Settings, besides those of {@link HFSMController}:
  * <pre>
  *   LPOS        the objects of the LPS the scripts ask for by number,
- *               separated by commas (default Ball, Net1, Net2, Align, Looka, Landmark1, Landmark2)
+ *               separated by commas (default Ball, Net1, Net2, Align, Looka, Landmark1, Landmark2,
+ *               Robot1, Robot2)
  * </pre>
  */
 public class SoccerHfsmController extends HFSMController

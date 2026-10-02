@@ -49,7 +49,8 @@ import wucore.utils.math.*;
  *   BEH         the folder the behaviours the program names are read from
  *               (default ./conf/programs/lua)
  *   LPOS        the objects of the LPS the script asks for by number,
- *               separated by commas (default Ball, Net1, Net2, Align, Looka, Landmark1, Landmark2)
+ *               separated by commas (default Ball, Net1, Net2, Align, Looka, Landmark1, Landmark2,
+ *               Robot1, Robot2)
  *   AUTO        run from the first cycle, waiting for nothing: no plan to
  *               follow, no command to start it and no LPS read yet (a passive
  *               module still runs when an event reaches it, which is what

@@ -33,6 +33,8 @@ public class SoccerRecognitonConfigPanel extends JPanel
 	private JTextField lmsymin;
 	private JTextField lmhorihgt;
 	private JTextField lmdensity;
+	private JTextField robotminpix;
+	private JTextField robotjoin;
 	
 	// The channel each object is looked for in
 	private ChannelSelector carpetch;
@@ -41,6 +43,8 @@ public class SoccerRecognitonConfigPanel extends JPanel
 	private ChannelSelector net2ch;
 	private ChannelSelector lm1ch;
 	private ChannelSelector lm2ch;
+	private ChannelSelector robot1ch;
+	private ChannelSelector robot2ch;
 
 	public SoccerRecognizer			recognizer;
 	protected Channels				channels;
@@ -59,6 +63,8 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		net2ch		= new ChannelSelector (recognizer.params.net2_channel, ch -> recognizer.params.net2_channel = ch);
 		lm1ch		= new ChannelSelector (recognizer.params.lm1_channel, ch -> recognizer.params.lm1_channel = ch);
 		lm2ch		= new ChannelSelector (recognizer.params.lm2_channel, ch -> recognizer.params.lm2_channel = ch);
+		robot1ch	= new ChannelSelector (recognizer.params.robot1_channel, ch -> recognizer.params.robot1_channel = ch);
+		robot2ch	= new ChannelSelector (recognizer.params.robot2_channel, ch -> recognizer.params.robot2_channel = ch);
 		
 		ballsxmin 	= new JTextField (Integer.valueOf (recognizer.params.ball_sx_min).toString ());
 		ballsymin 	= new JTextField (Integer.valueOf (recognizer.params.ball_sy_min).toString ());
@@ -78,6 +84,8 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		lmsymin 		= new JTextField (Integer.valueOf (recognizer.params.lm_sy_min).toString ());
 		lmhorihgt	= new JTextField (Integer.valueOf (recognizer.params.lm_horiz_hgt).toString ());
 		lmdensity	= new JTextField (Integer.valueOf (recognizer.params.lm_density).toString ());
+		robotminpix	= new JTextField (Integer.toString (recognizer.params.robot_min_pix));
+		robotjoin	= new JTextField (Integer.toString (recognizer.params.robot_join));
 		
 		view = new JPanel ();
 		view.setLayout (new BoxLayout (view, BoxLayout.Y_AXIS));
@@ -85,6 +93,7 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		view.add (createBallPanel ());
 		view.add (createNetPanel ());
 		view.add (createLmPanel ());
+		view.add (createRobotPanel ());
 		scroll = new JScrollPane (view);
 		
 		setLayout (new GridLayout (1, 1));
@@ -93,7 +102,7 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		// a value typed in takes effect when Enter is pressed or the field is left
 		for (JTextField f : new JTextField[] { ballsxmin, ballsymin, ballhorihgt, balldensity, ballxdisp, ballydisp,
 												netsxmin, netsymin, nethorihgt, netdensity, netinminx, netinminy, netinmina, netinmemo,
-												lmsxmin, lmsymin, lmhorihgt, lmdensity })
+												lmsxmin, lmsymin, lmhorihgt, lmdensity, robotminpix, robotjoin })
 		{
 			f.addActionListener (_ -> updateValues ());
 			f.addFocusListener (new FocusAdapter () { public void focusLost (FocusEvent e) { updateValues (); } });
@@ -116,7 +125,9 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		net2ch.current		= recognizer.params.net2_channel;
 		lm1ch.current		= recognizer.params.lm1_channel;
 		lm2ch.current		= recognizer.params.lm2_channel;
-		for (ChannelSelector s : new ChannelSelector[] { carpetch, ballch, net1ch, net2ch, lm1ch, lm2ch })
+		robot1ch.current	= recognizer.params.robot1_channel;
+		robot2ch.current	= recognizer.params.robot2_channel;
+		for (ChannelSelector s : new ChannelSelector[] { carpetch, ballch, net1ch, net2ch, lm1ch, lm2ch, robot1ch, robot2ch })
 			s.refresh ();
 	}
 
@@ -215,6 +226,8 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		lmsymin.setText (Integer.toString (recognizer.params.lm_sy_min));
 		lmhorihgt.setText (Integer.toString (recognizer.params.lm_horiz_hgt));
 		lmdensity.setText (Integer.toString (recognizer.params.lm_density));
+		robotminpix.setText (Integer.toString (recognizer.params.robot_min_pix));
+		robotjoin.setText (Integer.toString (recognizer.params.robot_join));
 	}
 
 	protected void updateValues ()
@@ -245,6 +258,9 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		recognizer.params.lm_sy_min 		= Integer.valueOf (lmsymin.getText ()).intValue ();
 		recognizer.params.lm_horiz_hgt		= Integer.valueOf (lmhorihgt.getText ()).intValue ();
 		recognizer.params.lm_density 		= Integer.valueOf (lmdensity.getText ()).intValue ();
+
+		recognizer.params.robot_min_pix		= Integer.valueOf (robotminpix.getText ().trim ()).intValue ();
+		recognizer.params.robot_join		= Integer.valueOf (robotjoin.getText ().trim ()).intValue ();
 	}
 						
 	/** The floor: the channel the horizon is found from (and the nets are fitted against). */
@@ -370,6 +386,36 @@ public class SoccerRecognitonConfigPanel extends JPanel
 		panel.setLayout(new BorderLayout ());
 		// the two landmarks have the same two bands, one of them on top of each: the channel of the one on top says which
 		panel.add (channelLines (new String[] { "Landmark 1 top channel", "Landmark 2 top channel" }, lm1ch, lm2ch), BorderLayout.NORTH);
+		panel.add (left, BorderLayout.WEST);
+		panel.add (right, BorderLayout.CENTER);
+
+		return panel;
+	}
+
+	/**
+	 * The robots: the channel of the uniform of each team (robot 1 scores on net
+	 * 1, robot 2 on net 2), how close the patches of a uniform must be to be of
+	 * the same robot (a share of the size of the larger patch), and how many pixels they must add up to: fewer is a robot
+	 * far away, or a leg alone.
+	 */
+	private JPanel createRobotPanel()
+	{
+		JPanel panel, left, right;
+
+		left = new JPanel();
+		left.setLayout(new GridLayout (2, 1));
+		left.add(new JLabel ("Min area (pix)"));
+		left.add(new JLabel ("Max patch gap (%)"));
+
+		right = new JPanel();
+		right.setLayout(new GridLayout (2, 1));
+		right.add(robotminpix);
+		right.add(robotjoin);
+
+		panel = new JPanel();
+		panel.setBorder(new javax.swing.plaf.BorderUIResource.TitledBorderUIResource(new javax.swing.border.LineBorder(new java.awt.Color(153, 153, 153), 1, false), "Robot Recognition", 4, 2, new java.awt.Font("Application", 1, 12), new java.awt.Color(102, 102, 153)));
+		panel.setLayout(new BorderLayout ());
+		panel.add (channelLines (new String[] { "Robot 1 channel", "Robot 2 channel" }, robot1ch, robot2ch), BorderLayout.NORTH);
 		panel.add (left, BorderLayout.WEST);
 		panel.add (right, BorderLayout.CENTER);
 

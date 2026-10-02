@@ -45,6 +45,8 @@ public class SoccerVisionConfig
 		public int						net2_channel	= 2;
 		public int						lm1_channel		= 1;				// the landmarks: the colour on top of landmark 1 (below it, lm2's)
 		public int						lm2_channel		= 2;				// ... and the one on top of landmark 2 (lm1's below it)
+		public int						robot1_channel	= 3;				// the uniform of robot 1 (blue), which scores on net 1
+		public int						robot2_channel	= 2;				// ... and that of robot 2 (red), which scores on net 2
 
 		public int 						ball_sx_min		= 2;				// Minimum reliable size in image (pix)
 		public int 						ball_sy_min		= 2;				// was 5 --AS 020618
@@ -64,6 +66,8 @@ public class SoccerVisionConfig
 		public int 						lm_sy_min		= 3;				// resolution: 10pix~=10cm, 15pix~=5cm
 		public int 						lm_horiz_hgt	= -20;
 		public int 						lm_density		= 10;
+		public int						robot_min_pix	= 600;				// the patches of a uniform together, at least (pix): fewer is a robot far away, or a leg
+		public int						robot_join		= 50;				// patches of a uniform this close to each other are of the same robot (% of the size of the larger)
 	}
 	
 	public SoccerVisionConfig ()

@@ -32,10 +32,12 @@ public class SoccerVision extends Perception
 	static public final double			NET_SIZE	= 0.2;			// Net size (m)
 	static public final double			LM_RADIUS	= 0.12;			// Landmark (beacon) radius as drawn in the LPS (m; it is 0.05, but so it is seen, as the ball)
 	static public final double			LM_BAND		= 0.30;			// How high its two bands of colour meet (m): what it is placed by
+	static public final double			ROBOT_RADIUS	= 0.15;		// How big a robot that is seen is drawn in the LPS (m): about half an AIBO long
 
 	static public final double			BALL_FADING	= 8.0;
 	static public final double			NET_FADING	= 15.0;
 	static public final double			LM_FADING	= 15.0;
+	static public final double			ROBOT_FADING	= 8.0;		// they move, as the ball does
 
 	static public final int				SCAN_STEPS	= 10;
 
@@ -67,6 +69,8 @@ public class SoccerVision extends Perception
 	protected LPONet					net2;
 	protected LPOLandmark				landmark1;
 	protected LPOLandmark				landmark2;
+	protected LPORobot					robot1;			// a robot of team 1 (blue), which scores on net 1
+	protected LPORobot					robot2;			// ... and one of team 2 (red), which scores on net 2
 	protected LPOAlign					align;
 
 	// Vision processing
@@ -251,6 +255,14 @@ public class SoccerVision extends Perception
 		landmark2.color (WColor.CYAN);
 		landmark2.below (WColor.YELLOW);
 		
+		robot1	= new LPORobot (ROBOT_RADIUS, "Robot1", LPOSource.PERCEPT);
+		robot1.anchor_fade = ROBOT_FADING;
+		robot1.color (WColor.BLUE);
+
+		robot2	= new LPORobot (ROBOT_RADIUS, "Robot2", LPOSource.PERCEPT);
+		robot2.anchor_fade = ROBOT_FADING;
+		robot2.color (WColor.RED);
+
 		align	= new LPOAlign ("Align", LPOSource.ARTIFACT);
 		align.anchor_fade = NET_FADING;
 		align.color (WColor.MAGENTA);
@@ -423,6 +435,8 @@ public class SoccerVision extends Perception
 		if ((net2 != null) && name.equals (net2.label ()))	return recognizer.net2;
 		if ((landmark1 != null) && name.equals (landmark1.label ()))	return recognizer.landmark1;
 		if ((landmark2 != null) && name.equals (landmark2.label ()))	return recognizer.landmark2;
+		if ((robot1 != null) && name.equals (robot1.label ()))	return recognizer.robot1;
+		if ((robot2 != null) && name.equals (robot2.label ()))	return recognizer.robot2;
 		return null;
 	}
 
@@ -544,6 +558,8 @@ public class SoccerVision extends Perception
 			see (net2, recognizer.net2, true, 0.0, recognizer.params.net2_channel, item, w, h);
 			seeLandmark (landmark1, recognizer.landmark1, recognizer.params.lm1_channel, recognizer.params.lm2_channel, item, w, h);
 			seeLandmark (landmark2, recognizer.landmark2, recognizer.params.lm2_channel, recognizer.params.lm1_channel, item, w, h);
+			seeRobot (robot1, recognizer.robot1, recognizer.params.robot1_channel, item, w, h);
+			seeRobot (robot2, recognizer.robot2, recognizer.params.robot2_channel, item, w, h);
 		}
 	}
 
@@ -561,7 +577,7 @@ public class SoccerVision extends Perception
 	protected void attach (LPS l)
 	{
 		if (l == attached)		return;
-		for (LPO o : new LPO[] { ball, net1, net2, landmark1, landmark2, align })
+		for (LPO o : new LPO[] { ball, net1, net2, landmark1, landmark2, robot1, robot2, align })
 		{
 			if (o == null)			continue;
 
@@ -611,6 +627,30 @@ public class SoccerVision extends Perception
 					  : floor (frame.device, frame.pan, frame.tilt, d.cx, d.cy, w, h, height);
 		if (p == null)							return;			// the ray does not reach that height in front of the camera
 		if (onFloor)							p[0] = Math.max (0.0, p[0] - NET_FRONT);
+
+		lpo.locate_polar (p[0], p[1], 0.0);
+		if ((channel >= 0) && (channel < vconfig.channels.size ()) && (vconfig.channels.at (channel).color != null))
+			lpo.color (ColorTool.fromColorToWColor (vconfig.channels.at (channel).color));
+		lpo.active (true);
+		lpo.anchor (1.0);
+		lpo.ageing (0);
+		lpo.sighted ();
+	}
+
+	/**
+	 * A robot seen in the frame: its LPO goes where the ray through the bottom of
+	 * the box of its uniform meets the floor -- the nearest of its feet, or near
+	 * them --, in the colour of the channel of its uniform, and the LPS is sure
+	 * of it again. One whose feet are under the bottom of the frame is nearer
+	 * than that, which is as near as the frame tells.
+	 */
+	protected void seeRobot (LPORobot lpo, SoccerRecognizer.Detection d, int channel, ItemCamera frame, int w, int h)
+	{
+		double[]		p;
+
+		if ((d == null) || (lpo == null))		return;
+		p	= floor (frame.device, frame.pan, frame.tilt, d.x, d.ymax, w, h, 0.0);
+		if (p == null)							return;
 
 		lpo.locate_polar (p[0], p[1], 0.0);
 		if ((channel >= 0) && (channel < vconfig.channels.size ()) && (vconfig.channels.at (channel).color != null))

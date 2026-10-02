@@ -80,6 +80,19 @@ public class SoccerRecognizer
 			radius	= (xmax - xmin) / 2.0;
 		}
 
+		/** A robot: the box of the patches of its uniform, and the pixels of all of them. */
+		Detection (int xmin, int xmax, int ymin, int ymax, int pixels)
+		{
+			this.xmin	= xmin;		this.xmax	= xmax;
+			this.ymin	= ymin;		this.ymax	= ymax;
+			this.pixels	= pixels;
+			x		= (xmin + xmax) / 2;
+			y		= (ymin + ymax) / 2;
+			cx		= x;
+			cy		= y;
+			radius	= (xmax - xmin) / 2.0;
+		}
+
 		public String toString ()
 		{
 			return "(" + x + "," + y + ") [" + xmin + ".." + xmax + " x " + ymin + ".." + ymax + "] " + pixels + " px"
@@ -93,6 +106,8 @@ public class SoccerRecognizer
 	public Detection				net2;
 	public Detection				landmark1;			// the landmark with the colour of lm1_channel on top (that of lm2_channel below it)
 	public Detection				landmark2;			// ... and the one the other way up
+	public Detection				robot1;				// a robot of team 1 (blue uniform), the one that scores on net 1
+	public Detection				robot2;				// ... and one of team 2 (red), which scores on net 2
 
 	private BufferedImageDrawing	dwg = new BufferedImageDrawing ();
 
@@ -116,6 +131,8 @@ public class SoccerRecognizer
 		net2		= null;
 		landmark1	= null;
 		landmark2	= null;
+		robot1		= null;
+		robot2		= null;
 
 		computeFovea (output, dwg);
 		dwg.setThickness (BufferedImageDrawing.MARK);			// what is recognised is marked thick, to be seen at a glance
@@ -165,7 +182,11 @@ public class SoccerRecognizer
 				}
 			}
 		}
-				
+
+		// the robots, by the patches of their uniforms (not those of a landmark, if they share its colour)
+		robot1	= robot (blobs, channels, params.robot1_channel, parts);
+		robot2	= robot (blobs, channels, params.robot2_channel, parts);
+
 		return output;
 	}
 
@@ -253,6 +274,89 @@ public class SoccerRecognizer
 			}
 		}
 		return parts;
+	}
+
+	/**
+	 * The robot of a team in the frame: its uniform is seen as several patches of
+	 * the colour of its channel (the head, the shoulders, the thighs, the legs),
+	 * and the patches that are close to each other are taken to be the same
+	 * robot: two groups of patches are joined when they are no more apart,
+	 * across or up and down, than robot_join percent of the size (width or
+	 * height, the larger) of the larger of the two, and so on while any can be
+	 * -- the nearer the robot, the larger its patches and the gaps between them,
+	 * so the two forelegs of one seen from the front, which are the most of it
+	 * that is seen, are one robot near or far. One whose patches do not add up
+	 * to robot_min_pix pixels is not taken for a robot: it is either far away,
+	 * where it is no danger, or a leg alone, which is not where the robot is.
+	 * The largest robot is the one taken; each one is marked with its box, and
+	 * a cross where it stands (the bottom of its box), in the colour of its
+	 * channel.
+	 */
+	protected Detection robot (Blobs[] blobs, Channels channels, int ch, java.util.List<Blob> parts)
+	{
+		java.util.List<int[]>	groups = new java.util.ArrayList<int[]> ();		// xmin, xmax, ymin, ymax, pixels
+		Detection				best = null;
+		boolean					joined;
+		int						color;
+
+		if (!has (channels, blobs, ch))					return null;
+		for (int i = 0; i < blobs[ch].getBlobNumber (); i++)
+		{
+			Blob	b = blobs[ch].getBlob (i);
+
+			if ((b.getNumPixels () > 0) && !partOf (b, parts))
+				groups.add (new int[] { b.getXMin (), b.getXMax (), b.getYMin (), b.getYMax (), b.getNumPixels () });
+		}
+
+		// the groups close to each other, joined, until none are
+		do
+		{
+			joined	= false;
+			for (int i = 0; (i < groups.size ()) && !joined; i++)
+				for (int k = i + 1; (k < groups.size ()) && !joined; k++)
+				{
+					int[]	a = groups.get (i), b = groups.get (k);
+
+					if (gap (a, b) > join (a, b))		continue;
+					a[0]	= Math.min (a[0], b[0]);		a[1]	= Math.max (a[1], b[1]);
+					a[2]	= Math.min (a[2], b[2]);		a[3]	= Math.max (a[3], b[3]);
+					a[4]	+= b[4];
+					groups.remove (k);
+					joined	= true;
+				}
+		}
+		while (joined);
+
+		// the ones big enough are robots
+		color	= channels.at (ch).color.getRGB ();
+		for (int[] g : groups)
+		{
+			if (g[4] < Math.max (1, params.robot_min_pix))		continue;
+
+			Detection	d = new Detection (g[0], g[1], g[2], g[3], g[4]);
+
+			dwg.drawBox (g[0], g[2], g[1], g[3], color);
+			dwg.drawCross (d.x, g[3], color);
+			if ((best == null) || (d.pixels > best.pixels))		best = d;
+		}
+		return best;
+	}
+
+	/** How far apart two groups of patches of a uniform may be to be of the same robot (pix): robot_join percent of the size of the larger of the two. */
+	protected int join (int[] a, int[] b)
+	{
+		int[]	big = (a[4] >= b[4]) ? a : b;
+
+		return Math.max (1, Math.max (big[1] - big[0] + 1, big[3] - big[2] + 1) * params.robot_join / 100);
+	}
+
+	/** How far apart two boxes (xmin, xmax, ymin, ymax) are (pix): the larger of their gaps across and up and down, 0 if they overlap. */
+	static protected int gap (int[] a, int[] b)
+	{
+		int		xgap = Math.max (a[0] - b[1], b[0] - a[1]);
+		int		ygap = Math.max (a[2] - b[3], b[2] - a[3]);
+
+		return Math.max (0, Math.max (xgap, ygap));
 	}
 
 	/** Whether a blob is one of some (the same one, not an equal one). */

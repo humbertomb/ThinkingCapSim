@@ -419,7 +419,7 @@ public class LuaHelp
 	static private final String[][]	OBJECT_FIELDS =
 	{
 		{ "index", "number", "The number of the object, the one it was asked for by (<span class=\"mono\">chaos.BALL_LPO</span> and so on)." },
-		{ "name", "string", "What the LPS calls it: Ball, Net1, Net2, Align, Looka, Landmark1 (yellow on top), Landmark2 (sky-blue on top)." },
+		{ "name", "string", "What the LPS calls it: Ball, Net1, Net2, Align, Looka, Landmark1 (yellow on top), Landmark2 (sky-blue on top), Robot1 (a robot of the blue team, which scores on net 1), Robot2 (one of the red team, which scores on net 2)." },
 		{ "rho", "number", "How far it is from the robot, in mm; 0 when it is not there at all." },
 		{ "theta", "number", "Which way it is, in degrees, from the heading of the robot: positive to the left. Of the robot, not of the camera." },
 		{ "x", "number", "Where it is in front of the robot, in mm (x ahead, y to the left): rho and theta as coordinates." },
