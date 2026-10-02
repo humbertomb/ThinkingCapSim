@@ -213,7 +213,28 @@ public class KineModel
 	/** The file of the part of a link, in a folder; null when the link names none. */
 	static public java.io.File part (String folder, KineNode k)
 	{
+		return part (folder, k, null);
+	}
+
+	/**
+	 * The same, in a variant: the file with the name of the variant after a dash
+	 * (ers7_body-red.3ds for the variant red of ers7_body.3ds) when the folder has
+	 * it, and the part itself otherwise. It is how a robot wears the uniform of
+	 * its team: only the parts that change are there twice.
+	 */
+	static public java.io.File part (String folder, KineNode k, String variant)
+	{
 		if ((folder == null) || (k == null) || (k.mesh == null) || (k.mesh.trim ().length () == 0))		return null;
-		return new java.io.File (folder.trim (), k.mesh.trim ());
+
+		java.io.File	f = new java.io.File (folder.trim (), k.mesh.trim ());
+
+		if ((variant == null) || (variant.trim ().length () == 0))		return f;
+
+		String			name = k.mesh.trim ();
+		int				dot = name.lastIndexOf ('.');
+		java.io.File	v = new java.io.File (folder.trim (), ((dot > 0) ? name.substring (0, dot) : name) + "-" + variant.trim ()
+											  + ((dot > 0) ? name.substring (dot) : ""));
+
+		return v.isFile () ? v : f;
 	}
 }

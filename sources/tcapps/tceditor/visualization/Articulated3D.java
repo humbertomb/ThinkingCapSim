@@ -44,6 +44,7 @@ public class Articulated3D extends BranchGroup
 
 	protected KineModel				model;
 	protected String				parts;						// the folder of its parts, when it is drawn from them
+	protected String				variant;					// the variant of the parts it wears (the uniform of its team: red, blue), null for none
 	protected TransformGroup		pose;						// the robot in the world
 	protected Map<String, TransformGroup>	joints = new HashMap<String, TransformGroup> ();	// the turning part of each link, by name
 	private Transform3D				t = new Transform3D ();
@@ -56,7 +57,17 @@ public class Articulated3D extends BranchGroup
 	/** The same, drawn from the parts in a folder when the model names them and they are all there. */
 	public Articulated3D (KineModel model, String parts)
 	{
+		this (model, parts, null);
+	}
+
+	/**
+	 * The same, wearing a variant of its parts where the folder has one (see
+	 * {@link KineModel#part(String, KineNode, String)}): the uniform of its team.
+	 */
+	public Articulated3D (KineModel model, String parts, String variant)
+	{
 		this.model	= model;
+		this.variant	= variant;
 		this.parts	= model.partsAvailable (parts) ? parts.trim () : null;
 		setCapability (BranchGroup.ALLOW_DETACH);
 		pose	= new TransformGroup ();
@@ -104,7 +115,7 @@ public class Articulated3D extends BranchGroup
 	 */
 	protected javax.media.j3d.Node part (KineNode n)
 	{
-		java.io.File	f = KineModel.part (parts, n);
+		java.io.File	f = KineModel.part (parts, n, variant);
 
 		if (f == null)				return null;
 

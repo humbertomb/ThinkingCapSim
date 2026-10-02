@@ -93,6 +93,13 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		// its kinematics reckon with the same cycle the robot is actually run at
 		rprops.setProperty ("DTIME", String.valueOf (tdesc.exectime));
 
+		// The uniform the robot wears, which is the deployment's to say and not the
+		// description's: the robots of both teams are described by the same file
+		String			uniform = cfg.get ("UNIFORM");
+
+		if ((uniform != null) && (uniform.trim ().length () > 0))
+			rprops.setProperty ("UNIFORM", uniform.trim ());
+
 		// Load world description and parameters (only when the world grants "a priori" knowledge to the robots)
 		wtext			= null;
 		if (wname != null)

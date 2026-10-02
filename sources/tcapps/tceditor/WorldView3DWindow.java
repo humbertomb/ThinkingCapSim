@@ -853,7 +853,7 @@ public class WorldView3DWindow extends JFrame
 			{
 				tc.vrobot.articulated.KineModel	km = tc.vrobot.articulated.KineJson.read (new File (sdesc.KINEFILE.trim ()));
 
-				art		= new Articulated3D (km, sdesc.V3DPARTS);
+				art		= new Articulated3D (km, sdesc.V3DPARTS, sdesc.UNIFORM);
 				walker	= tc.vrobot.articulated.WalkingModel.create (sdesc.WALKMODEL, km);
 				if (walker != null)		{ walker.stand ();	art.update (); }
 
