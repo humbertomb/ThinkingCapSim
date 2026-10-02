@@ -399,8 +399,9 @@
       "yf": -0.0989
     }
   ],
-  "image": "./conf/2dmodels/aibo.png",
+  "image": "./conf/2dmodels/aibo-red.png",
   "shapeParts": "./conf/3dmodels/aibo",
+  "team": "RED",
   "kinematics": {
     "drive": "tc.vrobot.models.ArticulatedDrive",
     "walking": "tcrob.umu.soccer.walking.AiboWalking",

@@ -1,4 +1,5 @@
 {
+  "apw": false,
   "starts": [
     { "x": 0, "y": 0, "z": 0, "orientation": 0 }
   ],
@@ -12,6 +13,10 @@
       { "x1": 100, "y1": -100, "z1": 0, "x2": -100, "y2": -100, "z2": 0, "width": 3.25, "height": 0.75, "texture": "./conf/3dmodels/textures/stone02.jpg" }
     ]
   },
+  "markings": {
+    "defaults": { "color": "white", "width": 0.05 },
+    "items": []
+  },
   "icons": [
     {
       "label": "barrera",
@@ -24,8 +29,8 @@
     }
   ],
   "objects": [
-    { "icon": "barrera", "x": -50, "y": -50, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false },
-    { "icon": "barrera", "x": 50, "y": 50, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/barrera.3ds", "usecolor": false }
+    { "icon": "barrera", "x": -50, "y": -50, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/ifork/barrera.3ds", "usecolor": false },
+    { "icon": "barrera", "x": 50, "y": 50, "z": 0, "orientation": 0, "color": "100:100:100", "shape": "./conf/3dmodels/ifork/barrera.3ds", "usecolor": false }
   ],
   "aobjects": [],
   "zones": {

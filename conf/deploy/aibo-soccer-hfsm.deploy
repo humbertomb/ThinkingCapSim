@@ -1,5 +1,5 @@
 {
-  "world": "./conf/maps/soccer_field_aibo_2007.world",
+  "world": "./conf/maps/soccer_field_aibo_2007_2robots.world",
   "robots": [
     {
       "name": "AIBO-1",
@@ -111,7 +111,7 @@
       "virtualRobot": {
         "name": "Virtual Robot",
         "properties": {
-          "DESC": "./conf/robots/aibo.robot",
+          "DESC": "./conf/robots/aibo-blue.robot",
           "EXTIME": "75",
           "GFX": "true",
           "MODE": "shared",

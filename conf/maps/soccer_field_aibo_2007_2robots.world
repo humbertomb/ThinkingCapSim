@@ -156,19 +156,21 @@
   ],
   "objects": [
     { "icon": "net", "x": 0, "y": 2.85, "z": 0, "orientation": -90, "color": "yellow", "shape": "./conf/3dmodels/aibo/aibo-net.3ds", "usecolor": true },
-    { "icon": "net", "x": 0.0088, "y": -2.85, "z": 0, "orientation": 90, "color": "cyan", "shape": "./conf/3dmodels/aibo/aibo-net.3ds", "usecolor": true },
+    { "icon": "net", "x": 0, "y": -2.85, "z": 0, "orientation": 90, "color": "cyan", "shape": "./conf/3dmodels/aibo/aibo-net.3ds", "usecolor": true },
     { "icon": "teamchaos", "image": "./conf/2dmodels/teamchaos.jpg", "x": 1, "y": 3.3, "z": 0, "orientation": 0, "color": "gray_dark" },
     { "icon": "teamchaos", "image": "./conf/2dmodels/teamchaos.jpg", "x": -1, "y": -3.3, "z": 0, "orientation": 180, "color": "gray_dark" },
-    { "icon": "landmark", "image": "./conf/2dmodels/landmark1.png", "x": -1.8912, "y": 0, "z": 0, "orientation": 0, "color": "gray_dark", "shape": "./conf/3dmodels/aibo/aibo-lm1.3ds", "usecolor": false },
+    { "icon": "landmark", "image": "./conf/2dmodels/landmark1.png", "x": -1.9, "y": 0, "z": 0, "orientation": 0, "color": "gray_dark", "shape": "./conf/3dmodels/aibo/aibo-lm1.3ds", "usecolor": false },
     { "icon": "landmark", "image": "./conf/2dmodels/landmark2.png", "x": 1.9, "y": 0, "z": 0, "orientation": 0, "color": "gray_dark", "shape": "./conf/3dmodels/aibo/aibo-lm2.3ds", "usecolor": false }
   ],
   "aobjects": [
-    { "label": "ball", "icon": "ball", "image": "./conf/2dmodels/ball.png", "x": 0, "y": 0, "z": 0.04, "orientation": 0, "radius": 0.04, "color": "gray_dark", "shape": "./conf/3dmodels/aibo/aibo-ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.01 }
+    { "label": "ball", "icon": "ball", "image": "./conf/2dmodels/ball.png", "x": 0, "y": 0, "z": 0.04, "orientation": 0, "radius": 0.04, "color": "gray_dark", "shape": "./conf/3dmodels/aibo/aibo-ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.01 },
+    { "label": "robot-1", "icon": "robot", "image": "./conf/2dmodels/aibo-red.png", "x": 0.2913, "y": 1.6316, "z": 0, "orientation": -108.9246, "radius": 0.2134, "color": "gray_dark", "shape": "./conf/3dmodels/aibo/aibo-red.3ds", "usecolor": false, "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.2, "coef_fric": 0.001 },
+    { "label": "robot-2", "icon": "robot", "image": "./conf/2dmodels/aibo-red.png", "x": -1.0376, "y": 0.8158, "z": 0, "orientation": -46.0416, "radius": 0.213, "color": "gray_dark", "shape": "./conf/3dmodels/aibo/aibo-red.3ds", "usecolor": false, "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.2, "coef_fric": 0.001 }
   ],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },
     "items": [
-      { "label": "Arena", "x": -2.55, "y": -3.45, "z": 0, "width": 5.1, "height": 6.9, "texture": "./conf/3dmodels/textures/floor2.jpg" },
+      { "label": "Arena", "x": -2.5412, "y": -3.45, "z": 0, "width": 5.1, "height": 6.9, "texture": "./conf/3dmodels/textures/floor2.jpg" },
       { "label": "Net1Inside", "x": -0.4, "y": 2.7, "z": 0, "width": 0.8, "height": 0.3, "texture": "./conf/3dmodels/textures/floor2.jpg" },
       { "label": "Net2Inside", "x": -0.4, "y": -3, "z": 0, "width": 0.8, "height": 0.3, "texture": "./conf/3dmodels/textures/floor2.jpg" },
       { "label": "Field", "x": -1.83, "y": -2.73, "z": 0, "width": 3.66, "height": 5.46, "texture": "./conf/3dmodels/textures/floor2.jpg" },

@@ -1,6 +1,5 @@
 {
   "name": "iFork",
-  "radius": 1.0,
   "icon": [
     {
       "xi": -1.1199,
@@ -184,8 +183,8 @@
     }
   ],
   "image": "./conf/2dmodels/ifork.png",
-  "shapeRobot": "./conf/3dmodels/ifork.3ds",
-  "shapeActuator": "./conf/3dmodels/ifork.lift.3ds",
+  "shapeRobot": "./conf/3dmodels/ifork/ifork.3ds",
+  "shapeActuator": "./conf/3dmodels/ifork/ifork.lift.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.TricycleDrive",
     "vmax": 0.0,

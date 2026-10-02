@@ -24,6 +24,10 @@
       { "x1": 5, "y1": -6.5, "z1": 0, "x2": 5, "y2": -11.8, "z2": 0 }
     ]
   },
+  "markings": {
+    "defaults": { "color": "white", "width": 0.05 },
+    "items": []
+  },
   "icons": [
     {
       "label": "box",
@@ -54,9 +58,9 @@
   ],
   "objects": [],
   "aobjects": [
-    { "label": "Palet-1", "icon": "palet", "image": "./conf/2dmodels/palet.png", "x": -10.4113, "y": -1.5471, "z": 0, "orientation": 0.0307, "radius": 0.5615, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
-    { "label": "palet-2", "icon": "palet", "image": "./conf/2dmodels/palet.png", "x": 2.5583, "y": 4.1938, "z": 0, "orientation": -90, "radius": 0.5574, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
-    { "label": "palet-3", "icon": "palet", "image": "./conf/2dmodels/palet.png", "x": 0.7931, "y": -8.7702, "z": 0, "orientation": 60, "radius": 0.6613, "color": "gray_dark", "shape": "./conf/3dmodels/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 }
+    { "label": "Palet-1", "icon": "palet", "image": "./conf/2dmodels/palet.png", "x": -10.4113, "y": -1.5471, "z": 0, "orientation": 0.0307, "radius": 0.5615, "color": "gray_dark", "shape": "./conf/3dmodels/ifork/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
+    { "label": "palet-2", "icon": "palet", "image": "./conf/2dmodels/palet.png", "x": 2.5583, "y": 4.1938, "z": 0, "orientation": -90, "radius": 0.5574, "color": "gray_dark", "shape": "./conf/3dmodels/ifork/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
+    { "label": "palet-3", "icon": "palet", "image": "./conf/2dmodels/palet.png", "x": 0.7931, "y": -8.7702, "z": 0, "orientation": 60, "radius": 0.6613, "color": "gray_dark", "shape": "./conf/3dmodels/ifork/pallet.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 }
   ],
   "zones": {
     "defaults": { "texture": "./conf/3dmodels/textures/floor.jpg" },

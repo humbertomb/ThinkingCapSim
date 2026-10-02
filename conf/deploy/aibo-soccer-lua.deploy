@@ -72,7 +72,7 @@
       "virtualRobot": {
         "name": "Virtual Robot",
         "properties": {
-          "DESC": "./conf/robots/aibo.robot",
+          "DESC": "./conf/robots/aibo-blue.robot",
           "EXTIME": "75",
           "GFX": "true",
           "MODE": "shared",
