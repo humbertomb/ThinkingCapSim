@@ -288,12 +288,12 @@
     { "icon": "lineaprod_corte", "x": 37.3308, "y": 54.4173, "z": 0, "orientation": 180, "color": "100:100:100", "shape": "./conf/3dmodels/ifork/linea.prod1.3ds", "usecolor": false }
   ],
   "aobjects": [
-    { "label": "Palet1", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 32.1903, "y": 82.0732, "z": 0, "orientation": 0, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
+    { "label": "Palet1", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 32.1159, "y": 82.0783, "z": 0, "orientation": 0, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
     { "label": "Palet2", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 69.4034, "y": 60.4995, "z": 0.8, "orientation": 90, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
-    { "label": "Palet3", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 28.6135, "y": 14.1859, "z": 0, "orientation": -0.3448, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
-    { "label": "Palet4", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 32.1978, "y": 80.3881, "z": 0, "orientation": 0, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
-    { "label": "Palet5", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 32.1978, "y": 78.7031, "z": 0, "orientation": 0, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
-    { "label": "Palet6", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 32.2053, "y": 77.1158, "z": 0, "orientation": 0, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
+    { "label": "Palet3", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 28.5594, "y": 14.1898, "z": 0, "orientation": -0.3448, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
+    { "label": "Palet4", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 32.1355, "y": 80.384, "z": 0, "orientation": 0, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
+    { "label": "Palet5", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 32.1257, "y": 78.7092, "z": 0, "orientation": 0, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
+    { "label": "Palet6", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 32.1061, "y": 77.1323, "z": 0, "orientation": 0, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
     { "label": "Palet7", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 59.524, "y": 60.4819, "z": 0.8, "orientation": 90, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
     { "label": "Palet8", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 46.5929, "y": 60.5142, "z": 0.8, "orientation": 90, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 },
     { "label": "Palet9", "icon": "pallet", "image": "./conf/2dmodels/palet.png", "x": 36.9368, "y": 60.5028, "z": 0.8, "orientation": 90, "radius": 0.65, "color": "150:100:0", "shape": "./conf/3dmodels/ifork/pallet.full.empty.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimCargo", "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.001 }
@@ -355,7 +355,7 @@
   },
   "waypoints": [
     { "label": "inA1wp", "x": 64.201, "y": 61.1, "z": 0, "orientation": 0 },
-    { "label": "outA1wp", "x": 70.6473, "y": 64.802, "z": 0, "orientation": 0 },
+    { "label": "outA1wp", "x": 70.6473, "y": 64.802, "z": 0, "orientation": 68.2073 },
     { "label": "inA2wp", "x": 54.875, "y": 61.1, "z": 0, "orientation": 0 },
     { "label": "outA2wp", "x": 61.347, "y": 64.101, "z": 0, "orientation": 0 },
     { "label": "bufA00", "x": 61, "y": 75, "z": 0, "orientation": 90 },
@@ -384,10 +384,10 @@
     { "label": "wpLA-Entrada", "x": 32.252, "y": 10.3377, "z": 0, "orientation": 0 }
   ],
   "docks": [
-    { "label": "L1-Entrada", "x": 66.1831, "y": 57.7738, "z": 0.84, "orientation": 90, "flow": "IN" },
-    { "label": "L1-Salida", "x": 69.4014, "y": 61.0706, "z": 0.81, "orientation": 90, "flow": "OUT" },
-    { "label": "L2-Entrada", "x": 56.3318, "y": 57.7738, "z": 0.84, "orientation": 90, "flow": "IN" },
-    { "label": "L2-Salida", "x": 59.524, "y": 61.0706, "z": 0.81, "orientation": 90, "flow": "OUT" },
+    { "label": "L1-Entrada", "x": 66.1914, "y": 57.8485, "z": 0.84, "orientation": 90, "flow": "IN" },
+    { "label": "L1-Salida", "x": 69.4221, "y": 61.1449, "z": 0.81, "orientation": 90, "flow": "OUT" },
+    { "label": "L2-Entrada", "x": 56.3283, "y": 57.8439, "z": 0.84, "orientation": 90, "flow": "IN" },
+    { "label": "L2-Salida", "x": 59.5289, "y": 61.141, "z": 0.81, "orientation": 90, "flow": "OUT" },
     { "label": "Carga1", "x": 79.721, "y": 72.227, "z": 0.08, "orientation": 180, "flow": "INOUT" },
     { "label": "Carga2", "x": 79.721, "y": 70.627, "z": 0.08, "orientation": 180, "flow": "INOUT" },
     { "label": "Carga3", "x": 79.721, "y": 68.427, "z": 0.08, "orientation": 180, "flow": "INOUT" },
@@ -400,10 +400,10 @@
     { "label": "Din1", "x": 32.785, "y": 73.703, "z": 0.1, "orientation": 0, "flow": "IN" },
     { "label": "Din2", "x": 32.785, "y": 72.165, "z": 0.1, "orientation": 0, "flow": "IN" },
     { "label": "Din3", "x": 32.785, "y": 70.313, "z": 0.1, "orientation": 0, "flow": "IN" },
-    { "label": "L3-Salida", "x": 46.6043, "y": 61.0863, "z": 0.81, "orientation": 90, "flow": "OUT" },
-    { "label": "L3-Entrada", "x": 50.2425, "y": 57.8027, "z": 0.84, "orientation": 90, "flow": "IN" },
-    { "label": "L4-Salida", "x": 36.9254, "y": 61.0863, "z": 0.81, "orientation": 90, "flow": "OUT" },
-    { "label": "L4-Entrada", "x": 40.678, "y": 57.8027, "z": 0.84, "orientation": 90, "flow": "IN" },
+    { "label": "L3-Salida", "x": 46.6043, "y": 61.1556, "z": 0.81, "orientation": 90, "flow": "OUT" },
+    { "label": "L3-Entrada", "x": 50.2428, "y": 57.8568, "z": 0.84, "orientation": 90, "flow": "IN" },
+    { "label": "L4-Salida", "x": 36.9279, "y": 61.1668, "z": 0.81, "orientation": 90, "flow": "OUT" },
+    { "label": "L4-Entrada", "x": 40.6349, "y": 57.8517, "z": 0.84, "orientation": 90, "flow": "IN" },
     { "label": "LA-Salida", "x": 29.2092, "y": 14.1761, "z": 0.1, "orientation": 1.7402, "flow": "OUT" },
     { "label": "LA-Entrada", "x": 29.252, "y": 11.8377, "z": 0.1, "orientation": 0.8173, "flow": "IN" }
   ],
