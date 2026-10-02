@@ -502,6 +502,14 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		if ((viewBT != null) && !viewBT[v].isSelected ())	viewBT[v].setSelected (true);
 	}
 
+	/** How big the robot is (m), to put what is added to it: how far its drawing reaches, or the default size while it has none. */
+	private double robotSize ()
+	{
+		double		r = robot.radius ();
+
+		return (r > 0.0) ? r : RobotDef.DEFAULT_RADIUS;
+	}
+
 	/** True when the robot is drawn from its parts (a folder of them is named). */
 	public boolean hasParts ()
 	{
@@ -746,7 +754,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 	private void addWheel ()
 	{
-		double				r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		double				r = robotSize ();
 		RobotDef.Wheel		w = new RobotDef.Wheel ();
 
 		w.x			= r / 2;
@@ -762,7 +770,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 	private void addLine ()
 	{
-		double		r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		double		r = robotSize ();
 		double[]	a = canvas.newArea ();					// inside what the view shows, at its zoom
 
 		if (a != null)		robot.icon.add (new RobotDef.IconLine (a[0], a[1], a[2], a[3]));
@@ -774,7 +782,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 	private void addBumper ()
 	{
-		double		r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		double		r = robotSize ();
 		double[]	a = canvas.newArea ();					// inside what the view shows, at its zoom
 
 		// across the view, as a bumper usually runs across the front of the robot
@@ -797,7 +805,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		RobotDef.Family		f = robot.family (fam);
 		RobotDef.Sensor		s = new RobotDef.Sensor ();
 
-		s.rho	= (robot.radius > 0.0) ? robot.radius : 0.25;
+		s.rho	= robotSize ();
 		if (RobotDef.hasFiring (fam))
 		{
 			if (f.n () == 0)			f.cycle = 1;
@@ -819,7 +827,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	 */
 	private void addGroup ()
 	{
-		double				r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		double				r = robotSize ();
 		RobotDef.Group		g = new RobotDef.Group ();
 
 		g.rho		= r;
@@ -843,7 +851,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	 */
 	private void addFused ()
 	{
-		double				r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		double				r = robotSize ();
 		RobotDef.Fused		f = new RobotDef.Fused ();
 
 		f.rho		= r;
@@ -866,7 +874,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	 */
 	private void addScan ()
 	{
-		double				r = (robot.radius > 0.0) ? robot.radius : 0.25;
+		double				r = robotSize ();
 		RobotDef.Scanner	s = new RobotDef.Scanner ();
 
 		s.rho		= r;
@@ -1158,7 +1166,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		RobotItem	sel = canvas.getSelection ();
 
 		robot.name			= c.name;
-		robot.radius		= c.radius;
 		robot.icon			= c.icon;
 		robot.image			= c.image;
 		robot.shapeRobot	= c.shapeRobot;
@@ -1443,7 +1450,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		if (it == null)				return new String[0];
 		switch (it.kind)
 		{
-		case RobotItem.PLATFORM:	return new String[] { "name", "radius", "image", "robot shape", "actuator shape", PARTS, TEAM };
+		case RobotItem.PLATFORM:	return new String[] { "name", "image", "robot shape", "actuator shape", PARTS, TEAM };
 		case RobotItem.KINEMATICS:	return kinematicsNames ();
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
@@ -1532,7 +1539,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 		case RobotItem.PLATFORM:
 			if (name.equals ("name"))		return (robot.name != null) ? robot.name : "";
-			if (name.equals ("radius"))		return RobotDef.fmt (robot.radius);
 			if (name.equals ("image"))			return (robot.image != null) ? robot.image : "";
 			if (name.equals ("robot shape"))	return (robot.shapeRobot != null) ? robot.shapeRobot : "";
 			if (name.equals ("actuator shape"))	return (robot.shapeActuator != null) ? robot.shapeActuator : "";
@@ -2001,7 +2007,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 		case RobotItem.PLATFORM:
 			if (name.equals ("name"))			robot.name = token (value);
-			else if (name.equals ("radius"))	robot.radius = num (value);
 			else if (name.equals ("image"))
 			{
 				tc.vrobot.RobotImage.flush (robot.image);		// the view reads the new file

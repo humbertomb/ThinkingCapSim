@@ -351,7 +351,8 @@ public class RobotDef
 	/* ------------------------------------------------------------------ */
 
 	public String				name;												// name of the platform (the file name by default)
-	public double				radius;												// RADIUS (m)
+	@Deprecated
+	private Double				radius;												// what older files said the robot was as a circle (m): read once, made into its drawing (see normalise), never written
 	public List<IconLine>		icon		= new ArrayList<IconLine> ();			// drawing of the robot
 	public String				image;												// IMAGE (2D bitmap, optional)
 	public String				shapeRobot;											// V3DFILE (3D model of the platform)
@@ -943,8 +944,7 @@ public class RobotDef
 	{
 		RobotDef	d = new RobotDef ();
 		d.name		= "robot";
-		d.radius	= 0.25;
-		d.normalise ();
+		d.normalise ();												// round, of the default size (see normalise)
 		d.original	= d.toJson ();
 		return d;
 	}
@@ -1022,7 +1022,6 @@ public class RobotDef
 	{
 		RobotDef	d = new RobotDef ();
 		d.name			= name;
-		d.radius		= radius;
 		for (IconLine l : icon)			d.icon.add (l.copy ());
 		d.image			= image;
 		d.shapeRobot	= shapeRobot;
@@ -1043,10 +1042,58 @@ public class RobotDef
 		return d;
 	}
 
+	/** How big a robot with no drawing is made, as a circle (m). */
+	static public final double		DEFAULT_RADIUS	= 0.25;
+	/** How many sides the circle of a round robot has. */
+	static public final int			ROUND_SIDES		= 24;
+
+	/**
+	 * How far from its origin the robot reaches (m): the farthest point of its
+	 * drawing, which is its outline -- what it collides as and what the others
+	 * see. It is what the runtime knows as the radius of the robot (RADIUS: how
+	 * much the planners grow the obstacles, the area the referee checks, ...),
+	 * worked out and never written. Zero for a robot with no drawing.
+	 */
+	public double radius ()
+	{
+		double		r = 0.0;
+
+		if (icon != null)
+			for (IconLine l : icon)
+				r	= Math.max (r, Math.max (Math.hypot (l.xi, l.yi), Math.hypot (l.xf, l.yf)));
+		return r;
+	}
+
+	/** A round drawing, of some radius around the origin: what a robot that is round is drawn as. */
+	static public List<IconLine> round (double r)
+	{
+		List<IconLine>	out = new ArrayList<IconLine> ();
+
+		for (int i = 0; i < ROUND_SIDES; i++)
+		{
+			double	a0 = 2.0 * Math.PI * i / ROUND_SIDES, a1 = 2.0 * Math.PI * (i + 1) / ROUND_SIDES;
+
+			out.add (new IconLine (fix (r * Math.cos (a0)), fix (r * Math.sin (a0)), fix (r * Math.cos (a1)), fix (r * Math.sin (a1))));
+		}
+		return out;
+	}
+
+	/** A coordinate as the files keep it: to the tenth of a millimetre, and no -0. */
+	static private double fix (double v)
+	{
+		double		r = Math.rint (v * 10000.0) / 10000.0;
+
+		return (r == 0.0) ? 0.0 : r;
+	}
+
 	/** Fills what a hand-written or older file may have left out. */
 	protected void normalise ()
 	{
 		if (icon == null)			icon = new ArrayList<IconLine> ();
+		// a robot is its drawing: one with none is a circle, of the radius an older
+		// file gave it or of the default size, and the radius is not kept any more
+		if (icon.isEmpty ())		icon = round (((radius != null) && (radius > 0.0)) ? radius : DEFAULT_RADIUS);
+		radius	= null;
 		if (bumpers == null)		bumpers = new ArrayList<Bumper> ();
 		if (wheels == null)			wheels = new ArrayList<Wheel> ();
 		if (groups == null)			groups = new ArrayList<Group> ();
@@ -1498,7 +1545,7 @@ public class RobotDef
 		normalise ();
 		for (Map.Entry<String, String> e : extra.entrySet ())		p.setProperty (e.getKey (), e.getValue ());
 
-		set (p, "RADIUS", radius);
+		set (p, "RADIUS", radius ());						// what the runtime knows as its radius: how far its outline reaches
 		if (image != null)			p.setProperty ("IMAGE", image);
 		if (shapeRobot != null)		p.setProperty ("V3DFILE", shapeRobot);
 		if (shapeActuator != null)	p.setProperty ("V3DLIFT", shapeActuator);
@@ -1707,7 +1754,7 @@ public class RobotDef
 
 	public String toString ()
 	{
-		StringBuilder	sb = new StringBuilder (((name != null) ? name : "robot") + " [radius=" + fmt (radius) + ", lines=" + icon.size () + ", bumpers=" + bumpers.size ());
+		StringBuilder	sb = new StringBuilder (((name != null) ? name : "robot") + " [reach=" + fmt (radius ()) + ", lines=" + icon.size () + ", bumpers=" + bumpers.size ());
 		for (String fam : FAMILIES)
 			if (family (fam).n () > 0)		sb.append (", " + fam + "=" + family (fam).n ());
 		return sb.append (']').toString ();

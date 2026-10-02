@@ -585,10 +585,10 @@ public class RobotCanvas extends JPanel
 		boolean		any = false;
 
 		if (robot == null)			return null;
-		if (robot.radius > 0.0)
+		if (robot.radius () > 0.0)
 		{
-			b	= grow3 (b, -robot.radius, -robot.radius, 0.0);
-			b	= grow3 (b, robot.radius, robot.radius, 0.0);
+			b	= grow3 (b, -robot.radius (), -robot.radius (), 0.0);
+			b	= grow3 (b, robot.radius (), robot.radius (), 0.0);
 			any	= true;
 		}
 		for (RobotDef.IconLine l : robot.icon)
@@ -1591,7 +1591,7 @@ public class RobotCanvas extends JPanel
 		double[]		b;
 
 		if (img == null)				return;
-		b	= RobotImage.box (iconLines (), robot.radius);
+		b	= RobotImage.box (iconLines (), robot.radius ());
 		if (b == null)					return;
 		RobotImage.draw (g, img, px ((b[0] + b[2]) / 2), py ((b[1] + b[3]) / 2),
 							(b[2] - b[0]) * scale, (b[3] - b[1]) * scale, 0.0);
@@ -1627,8 +1627,8 @@ public class RobotCanvas extends JPanel
 	{
 		double		r;
 
-		if (robot.radius <= 0.0)		return;
-		r	= robot.radius * scale;
+		if (robot.radius () <= 0.0)		return;
+		r	= robot.radius () * scale;			// how far its drawing reaches: what the planners grow the obstacles by
 		g.setColor (C_RADIUS);
 		g.setStroke (new BasicStroke (1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 1f, new float[] { 5f, 4f }, 0f));
 		if (isTop ())

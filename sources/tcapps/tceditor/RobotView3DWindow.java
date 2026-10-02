@@ -640,7 +640,7 @@ public class RobotView3DWindow extends JFrame
 	/** Centres the view on the robot and on what the selection covers. */
 	public void fitView ()
 	{
-		double	size = Math.max (2 * robot.radius, 0.4);			// a small robot is framed close, to be seen
+		double	size = Math.max (2 * robot.radius (), 0.4);			// a small robot is framed close, to be seen
 
 		size	= Math.max (size, 2 * coverExtent ());
 		scene.lookAt (0.0, 0.0, 0.1 * size, 2.5 * size + 0.3);
