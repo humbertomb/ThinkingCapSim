@@ -173,10 +173,10 @@ public class SimObjects
 					SimMobileObject		mobj = (SimMobileObject) OBJS[i];
 					mobj.move (dt / 1000.0);
 
-					// the robots: discs (of their radius) the object cannot get into
+					// the robots: their outlines (their icons, or the circle of their radius when they have none), which the object cannot get into
 					for (int r = 0; r < simul.numrobots; r++)
 						if ((simul.MODEL[r] != null) && (simul.RDESC[r] != null))
-							if (mobj.robot_collision (simul.MODEL[r].real_x, simul.MODEL[r].real_y, simul.RDESC[r].RADIUS, rvx[r], rvy[r]))
+							if (mobj.robot_collision (simul.robotOutline (r), simul.MODEL[r].real_x, simul.MODEL[r].real_y, rvx[r], rvy[r]))
 								mobj.touched (r, ct);					// the last robot to touch it, for whoever judges the game
 
 					// the walls (and the other objects)

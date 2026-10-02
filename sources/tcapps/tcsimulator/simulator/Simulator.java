@@ -83,7 +83,9 @@ public class Simulator
 	public RobotDesc[]				RDESC;
 	public RobotModel[]				MODEL;
 	public String[]					NAMES		= new String[MAX_ROBOTS];		// what each robot is called (the deployment's name), or null
-	protected double[][][]			BODY		= new double[MAX_ROBOTS][][];	// what each robot collides as (see body ()), made when first needed
+	protected double[][][]			BODY		= new double[MAX_ROBOTS][][];	// what each robot collides as when it is not its outline (see body ()), made when first needed
+	protected boolean[]				BODYDONE	= new boolean[MAX_ROBOTS];		// ... and whether that was worked out already
+	protected double[][]			PREV		= new double[MAX_ROBOTS][];		// where each robot was before the step it is taking (x, y, a)
 	protected double[][]			CMD			= new double[MAX_ROBOTS][3];	// the last control action of each robot: vlin, vlat (m/s), vrot (rad/s)
 
 	/** The last control action of a robot, {vlin, vlat, vrot} (m/s, m/s, rad/s): what an articulated robot is seen walking with. */
@@ -308,7 +310,7 @@ public class Simulator
 	/**
 	 * The edge closest to an animated object among the walls and the other
 	 * objects (not itself, whose icon is index, nor the robots: an object meets
-	 * a robot as the disc it is, see SimObjects).
+	 * a robot as its outline, see SimObjects).
 	 */
 	public Line2 closerObstacle (SimObject obj, int index)
 	{
@@ -1170,19 +1172,19 @@ public class Simulator
 	}
 
 	/**
-	 * What a robot collides as, in its own frame: discs {dx, dy, r}. The one disc
-	 * of its radius at its origin, as a rule. When its actuator is not to collide
-	 * ({@link #COLLIDE_ACTUATORS}) and the robot has one (a 3D model of it) and
-	 * its bumpers outline its body, it is that body instead: discs of half the
-	 * width of the outline, side by side along its length, which leave the fork
-	 * out of the collision and let it go under a pallet.
+	 * What a robot collides as when it is not its outline (see {@link #collide}),
+	 * in its own frame: discs {dx, dy, r}; null when it is its outline. When its
+	 * actuator is not to collide ({@link #COLLIDE_ACTUATORS}) and the robot has
+	 * one (a 3D model of it) and its bumpers outline its body, it is that body:
+	 * discs of half the width of the outline, side by side along its length,
+	 * which leave the fork out of the collision and let it go under a pallet.
 	 */
 	protected double[][] body (int robotind)
 	{
-		if (BODY[robotind] != null)			return BODY[robotind];
+		if (BODYDONE[robotind])				return BODY[robotind];
 
 		RobotDesc		rd = RDESC[robotind];
-		double[][]		discs = { { 0.0, 0.0, rd.RADIUS } };
+		double[][]		discs = null;
 		boolean			actuator = (SDESC[robotind] != null) && (SDESC[robotind].V3DLIFT != null);
 
 		if (!COLLIDE_ACTUATORS && actuator && (rd.MAXBUMPER > 0) && (rd.bumfeat != null))
@@ -1215,7 +1217,8 @@ public class Simulator
 				}
 			}
 		}
-		BODY[robotind]	= discs;
+		BODY[robotind]		= discs;
+		BODYDONE[robotind]	= true;
 		return discs;
 	}
 
@@ -1230,9 +1233,149 @@ public class Simulator
 	protected boolean collide (int robotind, RobotData data)
 	{
 		double[][]	discs = body (robotind);
-		boolean		hit = false;
 
 		if (map == null)		return false;
+		if (discs == null)		return collideOutline (robotind, data);
+		return collideDiscs (robotind, data, discs);
+	}
+
+	/**
+	 * The robot as its outline (its icon, or the circle of its radius when it has
+	 * none: what the others see and hit it as) against what it can hit: a step
+	 * that would take the outline across an edge is cut short where it touches,
+	 * and what is left of it goes on along that edge (with the turn, if there is
+	 * room for it), which is what lets it slide along a wall instead of stopping
+	 * dead against it. Its bumpers are set from where it was touched. A robot
+	 * that already overlapped something before the step (put there by hand) is
+	 * let move, so that it can get out. Returns whether it touched anything.
+	 */
+	protected boolean collideOutline (int robotind, RobotData data)
+	{
+		Line2[]			o = OUTLINE[robotind];
+		RobotModel		m = MODEL[robotind];
+		double[]		p = PREV[robotind];
+		double[]		to = { m.real_x, m.real_y, m.real_a };
+		double			reach = 0.0;
+		java.util.List<Line2>	edges = new java.util.ArrayList<Line2> ();
+
+		if ((o == null) || (o.length == 0) || (p == null))		return false;
+		for (Line2 l : o)
+			if (l != null)		reach = Math.max (reach, Math.max (Math.hypot (l.orig ().x (), l.orig ().y ()), Math.hypot (l.dest ().x (), l.dest ().y ())));
+		// only the edges within its reach on the way: not every wall against every side of it
+		double		step = Math.hypot (to[0] - p[0], to[1] - p[1]);
+		for (Line2 e : obstacles (robotind))
+			if (closestOn (e, (p[0] + to[0]) / 2.0, (p[1] + to[1]) / 2.0)[2] <= reach + step / 2.0 + 0.01)		edges.add (e);
+		if (edges.isEmpty () || (hit (o, to, edges) == null) || (hit (o, p, edges) != null))		return false;
+
+		// how far it gets: the last of the step that is free
+		double		lo = 0.0, hi = 1.0;
+		for (int i = 0; i < 12; i++)
+		{
+			double	mid = (lo + hi) / 2.0;
+			if (hit (o, along (p, to, mid), edges) != null)		hi = mid;
+			else												lo = mid;
+		}
+		double[]	at = along (p, to, lo);
+		Line2		e = hit (o, along (p, to, hi), edges);			// what it touched
+
+		// and on along what it touched, with the rest of the turn if there is room for it
+		if (e != null)
+		{
+			double	ex = e.dest ().x () - e.orig ().x (), ey = e.dest ().y () - e.orig ().y (), el = Math.hypot (ex, ey);
+			double	s = (el > 0.0) ? ((to[0] - at[0]) * ex + (to[1] - at[1]) * ey) / (el * el) : 0.0;
+			double	da = Angles.radnorm_180 (to[2] - at[2]);
+			double[][]	tries = { { at[0] + s * ex, at[1] + s * ey, at[2] + da }, { at[0] + s * ex, at[1] + s * ey, at[2] } };
+
+			for (double[] t : tries)
+			{
+				double	l0 = 0.0, h0 = 1.0;
+
+				if (hit (o, t, edges) == null)		{ at = t;	break; }
+				for (int i = 0; i < 10; i++)
+				{
+					double	mid = (l0 + h0) / 2.0;
+					if (hit (o, along (at, t, mid), edges) != null)		h0 = mid;
+					else												l0 = mid;
+				}
+				if (l0 > 0.0)		{ at = along (at, t, l0);	break; }
+			}
+		}
+
+		// where it is, and its odometry by as much (it was put there as the real robot is, by what it hit)
+		double		dx = at[0] - to[0], dy = at[1] - to[1], da = Angles.radnorm_180 (at[2] - to[2]);
+
+		m.real_x	= at[0];		m.real_y	= at[1];		m.real_a	= Angles.radnorm_180 (at[2]);
+		m.odom_x	+= dx;			m.odom_y	+= dy;			m.odom_a	= Angles.radnorm_180 (m.odom_a + da);
+		if (e != null)
+		{
+			double[]	c = closestOn (e, at[0], at[1]);
+			bumped (robotind, data, c[0] - at[0], c[1] - at[1]);
+		}
+		data.location (m.odom_x, m.odom_y, m.odom_a);
+		m.backup (data);
+		return true;
+	}
+
+	/** A pose a share of the way from one to another (the turn the short way round). */
+	static protected double[] along (double[] a, double[] b, double t)
+	{
+		return new double[] { a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]), a[2] + t * Angles.radnorm_180 (b[2] - a[2]) };
+	}
+
+	/** The first of some edges an outline (in the frame of the robot) crosses or touches at a pose; null when none. */
+	static protected Line2 hit (Line2[] outline, double[] pose, java.util.List<Line2> edges)
+	{
+		double		ca = Math.cos (pose[2]), sa = Math.sin (pose[2]);
+
+		for (Line2 l : outline)
+		{
+			if (l == null)		continue;
+
+			double	x0 = pose[0] + l.orig ().x () * ca - l.orig ().y () * sa, y0 = pose[1] + l.orig ().x () * sa + l.orig ().y () * ca;
+			double	x1 = pose[0] + l.dest ().x () * ca - l.dest ().y () * sa, y1 = pose[1] + l.dest ().x () * sa + l.dest ().y () * ca;
+
+			for (Line2 e : edges)
+				if (crosses (x0, y0, x1, y1, e.orig ().x (), e.orig ().y (), e.dest ().x (), e.dest ().y ()))		return e;
+		}
+		return null;
+	}
+
+	/** Whether two segments cross or touch. */
+	static protected boolean crosses (double ax, double ay, double bx, double by, double cx, double cy, double dx, double dy)
+	{
+		double		d1 = side (cx, cy, dx, dy, ax, ay), d2 = side (cx, cy, dx, dy, bx, by);
+		double		d3 = side (ax, ay, bx, by, cx, cy), d4 = side (ax, ay, bx, by, dx, dy);
+
+		if ((((d1 > 0) && (d2 < 0)) || ((d1 < 0) && (d2 > 0))) && (((d3 > 0) && (d4 < 0)) || ((d3 < 0) && (d4 > 0))))		return true;
+		return ((d1 == 0) && on (cx, cy, dx, dy, ax, ay)) || ((d2 == 0) && on (cx, cy, dx, dy, bx, by))
+				|| ((d3 == 0) && on (ax, ay, bx, by, cx, cy)) || ((d4 == 0) && on (ax, ay, bx, by, dx, dy));
+	}
+
+	static private double side (double ax, double ay, double bx, double by, double px, double py)
+	{
+		return (bx - ax) * (py - ay) - (by - ay) * (px - ax);
+	}
+
+	static private boolean on (double ax, double ay, double bx, double by, double px, double py)
+	{
+		return (Math.min (ax, bx) <= px) && (px <= Math.max (ax, bx)) && (Math.min (ay, by) <= py) && (py <= Math.max (ay, by));
+	}
+
+	/** What a robot occupies now, in the world: its outline where it is (null when it has none). */
+	public Line2[] robotOutline (int robotind)
+	{
+		return ((robotind >= 0) && (robotind < numrobots) && (icons != null)) ? icons[ROBOINDEX[robotind]] : null;
+	}
+
+	/**
+	 * The robot as discs (see {@link #body}) against what it can hit: an edge it
+	 * overlaps puts it out of the way (the deepest one first, a few times, so that
+	 * it comes out of a corner too). Returns whether it touched anything.
+	 */
+	protected boolean collideDiscs (int robotind, RobotData data, double[][] discs)
+	{
+		boolean		hit = false;
+
 		for (int pass = 0; pass < 6; pass++)
 		{
 			Line2		deepest = null;
@@ -1342,7 +1485,8 @@ public class Simulator
 		roboindex = robotind;        
 		CMD[robotind][0] = vlin;	CMD[robotind][1] = vlat;	CMD[robotind][2] = vrot;
 		
-		// Compute model based displacement        
+		// Compute model based displacement (from where it was, which collisions go back to)
+		PREV[robotind]	= new double[] { MODEL[robotind].real_x, MODEL[robotind].real_y, MODEL[robotind].real_a };
 		MODEL[robotind].backup (data);
 		MODEL[robotind].simulation (data, vlin, vlat, vrot, dt);		
 		
@@ -1382,6 +1526,7 @@ public class Simulator
 		roboindex = robotind;        
 		
 		// Set log based displacement        
+		PREV[robotind]	= new double[] { MODEL[robotind].real_x, MODEL[robotind].real_y, MODEL[robotind].real_a };
 		MODEL[robotind].backup (data);
 		MODEL[robotind].position (data, x, y, a);
 		
