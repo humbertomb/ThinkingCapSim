@@ -88,7 +88,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
 	protected javax.swing.JToggleButton[]		viewBT;					// the three flat projections
-	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, snapMI, snapVertexMI, imageMI, shapeMI;
+	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, snapMI, snapVertexMI, imageMI, shapeMI, boxMI, iconMI;
 
 	// Undo and redo: the description as it was before each change, and as it was before each undo
 	static public final int			UNDO_MAX		= 200;		// changes remembered
@@ -428,6 +428,16 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			public void run ()		{ canvas.setShapeVisible (shapeMI.isSelected ()); }
 		});
 		mview.add (shapeMI);
+		boxMI	= checkItem ("Show Bounding Box", KeyEvent.VK_B, mask | java.awt.event.InputEvent.SHIFT_DOWN_MASK, canvas.isBoxVisible (), new Runnable ()
+		{
+			public void run ()		{ canvas.setBoxVisible (boxMI.isSelected ()); }
+		});
+		mview.add (boxMI);
+		iconMI	= checkItem ("Show Collision Polygon", KeyEvent.VK_P, mask | java.awt.event.InputEvent.SHIFT_DOWN_MASK, canvas.isIconVisible (), new Runnable ()
+		{
+			public void run ()		{ canvas.setIconVisible (iconMI.isSelected ()); }
+		});
+		mview.add (iconMI);
 		mview.addSeparator ();
 		mview.add (view3dMenuItem (mask));
 		mb.add (mview);

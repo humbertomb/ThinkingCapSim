@@ -124,6 +124,7 @@ public class RobotCanvas extends JPanel
 	protected boolean				gridVisible		= true;
 	protected boolean				imageVisible	= true;
 	protected boolean				boxVisible		= true;		// the bounding box (the area of the image)
+	protected boolean				iconVisible		= true;		// the collision polygon
 	protected boolean				shapeVisible	= true;		// the lines of the 3D model, over the projection
 	protected boolean				snapGrid		= false;	// take the handles to the grid
 	protected boolean				snapVertex		= false;	// take a dragged vertex to a near one of its own kind
@@ -373,13 +374,13 @@ public class RobotCanvas extends JPanel
 				if (in (x0, y0, x1, y1, b.xi, b.yi, 0.0) && in (x0, y0, x1, y1, b.xf, b.yf, 0.0))
 					found.add (new RobotItem (RobotItem.BUMPER, i));
 			}
-			for (int i = 0; i < robot.icon.size (); i++)
+			for (int i = 0; iconVisible && (i < robot.icon.size ()); i++)
 			{
 				RobotDef.IconLine	l = robot.icon.get (i);
 				if (in (x0, y0, x1, y1, l.xi, l.yi, 0.0) && in (x0, y0, x1, y1, l.xf, l.yf, 0.0))
 					found.add (new RobotItem (RobotItem.LINE, i));
 			}
-			if (robot.boundingBox != null)
+			if ((robot.boundingBox != null) && boxVisible)
 			{
 				RobotDef.BoundingBox	b = robot.boundingBox;
 				if (in (x0, y0, x1, y1, b.xmin, b.ymin, 0.0) && in (x0, y0, x1, y1, b.xmax, b.ymax, 0.0))
@@ -566,6 +567,24 @@ public class RobotCanvas extends JPanel
 	}
 
 	/** Whether the lines of the 3D models are drawn over the projection. */
+	public boolean isBoxVisible ()					{ return boxVisible; }
+	/** Shows or hides the bounding box; hidden, it cannot be picked either, and it is let go if it was selected. */
+	public void setBoxVisible (boolean on)			{ boxVisible = on;	if (!on) unselect (RobotItem.BBOX); repaint (); }
+	public boolean isIconVisible ()					{ return iconVisible; }
+	/** Shows or hides the collision polygon; hidden, its lines cannot be picked either, and they are let go if selected. */
+	public void setIconVisible (boolean on)			{ iconVisible = on;	if (!on) unselect (RobotItem.LINE); repaint (); }
+
+	/** Lets go the elements of a kind that are selected (hidden, they are not to be dragged or deleted unseen). */
+	private void unselect (int kind)
+	{
+		boolean		any = ((selection != null) && (selection.kind == kind));
+
+		for (RobotItem it : group)		any |= (it.kind == kind);
+		if (!any)						return;
+		group.clear ();
+		setSelection ((RobotItem) null);
+	}
+
 	public boolean isShapeVisible ()				{ return shapeVisible; }
 	public void setShapeVisible (boolean on)		{ shapeVisible = on; repaint (); }
 
@@ -986,7 +1005,7 @@ public class RobotCanvas extends JPanel
 			RobotDef.Bumper	s = robot.bumpers.get (i);
 			if (segDist (s.xi, s.yi, s.xf, s.yf, x, y) <= tol)		return new RobotItem (RobotItem.BUMPER, i);
 		}
-		for (int i = 0; i < robot.icon.size (); i++)
+		for (int i = 0; iconVisible && (i < robot.icon.size ()); i++)
 		{
 			RobotDef.IconLine	l = robot.icon.get (i);
 			if (segDist (l.xi, l.yi, l.xf, l.yf, x, y) <= tol)		return new RobotItem (RobotItem.LINE, i);
@@ -1709,6 +1728,7 @@ public class RobotCanvas extends JPanel
 
 	private void drawIcon (Graphics2D g)
 	{
+		if (!iconVisible)		return;
 		for (int i = 0; i < robot.icon.size (); i++)
 		{
 			RobotDef.IconLine	l = robot.icon.get (i);
@@ -1734,7 +1754,7 @@ public class RobotCanvas extends JPanel
 			g.setColor (C_BBOX_FILL);
 			g.fill (new java.awt.geom.Rectangle2D.Double (px (r[0]), py (r[3]), (r[2] - r[0]) * scale, (r[3] - r[1]) * scale));
 		}
-		area	= polygonArea ();
+		area	= iconVisible ? polygonArea () : null;
 		if (area != null)
 		{
 			g.setColor (C_ICON_FILL);
