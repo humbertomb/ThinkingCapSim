@@ -1145,7 +1145,12 @@ public class Simulator
 	/**
 	 * What the robots collide with: the walls, the icons of the visible static
 	 * objects of the world (open ones, like a net, which a robot can get into
-	 * through their mouth) and the icons of the other robots.
+	 * through their mouth), the icons of the animated objects that have no
+	 * dynamics of their own (a robot put on the field as a figure, say: it is
+	 * there as much as a wall is) and the icons of the other robots. The
+	 * objects that move by themselves (a ball) are not: they get out of the way
+	 * of the robot themselves (see {@link SimObjects}), which is how a robot
+	 * pushes a ball; nor are the loads, which a robot picks.
 	 */
 	protected java.util.List<Line2> obstacles (int robotind)
 	{
@@ -1157,6 +1162,15 @@ public class Simulator
 		for (tc.shared.world.WMObject ob : map.objects ())
 			if (ob.visible)
 				for (Line2 l : ob.absIcon ())				edges.add (l);
+		SimObjects		objs = objects;
+		if (objs != null)
+			for (int i = 0; i < objs.numobjects; i++)
+			{
+				int		k = objs.iconOf (i);
+
+				if ((objs.OBJS[i] != null) && (objs.OBJS[i].getClass () == SimObject.class) && (k >= 0) && (k < icons.length) && (icons[k] != null))
+					for (Line2 l : icons[k])				edges.add (l);
+			}
 		for (int i = 0; i < numrobots; i++)
 			if ((i != robotind) && (icons[ROBOINDEX[i]] != null))
 				for (Line2 l : icons[ROBOINDEX[i]])			edges.add (l);

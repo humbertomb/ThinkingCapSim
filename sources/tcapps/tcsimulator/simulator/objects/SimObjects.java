@@ -73,6 +73,9 @@ public class SimObjects
 
 	public SimObject at (int i)					{ return ((i >= 0) && (i < numobjects)) ? OBJS[i] : null; }
 
+	/** Where the simulator keeps the collision outline of an object (its icon index), or -1. */
+	public int iconOf (int i)					{ return ((i >= 0) && (i < numobjects) && (OBJICONS != null)) ? OBJICONS[i] : -1; }
+
 	/** Puts the collision outline of an object at its current pose (sensors and other objects see it there). */
 	public void updateIcon (int i)
 	{
