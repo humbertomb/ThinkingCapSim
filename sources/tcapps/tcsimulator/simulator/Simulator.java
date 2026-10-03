@@ -1321,6 +1321,12 @@ public class Simulator
 			}
 		}
 
+		// a robot that was stopped short rebounds a little, a bit to one side and a bit
+		// turned, by chance: a real one does not stand dead still against what it hit,
+		// and a robot stuck on a corner gets a way out of it
+		if (e != null)
+			at	= bounce (o, edges, e, p, at, step);
+
 		// where it is, and its odometry by as much (it was put there as the real robot is, by what it hit)
 		double		dx = at[0] - to[0], dy = at[1] - to[1], da = Angles.radnorm_180 (at[2] - to[2]);
 
@@ -1334,6 +1340,46 @@ public class Simulator
 		data.location (m.odom_x, m.odom_y, m.odom_a);
 		m.backup (data);
 		return true;
+	}
+
+	/** How much a robot rebounds from what it hits, as a share of the step it lost against it. */
+	static public final double		BOUNCE		= 0.3;
+	/** How much it may be turned by it, either way (deg). */
+	static public final double		BOUNCE_TURN	= 3.0;
+
+	/**
+	 * The pose of a robot that hit something, rebounding: when it lost most of its
+	 * step (more than half), it is put back from the edge it hit, away from where
+	 * it touched, by a random part of what it lost (BOUNCE: 15 to 45 %), and
+	 * moved as much to one side or the other and turned up to BOUNCE_TURN degrees,
+	 * at random. A rebound that would put it into something else is tried without
+	 * the turn, then not at all.
+	 */
+	protected double[] bounce (Line2[] o, java.util.List<Line2> edges, Line2 e, double[] from, double[] at, double step)
+	{
+		double		lost = step - Math.hypot (at[0] - from[0], at[1] - from[1]);
+		double[]	c;
+		double		nx, ny, n, back, side, turn;
+
+		if ((step < 1e-6) || (lost < 0.5 * step))		return at;			// it slid on: no need
+
+		c	= closestOn (e, at[0], at[1]);
+		nx	= at[0] - c[0];			ny	= at[1] - c[1];
+		n	= Math.hypot (nx, ny);
+		if (n < 1e-9)									{ nx = from[0] - at[0];		ny = from[1] - at[1];	n = Math.hypot (nx, ny); }
+		if (n < 1e-9)									return at;
+		nx	/= n;					ny	/= n;
+
+		back	= BOUNCE * lost * (0.5 + rnd.nextDouble ());
+		side	= BOUNCE * lost * (2.0 * rnd.nextDouble () - 1.0);
+		turn	= Math.toRadians (BOUNCE_TURN) * (2.0 * rnd.nextDouble () - 1.0);
+
+		double[]	b = { at[0] + nx * back - ny * side, at[1] + ny * back + nx * side, at[2] + turn };
+
+		if (hit (o, b, edges) == null)					return b;
+		b[2]	= at[2];
+		if (hit (o, b, edges) == null)					return b;
+		return at;
 	}
 
 	/** A pose a share of the way from one to another (the turn the short way round). */
