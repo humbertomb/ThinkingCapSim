@@ -41,7 +41,7 @@
         "gap": 3,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "seeds": " 0,255,255 0,223,255 0,212,255 0,209,255 0,190,255 0,247,255"
+        "seeds": " 0,255,234 0,255,251 0,255,255 0,223,255 0,212,255 0,209,255 0,190,255 0,247,255 0,255,207"
       },
       {
         "id": 3,
@@ -55,7 +55,7 @@
         "gap": 3,
         "minpix": 4,
         "clustype": "tclib.vision.chaos.channels.ColorPrism",
-        "seeds": " 170,255,232 170,255,255 170,249,239 170,166,255 170,251,236 170,248,241"
+        "seeds": " 170,255,203 170,255,232 170,255,185 170,255,174 170,255,255 170,249,239 170,166,255 170,251,236 170,255,178 170,248,241 170,255,145"
       },
       {
         "id": 4,
@@ -125,6 +125,8 @@
     "net2_channel": 7,
     "lm1_channel": 5,
     "lm2_channel": 7,
+    "robot1_channel": 3,
+    "robot2_channel": 2,
     "ball_sx_min": 2,
     "ball_sy_min": 2,
     "ball_horiz_hgt": 20,
@@ -142,6 +144,8 @@
     "lm_sx_min": 3,
     "lm_sy_min": 3,
     "lm_horiz_hgt": -20,
-    "lm_density": 10
+    "lm_density": 10,
+    "robot_min_pix": 600,
+    "robot_join": 50
   }
 }

@@ -34,16 +34,12 @@ local info	= chaos.getBehaviorInfo ()
 
 local vlin, vlat, vrot = 0, 0, 0
 
--- The distance to keep: the one to the ball when the behaviour began, or
--- when the ball is first seen, if it was not then (0: not yet)
+-- The distance to keep: the one to the ball when the behaviour began, 
+-- precodition: the robot MUST be seeing teh ball when the behaviour is called
 if info.isNew > 0 then
-	chaos.setGlobal("ALIGN_RHO", 0)
+	chaos.setGlobal("ALIGN_RHO", math.limit (ball.rho, MIN_BALL_RHO, MAX_BALL_RHO))
 end
-local align_rho = chaos.getGlobal("ALIGN_RHO") or 0
-if (align_rho == 0) and (ball.anchored > 0.5) and (ball.rho > 0) then
-	align_rho = math.limit (ball.rho, MIN_BALL_RHO, MAX_BALL_RHO)
-	chaos.setGlobal("ALIGN_RHO", align_rho)
-end
+local align_rho = chaos.getGlobal("ALIGN_RHO")
 
 local bx, by, rho = ball.x, ball.y, ball.rho
 

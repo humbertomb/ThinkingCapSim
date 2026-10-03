@@ -164,7 +164,7 @@
   ],
   "aobjects": [
     { "label": "ball", "icon": "ball", "image": "./conf/2dmodels/ball.png", "x": 0, "y": 0, "z": 0.04, "orientation": 0, "radius": 0.04, "color": "gray_dark", "shape": "./conf/3dmodels/aibo/aibo-ball.3ds", "usecolor": false, "dynamics": "tcapps.tcsimulator.simulator.objects.SimMobileObject", "movement": "ACCELERATED", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.25, "coef_fric": 0.01 },
-    { "label": "robot-1", "icon": "robot", "image": "./conf/2dmodels/aibo-red.png", "x": 0.2913, "y": 1.6316, "z": 0, "orientation": -108.9246, "radius": 0.2134, "color": "gray_dark", "shape": "./conf/3dmodels/aibo/aibo-red.3ds", "usecolor": false, "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.2, "coef_fric": 0.001 },
+    { "label": "robot-1", "icon": "robot", "image": "./conf/2dmodels/aibo-blue.png", "x": 0.2913, "y": 1.6316, "z": 0, "orientation": -108.9246, "radius": 0.2134, "color": "gray_dark", "shape": "./conf/3dmodels/aibo/aibo-blue.3ds", "usecolor": false, "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.2, "coef_fric": 0.001 },
     { "label": "robot-2", "icon": "robot", "image": "./conf/2dmodels/aibo-red.png", "x": -1.0376, "y": 0.8158, "z": 0, "orientation": -46.0416, "radius": 0.213, "color": "gray_dark", "shape": "./conf/3dmodels/aibo/aibo-red.3ds", "usecolor": false, "movement": "STATIC", "speed": 0, "acceleration": 0, "mass": 0, "coef_col": 0.2, "coef_fric": 0.001 }
   ],
   "zones": {
