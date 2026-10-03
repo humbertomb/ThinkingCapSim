@@ -111,7 +111,22 @@
       "sensors": []
     },
     "camera": {
-      "sensors": []
+      "sensors": [
+        {
+          "rho": 0.15765412868951875,
+          "theta": 0.3205123685033479,
+          "height": 0.18830524507890162,
+          "orientation": 0.0,
+          "elevation": -29.054604099077228,
+          "rangemax": 6.0,
+          "panmax": 90.0,
+          "tiltmax": 30.0,
+          "hfov": 43.6,
+          "vfov": 33.4,
+          "framerate": 10.0,
+          "resolution": "640x480"
+        }
+      ]
     }
   },
   "bumpers": [],
