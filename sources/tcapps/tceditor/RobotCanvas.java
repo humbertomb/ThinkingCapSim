@@ -51,6 +51,8 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_AXIS_Z	= new Color (89, 128, 242);
 	static public final Color		C_ICON		= new Color (60, 60, 60);
 	static public final Color		C_BBOX		= new Color (0, 140, 150);		// the bounding box: the area of the image
+	static public final Color		C_BBOX_FILL	= new Color (255, 180, 100, 70);	// what it covers: light orange, seen through
+	static public final Color		C_ICON_FILL	= new Color (0, 200, 220, 70);		// what the collision polygon covers: cyan, seen through
 	static public final Color		C_RADIUS	= new Color (120, 120, 200);
 	static public final Color		C_BUMPER	= new Color (200, 60, 60);
 	static public final Color		C_SENSOR	= new Color (40, 120, 200);
@@ -1578,6 +1580,7 @@ public class RobotCanvas extends JPanel
 		if (imageVisible && isTop ())		drawImage (g);
 		if (shapeVisible)		drawShape (g);
 		drawRadius (g);
+		if (isTop ())					fillAreas (g);
 		drawIcon (g);
 		if (isTop () && boxVisible)		drawBoundingBox (g);
 		drawBumpers (g);
@@ -1715,6 +1718,78 @@ public class RobotCanvas extends JPanel
 			g.draw (new Line2D.Double (ph (l.xi, l.yi, 0), pv (l.xi, l.yi, 0), ph (l.xf, l.yf, 0), pv (l.xf, l.yf, 0)));
 		}
 	}
+
+	/**
+	 * What the bounding box and the collision polygon cover, from above, filled
+	 * in and seen through: the box light orange, under the polygon in cyan, so
+	 * that what is in the image and does not collide shows at a glance.
+	 */
+	private void fillAreas (Graphics2D g)
+	{
+		java.awt.geom.Path2D	area;
+
+		if ((robot.boundingBox != null) && boxVisible && robot.boundingBox.valid ())
+		{
+			double[]	r = robot.boundingBox.box ();
+			g.setColor (C_BBOX_FILL);
+			g.fill (new java.awt.geom.Rectangle2D.Double (px (r[0]), py (r[3]), (r[2] - r[0]) * scale, (r[3] - r[1]) * scale));
+		}
+		area	= polygonArea ();
+		if (area != null)
+		{
+			g.setColor (C_ICON_FILL);
+			g.fill (area);
+		}
+	}
+
+	/**
+	 * The area the collision polygon encloses, in pixels: its segments, which may
+	 * be in any order and either way round, put end to end into closed outlines
+	 * (two ends within {@link #JOIN} of each other are the same vertex); an
+	 * outline left open is closed by a straight line, and one inside another is
+	 * a hole in it. Null when there are no segments.
+	 */
+	private java.awt.geom.Path2D polygonArea ()
+	{
+		int						n = robot.icon.size ();
+		boolean[]				used = new boolean[n];
+		java.awt.geom.Path2D	p = new java.awt.geom.Path2D.Double (java.awt.geom.Path2D.WIND_EVEN_ODD);
+
+		if (n == 0)						return null;
+		for (int i = 0; i < n; i++)
+		{
+			RobotDef.IconLine	l = robot.icon.get (i);
+			double				sx = l.xi, sy = l.yi, cx = l.xf, cy = l.yf;
+			boolean				more = true;
+
+			if (used[i])				continue;
+			used[i]	= true;
+			p.moveTo (px (sx), py (sy));
+			p.lineTo (px (cx), py (cy));
+			while (more && (Math.hypot (cx - sx, cy - sy) > JOIN))
+			{
+				more	= false;
+				for (int k = 0; k < n; k++)
+				{
+					RobotDef.IconLine	m = robot.icon.get (k);
+
+					if (used[k])		continue;
+					if (Math.hypot (m.xi - cx, m.yi - cy) <= JOIN)			{ cx = m.xf;	cy = m.yf; }
+					else if (Math.hypot (m.xf - cx, m.yf - cy) <= JOIN)		{ cx = m.xi;	cy = m.yi; }
+					else				continue;
+					used[k]	= true;
+					p.lineTo (px (cx), py (cy));
+					more	= true;
+					break;
+				}
+			}
+			p.closePath ();
+		}
+		return p;
+	}
+
+	/** How near two ends of the collision polygon must be to be the same vertex (m). */
+	static private final double		JOIN		= 1e-4;
 
 	/** The bounding box of the robot, from above: dashed, as it is no outline of anything that collides. */
 	private void drawBoundingBox (Graphics2D g)

@@ -417,12 +417,13 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			public void run ()		{ canvas.setSnapVertexEnabled (snapVertexMI.isSelected ()); }
 		});
 		mview.add (snapVertexMI);
-		imageMI	= checkItem ("Robot Image", KeyEvent.VK_I, mask, canvas.isImageVisible (), new Runnable ()
+		mview.addSeparator ();
+		imageMI	= checkItem ("Show Robot Image", KeyEvent.VK_I, mask, canvas.isImageVisible (), new Runnable ()
 		{
 			public void run ()		{ canvas.setImageVisible (imageMI.isSelected ()); }
 		});
 		mview.add (imageMI);
-		shapeMI	= checkItem ("Robot Shape", KeyEvent.VK_I, mask | java.awt.event.InputEvent.SHIFT_DOWN_MASK, canvas.isShapeVisible (), new Runnable ()
+		shapeMI	= checkItem ("Show Robot Shape", KeyEvent.VK_I, mask | java.awt.event.InputEvent.SHIFT_DOWN_MASK, canvas.isShapeVisible (), new Runnable ()
 		{
 			public void run ()		{ canvas.setShapeVisible (shapeMI.isSelected ()); }
 		});
