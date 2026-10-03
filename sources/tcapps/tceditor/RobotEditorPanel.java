@@ -84,7 +84,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected JSplitPane			mainSP, rightSP;
 	protected StatusBar				statusBar;						// where the cursor is
 	protected boolean				dividersSet, syncing, dirty;
-	protected Action				openAC, wheelAC, lineAC, bumperAC, sensorAC, groupAC, fusedAC, scanAC, deleteAC;
+	protected Action				openAC, wheelAC, lineAC, bboxAC, bumperAC, sensorAC, groupAC, fusedAC, scanAC, deleteAC;
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
 	protected javax.swing.JToggleButton[]		viewBT;					// the three flat projections
@@ -192,7 +192,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		tb.setFloatable (false);
 		openAC		= ToolButtons.action ("Load Robot", ToolIcon.ROBOT_FILE, "Load a robot description  [Ctrl+O]", new Runnable () { public void run () { loadRobot (); } });
 		wheelAC		= ToolButtons.action ("Wheel", ToolIcon.WHEEL, "Add a wheel to the drive train", new Runnable () { public void run () { addWheel (); } });
-		lineAC		= ToolButtons.action ("Line", ToolIcon.WALL, "Add a segment to the drawing of the robot", new Runnable () { public void run () { addLine (); } });
+		lineAC		= ToolButtons.action ("Line", ToolIcon.WALL, "Add a segment to the collision polygon of the robot: the outline it collides as", new Runnable () { public void run () { addLine (); } });
+		bboxAC		= ToolButtons.action ("Bounding box", ToolIcon.ZONE, "Add the bounding box of the robot: the area its image is drawn over (only one)", new Runnable () { public void run () { addBoundingBox (); } });
 		bumperAC	= ToolButtons.action ("Bumper", ToolIcon.CONNECTOR, "Add a bumper", new Runnable () { public void run () { addBumper (); } });
 		sensorAC	= ToolButtons.action ("Sensor", ToolIcon.BEACON, "Add a sensor to the selected family", new Runnable () { public void run () { addSensor (); } });
 		groupAC		= ToolButtons.action ("Virtual sensor", ToolIcon.VIRTUAL, "Add a virtual sensor: a sector standing for a group of the real ones", new Runnable () { public void run () { addGroup (); } });
@@ -204,6 +205,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		tb.add (ToolButtons.flatButton (wheelAC));
 		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (lineAC));
+		tb.add (ToolButtons.flatButton (bboxAC));
 		tb.add (ToolButtons.flatButton (bumperAC));
 		tb.add (ToolButtons.flatButton (sensorAC));
 		tb.add (ToolButtons.flatButton (groupAC));
@@ -780,6 +782,25 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		select (new RobotItem (RobotItem.LINE, robot.icon.size () - 1));
 	}
 
+	/**
+	 * Adds the bounding box of the robot, the only one it may have: over its
+	 * collision polygon to begin with, which is what its image was drawn over
+	 * until now, so that nothing changes until it is dragged.
+	 */
+	private void addBoundingBox ()
+	{
+		double[]	b = robot.imageBox ();
+		double[]	a = canvas.newArea ();					// inside what the view shows, at its zoom
+		double		r = robotSize ();
+
+		if (robot.boundingBox != null)		{ select (new RobotItem (RobotItem.BBOX, 0)); return; }
+		if (b == null)						b = (a != null) ? a : new double[] { -r / 2, -r / 2, r / 2, r / 2 };
+		robot.boundingBox	= new RobotDef.BoundingBox (b[0], b[1], b[2], b[3]);
+		changed ();
+		refreshTree ();
+		select (new RobotItem (RobotItem.BBOX, 0));
+	}
+
 	private void addBumper ()
 	{
 		double		r = robotSize ();
@@ -907,6 +928,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			switch (it.kind)
 			{
 			case RobotItem.LINE:		robot.icon.remove (it.index);						any = true;		break;
+			case RobotItem.BBOX:		robot.boundingBox = null;							any = true;		break;
 			case RobotItem.BUMPER:		robot.bumpers.remove (it.index);					any = true;		break;
 			case RobotItem.WHEEL:		robot.wheels.remove (it.index);						any = true;		break;
 			case RobotItem.SENSOR:		robot.family (it.family).sensors.remove (it.index);	any = true;		break;
@@ -946,9 +968,12 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		for (int i = 0; i < robot.wheels.size (); i++)	drive.add (new ItemNode (new RobotItem (RobotItem.WHEEL, i), "Wheel " + i));
 		treeRoot.add (drive);
 
-		DefaultMutableTreeNode	lines = new DefaultMutableTreeNode ("Drawing  (" + robot.icon.size () + ")");
+		// what the robot collides as, and the box its image is drawn over (which may be more)
+		DefaultMutableTreeNode	lines = new DefaultMutableTreeNode ("Collision polygon  (" + robot.icon.size () + ")");
+		if (robot.boundingBox != null)						lines.add (new ItemNode (new RobotItem (RobotItem.BBOX, 0), "BoundingBox"));
 		for (int i = 0; i < robot.icon.size (); i++)		lines.add (new ItemNode (new RobotItem (RobotItem.LINE, i), "Line " + i));
 		treeRoot.add (lines);
+		if (bboxAC != null)		bboxAC.setEnabled (robot.boundingBox == null);
 
 		DefaultMutableTreeNode	bumpers = new DefaultMutableTreeNode ("Bumpers  (" + robot.bumpers.size () + ")");
 		// named as the description names them (bumxi0, bumyi0, ...)
@@ -1103,7 +1128,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	/** Whether an item is one element of the description, which can be removed, copied and pasted, and not a section of it. */
 	static private boolean isElement (RobotItem it)
 	{
-		return (it != null) && ((it.kind == RobotItem.LINE) || (it.kind == RobotItem.BUMPER)
+		return (it != null) && ((it.kind == RobotItem.LINE) || (it.kind == RobotItem.BUMPER) || (it.kind == RobotItem.BBOX)
 				|| (it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.WHEEL)
 				|| (it.kind == RobotItem.GROUP) || (it.kind == RobotItem.FUSED) || (it.kind == RobotItem.SCAN));
 	}
@@ -1167,6 +1192,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 
 		robot.name			= c.name;
 		robot.icon			= c.icon;
+		robot.boundingBox	= c.boundingBox;
 		robot.image			= c.image;
 		robot.shapeRobot	= c.shapeRobot;
 		robot.shapeActuator	= c.shapeActuator;
@@ -1202,6 +1228,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		switch (it.kind)
 		{
 		case RobotItem.LINE:		return it.index < robot.icon.size ();
+		case RobotItem.BBOX:		return robot.boundingBox != null;
 		case RobotItem.BUMPER:		return it.index < robot.bumpers.size ();
 		case RobotItem.WHEEL:		return it.index < robot.wheels.size ();
 		case RobotItem.SENSOR:		return it.index < robot.family (it.family).n ();
@@ -1252,6 +1279,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			switch (it.kind)
 			{
 			case RobotItem.LINE:		v = robot.icon.get (it.index).copy ();						break;
+			case RobotItem.BBOX:		v = (robot.boundingBox != null) ? robot.boundingBox.copy () : null;	break;
 			case RobotItem.BUMPER:		v = robot.bumpers.get (it.index).copy ();					break;
 			case RobotItem.WHEEL:		v = robot.wheels.get (it.index).copy ();					break;
 			case RobotItem.SENSOR:		v = robot.family (it.family).sensors.get (it.index).copy ();	break;
@@ -1296,6 +1324,9 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			case RobotItem.LINE:
 				robot.icon.add (((RobotDef.IconLine) c.value).copy ());
 				made.add (new RobotItem (c.kind, robot.icon.size () - 1));			break;
+			case RobotItem.BBOX:												// there is only one: it takes the place of the one there is
+				robot.boundingBox	= ((RobotDef.BoundingBox) c.value).copy ();
+				made.add (new RobotItem (c.kind, 0));								break;
 			case RobotItem.BUMPER:
 				robot.bumpers.add (((RobotDef.Bumper) c.value).copy ());
 				made.add (new RobotItem (c.kind, robot.bumpers.size () - 1));		break;
@@ -1366,7 +1397,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	{
 		switch (it.kind)
 		{
-		case RobotItem.LINE:		return "Drawing line " + it.index;
+		case RobotItem.LINE:		return "Collision polygon: line " + it.index;
+		case RobotItem.BBOX:		return "Collision polygon: bounding box";
 		case RobotItem.BUMPER:		return "Bumpers: bumper" + it.index;
 		case RobotItem.WHEEL:		return "Wheel " + it.index;
 		case RobotItem.GROUP:		return "Area groups: group" + it.index;
@@ -1454,6 +1486,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		case RobotItem.KINEMATICS:	return kinematicsNames ();
 		case RobotItem.LINE:
 		case RobotItem.BUMPER:		return new String[] { "xi", "yi", "xf", "yf" };
+		case RobotItem.BBOX:		return new String[] { "xmin", "ymin", "xmax", "ymax" };
 		case RobotItem.WHEEL:		return new String[] { "x", "y", "z", "orientation",
 														  "radius", "width",
 														  "steerable", MAX_STEER, MAX_TURN, "traction", MAX_RPM };
@@ -1568,6 +1601,16 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			if (key.equals ("odom et"))		return RobotDef.fmt (k.odomET);
 			if (key.equals ("odom er"))		return RobotDef.fmt (k.odomER);
 			if (key.equals ("odom bias"))	return RobotDef.fmt (k.odomBias);
+			break;
+		}
+		case RobotItem.BBOX:
+		{
+			RobotDef.BoundingBox	b = robot.boundingBox;
+			if (b == null)					break;
+			if (name.equals ("xmin"))		return RobotDef.fmt (b.xmin);
+			if (name.equals ("ymin"))		return RobotDef.fmt (b.ymin);
+			if (name.equals ("xmax"))		return RobotDef.fmt (b.xmax);
+			if (name.equals ("ymax"))		return RobotDef.fmt (b.ymax);
 			break;
 		}
 		case RobotItem.LINE:
@@ -2058,6 +2101,16 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			else if (key.equals ("odom et"))	k.odomET = num (value);
 			else if (key.equals ("odom er"))	k.odomER = num (value);
 			else if (key.equals ("odom bias"))	k.odomBias = num (value);
+			break;
+		}
+		case RobotItem.BBOX:
+		{
+			RobotDef.BoundingBox	b = robot.boundingBox;
+			if (b == null)						break;
+			if (name.equals ("xmin"))			b.xmin = num (value);
+			else if (name.equals ("ymin"))		b.ymin = num (value);
+			else if (name.equals ("xmax"))		b.xmax = num (value);
+			else if (name.equals ("ymax"))		b.ymax = num (value);
 			break;
 		}
 		case RobotItem.LINE:

@@ -12,8 +12,8 @@ import wucore.utils.image.PlanImage;
 
 /**
  * The bitmap a robot description may carry (its <code>image</code>) drawn in a
- * plan view: over the box the drawing of the robot occupies, scaled to it on
- * each axis and turned with the robot.
+ * plan view: over its bounding box, or the box its collision polygon occupies
+ * when it has none, scaled to it on each axis and turned with the robot.
  *
  * The reading and the drawing are those of {@link PlanImage}; what belongs to a
  * robot is the size the image is given.
@@ -38,6 +38,21 @@ public class RobotImage
 	 */
 	static public double[] box (Line2[] icon, double radius)
 	{
+		return box (null, icon, radius);
+	}
+
+	/**
+	 * The same, for a robot that may have a bounding box: the box its image is
+	 * drawn over then, whatever its collision polygon is (part of what is seen of
+	 * a robot need not collide: the head of an AIBO).
+	 *
+	 * @param bbox		its bounding box {minx, miny, maxx, maxy}, or null
+	 */
+	static public double[] box (double[] bbox, Line2[] icon, double radius)
+	{
+		if ((bbox != null) && (bbox.length >= 4) && (bbox[2] > bbox[0]) && (bbox[3] > bbox[1]))
+			return bbox.clone ();
+
 		double[]	b = PlanImage.bounds (icon);
 
 		if (b == null)		return (radius > 0.0) ? new double[] { -radius, -radius, radius, radius } : null;

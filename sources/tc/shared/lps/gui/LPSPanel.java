@@ -187,11 +187,11 @@ public class LPSPanel extends JPanel
 			if ((o != null) && o.active () && (o.label () != null) && anchored (o))		anch.put (o.label (), o.anchor ());
 		}
 
-		// the robot: its image, over the box of its drawing, or its drawing
+		// the robot: its image, over its bounding box (or the box of its drawing), or its drawing
 		if ((rdesc != null) && (rdesc.image != null) && (RobotImage.get (rdesc.image) != null))
 		{
 			img		= rdesc.image;
-			box		= RobotImage.box (rdesc.icon, rdesc.RADIUS);
+			box		= RobotImage.box (rdesc.bbox, rdesc.icon, rdesc.RADIUS);
 		}
 		if ((rdesc != null) && ((img == null) || (box == null)))
 		{

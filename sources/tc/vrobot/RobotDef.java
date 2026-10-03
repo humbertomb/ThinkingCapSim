@@ -312,6 +312,34 @@ public class RobotDef
 	}
 
 	/**
+	 * The box the image of the robot is drawn over (BBOX), in the frame of the
+	 * robot (m): what the robot looks like from above, which may well be more
+	 * than what it collides as -- the head of an AIBO is in its image and not in
+	 * its collision polygon. Its corners may be given either way round: the
+	 * smaller of each pair is the minimum.
+	 */
+	static public class BoundingBox
+	{
+		public double	xmin, ymin, xmax, ymax;
+
+		public BoundingBox ()												{ }
+		public BoundingBox (double xmin, double ymin, double xmax, double ymax)	{ this.xmin = xmin; this.ymin = ymin; this.xmax = xmax; this.ymax = ymax; }
+		public BoundingBox copy ()											{ return new BoundingBox (xmin, ymin, xmax, ymax); }
+
+		/** {minx, miny, maxx, maxy}, whichever way round its corners were given. */
+		public double[] box ()
+		{
+			return new double[] { Math.min (xmin, xmax), Math.min (ymin, ymax), Math.max (xmin, xmax), Math.max (ymin, ymax) };
+		}
+
+		/** Whether it has an area at all. */
+		public boolean valid ()
+		{
+			return (xmin != xmax) && (ymin != ymax);
+		}
+	}
+
+	/**
 	 * Kinematics and dynamics of the platform: what has to be given, and nothing
 	 * else. Whatever the drive train can say -- how far apart the axles are, how
 	 * big the wheel is, how fast the platform goes and turns -- is not here and is
@@ -353,7 +381,8 @@ public class RobotDef
 	public String				name;												// name of the platform (the file name by default)
 	@Deprecated
 	private Double				radius;												// what older files said the robot was as a circle (m): read once, made into its drawing (see normalise), never written
-	public List<IconLine>		icon		= new ArrayList<IconLine> ();			// drawing of the robot
+	public List<IconLine>		icon		= new ArrayList<IconLine> ();			// collision polygon of the robot: what it collides as, and what the others see
+	public BoundingBox			boundingBox;										// BBOX: the box its image is drawn over (null: the box of the collision polygon)
 	public String				image;												// IMAGE (2D bitmap, optional)
 	public String				shapeRobot;											// V3DFILE (3D model of the platform)
 	public String				shapeActuator;										// V3DLIFT (3D model of its actuator: the fork, the arm, ...)
@@ -1023,6 +1052,7 @@ public class RobotDef
 		RobotDef	d = new RobotDef ();
 		d.name			= name;
 		for (IconLine l : icon)			d.icon.add (l.copy ());
+		d.boundingBox	= (boundingBox != null) ? boundingBox.copy () : null;
 		d.image			= image;
 		d.shapeRobot	= shapeRobot;
 		d.shapeActuator	= shapeActuator;
@@ -1040,6 +1070,26 @@ public class RobotDef
 		d.file			= file;
 		d.original		= original;
 		return d;
+	}
+
+	/**
+	 * The box the image of the robot is drawn over, in its frame: its bounding
+	 * box when it has one, and the box of its collision polygon otherwise.
+	 *
+	 * @return {minx, miny, maxx, maxy} in metres, or null when there is nothing to measure
+	 */
+	public double[] imageBox ()
+	{
+		double		minx = Double.MAX_VALUE, miny = Double.MAX_VALUE, maxx = -Double.MAX_VALUE, maxy = -Double.MAX_VALUE;
+
+		if ((boundingBox != null) && boundingBox.valid ())		return boundingBox.box ();
+		if ((icon == null) || icon.isEmpty ())					return null;
+		for (IconLine l : icon)
+		{
+			minx	= Math.min (minx, Math.min (l.xi, l.xf));		maxx	= Math.max (maxx, Math.max (l.xi, l.xf));
+			miny	= Math.min (miny, Math.min (l.yi, l.yf));		maxy	= Math.max (maxy, Math.max (l.yi, l.yf));
+		}
+		return new double[] { minx, miny, maxx, maxy };
 	}
 
 	/** How big a robot with no drawing is made, as a circle (m). */
@@ -1547,6 +1597,11 @@ public class RobotDef
 
 		set (p, "RADIUS", radius ());						// what the runtime knows as its radius: how far its outline reaches
 		if (image != null)			p.setProperty ("IMAGE", image);
+		if ((boundingBox != null) && boundingBox.valid ())
+		{
+			double[]	b = boundingBox.box ();
+			p.setProperty ("BBOX", fmt (b[0]) + " " + fmt (b[1]) + " " + fmt (b[2]) + " " + fmt (b[3]));
+		}
 		if (shapeRobot != null)		p.setProperty ("V3DFILE", shapeRobot);
 		if (shapeActuator != null)	p.setProperty ("V3DLIFT", shapeActuator);
 		if ((shapeParts != null) && (shapeParts.trim ().length () > 0))

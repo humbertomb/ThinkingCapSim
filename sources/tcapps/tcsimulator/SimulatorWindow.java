@@ -1200,7 +1200,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		double			bx, by, ox, oy;
 
 		if (img == null)				return false;
-		b	= tc.vrobot.RobotImage.box (rv.rdesc.icon, rv.rdesc.RADIUS);
+		b	= tc.vrobot.RobotImage.box (rv.rdesc.bbox, rv.rdesc.icon, rv.rdesc.RADIUS);
 		if (b == null)					return false;
 		bx	= (b[0] + b[2]) / 2;		by = (b[1] + b[3]) / 2;			// centre of the box, in the frame of the robot
 		ox	= x + bx * Math.cos (a) - by * Math.sin (a);

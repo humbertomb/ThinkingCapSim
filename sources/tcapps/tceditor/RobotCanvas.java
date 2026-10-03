@@ -50,6 +50,7 @@ public class RobotCanvas extends JPanel
 	static public final Color		C_AXIS_Y	= new Color (51, 204, 51);
 	static public final Color		C_AXIS_Z	= new Color (89, 128, 242);
 	static public final Color		C_ICON		= new Color (60, 60, 60);
+	static public final Color		C_BBOX		= new Color (0, 140, 150);		// the bounding box: the area of the image
 	static public final Color		C_RADIUS	= new Color (120, 120, 200);
 	static public final Color		C_BUMPER	= new Color (200, 60, 60);
 	static public final Color		C_SENSOR	= new Color (40, 120, 200);
@@ -120,6 +121,7 @@ public class RobotCanvas extends JPanel
 	protected int					dragHandle;					// handle being dragged
 	protected boolean				gridVisible		= true;
 	protected boolean				imageVisible	= true;
+	protected boolean				boxVisible		= true;		// the bounding box (the area of the image)
 	protected boolean				shapeVisible	= true;		// the lines of the 3D model, over the projection
 	protected boolean				snapGrid		= false;	// take the handles to the grid
 	protected boolean				snapVertex		= false;	// take a dragged vertex to a near one of its own kind
@@ -374,6 +376,12 @@ public class RobotCanvas extends JPanel
 				RobotDef.IconLine	l = robot.icon.get (i);
 				if (in (x0, y0, x1, y1, l.xi, l.yi, 0.0) && in (x0, y0, x1, y1, l.xf, l.yf, 0.0))
 					found.add (new RobotItem (RobotItem.LINE, i));
+			}
+			if (robot.boundingBox != null)
+			{
+				RobotDef.BoundingBox	b = robot.boundingBox;
+				if (in (x0, y0, x1, y1, b.xmin, b.ymin, 0.0) && in (x0, y0, x1, y1, b.xmax, b.ymax, 0.0))
+					found.add (new RobotItem (RobotItem.BBOX, 0));
 			}
 		}
 
@@ -981,6 +989,13 @@ public class RobotCanvas extends JPanel
 			RobotDef.IconLine	l = robot.icon.get (i);
 			if (segDist (l.xi, l.yi, l.xf, l.yf, x, y) <= tol)		return new RobotItem (RobotItem.LINE, i);
 		}
+		if ((robot.boundingBox != null) && boxVisible)		// its edges, after the collision polygon it often runs along
+		{
+			RobotDef.BoundingBox	b = robot.boundingBox;
+			if ((segDist (b.xmin, b.ymin, b.xmax, b.ymin, x, y) <= tol) || (segDist (b.xmax, b.ymin, b.xmax, b.ymax, x, y) <= tol)
+					|| (segDist (b.xmax, b.ymax, b.xmin, b.ymax, x, y) <= tol) || (segDist (b.xmin, b.ymax, b.xmin, b.ymin, x, y) <= tol))
+				return new RobotItem (RobotItem.BBOX, 0);
+		}
 		return null;
 	}
 
@@ -1016,7 +1031,7 @@ public class RobotCanvas extends JPanel
 	/** True for the elements the view lets the user drag. */
 	public boolean isMovable (RobotItem it)
 	{
-		return (it != null) && ((it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.LINE)
+		return (it != null) && ((it.kind == RobotItem.SENSOR) || (it.kind == RobotItem.LINE) || (it.kind == RobotItem.BBOX)
 								|| (it.kind == RobotItem.BUMPER) || (it.kind == RobotItem.WHEEL)
 								|| (it.kind == RobotItem.GROUP) || (it.kind == RobotItem.FUSED) || (it.kind == RobotItem.SCAN));
 	}
@@ -1124,6 +1139,14 @@ public class RobotCanvas extends JPanel
 			RobotDef.Bumper		b = robot.bumpers.get (selection.index);
 			return new double[] { ph (b.xi, b.yi, 0), pv (b.xi, b.yi, 0), ph (b.xf, b.yf, 0), pv (b.xf, b.yf, 0) };
 		}
+		case RobotItem.BBOX:
+		{
+			// its four corners, each dragged on its own: (xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)
+			RobotDef.BoundingBox	b = robot.boundingBox;
+			if ((b == null) || !isTop ())					return new double[0];
+			return new double[] { ph (b.xmin, b.ymin, 0), pv (b.xmin, b.ymin, 0), ph (b.xmax, b.ymin, 0), pv (b.xmax, b.ymin, 0),
+								  ph (b.xmax, b.ymax, 0), pv (b.xmax, b.ymax, 0), ph (b.xmin, b.ymax, 0), pv (b.xmin, b.ymax, 0) };
+		}
 		}
 		return new double[0];
 	}
@@ -1225,6 +1248,15 @@ public class RobotCanvas extends JPanel
 			double[]			p = stick (x, y);
 			if (handle == 0)		{ b.xi = p[0]; b.yi = p[1]; }
 			else					{ b.xf = p[0]; b.yf = p[1]; }
+			break;
+		}
+		case RobotItem.BBOX:
+		{
+			RobotDef.BoundingBox	b = robot.boundingBox;
+			if (!isTop () || (b == null))		return;
+			double[]			p = stick (x, y);
+			if ((handle == 0) || (handle == 3))		b.xmin = p[0];	else	b.xmax = p[0];
+			if ((handle == 0) || (handle == 1))		b.ymin = p[1];	else	b.ymax = p[1];
 			break;
 		}
 		default:
@@ -1373,6 +1405,13 @@ public class RobotCanvas extends JPanel
 			if (!isTop () || (it.index >= robot.bumpers.size ()))		return;
 			RobotDef.Bumper		b = robot.bumpers.get (it.index);
 			b.xi += dx;		b.yi += dy;		b.xf += dx;		b.yf += dy;
+			return;
+		}
+		case RobotItem.BBOX:
+		{
+			RobotDef.BoundingBox	b = robot.boundingBox;
+			if (!isTop () || (b == null))		return;
+			b.xmin += dx;	b.ymin += dy;	b.xmax += dx;	b.ymax += dy;
 			return;
 		}
 		}
@@ -1540,6 +1579,7 @@ public class RobotCanvas extends JPanel
 		if (shapeVisible)		drawShape (g);
 		drawRadius (g);
 		drawIcon (g);
+		if (isTop () && boxVisible)		drawBoundingBox (g);
 		drawBumpers (g);
 		drawWheels (g);
 		drawCoverage (g);
@@ -1584,14 +1624,15 @@ public class RobotCanvas extends JPanel
 		return (view == V_TOP) ? C_AXIS_Y : C_AXIS_Z;
 	}
 
-	/** The bitmap of the robot: drawn over the box its drawing occupies. */
+	/** The bitmap of the robot: drawn over its bounding box, or the box its collision polygon occupies when it has none. */
 	private void drawImage (Graphics2D g)
 	{
 		java.awt.Image	img = RobotImage.get (robot.image);
 		double[]		b;
 
 		if (img == null)				return;
-		b	= RobotImage.box (iconLines (), robot.radius ());
+		b	= RobotImage.box ((robot.boundingBox != null) && robot.boundingBox.valid () ? robot.boundingBox.box () : null,
+							  iconLines (), robot.radius ());
 		if (b == null)					return;
 		RobotImage.draw (g, img, px ((b[0] + b[2]) / 2), py ((b[1] + b[3]) / 2),
 							(b[2] - b[0]) * scale, (b[3] - b[1]) * scale, 0.0);
@@ -1673,6 +1714,21 @@ public class RobotCanvas extends JPanel
 			g.setStroke (stroke (sel ? 3f : 1.5f));
 			g.draw (new Line2D.Double (ph (l.xi, l.yi, 0), pv (l.xi, l.yi, 0), ph (l.xf, l.yf, 0), pv (l.xf, l.yf, 0)));
 		}
+	}
+
+	/** The bounding box of the robot, from above: dashed, as it is no outline of anything that collides. */
+	private void drawBoundingBox (Graphics2D g)
+	{
+		RobotDef.BoundingBox	b = robot.boundingBox;
+		boolean					sel;
+		double[]				r;
+
+		if (b == null)			return;
+		sel	= isSel (RobotItem.BBOX, 0, null);
+		r	= b.box ();
+		g.setColor (sel ? C_SEL : C_BBOX);
+		g.setStroke (new BasicStroke (sel ? 2.5f : 1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10f, new float[] { 6f, 4f }, 0f));
+		g.draw (new java.awt.geom.Rectangle2D.Double (px (r[0]), py (r[3]), (r[2] - r[0]) * scale, (r[3] - r[1]) * scale));
 	}
 
 	private void drawBumpers (Graphics2D g)

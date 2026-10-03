@@ -13,7 +13,7 @@ public class RobotItem
 {
 	static public final int		PLATFORM	= 0;		// name, radius, drawings
 	static public final int		KINEMATICS	= 1;		// drive model and its parameters
-	static public final int		LINE		= 2;		// a segment of the robot drawing
+	static public final int		LINE		= 2;		// a segment of the collision polygon of the robot
 	static public final int		BUMPER		= 3;
 	static public final int		SENSOR		= 4;		// one sensor of a family
 	static public final int		FAMILY		= 5;		// the parameters shared by a family of sensors
@@ -26,13 +26,14 @@ public class RobotItem
 	static public final int		SCAN		= 12;		// one reduced laser scan: the fan a laser is taken down to
 	static public final int		SCANS		= 13;		// all of them together
 	static public final int		FILTERING	= 14;		// both lots at once: what is worked out of the real sensors
+	static public final int		BBOX		= 15;		// the bounding box of the robot: what its image is drawn over (one at most)
 
-	static public final int		NKINDS		= 15;
+	static public final int		NKINDS		= 16;
 
-	static public final String[]	NAMES	= { "Platform", "Kinematics", "Drawing line", "Bumper", "Sensor", "Sensors",
+	static public final String[]	NAMES	= { "Platform", "Kinematics", "Collision line", "Bumper", "Sensor", "Sensors",
 												"Other properties", "Wheel", "Area group", "Area groups",
 												"Fused sensor", "Fused sensors",
-												"Laser reduction", "Laser reduction", "Sensor filtering" };
+												"Laser reduction", "Laser reduction", "Sensor filtering", "BoundingBox" };
 
 	public int			kind;
 	public int			index;

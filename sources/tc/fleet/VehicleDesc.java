@@ -23,6 +23,7 @@ public class VehicleDesc extends Object implements Serializable
 	public int					LINES;					// Number of line segments in the icon
 	public Line2[]				icon		= null;			// Line segments in the icon
 	public String				image	= null;			// Image icon file name
+	public double[]				bbox	= null;			// Box the image is drawn over {minx, miny, maxx, maxy} (m); null: the box of the icon
 
 	/* Constructors */
 	public VehicleDesc (String name)
@@ -79,6 +80,18 @@ public class VehicleDesc extends Object implements Serializable
 		
 		if (props.getProperty ("IMAGE") != null)
 			image		= props.getProperty ("IMAGE");
+		if (props.getProperty ("BBOX") != null)
+		{
+			try
+			{
+				String[]	t = props.getProperty ("BBOX").trim ().split ("[\\s,]+");
+				double[]	b = new double[4];
+
+				for (i = 0; i < 4; i++)		b[i] = Double.parseDouble (t[i]);
+				bbox		= ((b[2] > b[0]) && (b[3] > b[1])) ? b : null;
+			}
+			catch (Exception e)		{ bbox = null; }
+		}
 
 		if (pldesc == null)
 			pldesc		= new PayloadDesc (props);
