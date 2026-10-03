@@ -1262,15 +1262,16 @@ public class WorldCanvas extends JPanel
 	}
 
 	/**
-	 * An animated object: drawn as an object plus its virtual radius (dashed
-	 * circle), a small motion mark (two chevrons) at its position and its label.
+	 * An animated object: drawn as an object plus, when it is selected, its
+	 * virtual radius (dashed circle), a small motion mark (two chevrons) at its
+	 * position and its label.
 	 */
 	private void drawAObject (Graphics2D g, WMAObject o, boolean sel)
 	{
 		drawObject (g, o, sel);
 		Color	c = sel ? C_SEL : ColorTool.fromWColorToColor (o.color);
 		double	x = px (o.pos.x ()), y = py (o.pos.y ());
-		if (o.radius > 0.0)
+		if (sel && (o.radius > 0.0))				// only when picked: it says nothing of what the object looks like
 		{
 			double	r = o.radius * scale;
 			g.setColor (new Color (c.getRed (), c.getGreen (), c.getBlue (), 110));

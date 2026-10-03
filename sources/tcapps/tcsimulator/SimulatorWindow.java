@@ -1027,16 +1027,17 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		canvas.repaint ();
 	}
 
-	/** A live animated object: its icon at the simulated pose, its virtual radius and its name (as the robots). */
+	/** A live animated object: its icon at the simulated pose, its virtual radius when it is selected, and its name (as the robots). */
 	private void drawObject (Graphics2D g, WorldCanvas c, ObjectView ov)
 	{
 		WMAObject	o = ov.obj.odesc;
 		Color		col = wucore.utils.color.ColorTool.fromWColorToColor (o.color);
 		double		x = ov.pos.x (), y = ov.pos.y ();
 		WorldItem	sel = c.getSelection ();
+		boolean		picked = (sel != null) && (sel.kind == WorldItem.AOBJECT) && (objects.indexOf (ov) == sel.index);
 
 		// the one picked on the canvas is drawn as picked, as the canvas draws its own
-		if ((sel != null) && (sel.kind == WorldItem.AOBJECT) && (objects.indexOf (ov) == sel.index))		col = WorldCanvas.C_SEL;
+		if (picked)		col = WorldCanvas.C_SEL;
 
 		g.setStroke (new BasicStroke (1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		g.setColor (col);
@@ -1045,7 +1046,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		else if (o.icon != null)
 			for (Line2 l : o.icon.toAbsolute (ov.pos, ov.a))
 				g.draw (new Line2D.Double (c.toPixelX (l.orig ().x ()), c.toPixelY (l.orig ().y ()), c.toPixelX (l.dest ().x ()), c.toPixelY (l.dest ().y ())));
-		if (ov.obj.radius > 0.0)
+		if (picked && (ov.obj.radius > 0.0))		// its virtual radius only when picked
 		{
 			double	r = ov.obj.radius * c.getScale ();
 			g.setColor (new Color (col.getRed (), col.getGreen (), col.getBlue (), 90));
