@@ -115,8 +115,8 @@ public class SimModes
 	 * of what falls in its arc of the range buffer, as it is, or weighted by how
 	 * old each reading is.
 	 */
-	static public final String		G_BUF_ARC	= "Buffer: arc";
-	static public final String		G_WBUF_ARC	= "Buffer: weighted arc";
+	static public final String		G_BUF_ARC	= "Nearest";			// the nearest reading in the arc
+	static public final String		G_WBUF_ARC	= "Most recent";		// the same, an older reading counting as farther
 
 	static private final Map<Integer, String>	GROUP = group ();
 
