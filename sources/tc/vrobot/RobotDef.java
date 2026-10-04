@@ -1138,14 +1138,10 @@ public class RobotDef
 		return mode;
 	}
 
-	/**
-	 * A way of working a sensor of an area out as it is now (FusionDesc.groupMode):
-	 * the weighted arc (4, and the weighted rectangle, 6), or else the arc (3): the
-	 * rectangles and the lists of fused sensors (0 to 2) are gone.
-	 */
+	/** A way of working a sensor of an area out (FusionDesc.groupMode): the weighted arc (1), or else the arc (0). */
 	static private int groupMode (int mode)
 	{
-		return ((mode == 4) || (mode == 6)) ? 4 : 3;
+		return (mode == 1) ? 1 : 0;
 	}
 
 	/** Fills what a hand-written or older file may have left out. */
@@ -1211,8 +1207,7 @@ public class RobotDef
 		if (fused.isEmpty ())		readFused ();
 		if (scans.isEmpty ())		readScans ();
 		// the ways of fusing as they are numbered now: Flynn's rules were 4, and
-		// every sensor of an area is an arc of the range buffer (the rectangles and
-		// the lists of fused sensors are gone)
+		// every sensor of an area is an arc of the range buffer, as it is or weighted
 		fusionmode	= fusedMode (fusionmode);
 		if (fusionmode < 0)			fusionmode = 0;
 		for (Fused f : fused)		f.mode = fusedMode (f.mode);

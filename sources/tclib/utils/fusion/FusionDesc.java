@@ -26,8 +26,8 @@ public class FusionDesc extends Object
 	public static final int			V_MIN		= 2;		// Fuse sensors using the minimum
 	public static final int			V_FLYNN		= 3;		// Fuse sensors using Flynn's rules (it was 4, read as 3)
 
-	public static final int			G_BUF_ARC	= 3;		// The nearest reading of the range buffer in the arc of the sensor
-	public static final int			G_WBUF_ARC	= 4;		// The same, an older reading counting as farther (0-2 were lists of fused sensors, 5 and 6 rectangles: now arcs)
+	public static final int			G_BUF_ARC	= 0;		// The nearest reading of the range buffer in the arc of the sensor
+	public static final int			G_WBUF_ARC	= 1;		// The same, an older reading counting as farther
 
 	public static final int			S_UNDEF		= -1;		// Undefined scanner mode
 	public static final int			S_MIN		= 0;		// Use the minimum fusion
@@ -103,14 +103,12 @@ public class FusionDesc extends Object
 	}
 
 	/**
-	 * The mode of a sensor of an area, as it is now: every one is an arc of the
-	 * range buffer, as it is or weighted; the rectangles (5, 6) are the arcs (3, 4),
-	 * and the lists of fused sensors (0 to 2) and anything else the plain arc.
+	 * The mode of a sensor of an area: every one is an arc of the range buffer,
+	 * weighted (1) or as it is (0, and anything else).
 	 */
 	static public int groupMode (int mode)
 	{
-		if ((mode == G_WBUF_ARC) || (mode == 6))		return G_WBUF_ARC;
-		return G_BUF_ARC;
+		return (mode == G_WBUF_ARC) ? G_WBUF_ARC : G_BUF_ARC;
 	}
 
 	/* Instance methods */

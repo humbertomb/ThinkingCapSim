@@ -118,7 +118,7 @@
   ],
   "groups": [
     {
-      "mode": 4,
+      "mode": 1,
       "rho": 0.0,
       "theta": 0.0,
       "height": 0.0,
@@ -129,7 +129,7 @@
       "cone": 45.0
     },
     {
-      "mode": 4,
+      "mode": 1,
       "rho": 0.0,
       "theta": 0.0,
       "height": 0.0,
@@ -140,7 +140,7 @@
       "cone": 45.0
     },
     {
-      "mode": 4,
+      "mode": 1,
       "rho": 0.0,
       "theta": 0.0,
       "height": 0.0,
@@ -151,7 +151,7 @@
       "cone": 45.0
     },
     {
-      "mode": 4,
+      "mode": 1,
       "rho": 0.0,
       "theta": 0.0,
       "height": 0.0,
@@ -162,7 +162,7 @@
       "cone": 45.0
     },
     {
-      "mode": 4,
+      "mode": 1,
       "rho": 0.0,
       "theta": 0.0,
       "height": 0.0,

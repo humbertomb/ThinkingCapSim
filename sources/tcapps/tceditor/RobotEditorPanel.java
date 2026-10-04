@@ -872,7 +872,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		g.rho		= r;
 		g.rangemax	= Math.max (1.0, 4 * r);
 		g.cone		= 30.0;
-		g.mode		= 4;						// tclib.utils.fusion.FusionDesc.G_WBUF_ARC
+		g.mode		= 1;						// tclib.utils.fusion.FusionDesc.G_WBUF_ARC
 		robot.groups.add (g);
 		changed ();
 		refreshTree ();

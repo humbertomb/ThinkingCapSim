@@ -197,7 +197,7 @@
   ],
   "groups": [
     {
-      "mode": 6,
+      "mode": 1,
       "rho": 0.0,
       "theta": 0.0,
       "height": 0.0,
