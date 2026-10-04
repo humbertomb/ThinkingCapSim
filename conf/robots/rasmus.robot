@@ -58,7 +58,7 @@
     "lamax": 0.0,
     "ldmax": 0.0,
     "rwheel": 0.0,
-    "skid": 1.0,
+    "skid": 1.5,
     "gear": 0.0,
     "pulses": 0.0,
     "odomET": 5.0E-4,

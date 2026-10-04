@@ -267,8 +267,7 @@
   ],
   "groups": [
     {
-      "mode": 1,
-      "base": 0.9,
+      "mode": 0,
       "rho": 1.0,
       "theta": 0.0,
       "height": 0.0,
@@ -279,8 +278,7 @@
       "cone": 45.0
     },
     {
-      "mode": 1,
-      "base": 0.3,
+      "mode": 0,
       "rho": 1.0,
       "theta": 0.0,
       "height": 0.0,
@@ -291,8 +289,7 @@
       "cone": 45.0
     },
     {
-      "mode": 1,
-      "base": 0.75,
+      "mode": 0,
       "rho": 1.0,
       "theta": 0.0,
       "height": 0.0,
@@ -303,8 +300,7 @@
       "cone": 45.0
     },
     {
-      "mode": 1,
-      "base": 0.3,
+      "mode": 0,
       "rho": 1.0,
       "theta": 0.0,
       "height": 0.0,
@@ -315,8 +311,7 @@
       "cone": 45.0
     },
     {
-      "mode": 1,
-      "base": 0.9,
+      "mode": 0,
       "rho": 1.0,
       "theta": 0.0,
       "height": 0.0,

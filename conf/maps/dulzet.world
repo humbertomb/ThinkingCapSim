@@ -98,12 +98,12 @@
     { "label": "ra4", "x": -5.1938, "y": 3.6742, "z": 0, "orientation": -90, "flow": "INOUT" }
   ],
   "beacons": [
-    { "label": "b0", "x": 8.1, "y": -11.7, "z": 2, "orientation": 45, "width": 0.2, "height": 0.5 },
-    { "label": "b1", "x": -3.951, "y": -8.481, "z": 2, "orientation": -18, "width": 0.2, "height": 0.5 },
-    { "label": "b2", "x": -10.98, "y": -2.6, "z": 2, "orientation": -90, "width": 0.2, "height": 0.5 },
-    { "label": "b3", "x": -10.9, "y": 4.9, "z": 2, "orientation": -135, "width": 0.2, "height": 0.5 },
-    { "label": "b4", "x": -2.21, "y": 4.935, "z": 2, "orientation": 180, "width": 0.2, "height": 0.5 },
-    { "label": "b5", "x": 8.1, "y": 4.9, "z": 2, "orientation": 135, "width": 0.2, "height": 0.5 }
+    { "label": "b0", "x": 4.8776, "y": -11.6412, "z": 2.5, "orientation": 32.7352, "width": 0.1855, "height": 0.5 },
+    { "label": "b1", "x": -3.951, "y": -8.481, "z": 2.5, "orientation": -18, "width": 0.2, "height": 0.5 },
+    { "label": "b2", "x": -10.98, "y": -2.6, "z": 2.5, "orientation": -90, "width": 0.2, "height": 0.5 },
+    { "label": "b3", "x": -10.9, "y": 4.9, "z": 2.5, "orientation": -135, "width": 0.2, "height": 0.5 },
+    { "label": "b4", "x": -2.21, "y": 4.935, "z": 2.5, "orientation": 180, "width": 0.2, "height": 0.5 },
+    { "label": "b5", "x": 6.4902, "y": 4.8992, "z": 2.5, "orientation": 135, "width": 0.2, "height": 0.5 }
   ],
   "cbeacons": [],
   "topology": {
