@@ -65,6 +65,7 @@ public class LPOSensorGroup extends LPO implements Serializable
 		for (i = 0; i < size; i++)
 		{
 			if (!valid[i])				continue;
+			if ((spos[i] instanceof FeaturePos) && !(range[i] < ((FeaturePos) spos[i]).range () - 1E-3))		continue;	// at its range it sees nothing
 			
 			aa	= view.rotation + spos[i].theta ();
 			xx 	= spos[i].rho () * Math.cos (aa) + range[i] * Math.cos (view.rotation + spos[i].orientation ());

@@ -219,6 +219,7 @@ public class Fusion extends Object
 				out = 0.0;
 				for (i = 0; i < f.n (); i++)
 					out += listed (f, i) * f.wgt (i);
+				if (!anyListed (f))		out = f.range ();
 				break;
 			case FusionDesc.G_BWEIGHT:
 				out = 0.0;
@@ -228,26 +229,53 @@ public class Fusion extends Object
 					if (t > f.range ())		t = f.range ();
 					out += t * f.wgt (i);
 				}
+				if (!anyListed (f))		out = f.range ();
 				break;
 			case FusionDesc.G_MIN:
 			default:
-				out = Double.MAX_VALUE;
+				out = f.range ();
 				for (i = 0; i < f.n (); i++)
 				{
+					if (!seen (f.ndx (i)))		continue;		// one that sees nothing says nothing of how near things are
 					t = listed (f, i) * f.wgt (i);
 					if (t < out)	out = t;
 				}
 		}
 
+		// it sees something when what it reads is short of its range (a hair short
+		// does not count: the sum of the weights may come a hair short of one)
 		groups[s]		= Math.max (Math.min (out, f.range ()), 0.0);
-		groups_flg[s]	= (groups[s] < f.range ());
+		groups_flg[s]	= (groups[s] < f.range () - EPSILON);
+		if (groups_flg[s] == false)		groups[s] = f.range ();
 	}
 
-	/** The i-th fused sensor of the list of a sensor of an area, from where the sensor of the area sits. */
+	/** How much short of its range a sensor of an area must read to see something (m). */
+	static public final double			EPSILON			= 1E-3;
+
+	/** Whether a fused sensor sees something: it reads short of its range. */
+	protected boolean seen (int k)
+	{
+		return (k >= 0) && (k < virtuals.length) && (virtuals[k] < fdesc.RANGEVIRTU - EPSILON);
+	}
+
+	/** Whether any of the fused sensors of the list of a sensor of an area sees something. */
+	protected boolean anyListed (FeaturePos f)
+	{
+		for (int i = 0; i < f.n (); i++)
+			if (seen (f.ndx (i)))		return true;
+		return false;
+	}
+
+	/**
+	 * The i-th fused sensor of the list of a sensor of an area, from where the
+	 * sensor of the area sits; one that sees nothing reads the range of the sensor
+	 * of the area (taken from elsewhere, its own range would fall short of it).
+	 */
 	protected double listed (FeaturePos f, int i)
 	{
 		int		k = f.ndx (i);
 
+		if (!seen (k))		return f.range ();
 		return from (f, fdesc.virtufeat[k], virtuals[k], 0.0);
 	}
 
