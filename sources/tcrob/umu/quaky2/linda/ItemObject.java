@@ -2,15 +2,16 @@
  * (c) 2002 Humberto Martinez
  */
  
-package tc.shared.linda;
+package tcrob.umu.quaky2.linda;
 
 import java.io.*;
 
-import devices.data.*;
+import tc.shared.linda.Item;
+import tcrob.umu.quaky2.Quaky2VisData;
 
 public class ItemObject extends Item implements Serializable
 {
-	public VisionData[]				data;
+	public Quaky2VisData[]				data;
 	
 	// Constructors
 	public ItemObject () 
@@ -19,7 +20,7 @@ public class ItemObject extends Item implements Serializable
 	}	
 	
 	// Instance methods
-	public void set (VisionData[] data, long tstamp)
+	public void set (Quaky2VisData[] data, long tstamp)
 	{
 		set (tstamp);
 		

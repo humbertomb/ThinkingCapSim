@@ -12,8 +12,6 @@ import tc.shared.linda.*;
 
 import tclib.utils.pos.*;
 
-import devices.data.*;
-import devices.drivers.vision.*;
 import devices.drivers.lcd.*;
 
 public class Quaky2 extends VirtualRobot
@@ -72,17 +70,17 @@ public class Quaky2 extends VirtualRobot
 
 	// Devices and data
 	protected Quaky2Driver					driver;
-	protected Vision[]						vision;
-	protected VisionData[]					obdata;
+	protected Quaky2Vis[]					vision;
+	protected Quaky2VisData[]					obdata;
 	protected Position						vpos;									// Position reference for vision
 	protected Position						cpos;									// Current odometry based location
 	protected GLC24064						lcd;
-	protected String							lcd_port;
+	protected String						lcd_port;
 	
 	// Motor control
 	protected DifferentialDrive				model;
-	protected double							vlin;					// what the platform was asked for (m/s, rad/s)
-	protected double							vrot;
+	protected double						vlin;					// what the platform was asked for (m/s, rad/s)
+	protected double						vrot;
 	protected int							ctrlmode;
     	
 	// Other local stuff
@@ -117,19 +115,19 @@ public class Quaky2 extends VirtualRobot
 		model		= (DifferentialDrive) rdesc.model;
 		vpos			= new Position ();
 		cpos			= new Position ();
-		obdata			= new VisionData[MAX_OBJS];
+		obdata			= new Quaky2VisData[MAX_OBJS];
 		for (i = 0; i < MAX_OBJS; i++)
-			obdata[i]		= new VisionData ();
+			obdata[i]		= new Quaky2VisData ();
 
 		// Configure vision based sensors
 		System.out.println ("  [Quaky2] Initialising " + rdesc.MAXVISION + " vision based sensors ...");
-		vision = new Vision[rdesc.MAXVISION];
+		vision = new Quaky2Vis[rdesc.MAXVISION];
 		for (i = 0; i < rdesc.MAXVISION; i++)
 		{
 			params = rprops.getProperty ("VISION" + i);
 			try
 			{ 
-				vision[i] = Vision.getVision (params); 
+				vision[i] = Quaky2Vis.getVision (params); 
 				vision[i].setDebug (debug);
 				vision[i].start ();
 			} catch (Exception e) { System.out.println ("--[Quaky2] Error opening VISION" + i + "=" + e.toString ()); }

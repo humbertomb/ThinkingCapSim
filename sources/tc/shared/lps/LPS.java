@@ -26,9 +26,6 @@ import tc.shared.world.*;
 import tclib.utils.pos.*;
 import wucore.widgets.*;
 import wucore.utils.math.*;
-import wucore.utils.color.*;
-
-import devices.data.*;
 
 public class LPS extends Object
 {
@@ -232,44 +229,6 @@ public class LPS extends Object
 		lpos_n += map.docks().size();
 	}
 						
-	public void set_lpo (VisionData data)
-	{
-		int			i;
-		double		x, y;
-		double		ll, aa;
-		Position	pos;
-
-		pos		= new Position ();
-		for (i = 0; i < lpos_n; i++)
-			if (data.id.equals (lpos[i].label ()))
-			{
-				// Compute sensor absolute position (where the objects were captured)
-				pos.set (cur.x (), cur.y (), cur.alpha);
-				pos.untranslate (data.cpos);
-				
-				// Compute object absolute positions (where captured)
-				x	= pos.x () + data.rho * Math.cos (pos.alpha + data.phi);
-				y	= pos.y () + data.rho * Math.sin (pos.alpha + data.phi);
-
-				// Compute object relative positions (current robot frame)
-				x	= x - cur.x ();
-				y	= y - cur.y ();
-				ll	= Math.sqrt (x * x + y * y);
-				aa	= Math.atan2 (y, x);
-				x	= ll * Math.cos (aa - cur.alpha);
-				y	= ll * Math.sin (aa - cur.alpha);
-				
-				// Update LPS data
-				lpos[i].locate (x, y, 0.0);
-				lpos[i].color (ColorTool.fromColorToWColor(data.color));
-				//lpos[i].color (data.color);
-				
-				lpos[i].active (true);
-				lpos[i].anchor (1.0);
-				lpos[i].ageing (0);
-			}
-	}
-		
 	/**
 	 * Ages the LPOs: an anchoring not renewed for a few updates (ANCHOR_GRACE)
 	 * fades with time, from 1 to 0 in ANCHOR_FADE seconds, however often the LPS

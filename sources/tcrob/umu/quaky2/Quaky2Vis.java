@@ -2,17 +2,28 @@
  * (c) 2002 Humberto Martinez
  */
  
-package devices.drivers.vision.quaky2;
+package tcrob.umu.quaky2;
 
 import java.util.*;
+
 import java.net.*;
 import java.awt.*;
 
-import devices.data.*;
-import devices.drivers.vision.*;
-
-public class Quaky2Vis extends Vision
+public class Quaky2Vis extends Thread
 {
+	public class VisionException extends Exception
+	{
+		public VisionException ()
+		{
+			super ();
+		}
+
+		public VisionException (String message)
+		{
+			super (message);
+		}
+	}
+	
 	static public final byte				CAPTURE			= 100;
 	
 	protected DatagramSocket				socket;
@@ -23,12 +34,42 @@ public class Quaky2Vis extends Vision
 	protected InetAddress					rip;
 	protected int							rport;
 
+	// Processed objects information
+	protected Quaky2VisData[]				odata;
+	protected int							maxobjs;
+	
+	// Communication parameters and instance class
+	protected String						clase;
+	protected int							port;
+	
+	// Flow control and locking
+	protected boolean						updated		= false;
+	protected boolean						debug		= false;
+
 	// Constructors
 	public Quaky2Vis ()
 	{
 		super ();
 		
 		setName ("Thread-Quaky2Vis");	
+	}
+	
+	// Accessors
+	public final synchronized void			setUpdated (boolean updated)	{ this.updated = updated; }	
+	public final synchronized boolean		isUpdated ()					{ return updated; }	
+	public final Quaky2VisData[]				getData ()						{ return odata; }	
+	public final void						setDebug (boolean debug)		{ this.debug = debug; }
+	public final boolean					getDebug ()						{ return debug; }
+
+	// Class methods
+	public static Quaky2Vis getVision (String param) throws VisionException
+	{
+		Quaky2Vis		vis;
+		
+		vis = new Quaky2Vis ();
+		vis.initialise (param);
+		
+		return vis;	
 	}
 
 	// Instance methods
@@ -47,9 +88,9 @@ public class Quaky2Vis extends Vision
 			rport	= Integer.parseInt (st.nextToken ());
 
 			// Create and initialise object structures
-			odata			= new VisionData[maxobjs];
+			odata			= new Quaky2VisData[maxobjs];
 			for (i = 0; i < maxobjs; i++)
-				odata[i]		= new VisionData ();
+				odata[i]		= new Quaky2VisData ();
 				
 			// Communication stuff initialisation
 			ibuffer			= new byte[1500];
@@ -161,6 +202,55 @@ public class Quaky2Vis extends Vision
 		}
 	}		
 
+	/* -------------------------------------------------------------------------------------
+	 *  WARNING:
+	 * 
+	 * TODO: este codigo se mantine por razones historicas. Ya no hay robot para ejecutarlo.
+	 * Pero si se quisiera terminar la integracion, este fragmento tendria que usarse para 
+	 * meter en el LPS los objetos detectados por el modulo de vision
+	 * 
+	   ------------------------------------------------------------------------------------- */
+	
+	/*
+	public void set_lpo (Quaky2VisData data)
+	{
+		int			i;
+		double		x, y;
+		double		ll, aa;
+		Position	pos;
+
+		pos		= new Position ();
+		for (i = 0; i < lpos_n; i++)
+			if (data.id.equals (lpos[i].label ()))
+			{
+				// Compute sensor absolute position (where the objects were captured)
+				pos.set (cur.x (), cur.y (), cur.alpha);
+				pos.untranslate (data.cpos);
+				
+				// Compute object absolute positions (where captured)
+				x	= pos.x () + data.rho * Math.cos (pos.alpha + data.phi);
+				y	= pos.y () + data.rho * Math.sin (pos.alpha + data.phi);
+
+				// Compute object relative positions (current robot frame)
+				x	= x - cur.x ();
+				y	= y - cur.y ();
+				ll	= Math.sqrt (x * x + y * y);
+				aa	= Math.atan2 (y, x);
+				x	= ll * Math.cos (aa - cur.alpha);
+				y	= ll * Math.sin (aa - cur.alpha);
+				
+				// Update LPS data
+				lpos[i].locate (x, y, 0.0);
+				lpos[i].color (ColorTool.fromColorToWColor(data.color));
+				//lpos[i].color (data.color);
+				
+				lpos[i].active (true);
+				lpos[i].anchor (1.0);
+				lpos[i].ageing (0);
+			}
+	}
+	 */
+	
 	public void run () 
 	{
     	long		ct, tk;

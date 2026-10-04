@@ -17,12 +17,9 @@ import tc.shared.linda.ItemSensorsCtrl;
 import tc.shared.linda.ItemCameraCtrl;
 import tc.shared.linda.ItemExecution;
 import tc.shared.linda.ItemMotion;
-import tc.shared.linda.ItemObject;
 import tc.shared.linda.Linda;
 import tc.shared.linda.Tuple;
 import tc.shared.world.World;
-
-
 import wucore.gui.ChildWindowListener;
 import wucore.gui.PlotWindow;
 
@@ -53,8 +50,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected Tuple						tdata;
 	protected ItemSensors				sdata;
 	protected RobotData					data;
-	protected Tuple						tobj;
-	protected ItemObject				sobj;
 	protected Tuple						tcam;
 	protected ItemCamera				scam;
 	protected BufferedImage				cdata;			// frame of the current cycle (null: no camera, or nothing taken)
@@ -108,8 +103,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		// Prepare Linda data structures
 		sdata		= new ItemSensors ();
 		tdata		= new Tuple (Tuple.SENSORS, sdata);
-		sobj		= new ItemObject ();
-		tobj		= new Tuple (Tuple.OBJECT, sobj);
 		scam		= new ItemCamera ();
 		tcam		= new Tuple (Tuple.CAMERA, scam);
 		

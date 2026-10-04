@@ -2,14 +2,14 @@
  * (c) 2002 Humberto Martinez
  */
  
-package devices.data;
+package tcrob.umu.quaky2;
 
 import java.io.*;
 import java.awt.*;
 
 import tclib.utils.pos.*;
 
-public class VisionData extends Object implements Serializable 
+public class Quaky2VisData extends Object implements Serializable 
 {
 	// Type of object recognised
 	public String				id;
@@ -36,7 +36,7 @@ public class VisionData extends Object implements Serializable
 	public Color			color;					// Segmented color code
 	
 	/* Constructors */
-	public VisionData ()
+	public Quaky2VisData ()
 	{
 		this.id			= "noname";
 		this.device		= 0;
@@ -45,7 +45,7 @@ public class VisionData extends Object implements Serializable
 	}
 	
 	// Instance methods
-	public void set (VisionData data)
+	public void set (Quaky2VisData data)
 	{
 		this.id			= data.id;
 		this.device		= data.device;
@@ -114,11 +114,11 @@ public class VisionData extends Object implements Serializable
 		cpos.delta (prev);
 	}
 
-	public VisionData dup ()
+	public Quaky2VisData dup ()
 	{
-		VisionData		data;
+		Quaky2VisData		data;
 		
-		data		= new VisionData ();
+		data		= new Quaky2VisData ();
 		data.set (this);
 		
 		return data;
