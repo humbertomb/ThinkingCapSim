@@ -147,7 +147,7 @@ public class SimRobot extends VirtualRobot
 			dt = rdesc.DTIME / 1000.0;							// Non real-time simulation
 
 		// Compute simulation
-		simul.simulate (r_index, data, vlin, vlat, vrot, cycson, cycir, cyclrf, cyclsb, cycvis, dt);    
+		simul.simulate (r_index, data, vlin, vlat, vrot, cycson, cycir, cyclrf, cyclsb, dt);    
 		
 		// Take a frame of whichever camera is due for one
 		process_cameras (dtime);

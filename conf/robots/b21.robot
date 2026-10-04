@@ -452,9 +452,6 @@
     "trk": {
       "sensors": []
     },
-    "vis": {
-      "sensors": []
-    },
     "camera": {
       "sensors": []
     }

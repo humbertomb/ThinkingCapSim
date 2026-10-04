@@ -70,10 +70,6 @@ public class Quaky2 extends VirtualRobot
 
 	// Devices and data
 	protected Quaky2Driver					driver;
-	protected Quaky2Vis[]					vision;
-	protected Quaky2VisData[]					obdata;
-	protected Position						vpos;									// Position reference for vision
-	protected Position						cpos;									// Current odometry based location
 	protected GLC24064						lcd;
 	protected String						lcd_port;
 	
@@ -113,26 +109,7 @@ public class Quaky2 extends VirtualRobot
 		
 		// Initialise other structures
 		model		= (DifferentialDrive) rdesc.model;
-		vpos			= new Position ();
-		cpos			= new Position ();
-		obdata			= new Quaky2VisData[MAX_OBJS];
-		for (i = 0; i < MAX_OBJS; i++)
-			obdata[i]		= new Quaky2VisData ();
 
-		// Configure vision based sensors
-		System.out.println ("  [Quaky2] Initialising " + rdesc.MAXVISION + " vision based sensors ...");
-		vision = new Quaky2Vis[rdesc.MAXVISION];
-		for (i = 0; i < rdesc.MAXVISION; i++)
-		{
-			params = rprops.getProperty ("VISION" + i);
-			try
-			{ 
-				vision[i] = Quaky2Vis.getVision (params); 
-				vision[i].setDebug (debug);
-				vision[i].start ();
-			} catch (Exception e) { System.out.println ("--[Quaky2] Error opening VISION" + i + "=" + e.toString ()); }
-		}
-		
 		// Configure default LCD serial port
 		lcd_port	= rprops.getProperty ("LCD");
 		System.out.println ("  [Quaky2] Initialising LCD in port " + lcd_port);
@@ -176,7 +153,6 @@ public class Quaky2 extends VirtualRobot
 		data.odom_x	= 0.0;		
 		data.odom_y	= 0.0;		
 		data.odom_a	= 0.0;		
-		vpos.set (data.odom_x, data.odom_y, data.odom_a);
 	}
 
 	// Transform raw Sharp GP2D02 IR sensor data to metres
@@ -429,55 +405,6 @@ public class Quaky2 extends VirtualRobot
 		driver.odom_motL	= 0;
 		driver.odom_motR	= 0;
 		
-		/* -------------- */
-		/* PROCESS VISION */
-		/* -------------- */
-		
-		if (debug)		System.out.println ("  [Quaky2] Executing phase VISION");
-
-		// Read and process vision data
-//		odata	= null;
-//		k		= 0;
-//		
-//		for (i = 0; i < MAX_OBJS; i++)
-//			obdata[i].valid = false;
-//			
-//		for (i = 0; i < rdesc.MAXVISION; i++)
-//			if (vision[i].isUpdated ())
-//			{				
-//				// Store current position
-//				cpos.set (data.odom_x, data.odom_y, data.odom_a);
-//				
-//				// Get vision objects
-//				vdata	= vision[i].getData ();
-//				
-//				// Update objects buffer
-//				for (j = 0; j < vdata.length; j++)
-//					if (vdata[j].valid && (k < MAX_OBJS))
-//					{
-//						obdata[k].set (vdata[j]);
-//						obdata[k].sensor_pos (rdesc.visfeat[i].x (), rdesc.visfeat[i].y (), rdesc.visfeat[i].orientation ());
-//						obdata[k].capture_pos (vpos, cpos);
-//						obdata[k].set_dev (i);
-//						k ++;
-//					}
-//
-//				odata	= obdata;
-//				
-//				// Clear update flag
-//				vision[i].setUpdated (false);
-//			}
-			
-		// Fire vision processing
-    	if (data_ctrl.vision)						
-    		for (i = 0; i < rdesc.MAXVISION; i++)
- 				if (rdesc.visfeat[i].step () == cycvis)
- 				{
-					vpos.set (data.odom_x, data.odom_y, data.odom_a);
-					vision[i].acquire_frame ();
-					vision[i].setUpdated (false);
-				}
- 	
 		if (debug)		System.out.println ("  [Quaky2] Leaving SENSOR processing module\n");
 	}	
 

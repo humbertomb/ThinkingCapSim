@@ -44,7 +44,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	protected int						cycir;
 	protected int						cyclsb;
 	protected int						cyclrf;
-	protected int						cycvis;
 	
 	// Data sent by the robot
 	protected Tuple						tdata;
@@ -139,7 +138,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		cycir		= 1;
 		cyclrf		= 1;
 		cyclsb		= 1;
-		cycvis		= 1;
 		       	
 		// Initialise time computations
     	ltime		= System.currentTimeMillis () - rdesc.DTIME;
@@ -197,7 +195,6 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 	   	cycir++;		if (cycir > rdesc.CYCLEIR)		cycir	= 1;
 	   	cyclrf++;		if (cyclrf > rdesc.CYCLELRF)	cyclrf	= 1;
 	   	cyclsb++;		if (cyclsb > rdesc.CYCLELSB)	cyclsb	= 1;
-	    cycvis++;		if (cycvis > rdesc.CYCLEVIS)	cycvis	= 1;
 			
 		process_sensors (ctime - ltime);
 		ltime	= ctime;

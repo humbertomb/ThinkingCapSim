@@ -13,7 +13,6 @@ public class RobotDataCtrl extends Object implements Serializable
 	public boolean				ir			= true;
 	public boolean				lrf			= true;
 	public boolean				lsb			= true;	
-	public boolean				vision		= true;	
 	public boolean				camera		= true;	
 
 	/* Constructors */
@@ -27,7 +26,6 @@ public class RobotDataCtrl extends Object implements Serializable
 		this.ir			= other.ir;
 		this.lrf		= other.lrf;
 		this.lsb		= other.lsb;
-		this.vision		= other.vision;
 		this.camera		= other.camera;
 	}
 		
@@ -51,7 +49,6 @@ public class RobotDataCtrl extends Object implements Serializable
 		if (ir)			str += "IR ";
 		if (lrf)		str += "LRF ";
 		if (lsb)		str += "LSB ";
-		if (vision)		str += "VISION ";
 		if (camera)		str += "CAMERA ";
 
 		str		+= "]";

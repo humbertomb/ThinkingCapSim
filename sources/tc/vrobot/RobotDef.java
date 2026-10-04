@@ -404,14 +404,14 @@ public class RobotDef
 	protected transient String	original;											// JSON as loaded or saved (to detect changes)
 
 	/** Families of range sensors, by the prefix their properties use. */
-	static public final String[]	FAMILIES		= { "son", "ir", "lrf", "lsb", "trk", "vis", "camera" };
-	static public final String[]	FAMILY_NAMES	= { "Sonars", "Infrared", "Laser range finders", "Laser beacon scanners", "Radar trackers", "Vision", "Cameras" };
+	static public final String[]	FAMILIES		= { "son", "ir", "lrf", "lsb", "trk", "camera" };
+	static public final String[]	FAMILY_NAMES	= { "Sonars", "Infrared", "Laser range finders", "Laser beacon scanners", "Radar trackers", "Cameras" };
 	/** Property suffix of the count of each family (MAXSONAR, MAXIR, ...). */
-	static public final String[]	FAMILY_COUNTS	= { "MAXSONAR", "MAXIR", "MAXLRF", "MAXLSB", "MAXTRACKER", "MAXVISION", "MAXCAMERA" };
+	static public final String[]	FAMILY_COUNTS	= { "MAXSONAR", "MAXIR", "MAXLRF", "MAXLSB", "MAXTRACKER", "MAXCAMERA" };
 	/** Suffix the range properties of each family use (RANGESON, RANGEIR, ...). */
-	static public final String[]	FAMILY_KEYS		= { "SON", "IR", "LRF", "LSB", "TRK", "VIS", "CAM" };
+	static public final String[]	FAMILY_KEYS		= { "SON", "IR", "LRF", "LSB", "TRK", "CAM" };
 	/** How the simulator works a reading of a family out, where it has a say ("MODESON", ...); null where it has none. */
-	static public final String[]	FAMILY_MODES	= { "MODESON", "MODEIR", "MODELRF", "MODELSB", null, null, null };
+	static public final String[]	FAMILY_MODES	= { "MODESON", "MODEIR", "MODELRF", "MODELSB", null, null };
 	/**
 	 * How far off the simulator puts a reading of a family when it adds an error
 	 * of its own ("ERRORSON", ...); null where it adds none. It is a share of the
@@ -422,7 +422,7 @@ public class RobotDef
 	 * angle (ERRORANGLELSB); what is kept here is the one of the range, which is
 	 * the reading the rest of the families give as well.
 	 */
-	static public final String[]	FAMILY_ERRORS	= { "ERRORSON", "ERRORIR", "ERRORLRF", "ERRORRANGELSB", null, null, null };
+	static public final String[]	FAMILY_ERRORS	= { "ERRORSON", "ERRORIR", "ERRORLRF", "ERRORRANGELSB", null, null };
 	/** What the simulator takes it to be when a description does not say. */
 	static public final double		DEFAULT_ERROR	= 0.05;
 
@@ -433,6 +433,16 @@ public class RobotDef
 	 * are dropped rather than written out again.
 	 */
 	static private final String[]	DEAD			= { "MAXSPEED", "MAXTURN", "RAYVIRTU" };
+
+	/**
+	 * The family of the old vision devices ("vis": a camera that gave the blobs it
+	 * saw, of a model that cannot be used any more) and the properties it was
+	 * described with: a description that still has them loses them when it is
+	 * read, and they are not written again.
+	 */
+	static private final String		OLD_VISION		= "vis";
+	static private final java.util.regex.Pattern	OLD_VISION_KEYS	= java.util.regex.Pattern.compile (
+														"MAXVISION|CONEVIS|CYCLEVIS|RANGEVIS|ERRORVIS|VISION\\d+|vis(len|rho|hgt|feat|elev|step)\\d+");
 
 	/** True for a family whose readings the simulator works out in a way that can be chosen. */
 	static public boolean hasSimMode (String fam)
@@ -470,13 +480,13 @@ public class RobotDef
 	 * the family has none. The radar trackers are opened as RADAR0, which is what
 	 * a radar is named by everywhere else; nothing ever read a TRK0.
 	 */
-	static public final String[]	FAMILY_DRIVERS	= { "SONAR", "IR", "LRF", "LSB", "RADAR", "VISION", "CAMERA" };
+	static public final String[]	FAMILY_DRIVERS	= { "SONAR", "IR", "LRF", "LSB", "RADAR", "CAMERA" };
 	/**
 	 * A second count of a family, under the name the rest of the description uses
 	 * for it; null where there is none. The radar trackers are counted as radars
 	 * (MAXRADAR) as well as as trackers (MAXTRACKER), and both are read.
 	 */
-	static private final String[]	FAMILY_ALIAS	= { null, null, null, null, "MAXRADAR", null, null };
+	static private final String[]	FAMILY_ALIAS	= { null, null, null, null, "MAXRADAR", null };
 
 	/**
 	 * The class every driver of a family derives from; null when the family has
@@ -488,7 +498,6 @@ public class RobotDef
 														"devices.drivers.laser.Laser",
 														"devices.drivers.beacon.LaserBeacon",
 														"devices.drivers.radar.Radar",
-														"devices.drivers.vision.Vision",
 															"devices.drivers.camera.Camera" };
 
 	/** The class every kinematics model of a platform derives from. */
@@ -770,7 +779,7 @@ public class RobotDef
 	 * detects (driver, range, cone, rays, ...) instead of taking it from the
 	 * family. Only the firing cycle stays with the family.
 	 */
-	static public final boolean[]	FAMILY_OWN		= { false, false, true, true, true, true, true };
+	static public final boolean[]	FAMILY_OWN		= { false, false, true, true, true, true };
 
 	/**
 	 * True for a family that sees a rectangle and not a cone: a camera says a
@@ -781,7 +790,7 @@ public class RobotDef
 	 * has already made of what it saw (blobs, objects), and a camera, which hands
 	 * over the picture itself (CAMERA, tc.shared.linda.ItemCamera).
 	 */
-	static public boolean hasFov (String fam)			{ return "vis".equals (fam) || "camera".equals (fam); }
+	static public boolean hasFov (String fam)			{ return "camera".equals (fam); }
 
 	/**
 	 * True for a family whose sensors take so many frames in a second: a camera
@@ -1193,6 +1202,8 @@ public class RobotDef
 		String	fm = extra.remove ("MODEVIRTU");
 		if (fm != null)				fusionmode = (int) number (fm, 0.0);
 		for (String k : DEAD)		extra.remove (k);
+		sensors.remove (OLD_VISION);
+		extra.keySet ().removeIf (k -> OLD_VISION_KEYS.matcher (k).matches ());
 		if (groups.isEmpty ())		readGroups ();
 		if (fused.isEmpty ())		readFused ();
 		if (scans.isEmpty ())		readScans ();

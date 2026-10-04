@@ -57,10 +57,6 @@ public class RobotDesc extends VehicleDesc implements Serializable
 	public double				CONETRK; 		// Tracker aperture range (rad)
 	public int					OBJTRK; 			// Number of tracked objects
 
-	public int					MAXVISION; 		// Maximum number of vision based sensors
-	public double				CONEVIS; 		// Vision field of view (rad)
-	public int					CYCLEVIS; 		// Number of vision firing cycles
-
 	public double				CONECAM; 		// Camera horizontal field of view (rad)
 	public double				VFOVCAM; 		// Camera vertical field of view (rad)
 	public double				FPSCAM; 			// Camera frame rate (fps)
@@ -74,7 +70,6 @@ public class RobotDesc extends VehicleDesc implements Serializable
 	public SensorPos[]			irfeat; 			// IR sensors robot-local position
 	public SensorPos[]			lrffeat; 		// LRF sensors robot-local position
 	public SensorPos[]			lsbfeat; 		// LSB sensors robot-local position
-	public SensorPos[]			visfeat; 		// Vision sensors robot-local position
 	public SensorPos[]			camfeat; 		// Cameras robot-local position
 	public double[]				camfps; 		// Cameras frame rate (fps)
 	public double[]				camhfov; 		// Cameras horizontal field of view (rad)
@@ -165,10 +160,6 @@ public class RobotDesc extends VehicleDesc implements Serializable
 		try { INITLAYER	 	= Integer.parseInt(props.getProperty ("INITLAYER")); } catch (Exception e) 	{ }
 		
 		
-		try { MAXVISION 		= Integer.valueOf (props.getProperty ("MAXVISION")).intValue (); }				catch (Exception e) 	{ }
-		try { CONEVIS	 	= Double.valueOf (props.getProperty ("CONEVIS")).doubleValue () * Angles.DTOR; } catch (Exception e) 	{ }
-		try { CYCLEVIS	 	= Integer.valueOf (props.getProperty ("CYCLEVIS")).intValue (); } 				catch (Exception e) 	{ }
-
 		try { CONECAM	 	= Double.valueOf (props.getProperty ("CONECAM")).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 		try { VFOVCAM	 	= Double.valueOf (props.getProperty ("VFOVCAM")).doubleValue () * Angles.DTOR; }	catch (Exception e) 	{ }
 		try { FPSCAM	 	= Double.valueOf (props.getProperty ("FPSCAM")).doubleValue (); }				catch (Exception e) 	{ }
@@ -195,7 +186,6 @@ public class RobotDesc extends VehicleDesc implements Serializable
 		irfeat		= new SensorPos [MAXIR];
 		lrffeat		= new SensorPos [MAXLRF];
 		lsbfeat		= new SensorPos [MAXLSB];
-		visfeat		= new SensorPos [MAXVISION];
 		camfeat		= new SensorPos [MAXCAMERA];
 		camfps		= new double [MAXCAMERA];
 		camhfov		= new double [MAXCAMERA];
@@ -287,21 +277,6 @@ public class RobotDesc extends VehicleDesc implements Serializable
 				lsbfeat[i].step (stp);
 			}
 		
-		for (i = 0; i < MAXVISION; i++)
-		{
-			try { alpha		= Double.valueOf (props.getProperty ("visfeat" + i)).doubleValue (); } 			catch (Exception e) 	{ }
-			try { len		= Double.valueOf (props.getProperty ("vislen" + i)).doubleValue (); } 			catch (Exception e) 	{ }
-			try { rho		= Double.valueOf (props.getProperty ("visrho" + i)).doubleValue (); } 			catch (Exception e) 	{ }
-			try { hgt		= Double.valueOf (props.getProperty ("vishgt" + i)).doubleValue (); } 			catch (Exception e) 	{ }
-			try { elev		= Double.valueOf (props.getProperty ("viselev" + i)).doubleValue (); } 			catch (Exception e) 	{ elev = 0.0; }
-			try { stp		= Integer.valueOf (props.getProperty ("visstep" + i)).intValue (); } 			catch (Exception e) 	{ }
-			visfeat[i]		= new SensorPos ();
-			visfeat[i].set_polar (len, rho * Angles.DTOR, alpha * Angles.DTOR);
-			visfeat[i].set_height (hgt);
-			visfeat[i].elevation (elev * Angles.DTOR);
-			visfeat[i].step (stp);
-		}
-		
 		for (i = 0; i < MAXCAMERA; i++)
 		{
 			try { alpha		= Double.valueOf (props.getProperty ("camerafeat" + i)).doubleValue (); } 		catch (Exception e) 	{ }
@@ -364,7 +339,6 @@ public class RobotDesc extends VehicleDesc implements Serializable
 		if (MAXENCS > 0)			str += ",ENC="+MAXENCS;
 		if (MAXCAMERA > 0)		str += ",CAM="+MAXCAMERA;
 		if (MAXDIGITIZER > 0)		str += ",DIG="+MAXDIGITIZER;
-		if (MAXVISION > 0)		str += ",VIS="+MAXVISION;
 		
 		return str;
 	}

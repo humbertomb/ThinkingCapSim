@@ -1543,7 +1543,7 @@ public class Simulator
 	
 	
 	synchronized public void simulate (int robotind, RobotData data, double vlin, double vlat, double vrot, 
-			int cycson, int cycir, int cyclrf, int cyclsb, int cycvis, double dt)
+			int cycson, int cycir, int cyclrf, int cyclsb, double dt)
 	{
 		int			i;
 //		boolean		collision;
@@ -1573,7 +1573,7 @@ public class Simulator
 		MODEL[robotind].update (data);
 		
 		// Simulate sensors
-		simulate (robotind, data, cycson, cycir, cyclrf, cyclsb, cycvis);
+		simulate (robotind, data, cycson, cycir, cyclrf, cyclsb);
 		
 		// Stores robot data
 		lastRobotData[robotind] = data;
@@ -1585,7 +1585,7 @@ public class Simulator
 	}
 	
 	synchronized public void simulate (int robotind, RobotData data, double x, double y, double a, 
-			int cycson, int cycir, int cyclrf, int cyclsb, int cycvis)
+			int cycson, int cycir, int cyclrf, int cyclsb)
 	{
 		int			i;
 		
@@ -1612,7 +1612,7 @@ public class Simulator
 		MODEL[robotind].update (data);
 		
 		// Simulate sensors
-		simulate (robotind, data, cycson, cycir, cyclrf, cyclsb, cycvis);
+		simulate (robotind, data, cycson, cycir, cyclrf, cyclsb);
 		
 		// Stores robot data
 		lastRobotData[robotind] = data;		
@@ -1632,7 +1632,7 @@ public class Simulator
 		return (step <= 0) || (step == cycle);
 	}
 
-	synchronized public void simulate (int robotind, RobotData data, int cycson, int cycir, int cyclrf, int cyclsb, int cycvis)
+	synchronized public void simulate (int robotind, RobotData data, int cycson, int cycir, int cyclrf, int cyclsb)
 	{
 		int			i,j;
 		

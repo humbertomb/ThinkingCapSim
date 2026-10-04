@@ -547,10 +547,9 @@ public class ArchModel
 	/**
 	 * Symbols the robot writes only when its platform carries the devices behind
 	 * them, by the family of {@link tc.vrobot.RobotDef} that has to have one: the picture of
-	 * a camera (CAMERA) when the description declares a camera, and what a vision
-	 * made of what it saw (OBJECT) when it declares a vision.
+	 * a camera (CAMERA) when the description declares a camera.
 	 *
-	 * The code of the virtual robot names both whichever platform it runs, since
+	 * The code of the virtual robot names it whichever platform it runs, since
 	 * it writes them if its subclass hands it something to write; whether anything
 	 * ever does is said by the description and not by the code, so it is looked up
 	 * there instead of being drawn always.
@@ -558,7 +557,6 @@ public class ArchModel
 	static private final String[][]	BY_DEVICE	=
 	{
 		{ "CAMERA",	"camera" },			// tc.shared.linda.ItemCamera: the frame of a camera
-		{ "OBJECT",	"vis" },			// tc.shared.linda.ItemObject: the blobs of a vision
 	};
 
 	/** Descriptions of the robots already read, by file and by when it was last written. */

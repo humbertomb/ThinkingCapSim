@@ -420,10 +420,6 @@
     "trk": {
       "sensors": []
     },
-    "vis": {
-      "cycle": 1,
-      "sensors": []
-    },
     "camera": {
       "sensors": [
         {
@@ -745,7 +741,6 @@
     "CAN_S_FIREID": "160",
     "CAN_M_ODOMID": "98",
     "CAN_CDR": "192",
-    "ERRORVIS": "0",
     "CAN_SINGLE_FILTER": "false",
     "CAN_S_SONID": "192",
     "CAN_BRATE": "500",

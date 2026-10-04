@@ -191,9 +191,6 @@
         }
       ]
     },
-    "vis": {
-      "sensors": []
-    },
     "camera": {
       "sensors": []
     }
