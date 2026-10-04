@@ -110,6 +110,13 @@
       "yf": -0.13947373558187764
     }
   ],
+  "boundingBox": {
+    "xmin": -0.216,
+    "ymin": -0.2197109795265437,
+    "xmax": 0.21065695564495535,
+    "ymax": 0.2197109795265437
+  },
+  "image": "./conf/2dmodels/quaky2.png",
   "shapeRobot": "./conf/3dmodels/quaky2/quaky2.3ds",
   "kinematics": {
     "drive": "tc.vrobot.models.DifferentialDrive",
