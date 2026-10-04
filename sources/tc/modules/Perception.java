@@ -30,12 +30,12 @@ public abstract class Perception extends StdThread
 
 	protected World				world;			// A priori world model
 	protected RobotDesc			rdesc;			// Robot description
-	protected FusionDesc			fdesc;			// Fusion method description
-	protected Fusion				fusion;			// Sensor fusion method
+	protected FusionDesc		fdesc;			// Fusion method description
+	protected Fusion			fusion;			// Sensor fusion method
 	protected LPS				lps;				// Local Perceptual Space
 
 	// Linda related variables
-	protected String				robotid;
+	protected String			robotid;
 	protected Tuple				ltuple;
 	protected ItemLPS			lstore;
 	protected long				stime 		= 0;

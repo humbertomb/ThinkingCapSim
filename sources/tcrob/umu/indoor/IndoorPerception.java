@@ -57,7 +57,7 @@ public class IndoorPerception extends Perception
 	protected boolean				firstime		= true;
 	
 	// Debugging tools and windows
-	protected LPSWindow			win;
+	protected LPSWindow				win;
 	
 	// Constructors
 	public IndoorPerception (ModuleConfig cfg, Linda linda)

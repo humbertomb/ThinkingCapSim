@@ -1,6 +1,5 @@
 {
   "name": "B21",
-  "radius": 0.3,
   "icon": [
     {
       "xi": 0.0,
@@ -97,24 +96,6 @@
       "yi": 0.19745431879570693,
       "xf": 0.24179011830483707,
       "yf": 0.14008715303813063
-    },
-    {
-      "xi": 0.28,
-      "yi": 0.0,
-      "xf": 0.17978605062169128,
-      "yf": -0.10016191039982758
-    },
-    {
-      "xi": 0.28,
-      "yi": 0.0,
-      "xf": 0.17960507244228535,
-      "yf": 0.09887537000838888
-    },
-    {
-      "xi": 0.17978605062169128,
-      "yi": -0.10016191039982758,
-      "xf": 0.17960507244228535,
-      "yf": 0.09887537000838888
     },
     {
       "xi": -0.1975,
@@ -307,10 +288,11 @@
       ]
     },
     "ir": {
-      "rangemax": 0.45,
+      "rangemax": 0.9,
       "rangemin": 0.1,
       "cone": 10.0,
       "rays": 5,
+      "cycle": 1,
       "simmode": 2,
       "simerror": 0.05,
       "sensors": [
@@ -319,112 +301,112 @@
           "theta": -0.0,
           "height": 0.24999999999999997,
           "orientation": 0.0,
-          "step": 0
+          "step": 1
         },
         {
-          "rho": 0.27746170906991835,
+          "rho": 0.277462,
           "theta": 22.683403352283307,
           "height": 0.24999999999999997,
           "orientation": 22.5,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.2800142853498728,
           "theta": 45.0,
           "height": 0.24999999999999997,
           "orientation": 45.0,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.2776220452341636,
           "theta": 67.7770238237238,
           "height": 0.24999999999999997,
           "orientation": 67.5,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.28,
           "theta": 90.0,
           "height": 0.24999999999999997,
           "orientation": 90.0,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.27808496902925195,
           "theta": 112.18401334526999,
           "height": 0.24999999999999997,
           "orientation": 112.5,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.2793071785686863,
           "theta": 135.0,
           "height": 0.24999999999999997,
           "orientation": 135.0,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.2778488797889961,
           "theta": 157.12633480937328,
           "height": 0.24999999999999997,
           "orientation": 157.5,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.28,
           "theta": -180.0,
           "height": 0.24999999999999997,
           "orientation": 180.0,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.2776220452341636,
           "theta": -157.7770238237238,
           "height": 0.24999999999999997,
           "orientation": -157.5,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.279308073639127,
           "theta": -135.14505229647162,
           "height": 0.24999999999999997,
           "orientation": -135.0,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.2776220452341636,
           "theta": -112.22297617627622,
           "height": 0.24999999999999997,
           "orientation": -112.5,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.28,
           "theta": -90.0,
           "height": 0.24999999999999997,
           "orientation": -90.0,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.277077606457108,
           "theta": -67.50738810094131,
           "height": 0.24999999999999997,
           "orientation": -67.5,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.2800142853498728,
           "theta": -45.0,
           "height": 0.24999999999999997,
           "orientation": -45.0,
-          "step": 0
+          "step": 1
         },
         {
           "rho": 0.2776220452341636,
           "theta": -22.22297617627621,
           "height": 0.24999999999999997,
           "orientation": -22.5,
-          "step": 0
+          "step": 1
         }
       ]
     },
@@ -618,8 +600,8 @@
       "height": 0.0,
       "orientation": 90.0,
       "elevation": 0.0,
-      "rangemax": 1.0,
-      "rangemin": 0.3,
+      "rangemax": 1.5,
+      "rangemin": 0.2,
       "cone": 45.0
     },
     {
@@ -631,8 +613,8 @@
       "height": 0.0,
       "orientation": 45.0,
       "elevation": 0.0,
-      "rangemax": 1.0,
-      "rangemin": 0.3,
+      "rangemax": 1.5,
+      "rangemin": 0.2,
       "cone": 45.0
     },
     {
@@ -644,8 +626,8 @@
       "height": 0.0,
       "orientation": 0.0,
       "elevation": 0.0,
-      "rangemax": 1.0,
-      "rangemin": 0.3,
+      "rangemax": 1.5,
+      "rangemin": 0.2,
       "cone": 45.0
     },
     {
@@ -657,8 +639,8 @@
       "height": 0.0,
       "orientation": -45.0,
       "elevation": 0.0,
-      "rangemax": 1.0,
-      "rangemin": 0.3,
+      "rangemax": 1.5,
+      "rangemin": 0.2,
       "cone": 45.0
     },
     {
@@ -670,8 +652,8 @@
       "height": 0.0,
       "orientation": -90.0,
       "elevation": 0.0,
-      "rangemax": 1.0,
-      "rangemin": 0.3,
+      "rangemax": 1.5,
+      "rangemin": 0.2,
       "cone": 45.0
     }
   ],
@@ -856,8 +838,8 @@
   "fusionmode": 4,
   "scans": [
     {
-      "mode": 0,
-      "rays": 90,
+      "mode": 1,
+      "rays": 60,
       "rho": 0.0,
       "theta": 180.0,
       "height": 1.43,
@@ -865,7 +847,7 @@
       "elevation": 0.0,
       "rangemax": 12.0,
       "rangemin": 0.0,
-      "cone": 180.0
+      "cone": 120.0
     }
   ],
   "extra": {
