@@ -71,10 +71,18 @@ public class LPOSensorGroup extends LPO implements Serializable
 			xx 	= spos[i].rho () * Math.cos (aa) + range[i] * Math.cos (view.rotation + spos[i].orientation ());
 			yy 	= spos[i].rho () * Math.sin (aa) + range[i] * Math.sin (view.rotation + spos[i].orientation ());
 			
-			model.addRawCircle (xx, yy, RADIUS, ColorTool.fromWColorToColor(color));
+			// the one in the middle (of an odd number of them, as they usually are)
+			// is filled: it is the one that matters most not to bump into anything
+			model.addRawCircle (xx, yy, RADIUS, middle (i) ? Model2D.FILLED : Model2D.PLAIN, ColorTool.fromWColorToColor(color));
 			if (spos[i] instanceof FeaturePos)
 				sector (model, view, (FeaturePos) spos[i], range[i]);
 		}
+	}
+
+	/** Whether a sensor of an area is the one in the middle (there being an odd number of them). */
+	protected boolean middle (int i)
+	{
+		return (size % 2 == 1) && (i == size / 2);
 	}
 
 	/** The sector of a sensor of an area out to what it reads, in dashed lines: its two sides and its arc. */
