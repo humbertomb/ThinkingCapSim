@@ -87,6 +87,12 @@ public class Fusion extends Object
 	 * range. It is read on this cycle when any of the two was; when neither was,
 	 * it keeps what it read last (it does not jump to its maximum range because a
 	 * sensor did not fire).
+	 *
+	 * The sensors fused are the ones that look the same way as the fused sensor
+	 * (the nearest of them, when several do), and each sits where it sits on the
+	 * robot: what it reads is the point it hit, taken as the distance from where
+	 * the fused sensor sits (see {@link #from}). Whether a sensor sees something
+	 * and Flynn's rule go by what the sensor itself reads.
 	 */
 	protected void virtual (int s, RobotData data, SensorPos a1)
 	{
@@ -99,10 +105,15 @@ public class Fusion extends Object
 		double			ir = i_read ? data.irs[ki] : 0.0;
 		boolean			s_ok = s_read && sees (sonar, rdesc.RANGESON);		// what can be used: what sees something
 		boolean			i_ok = i_read && sees (ir, rdesc.RANGEIR);
+		boolean			near = i_ok && (ir < 0.7 * rdesc.RANGEIR);			// Flynn: an infrared near enough to be trusted
 		double			out = fdesc.RANGEVIRTU;
 
 		virtuals_flg[s]	= s_read || i_read;
 		if (!virtuals_flg[s])				return;			// nothing new: as it was
+
+		// from where the fused sensor sits
+		if (s_ok)		sonar	= from (a1, rdesc.sonfeat[ks], sonar, 0.0);
+		if (i_ok)		ir		= from (a1, rdesc.irfeat[ki], ir, 0.0);
 
 		if (mode == FusionDesc.V_UNDEF)		mode = fdesc.MODEVIRTU;
 		switch (mode)
@@ -114,7 +125,7 @@ public class Fusion extends Object
 				if (i_ok)				out = ir;
 				break;
 			case FusionDesc.V_FLYNN:
-				if (s_ok && i_ok)		out = (ir >= 0.7 * rdesc.RANGEIR) ? sonar : ir;
+				if (s_ok && i_ok)		out = near ? ir : sonar;
 				else if (s_ok)			out = sonar;
 				else if (i_ok)			out = ir;
 				break;
@@ -134,24 +145,46 @@ public class Fusion extends Object
 		return (range <= 0.0) || (r < range);
 	}
 
-	/** The sensor of a family nearest to a fused sensor (-1: the family has none). */
+	/**
+	 * The sensor of a family a fused sensor is made of: the one that looks the
+	 * most the same way, and the nearest of them when several look alike (within
+	 * a degree), -1 when the family has none. Where they sit alone does not tell:
+	 * two sensors side by side may look forty degrees apart.
+	 */
 	static protected int nearest (SensorPos a1, SensorPos[] feats, int n)
 	{
-		double			min = Double.MAX_VALUE, t;
+		double			bestA = Double.MAX_VALUE, bestD = Double.MAX_VALUE;
 		int				k = -1;
 
 		if (feats == null)		return -1;
 		for (int i = 0; i < Math.min (n, feats.length); i++)
 		{
 			if (feats[i] == null)		continue;
-			t	= a1.distance (feats[i]);
-			if (t < min)
-			{
-				min	= t;
-				k	= i;
-			}
+
+			double	a = Math.abs (Angles.radnorm_180 (feats[i].orientation () - a1.orientation ()));
+			double	d = a1.distance (feats[i]);
+
+			if ((k < 0) || (a < bestA - LOOK_ALIKE))						{ bestA = a;	bestD = d;	k = i; }	// looks more the same way
+			else if ((a <= bestA + LOOK_ALIKE) && (d < bestD))				{ bestA = Math.min (bestA, a);	bestD = d;	k = i; }	// as much, and nearer
 		}
 		return k;
+	}
+
+	/** How far apart two sensors may look and still look the same way (rad). */
+	static public final double			LOOK_ALIKE		= Math.toRadians (1.0);
+
+	/**
+	 * What a sensor reads, seen from somewhere else on the robot: the distance from
+	 * where o sits to the point the sensor s hit, reading r along its own direction
+	 * (turned alpha, the ray of a laser). With o and s in the same place it is r.
+	 */
+	static public double from (SensorPos o, SensorPos s, double r, double alpha)
+	{
+		double	b = s.orientation () + alpha;
+		double	dx = s.x () + r * Math.cos (b) - o.x ();
+		double	dy = s.y () + r * Math.sin (b) - o.y ();
+
+		return Math.sqrt (dx * dx + dy * dy);
 	}
 
 	/**
@@ -160,7 +193,9 @@ public class Fusion extends Object
 	 * worked out again when what it is made of was read on this cycle (anything
 	 * the range buffer is filled with, or any of the fused sensors of its list);
 	 * otherwise it keeps its value, so that it does not jump on the cycles the
-	 * sensors do not fire.
+	 * sensors do not fire. The fused sensors of its list are taken from where it
+	 * sits (see {@link #from}), as the range buffer is, and it never reads
+	 * farther than its range.
 	 */
 	protected void group (int s, LPS lps, RobotData data, FeaturePos f)
 	{
@@ -183,13 +218,13 @@ public class Fusion extends Object
 			case FusionDesc.G_WEIGHT:
 				out = 0.0;
 				for (i = 0; i < f.n (); i++)
-					out += virtuals[f.ndx (i)] * f.wgt (i);
+					out += listed (f, i) * f.wgt (i);
 				break;
 			case FusionDesc.G_BWEIGHT:
 				out = 0.0;
 				for (i = 0; i < f.n (); i++)
 				{
-					t = virtuals[f.ndx (i)];
+					t = listed (f, i);
 					if (t > f.range ())		t = f.range ();
 					out += t * f.wgt (i);
 				}
@@ -199,13 +234,21 @@ public class Fusion extends Object
 				out = Double.MAX_VALUE;
 				for (i = 0; i < f.n (); i++)
 				{
-					t = virtuals[f.ndx (i)] * f.wgt (i);
+					t = listed (f, i) * f.wgt (i);
 					if (t < out)	out = t;
 				}
 		}
 
-		groups[s]		= Math.max (out, 0.0);
+		groups[s]		= Math.max (Math.min (out, f.range ()), 0.0);
 		groups_flg[s]	= (groups[s] < f.range ());
+	}
+
+	/** The i-th fused sensor of the list of a sensor of an area, from where the sensor of the area sits. */
+	protected double listed (FeaturePos f, int i)
+	{
+		int		k = f.ndx (i);
+
+		return from (f, fdesc.virtufeat[k], virtuals[k], 0.0);
 	}
 
 	/** Whether what a sensor of an area is made of was read on this cycle. */

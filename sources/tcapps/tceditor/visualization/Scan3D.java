@@ -103,7 +103,7 @@ public class Scan3D extends BranchGroup
 		
 		for (i = 0; i < num; i++)
 		{
-			scan		= (Shape3D) scans[i].getChild (i);
+			scan		= (Shape3D) scans[i].getChild (0);
 			pts		= (TriangleArray) scan.getGeometry ();
 			
 			hcone	= cone * 0.5;		

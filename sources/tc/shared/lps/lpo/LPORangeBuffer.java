@@ -163,30 +163,29 @@ public class LPORangeBuffer extends LPO implements Serializable
 		}
 	}
 	
-	/* 
-	 * Check occupancy
-	 *
-	 * Find the closest reading (m) in a slice from a1 to a2 rad
-	 *
+	/**
+	 * The distance (m) from where a sensor of an area sits (f) to the nearest
+	 * reading in its arc: cone (rad) either way of where it looks, out to range
+	 * (range when there is none). Weighted, an older reading counts as farther
+	 * when choosing the nearest (buffer_wgt), though its own distance is what is
+	 * returned.
 	 */
 	public double occupied_arc (FeaturePos f, double cone, double range, boolean dowgt)
 	{
 		int				i, j;
 		double			x1, y1;
 		double			min;
-		double			a1, a2;
+		double			best;
 		double			phi, rho;
 		LPORangePoint	s;
-
-		a1	= Angles.radnorm_180 (f.orientation () - cone);
-		a2	= Angles.radnorm_180 (f.orientation () + cone);
 
 		// Compute sensor detection cone
 		x1	= f.rho () * Math.cos (f.theta ());
 		y1	= f.rho () * Math.sin (f.theta ());
 				
 		// Find closest reading within bounding region
-		min = range;	
+		min = range;
+		best = range;
 		for (i = 0; i < size; i++) 
 		{
 			s = buffer[i];
@@ -194,7 +193,7 @@ public class LPORangeBuffer extends LPO implements Serializable
 			{
 				// Compute translated point
 				rho	= Math.sqrt ((s.x - x1) * (s.x - x1) + (s.y - y1) * (s.y - y1));
-				phi	= Math.atan2 (s.y - y1, s.x - x1);
+				phi	= Angles.radnorm_180 (Math.atan2 (s.y - y1, s.x - x1) - f.orientation ());		// from where the sensor looks
 				
 				// Check if the weighting scheme applies
 				if (dowgt)
@@ -202,9 +201,13 @@ public class LPORangeBuffer extends LPO implements Serializable
 				else
 					j	= 0;
 					
-				// Check if point is in sensors cone
-				if ((a1 <= phi) && (phi <= a2) && (buffer_wgt[j] * rho < min))
-					min = rho;
+				// Check if point is in sensors cone (whichever way it looks, behind included),
+				// the nearest by its weighted distance, which an older point makes longer
+				if ((Math.abs (phi) <= cone) && (rho <= range) && (buffer_wgt[j] * rho < best))
+				{
+					best	= buffer_wgt[j] * rho;
+					min		= rho;
+				}
 			}
 		}
 		
@@ -221,7 +224,7 @@ public class LPORangeBuffer extends LPO implements Serializable
 	{
 		int				i, j;
 		double			x, y, xs, ys;
-		double			min;
+		double			min, best;
 		double			phi, rho;
 		LPORangePoint	s;
 
@@ -230,7 +233,8 @@ public class LPORangeBuffer extends LPO implements Serializable
 		y	= f.rho () * Math.sin (f.theta ());
 		
 		// Find closest reading within bounding region
-		min = range;	
+		min = range;
+		best = range;
 		for (i = 0; i < size; i++) 
 		{
 			s = buffer[i];
@@ -250,8 +254,11 @@ public class LPORangeBuffer extends LPO implements Serializable
 					j	= 0;
 					
 				// Check if point is in sensors area
-				if ((ys > -base) && (ys < base) && (xs > 0.0)  && (xs < range) && (buffer_wgt[j] * rho < min))
-					min = rho;
+				if ((ys > -base) && (ys < base) && (xs > 0.0)  && (xs < range) && (buffer_wgt[j] * rho < best))
+				{
+					best	= buffer_wgt[j] * rho;
+					min		= rho;
+				}
 			}
 		}
 		

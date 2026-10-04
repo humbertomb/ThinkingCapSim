@@ -525,6 +525,7 @@ public class Simulator
 	{
 		double			xx1, yy1;
 		double			xx2, yy2;
+		int				n;
 		double			a, a2, step;
 		double			dist, tdist;
 		double			rlen;
@@ -537,25 +538,25 @@ public class Simulator
 		
 		a2		= RDESC[roboindex].CONESON / 2.0;
 		rlen	= RDESC[roboindex].RANGESON * 2.0;
-		step		= (a2 * 2.0) / (double) (SDESC[roboindex].RAYSON - 1);
-		dist		= Double.MAX_VALUE;
-		rout		= new Line2 ();
-		for (a = -a2; a <= a2; a += step)
+		n		= Math.max (1, SDESC[roboindex].RAYSON);
+		step	= (n > 1) ? (a2 * 2.0) / (double) (n - 1) : 0.0;
+		dist	= RDESC[roboindex].RANGESON;
+		rout	= new Line2 ();
+		for (int k = 0; k < n; k++)						// every ray of its cone, both ends included (one ray: the axis)
 		{
+			a		= (n > 1) ? -a2 + k * step : 0.0;
 			xx2		= xx1 + rlen * Math.cos (MODEL[roboindex].real_a + a1.orientation () + a);
 			yy2		= yy1 + rlen * Math.sin (MODEL[roboindex].real_a + a1.orientation () + a);	
 			tdist	= RDESC[roboindex].RANGESON;
 			
 			rout.set (xx1, yy1, xx2, yy2);
-			wall 		= map.crossline (rout, icons, iconcount, ROBOINDEX[roboindex]);						
-			if (wall == null)									
-				break;
-			else
-			{				
+			wall 	= map.crossline (rout, icons, iconcount, ROBOINDEX[roboindex]);
+			if (wall != null)							// a ray that hits nothing reads the range, and the others are still looked at
+			{
 				p		= rout.intersection (wall);
 				if (p != null)	tdist 	= p.distance (xx1, yy1);
 			}
-			dist 		= Math.min (dist, tdist);
+			dist 	= Math.min (dist, tdist);
 		}
 		
 		return dist;
@@ -701,6 +702,7 @@ public class Simulator
 	{
 		double			xx1, yy1;
 		double			xx2, yy2;
+		int				n;
 		double			a, a2, step;
 		double			dist, tdist;
 		double			rlen;
@@ -712,21 +714,21 @@ public class Simulator
 		
 		a2		= RDESC[roboindex].CONEIR / 2.0;
 		rlen	= RDESC[roboindex].RANGEIR * 2.0;
-		step	= (a2 * 2.0) / (double) (SDESC[roboindex].RAYIR- 1);
-		dist	= Double.MAX_VALUE;
+		n		= Math.max (1, SDESC[roboindex].RAYIR);
+		step	= (n > 1) ? (a2 * 2.0) / (double) (n - 1) : 0.0;
+		dist	= RDESC[roboindex].RANGEIR;
 		rout	= new Line2 ();
-		for (a = -a2; a <= a2; a += step)
+		for (int k = 0; k < n; k++)						// every ray of its cone, both ends included (one ray: the axis)
 		{
+			a		= (n > 1) ? -a2 + k * step : 0.0;
 			xx2		= xx1 + rlen * Math.cos (MODEL[roboindex].real_a + a1.orientation () + a);
 			yy2		= yy1 + rlen * Math.sin (MODEL[roboindex].real_a + a1.orientation () + a);	
 			tdist	= RDESC[roboindex].RANGEIR;
 			
 			rout.set (xx1, yy1, xx2, yy2);
-			wall 	= map.crossline (rout, icons, iconcount, ROBOINDEX[roboindex]);						
-			if (wall == null)									
-				break;
-			else
-			{				
+			wall 	= map.crossline (rout, icons, iconcount, ROBOINDEX[roboindex]);
+			if (wall != null)							// a ray that hits nothing reads the range, and the others are still looked at
+			{
 				p		= rout.intersection (wall);
 				if (p != null)	tdist 	= p.distance (xx1, yy1);
 			}

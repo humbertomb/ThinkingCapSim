@@ -57,29 +57,16 @@ public class BGrid extends Grid
 		
 		s	= fdesc.scanfeat;
 			
-		xs 	= pos.x () + s.rho () * Math.cos (pos.alpha + s.rho());			
-		ys 	= pos.y () + s.rho () * Math.sin (pos.alpha + s.rho());
+		xs 	= pos.x () + s.rho () * Math.cos (pos.alpha + s.theta ());			// where the scanner sits
+		ys 	= pos.y () + s.rho () * Math.sin (pos.alpha + s.theta ());
 			
 		for (int j = 0; j < fdesc.RAYSCAN; j++){
 					
 			if ((scan.range[j] <= 0.0) || (scan.range[j] > MAX_RANGE_LRF))		continue;
 				
-			if(j < ((fdesc.RAYSCAN-1)/2)){
-																																	
-				xm	= xs + scan.range[j] * Math.cos ((s.orientation() - a + j*da )  + pos.alpha);
-				ym	= ys + scan.range[j] * Math.sin ((s.orientation() - a + j*da )  + pos.alpha);
-										
-			}else if (j==((fdesc.RAYSCAN-1)/2)){
-				
-				xm	= xs + scan.range[j] * Math.cos (s.orientation ()  + pos.alpha);
-				ym	= ys + scan.range[j] * Math.sin (s.orientation ()  + pos.alpha);	
-								
-			}else{
-																										
-				xm	= xs + scan.range[j] * Math.cos ((s.orientation() + (j-((fdesc.RAYSCAN-1)/2))*da )  + pos.alpha);
-				ym	= ys + scan.range[j] * Math.sin ((s.orientation() + (j-((fdesc.RAYSCAN-1)/2))*da )  + pos.alpha);			
-				
-			}	
+			// ray j of the fan, from one end of the cone to the other
+			xm	= xs + scan.range[j] * Math.cos (pos.alpha + s.orientation () - a + j * da);
+			ym	= ys + scan.range[j] * Math.sin (pos.alpha + s.orientation () - a + j * da);
 				
 			ci 	= ctog_x (xm);
 			cj 	= ctog_y (ym);

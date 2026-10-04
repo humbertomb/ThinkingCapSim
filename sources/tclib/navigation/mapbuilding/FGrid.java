@@ -62,7 +62,7 @@ public class FGrid extends Grid
 		int			i;
 			
 		// Create data structures
-		data			= new Point2[rdesc.RAYLRF];		
+		data			= new Point2[Math.max (rdesc.RAYLRF, fdesc.RAYSCAN)];		// it takes the rays of the scanner		
 		lines		= new Line2[RIEPFA_MAXSEGS];	
 		
 		// Initialise data structures

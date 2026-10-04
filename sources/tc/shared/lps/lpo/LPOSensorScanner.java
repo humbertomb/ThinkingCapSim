@@ -66,7 +66,7 @@ public class LPOSensorScanner extends LPO implements Serializable
 		
 		if (!active)				return;
 
-		delta	= cone / ((double) size - 1.0);
+		delta	= (size > 1) ? cone / ((double) size - 1.0) : 0.0;
 
 		aa	= view.rotation + spos.theta ();
    		xx	= spos.rho () * Math.cos (aa);

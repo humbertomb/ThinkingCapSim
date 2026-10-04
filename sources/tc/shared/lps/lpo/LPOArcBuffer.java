@@ -119,19 +119,17 @@ public class LPOArcBuffer extends LPO implements Serializable
 		int				i, j;
 		double			x1, y1;
 		double			min;
-		double			a1, a2;
+		double			best;
 		double			phi, rho;
 		LPOArcPoint		s;
-
-		a1	= Angles.radnorm_180 (f.orientation () - cone);
-		a2	= Angles.radnorm_180 (f.orientation () + cone);
 
 		// Compute sensor detection cone
 		x1	= f.rho () * Math.cos (f.theta ());
 		y1	= f.rho () * Math.sin (f.theta ());
 		
 		// Find closest reading within bounding region
-		min = range;	
+		min = range;
+		best = range;
 		for (i = 0; i < size; i++) 
 		{
 			s = buffer[i];
@@ -139,7 +137,7 @@ public class LPOArcBuffer extends LPO implements Serializable
 			{
 				// Compute translated point
 				rho	= Math.sqrt ((s.x - x1) * (s.x - x1) + (s.y - y1) * (s.y - y1));
-				phi	= Math.atan2 (s.y - y1, s.x - x1);
+				phi	= Angles.radnorm_180 (Math.atan2 (s.y - y1, s.x - x1) - f.orientation ());		// from where the sensor looks
 				
 				// Check if the weighting scheme applies
 				if (dowgt)
@@ -147,9 +145,13 @@ public class LPOArcBuffer extends LPO implements Serializable
 				else
 					j	= 0;
 					
-				// Check if point is in sensors cone
-				if ((a1 <= phi) && (phi <= a2) && (buffer_wgt[j] * rho < min))
-					min = rho;
+				// Check if point is in sensors cone (whichever way it looks, behind included),
+				// the nearest by its weighted distance, which an older point makes longer
+				if ((Math.abs (phi) <= cone) && (rho <= range) && (buffer_wgt[j] * rho < best))
+				{
+					best	= buffer_wgt[j] * rho;
+					min		= rho;
+				}
 			}
 		}
 
