@@ -193,7 +193,7 @@ public class LPORangePBug extends LPORangeBuffer
 					continue;
 				}
 			}
-			if(buffer[i].len < (dist + 0.5) || intersection){
+			if(buffer[i].rho < (dist + 0.5) || intersection){		// distance from the robot centre, as dist (len is from the laser)
 				cindex[cnum++] = i;
 				if(!colision && mindistrad(buffer[i].x(),buffer[i].y(),r)<SZONE){ 
 					//System.out.println("Colision ["+buffer[i].x()+","+buffer[i].y());
@@ -495,7 +495,7 @@ public class LPORangePBug extends LPORangeBuffer
 					continue;
 				}
 			}
-			if(buffer[i].len < (dist + 0.5)){
+			if(buffer[i].rho < (dist + 0.5)){		// distance from the robot centre, as dist (len is from the laser)
 				cindex[cnum++] = i;
 				if(!colision && mindistrad(buffer[i].x(),buffer[i].y(),r)<SZONE){ 
 				    colision = true;
@@ -647,8 +647,8 @@ public class LPORangePBug extends LPORangeBuffer
 			double rigth = Double.MAX_VALUE; // Distancia minima para girar a la der
 			int maxray = (int)Math.round((size / 4));
 			for(int i = 0; i<maxray; i++){
-				rigth = Math.min(buffer[i].len, rigth);
-				left  = Math.min(buffer[size-1-i].len, left);
+				rigth = Math.min(buffer[i].rho, rigth);			// room to turn, from the robot centre
+				left  = Math.min(buffer[size-1-i].rho, left);
 			}
 			if(rigth>left){
 				pt = buffer[0]; 		// giro a derecha
