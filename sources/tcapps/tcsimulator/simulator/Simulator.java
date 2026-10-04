@@ -1565,7 +1565,11 @@ public class Simulator
 				data.lrfs_flg[i]	= true;
 			}     
 			else   
+			{
 				data.lrfs_flg[i]	= false;
+				// switched off (by the controller): it sees nothing, and keeps nothing it saw
+				if (!DATA_CTRL[robotind].lrf && (data.lrfs[i] != null))		data.lrfs[i] = new double[data.lrfs[i].length];		// a new one: whoever holds the old one is reading it
+			}
 		
 		// Compute simulated LASER BEACON data
 		for (i = 0; i < RDESC[robotind].MAXLSB; i++)
