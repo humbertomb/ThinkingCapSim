@@ -1967,7 +1967,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		if (!names.contains (current))		names.add (0, current);
 		cb		= new JComboBox<String> (names.toArray (new String[0]));
 		cb.setSelectedItem (current);
-		cb.setToolTipText ("How the sensor of the area is worked out: from the fused sensors its list names, or from what falls in its arc");
+		cb.setToolTipText ("How the sensor of the area is worked out: the nearest of what falls in its arc, as it is or weighted by how old it is");
 		return new DefaultCellEditor (cb);
 	}
 

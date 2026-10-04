@@ -134,23 +134,21 @@ public class RobotDef
 	 * It covers an arc: its aperture (cone) out to its range. How the fusion of
 	 * the runtime works it out is its mode (one of tclib.utils.fusion.FusionDesc.G_*,
 	 * chosen in the editor): the nearest of what falls in its arc of the range
-	 * buffer, or from the fused sensors its list names (equ: the sensors and their
-	 * weights), which is kept as it was given, though the editor does not show it.
+	 * buffer, as it is or weighted by how old each reading is.
 	 *
 	 * The properties of the older files name these badly: what they call len is
 	 * the distance, rho the angle of it and feat where it looks.
 	 */
 	static public class Group extends Sector
 	{
-		public int		mode;						// "groupmode": how it is worked out (FusionDesc.G_*: from the listed fused sensors, or from the range buffer)
-		public String	equ;						// "groupequ": the sensors it fuses and their weights
+		public int		mode;						// "groupmode": how it is worked out (FusionDesc.G_*: the arc of the range buffer, as it is or weighted)
 
 		public Group ()								{ }
 		public Group copy ()
 		{
 			Group	g = new Group ();
 			copyTo (g);
-			g.mode = mode;			g.equ = equ;
+			g.mode = mode;
 			return g;
 		}
 	}
@@ -1140,12 +1138,14 @@ public class RobotDef
 		return mode;
 	}
 
-	/** A way of working a sensor of an area out as it is now (FusionDesc.groupMode): the rectangles (5, 6) are the arcs (3, 4). */
+	/**
+	 * A way of working a sensor of an area out as it is now (FusionDesc.groupMode):
+	 * the weighted arc (4, and the weighted rectangle, 6), or else the arc (3): the
+	 * rectangles and the lists of fused sensors (0 to 2) are gone.
+	 */
 	static private int groupMode (int mode)
 	{
-		if ((mode == 5) || (mode == 6))	return mode - 2;
-		if ((mode < 0) || (mode > 4))	return 0;
-		return mode;
+		return ((mode == 4) || (mode == 6)) ? 4 : 3;
 	}
 
 	/** Fills what a hand-written or older file may have left out. */
@@ -1211,7 +1211,8 @@ public class RobotDef
 		if (fused.isEmpty ())		readFused ();
 		if (scans.isEmpty ())		readScans ();
 		// the ways of fusing as they are numbered now: Flynn's rules were 4, and
-		// every sensor of an area is an arc (the rectangles are the arcs)
+		// every sensor of an area is an arc of the range buffer (the rectangles and
+		// the lists of fused sensors are gone)
 		fusionmode	= fusedMode (fusionmode);
 		if (fusionmode < 0)			fusionmode = 0;
 		for (Fused f : fused)		f.mode = fusedMode (f.mode);
@@ -1371,7 +1372,7 @@ public class RobotDef
 			g.cone			= number (take ("groupcone" + i), cone);
 			take ("groupbase" + i);						// the width of the rectangles that are gone
 			g.mode			= (int) number (take ("groupmode" + i), 0.0);
-			g.equ			= take ("groupequ" + i);
+			take ("groupequ" + i);						// the lists of fused sensors that are gone
 			groups.add (g);
 		}
 		extra.remove ("MAXGROUP");						// it is however many there are
@@ -1795,7 +1796,6 @@ public class RobotDef
 				set (p, "groupfeat" + i, g.orientation);
 				setNZ (p, "grouprng" + i, g.rangemax);	setNZ (p, "groupcone" + i, g.cone);
 				p.setProperty ("groupmode" + i, String.valueOf (g.mode));
-				if ((g.equ != null) && (g.equ.trim ().length () > 0))		p.setProperty ("groupequ" + i, g.equ.trim ());
 			}
 		}
 

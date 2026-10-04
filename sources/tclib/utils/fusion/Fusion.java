@@ -19,8 +19,7 @@ import tc.shared.lps.lpo.*;
  * <li>the virtual scanners (signal level): every reduced laser scan, out of the
  *     rays of every laser that reads where its fan looks;</li>
  * <li>the sensors of an area (feature level): the nearest of what falls in their
- *     arc of the range buffer (as it is, or weighted), or the minimum or the
- *     weighted average of the fused sensors their list names.</li>
+ *     arc of the range buffer, as it is or weighted by how old it is.</li>
  * </ul>
  */
 public class Fusion extends Object
@@ -188,106 +187,32 @@ public class Fusion extends Object
 	}
 
 	/**
-	 * A sensor of an area, as its mode says: the nearest of what falls in its arc
-	 * of the range buffer, or out of the fused sensors its list names. It is only
-	 * worked out again when what it is made of was read on this cycle (anything
-	 * the range buffer is filled with, or any of the fused sensors of its list);
-	 * otherwise it keeps its value, so that it does not jump on the cycles the
-	 * sensors do not fire. The fused sensors of its list are taken from where it
-	 * sits (see {@link #from}), as the range buffer is, and it never reads
-	 * farther than its range.
+	 * A sensor of an area: the nearest of what falls in its arc of the range
+	 * buffer, out to its range (range when there is nothing), as it is or, in the
+	 * weighted mode, an older reading counting as farther when choosing the
+	 * nearest (LPORangeBuffer.buffer_wgt, by how many cycles old it is). It is only
+	 * worked out again when anything the range buffer is filled with was read on
+	 * this cycle; otherwise it keeps its value, so that it does not jump on the
+	 * cycles the sensors do not fire. It sees something when it reads short of its
+	 * range.
 	 */
 	protected void group (int s, LPS lps, RobotData data, FeaturePos f)
 	{
-		if (!fed (f))		return;
-
-		double			out;
-		double			t;
-		int				i;
 		LPORangeBuffer	rbuffer;
-		
-		rbuffer	= (LPORangeBuffer) lps.find ("RBuffer");
-		switch (f.mode ())
-		{
-			case FusionDesc.G_BUF_ARC:
-				out	= rbuffer.occupied_arc (f, f.cone () * 0.5, f.range (), false);
-				break;
-			case FusionDesc.G_WBUF_ARC:
-				out = rbuffer.occupied_arc (f, f.cone () * 0.5, f.range (), true);
-				break;
-			case FusionDesc.G_WEIGHT:
-				out = 0.0;
-				for (i = 0; i < f.n (); i++)
-					out += listed (f, i) * f.wgt (i);
-				if (!anyListed (f))		out = f.range ();
-				break;
-			case FusionDesc.G_BWEIGHT:
-				out = 0.0;
-				for (i = 0; i < f.n (); i++)
-				{
-					t = listed (f, i);
-					if (t > f.range ())		t = f.range ();
-					out += t * f.wgt (i);
-				}
-				if (!anyListed (f))		out = f.range ();
-				break;
-			case FusionDesc.G_MIN:
-			default:
-				out = f.range ();
-				for (i = 0; i < f.n (); i++)
-				{
-					if (!seen (f.ndx (i)))		continue;		// one that sees nothing says nothing of how near things are
-					t = listed (f, i) * f.wgt (i);
-					if (t < out)	out = t;
-				}
-		}
+		double			out;
 
-		// it sees something when what it reads is short of its range (a hair short
-		// does not count: the sum of the weights may come a hair short of one)
+		if (!fresh_flg)		return;
+
+		rbuffer	= (LPORangeBuffer) lps.find ("RBuffer");
+		out		= rbuffer.occupied_arc (f, f.cone () * 0.5, f.range (), f.mode () == FusionDesc.G_WBUF_ARC);
+
 		groups[s]		= Math.max (Math.min (out, f.range ()), 0.0);
 		groups_flg[s]	= (groups[s] < f.range () - EPSILON);
-		if (groups_flg[s] == false)		groups[s] = f.range ();
+		if (!groups_flg[s])		groups[s] = f.range ();
 	}
 
 	/** How much short of its range a sensor of an area must read to see something (m). */
 	static public final double			EPSILON			= 1E-3;
-
-	/** Whether a fused sensor sees something: it reads short of its range. */
-	protected boolean seen (int k)
-	{
-		return (k >= 0) && (k < virtuals.length) && (virtuals[k] < fdesc.RANGEVIRTU - EPSILON);
-	}
-
-	/** Whether any of the fused sensors of the list of a sensor of an area sees something. */
-	protected boolean anyListed (FeaturePos f)
-	{
-		for (int i = 0; i < f.n (); i++)
-			if (seen (f.ndx (i)))		return true;
-		return false;
-	}
-
-	/**
-	 * The i-th fused sensor of the list of a sensor of an area, from where the
-	 * sensor of the area sits; one that sees nothing reads the range of the sensor
-	 * of the area (taken from elsewhere, its own range would fall short of it).
-	 */
-	protected double listed (FeaturePos f, int i)
-	{
-		int		k = f.ndx (i);
-
-		if (!seen (k))		return f.range ();
-		return from (f, fdesc.virtufeat[k], virtuals[k], 0.0);
-	}
-
-	/** Whether what a sensor of an area is made of was read on this cycle. */
-	protected boolean fed (FeaturePos f)
-	{
-		if ((f.mode () == FusionDesc.G_BUF_ARC) || (f.mode () == FusionDesc.G_WBUF_ARC))
-			return fresh_flg;
-		for (int i = 0; i < f.n (); i++)
-			if ((f.ndx (i) >= 0) && (f.ndx (i) < virtuals_flg.length) && virtuals_flg[f.ndx (i)])		return true;
-		return false;
-	}
 
 	/** Whether anything the range buffer is filled with ({@link #fill}) was read on this cycle. */
 	protected boolean fresh (RobotData data)

@@ -198,7 +198,6 @@
   "groups": [
     {
       "mode": 6,
-      "base": 0.3,
       "rho": 0.0,
       "theta": 0.0,
       "height": 0.0,

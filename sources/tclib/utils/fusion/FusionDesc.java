@@ -26,12 +26,8 @@ public class FusionDesc extends Object
 	public static final int			V_MIN		= 2;		// Fuse sensors using the minimum
 	public static final int			V_FLYNN		= 3;		// Fuse sensors using Flynn's rules (it was 4, read as 3)
 
-	public static final int			G_UNDEF		= -1;		// Undefined group mode
-	public static final int			G_MIN		= 0;		// Use the minimum fusion
-	public static final int			G_WEIGHT	= 1;		// Use a weighted average fusion
-	public static final int			G_BWEIGHT	= 2;		// Use a bounded weighted average fusion
-	public static final int			G_BUF_ARC	= 3;		// Use a buffer-based circular arc sensor fusion
-	public static final int			G_WBUF_ARC	= 4;		// Use a weighted buffer-based circular arc sensor fusion (5 and 6 were rectangles, now arcs)
+	public static final int			G_BUF_ARC	= 3;		// The nearest reading of the range buffer in the arc of the sensor
+	public static final int			G_WBUF_ARC	= 4;		// The same, an older reading counting as farther (0-2 were lists of fused sensors, 5 and 6 rectangles: now arcs)
 
 	public static final int			S_UNDEF		= -1;		// Undefined scanner mode
 	public static final int			S_MIN		= 0;		// Use the minimum fusion
@@ -106,12 +102,15 @@ public class FusionDesc extends Object
 		return mode;
 	}
 
-	/** The mode of a sensor of an area, as it is now: every area is an arc, and the rectangles (5, 6) are the arcs (3, 4). */
+	/**
+	 * The mode of a sensor of an area, as it is now: every one is an arc of the
+	 * range buffer, as it is or weighted; the rectangles (5, 6) are the arcs (3, 4),
+	 * and the lists of fused sensors (0 to 2) and anything else the plain arc.
+	 */
 	static public int groupMode (int mode)
 	{
-		if ((mode == 5) || (mode == 6))					return mode - 2;
-		if ((mode < G_UNDEF) || (mode > G_WBUF_ARC))	return G_UNDEF;
-		return mode;
+		if ((mode == G_WBUF_ARC) || (mode == 6))		return G_WBUF_ARC;
+		return G_BUF_ARC;
 	}
 
 	/* Instance methods */
@@ -164,9 +163,8 @@ public class FusionDesc extends Object
 			groupfeat[i]	= new FeaturePos ();
 			groupfeat[i].set_polar (len, rho * ra, alpha * ra);
 			
-			try { mode 	= Integer.valueOf (props.getProperty ("groupmode" + i)).intValue (); } 			catch (Exception e) 	{ mode  	= G_UNDEF; }
+			try { mode 	= Integer.valueOf (props.getProperty ("groupmode" + i)).intValue (); } 			catch (Exception e) 	{ mode  	= G_BUF_ARC; }
 			groupfeat[i].mode (groupMode (mode));
-			groupfeat[i].set_equ (props.getProperty ("groupequ" + i));
 
 			try { cone		= Double.valueOf (props.getProperty ("groupcone" + i)).doubleValue () * ra; }	catch (Exception e) { cone		= CONEGROUP; }
 			try { range		= Double.valueOf (props.getProperty ("grouprng" + i)).doubleValue (); }		catch (Exception e) 	{ range		= RANGEGROUP; }

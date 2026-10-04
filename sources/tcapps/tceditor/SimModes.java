@@ -111,14 +111,10 @@ public class SimModes
 	}
 
 	/**
-	 * How the fusion works a sensor of an area out (its "groupmode"): from the
-	 * fused sensors its list names (groupequ: the minimum, a weighted average, or
-	 * one with every reading bounded by its range), or from the range buffer, the
-	 * nearest of what falls in its arc (as it is, or weighted).
+	 * How the fusion works a sensor of an area out (its "groupmode"): the nearest
+	 * of what falls in its arc of the range buffer, as it is, or weighted by how
+	 * old each reading is.
 	 */
-	static public final String		G_MIN		= "List: minimum";
-	static public final String		G_WEIGHT	= "List: weighted average";
-	static public final String		G_BWEIGHT	= "List: bounded average";
 	static public final String		G_BUF_ARC	= "Buffer: arc";
 	static public final String		G_WBUF_ARC	= "Buffer: weighted arc";
 
@@ -128,9 +124,6 @@ public class SimModes
 	{
 		Map<Integer, String>	m = new LinkedHashMap<Integer, String> ();
 
-		m.put (Integer.valueOf (FusionDesc.G_MIN), G_MIN);
-		m.put (Integer.valueOf (FusionDesc.G_WEIGHT), G_WEIGHT);
-		m.put (Integer.valueOf (FusionDesc.G_BWEIGHT), G_BWEIGHT);
 		m.put (Integer.valueOf (FusionDesc.G_BUF_ARC), G_BUF_ARC);
 		m.put (Integer.valueOf (FusionDesc.G_WBUF_ARC), G_WBUF_ARC);
 		return m;
@@ -153,7 +146,7 @@ public class SimModes
 		if (name != null)
 			for (Map.Entry<Integer, String> e : GROUP.entrySet ())
 				if (e.getValue ().equalsIgnoreCase (name.trim ()))		return e.getKey ().intValue ();
-		try { return FusionDesc.groupMode (Integer.parseInt (name.trim ())); }	catch (Exception e)		{ return FusionDesc.G_MIN; }
+		try { return FusionDesc.groupMode (Integer.parseInt (name.trim ())); }	catch (Exception e)		{ return FusionDesc.G_BUF_ARC; }
 	}
 
 	/** The ways the fusion knows, by name and in the order they are offered. */

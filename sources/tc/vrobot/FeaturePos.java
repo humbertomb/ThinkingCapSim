@@ -4,16 +4,11 @@
 
 package tc.vrobot;
 
-import java.util.*;
-
 import wucore.utils.math.*;
 
+/** A sensor of an area: where it sits and looks (a SensorPos), and the arc it covers. */
 public class FeaturePos extends SensorPos
 {
-	protected int[]						ndx;
-	protected double[]					wgt;
-	protected int						n;
-	
 	protected double					cone;
 	protected double					range;
     
@@ -21,36 +16,11 @@ public class FeaturePos extends SensorPos
 	public FeaturePos ()
 	{
 		super ();
-		
-		this.n	= 0;
 	}
 	
 	/* Accessor methods */
-	public final int		 	n () 				{ return n; }
-	public final int		 	ndx (int i) 		{ return ndx[i]; }
-	public final double		 	wgt (int i) 		{ return wgt[i]; }
-
 	public final double		 	cone () 			{ return cone; }
 	public final double		 	range () 			{ return range; }
-
-	public void set_equ (String buff)
-	{
-		StringTokenizer	st;
-		int				i;
-		
-		if (buff == null)			return;
-		
-   		st	= new StringTokenizer (buff, ",");
- 		try { n 	= Integer.valueOf (st.nextToken ()).intValue (); } catch (Exception e) 		{ n = 0; }
-  			
-  		ndx	= new int[n];
-  		wgt	= new double[n];
-		for (i = 0; i < n; i++)
-		{
- 			try { ndx[i] 	= Integer.valueOf (st.nextToken ()).intValue (); } catch (Exception e) 		{ ndx[i] = 0; }
- 			try { wgt[i] 	= Double.valueOf (st.nextToken ()).doubleValue (); } catch (Exception e) 	{ wgt[i] = 0.0; }
-		}
-	}	
 
 	/** The arc the sensor of an area covers: its aperture (rad) and how far it reaches (m). */
 	public void set_shape (double cone, double range)
@@ -61,17 +31,6 @@ public class FeaturePos extends SensorPos
 	
 	public String toString ()
 	{
-		String		tmp;
-		int			i;
-		
-		tmp = "sensor " + (theta*Angles.DTOR) + " := ";
-		for (i = 0; i < n; i++)
-		{
-			tmp += wgt[i] + " * virtu[" + ndx[i] + "]";
-			if (i < (n - 1))	
-				tmp += " + ";
-		}
-			
-		return tmp;
+		return "sensor " + (orientation * Angles.RTOD) + " deg, cone " + (cone * Angles.RTOD) + " deg, range " + range + " m";
 	}
-} 
+}
