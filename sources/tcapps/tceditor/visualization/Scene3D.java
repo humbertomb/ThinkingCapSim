@@ -50,6 +50,15 @@ public class Scene3D extends Object
 	protected double					len			= 20.0;
 	protected double					rho			= 0.0;
 	protected double					theta		= 0.0;
+	/**
+	 * How the eye is placed around what it looks at: false, as it always was (len
+	 * away on the floor at theta, and len sin(rho) up: never more than 45 degrees
+	 * over it); true, on a sphere of radius len, theta round and rho up from the
+	 * horizon, which can look straight down (the views of a view cube).
+	 */
+	protected boolean					spherical	= false;
+	/** How near the poles a spherical eye may go (rad): straight over, the way up on the screen would be lost. */
+	static public final double		POLE		= 1e-4;
 
 	// Lighting stuff
 	protected DirectionalLight		lightFront;
@@ -426,13 +435,41 @@ public class Scene3D extends Object
 		}
 	}
 	
+	/** Round the focus (rad). */
+	public double		theta ()		{ return theta; }
+	/** Up from the horizon (rad; see {@link #spherical}). */
+	public double		rho ()			{ return rho; }
+	/** Whether the eye goes round on a sphere (see {@link #spherical}). */
+	public boolean		isSpherical ()	{ return spherical; }
+	/** Puts the eye on a sphere round the focus (true), or as it always was. */
+	public void			setSpherical (boolean b)	{ spherical = b;	rho = Math.max (-maxRho (), Math.min (rho, maxRho ()));	setViewpoint (); }
+	/** How far up or down the eye may go (rad). */
+	protected double	maxRho ()		{ return spherical ? Math.PI / 2.0 - POLE : Math.PI; }
+
+	/** Turns the eye to some angles, round and up, keeping what it looks at and how far. */
+	public void setAngles (double theta, double rho)
+	{
+		this.theta	= theta;
+		this.rho	= Math.max (-maxRho (), Math.min (rho, maxRho ()));
+		setViewpoint ();
+	}
+
 	public void setViewpoint ()
 	{
 		double			x, y, z;
 		
-		x	= len * Math.cos (theta);
-		y	= len * Math.sin (theta);
-		z	= len * Math.sin (rho);
+		if (spherical)
+		{
+			x	= len * Math.cos (rho) * Math.cos (theta);
+			y	= len * Math.cos (rho) * Math.sin (theta);
+			z	= len * Math.sin (rho);
+		}
+		else
+		{
+			x	= len * Math.cos (theta);
+			y	= len * Math.sin (theta);
+			z	= len * Math.sin (rho);
+		}
 
 		eye.set (x, y, z);
 		eye.add (focus);
@@ -478,7 +515,7 @@ public class Scene3D extends Object
 			theta	+= dx * 0.002;
 			rho		+= dy * 0.002;
 			
-			rho		= Math.max (Math.min (rho, Math.PI), -Math.PI);
+			rho		= Math.max (Math.min (rho, maxRho ()), -maxRho ());
 			break;
 			
 		case M_ZOOM:

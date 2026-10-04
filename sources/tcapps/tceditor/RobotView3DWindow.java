@@ -47,6 +47,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
 
 import tc.vrobot.RobotDef;
 import tcapps.tceditor.visualization.Scene3D;
+import tcapps.tceditor.visualization.ViewCube;
 
 /**
  * Java 3D view of the models a robot description carries: the platform
@@ -70,6 +71,7 @@ public class RobotView3DWindow extends JFrame
 
 	protected RobotDef				robot;
 	protected Canvas3D				canvas;
+	protected ViewCube				cube;				// the view cube over the top right corner of the canvas
 	protected RobotScene			scene;
 	protected BranchGroup			branch;					// detachable: everything drawn
 	protected int					vmode		= Scene3D.M_MOVE;
@@ -93,9 +95,24 @@ public class RobotView3DWindow extends JFrame
 		this.robot	= robot;
 		this.onHide	= onHide;
 
-		canvas	= new Canvas3D (SimpleUniverse.getPreferredConfiguration ());
+		canvas	= new Canvas3D (SimpleUniverse.getPreferredConfiguration ())
+		{
+			private static final long	serialVersionUID = 1L;
+
+			public void postRender ()								// the view cube over the top right corner
+			{
+				if (cube == null)		return;
+
+				javax.media.j3d.J3DGraphics2D	g = getGraphics2D ();
+
+				cube.paint (g, getWidth ());
+				g.flush (false);
+			}
+		};
 		canvas.setPreferredSize (new Dimension (700, 540));
 		scene	= new RobotScene (canvas);
+		scene.setSpherical (true);								// the eye can look straight down: the views of the cube
+		cube	= new ViewCube (scene, new Runnable () { public void run () { canvas.getView ().repaint (); } });
 
 		statusLabel	= new JLabel (" ");
 		statusLabel.setBorder (BorderFactory.createEmptyBorder (3, 8, 3, 8));
@@ -200,11 +217,23 @@ public class RobotView3DWindow extends JFrame
 			public void mousePressed (MouseEvent e)
 			{
 				canvas.requestFocusInWindow ();
+				if (cube.contains (e.getX (), e.getY ()))		{ cube.press (e.getX (), e.getY ());	return; }
 				scene.mouseDown (e.getX (), e.getY ());
+			}
+
+			public void mouseReleased (MouseEvent e)
+			{
+				if (cube.active ())		cube.release (e.getX (), e.getY ());
+			}
+
+			public void mouseMoved (MouseEvent e)
+			{
+				cube.moved (e.getX (), e.getY ());
 			}
 
 			public void mouseDragged (MouseEvent e)
 			{
+				if (cube.active ())		{ cube.drag (e.getX (), e.getY ());	return; }
 				int		mode = vmode;
 
 				if (SwingUtilities.isRightMouseButton (e))			mode = Scene3D.M_ROTATE;
@@ -756,12 +785,6 @@ public class RobotView3DWindow extends JFrame
 			setViewpoint ();
 		}
 
-		public void setAngles (double theta, double rho)
-		{
-			this.theta	= theta;
-			this.rho	= rho;
-			setViewpoint ();
-		}
 
 		public void zoom (double factor)
 		{

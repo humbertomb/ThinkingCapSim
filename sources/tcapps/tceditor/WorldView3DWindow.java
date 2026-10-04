@@ -64,6 +64,7 @@ import tc.shared.world.World;
 import tc.vrobot.RobotData;
 import tc.vrobot.RobotDesc;
 import tcapps.tceditor.visualization.Scene3D;
+import tcapps.tceditor.visualization.ViewCube;
 import tcapps.tceditor.visualization.Articulated3D;
 import tcapps.tceditor.visualization.FloorName;
 import tcapps.tceditor.visualization.Robot3D;
@@ -139,6 +140,7 @@ public class WorldView3DWindow extends JFrame
 
 	protected JLabel				statusLabel;
 	protected JCheckBox				floorCB;
+	protected ViewCube				cube;				// the view cube over the top right corner of the canvas
 	protected JCheckBox				followCB;
 	protected Timer					rebuildTimer;
 	protected Runnable				onHide;
@@ -179,22 +181,25 @@ public class WorldView3DWindow extends JFrame
 
 			public void postRender ()
 			{
-				if (fps.length () == 0)		return;
-
 				javax.media.j3d.J3DGraphics2D	g = getGraphics2D ();
 
-				g.setFont (FPS_FONT);
-				int		w = g.getFontMetrics ().stringWidth (fps);
-
-				g.setColor (java.awt.Color.BLACK);
-				g.drawString (fps, getWidth () - w - 7, 17);
-				g.setColor (java.awt.Color.WHITE);
-				g.drawString (fps, getWidth () - w - 8, 16);
+				// the frame rate in the top left corner, the view cube in the top right one
+				if (fps.length () > 0)
+				{
+					g.setFont (FPS_FONT);
+					g.setColor (java.awt.Color.BLACK);
+					g.drawString (fps, 9, 17);
+					g.setColor (java.awt.Color.WHITE);
+					g.drawString (fps, 8, 16);
+				}
+				if (cube != null)		cube.paint (g, getWidth ());
 				g.flush (false);
 			}
 		};
 		canvas.setPreferredSize (new Dimension (800, 600));
 		scene	= new EditorScene (canvas);
+		scene.setSpherical (true);								// the eye can look straight down: the views of the cube
+		cube	= new ViewCube (scene, new Runnable () { public void run () { canvas.getView ().repaint (); } });
 
 		statusLabel	= new JLabel (" ");
 		statusLabel.setBorder (BorderFactory.createEmptyBorder (3, 8, 3, 8));
@@ -401,11 +406,23 @@ public class WorldView3DWindow extends JFrame
 			public void mousePressed (MouseEvent e)
 			{
 				canvas.requestFocusInWindow ();
+				if (cube.contains (e.getX (), e.getY ()))		{ cube.press (e.getX (), e.getY ());	return; }
 				scene.mouseDown (e.getX (), e.getY ());
+			}
+
+			public void mouseReleased (MouseEvent e)
+			{
+				if (cube.active ())		cube.release (e.getX (), e.getY ());
+			}
+
+			public void mouseMoved (MouseEvent e)
+			{
+				cube.moved (e.getX (), e.getY ());
 			}
 
 			public void mouseDragged (MouseEvent e)
 			{
+				if (cube.active ())		{ cube.drag (e.getX (), e.getY ());	return; }
 				int	mode = vmode;
 				if (SwingUtilities.isRightMouseButton (e))			mode = Scene3D.M_ROTATE;
 				else if (SwingUtilities.isMiddleMouseButton (e))	mode = Scene3D.M_ZOOM;
@@ -1129,12 +1146,6 @@ public class WorldView3DWindow extends JFrame
 			setViewpoint ();
 		}
 
-		public void setAngles (double theta, double rho)
-		{
-			this.theta	= theta;
-			this.rho	= rho;
-			setViewpoint ();
-		}
 
 		public void zoom (double factor)
 		{
