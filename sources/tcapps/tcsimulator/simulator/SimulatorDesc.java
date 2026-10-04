@@ -7,33 +7,31 @@ package tcapps.tcsimulator.simulator;
 
 import java.util.*;
 
-import wucore.utils.math.*;
-
 public class SimulatorDesc
 {
 	// Robot simulation models
-	public int					MODESON; 				// Sonar simulation method
+	public int					MODESON; 					// Sonar simulation method
 	public int					MODEIR; 					// Ir simulation method
-	public int					MODELRF; 				// Lrf simulation method	
-	public int					MODELSB; 				// Lsb simulation method		
+	public int					MODELRF; 					// Lrf simulation method	
+	public int					MODELSB; 					// Lsb simulation method		
 
 	// Sensor simulation parameters	
-	public double				SENSIBSON; 				// Sonar sensibility
+	public double				SENSIBSON; 					// Sonar sensibility
 	public int					RAYSON; 					// Number of sonar intersection rays
-	public double				ERRORSON; 				// Percentual sonar error (± %)	
-	public int					RAYIR; 					// Number of ir intersection rays
-	public double				ERRORIR; 				// Percentual ir error (± %)
-	public double				ERRORLRF; 				// Percentual lrf error (± %)
-	public double				ERRORLRFGAUSS;			// Gauss range of lrf error (m)
+	public double				ERRORSON; 					// Percentual sonar error (± %)	
+	public int					RAYIR; 						// Number of ir intersection rays
+	public double				ERRORIR; 					// Percentual ir error (± %)
+	public double				ERRORLRF; 					// Percentual lrf error (± %)
+	public double				ERRORLRFGAUSS;				// Gauss range of lrf error (m)
 	
-	public int	 				RAYRAD;					// Number of radar rays.
+	public int	 				RAYRAD;						// Number of radar rays.
 	
 	/* Laser balizas */
 	public int					RAYLSB; 					// Number of lsb intersection rays
-	public double				ERRORANGLELSB; 			// Percentual lsb error (± %) of angle
-	public double				ERRORANGLELSBGAUSS;		// Gauss range of lsb error (degree) of angle
-	public double				ERRORRANGELSB; 			// Percentual lsb error (± %) of range
-	public double				ERRORRANGELSBGAUSS;		// Gauss range of lsb error (m) of range
+	public double				ERRORANGLELSB; 				// Percentual lsb error (± %) of angle
+	public double				ERRORANGLELSBGAUSS;			// Gauss range of lsb error (degree) of angle
+	public double				ERRORRANGELSB; 				// Percentual lsb error (± %) of range
+	public double				ERRORRANGELSBGAUSS;			// Gauss range of lsb error (m) of range
 
 	/* 3D representation info */
 	public String 				V3DFILE;					// File with the robot 3D representation in Wavefront format (.obj)
@@ -42,15 +40,13 @@ public class SimulatorDesc
 	public String				V3DPARTS;					// The folder of the 3D models of its parts (one per link of the kinematic model), drawn when they are all there
 	public String				WALKMODEL;					// The class of its walking model, which moves its joints
 	public String				V3DTEAM;					// The team whose uniform its parts wear (BLUE, RED): <part>-<team>.3ds where there is one
-	public float					V3DCOLORR;				// Red level of the robot 3D representation
-	public float					V3DCOLORG;				// Green level of the robot 3D representation
-	public float					V3DCOLORB;				// Blue level of the robot 3D representation
+	public float				V3DCOLORR;					// Red level of the robot 3D representation
+	public float				V3DCOLORG;					// Green level of the robot 3D representation
+	public float				V3DCOLORB;					// Blue level of the robot 3D representation
 
 	/* Constructors */
 	public SimulatorDesc (Properties props)
 	{
-		double			ra = Angles.DTOR;
-
 		// Set default properties for simulated robot and environment
 		try { SENSIBSON	 	= Double.valueOf (props.getProperty ("SENSIBSON")).doubleValue (); } catch (Exception e) 				{ SENSIBSON			= 0.85; }
 		try { ERRORSON	 	= Double.valueOf (props.getProperty ("ERRORSON")).doubleValue (); } catch (Exception e) 				{ ERRORSON			= 0.05; }
@@ -87,7 +83,7 @@ public class SimulatorDesc
 	}
 
 	public final int 			sonar_mode ()	 		{ return MODESON; }
-	public final void 			sonar_mode (int mod)		{ this.MODESON = mod; }
+	public final void 			sonar_mode (int mod)	{ this.MODESON = mod; }
 	public final int 			ir_mode ()	 			{ return MODEIR; }
 	public final void 			ir_mode (int mod)		{ this.MODEIR = mod; }		
 	public final int 			lsb_mode ()	 			{ return MODELSB; }

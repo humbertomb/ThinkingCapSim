@@ -22,12 +22,12 @@ public class QuakySoccerPlanner extends SeqPlanner
 	static public final  double		TOL_NET_DIST	= 1.0;		// Tolerance in net operations (m)
 	static public final  double		TOL_NET_HEAD	= 180.0;	// Tolerance in net operations (deg)
 	
-	static public final int			STAY		= 0;
-	static public final int			KICK		= 1;
+	static public final int			STAY	= 0;
+	static public final int			KICK	= 1;
 	static public final int			SCORE	= 2;
 		
 	// Current sub-plan parameters
-	protected Task[]					subplan;
+	protected Task[]				subplan;
 	protected int					subplan_n;
 	protected int					subplan_k;
 	

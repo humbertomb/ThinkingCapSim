@@ -198,31 +198,29 @@ public class NAV200Datagram {
 	   // compare received command 
 
 	protected boolean isEquals(NAV200Datagram datagram2){
-		if(this==null || datagram2==null) return false;
+		if (datagram2==null) 							return false;
 
-		if(length != datagram2.length) 	return false;
-		if(mode != datagram2.mode) 		return false;
-		if(function != datagram2.function) 		return false;
-		if(BCC != datagram2.BCC) 		return false;
+		if(length != datagram2.length) 					return false;
+		if(mode != datagram2.mode) 						return false;
+		if(function != datagram2.function) 				return false;
+		if(BCC != datagram2.BCC) 						return false;
 		
 		for(int i = 0; i< length-1; i++)
-			if (data[i] != datagram2.data[i]) 	return false;	
+			if (data[i] != datagram2.data[i]) 			return false;	
 		
 		return (true);
 	}
 	
 	protected boolean isEquals(NAV200Datagram datagram2, int n){
-		if(this==null || datagram2==null) return false;
-		if(mode != datagram2.mode) 		return false;
-		if(function != datagram2.function) 		return false;
+		if(datagram2==null) 							return false;
+		if(mode != datagram2.mode) 						return false;
+		if(function != datagram2.function) 				return false;
 		
-		if(data.length<n || datagram2.data.length<n) return false;
+		if(data.length<n || datagram2.data.length<n)	return false;
 		
 		for(int i = 0; i < n; i++)
-			if (data[i] != datagram2.data[i]) 	return false;
+			if (data[i] != datagram2.data[i]) 			return false;
 	    return true;
 	}
-	
-	
 }
 

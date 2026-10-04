@@ -10,8 +10,6 @@ import tc.vrobot.*;
 import tc.vrobot.models.*;
 import tc.shared.linda.*;
 
-import tclib.utils.pos.*;
-
 import devices.drivers.lcd.*;
 
 public class Quaky2 extends VirtualRobot
@@ -70,19 +68,21 @@ public class Quaky2 extends VirtualRobot
 
 	// Devices and data
 	protected Quaky2Driver					driver;
+	protected GLC24064						lcd;
+	protected String						lcd_port;
+
 	// Vision (out of use). The robot had vision devices (Quaky2Vis, which send the
 	// objects they see as Quaky2VisData), described in the old "vis" family of the
 	// robot description: MAXVISION of them, each opened from its property VISIONi
 	// ("class|parameters"), at visfeat i on the robot and fired on step visstep i
 	// of a cycle of CYCLEVIS. That family is no longer in the descriptions, so
 	// nothing of it is created; to revive it, these fields went here:
-	//	protected Quaky2Vis[]					vision;
-	//	protected Quaky2VisData[]				obdata;				// MAX_OBJS of them
-	//	protected Position						vpos;				// where the robot was when a frame was asked for
-	//	protected Position						cpos;				// where it is when the objects arrive
-	protected GLC24064						lcd;
-	protected String						lcd_port;
-	
+	//
+	//	protected Quaky2Vis[]				vision;
+	//	protected Quaky2VisData[]			obdata;				// MAX_OBJS of them
+	//	protected Position					vpos;				// where the robot was when a frame was asked for
+	//	protected Position					cpos;				// where it is when the objects arrive
+
 	// Motor control
 	protected DifferentialDrive				model;
 	protected double						vlin;					// what the platform was asked for (m/s, rad/s)
@@ -106,9 +106,7 @@ public class Quaky2 extends VirtualRobot
 	// Instance methods
 	protected void initialise (ModuleConfig cfg)
 	{		
-		int				i;
 		String			sprop;
-		String			params;
 		
 		super.initialise (cfg);
 		
