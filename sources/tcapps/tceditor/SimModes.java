@@ -54,15 +54,13 @@ public class SimModes
 	static public final String		SONAR_ONLY	= "Sonar only";
 	static public final String		IR_ONLY		= "Infrared only";
 	static public final String		NEAREST		= "Nearest of both";
-	static public final String		FILTERED	= "2x1 filter";
 	static public final String		FLYNN		= "Flynn's rules";
 
 	/**
 	 * How the fusion turns the sonar and the infrared that look the same way into
 	 * the one reading of a fused sensor: which of the two it keeps, the nearer of
-	 * them, what the filter of the description (FILTERVIRTU) makes of the pair, or
-	 * the rules of Flynn, which keep the infrared while it is close enough to be
-	 * trusted and the sonar beyond that.
+	 * them, or the rules of Flynn, which keep the infrared while it is close enough
+	 * to be trusted and the sonar beyond that.
 	 */
 	static private final Map<Integer, String>	FUSION = fusion ();
 
@@ -73,7 +71,6 @@ public class SimModes
 		m.put (Integer.valueOf (FusionDesc.V_SONAR), SONAR_ONLY);
 		m.put (Integer.valueOf (FusionDesc.V_IR), IR_ONLY);
 		m.put (Integer.valueOf (FusionDesc.V_MIN), NEAREST);
-		m.put (Integer.valueOf (FusionDesc.V_FILTER), FILTERED);
 		m.put (Integer.valueOf (FusionDesc.V_FLYNN), FLYNN);
 		return m;
 	}
@@ -117,15 +114,13 @@ public class SimModes
 	 * How the fusion works a sensor of an area out (its "groupmode"): from the
 	 * fused sensors its list names (groupequ: the minimum, a weighted average, or
 	 * one with every reading bounded by its range), or from the range buffer, the
-	 * nearest of what falls in its arc or in its rectangle (as it is, or weighted).
+	 * nearest of what falls in its arc (as it is, or weighted).
 	 */
 	static public final String		G_MIN		= "List: minimum";
 	static public final String		G_WEIGHT	= "List: weighted average";
 	static public final String		G_BWEIGHT	= "List: bounded average";
 	static public final String		G_BUF_ARC	= "Buffer: arc";
 	static public final String		G_WBUF_ARC	= "Buffer: weighted arc";
-	static public final String		G_BUF_RECT	= "Buffer: rectangle";
-	static public final String		G_WBUF_RECT	= "Buffer: weighted rectangle";
 
 	static private final Map<Integer, String>	GROUP = group ();
 
@@ -138,8 +133,6 @@ public class SimModes
 		m.put (Integer.valueOf (FusionDesc.G_BWEIGHT), G_BWEIGHT);
 		m.put (Integer.valueOf (FusionDesc.G_BUF_ARC), G_BUF_ARC);
 		m.put (Integer.valueOf (FusionDesc.G_WBUF_ARC), G_WBUF_ARC);
-		m.put (Integer.valueOf (FusionDesc.G_BUF_RECT), G_BUF_RECT);
-		m.put (Integer.valueOf (FusionDesc.G_WBUF_RECT), G_WBUF_RECT);
 		return m;
 	}
 
@@ -160,7 +153,7 @@ public class SimModes
 		if (name != null)
 			for (Map.Entry<Integer, String> e : GROUP.entrySet ())
 				if (e.getValue ().equalsIgnoreCase (name.trim ()))		return e.getKey ().intValue ();
-		try { return Integer.parseInt (name.trim ()); }	catch (Exception e)		{ return FusionDesc.G_MIN; }
+		try { return FusionDesc.groupMode (Integer.parseInt (name.trim ())); }	catch (Exception e)		{ return FusionDesc.G_MIN; }
 	}
 
 	/** The ways the fusion knows, by name and in the order they are offered. */
@@ -180,7 +173,7 @@ public class SimModes
 		if (name != null)
 			for (Map.Entry<Integer, String> e : FUSION.entrySet ())
 				if (e.getValue ().equalsIgnoreCase (name.trim ()))		return e.getKey ().intValue ();
-		try { return Integer.parseInt (name.trim ()); }	catch (Exception e)		{ return 0; }
+		try { return FusionDesc.virtuMode (Integer.parseInt (name.trim ())); }	catch (Exception e)		{ return 0; }
 	}
 
 	static private Map<Integer, String> of (int a, String na, int b, String nb, int c, String nc)

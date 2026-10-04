@@ -873,7 +873,6 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		g.rangemax	= Math.max (1.0, 4 * r);
 		g.cone		= 30.0;
 		g.mode		= 4;						// tclib.utils.fusion.FusionDesc.G_WBUF_ARC
-		g.base		= 0.3;
 		robot.groups.add (g);
 		changed ();
 		refreshTree ();
@@ -1968,7 +1967,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		if (!names.contains (current))		names.add (0, current);
 		cb		= new JComboBox<String> (names.toArray (new String[0]));
 		cb.setSelectedItem (current);
-		cb.setToolTipText ("How the sensor of the area is worked out: from the fused sensors its list names, or from what falls in its arc or rectangle");
+		cb.setToolTipText ("How the sensor of the area is worked out: from the fused sensors its list names, or from what falls in its arc");
 		return new DefaultCellEditor (cb);
 	}
 

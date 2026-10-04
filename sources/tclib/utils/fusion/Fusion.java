@@ -10,6 +10,19 @@ import tc.vrobot.*;
 import tc.shared.lps.*;
 import tc.shared.lps.lpo.*;
 
+/**
+ * The fusion of the sensors of a robot, as its description ({@link FusionDesc})
+ * says, worked out every cycle from what the real sensors read:
+ * <ul>
+ * <li>the fused sensors (signal level): the nearest sonar and infrared to each,
+ *     the sonar, the infrared, the nearer of the two or Flynn's rules;</li>
+ * <li>the virtual scanners (signal level): every reduced laser scan, out of the
+ *     rays of every laser that reads where its fan looks;</li>
+ * <li>the sensors of an area (feature level): the nearest of what falls in their
+ *     arc of the range buffer (as it is, or weighted), or the minimum or the
+ *     weighted average of the fused sensors their list names.</li>
+ * </ul>
+ */
 public class Fusion extends Object
 {
 	public double[]						virtuals;				// Virtual sensor values
@@ -118,12 +131,6 @@ public class Fusion extends Object
 				case FusionDesc.V_IR:
 					virtual = ir;
 					break;
-				case FusionDesc.V_FILTER:
-					if ((sonar >= 0.95 * rdesc.RANGEIR) && (ir >= 0.95 * rdesc.RANGEIR))
-						virtual = sonar;
-					else
-						virtual = fdesc.vfilter.filter (sonar, ir);
-					break;
 				case FusionDesc.V_FLYNN:
 					if (ir >= 0.7 * rdesc.RANGEIR)
 						virtual = sonar;
@@ -174,12 +181,6 @@ public class Fusion extends Object
 			case FusionDesc.G_WBUF_ARC:
 				out = rbuffer.occupied_arc (f, f.cone () * 0.5, f.range (), true);
 				break;
-			case FusionDesc.G_BUF_RECT:
-				out = rbuffer.occupied_rect (f, f.base (), f.range (), false);
-				break;
-			case FusionDesc.G_WBUF_RECT:
-				out = rbuffer.occupied_rect (f, f.base (), f.range (), true);
-				break;
 			case FusionDesc.G_WEIGHT:
 				out = 0.0;
 				for (i = 0; i < f.n (); i++)
@@ -218,14 +219,14 @@ public class Fusion extends Object
 	 * there, whichever is wider), and each ray of the fan keeps the nearest of what
 	 * falls to it, or the mean, as its mode says. A ray that nothing falls to takes
 	 * the nearest one that something did, up to SCAN_GAP rays away, and otherwise
-	 * reads the range of the fan, as one that sees nothing. When the fan and a laser sit in the same place this is
-	 * the old reduction of that laser, ray by ray.
+	 * reads the range of the fan, as one that sees nothing. When the fan and a
+	 * laser sit in the same place this is the old reduction of that laser, ray by
+	 * ray.
 	 *
-	 * The rays of the lasers are as the simulator and the perception take them: from
-	 * one end of the cone to the other, both included (the rays of the fan as well),
-	 * all of them with the rays and
-	 * the cone of the description (RAYLRF, CONELRF). The scan is read on this cycle
-	 * when any of the lasers was.
+	 * The rays of the lasers are as the simulator and the perception take them:
+	 * from one end of the cone to the other, both included (the rays of the fan as
+	 * well), all of them with the rays and the cone of the description (RAYLRF,
+	 * CONELRF). The scan is read on this cycle when any of the lasers was.
 	 */
 	protected void scanner (RobotData data, int k)
 	{
@@ -281,14 +282,11 @@ public class Fusion extends Object
 						i1	= (int) Math.floor ((c + half) / sStep + 1E-9);
 						if (i1 < i0)			i1 = i0 = (int) Math.round (c / sStep);
 					}
-					for (int i = i0; i <= i1; i++)
+					for (int i = Math.max (0, i0); i <= Math.min (n - 1, i1); i++)		// what falls outside the fan is left out
 					{
-						int		q = i;
-
-						if ((q < 0) || (q >= n))		continue;		// outside the fan
-						if (avg)			acc[q] += d;
-						else				acc[q] = Math.min (acc[q], d);
-						cnt[q] ++;
+						if (avg)			acc[i] += d;
+						else				acc[i] = Math.min (acc[i], d);
+						cnt[i] ++;
 					}
 				}
 			}

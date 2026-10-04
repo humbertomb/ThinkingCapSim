@@ -25,8 +25,8 @@ import tclib.utils.fusion.FusionDesc;
  *     its aperture out to the distance it reads;</li>
  * <li>a reduced laser scan, the polygon of its fan, a vertex at the end of every
  *     ray;</li>
- * <li>a sensor of an area, its sector (or its rectangle, for the rectangle
- *     modes) out to the distance it reads, no farther than its range.</li>
+ * <li>a sensor of an area, its sector out to the distance it reads, no
+ *     farther than its range.</li>
  * </ul>
  * They are worked out here from what the real sensors read, as the perception
  * of the robot works them out (the fusion of its description). The range buffer
@@ -138,7 +138,7 @@ public class VirtualProfiles3D extends Profiles3D
 		}
 	}
 
-	/** The area of each sensor of an area out to what it reads: its rectangle in the rectangle modes, its sector otherwise. */
+	/** The sector of each sensor of an area out to what it reads. */
 	protected void groups (BranchGroup bg, double x, double y, double a)
 	{
 		for (int i = 0; i < fdesc.MAXGROUP; i++)
@@ -150,18 +150,7 @@ public class VirtualProfiles3D extends Profiles3D
 			double[]	p = spot (f, x, y, a);
 			double		d = Math.min (fusion.groups[i], f.range ());
 
-			if (!(d > 0.0))		continue;
-			if ((f.mode () == FusionDesc.G_BUF_RECT) || (f.mode () == FusionDesc.G_WBUF_RECT))
-			{
-				double	cx = Math.cos (p[3]), sx = Math.sin (p[3]), w = f.base ();
-				double[][]	pts = {
-					{ p[0] - w * sx, p[1] + w * cx },
-					{ p[0] - w * sx + d * cx, p[1] + w * cx + d * sx },
-					{ p[0] + w * sx + d * cx, p[1] - w * cx + d * sx },
-					{ p[0] + w * sx, p[1] - w * cx } };
-				fan (bg, p, pts, C_GROUP);
-			}
-			else
+			if (d > 0.0)
 				sector (bg, p, f.cone (), d, C_GROUP);
 		}
 	}

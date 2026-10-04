@@ -11,6 +11,12 @@ import tc.vrobot.*;
 
 import wucore.utils.math.*;
 
+/**
+ * How the sensors of a robot are fused (see {@link Fusion}): its fused sensors,
+ * virtual scanners and sensors of an area, read from the properties of its
+ * description. Every sensor of an area is an arc; the ways of fusing that are
+ * gone (the 2x1 filter, the rectangles) are read as the ones that replace them.
+ */
 public class FusionDesc extends Object
 {
 	// Low-level sensor fusion parameters
@@ -18,17 +24,14 @@ public class FusionDesc extends Object
 	public static final int			V_SONAR		= 0;		// Use sonar as virtual sensor
 	public static final int			V_IR			= 1;		// Use ir as virtual sensor
 	public static final int			V_MIN		= 2;		// Fuse sensors using the minimum
-	public static final int			V_FILTER		= 3;		// Fuse sensors using a 2x1 filter (fuzzy rules, neural network, etc)
-	public static final int			V_FLYNN		= 4;		// Fuse sensors using Flynn's rules
+	public static final int			V_FLYNN		= 4;		// Fuse sensors using Flynn's rules (3 was a 2x1 filter, now the minimum)
 
 	public static final int			G_UNDEF		= -1;	// Undefined group mode
 	public static final int			G_MIN		= 0;		// Use the minimum fusion
 	public static final int			G_WEIGHT		= 1;		// Use a weighted average fusion
 	public static final int			G_BWEIGHT	= 2;		// Use a bounded weighted average fusion
 	public static final int			G_BUF_ARC	= 3;		// Use a buffer-based circular arc sensor fusion
-	public static final int			G_WBUF_ARC	= 4;		// Use a weighted buffer-based circular arc sensor fusion
-	public static final int			G_BUF_RECT	= 5;		// Use a buffer-based circular arc sensor fusion
-	public static final int			G_WBUF_RECT	= 6;		// Use a weighted buffer-based circular arc sensor fusion
+	public static final int			G_WBUF_ARC	= 4;		// Use a weighted buffer-based circular arc sensor fusion (5 and 6 were rectangles, now arcs)
 
 	public static final int			S_UNDEF		= -1;	// Undefined scanner mode
 	public static final int			S_MIN		= 0;		// Use the minimum fusion
@@ -41,8 +44,7 @@ public class FusionDesc extends Object
 	public int						MAXVIRTU; 				// Number of virtual sensors
 	public double					RANGEVIRTU; 			// Maximum virtual sensor range (m)
 	public double					CONEVIRTU; 				// Virtual sensor aperture range (rad)
-	public String					FILTERVIRTU;			// Name of virtual filter definition file
-	
+
 	public int						MAXGROUP; 				// Number of group sensors
 	public double					RANGEGROUP; 			// Maximum group sensor range (m)
 	public double					CONEGROUP; 				// Group sensor aperture range (rad)
@@ -62,7 +64,6 @@ public class FusionDesc extends Object
 	public double[]					scancones;				// ... how wide it opens (rad; scancones[0] is CONESCAN)
 	public double[]					scanranges;				// ... and how far it reads (m; scanranges[0] is RANGESCAN)
 	public SensorPos[]				dsigfeat; 				// Digital inputs angular position
-	public Filter					vfilter; 				// Virtual sensor fusion-filter
 	
 	/* Constructors */
 	protected FusionDesc ()
@@ -94,22 +95,40 @@ public class FusionDesc extends Object
 		
 	// Accessors
 	public final int 			virtu_mode ()	 		{ return MODEVIRTU; }
-	public final void 			virtu_mode (int mod)	{ this.MODEVIRTU = mod; }
+	public final void 			virtu_mode (int mod)	{ this.MODEVIRTU = virtuMode (mod); }
+
+	/* Class methods */
+	/** The mode of a fused sensor, as it is now: the 2x1 filter (3) is gone, and fuses with the minimum. */
+	static public int virtuMode (int mode)
+	{
+		if (mode == 3)								return V_MIN;
+		if ((mode < V_UNDEF) || (mode > V_FLYNN))	return V_UNDEF;
+		return mode;
+	}
+
+	/** The mode of a sensor of an area, as it is now: every area is an arc, and the rectangles (5, 6) are the arcs (3, 4). */
+	static public int groupMode (int mode)
+	{
+		if ((mode == 5) || (mode == 6))					return mode - 2;
+		if ((mode < G_UNDEF) || (mode > G_WBUF_ARC))	return G_UNDEF;
+		return mode;
+	}
 
 	/* Instance methods */
 	protected void set (Properties props) 
 	{
 		int				i, mode;
 		double			len, rho, alpha;
-		double			base, cone, range;
+		double			cone, range;
 		double			ra = Angles.DTOR;
 				
 		// Set default properties	
-		FILTERVIRTU 		= props.getProperty ("FILTERVIRTU");
 		try { MAXVIRTU	 	= Integer.valueOf (props.getProperty ("MAXVIRTU")).intValue (); } 			catch (Exception e) 	{ MAXVIRTU		= 0; }
 		try { RANGEVIRTU	= Double.valueOf (props.getProperty ("RANGEVIRTU")).doubleValue (); } 		catch (Exception e) 	{ RANGEVIRTU	= 8.0; }
 		try { CONEVIRTU	 	= Double.valueOf (props.getProperty ("CONEVIRTU")).doubleValue () * ra; }	catch (Exception e) 	{ CONEVIRTU		= 20.0 * ra; }
 		try { MODEVIRTU	 	= Integer.valueOf (props.getProperty ("MODEVIRTU")).intValue (); } 			catch (Exception e) 	{ MODEVIRTU		= V_SONAR; }
+		MODEVIRTU		= virtuMode (MODEVIRTU);
+		if (MODEVIRTU == V_UNDEF)		MODEVIRTU = V_SONAR;
 
 		try { MAXGROUP	 	= Integer.valueOf (props.getProperty ("MAXGROUP")).intValue (); } 			catch (Exception e) 	{ MAXGROUP		= 0; }
 		try { RANGEGROUP	= Double.valueOf (props.getProperty ("RANGEGROUP")).doubleValue (); }		catch (Exception e) 	{ RANGEGROUP	= 1.0; }
@@ -125,7 +144,6 @@ public class FusionDesc extends Object
 		groupfeat		= new FeaturePos [MAXGROUP];
 		dsigfeat		= new SensorPos [MAXDSIG];
 
-		vfilter	= Filter.fromFile (FILTERVIRTU);
 		for (i = 0; i < MAXVIRTU; i++)
 		{
 			try { alpha		= Double.valueOf (props.getProperty ("virtufeat" + i)).doubleValue (); }	catch (Exception e) 	{ alpha		= 0.0; }
@@ -134,7 +152,7 @@ public class FusionDesc extends Object
 			virtufeat[i]	= new SensorPos ();
 			
 			try { mode 	= Integer.valueOf (props.getProperty ("virtumode" + i)).intValue (); }			catch (Exception e) 	{ mode  	= V_UNDEF; }
-			virtufeat[i].mode (mode);
+			virtufeat[i].mode (virtuMode (mode));
 			virtufeat[i].set_polar (len, rho * ra, alpha * ra);			
 		}
 
@@ -147,13 +165,12 @@ public class FusionDesc extends Object
 			groupfeat[i].set_polar (len, rho * ra, alpha * ra);
 			
 			try { mode 	= Integer.valueOf (props.getProperty ("groupmode" + i)).intValue (); } 			catch (Exception e) 	{ mode  	= G_UNDEF; }
-			groupfeat[i].mode (mode);
+			groupfeat[i].mode (groupMode (mode));
 			groupfeat[i].set_equ (props.getProperty ("groupequ" + i));
 
-			try { base		= Double.valueOf (props.getProperty ("groupbase" + i)).doubleValue (); }	catch (Exception e) 	{ base		= 0.3; }
 			try { cone		= Double.valueOf (props.getProperty ("groupcone" + i)).doubleValue () * ra; }	catch (Exception e) { cone		= CONEGROUP; }
 			try { range		= Double.valueOf (props.getProperty ("grouprng" + i)).doubleValue (); }		catch (Exception e) 	{ range		= RANGEGROUP; }
-			groupfeat[i].set_shape (base, cone, range);
+			groupfeat[i].set_shape (cone, range);
 		}
 
 		for (i = 0; i < MAXDSIG; i++)

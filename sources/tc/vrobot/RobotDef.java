@@ -102,19 +102,6 @@ public class RobotDef
 	 * always of the whole family, is kept here.
 	 */
 	/**
-	 * A virtual sensor: a sector that stands for a group of the physical ones, so
-	 * that a controller reads one distance where the robot has a dozen sensors.
-	 *
-	 * It sits where a real sensor sits, said the same way (polar), and covers what
-	 * a real sensor covers. The rest of what the fusion of the runtime works it out
-	 * with -- how it fuses (mode), the sensors it fuses and their weights (equ) and
-	 * the width of the rectangle the buffer modes sweep (base) -- is kept as it was
-	 * given, though the editor does not show it yet.
-	 *
-	 * The properties of the older files name these badly: what they call len is the
-	 * distance, rho the angle of it and feat where it looks.
-	 */
-	/**
 	 * What a virtual sensor is, whichever kind: something that sits where a real
 	 * sensor sits, said the same way (polar), and covers what a real sensor
 	 * covers, but whose reading is worked out from the other sensors instead of
@@ -144,11 +131,11 @@ public class RobotDef
 	 * A sensor of an area: the sector that stands for a group of the real ones, so
 	 * that a controller reads one distance where the robot has a dozen sensors.
 	 *
-	 * How the fusion of the runtime works it out is its mode (one of
-	 * tclib.utils.fusion.FusionDesc.G_*, chosen in the editor). The rest of what
-	 * it is worked out with -- the sensors it fuses and their weights (equ) and the
-	 * width of the rectangle the buffer modes sweep (base) -- is kept as it was
-	 * given, though the editor does not show it yet.
+	 * It covers an arc: its aperture (cone) out to its range. How the fusion of
+	 * the runtime works it out is its mode (one of tclib.utils.fusion.FusionDesc.G_*,
+	 * chosen in the editor): the nearest of what falls in its arc of the range
+	 * buffer, or from the fused sensors its list names (equ: the sensors and their
+	 * weights), which is kept as it was given, though the editor does not show it.
 	 *
 	 * The properties of the older files name these badly: what they call len is
 	 * the distance, rho the angle of it and feat where it looks.
@@ -157,14 +144,13 @@ public class RobotDef
 	{
 		public int		mode;						// "groupmode": how it is worked out (FusionDesc.G_*: from the listed fused sensors, or from the range buffer)
 		public String	equ;						// "groupequ": the sensors it fuses and their weights
-		public double	base;						// "groupbase": width of the rectangle of the buffer modes (m)
 
 		public Group ()								{ }
 		public Group copy ()
 		{
 			Group	g = new Group ();
 			copyTo (g);
-			g.mode = mode;			g.equ = equ;			g.base = base;
+			g.mode = mode;			g.equ = equ;
 			return g;
 		}
 	}
@@ -172,8 +158,8 @@ public class RobotDef
 	/**
 	 * A fused sensor: one reading in one direction, taken from the real sensors
 	 * that look that way -- the nearest sonar and the nearest infrared -- fused as
-	 * its mode says (the sonar, the infrared, the nearer of the two, a filter, or
-	 * Flynn's rule). They are what the sensors of an area are worked out from.
+	 * its mode says (the sonar, the infrared, the nearer of the two, or Flynn's
+	 * rule). They are what the sensors of an area are worked out from.
 	 *
 	 * Named "virtu" in the older files, which name them as badly as the others:
 	 * len is the distance, rho the angle of it and feat where it looks.
@@ -433,7 +419,7 @@ public class RobotDef
 	 * before the drive train said them, and RAYVIRTU was never read at all. They
 	 * are dropped rather than written out again.
 	 */
-	static private final String[]	DEAD			= { "MAXSPEED", "MAXTURN", "RAYVIRTU" };
+	static private final String[]	DEAD			= { "MAXSPEED", "MAXTURN", "RAYVIRTU", "FILTERVIRTU" };
 
 	/**
 	 * The family of the old vision devices ("vis": a camera that gave the blobs it
@@ -1147,6 +1133,22 @@ public class RobotDef
 	}
 
 	/** Fills what a hand-written or older file may have left out. */
+	/** A way of fusing a fused sensor as it is now (FusionDesc.virtuMode): the 2x1 filter (3) is the minimum (2). */
+	static private int fusedMode (int mode)
+	{
+		if (mode == 3)					return 2;
+		if ((mode < -1) || (mode > 4))	return -1;
+		return mode;
+	}
+
+	/** A way of working a sensor of an area out as it is now (FusionDesc.groupMode): the rectangles (5, 6) are the arcs (3, 4). */
+	static private int groupMode (int mode)
+	{
+		if ((mode == 5) || (mode == 6))	return mode - 2;
+		if ((mode < 0) || (mode > 4))	return 0;
+		return mode;
+	}
+
 	protected void normalise ()
 	{
 		if (icon == null)			icon = new ArrayList<IconLine> ();
@@ -1208,6 +1210,12 @@ public class RobotDef
 		if (groups.isEmpty ())		readGroups ();
 		if (fused.isEmpty ())		readFused ();
 		if (scans.isEmpty ())		readScans ();
+		// the ways of fusing that are gone: the 2x1 filter fuses with the minimum
+		// now, and every sensor of an area is an arc (the rectangles are the arcs)
+		fusionmode	= fusedMode (fusionmode);
+		if (fusionmode < 0)			fusionmode = 0;
+		for (Fused f : fused)		f.mode = fusedMode (f.mode);
+		for (Group g : groups)		g.mode = groupMode (g.mode);
 		// what the whole lot of them reaches is now what each one of them says, and
 		// is written back from the first: a description read once does not carry it
 		if (!groups.isEmpty ())		{ extra.remove ("RANGEGROUP");	extra.remove ("CONEGROUP"); }
@@ -1361,7 +1369,7 @@ public class RobotDef
 			g.orientation	= number (take ("groupfeat" + i), g.theta);
 			g.rangemax		= number (take ("grouprng" + i), range);
 			g.cone			= number (take ("groupcone" + i), cone);
-			g.base			= number (take ("groupbase" + i), 0.3);
+			take ("groupbase" + i);						// the width of the rectangles that are gone
 			g.mode			= (int) number (take ("groupmode" + i), 0.0);
 			g.equ			= take ("groupequ" + i);
 			groups.add (g);
@@ -1786,7 +1794,6 @@ public class RobotDef
 				set (p, "grouplen" + i, g.rho);			set (p, "grouprho" + i, g.theta);
 				set (p, "groupfeat" + i, g.orientation);
 				setNZ (p, "grouprng" + i, g.rangemax);	setNZ (p, "groupcone" + i, g.cone);
-				setNZ (p, "groupbase" + i, g.base);
 				p.setProperty ("groupmode" + i, String.valueOf (g.mode));
 				if ((g.equ != null) && (g.equ.trim ().length () > 0))		p.setProperty ("groupequ" + i, g.equ.trim ());
 			}

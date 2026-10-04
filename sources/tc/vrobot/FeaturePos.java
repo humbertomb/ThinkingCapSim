@@ -14,7 +14,6 @@ public class FeaturePos extends SensorPos
 	protected double[]					wgt;
 	protected int						n;
 	
-	protected double					base;
 	protected double					cone;
 	protected double					range;
     
@@ -31,7 +30,6 @@ public class FeaturePos extends SensorPos
 	public final int		 	ndx (int i) 		{ return ndx[i]; }
 	public final double		 	wgt (int i) 		{ return wgt[i]; }
 
-	public final double		 	base () 			{ return base; }
 	public final double		 	cone () 			{ return cone; }
 	public final double		 	range () 			{ return range; }
 
@@ -54,9 +52,9 @@ public class FeaturePos extends SensorPos
 		}
 	}	
 
-	public void set_shape (double base, double cone, double range)
+	/** The arc the sensor of an area covers: its aperture (rad) and how far it reaches (m). */
+	public void set_shape (double cone, double range)
 	{
-		this.base	= base;
 		this.cone	= cone;
 		this.range	= range;
 	}
