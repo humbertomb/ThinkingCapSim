@@ -877,11 +877,14 @@ public class Simulator
 	 * where it looks) and the range (m) of each from where it sits, the nearest
 	 * BEACLSB of them; and, as a NAV200 does, the pose of the robot when it sees
 	 * three or more (quality 90; 0 when it sees fewer). A reflector is seen when it
-	 * is within its range (MINIMLSB to RANGELSB) and its aperture (CONELSB), and
-	 * nothing is in between: no wall, no static object, no animated object, no
-	 * other robot. A cylinder is aimed at on the side that faces the scanner, and
-	 * a strip at its middle, and a strip is seen only when it is not looked at
-	 * edgewise (more than REFLSB off its line). The readings are as exact as the
+	 * is within its range (MINIMLSB to RANGELSB) and its aperture (CONELSB), and no
+	 * wall is in between at the height the beam goes (from the height of the
+	 * scanner to the middle of the reflector; a wall goes from its base to its
+	 * height, and one of no height goes all the way up). The objects and the other
+	 * robots do not hide them: the scanner is mounted above them, as a NAV200 is,
+	 * and the world does not say how tall they are. A cylinder is aimed at on the
+	 * side that faces the scanner, and a strip at its middle, and a strip is seen
+	 * only when it is not looked at edgewise (more than REFLSB off its line). The readings are as exact as the
 	 * simulation mode of the family says (MODELSB): exact, with a relative error
 	 * (ERRORANGLELSB, ERRORRANGELSB) or with a gaussian one (ERRORANGLELSBGAUSS in
 	 * degrees, ERRORRANGELSBGAUSS in metres).
@@ -893,6 +896,7 @@ public class Simulator
 		RobotModel			m = MODEL[roboindex];
 		double				sx = m.real_x + a1.rho () * Math.cos (m.real_a + a1.theta ());
 		double				sy = m.real_y + a1.rho () * Math.sin (m.real_a + a1.theta ());
+		double				sz = a1.z ();
 		double				look = m.real_a + a1.orientation ();
 		List<double[]>		seen = new ArrayList<double[]> ();		// {bearing, range}
 
@@ -906,7 +910,7 @@ public class Simulator
 					double	dx = b.x () - sx, dy = b.y () - sy, d = Math.hypot (dx, dy);
 
 					if (d <= b.radius ())		continue;
-					see (sx, sy, look, b.x () - b.radius () * dx / d, b.y () - b.radius () * dy / d, seen);
+					see (sx, sy, sz, look, b.x () - b.radius () * dx / d, b.y () - b.radius () * dy / d, b.z () + b.height / 2.0, seen);
 				}
 			if (map.beacons () != null)
 				for (WMBeacon b : map.beacons ())
@@ -919,7 +923,7 @@ public class Simulator
 					double	inc = Angles.radnorm_180 (b.getAng () - Math.atan2 (my - sy, mx - sx));
 
 					if (Math.abs (Math.sin (inc)) <= Math.sin (Math.max (0.0, rd.REFLSB)))		continue;		// edgewise: it reflects nothing back
-					see (sx, sy, look, mx, my, seen);
+					see (sx, sy, sz, look, mx, my, b.pos.z () + b.height / 2.0, seen);
 				}
 		}
 
@@ -957,8 +961,8 @@ public class Simulator
 		out.setValid (true);
 	}
 
-	/** A reflector at (x, y), if the scanner at (sx, sy) looking at look sees it: in its range and aperture, and nothing in between. */
-	private void see (double sx, double sy, double look, double x, double y, List<double[]> seen)
+	/** A reflector at (x, y, z), if the scanner at (sx, sy, sz) looking at look sees it: in its range and aperture, and no wall in between. */
+	private void see (double sx, double sy, double sz, double look, double x, double y, double z, List<double[]> seen)
 	{
 		RobotDesc		rd = RDESC[roboindex];
 		double			dx = x - sx, dy = y - sy, d = Math.hypot (dx, dy);
@@ -970,8 +974,31 @@ public class Simulator
 		// a little short of it: a strip on a wall is not behind the wall
 		double			ex = x - 0.02 * dx / d, ey = y - 0.02 * dy / d;
 
-		if (map.crossline (new Line2 (sx, sy, ex, ey), icons, iconcount, ROBOINDEX[roboindex]) != null)		return;
+		if (walled (sx, sy, sz, ex, ey, z))		return;
 		seen.add (new double[] { bearing, d });
+	}
+
+	/** Whether a wall is in the way of a beam from (sx, sy, sz) to (ex, ey, ez), at the height the beam crosses it. */
+	private boolean walled (double sx, double sy, double sz, double ex, double ey, double ez)
+	{
+		double		len = Math.hypot (ex - sx, ey - sy);
+
+		if ((map.walls () == null) || (len <= 0.0))		return false;
+		for (tc.shared.world.WMWall w : map.walls ().edges ())
+		{
+			Point2		q = ((w != null) && (w.edge != null)) ? w.edge.intersection (sx, sy, ex, ey) : null;
+
+			if (q == null)		continue;
+			if (w.height <= 0.0)		return true;			// no height said: all the way up
+
+			double		el = w.edge.orig ().distance (w.edge.dest ().x (), w.edge.dest ().y ());
+			double		u = (el > 0.0) ? w.edge.orig ().distance (q.x (), q.y ()) / el : 0.0;
+			double		base = w.edge.z1 () + (w.edge.z2 () - w.edge.z1 ()) * u;
+			double		bz = sz + (ez - sz) * Math.hypot (q.x () - sx, q.y () - sy) / len;		// how high the beam goes there
+
+			if ((bz >= base) && (bz <= base + w.height))		return true;
+		}
+		return false;
 	}
 
 	protected double[] radar (SensorPos a1)
