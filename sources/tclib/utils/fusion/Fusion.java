@@ -63,107 +63,86 @@ public class Fusion extends Object
 	}
 		
 	/* Instance methods */
+	/**
+	 * A fused sensor: the nearest sonar and the nearest infrared to it, fused as
+	 * its mode says (or the mode of the description, when it says none). Before
+	 * anything else, a sensor that reads its maximum range (or beyond) sees
+	 * nothing and is not used, nor is one not read on this cycle. Of the ones
+	 * left:
+	 * <ul>
+	 * <li>sonar only: the sonar;</li>
+	 * <li>infrared only: the infrared;</li>
+	 * <li>the minimum: the nearer of the two;</li>
+	 * <li>Flynn's rules: the infrared while it is close enough to be trusted
+	 *     (under 70% of its range), and the sonar beyond that.</li>
+	 * </ul>
+	 * When either of the two is left alone, it is what the rules that can use it
+	 * read; when the mode has none to use, the fused sensor reads its maximum
+	 * range. It is read on this cycle when any of the two was.
+	 */
 	protected void virtual (int s, RobotData data, SensorPos a1)
 	{
-		double			virtual;
-		double			sonar, ir;
-		int             mode;
-		double			min, t;
-		int				i, k1, k2;
-		boolean			s_flg, i_flg;
-		
-		// Select fusion mode
-		mode    = a1.mode ();
-		if (mode == FusionDesc.V_UNDEF)    mode = fdesc.MODEVIRTU;
-		
-		// Find nearest sonar sensor
-		if (rdesc.MAXSONAR > 0)
+		int				mode = a1.mode ();
+		int				ks = nearest (a1, rdesc.sonfeat, rdesc.MAXSONAR);
+		int				ki = nearest (a1, rdesc.irfeat, rdesc.MAXIR);
+		boolean			s_read = (ks >= 0) && data.sonars_flg[ks];
+		boolean			i_read = (ki >= 0) && data.irs_flg[ki];
+		double			sonar = s_read ? data.sonars[ks] : 0.0;
+		double			ir = i_read ? data.irs[ki] : 0.0;
+		boolean			s_ok = s_read && sees (sonar, rdesc.RANGESON);		// what can be used: what sees something
+		boolean			i_ok = i_read && sees (ir, rdesc.RANGEIR);
+		double			out = fdesc.RANGEVIRTU;
+
+		if (mode == FusionDesc.V_UNDEF)		mode = fdesc.MODEVIRTU;
+		switch (mode)
 		{
-			min = Double.MAX_VALUE;
-			for (i = 0, k1 = 0; i < rdesc.MAXSONAR; i++)
-			{
-			    t = a1.distance (rdesc.sonfeat[i]);
-				if (t < min)
-				{
-					min = t;
-					k1 = i;
-				}
-			}
-			sonar	= data.sonars[k1];
-			s_flg	= data.sonars_flg[k1];
-		}
-		else
-		{
-			sonar	= 0.0;
-			s_flg	= false;
-		}
-		
-		// Find nearest ir sensor
-		if (rdesc.MAXIR > 0)
-		{
-			min = Double.MAX_VALUE;
-			for (i = 0, k2 = 0; i < rdesc.MAXIR; i++)
-			{
-			    t = a1.distance (rdesc.irfeat[i]);
-				if (t < min)
-				{
-					min = t;
-					k2 = i;
-				}
-			}
-			ir		= data.irs[k2];
-			i_flg	= data.irs_flg[k2];
-		}
-		else
-		{
-			ir		= 0.0;
-			i_flg	= false;
+			case FusionDesc.V_SONAR:
+				if (s_ok)				out = sonar;
+				break;
+			case FusionDesc.V_IR:
+				if (i_ok)				out = ir;
+				break;
+			case FusionDesc.V_FLYNN:
+				if (s_ok && i_ok)		out = (ir >= 0.7 * rdesc.RANGEIR) ? sonar : ir;
+				else if (s_ok)			out = sonar;
+				else if (i_ok)			out = ir;
+				break;
+			case FusionDesc.V_MIN:
+			default:
+				if (s_ok && i_ok)		out = Math.min (sonar, ir);
+				else if (s_ok)			out = sonar;
+				else if (i_ok)			out = ir;
 		}
 
-		// Apply the fusion method depending on the available sensor data
-		if (s_flg && i_flg)												// Both sensors available
-		{
-			switch (mode)
-			{
-				case FusionDesc.V_SONAR:
-					virtual = sonar;
-					break;
-				case FusionDesc.V_IR:
-					virtual = ir;
-					break;
-				case FusionDesc.V_FLYNN:
-					if (ir >= 0.7 * rdesc.RANGEIR)
-						virtual = sonar;
-					else
-						virtual = ir;					
-					break;
-				case FusionDesc.V_MIN:
-				default:
-					virtual = Math.min (sonar, ir);
-			}
-			
-			virtuals[s]			= virtual; 
-			virtuals_flg[s]		= true;
-		}      
-		else if (s_flg && (mode != FusionDesc.V_IR))					// Only sonar available
-		{
-			virtuals[s]			= sonar; 
-			virtuals_flg[s]		= true;
-		}
-		else if (i_flg && (mode != FusionDesc.V_SONAR))					// Only infrared available
-		{
-			virtuals[s]			= ir; 
-			virtuals_flg[s]		= (ir < 0.9 * rdesc.RANGEIR);
-		}
-		else															// No sensor available
-		{
-			virtuals[s]			= fdesc.RANGEVIRTU; 
-			virtuals_flg[s]		= false;
-		}
+		virtuals[s]		= Math.max (Math.min (out, fdesc.RANGEVIRTU), 0.0);
+		virtuals_flg[s]	= s_read || i_read;
+	}
 
-		// Put virtual sensor into limit
-		virtuals[s]		= Math.max (Math.min (virtuals[s], fdesc.RANGEVIRTU), 0.0); 
-	}		
+	/** Whether a reading sees something: it is under the maximum range of its sensor (when the sensor says one). */
+	static protected boolean sees (double r, double range)
+	{
+		return (range <= 0.0) || (r < range);
+	}
+
+	/** The sensor of a family nearest to a fused sensor (-1: the family has none). */
+	static protected int nearest (SensorPos a1, SensorPos[] feats, int n)
+	{
+		double			min = Double.MAX_VALUE, t;
+		int				k = -1;
+
+		if (feats == null)		return -1;
+		for (int i = 0; i < Math.min (n, feats.length); i++)
+		{
+			if (feats[i] == null)		continue;
+			t	= a1.distance (feats[i]);
+			if (t < min)
+			{
+				min	= t;
+				k	= i;
+			}
+		}
+		return k;
+	}
 
 	protected void group (int s, LPS lps, RobotData data, FeaturePos f)
 	{
