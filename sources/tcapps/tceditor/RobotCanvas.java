@@ -992,14 +992,42 @@ public class RobotCanvas extends JPanel
 					return new RobotItem (kind, i);
 			}
 		}
-		for (int i = 0; i < robot.wheels.size (); i++)	// then the wheels, which are bigger
-		{
-			RobotDef.Wheel	w = robot.wheels.get (i);
-			double			r = Math.max (w.radius, tol);
-			if (Math.hypot (x - h (kx (w), ky (w), w.z), y - v (kx (w), ky (w), w.z)) <= r + tol)
+		// then the flat elements, which are thin and are only picked from above, and
+		// only then the wheels, which take an area: a line that runs over a wheel can
+		// still be picked by clicking on it
+		RobotItem	flat = isTop () ? pickFlat (x, y, tol) : null;
+		if (flat != null)		return flat;
+		for (int i = 0; i < robot.wheels.size (); i++)
+			if (onWheel (robot.wheels.get (i), mx, my, x, y, tol))
 				return new RobotItem (RobotItem.WHEEL, i);
-		}
-		if (!isTop ())			return null;			// the drawing and the bumpers are flat: only from above
+		return null;
+	}
+
+	/**
+	 * Whether a click falls on a wheel: inside what is drawn of it in the view (the
+	 * two rims and the tread between them), or within a few pixels of it; a wheel
+	 * with no size yet, on the mark where it sits.
+	 */
+	private boolean onWheel (RobotDef.Wheel w, int mx, int my, double x, double y, double tol)
+	{
+		java.util.List<double[]>	pts = new java.util.ArrayList<double[]> ();
+		double						cx = kx (w), cy = ky (w), hw = kwidth (w) / 2;
+		double						o = Math.toRadians (w.orientation);
+		double						ax = -Math.sin (o), ay = Math.cos (o);
+
+		if (w.radius <= 0.0)
+			return Math.hypot (x - h (cx, cy, w.z), y - v (cx, cy, w.z)) <= tol;
+		rim (cx - hw * ax, cy - hw * ay, w.z, o, w.radius, pts);
+		rim (cx + hw * ax, cy + hw * ay, w.z, o, w.radius, pts);
+		return outline (pts.toArray (new double[0][])).intersects (mx - WHEEL_HIT, my - WHEEL_HIT, 2 * WHEEL_HIT, 2 * WHEEL_HIT);
+	}
+
+	/** How near a click must be to what is drawn of a wheel to pick it (pixels). */
+	static private final int		WHEEL_HIT	= 2;
+
+	/** The flat elements (bumpers, collision polygon, bounding box) under a point of the top view, or null. */
+	private RobotItem pickFlat (double x, double y, double tol)
+	{
 		for (int i = 0; i < robot.bumpers.size (); i++)
 		{
 			RobotDef.Bumper	s = robot.bumpers.get (i);
