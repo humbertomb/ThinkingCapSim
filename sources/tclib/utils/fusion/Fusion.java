@@ -28,7 +28,8 @@ public class Fusion extends Object
 	public double[]						virtuals;				// Virtual sensor values
 	public boolean[]					virtuals_flg;			// Virtual sensor update flag
 	public double[]						groups;					// Group sensor values
-	public boolean[]					groups_flg;				// Group sensor update flag
+	public boolean[]					groups_flg;				// Group sensor flag: it sees something (under its range)
+	public boolean						fresh_flg;				// Whether anything the range buffer is filled with was read on this cycle
 	public double[] 					scans;					// Scanner sensor values (the first virtual scanner: allscans[0])
 	public boolean						scans_flg;				// Scanner sensor update flags
 	public double[][]					allscans;				// The values of every virtual scanner (one per reduced laser scan)
@@ -60,6 +61,11 @@ public class Fusion extends Object
 		for (int k = 0; k < fdesc.MAXSCAN; k++)
 			allscans[k]	= new double [Math.max (0, fdesc.scanrays[k])];
 		scans			= (fdesc.MAXSCAN > 0) ? allscans[0] : new double [Math.max (0, fdesc.RAYSCAN)];
+
+		// until they are first read, they see nothing
+		java.util.Arrays.fill (virtuals, fdesc.RANGEVIRTU);
+		for (int i = 0; i < fdesc.MAXGROUP; i++)
+			groups[i]	= (fdesc.groupfeat[i] != null) ? fdesc.groupfeat[i].range () : fdesc.RANGEGROUP;
 	}
 		
 	/* Instance methods */
@@ -78,7 +84,9 @@ public class Fusion extends Object
 	 * </ul>
 	 * When either of the two is left alone, it is what the rules that can use it
 	 * read; when the mode has none to use, the fused sensor reads its maximum
-	 * range. It is read on this cycle when any of the two was.
+	 * range. It is read on this cycle when any of the two was; when neither was,
+	 * it keeps what it read last (it does not jump to its maximum range because a
+	 * sensor did not fire).
 	 */
 	protected void virtual (int s, RobotData data, SensorPos a1)
 	{
@@ -92,6 +100,9 @@ public class Fusion extends Object
 		boolean			s_ok = s_read && sees (sonar, rdesc.RANGESON);		// what can be used: what sees something
 		boolean			i_ok = i_read && sees (ir, rdesc.RANGEIR);
 		double			out = fdesc.RANGEVIRTU;
+
+		virtuals_flg[s]	= s_read || i_read;
+		if (!virtuals_flg[s])				return;			// nothing new: as it was
 
 		if (mode == FusionDesc.V_UNDEF)		mode = fdesc.MODEVIRTU;
 		switch (mode)
@@ -115,7 +126,6 @@ public class Fusion extends Object
 		}
 
 		virtuals[s]		= Math.max (Math.min (out, fdesc.RANGEVIRTU), 0.0);
-		virtuals_flg[s]	= s_read || i_read;
 	}
 
 	/** Whether a reading sees something: it is under the maximum range of its sensor (when the sensor says one). */
@@ -144,8 +154,18 @@ public class Fusion extends Object
 		return k;
 	}
 
+	/**
+	 * A sensor of an area, as its mode says: the nearest of what falls in its arc
+	 * of the range buffer, or out of the fused sensors its list names. It is only
+	 * worked out again when what it is made of was read on this cycle (anything
+	 * the range buffer is filled with, or any of the fused sensors of its list);
+	 * otherwise it keeps its value, so that it does not jump on the cycles the
+	 * sensors do not fire.
+	 */
 	protected void group (int s, LPS lps, RobotData data, FeaturePos f)
 	{
+		if (!fed (f))		return;
+
 		double			out;
 		double			t;
 		int				i;
@@ -186,6 +206,39 @@ public class Fusion extends Object
 
 		groups[s]		= Math.max (out, 0.0);
 		groups_flg[s]	= (groups[s] < f.range ());
+	}
+
+	/** Whether what a sensor of an area is made of was read on this cycle. */
+	protected boolean fed (FeaturePos f)
+	{
+		if ((f.mode () == FusionDesc.G_BUF_ARC) || (f.mode () == FusionDesc.G_WBUF_ARC))
+			return fresh_flg;
+		for (int i = 0; i < f.n (); i++)
+			if ((f.ndx (i) >= 0) && (f.ndx (i) < virtuals_flg.length) && virtuals_flg[f.ndx (i)])		return true;
+		return false;
+	}
+
+	/** Whether anything the range buffer is filled with ({@link #fill}) was read on this cycle. */
+	protected boolean fresh (RobotData data)
+	{
+		if (fdesc.MAXVIRTU > 0)
+		{
+			for (int i = 0; i < fdesc.MAXVIRTU; i++)		if (virtuals_flg[i])		return true;
+		}
+		else
+		{
+			for (int i = 0; i < rdesc.MAXSONAR; i++)		if (data.sonars_flg[i])		return true;
+			for (int i = 0; i < rdesc.MAXIR; i++)			if (data.irs_flg[i])		return true;
+		}
+		if (fdesc.MAXSCAN > 0)
+		{
+			for (int k = 0; k < fdesc.MAXSCAN; k++)			if (allscans_flg[k])		return true;
+		}
+		else if ((rdesc.RAYLRF > 0) && (data.lrfs != null) && (data.lrfs_flg != null))
+		{
+			for (int k = 0; k < Math.min (rdesc.MAXLRF, data.lrfs_flg.length); k++)		if (data.lrfs_flg[k])		return true;
+		}
+		return false;
 	}		
 	
 	/**
@@ -307,6 +360,7 @@ public class Fusion extends Object
 		for (i = 0; i < fdesc.MAXSCAN; i++)
 			scanner (data, i);
 		scans_flg	= (fdesc.MAXSCAN > 0) && allscans_flg[0];
+		fresh_flg	= fresh (data);
 		
 		// Perform signal-level sensor fusion (digital signals)
 		btmp	= false;	
