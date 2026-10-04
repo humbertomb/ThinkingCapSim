@@ -109,29 +109,14 @@ public class IndoorPerception extends Perception
 	
 	protected void lowlevel_fusion ()
 	{
-		int				i;
-		double			delta, alpha;
-		
 		// Signal-level sensor fusion and LPS update
 		fusion.fuse_signal (data);	
 		lps.update_anchors ();
 		lps.clamp (pos);
 		
-		for (i = 0; i < fdesc.MAXVIRTU; i++)
-		{
-			if (fusion.virtuals_flg[i])
-				l_rbuffer.add_range (fdesc.virtufeat[i], i, fusion.virtuals[i]);
-		}
+		// what the robot sees around it, which the sensors of an area are worked out of
+		fill_buffer ();
 		l_virtual.update (fusion.virtuals, fusion.virtuals_flg);
-		
-		if (fusion.scans_flg)
-		{
-			delta	= (fdesc.RAYSCAN > 1) ? fdesc.CONESCAN / (double) (fdesc.RAYSCAN - 1) : 0.0;
-			alpha	= -fdesc.CONESCAN / 2.0;		
-			
-			for (i = 0; i < fdesc.RAYSCAN; i++, alpha += delta)
-				l_rbuffer.add_range (fdesc.scanfeat, i, fusion.scans[i], alpha);
-		}
 		l_scan.update (fusion.scans, fusion.scans_flg);
 		
 		// Feature-level sensor fusion and LPS update
@@ -144,6 +129,87 @@ public class IndoorPerception extends Perception
 		if (win != null)		win.update (lps, null);
 	}
 	
+	/**
+	 * Puts what the range sensors read on this cycle in the range buffer, which is
+	 * what the sensors of an area (the groups of the buffer modes) are worked out
+	 * of. Every source the robot has is taken, each in the most worked-out form it
+	 * is described in:
+	 * <ul>
+	 * <li>the sonars and the infrared, through the fused sensors when there are
+	 *     any (one reading per direction, fused as each says), and one by one when
+	 *     there are none: each sonar, and each infrared that sees something (one
+	 *     near the end of its range does not, as the fusion takes it);</li>
+	 * <li>the laser range finders, through the reduced scan when there is one
+	 *     (the fan the rays of the laser are taken down to), and ray by ray, every
+	 *     laser of the robot, when there is none.</li>
+	 * </ul>
+	 * Only what was read on this cycle goes in, as the fused sensors always did.
+	 */
+	protected void fill_buffer ()
+	{
+		int				i, k;
+		double			delta, alpha;
+
+		// sonars and infrared: the fused sensors, or each of them when there are none
+		if (fdesc.MAXVIRTU > 0)
+		{
+			for (i = 0; i < fdesc.MAXVIRTU; i++)
+				if (fusion.virtuals_flg[i])
+					l_rbuffer.add_range (fdesc.virtufeat[i], i, fusion.virtuals[i]);
+		}
+		else
+		{
+			for (i = 0; i < rdesc.MAXSONAR; i++)
+				if (data.sonars_flg[i])
+					l_rbuffer.add_range (rdesc.sonfeat[i], i, data.sonars[i]);
+			for (i = 0; i < rdesc.MAXIR; i++)
+				if (data.irs_flg[i])			// one at the end of its range saw nothing (0: no point)
+					l_rbuffer.add_range (rdesc.irfeat[i], rdesc.MAXSONAR + i, (data.irs[i] < 0.9 * rdesc.RANGEIR) ? data.irs[i] : 0.0);
+		}
+
+		// laser range finders: the reduced scan, or every ray of every laser when there is none
+		if (fdesc.RAYSCAN > 0)
+		{
+			if (fusion.scans_flg)
+			{
+				delta	= (fdesc.RAYSCAN > 1) ? fdesc.CONESCAN / (double) (fdesc.RAYSCAN - 1) : 0.0;
+				alpha	= -fdesc.CONESCAN / 2.0;		
+				for (i = 0; i < fdesc.RAYSCAN; i++, alpha += delta)
+					l_rbuffer.add_range (fdesc.scanfeat, i, fusion.scans[i], alpha);
+			}
+		}
+		else if ((rdesc.RAYLRF > 0) && (data.lrfs != null))
+		{
+			delta	= (rdesc.RAYLRF > 1) ? rdesc.CONELRF / (double) (rdesc.RAYLRF - 1) : 0.0;
+			for (k = 0; k < Math.min (rdesc.MAXLRF, data.lrfs.length); k++)
+			{
+				if ((data.lrfs[k] == null) || (data.lrfs_flg == null) || !data.lrfs_flg[k] || (rdesc.lrffeat[k] == null))		continue;
+				alpha	= -rdesc.CONELRF / 2.0;
+				for (i = 0; i < Math.min (rdesc.RAYLRF, data.lrfs[k].length); i++, alpha += delta)
+					l_rbuffer.add_range (rdesc.lrffeat[k], k * rdesc.RAYLRF + i, data.lrfs[k][i], alpha);
+			}
+		}
+	}
+
+	/**
+	 * How many points the range buffer keeps: PPR_BUFFER readings of each of the
+	 * sonar-like sources (the fused sensors, or the sonars and infrared one by
+	 * one), which are slow and sparse and are remembered as the robot moves, and a
+	 * couple of cycles of the laser ones (the reduced scan, or every ray of every
+	 * laser), which are dense and fresh on every cycle; never fewer than the 200
+	 * of old.
+	 */
+	protected int buffer_size ()
+	{
+		int		sparse = (fdesc.MAXVIRTU > 0) ? fdesc.MAXVIRTU : rdesc.MAXSONAR + rdesc.MAXIR;
+		int		dense = (fdesc.RAYSCAN > 0) ? fdesc.RAYSCAN : rdesc.MAXLRF * rdesc.RAYLRF;
+
+		return Math.max (200, LPS.PPR_BUFFER * sparse + LASER_CYCLES * dense);
+	}
+
+	/** How many cycles of laser readings the range buffer has room for. */
+	static public final int			LASER_CYCLES	= 2;
+
 	protected void maplevel_fusion ()
 	{
 		l_fsegs.active (segments);
@@ -222,8 +288,7 @@ public class IndoorPerception extends Perception
 	{
 		super.notify_config (space, item);
 		
-		if (fdesc.MAXVIRTU > 0)
-			max_buffer	= LPS.PPR_BUFFER * fdesc.MAXVIRTU;
+		max_buffer	= buffer_size ();
 		
 		// Add domain specific LPOs to the LPS
 		l_home		= new LPOPoint (0.0, 0.0, 0.0, "Home", LPOSource.MAP);	
