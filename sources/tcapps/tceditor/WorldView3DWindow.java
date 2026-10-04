@@ -121,8 +121,6 @@ public class WorldView3DWindow extends JFrame
 	protected java.util.List<long[]>	stepped = new java.util.ArrayList<long[]> ();	// when each was last moved on [ns], for the time step of its walk
 	protected BranchGroup			objectsBranch;		// live: simulated animated objects (one TransformGroup each)
 	protected java.util.List<TransformGroup>	objects = new java.util.ArrayList<TransformGroup> ();
-	protected java.util.List<wucore.utils.geom.Line2[]>	shapes = new java.util.ArrayList<wucore.utils.geom.Line2[]> ();	// the icon of each live object, in its own frame
-	protected java.util.List<wucore.utils.geom.Line2[]>	outlines = new java.util.ArrayList<wucore.utils.geom.Line2[]> ();	// ... and where it is now, which hides reflectors from the beacon scanners
 	protected boolean				showAnimated	= true;	// draw the world's animated objects at their initial pose (off while simulating)
 	protected boolean				showStarts		= true;	// View menu: the starting positions of the robots
 	protected boolean				showNames		= true;	// View menu: the names of the robots
@@ -461,7 +459,6 @@ public class WorldView3DWindow extends JFrame
 			if ((floorCB != null) && (world != null))		floorCB.setSelected (world.zones ().n () == 0);
 		}
 		this.world	= world;
-		for (Robot3D r : robots)		r.setWorld (world);				// the reflectors their beacon scanners look for
 		scheduleRebuild ();
 	}
 
@@ -913,11 +910,6 @@ public class WorldView3DWindow extends JFrame
 		Robot3D		r3d = new Robot3D (rdesc, body, lift, new Point3 (x, y, 0.0), 0.0, a, name);
 		r3d.setCameraBounds (wallBounds ());						// what its cameras see stops at the outer walls
 		r3d.showCameras (showFOVs);
-		r3d.setWorld (world);										// the reflectors its beacon scanners look for
-		r3d.setMovers (new java.util.function.Supplier<java.util.List<wucore.utils.geom.Line2>> ()		// and the live objects that hide them
-		{
-			public java.util.List<wucore.utils.geom.Line2> get ()		{ return liveOutlines (); }
-		});
 		r3d.showProfiles (showProfiles);
 		if ((sdesc != null) && (sdesc.props != null))				// its virtual sensors, as its perception works them out
 			r3d.setFusion (new tclib.utils.fusion.FusionDesc (sdesc.props));
@@ -1043,8 +1035,6 @@ public class WorldView3DWindow extends JFrame
 		bg.setCapability (BranchGroup.ALLOW_DETACH);
 		bg.addChild (tg);
 		objects.add (tg);
-		shapes.add (o.getLocalIcon ());
-		outlines.add (null);
 		objectsBranch.addChild (bg);
 		updateObject (objects.size () - 1, x, y, z, a);
 		return objects.size () - 1;
@@ -1059,32 +1049,6 @@ public class WorldView3DWindow extends JFrame
 		t.setTranslation (new Vector3d (x, y, z));
 		objects.get (index).setTransform (t);
 		if ((index < labels.size ()) && (labels.get (index) != null))		labels.get (index).place (x, y, 0.0);
-
-		// its outline where it is now
-		wucore.utils.geom.Line2[]	local = (index < shapes.size ()) ? shapes.get (index) : null;
-		if (local != null)
-		{
-			wucore.utils.geom.Line2[]	abs = new wucore.utils.geom.Line2[local.length];
-			double						c = Math.cos (a), s = Math.sin (a);
-
-			for (int k = 0; k < local.length; k++)
-			{
-				wucore.utils.geom.Line2	l = local[k];
-				abs[k]	= new wucore.utils.geom.Line2 (x + c * l.orig ().x () - s * l.orig ().y (), y + s * l.orig ().x () + c * l.orig ().y (),
-													   x + c * l.dest ().x () - s * l.dest ().y (), y + s * l.dest ().x () + c * l.dest ().y ());
-			}
-			outlines.set (index, abs);
-		}
-	}
-
-	/** The outlines of the live objects where they are now. */
-	protected java.util.List<wucore.utils.geom.Line2> liveOutlines ()
-	{
-		java.util.List<wucore.utils.geom.Line2>	out = new java.util.ArrayList<wucore.utils.geom.Line2> ();
-
-		for (wucore.utils.geom.Line2[] ls : outlines)
-			if (ls != null)		for (wucore.utils.geom.Line2 l : ls)		out.add (l);
-		return out;
 	}
 
 	public void clearObjects ()
@@ -1092,8 +1056,6 @@ public class WorldView3DWindow extends JFrame
 		if (objectsBranch != null)		objectsBranch.detach ();
 		objectsBranch = null;
 		objects.clear ();
-		shapes.clear ();
-		outlines.clear ();
 		labels.clear ();
 	}
 

@@ -7,8 +7,12 @@
 
 package tcapps.tcsimulator.simulator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
+import tc.shared.world.WMBeacon;
+import tc.shared.world.WMCBeacon;
 import tc.shared.world.World;
 import tc.vrobot.RobotData;
 import tc.vrobot.RobotDataCtrl;
@@ -26,6 +30,7 @@ import wucore.utils.geom.Line2;
 import wucore.utils.geom.Point2;
 import wucore.utils.math.Angles;
 import wucore.utils.math.stat.RandomNumberGenerator;
+import devices.data.BeaconData;
 import devices.data.CompassData;
 import devices.data.GPSData;
 import devices.data.InsData;
@@ -867,243 +872,108 @@ public class Simulator
 		return dist;
 	}
 	
-//	Sensor laser de balizas (tres tipos: exacto, gaussiano y geometrico)
-	protected double[] lsb (SensorPos a1)
+	/**
+	 * A laser beacon scanner: the reflectors it sees, with the bearing (rad, from
+	 * where it looks) and the range (m) of each from where it sits, the nearest
+	 * BEACLSB of them; and, as a NAV200 does, the pose of the robot when it sees
+	 * three or more (quality 90; 0 when it sees fewer). A reflector is seen when it
+	 * is within its range (MINIMLSB to RANGELSB) and its aperture (CONELSB), and
+	 * nothing is in between: no wall, no static object, no animated object, no
+	 * other robot. A cylinder is aimed at on the side that faces the scanner, and
+	 * a strip at its middle, and a strip is seen only when it is not looked at
+	 * edgewise (more than REFLSB off its line). The readings are as exact as the
+	 * simulation mode of the family says (MODELSB): exact, with a relative error
+	 * (ERRORANGLELSB, ERRORRANGELSB) or with a gaussian one (ERRORANGLELSBGAUSS in
+	 * degrees, ERRORRANGELSBGAUSS in metres).
+	 */
+	protected void beacons (SensorPos a1, BeaconData out)
 	{
-		double			lsb[];
-		
-		if (map == null) 		return null;
-		
-		switch (SDESC[roboindex].MODELSB)
+		RobotDesc			rd = RDESC[roboindex];
+		SimulatorDesc		sd = SDESC[roboindex];
+		RobotModel			m = MODEL[roboindex];
+		double				sx = m.real_x + a1.rho () * Math.cos (m.real_a + a1.theta ());
+		double				sy = m.real_y + a1.rho () * Math.sin (m.real_a + a1.theta ());
+		double				look = m.real_a + a1.orientation ();
+		List<double[]>		seen = new ArrayList<double[]> ();		// {bearing, range}
+
+		if (map != null)
 		{
-			case LSB_EXACT:
-				lsb = lsb_exact (a1);
-				break;
-			case LSB_GAUSS:
-				lsb = lsb_gauss (a1);
-				break;
-			case LSB_GEOM:
-			default:
-				lsb = lsb_geom (a1);
-		}
-		
-		return lsb;
-	}
-	
-//	Sensor Laser de balizas sin errores que da el angulo de orientacion (en RAD) de la baliza detectada	
-	private double[] lsb_exact (SensorPos a1)
-	{
-		int 			i,longitud;
-		double			xx1, yy1; 						// 	Posicion inicial del barrido
-		double			xx2, yy2; 						// 	Posicion final del barrido
-		double 			distMuro, distBeac, dist, dist1;//	Distancia al muro y distancia a baliza y distancia auxiliar, y distancia de la primera baliza
-		double			a2, a, step, angle; 			//  angulo de semiapertura , angulo auxiliar, angulo entre barridos, angulo auxiliar
-		double			bearing, bearingFinal; 			// angulo medido por el sensor, y angulo final medido por el sensor
-		double			rangeFinal,range;
-		double[]		lsb_measures;					//  Medidas calculadas
-		Line2			rout, wall;						//	Linea del barrido, linea que intersecta el barrido (del muro o baliza)
-		Point2			p;								// 	Punto de interseccion entre barrido y el muro o la baliza.
-		int				 index, first_index, last_index;//	Indices de la baliza intersectada (actual, primera y la ultima baliza detectada)
-		
-		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.theta ());  // Posicion absoluta del sensor laser
-		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.theta ());
-		
-		if(RDESC[roboindex].RANGE == true ||RDESC[roboindex].ANGLE == true)
-			longitud = RDESC[roboindex].BEACLSB*2;						// longitud del vector de las medidas
-		else
-			longitud = RDESC[roboindex].BEACLSB;						// longitud del vector de las medidas
-		
-		lsb_measures = new double[longitud];  					// BEACLSB es el numero maximo de balizas detectables
-		
-		
-		for (i=0;i<longitud;i++) lsb_measures[i]=Double.MAX_VALUE;		// Inicia el array de medida con el maximo valor (no hay medida)
-		a2		= (RDESC[roboindex].CONELSB / 2.0);								// CONELSB es el angulo de barrido (seguramente 360°)
-		step	= (a2 * 2.0) / (double) (RDESC[roboindex].RAYLSB-1);  					// angulo entre barridos 
-		rout	= new Line2 ();
-		
-		bearingFinal=Double.MAX_VALUE;
-		rangeFinal=Double.MAX_VALUE;
-		i		= 0;						//	numero de medidas
-		
-		
-		dist		= Double.MAX_VALUE;									// Minima distancia entre sensor y el baliza 	
-		dist1		= Double.MAX_VALUE;									// Primera distancia entre sensor y la baliza 	
-		index=-1;
-		last_index=-1;
-		first_index=-1;
-		
-		for (a = -a2; a < a2; a += step)	// barrido entre -a2 y a2                 
-		{
-			
-			xx2		= xx1 + RDESC[roboindex].RANGELSB * Math.cos (MODEL[roboindex].real_a + a1.orientation () + a);	// punto final del barrido
-			yy2		= yy1 + RDESC[roboindex].RANGELSB * Math.sin (MODEL[roboindex].real_a + a1.orientation () + a);
-			
-			distMuro	= Double.MAX_VALUE;									
-			distBeac	= Double.MAX_VALUE;										
-			rout.set (xx1, yy1, xx2, yy2);					
-			wall 	= map.crossline (rout, icons, iconcount, ROBOINDEX[roboindex]);									
-			if(wall != null){													
-				p			= rout.intersection (wall);	
-				if (p != null)	distMuro	= p.distance (xx1, yy1);						// Calculo de la distancia entre sensor y el muro
-			}
-			
-			index = map.crossBeacon (rout);														
-			wall = (index >= 0) ? map.beacons().get(index).getLine() : null;
-			if(wall != null){
-				p			= rout.intersection (wall);
-				if (p != null)	distBeac	= p.distance (xx1, yy1);						// Calcula la interseccion entre el sensor y baliza			
-				
-				if((distBeac<distMuro)&&(distBeac>RDESC[roboindex].MINIMLSB)){			// Si la distancia a la baliza es menor o que la del Muro, y la distancia entre la baliza es mayor a la minima
-					
-					if(index!=last_index)	dist=Double.MAX_VALUE;			
-					
-					if (distBeac<dist){										// dist = distancia minima entre entre sensor y baliza para distintos rayos (la mas perpendicular)
-						
-						range=distBeac; // Para el rango
-						bearing=Math.atan2(yy2-yy1,xx2-xx1);				// Calcula el angulo absoluto entre la baliza y sensor(PI a -PI)
-						angle=Angles.radnorm_180(map.beacons().get(index).getAng()-bearing);		// Calcula el angulo entre balizas y barrido
-						
-						//System.out.println(" range ="+ range);
-						
-						// || (angle>(rdesc.REFLSB)) && (angle<(Math.PI-rdesc.REFLSB))	// añadir al if para detectar en las dos caras
-						if ((angle>RDESC[roboindex].REFLSB) && (angle<(Math.PI-RDESC[roboindex].REFLSB)) )		// Verifica si el rayo reflecta en la baliza
-						{	
-							if ((last_index>=0) && (last_index!=index))	{
-								
-								if(RDESC[roboindex].ANGLE == true) lsb_measures[i++]=bearingFinal;	// Guarda la medida (la mas perpendicular) cuando cambia de baliza					
-								if(RDESC[roboindex].RANGE == true) lsb_measures[i++]=rangeFinal;	// Guarda la medida (la mas perpendicular) cuando cambia de baliza					
-							}
-							bearingFinal=Angles.radnorm_180(bearing-a1.orientation()-MODEL[roboindex].real_a);					// Se almacena la medida relativa que se mediría con el sensor
-							rangeFinal = range;
-							if (last_index<0)	{dist1=distBeac; first_index=index;}				// Guarda la primera distancia (para el caso especial de que el primer rayo y el ultimo del barrido correspondan a la misma baliza)
-							last_index=index;			// Se almacena el indice de la ultima baliza
-							dist=distBeac;				// Se guarda la distancia mas perpendicular a la baliza
-						}
-						
-					}
-					
-					
-				} 
-			}
-		}
-		
-		// Guarda la medida de la ultima baliza (y en el caso de que sea la misma baliza que la primera, guarda la del rayo mas perpendicular
-		if (last_index>=0){				
-			if(last_index!=first_index){								// Si la primera baliza no corresponde con la ultima guarda la medida
-				if(RDESC[roboindex].ANGLE == true) lsb_measures[i++]=bearingFinal;	// Guarda la medida (la mas perpendicular) cuando cambia de baliza					
-				if(RDESC[roboindex].RANGE == true) lsb_measures[i++]=rangeFinal;	// Guarda la medida (la mas perpendicular) cuando cambia de baliza					
-			}
-			else
-				if (dist1>dist){
-					i=0;	
-					if(RDESC[roboindex].ANGLE == true) lsb_measures[i++]=bearingFinal;	// Guarda la medida (la mas perpendicular) cuando cambia de baliza					
-					if(RDESC[roboindex].RANGE == true) lsb_measures[i++]=rangeFinal;	// Guarda la medida (la mas perpendicular) cuando cambia de baliza					
+			if (map.cbeacons () != null)
+				for (WMCBeacon b : map.cbeacons ())
+				{
+					if (b == null)		continue;
+
+					double	dx = b.x () - sx, dy = b.y () - sy, d = Math.hypot (dx, dy);
+
+					if (d <= b.radius ())		continue;
+					see (sx, sy, look, b.x () - b.radius () * dx / d, b.y () - b.radius () * dy / d, seen);
+				}
+			if (map.beacons () != null)
+				for (WMBeacon b : map.beacons ())
+				{
+					Line2	l = (b != null) ? b.getLine () : null;
+
+					if (l == null)		continue;
+
+					double	mx = (l.orig ().x () + l.dest ().x ()) / 2.0, my = (l.orig ().y () + l.dest ().y ()) / 2.0;
+					double	inc = Angles.radnorm_180 (b.getAng () - Math.atan2 (my - sy, mx - sx));
+
+					if (Math.abs (Math.sin (inc)) <= Math.sin (Math.max (0.0, rd.REFLSB)))		continue;		// edgewise: it reflects nothing back
+					see (sx, sy, look, mx, my, seen);
 				}
 		}
-		
-//		for(i=0;i<3;i++)
-//		System.out.println("MEDIDA0="+lsb_measures[2*i]*Angles.+"MEDIDA1="+lsb_measures[2*i+1]);
-		
-		
-//		System.out.println("**POSICION REAL ["+model.real_x+" , "+model.real_y+"]  angulo = "+model.real_a*Angles.);
-		
-		return lsb_measures;
-	}
-	
-	
-//	Sensor Laser de balizas sin errores que da el angulo de orientacion (en RAD) de la baliza detectada	(modo continuo)
-	private double[] lsb_exact_CONT (SensorPos a1)
-	{
-		int 			i,a;
-		double			xx1, yy1; 		// Posicion sensor (absolutas)
-		double			xx2, yy2; 		// Posiciones del barrido (absolutas)
-		double			a2, angle, dist; 	
-		double			range, bearing; // rango y angulo medido por el sensor
-		double[]		lsb_measures;
-		Line2			rout, wall;
-		Point2			p;
-		
-		xx1		= MODEL[roboindex].real_x + a1.rho () * Math.cos (MODEL[roboindex].real_a + a1.theta ());  // Posicion absoluta del sensor laser
-		yy1		= MODEL[roboindex].real_y + a1.rho () * Math.sin (MODEL[roboindex].real_a + a1.theta ());
-		
-		lsb_measures = new double[RDESC[roboindex].BEACLSB];  			// BEACLSB es el numero maximo de balizas
-		a2		= (RDESC[roboindex].CONELSB / 2.0);				// CONELSB es el angulo de barrido (seguramente 360°)
-		
-		rout	= new Line2 ();
-		i		= 0;
-		
-		for (a = 0; a < map.beacons().size(); a++)			// map.bn() es el numero de balizas                  
-		{	
-			rout.set(map.beacons().get(a).getLine());
-			xx2		=(rout.orig().x()+rout.dest().x())/2;		// Posicion X de la baliza
-			yy2		=(rout.orig().y()+rout.dest().y())/2;		// Posicion Y de la baliza
-			range =Math.sqrt((xx2-xx1)*(xx2-xx1)+(yy2-yy1)*(yy2-yy1));	// rango entre sensor y balizas
-			
-			dist	= Double.MAX_VALUE;									// Calculo de la distancia entre sensor y el muro	
-			rout.set (xx1, yy1, xx2, yy2);					
-			wall 	= map.crossline (rout, icons, iconcount, ROBOINDEX[roboindex]);									
-			if(wall != null){
-				p		= rout.intersection (wall);
-				if (p != null)	dist 	= p.distance (xx1, yy1);
+
+		// the nearest ones, as many as it can tell apart
+		seen.sort ((u, v) -> Double.compare (u[1], v[1]));
+		if ((rd.BEACLSB > 0) && (seen.size () > rd.BEACLSB))		seen = new ArrayList<double[]> (seen.subList (0, rd.BEACLSB));
+
+		double[]		bearings = new double[seen.size ()], ranges = new double[seen.size ()];
+
+		for (int k = 0; k < seen.size (); k++)
+		{
+			double	b = seen.get (k)[0], r = seen.get (k)[1];
+
+			switch ((sd != null) ? sd.MODELSB : LSB_EXACT)
+			{
+				case LSB_GEOM:
+					b	= b * (1.0 + sd.ERRORANGLELSB * (2.0 * Math.random () - 1.0));
+					r	= r * (1.0 + sd.ERRORRANGELSB * (2.0 * Math.random () - 1.0));
+					break;
+				case LSB_GAUSS:
+					b	= b + rnd.nextGaussian () * sd.ERRORANGLELSBGAUSS * Angles.DTOR;
+					r	= r + rnd.nextGaussian () * sd.ERRORRANGELSBGAUSS;
+					break;
+				default:
 			}
-			
-			
-			if (range<=RDESC[roboindex].RANGELSB && range>=RDESC[roboindex].MINIMLSB && range<=dist ){				// Si el barrido alcanza la baliza y no se excede el rango maximo ...
-				bearing=Math.atan2(yy2-yy1,xx2-xx1);											// Calcula el angulo absoluto entre la baliza y sensor(PI a -PI)
-				
-				if(bearing<=a2 & bearing>=(-a2)){												// Si no se supera el angulo de barrido del laser ...
-					angle=Angles.radnorm_180(map.beacons().get(a).getAng()-bearing);									// Calcula el angulo entre balizas y barrido
-					
-					if ((angle>RDESC[roboindex].REFLSB) && (angle<(Math.PI-RDESC[roboindex].REFLSB)))
-					{lsb_measures[i++] = Angles.radnorm_180(bearing-a1.orientation()-MODEL[roboindex].real_a);		// Calculo del angulo relativo de la baliza (radianes)
-					System.out.println("Medidas beacons = "+lsb_measures[i-1]);
-					}
-				}
-			}
+			bearings[k]	= Angles.radnorm_180 (b);
+			ranges[k]	= Math.max (0.0, r);
 		}
-		
-		while(i<RDESC[roboindex].BEACLSB)			lsb_measures[i++]=Double.MAX_VALUE;
-		
-		return lsb_measures;
+
+		bpos.set (m.real_x, m.real_y, m.real_a);
+		out.setPosition (bpos);
+		out.setSeen (bearings, ranges);
+		out.setNumber (seen.size ());
+		out.setQuality ((seen.size () >= 3) ? 90 : 0);
+		out.setValid (true);
 	}
-	
-	private double[] lsb_geom (SensorPos a1)	
+
+	/** A reflector at (x, y), if the scanner at (sx, sy) looking at look sees it: in its range and aperture, and nothing in between. */
+	private void see (double sx, double sy, double look, double x, double y, List<double[]> seen)
 	{
-		int 				a=0;
-		int					i=0;
-		double[]			measures;
-		
-		measures = lsb_exact (a1);
-		
-		for (a = 0; a < RDESC[roboindex].BEACLSB; a++) {
-			if(Math.abs(measures[a])<1000){
-				if(RDESC[roboindex].ANGLE == true) 
-					measures[i]	= (1.0 - SDESC[roboindex].ERRORANGLELSB) * measures[i] + (2.0 * SDESC[roboindex].ERRORANGLELSB * Math.random () - SDESC[roboindex].ERRORANGLELSB) * measures[i++];
-				if(RDESC[roboindex].RANGE == true) 		
-					measures[i]	= (1.0 - SDESC[roboindex].ERRORRANGELSB) * measures[i] + (2.0 * SDESC[roboindex].ERRORRANGELSB * Math.random () - SDESC[roboindex].ERRORRANGELSB) * measures[i++];
-			}
-		}
-		
-		return measures;
-	}		
-	
-	private double[] lsb_gauss (SensorPos a1) // añade ruido gausiano de desviacion tipica ERRORGAUSS
-	{
-		int 				a=0;
-		int					i=0;
-		double[]			measures;		
-		measures = lsb_exact (a1);
-		for (a = 0; a < RDESC[roboindex].BEACLSB; a++) {
-			if(Math.abs(measures[a])<1000){
-				if(RDESC[roboindex].ANGLE == true) 
-					measures[i]	= measures[i++] + rnd.nextGaussian()*SDESC[roboindex].ERRORANGLELSBGAUSS; // Añade ruido gaussiano			
-				if(RDESC[roboindex].RANGE == true) 		
-					measures[i]	= measures[i++] + rnd.nextGaussian()*SDESC[roboindex].ERRORRANGELSBGAUSS; // Añade ruido gaussiano
-			}
-		}
-		return measures;
+		RobotDesc		rd = RDESC[roboindex];
+		double			dx = x - sx, dy = y - sy, d = Math.hypot (dx, dy);
+		double			bearing = Angles.radnorm_180 (Math.atan2 (dy, dx) - look);
+
+		if ((d < rd.MINIMLSB) || (d <= 1e-6) || ((rd.RANGELSB > 0.0) && (d > rd.RANGELSB)))		return;
+		if ((rd.CONELSB < 2.0 * Math.PI - 1e-6) && (Math.abs (bearing) > rd.CONELSB / 2.0))		return;
+
+		// a little short of it: a strip on a wall is not behind the wall
+		double			ex = x - 0.02 * dx / d, ey = y - 0.02 * dy / d;
+
+		if (map.crossline (new Line2 (sx, sy, ex, ey), icons, iconcount, ROBOINDEX[roboindex]) != null)		return;
+		seen.add (new double[] { bearing, d });
 	}
-	
+
 	protected double[] radar (SensorPos a1)
 	{
 		int 			i;
@@ -1673,16 +1543,7 @@ public class Simulator
 		// Compute simulated LASER BEACON data
 		for (i = 0; i < RDESC[robotind].MAXLSB; i++)
 			if (fires (RDESC[robotind].lsbfeat[i].step (), cyclsb) && (DATA_CTRL[robotind].lsb))
-			{
-//				data.beacon[i]		= lsb (RDESC[robotind].lsbfeat[i]);  
-				
-				bpos.set (data.real_x, data.real_y, data.real_a);
-				
-				data.beacon[i].setPosition (bpos);  
-				data.beacon[i].setNumber (5);
-				data.beacon[i].setQuality(90);
-				data.beacon[i].setValid (true);
-			}     
+				beacons (RDESC[robotind].lsbfeat[i], data.beacon[i]);
 			else   
 				data.beacon[i].setValid (false);
 		

@@ -224,11 +224,6 @@ public class Robot3D extends BranchGroup
 		else if (!show && was)			virtuals.detach ();
 	}
 
-	/** The world the reflectors the laser beacon scanners look for are in. */
-	public void setWorld (tc.shared.world.World world)		{ profiles.setWorld (world); }
-
-	/** Where to ask for the outlines of the animated objects where they are now, which hide the reflectors too. */
-	public void setMovers (java.util.function.Supplier<java.util.List<wucore.utils.geom.Line2>> movers)		{ profiles.setMovers (movers); }
 		
 	/** Whether what the cameras see (the prism of each) is drawn. */
 	public void showCameras (boolean show)

@@ -21,13 +21,10 @@ import javax.media.j3d.TriangleArray;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 
-import tc.shared.world.WMBeacon;
-import tc.shared.world.WMCBeacon;
-import tc.shared.world.World;
+import devices.data.BeaconData;
 import tc.vrobot.RobotData;
 import tc.vrobot.RobotDesc;
 import tc.vrobot.SensorPos;
-import wucore.utils.geom.Line2;
 
 /**
  * What the sensors of a robot are measuring now, drawn where they measure it, as
@@ -37,9 +34,8 @@ import wucore.utils.geom.Line2;
  *     reads;</li>
  * <li>a laser range finder, the polygon of its scan, a vertex at the end of
  *     every ray;</li>
- * <li>a laser beacon scanner, a line from it to every reflector of the world it
- *     sees (in its range and aperture, and with no wall nor object in between:
- *     the static objects of the world, and the animated ones where they are).</li>
+ * <li>a laser beacon scanner, a line from it to every reflector it sees, as the
+ *     simulation works out which (see Simulator.beacons).</li>
  * </ul>
  * Everything is flat, at the height of each sensor, and drawn again whenever
  * the robot moves ({@link #update}), at most every {@link #PERIOD} ms.
@@ -55,8 +51,6 @@ public class Profiles3D extends BranchGroup
 	static public final Color3f		C_LSB		= new Color3f (1.0f, 0.0f, 1.0f);
 
 	protected RobotDesc				rdesc;
-	protected World					world;				// where the reflectors are, and the walls and objects that hide them
-	protected java.util.function.Supplier<List<Line2>>	movers;		// the outlines of the animated objects where they are now (null: none)
 	protected BranchGroup			drawn;				// what is drawn now
 	protected long					last;
 
@@ -67,12 +61,6 @@ public class Profiles3D extends BranchGroup
 		setCapability (BranchGroup.ALLOW_CHILDREN_EXTEND);
 		setCapability (BranchGroup.ALLOW_CHILDREN_WRITE);
 	}
-
-	/** The world the reflectors the beacon scanners look for are in (null: none). */
-	public void setWorld (World world)			{ this.world = world; }
-
-	/** Where to ask for the outlines of the animated objects where they are now, which hide reflectors as well (null: none). */
-	public void setMovers (java.util.function.Supplier<List<Line2>> movers)		{ this.movers = movers; }
 
 	/** Draws what the sensors read, the robot at (x, y, heading a). */
 	public void update (RobotData data, double x, double y, double a)
@@ -88,7 +76,7 @@ public class Profiles3D extends BranchGroup
 		ranges (bg, rdesc.sonfeat, rdesc.MAXSONAR, data.sonars, rdesc.CONESON, C_SONAR, x, y, a);
 		ranges (bg, rdesc.irfeat, rdesc.MAXIR, data.irs, rdesc.CONEIR, C_IR, x, y, a);
 		scans (bg, data, x, y, a);
-		beacons (bg, x, y, a);
+		beacons (bg, data, x, y, a);
 
 		if (drawn != null)		drawn.detach ();
 		drawn	= bg;
@@ -151,45 +139,28 @@ public class Profiles3D extends BranchGroup
 		}
 	}
 
-	/** A line from each laser beacon scanner to every reflector it sees. */
-	protected void beacons (BranchGroup bg, double x, double y, double a)
+	/**
+	 * A line from each laser beacon scanner to every reflector it sees, as the
+	 * simulation has it (data.beacon: the bearing and range of each, from the
+	 * scanner), the last time it fired.
+	 */
+	protected void beacons (BranchGroup bg, RobotData data, double x, double y, double a)
 	{
-		List<double[]>	refl;
-		List<Line2>		walls;
-
-		if ((rdesc.lsbfeat == null) || (rdesc.MAXLSB <= 0) || (world == null))		return;
-		refl	= reflectors ();
-		if (refl.isEmpty ())			return;
-		walls	= new ArrayList<Line2> ();
-		if (world.walls () != null)
-			for (Line2 l : world.walls ().getLines ())		if (l != null)		walls.add (l);
-		if (world.objects () != null)								// the static objects hide them as the walls do
-			for (tc.shared.world.WMObject o : world.objects ())
-				if ((o != null) && o.visible)
-					for (Line2 l : o.absIcon ())		if (l != null)		walls.add (l);
-		if (movers != null)											// and the animated ones, where they are now
-		{
-			List<Line2>	m = movers.get ();
-			if (m != null)		for (Line2 l : m)		if (l != null)		walls.add (l);
-		}
-
 		List<double[]>	segs = new ArrayList<double[]> ();
 
-		for (int i = 0; (i < rdesc.MAXLSB) && (i < rdesc.lsbfeat.length); i++)
+		if ((rdesc.lsbfeat == null) || (data.beacon == null))		return;
+		for (int i = 0; (i < rdesc.MAXLSB) && (i < rdesc.lsbfeat.length) && (i < data.beacon.length); i++)
 		{
-			if (rdesc.lsbfeat[i] == null)		continue;
+			BeaconData	b = data.beacon[i];
+
+			if ((rdesc.lsbfeat[i] == null) || (b == null))		continue;
 
 			double[]	p = place (rdesc.lsbfeat[i], x, y, a);
 
-			for (double[] r : refl)
+			for (int k = 0; k < b.seen (); k++)
 			{
-				double	dx = r[0] - p[0], dy = r[1] - p[1], d = Math.hypot (dx, dy);
-				double	off = Math.abs (wucore.utils.math.Angles.radnorm_180 (Math.atan2 (dy, dx) - p[3]));
-
-				if ((d <= 1e-6) || ((rdesc.RANGELSB > 0.0) && (d > rdesc.RANGELSB)))		continue;
-				if ((rdesc.CONELSB < 2.0 * Math.PI - 1e-6) && (off > rdesc.CONELSB / 2.0))	continue;
-				if (hidden (p[0], p[1], r[0] - 0.02 * dx / d, r[1] - 0.02 * dy / d, walls))	continue;		// short of the reflector: a plate on a wall is not behind it
-				segs.add (new double[] { p[0], p[1], p[2], r[0], r[1], p[2] });
+				double	h = p[3] + b.bearing (k);
+				segs.add (new double[] { p[0], p[1], p[2], p[0] + b.range (k) * Math.cos (h), p[1] + b.range (k) * Math.sin (h), p[2] });
 			}
 		}
 		if (segs.isEmpty ())			return;
@@ -203,41 +174,6 @@ public class Profiles3D extends BranchGroup
 			la.setCoordinate (2 * k + 1, new Point3d (s[3], s[4], s[5]));
 		}
 		bg.addChild (new Shape3D (la, lines (C_LSB, 2.0f)));
-	}
-
-	/** The reflectors of the world, where a scanner aims at: the cylinders, and the middle of the plates. */
-	protected List<double[]> reflectors ()
-	{
-		List<double[]>	out = new ArrayList<double[]> ();
-
-		if (world.cbeacons () != null)
-			for (WMCBeacon b : world.cbeacons ())		if (b != null)		out.add (new double[] { b.x (), b.y () });
-		if (world.beacons () != null)
-			for (WMBeacon b : world.beacons ())
-			{
-				Line2	l = (b != null) ? b.getLine () : null;
-				if (l != null)		out.add (new double[] { (l.orig ().x () + l.dest ().x ()) / 2.0, (l.orig ().y () + l.dest ().y ()) / 2.0 });
-			}
-		return out;
-	}
-
-	/** Whether a wall (or the edge of an object) is in the way from one point to another. */
-	static protected boolean hidden (double x0, double y0, double x1, double y1, List<Line2> walls)
-	{
-		for (Line2 w : walls)
-		{
-			double	ax = w.orig ().x (), ay = w.orig ().y (), bx = w.dest ().x (), by = w.dest ().y ();
-			double	d1 = side (ax, ay, bx, by, x0, y0), d2 = side (ax, ay, bx, by, x1, y1);
-			double	d3 = side (x0, y0, x1, y1, ax, ay), d4 = side (x0, y0, x1, y1, bx, by);
-
-			if ((d1 * d2 < 0.0) && (d3 * d4 < 0.0))		return true;
-		}
-		return false;
-	}
-
-	static private double side (double ax, double ay, double bx, double by, double px, double py)
-	{
-		return (bx - ax) * (py - ay) - (by - ay) * (px - ax);
 	}
 
 	/**
