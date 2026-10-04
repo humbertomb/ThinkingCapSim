@@ -125,6 +125,7 @@ public class RobotCanvas extends JPanel
 	protected boolean				imageVisible	= true;
 	protected boolean				boxVisible		= true;		// the bounding box (the area of the image)
 	protected boolean				iconVisible		= true;		// the collision polygon
+	protected boolean				wheelsVisible	= true;		// the wheels of the drive train
 	protected boolean				shapeVisible	= true;		// the lines of the 3D model, over the projection
 	protected boolean				snapGrid		= false;	// take the handles to the grid
 	protected boolean				snapVertex		= false;	// take a dragged vertex to a near one of its own kind
@@ -361,7 +362,7 @@ public class RobotCanvas extends JPanel
 				if (in (x0, y0, x1, y1, gx (q), gy (q), q.height))	found.add (new RobotItem (kind, i));
 			}
 		}
-		for (int i = 0; i < robot.wheels.size (); i++)
+		for (int i = 0; wheelsVisible && (i < robot.wheels.size ()); i++)
 		{
 			RobotDef.Wheel	w = robot.wheels.get (i);
 			if (in (x0, y0, x1, y1, kx (w), ky (w), w.z))		found.add (new RobotItem (RobotItem.WHEEL, i));
@@ -584,6 +585,10 @@ public class RobotCanvas extends JPanel
 		group.clear ();
 		setSelection ((RobotItem) null);
 	}
+
+	public boolean isWheelsVisible ()				{ return wheelsVisible; }
+	/** Shows or hides the wheels; hidden, they cannot be picked either, and they are let go if selected. */
+	public void setWheelsVisible (boolean on)		{ wheelsVisible = on;	if (!on) unselect (RobotItem.WHEEL); repaint (); }
 
 	public boolean isShapeVisible ()				{ return shapeVisible; }
 	public void setShapeVisible (boolean on)		{ shapeVisible = on; repaint (); }
@@ -997,7 +1002,7 @@ public class RobotCanvas extends JPanel
 		// still be picked by clicking on it
 		RobotItem	flat = isTop () ? pickFlat (x, y, tol) : null;
 		if (flat != null)		return flat;
-		for (int i = 0; i < robot.wheels.size (); i++)
+		for (int i = 0; wheelsVisible && (i < robot.wheels.size ()); i++)
 			if (onWheel (robot.wheels.get (i), mx, my, x, y, tol))
 				return new RobotItem (RobotItem.WHEEL, i);
 		return null;
@@ -1631,7 +1636,7 @@ public class RobotCanvas extends JPanel
 		drawIcon (g);
 		if (isTop () && boxVisible)		drawBoundingBox (g);
 		drawBumpers (g);
-		drawWheels (g);
+		if (wheelsVisible)		drawWheels (g);
 		drawCoverage (g);
 		drawSensors (g);
 		drawGroups (g);

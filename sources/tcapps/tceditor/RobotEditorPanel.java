@@ -88,7 +88,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	protected RobotView3DWindow		view3d;					// created the first time it is shown
 	protected javax.swing.JToggleButton			view3dBT;
 	protected javax.swing.JToggleButton[]		viewBT;					// the three flat projections
-	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, snapMI, snapVertexMI, imageMI, shapeMI, boxMI, iconMI;
+	protected javax.swing.JCheckBoxMenuItem		view3dMI, gridMI, snapMI, snapVertexMI, imageMI, shapeMI, boxMI, iconMI, wheelsMI;
 
 	// Undo and redo: the description as it was before each change, and as it was before each undo
 	static public final int			UNDO_MAX		= 200;		// changes remembered
@@ -438,6 +438,11 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 			public void run ()		{ canvas.setIconVisible (iconMI.isSelected ()); }
 		});
 		mview.add (iconMI);
+		wheelsMI	= checkItem ("Show Wheels", KeyEvent.VK_W, mask | java.awt.event.InputEvent.SHIFT_DOWN_MASK, canvas.isWheelsVisible (), new Runnable ()
+		{
+			public void run ()		{ canvas.setWheelsVisible (wheelsMI.isSelected ()); }
+		});
+		mview.add (wheelsMI);
 		mview.addSeparator ();
 		mview.add (view3dMenuItem (mask));
 		mb.add (mview);
