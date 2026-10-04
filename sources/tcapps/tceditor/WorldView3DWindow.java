@@ -507,6 +507,17 @@ public class WorldView3DWindow extends JFrame
 		}
 	}
 
+	/**
+	 * Where the selected element is now, when it moves (a robot or an animated
+	 * object of a simulation): with Follow selection on, the view moves to keep it
+	 * in the middle, looking at it from the same angles and distance.
+	 */
+	public void follow (double x, double y)
+	{
+		if (isVisible () && followCB.isSelected () && Double.isFinite (x) && Double.isFinite (y))
+			scene.setFocus (x, y);
+	}
+
 	public void fitView ()
 	{
 		double[]	b = WorldEditor.bounds (world);

@@ -186,6 +186,12 @@ public class View3DController
 		if (view3d != null)		view3d.clearRobots ();
 	}
 
+	/** Where the selected element is now, when it moves: the view follows it if it is asked to. */
+	public void follow (double x, double y)
+	{
+		if (view3d != null)		view3d.follow (x, y);
+	}
+
 	/* --- simulated animated objects --- */
 
 	public int addObject (tc.shared.world.WMObject o, double x, double y, double z, double a)

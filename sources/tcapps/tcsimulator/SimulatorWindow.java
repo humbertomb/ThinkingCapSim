@@ -887,8 +887,41 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 				canvas.repaint ();
 				update3DRobots ();
 				update3DObjects ();
+				follow3D ();
 			}
 		});
+	}
+
+	/**
+	 * The 3D view after what is picked on the canvas, if it is asked to follow it:
+	 * the robot picked, or else the animated object selected, where the simulation
+	 * has it now.
+	 */
+	private void follow3D ()
+	{
+		if (!view3d.isVisible ())		return;
+
+		int			r = canvas.getOverlaySelection ();
+		WorldItem	sel = canvas.getSelection ();
+
+		if (r >= 0)
+		{
+			synchronized (robots)
+			{
+				RobotView	rv = (r < robots.size ()) ? robots.get (r) : null;
+
+				if ((rv != null) && (rv.data != null))		view3d.follow (rv.data.real_x, rv.data.real_y);
+			}
+		}
+		else if ((sel != null) && (sel.kind == WorldItem.AOBJECT))
+		{
+			synchronized (objects)
+			{
+				ObjectView	ov = (sel.index < objects.size ()) ? objects.get (sel.index) : null;
+
+				if ((ov != null) && (ov.pos != null))		view3d.follow (ov.pos.x (), ov.pos.y ());
+			}
+		}
 	}
 
 	private void update3DObjects ()
