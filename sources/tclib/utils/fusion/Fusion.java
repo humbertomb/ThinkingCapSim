@@ -16,8 +16,10 @@ public class Fusion extends Object
 	public boolean[]					virtuals_flg;			// Virtual sensor update flag
 	public double[]						groups;					// Group sensor values
 	public boolean[]					groups_flg;				// Group sensor update flag
-	public double[] 					scans;					// Scanner sensor values
+	public double[] 					scans;					// Scanner sensor values (the first virtual scanner: allscans[0])
 	public boolean						scans_flg;				// Scanner sensor update flags
+	public double[][]					allscans;				// The values of every virtual scanner (one per reduced laser scan)
+	public boolean[]					allscans_flg;			// ... and whether each was read on this cycle
 	public boolean[] 					dsignals;				// Digital inputs values
 	public boolean[]					dsignals_flg;			// Digital inputs update flags
 	
@@ -40,7 +42,11 @@ public class Fusion extends Object
 		groups_flg		= new boolean [fdesc.MAXGROUP];
 		dsignals		= new boolean [fdesc.MAXDSIG];
 		dsignals_flg	= new boolean [fdesc.MAXDSIG];
-		scans			= new double [fdesc.RAYSCAN];
+		allscans		= new double [fdesc.MAXSCAN][];
+		allscans_flg	= new boolean [fdesc.MAXSCAN];
+		for (int k = 0; k < fdesc.MAXSCAN; k++)
+			allscans[k]	= new double [Math.max (0, fdesc.scanrays[k])];
+		scans			= (fdesc.MAXSCAN > 0) ? allscans[0] : new double [Math.max (0, fdesc.RAYSCAN)];
 	}
 		
 	/* Instance methods */
@@ -203,80 +209,114 @@ public class Fusion extends Object
 	}		
 	
 	/**
-	 * The virtual scanner: the fan of the fusion (RAYSCAN rays over CONESCAN,
-	 * looking where its own feature looks) made out of the rays of the first laser
-	 * scanner of the robot (RAYLRF rays over CONELRF, looking where it looks). Each
-	 * ray of the fan takes the laser rays that fall within its share of the fan,
-	 * by their bearing, and keeps the least of them or their mean, as its mode says;
-	 * one that no laser ray falls on (outside what the laser covers) reads the
-	 * range of the fan, as one that sees nothing. A laser that goes all the way
-	 * round is taken round. The rays of the two are as the simulator and the
-	 * perception take them: from one end of the cone to the other, both included.
+	 * A virtual scanner: the fan of a reduced laser scan (its rays over its cone,
+	 * from where it sits and looking where it looks) made out of the rays of every
+	 * laser range finder of the robot that has readings where the fan looks. Each
+	 * reading of a laser is the point it hit (or the end of its range), and is seen
+	 * from where the fan sits: by its bearing it falls to the rays of the fan within
+	 * half a ray of it (half a ray of the fan, or of the laser as it is seen from
+	 * there, whichever is wider), and each ray of the fan keeps the nearest of what
+	 * falls to it, or the mean, as its mode says. A ray that nothing falls to takes
+	 * the nearest one that something did, up to SCAN_GAP rays away, and otherwise
+	 * reads the range of the fan, as one that sees nothing. When the fan and a laser sit in the same place this is
+	 * the old reduction of that laser, ray by ray.
 	 *
-	 * Nothing when the robot has no laser, the fusion asks for no scanner, or there
-	 * is no scan in the data: then no scan is there (scans_flg false).
-	 * OJO: this does not take into account more than one LRF sensor.
+	 * The rays of the lasers are as the simulator and the perception take them: from
+	 * one end of the cone to the other, both included (the rays of the fan as well),
+	 * all of them with the rays and
+	 * the cone of the description (RAYLRF, CONELRF). The scan is read on this cycle
+	 * when any of the lasers was.
 	 */
-	protected void scanner (RobotData data, SensorPos f)
+	protected void scanner (RobotData data, int k)
 	{
-		int				i, j, k, n, nl;
-		int				j0, j1;
-		double			out, v;
-		double[]		lrf;
-		double			sStep, sStart, lStep, lStart, half, a;
-		boolean			avg, round;
-		
-		scans_flg	= false;
-		if ((rdesc.MAXLRF <= 0) || (rdesc.RAYLRF <= 0) || (fdesc.RAYSCAN <= 0) || (scans == null))		return;
-		if ((data.lrfs == null) || (data.lrfs.length == 0) || ((lrf = data.lrfs[0]) == null))			return;
+		SensorPos		f = fdesc.scanfeats[k];
+		double[]		out = allscans[k];
+		int				n = out.length;
+		double			cone = fdesc.scancones[k], range = fdesc.scanranges[k];
+		boolean			avg = (f != null) && (f.mode () == FusionDesc.S_AVG);
+		double			sStep = (n > 1) ? cone / (double) (n - 1) : 0.0;
+		double			sStart = ((f != null) ? f.orientation () : 0.0) - cone * 0.5;
+		double			ox = (f != null) ? f.x () : 0.0, oy = (f != null) ? f.y () : 0.0;
+		double[]		acc = new double[n];
+		int[]			cnt = new int[n];
+		boolean			read = false;
 
-		nl		= Math.min (rdesc.RAYLRF, lrf.length);
-		avg		= (f != null) && (f.mode () == FusionDesc.S_AVG);
-		// where each fan begins and how far apart its rays are, in the frame of the robot
-		sStep	= (fdesc.RAYSCAN > 1) ? fdesc.CONESCAN / (double) (fdesc.RAYSCAN - 1) : 0.0;
-		sStart	= ((f != null) ? f.orientation () : 0.0) - fdesc.CONESCAN * 0.5;
-		lStep	= (nl > 1) ? rdesc.CONELRF / (double) (nl - 1) : 0.0;
-		lStart	= (((rdesc.lrffeat != null) && (rdesc.lrffeat.length > 0) && (rdesc.lrffeat[0] != null)) ? rdesc.lrffeat[0].orientation () : 0.0)
-				  - rdesc.CONELRF * 0.5;
-		round	= rdesc.CONELRF >= 2.0 * Math.PI - 1E-6;
-		half	= Math.max (sStep, lStep) * 0.5;					// each ray of the fan takes what is within half a ray of it
+		allscans_flg[k]	= false;
+		if (n == 0)					return;
+		for (int i = 0; i < n; i++)		acc[i] = avg ? 0.0 : Double.MAX_VALUE;
 
-		for (i = 0; i < Math.min (fdesc.RAYSCAN, scans.length); i++)
-		{
-			a		= sStart + i * sStep;							// the bearing of this ray of the fan
-			out		= avg ? 0.0 : Double.MAX_VALUE;
-			n		= 0;
-			if (lStep > 0.0)
+		if ((rdesc.MAXLRF > 0) && (rdesc.RAYLRF > 0) && (data.lrfs != null))
+			for (int l = 0; l < Math.min (rdesc.MAXLRF, data.lrfs.length); l++)
 			{
-				// the laser rays within half a ray either side, by their index (as near as it goes)
-				double	c = Angles.radnorm_180 (a - lStart - (round ? 0.0 : Math.PI)) + (round ? 0.0 : Math.PI);
+				double[]	lrf = data.lrfs[l];
+				SensorPos	lf = ((rdesc.lrffeat != null) && (l < rdesc.lrffeat.length)) ? rdesc.lrffeat[l] : null;
+				int			nl;
+				double		lStep, lStart;
 
-				if (round && (c < 0.0))		c += 2.0 * Math.PI;
-				j0		= (int) Math.ceil ((c - half) / lStep - 1E-9);
-				j1		= (int) Math.floor ((c + half) / lStep + 1E-9);
-				if (j1 < j0)			j1 = j0 = (int) Math.round (c / lStep);
-				for (j = j0; j <= j1; j++)
+				if ((lrf == null) || (lf == null))		continue;
+				nl		= Math.min (rdesc.RAYLRF, lrf.length);
+				lStep	= (nl > 1) ? rdesc.CONELRF / (double) (nl - 1) : 0.0;
+				lStart	= lf.orientation () - rdesc.CONELRF * 0.5;
+				if ((data.lrfs_flg != null) && (l < data.lrfs_flg.length) && data.lrfs_flg[l])		read = true;
+
+				for (int j = 0; j < nl; j++)
 				{
-					k	= j;
-					if (round)			k = ((k % nl) + nl) % nl;
-					else if ((k < 0) || (k >= nl))		continue;		// outside what the laser covers
-					v	= lrf[k];
-					if (avg)			out += v;
-					else				out = Math.min (out, v);
-					n ++;
+					double	r = lrf[j], b = lStart + j * lStep;
+					double	px = lf.x () + r * Math.cos (b), py = lf.y () + r * Math.sin (b);
+					double	dx = px - ox, dy = py - oy, d = Math.sqrt (dx * dx + dy * dy);
+					double	half, c;
+					int		i0, i1;
+
+					// how wide the reading is from the fan, and where it falls in it
+					half	= 0.5 * Math.max (sStep, (d > 1E-6) ? lStep * r / d : lStep);
+					c		= Angles.radnorm_180 (Math.atan2 (dy, dx) - sStart - cone * 0.5) + cone * 0.5;		// from the start of the fan (measured round its middle)
+					if (sStep <= 0.0)
+					{
+						if (Math.abs (c - cone * 0.5) > Math.max (half, cone * 0.5))		continue;
+						i0	= i1 = 0;
+					}
+					else
+					{
+						i0	= (int) Math.ceil ((c - half) / sStep - 1E-9);
+						i1	= (int) Math.floor ((c + half) / sStep + 1E-9);
+						if (i1 < i0)			i1 = i0 = (int) Math.round (c / sStep);
+					}
+					for (int i = i0; i <= i1; i++)
+					{
+						int		q = i;
+
+						if ((q < 0) || (q >= n))		continue;		// outside the fan
+						if (avg)			acc[q] += d;
+						else				acc[q] = Math.min (acc[q], d);
+						cnt[q] ++;
+					}
 				}
 			}
-			else
+
+		for (int i = 0; i < n; i++)
+			out[i]	= (cnt[i] == 0) ? Double.NaN : (avg ? acc[i] / cnt[i] : acc[i]);
+		// a ray nothing fell to takes the nearest one that something did, a few rays
+		// away at most (a fan that sits off the laser sees its edges from aside, and
+		// a ray or two at the end get nothing), and otherwise sees nothing
+		for (int i = 0; i < n; i++)
+		{
+			if (cnt[i] > 0)				continue;
+			double	v = range;
+			for (int g = 1; g <= SCAN_GAP; g++)
 			{
-				v	= lrf[0];
-				out	= v;
-				n	= 1;
+				if ((i - g >= 0) && (cnt[i - g] > 0))		{ v = out[i - g];	break; }
+				if ((i + g < n) && (cnt[i + g] > 0))		{ v = out[i + g];	break; }
 			}
-			scans[i]	= (n == 0) ? fdesc.RANGESCAN : (avg ? out / n : out);
+			acc[i]	= v;
 		}
-		scans_flg	= (data.lrfs_flg != null) && (data.lrfs_flg.length > 0) && data.lrfs_flg[0];
+		for (int i = 0; i < n; i++)
+			if (cnt[i] == 0)			out[i] = acc[i];
+		allscans_flg[k]	= read;
 	}		
 	
+	/** How many rays away a ray of a virtual scanner that nothing fell to looks for one that something did. */
+	static public final int				SCAN_GAP		= 3;
+
 	public void fuse_signal (RobotData data)
 	{
 		int			i;
@@ -286,8 +326,10 @@ public class Fusion extends Object
 		for (i = 0; i < fdesc.MAXVIRTU; i++)
 			virtual (i, data, fdesc.virtufeat[i]);       
 
-		// Perform signal-level sensor fusion (virtual scanner)
-		scanner (data, fdesc.scanfeat);       
+		// Perform signal-level sensor fusion (virtual scanners: every reduced laser scan)
+		for (i = 0; i < fdesc.MAXSCAN; i++)
+			scanner (data, i);
+		scans_flg	= (fdesc.MAXSCAN > 0) && allscans_flg[0];
 		
 		// Perform signal-level sensor fusion (digital signals)
 		btmp	= false;	

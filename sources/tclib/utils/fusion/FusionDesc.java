@@ -47,6 +47,7 @@ public class FusionDesc extends Object
 	public double					RANGEGROUP; 			// Maximum group sensor range (m)
 	public double					CONEGROUP; 				// Group sensor aperture range (rad)
 	
+	public int						MAXSCAN;				// Number of virtual scanners (reduced laser scans); the first is the one of RAYSCAN, scanfeat, ...
 	public int 						RAYSCAN;	 			// Number of virtual scanner rays
 	public double 					RANGESCAN;	 			// Maximum virtual scanner range (m)
 	public double 					CONESCAN;	 			// Virtual scanner aperture range (rad)
@@ -56,6 +57,10 @@ public class FusionDesc extends Object
 	public SensorPos[]				virtufeat; 				// Virtual sensors angular position
 	public FeaturePos[]				groupfeat; 				// Group sensors angular position
 	public SensorPos				scanfeat; 				// Virtual scanner angular position
+	public SensorPos[]				scanfeats;				// Every virtual scanner: where it is and where it looks (scanfeats[0] is scanfeat)
+	public int[]					scanrays;				// ... how many rays it has (scanrays[0] is RAYSCAN)
+	public double[]					scancones;				// ... how wide it opens (rad; scancones[0] is CONESCAN)
+	public double[]					scanranges;				// ... and how far it reads (m; scanranges[0] is RANGESCAN)
 	public SensorPos[]				dsigfeat; 				// Digital inputs angular position
 	public Filter					vfilter; 				// Virtual sensor fusion-filter
 	
@@ -171,5 +176,35 @@ public class FusionDesc extends Object
 		try { mode 	= Integer.valueOf (props.getProperty ("scanmode")).intValue (); }					catch (Exception e) 	{ mode  	= S_UNDEF; }
 		scanfeat.mode (mode);
 		scanfeat.set_polar (len, rho * ra, alpha * ra);			
+
+		// every virtual scanner: the first is the one above, the rest are numbered from
+		// one, each with its own fan (and the fan of the first when it says nothing)
+		try { MAXSCAN		= Integer.valueOf (props.getProperty ("MAXSCAN")).intValue (); }			catch (Exception e) 	{ MAXSCAN		= (RAYSCAN > 0) ? 1 : 0; }
+		if (RAYSCAN <= 0)		MAXSCAN = 0;
+		scanfeats		= new SensorPos [MAXSCAN];
+		scanrays		= new int [MAXSCAN];
+		scancones		= new double [MAXSCAN];
+		scanranges		= new double [MAXSCAN];
+		for (i = 0; i < MAXSCAN; i++)
+		{
+			if (i == 0)
+			{
+				scanfeats[i]	= scanfeat;
+				scanrays[i]		= RAYSCAN;
+				scancones[i]	= CONESCAN;
+				scanranges[i]	= RANGESCAN;
+				continue;
+			}
+			try { scanrays[i]	= Integer.valueOf (props.getProperty ("RAYSCAN" + i)).intValue (); }		catch (Exception e) 	{ scanrays[i]	= RAYSCAN; }
+			try { scancones[i]	= Double.valueOf (props.getProperty ("CONESCAN" + i)).doubleValue () * ra; }	catch (Exception e) 	{ scancones[i]	= CONESCAN; }
+			try { scanranges[i]	= Double.valueOf (props.getProperty ("RANGESCAN" + i)).doubleValue (); }	catch (Exception e) 	{ scanranges[i]	= RANGESCAN; }
+			try { alpha		= Double.valueOf (props.getProperty ("scanfeat" + i)).doubleValue (); }			catch (Exception e) 	{ alpha		= 0.0; }
+			try { len		= Double.valueOf (props.getProperty ("scanlen" + i)).doubleValue (); }			catch (Exception e) 	{ len		= 0.0; }
+			try { rho		= Double.valueOf (props.getProperty ("scanrho" + i)).doubleValue (); }			catch (Exception e) 	{ rho		= alpha; }
+			try { mode 		= Integer.valueOf (props.getProperty ("scanmode" + i)).intValue (); }			catch (Exception e) 	{ mode  	= S_UNDEF; }
+			scanfeats[i]	= new SensorPos ();
+			scanfeats[i].mode (mode);
+			scanfeats[i].set_polar (len, rho * ra, alpha * ra);
+		}
 	}
 } 

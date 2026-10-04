@@ -1750,19 +1750,19 @@ public class RobotDef
 			}
 		}
 
-		// the reduced laser scans, said without a number for the first, which is the
-		// one the fusion reads, and what the fan itself is said once
+		// the reduced laser scans, said without a number for the first and with it
+		// for the rest (scanlen1, RAYSCAN1, ...), each with its own fan, and how many
+		// there are (MAXSCAN)
 		if (!scans.isEmpty ())
 		{
-			Scanner	s0 = scans.get (0);
-
-			if (s0.rays > 0)		p.setProperty ("RAYSCAN", String.valueOf (s0.rays));
-			setNZ (p, "CONESCAN", s0.cone);		setNZ (p, "RANGESCAN", s0.rangemax);
+			p.setProperty ("MAXSCAN", String.valueOf (scans.size ()));
 			for (int i = 0; i < scans.size (); i++)
 			{
 				Scanner	s = scans.get (i);
 				String	sfx = (i == 0) ? "" : String.valueOf (i);
 
+				if (s.rays > 0)		p.setProperty ("RAYSCAN" + sfx, String.valueOf (s.rays));
+				setNZ (p, "CONESCAN" + sfx, s.cone);	setNZ (p, "RANGESCAN" + sfx, s.rangemax);
 				set (p, "scanlen" + sfx, s.rho);		set (p, "scanrho" + sfx, s.theta);
 				set (p, "scanfeat" + sfx, s.orientation);
 				p.setProperty ("scanmode" + sfx, String.valueOf (s.mode));
