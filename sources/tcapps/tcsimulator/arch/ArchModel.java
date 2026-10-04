@@ -205,6 +205,7 @@ public class ArchModel
 	 */
 	static public final Property	POLLED_PROP	= new Property ("POLLED", "Polled", P_BOOLEAN).fixedTo ("true", "A planner reads the latest perceptual space (LPS) before every step");
 	static public final Property	QUEUED_PROP	= new Property ("QUEUED", "Queued", P_BOOLEAN).fixedTo ("false", "A module handles what it is told as it arrives");
+	static public final Property	ACTIVE_PROP	= new Property ("PASSIVE", "Passive", P_BOOLEAN).fixedTo ("false", "A planner runs on its own cycle: it plans every so often, reading the latest perceptual space");
 	static public final String		PLANNER_BASE	= "tc.modules.Planner";
 
 	/** Suffixes that exist in the ADF but are not shown in the editor, per kind. */
@@ -389,6 +390,13 @@ public class ArchModel
 				if (p.key.equals ("QUEUED") && !isPlanner (b))			props.add (QUEUED_PROP);
 				continue;
 			}
+			// and a planner is never passive
+			if ((b.kind == MODULE) && p.key.equals ("PASSIVE") && isPlanner (b))
+			{
+				known.add (p.key);
+				props.add (ACTIVE_PROP);
+				continue;
+			}
 			props.add (p);
 			known.add (p.key);
 			// only a controller runs a program, and it is of a piece with its class
@@ -520,7 +528,7 @@ public class ArchModel
 		return "Planner".equalsIgnoreCase (get (b, "TYPE"));
 	}
 
-	/** Puts down how a module runs, as it has to: polled if it is a planner, and never queued. */
+	/** Puts down how a module runs, as it has to: polled and not passive if it is a planner, and never queued. */
 	public void fixRunModes (Block b)
 	{
 		Module	m = moduleOf (b);
@@ -528,6 +536,7 @@ public class ArchModel
 		if ((m == null) || (b.kind != MODULE))		return;
 		m.set ("POLLED", String.valueOf (isPlanner (b)));
 		m.set ("QUEUED", "false");
+		if (isPlanner (b))		m.set ("PASSIVE", "false");
 	}
 
 	/** The same for every module of the deployment. */
