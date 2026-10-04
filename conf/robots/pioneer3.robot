@@ -314,7 +314,6 @@
   "groups": [
     {
       "mode": 4,
-      "base": 0.3,
       "rho": 0.0,
       "theta": 90.0,
       "height": 0.0,
@@ -326,7 +325,6 @@
     },
     {
       "mode": 4,
-      "base": 0.3,
       "rho": 0.0,
       "theta": 45.0,
       "height": 0.0,
@@ -338,7 +336,6 @@
     },
     {
       "mode": 4,
-      "base": 0.3,
       "rho": 0.0,
       "theta": 0.0,
       "height": 0.0,
@@ -350,7 +347,6 @@
     },
     {
       "mode": 4,
-      "base": 0.3,
       "rho": 0.0,
       "theta": -45.0,
       "height": 0.0,
@@ -362,7 +358,6 @@
     },
     {
       "mode": 4,
-      "base": 0.3,
       "rho": 0.0,
       "theta": -90.0,
       "height": 0.0,
@@ -371,184 +366,6 @@
       "rangemax": 0.75,
       "rangemin": 0.25,
       "cone": 45.0
-    }
-  ],
-  "fused": [
-    {
-      "mode": -1,
-      "rho": 0.19474,
-      "theta": 41.88,
-      "height": 0.0,
-      "orientation": 90.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.21783,
-      "theta": 31.86,
-      "height": 0.0,
-      "orientation": 50.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.23409,
-      "theta": 19.98,
-      "height": 0.0,
-      "orientation": 30.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.2413,
-      "theta": 5.95,
-      "height": 0.0,
-      "orientation": 10.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.2413,
-      "theta": -5.95,
-      "height": 0.0,
-      "orientation": -10.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.23409,
-      "theta": -19.98,
-      "height": 0.0,
-      "orientation": -30.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.21783,
-      "theta": -31.86,
-      "height": 0.0,
-      "orientation": -50.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.19474,
-      "theta": -41.88,
-      "height": 0.0,
-      "orientation": -90.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.19474,
-      "theta": -138.12,
-      "height": 0.0,
-      "orientation": -90.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.21783,
-      "theta": -148.14,
-      "height": 0.0,
-      "orientation": -130.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.23409,
-      "theta": -160.02,
-      "height": 0.0,
-      "orientation": -150.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.2413,
-      "theta": -174.05,
-      "height": 0.0,
-      "orientation": -170.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.2413,
-      "theta": 174.05,
-      "height": 0.0,
-      "orientation": 170.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.23409,
-      "theta": 160.02,
-      "height": 0.0,
-      "orientation": 150.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.21783,
-      "theta": 148.14,
-      "height": 0.0,
-      "orientation": 130.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
-    },
-    {
-      "mode": -1,
-      "rho": 0.19474,
-      "theta": 138.12,
-      "height": 0.0,
-      "orientation": 90.0,
-      "elevation": 0.0,
-      "rangemax": 5.0,
-      "rangemin": 0.0,
-      "cone": 17.0
     }
   ],
   "fusionmode": 0,

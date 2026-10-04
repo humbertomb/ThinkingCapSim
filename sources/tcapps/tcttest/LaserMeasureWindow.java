@@ -4,7 +4,7 @@
  *	Laser test with GUI application
  */
 
-package tclib.navigation.mapbuilding.gui;
+package tcapps.tcttest;
 
 import java.io.*;
 import java.util.Enumeration;
