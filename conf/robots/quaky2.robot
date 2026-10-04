@@ -677,7 +677,7 @@
       "cone": 17.0
     }
   ],
-  "fusionmode": 4,
+  "fusionmode": 3,
   "extra": {
     "CAN_S_BUMID": "250",
     "MAXDSIG": "1",

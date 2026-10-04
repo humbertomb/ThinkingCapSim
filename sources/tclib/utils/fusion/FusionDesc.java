@@ -24,7 +24,7 @@ public class FusionDesc extends Object
 	public static final int			V_SONAR		= 0;		// Use sonar as virtual sensor
 	public static final int			V_IR		= 1;		// Use ir as virtual sensor
 	public static final int			V_MIN		= 2;		// Fuse sensors using the minimum
-	public static final int			V_FLYNN		= 4;		// Fuse sensors using Flynn's rules (3 was a 2x1 filter, now the minimum)
+	public static final int			V_FLYNN		= 3;		// Fuse sensors using Flynn's rules (it was 4, read as 3)
 
 	public static final int			G_UNDEF		= -1;		// Undefined group mode
 	public static final int			G_MIN		= 0;		// Use the minimum fusion
@@ -98,10 +98,10 @@ public class FusionDesc extends Object
 	public final void 			virtu_mode (int mod)	{ this.MODEVIRTU = virtuMode (mod); }
 
 	/* Class methods */
-	/** The mode of a fused sensor, as it is now: the 2x1 filter (3) is gone, and fuses with the minimum. */
+	/** The mode of a fused sensor, as it is now: Flynn's rules were 4 (and 3, the 2x1 filter that is gone). */
 	static public int virtuMode (int mode)
 	{
-		if (mode == 3)								return V_MIN;
+		if (mode == 4)								return V_FLYNN;
 		if ((mode < V_UNDEF) || (mode > V_FLYNN))	return V_UNDEF;
 		return mode;
 	}

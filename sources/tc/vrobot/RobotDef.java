@@ -1132,12 +1132,11 @@ public class RobotDef
 		return (r == 0.0) ? 0.0 : r;
 	}
 
-	/** Fills what a hand-written or older file may have left out. */
-	/** A way of fusing a fused sensor as it is now (FusionDesc.virtuMode): the 2x1 filter (3) is the minimum (2). */
+	/** A way of fusing a fused sensor as it is now (FusionDesc.virtuMode): Flynn's rules were 4, and are 3. */
 	static private int fusedMode (int mode)
 	{
-		if (mode == 3)					return 2;
-		if ((mode < -1) || (mode > 4))	return -1;
+		if (mode == 4)					return 3;
+		if ((mode < -1) || (mode > 3))	return -1;
 		return mode;
 	}
 
@@ -1149,6 +1148,7 @@ public class RobotDef
 		return mode;
 	}
 
+	/** Fills what a hand-written or older file may have left out. */
 	protected void normalise ()
 	{
 		if (icon == null)			icon = new ArrayList<IconLine> ();
@@ -1210,8 +1210,8 @@ public class RobotDef
 		if (groups.isEmpty ())		readGroups ();
 		if (fused.isEmpty ())		readFused ();
 		if (scans.isEmpty ())		readScans ();
-		// the ways of fusing that are gone: the 2x1 filter fuses with the minimum
-		// now, and every sensor of an area is an arc (the rectangles are the arcs)
+		// the ways of fusing as they are numbered now: Flynn's rules were 4, and
+		// every sensor of an area is an arc (the rectangles are the arcs)
 		fusionmode	= fusedMode (fusionmode);
 		if (fusionmode < 0)			fusionmode = 0;
 		for (Fused f : fused)		f.mode = fusedMode (f.mode);

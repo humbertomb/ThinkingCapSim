@@ -835,7 +835,7 @@
       "cone": 17.0
     }
   ],
-  "fusionmode": 4,
+  "fusionmode": 3,
   "scans": [
     {
       "mode": 1,

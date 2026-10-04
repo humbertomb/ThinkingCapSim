@@ -464,7 +464,7 @@
       "cone": 17.0
     }
   ],
-  "fusionmode": 4,
+  "fusionmode": 3,
   "extra": {
     "FILTERVIRTU": "anfis5.filter",
     "SENSIBSON": "0.0000001"
