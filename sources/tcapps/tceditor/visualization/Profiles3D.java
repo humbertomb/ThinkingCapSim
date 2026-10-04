@@ -38,7 +38,8 @@ import wucore.utils.geom.Line2;
  * <li>a laser range finder, the polygon of its scan, a vertex at the end of
  *     every ray;</li>
  * <li>a laser beacon scanner, a line from it to every reflector of the world it
- *     sees (in its range and aperture, and with no wall in between).</li>
+ *     sees (in its range and aperture, and with no wall nor object in between:
+ *     the static objects of the world, and the animated ones where they are).</li>
  * </ul>
  * Everything is flat, at the height of each sensor, and drawn again whenever
  * the robot moves ({@link #update}), at most every {@link #PERIOD} ms.
@@ -54,7 +55,8 @@ public class Profiles3D extends BranchGroup
 	static public final Color3f		C_LSB		= new Color3f (1.0f, 0.0f, 1.0f);
 
 	protected RobotDesc				rdesc;
-	protected World					world;				// where the reflectors are, and the walls that hide them
+	protected World					world;				// where the reflectors are, and the walls and objects that hide them
+	protected java.util.function.Supplier<List<Line2>>	movers;		// the outlines of the animated objects where they are now (null: none)
 	protected BranchGroup			drawn;				// what is drawn now
 	protected long					last;
 
@@ -68,6 +70,9 @@ public class Profiles3D extends BranchGroup
 
 	/** The world the reflectors the beacon scanners look for are in (null: none). */
 	public void setWorld (World world)			{ this.world = world; }
+
+	/** Where to ask for the outlines of the animated objects where they are now, which hide reflectors as well (null: none). */
+	public void setMovers (java.util.function.Supplier<List<Line2>> movers)		{ this.movers = movers; }
 
 	/** Draws what the sensors read, the robot at (x, y, heading a). */
 	public void update (RobotData data, double x, double y, double a)
@@ -158,6 +163,15 @@ public class Profiles3D extends BranchGroup
 		walls	= new ArrayList<Line2> ();
 		if (world.walls () != null)
 			for (Line2 l : world.walls ().getLines ())		if (l != null)		walls.add (l);
+		if (world.objects () != null)								// the static objects hide them as the walls do
+			for (tc.shared.world.WMObject o : world.objects ())
+				if ((o != null) && o.visible)
+					for (Line2 l : o.absIcon ())		if (l != null)		walls.add (l);
+		if (movers != null)											// and the animated ones, where they are now
+		{
+			List<Line2>	m = movers.get ();
+			if (m != null)		for (Line2 l : m)		if (l != null)		walls.add (l);
+		}
 
 		List<double[]>	segs = new ArrayList<double[]> ();
 
@@ -207,7 +221,7 @@ public class Profiles3D extends BranchGroup
 		return out;
 	}
 
-	/** Whether a wall is in the way from one point to another. */
+	/** Whether a wall (or the edge of an object) is in the way from one point to another. */
 	static protected boolean hidden (double x0, double y0, double x1, double y1, List<Line2> walls)
 	{
 		for (Line2 w : walls)
