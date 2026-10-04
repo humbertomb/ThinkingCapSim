@@ -197,6 +197,16 @@ public class ArchModel
 		new Property ("GFX",	"Graphics",	P_BOOLEAN),
 	};
 
+	/**
+	 * How a module runs, which is not for the deployment to choose: a planner
+	 * polls the perceptual space before every step (POLLED, which only a planner
+	 * does anything with: {@link tc.modules.Planner#poll}), and no module queues
+	 * what it is told (QUEUED). Each is shown only to the modules it is about.
+	 */
+	static public final Property	POLLED_PROP	= new Property ("POLLED", "Polled", P_BOOLEAN).fixedTo ("true", "A planner reads the latest perceptual space (LPS) before every step");
+	static public final Property	QUEUED_PROP	= new Property ("QUEUED", "Queued", P_BOOLEAN).fixedTo ("false", "A module handles what it is told as it arrives");
+	static public final String		PLANNER_BASE	= "tc.modules.Planner";
+
 	/** Suffixes that exist in the ADF but are not shown in the editor, per kind. */
 	static public final String[]	LINDA_HIDDEN	= { "CLASS" };
 	static public final String[]	ROUTER_HIDDEN	= { "PRI", "CONNECT" };
@@ -371,6 +381,14 @@ public class ArchModel
 		List<String>	known = new ArrayList<String> ();
 		for (Property p : std)
 		{
+			// how it runs: polled for a planner, never queued for the rest
+			if ((b.kind == MODULE) && (p.key.equals ("POLLED") || p.key.equals ("QUEUED")))
+			{
+				known.add (p.key);
+				if (p.key.equals ("POLLED") && isPlanner (b))			props.add (POLLED_PROP);
+				if (p.key.equals ("QUEUED") && !isPlanner (b))			props.add (QUEUED_PROP);
+				continue;
+			}
 			props.add (p);
 			known.add (p.key);
 			// only a controller runs a program, and it is of a piece with its class
@@ -433,8 +451,8 @@ public class ArchModel
 	 * Whether a property is of no use at all to a block as it stands, so that
 	 * there is nothing to show and nothing to edit: the cycle time of a module
 	 * that waits for an event to run (passive) is one, as the runtime never looks
-	 * at it -- unless the module is queued or polled, which makes it run on its own
-	 * cycle again ({@link tc.runtime.thread.StdThread#start}).
+	 * at it -- unless the module is polled (a planner), which makes it run on its
+	 * own cycle again ({@link tc.runtime.thread.StdThread#start}).
 	 */
 	public boolean idle (Block b, Property p)
 	{
@@ -487,6 +505,36 @@ public class ArchModel
 			if (p.key.equals (key) && (p.fixed != null))		v = p.fixed;		// what can only be one thing is that thing
 		if (key.equals ("INFO"))		{ if (v.length () > 0) m.name = v; }
 		else							m.set (key, v);
+		if (key.equals ("CLASS"))		fixRunModes (b);		// a planner now, or no longer
+	}
+
+	/** Whether a module is a planner: its class derives from tc.modules.Planner (or, when it is not there to tell, it was created as one). */
+	public boolean isPlanner (Block b)
+	{
+		String		cls;
+
+		if ((b == null) || (b.kind != MODULE) || (moduleOf (b) == null))		return false;
+		cls		= get (b, "CLASS").trim ();
+		if (tcapps.tceditor.DriverClasses.exists (cls))
+			return cls.equals (PLANNER_BASE) || tcapps.tceditor.DriverClasses.of (PLANNER_BASE, false, true).contains (cls);
+		return "Planner".equalsIgnoreCase (get (b, "TYPE"));
+	}
+
+	/** Puts down how a module runs, as it has to: polled if it is a planner, and never queued. */
+	public void fixRunModes (Block b)
+	{
+		Module	m = moduleOf (b);
+
+		if ((m == null) || (b.kind != MODULE))		return;
+		m.set ("POLLED", String.valueOf (isPlanner (b)));
+		m.set ("QUEUED", "false");
+	}
+
+	/** The same for every module of the deployment. */
+	public void fixRunModes ()
+	{
+		for (Block b : allRobotBlocks ())
+			if (b.kind == MODULE)		fixRunModes (b);
 	}
 
 	/* --- events --- */
@@ -977,7 +1025,9 @@ public class ArchModel
 	{
 		if (!hasRobot (r))				return null;
 		robot (r).modules.add (DeployArch.newModule (uniqueModuleName (r, "Module")));
-		return new Block (MODULE, r, robot (r).modules.size () - 1);
+		Block	b = new Block (MODULE, r, robot (r).modules.size () - 1);
+		fixRunModes (b);
+		return b;
 	}
 
 	/**
@@ -990,7 +1040,9 @@ public class ArchModel
 		if (moduleTypeBase (type) == null)		return addModule (r);
 		type	= type.trim ();
 		robot (r).modules.add (DeployArch.newModule (uniqueName (r, type), type));
-		return new Block (MODULE, r, robot (r).modules.size () - 1);
+		Block	b = new Block (MODULE, r, robot (r).modules.size () - 1);
+		fixRunModes (b);								// a planner is polled from the start
+		return b;
 	}
 
 	protected String uniqueModuleName (int r, String base)

@@ -896,6 +896,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	{
 		model	= new ArchModel (d);
 		normalisePaths (model);			// old files may name their resources without the leading "./"
+		model.fixRunModes ();			// how each module runs is not for the file to say (ArchModel.POLLED_PROP, QUEUED_PROP)
 		model.setStartNames (startNamesOf (d));
 		canvas.setModel (model);
 		rebuild (null);
