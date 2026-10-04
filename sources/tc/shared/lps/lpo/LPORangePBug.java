@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import tclib.utils.pos.*;
 import tc.shared.world.WMZone;
 import tc.shared.world.World;
+import tc.vrobot.SensorPos;
 import tclib.utils.pos.Position;
 import wucore.utils.geom.*;
 import wucore.utils.math.Angles;
@@ -53,6 +54,7 @@ public class LPORangePBug extends LPORangeBuffer
 	World							world;
 	boolean							onlyInZone = true;
 	double							radius;
+	double							sensor_x = 0.0;		// Where the laser the readings come from sits, forward of the robot centre (m)
 
 	// Constructor
 	public LPORangePBug (int size, double cone, double range, double side, String label, LPOSource source)
@@ -91,6 +93,13 @@ public class LPORangePBug extends LPORangeBuffer
 	public void		setSZone (double szone)		{ this.SZONE = szone; }
 	
 	// Instance methods	
+	/** Adds a laser reading, and remembers where the laser sits (what is ahead of it is what it sees). */
+	public void add_range (SensorPos feat, int i, double rho, double alpha)
+	{
+		sensor_x	= feat.x ();
+		super.add_range (feat, i, rho, alpha);
+	}
+
 	public LPORangePoint collision (Point2 point)
 	{
 		if (point != null)
@@ -699,7 +708,7 @@ public class LPORangePBug extends LPORangeBuffer
 	        }
 			
 			// Borrando puntos almacenados que no coinciden con las medidas del laser
-			if(pt.x() < 1.314) continue; 	// Solo se eliminan puntos delante del laser (lrflen0 = 1.314)
+			if(pt.x() < sensor_x) continue; 	// Solo se eliminan puntos delante del laser (donde esta en el robot)
 			dist = Double.MAX_VALUE;
 			for(int m = 0; m < buffer.length; m++){
 				dist = pt.distance(buffer[m]);
