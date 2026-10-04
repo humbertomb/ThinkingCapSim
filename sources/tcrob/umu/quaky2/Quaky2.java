@@ -70,6 +70,16 @@ public class Quaky2 extends VirtualRobot
 
 	// Devices and data
 	protected Quaky2Driver					driver;
+	// Vision (out of use). The robot had vision devices (Quaky2Vis, which send the
+	// objects they see as Quaky2VisData), described in the old "vis" family of the
+	// robot description: MAXVISION of them, each opened from its property VISIONi
+	// ("class|parameters"), at visfeat i on the robot and fired on step visstep i
+	// of a cycle of CYCLEVIS. That family is no longer in the descriptions, so
+	// nothing of it is created; to revive it, these fields went here:
+	//	protected Quaky2Vis[]					vision;
+	//	protected Quaky2VisData[]				obdata;				// MAX_OBJS of them
+	//	protected Position						vpos;				// where the robot was when a frame was asked for
+	//	protected Position						cpos;				// where it is when the objects arrive
 	protected GLC24064						lcd;
 	protected String						lcd_port;
 	
@@ -109,6 +119,14 @@ public class Quaky2 extends VirtualRobot
 		
 		// Initialise other structures
 		model		= (DifferentialDrive) rdesc.model;
+
+		// Vision (out of use, see the fields): the devices were opened here, one per
+		// VISIONi property, as
+		//	vision[i] = Quaky2Vis.getVision (rprops.getProperty ("VISION" + i));
+		//	vision[i].setDebug (debug);
+		//	vision[i].start ();
+		// with obdata filled with MAX_OBJS new Quaky2VisData, and vpos and cpos made
+		// (vpos set to the odometry after it is reset, below)
 
 		// Configure default LCD serial port
 		lcd_port	= rprops.getProperty ("LCD");
@@ -405,6 +423,23 @@ public class Quaky2 extends VirtualRobot
 		driver.odom_motL	= 0;
 		driver.odom_motR	= 0;
 		
+		/* --------------------------- */
+		/* PROCESS VISION (out of use) */
+		/* --------------------------- */
+
+		// Each cycle the vision devices were dealt with here (see the fields):
+		//	- a device whose objects had arrived (isUpdated) had them copied, the
+		//	  valid ones, into obdata (at most MAX_OBJS), each told where the device
+		//	  sits on the robot (sensor_pos, from visfeat i), where the robot was when
+		//	  the frame was asked for and where it is now (capture_pos (vpos, cpos))
+		//	  and which device saw it (set_dev), and setUpdated (false);
+		//	- and, when the vision was enabled (a vision switch of RobotDataCtrl, gone
+		//	  with it), every device whose step (visstep i) was the one of this cycle
+		//	  (a counter cycvis going round 1 .. CYCLEVIS, gone from VirtualRobot) was
+		//	  asked for a frame: vpos set to the odometry, acquire_frame (), and
+		//	  setUpdated (false).
+		// What was seen was meant to go out as a Quaky2Tuple.OBJECT (ItemObject).
+
 		if (debug)		System.out.println ("  [Quaky2] Leaving SENSOR processing module\n");
 	}	
 
