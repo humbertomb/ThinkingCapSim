@@ -877,12 +877,14 @@ public class Simulator
 	 * where it looks) and the range (m) of each from where it sits, the nearest
 	 * BEACLSB of them; and, as a NAV200 does, the pose of the robot when it sees
 	 * three or more (quality 90; 0 when it sees fewer). A reflector is seen when it
-	 * is within its range (MINIMLSB to RANGELSB) and its aperture (CONELSB), and no
-	 * wall is in between at the height the beam goes (from the height of the
-	 * scanner to the middle of the reflector; a wall goes from its base to its
-	 * height, and one of no height goes all the way up). The objects and the other
-	 * robots do not hide them: the scanner is mounted above them, as a NAV200 is,
-	 * and the world does not say how tall they are. A cylinder is aimed at on the
+	 * is within its range (MINIMLSB to RANGELSB) and its aperture (CONELSB), and
+	 * nothing is in between at the height the beam goes there (from the height of
+	 * the scanner to the middle of the reflector): no wall (from its base to its
+	 * height; one of no height goes all the way up), and no object, static or
+	 * animated, from its base (pos.z, which changes when a load is lifted) to its
+	 * top (its height, from its 3D model: one without a model hides nothing). The
+	 * other robots do not hide them: the world does not say how tall they are,
+	 * and the scanner is usually mounted above them, as a NAV200 is. A cylinder is aimed at on the
 	 * side that faces the scanner, and a strip at its middle, and a strip is seen
 	 * only when it is not looked at edgewise (more than REFLSB off its line). The readings are as exact as the
 	 * simulation mode of the family says (MODELSB): exact, with a relative error
@@ -974,31 +976,76 @@ public class Simulator
 		// a little short of it: a strip on a wall is not behind the wall
 		double			ex = x - 0.02 * dx / d, ey = y - 0.02 * dy / d;
 
-		if (walled (sx, sy, sz, ex, ey, z))		return;
+		if (blocked (sx, sy, sz, ex, ey, z))		return;
 		seen.add (new double[] { bearing, d });
 	}
 
-	/** Whether a wall is in the way of a beam from (sx, sy, sz) to (ex, ey, ez), at the height the beam crosses it. */
-	private boolean walled (double sx, double sy, double sz, double ex, double ey, double ez)
+	/**
+	 * Whether something is in the way of a beam from (sx, sy, sz) to (ex, ey, ez),
+	 * at the height the beam goes where it crosses it: a wall, a static object or
+	 * an animated one where the simulation has it now.
+	 */
+	private boolean blocked (double sx, double sy, double sz, double ex, double ey, double ez)
 	{
 		double		len = Math.hypot (ex - sx, ey - sy);
 
-		if ((map.walls () == null) || (len <= 0.0))		return false;
-		for (tc.shared.world.WMWall w : map.walls ().edges ())
+		if (len <= 0.0)		return false;
+
+		// the walls, from their base to their height
+		if (map.walls () != null)
+			for (tc.shared.world.WMWall w : map.walls ().edges ())
+			{
+				Point2		q = ((w != null) && (w.edge != null)) ? w.edge.intersection (sx, sy, ex, ey) : null;
+
+				if (q == null)		continue;
+				if (w.height <= 0.0)		return true;			// no height said: all the way up
+
+				double		el = w.edge.orig ().distance (w.edge.dest ().x (), w.edge.dest ().y ());
+				double		u = (el > 0.0) ? w.edge.orig ().distance (q.x (), q.y ()) / el : 0.0;
+				double		base = w.edge.z1 () + (w.edge.z2 () - w.edge.z1 ()) * u;
+
+				if (within (sx, sy, sz, ez, len, q, base, base + w.height))		return true;
+			}
+
+		// the static objects, from their base to their top
+		for (tc.shared.world.WMObject ob : map.objects ())
+			if (ob.visible && (ob.height > 0.0) && crosses (ob.absIcon (), sx, sy, sz, ex, ey, ez, len, ob.pos.z (), ob.pos.z () + ob.height))
+				return true;
+
+		// the animated ones, where they are now: a load carried goes along and up
+		// with the forks (it is not an obstacle to collide with any more, but it
+		// still hides what is behind it)
+		SimObjects		objs = objects;
+		if (objs != null)
+			for (int i = 0; i < objs.numobjects; i++)
+			{
+				SimObject	so = objs.OBJS[i];
+
+				if ((so == null) || (so.odesc == null) || !so.odesc.visible || !(so.odesc.height > 0.0))		continue;
+				if (crosses (so.odesc.absIcon (), sx, sy, sz, ex, ey, ez, len, so.odesc.pos.z (), so.odesc.pos.z () + so.odesc.height))		return true;
+			}
+		return false;
+	}
+
+	/** Whether the beam crosses any of some edges between two heights. */
+	private boolean crosses (Line2[] edges, double sx, double sy, double sz, double ex, double ey, double ez, double len, double bottom, double top)
+	{
+		if (edges == null)		return false;
+		for (Line2 l : edges)
 		{
-			Point2		q = ((w != null) && (w.edge != null)) ? w.edge.intersection (sx, sy, ex, ey) : null;
+			Point2		q = (l != null) ? l.intersection (sx, sy, ex, ey) : null;
 
-			if (q == null)		continue;
-			if (w.height <= 0.0)		return true;			// no height said: all the way up
-
-			double		el = w.edge.orig ().distance (w.edge.dest ().x (), w.edge.dest ().y ());
-			double		u = (el > 0.0) ? w.edge.orig ().distance (q.x (), q.y ()) / el : 0.0;
-			double		base = w.edge.z1 () + (w.edge.z2 () - w.edge.z1 ()) * u;
-			double		bz = sz + (ez - sz) * Math.hypot (q.x () - sx, q.y () - sy) / len;		// how high the beam goes there
-
-			if ((bz >= base) && (bz <= base + w.height))		return true;
+			if ((q != null) && within (sx, sy, sz, ez, len, q, bottom, top))		return true;
 		}
 		return false;
+	}
+
+	/** Whether the beam, where it crosses at q, goes between two heights. */
+	static private boolean within (double sx, double sy, double sz, double ez, double len, Point2 q, double bottom, double top)
+	{
+		double		bz = sz + (ez - sz) * Math.hypot (q.x () - sx, q.y () - sy) / len;		// how high the beam goes there
+
+		return (bz >= bottom) && (bz <= top);
 	}
 
 	protected double[] radar (SensorPos a1)

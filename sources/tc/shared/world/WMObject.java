@@ -44,6 +44,7 @@ public class WMObject extends WMElement
 	public boolean				usecolor;	// Replace 3D object color
 
 	public boolean				visible		= true;
+	public transient double		height;		// How tall it is over its base (pos.z; m): the top of its 3D model, 0 without one. Worked out on loading, never written
 
 	// Cache of the icon in world coordinates
 	private Line2[]				absCache;
@@ -85,6 +86,7 @@ public class WMObject extends WMElement
 			if (shape.equalsIgnoreCase ("none"))		shape = null;
 			usecolor = st.hasMoreTokens () && Boolean.parseBoolean (st.nextToken ());
 		}
+		updateHeight ();
 		icon = World.find (icons, iconId);
 		if (icon == null)
 		{
@@ -94,6 +96,12 @@ public class WMObject extends WMElement
 	}
 
 	/* Accessors */
+
+	/** Works out how tall it is again, from its 3D model (after the model changes). */
+	public void updateHeight ()
+	{
+		height	= Model3DS.height (shape);
+	}
 
 	/** Assigns a (shared) icon to the object. */
 	public void setIcon (WMIcon icon)
@@ -174,6 +182,7 @@ public class WMObject extends WMElement
 		shape	= World.getString (o, "shape", null);
 		if ((shape != null) && shape.equalsIgnoreCase ("none"))		shape = null;
 		usecolor = World.getBoolean (o, "usecolor", false);
+		updateHeight ();
 		icon = World.find (icons, iconId);
 		if (icon == null)
 		{
