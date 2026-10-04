@@ -20,20 +20,20 @@ import wucore.utils.math.*;
 public class FusionDesc extends Object
 {
 	// Low-level sensor fusion parameters
-	public static final int			V_UNDEF		= -1;	// Undefined virtual mode
+	public static final int			V_UNDEF		= -1;		// Undefined virtual mode
 	public static final int			V_SONAR		= 0;		// Use sonar as virtual sensor
-	public static final int			V_IR			= 1;		// Use ir as virtual sensor
+	public static final int			V_IR		= 1;		// Use ir as virtual sensor
 	public static final int			V_MIN		= 2;		// Fuse sensors using the minimum
 	public static final int			V_FLYNN		= 4;		// Fuse sensors using Flynn's rules (3 was a 2x1 filter, now the minimum)
 
-	public static final int			G_UNDEF		= -1;	// Undefined group mode
+	public static final int			G_UNDEF		= -1;		// Undefined group mode
 	public static final int			G_MIN		= 0;		// Use the minimum fusion
-	public static final int			G_WEIGHT		= 1;		// Use a weighted average fusion
+	public static final int			G_WEIGHT	= 1;		// Use a weighted average fusion
 	public static final int			G_BWEIGHT	= 2;		// Use a bounded weighted average fusion
 	public static final int			G_BUF_ARC	= 3;		// Use a buffer-based circular arc sensor fusion
 	public static final int			G_WBUF_ARC	= 4;		// Use a weighted buffer-based circular arc sensor fusion (5 and 6 were rectangles, now arcs)
 
-	public static final int			S_UNDEF		= -1;	// Undefined scanner mode
+	public static final int			S_UNDEF		= -1;		// Undefined scanner mode
 	public static final int			S_MIN		= 0;		// Use the minimum fusion
 	public static final int			S_AVG		= 1;		// Use the average fusion
 
