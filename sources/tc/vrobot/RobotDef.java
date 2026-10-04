@@ -144,17 +144,18 @@ public class RobotDef
 	 * A sensor of an area: the sector that stands for a group of the real ones, so
 	 * that a controller reads one distance where the robot has a dozen sensors.
 	 *
-	 * The rest of what the fusion of the runtime works it out with -- how it fuses
-	 * (mode), the sensors it fuses and their weights (equ) and the width of the
-	 * rectangle the buffer modes sweep (base) -- is kept as it was given, though
-	 * the editor does not show it yet.
+	 * How the fusion of the runtime works it out is its mode (one of
+	 * tclib.utils.fusion.FusionDesc.G_*, chosen in the editor). The rest of what
+	 * it is worked out with -- the sensors it fuses and their weights (equ) and the
+	 * width of the rectangle the buffer modes sweep (base) -- is kept as it was
+	 * given, though the editor does not show it yet.
 	 *
 	 * The properties of the older files name these badly: what they call len is
 	 * the distance, rho the angle of it and feat where it looks.
 	 */
 	static public class Group extends Sector
 	{
-		public int		mode;						// "groupmode"
+		public int		mode;						// "groupmode": how it is worked out (FusionDesc.G_*: from the listed fused sensors, or from the range buffer)
 		public String	equ;						// "groupequ": the sensors it fuses and their weights
 		public double	base;						// "groupbase": width of the rectangle of the buffer modes (m)
 

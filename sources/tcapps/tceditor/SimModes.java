@@ -113,6 +113,56 @@ public class SimModes
 		try { return Integer.parseInt (name.trim ()); }	catch (Exception e)		{ return 0; }
 	}
 
+	/**
+	 * How the fusion works a sensor of an area out (its "groupmode"): from the
+	 * fused sensors its list names (groupequ: the minimum, a weighted average, or
+	 * one with every reading bounded by its range), or from the range buffer, the
+	 * nearest of what falls in its arc or in its rectangle (as it is, or weighted).
+	 */
+	static public final String		G_MIN		= "List: minimum";
+	static public final String		G_WEIGHT	= "List: weighted average";
+	static public final String		G_BWEIGHT	= "List: bounded average";
+	static public final String		G_BUF_ARC	= "Buffer: arc";
+	static public final String		G_WBUF_ARC	= "Buffer: weighted arc";
+	static public final String		G_BUF_RECT	= "Buffer: rectangle";
+	static public final String		G_WBUF_RECT	= "Buffer: weighted rectangle";
+
+	static private final Map<Integer, String>	GROUP = group ();
+
+	static private Map<Integer, String> group ()
+	{
+		Map<Integer, String>	m = new LinkedHashMap<Integer, String> ();
+
+		m.put (Integer.valueOf (FusionDesc.G_MIN), G_MIN);
+		m.put (Integer.valueOf (FusionDesc.G_WEIGHT), G_WEIGHT);
+		m.put (Integer.valueOf (FusionDesc.G_BWEIGHT), G_BWEIGHT);
+		m.put (Integer.valueOf (FusionDesc.G_BUF_ARC), G_BUF_ARC);
+		m.put (Integer.valueOf (FusionDesc.G_WBUF_ARC), G_WBUF_ARC);
+		m.put (Integer.valueOf (FusionDesc.G_BUF_RECT), G_BUF_RECT);
+		m.put (Integer.valueOf (FusionDesc.G_WBUF_RECT), G_WBUF_RECT);
+		return m;
+	}
+
+	/** The ways a sensor of an area can be worked out, by name and in the order they are offered. */
+	static public List<String> groupNames ()					{ return new ArrayList<String> (GROUP.values ()); }
+
+	/** The name of one of them, or the number itself when it is not one the fusion knows. */
+	static public String groupName (int mode)
+	{
+		String	name = GROUP.get (Integer.valueOf (mode));
+
+		return (name != null) ? name : String.valueOf (mode);
+	}
+
+	/** The way a name stands for, or what the text says when it names none. */
+	static public int groupMode (String name)
+	{
+		if (name != null)
+			for (Map.Entry<Integer, String> e : GROUP.entrySet ())
+				if (e.getValue ().equalsIgnoreCase (name.trim ()))		return e.getKey ().intValue ();
+		try { return Integer.parseInt (name.trim ()); }	catch (Exception e)		{ return FusionDesc.G_MIN; }
+	}
+
 	/** The ways the fusion knows, by name and in the order they are offered. */
 	static public List<String> fusionNames ()					{ return new ArrayList<String> (FUSION.values ()); }
 

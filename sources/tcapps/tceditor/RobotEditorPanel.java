@@ -269,6 +269,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 					}
 					if (name.equals (RESOLUTION))		return resolutionEditor (propsModel.item);
 					if (name.equals (FUSION_MODE))		return fusionModeEditor ();
+					if (name.equals (GROUP_MODE) && (propsModel.item != null))
+						return groupModeEditor (propsModel.item.index);
 					if (name.equals (TEAM))				return new DefaultCellEditor (new JComboBox<String> (RobotDef.TEAMS));
 					if (name.equals (SCAN_MODE) && (propsModel.item != null))
 						return reductionEditor (propsModel.item.index);
@@ -1508,7 +1510,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 														  "steerable", MAX_STEER, MAX_TURN, "traction", MAX_RPM };
 		// a virtual sensor is read from the others, so it has no device and no step:
 		// where it sits and what it covers is all of it
-		case RobotItem.GROUP:		return new String[] { "rho", "theta", "height", "orientation", "elevation",
+		case RobotItem.GROUP:		return new String[] { GROUP_MODE, "rho", "theta", "height", "orientation", "elevation",
 														  "range max", "range min", "cone" };
 		case RobotItem.FUSED:		return new String[] { "rho", "theta", "height", "orientation", "elevation",
 														  "range max", "range min", "cone" };
@@ -1652,6 +1654,7 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 			if (it.index >= canvas.sectors (it.kind).size ())		break;
 			RobotDef.Sector		g = canvas.sectors (it.kind).get (it.index);
+			if (name.equals (GROUP_MODE) && (g instanceof RobotDef.Group))		return SimModes.groupName (((RobotDef.Group) g).mode);
 			if (name.equals ("rho"))			return RobotDef.fmt (g.rho);
 			if (name.equals ("theta"))			return RobotDef.fmt (g.theta);
 			if (name.equals ("height"))			return RobotDef.fmt (g.height);
@@ -1779,6 +1782,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	static public final String		SIM_ERROR				= "simulation error";
 	/** The name the editor gives to how the fusion works the fused sensors out. */
 	static public final String		FUSION_MODE				= "fusion mode";
+	/** How a sensor of an area is worked out (its groupmode). */
+	static public final String		GROUP_MODE				= "group mode";
 	/** How many frames a camera takes in a second. */
 	static public final String		FRAME_RATE				= "frame rate";
 	/** How large a frame of a camera is, in pixels. */
@@ -1950,6 +1955,23 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 	 * same way into the one reading of a fused sensor. What a description says now
 	 * comes first when it is not one of the ways the fusion knows.
 	 */
+	/**
+	 * The chooser of how a sensor of an area is worked out: every way the fusion
+	 * knows, and whatever the description says now when it is not one of them.
+	 */
+	private javax.swing.table.TableCellEditor groupModeEditor (int index)
+	{
+		List<String>		names = SimModes.groupNames ();
+		String				current = SimModes.groupName ((index < robot.groups.size ()) ? robot.groups.get (index).mode : 0);
+		JComboBox<String>	cb;
+
+		if (!names.contains (current))		names.add (0, current);
+		cb		= new JComboBox<String> (names.toArray (new String[0]));
+		cb.setSelectedItem (current);
+		cb.setToolTipText ("How the sensor of the area is worked out: from the fused sensors its list names, or from what falls in its arc or rectangle");
+		return new DefaultCellEditor (cb);
+	}
+
 	private javax.swing.table.TableCellEditor fusionModeEditor ()
 	{
 		List<String>		names = SimModes.fusionNames ();
@@ -2152,7 +2174,8 @@ public class RobotEditorPanel extends JPanel implements RobotCanvas.Listener
 		{
 			if (it.index >= canvas.sectors (it.kind).size ())		break;
 			RobotDef.Sector		g = canvas.sectors (it.kind).get (it.index);
-			if (name.equals ("rho"))				g.rho = num (value);
+			if (name.equals (GROUP_MODE) && (g instanceof RobotDef.Group))		((RobotDef.Group) g).mode = SimModes.groupMode (value);
+			else if (name.equals ("rho"))			g.rho = num (value);
 			else if (name.equals ("theta"))			g.theta = num (value);
 			else if (name.equals ("height"))		g.height = num (value);
 			else if (name.equals ("orientation"))	g.orientation = num (value);
