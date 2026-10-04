@@ -128,6 +128,7 @@ public class WorldView3DWindow extends JFrame
 	protected JCheckBoxMenuItem		startsItem, labelsItem;	// ... and their items, which follow setOverlays
 	protected boolean				showFOVs		= true;	// View menu: what the cameras of the robots see
 	protected boolean				showProfiles	= false;	// View menu: what the sensors of the robots measure now
+	protected boolean				showVirtuals	= false;	// View menu: what their virtual sensors read now
 	protected java.util.List<FloorName>	labels = new java.util.ArrayList<FloorName> ();	// the names of the live objects, one per object (null for an unnamed one)
 	protected World3D				world3d;				// the world as drawn now (its names take the size of letter of the scene)
 	protected double				nameScale		= 1.0;	// the size of letter of every name, set by the robots (see FloorName.fit)
@@ -297,6 +298,10 @@ public class WorldView3DWindow extends JFrame
 		view.add (check ("Show sensor profiles", showProfiles, new Runnable ()
 		{
 			public void run ()		{ showProfiles = !showProfiles;	for (Robot3D r : robots)	r.showProfiles (showProfiles); }
+		}));
+		view.add (check ("Show virtual profiles", showVirtuals, new Runnable ()
+		{
+			public void run ()		{ showVirtuals = !showVirtuals;	for (Robot3D r : robots)	r.showVirtualProfiles (showVirtuals); }
 		}));
 		mb.add (view);
 		return mb;
@@ -897,6 +902,9 @@ public class WorldView3DWindow extends JFrame
 		r3d.showCameras (showFOVs);
 		r3d.setWorld (world);										// the reflectors its beacon scanners look for
 		r3d.showProfiles (showProfiles);
+		if ((sdesc != null) && (sdesc.props != null))				// its virtual sensors, as its perception works them out
+			r3d.setFusion (new tclib.utils.fusion.FusionDesc (sdesc.props));
+		r3d.showVirtualProfiles (showVirtuals);
 		r3d.showName (showNames);
 		robots.add (r3d);
 		articulated.add (art);

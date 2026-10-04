@@ -342,6 +342,75 @@ public class Fusion extends Object
 		}		
 	}
 	
+	/**
+	 * Puts what the range sensors read on this cycle in a range buffer, which is
+	 * what the sensors of an area (the groups of the buffer modes) are worked out
+	 * of: the sonars and the infrared through the fused sensors when there are
+	 * any, and one by one when there are none (an infrared only when it sees
+	 * something); the laser range finders through the reduced scans when there
+	 * are any, and ray by ray, every laser, when there is none. Only what was
+	 * read on this cycle goes in. The signal-level fusion must have been done
+	 * ({@link #fuse_signal}).
+	 */
+	public void fill (LPORangeBuffer rb, RobotData data)
+	{
+		int			i, k;
+		double		delta, alpha;
+
+		if (fdesc.MAXVIRTU > 0)
+		{
+			for (i = 0; i < fdesc.MAXVIRTU; i++)
+				if (virtuals_flg[i])
+					rb.add_range (fdesc.virtufeat[i], i, virtuals[i]);
+		}
+		else
+		{
+			for (i = 0; i < rdesc.MAXSONAR; i++)
+				if (data.sonars_flg[i])
+					rb.add_range (rdesc.sonfeat[i], i, data.sonars[i]);
+			for (i = 0; i < rdesc.MAXIR; i++)
+				if (data.irs_flg[i])
+					rb.add_range (rdesc.irfeat[i], rdesc.MAXSONAR + i, (data.irs[i] < 0.9 * rdesc.RANGEIR) ? data.irs[i] : 0.0);
+		}
+
+		if (fdesc.MAXSCAN > 0)
+		{
+			int		id = 0;
+
+			for (k = 0; k < fdesc.MAXSCAN; id += fdesc.scanrays[k], k++)
+			{
+				int		n = fdesc.scanrays[k];
+
+				if (!allscans_flg[k])		continue;
+				delta	= (n > 1) ? fdesc.scancones[k] / (double) (n - 1) : 0.0;
+				alpha	= -fdesc.scancones[k] / 2.0;
+				for (i = 0; i < n; i++, alpha += delta)
+					rb.add_range (fdesc.scanfeats[k], id + i, allscans[k][i], alpha);
+			}
+		}
+		else if ((rdesc.RAYLRF > 0) && (data.lrfs != null))
+		{
+			delta	= (rdesc.RAYLRF > 1) ? rdesc.CONELRF / (double) (rdesc.RAYLRF - 1) : 0.0;
+			for (k = 0; k < Math.min (rdesc.MAXLRF, data.lrfs.length); k++)
+			{
+				if ((data.lrfs[k] == null) || (data.lrfs_flg == null) || !data.lrfs_flg[k] || (rdesc.lrffeat[k] == null))		continue;
+				alpha	= -rdesc.CONELRF / 2.0;
+				for (i = 0; i < Math.min (rdesc.RAYLRF, data.lrfs[k].length); i++, alpha += delta)
+					rb.add_range (rdesc.lrffeat[k], k * rdesc.RAYLRF + i, data.lrfs[k][i], alpha);
+			}
+		}
+	}
+
+	/** How many readings one cycle puts in a range buffer at most ({@link #fill}). */
+	public int readings ()
+	{
+		int		n = (fdesc.MAXVIRTU > 0) ? fdesc.MAXVIRTU : rdesc.MAXSONAR + rdesc.MAXIR;
+
+		if (fdesc.MAXSCAN > 0)		for (int k = 0; k < fdesc.MAXSCAN; k++)		n += fdesc.scanrays[k];
+		else						n += rdesc.MAXLRF * rdesc.RAYLRF;
+		return n;
+	}
+
 	public void fuse_feature (LPS lps, RobotData data)
 	{
 		int			i;

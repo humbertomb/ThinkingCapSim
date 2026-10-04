@@ -44,9 +44,13 @@ public class SimulatorDesc
 	public float				V3DCOLORG;					// Green level of the robot 3D representation
 	public float				V3DCOLORB;					// Blue level of the robot 3D representation
 
+	/** The properties of the robot it was made from (what the views work the virtual sensors out of). */
+	public Properties			props;
+
 	/* Constructors */
 	public SimulatorDesc (Properties props)
 	{
+		this.props	= props;
 		// Set default properties for simulated robot and environment
 		try { SENSIBSON	 	= Double.valueOf (props.getProperty ("SENSIBSON")).doubleValue (); } catch (Exception e) 				{ SENSIBSON			= 0.85; }
 		try { ERRORSON	 	= Double.valueOf (props.getProperty ("ERRORSON")).doubleValue (); } catch (Exception e) 				{ ERRORSON			= 0.05; }

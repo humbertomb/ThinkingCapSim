@@ -31,6 +31,8 @@ public class Robot3D extends BranchGroup
 	protected Camera3D				cameras;			// what its cameras see, turned as they are (null: it has none)
 	protected Profiles3D			profiles;			// what its sensors measure now, where they measure it
 	protected boolean				profilesShown	= false;
+	protected VirtualProfiles3D		virtuals;			// what its virtual sensors read now (null: it has none, or no fusion was given)
+	protected boolean				virtualsShown	= false;
 
 	protected boolean				camerasShown = true;	// whether the prisms of the cameras are on the scene
 	protected boolean 				sonarActive = false;
@@ -181,6 +183,7 @@ public class Robot3D extends BranchGroup
 		if (laserActive)		lasers.move (data.lrfs, pt, a);
 		if (cameras != null)	cameras.move (pt, a, pans, tilts);
 		if (profilesShown)		profiles.update (data, pt.x (), pt.y (), a);
+		if (virtualsShown && (virtuals != null))		virtuals.update (data, pt.x (), pt.y (), a);
 	}	
 
 	/** Whether what the sensors measure now (the profile of each, see Profiles3D) is drawn. */
@@ -190,6 +193,35 @@ public class Robot3D extends BranchGroup
 		profilesShown	= show;
 		if (show)		addChild (profiles);
 		else			profiles.detach ();
+	}
+
+	/**
+	 * The fusion of the robot (its virtual sensors, as its description says them),
+	 * which what its virtual sensors read is worked out with (see VirtualProfiles3D).
+	 */
+	public void setFusion (tclib.utils.fusion.FusionDesc fdesc)
+	{
+		boolean		shown = virtualsShown;
+
+		showVirtualProfiles (false);
+		virtuals	= null;
+		if (fdesc != null)
+		{
+			virtuals	= new VirtualProfiles3D (profiles.rdesc, fdesc);		// the description the real profiles are drawn with
+			if (!virtuals.any ())		virtuals = null;
+		}
+		showVirtualProfiles (shown);
+	}
+
+	/** Whether what the virtual sensors read now (fused sensors, reduced scans, sensors of an area) is drawn. */
+	public void showVirtualProfiles (boolean show)
+	{
+		boolean		was = virtualsShown && (virtuals != null) && (virtuals.getParent () != null);
+
+		virtualsShown	= show;
+		if (virtuals == null)			return;
+		if (show && !was)				addChild (virtuals);
+		else if (!show && was)			virtuals.detach ();
 	}
 
 	/** The world the reflectors the laser beacon scanners look for are in. */
