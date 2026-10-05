@@ -24,7 +24,7 @@ public class ItemReferee extends Item implements Serializable
 	public enum GameStates			{ INITIAL, READY, SET, PLAYING, PENALIZED, FINISHED }
 
 	/** What happened: a change of state, or a decision of the referee. */
-	public enum Events				{ STATE, KICKOFF, GOAL, KICKOFF_SHOT, BALL_OUT, ILLEGAL_DEFENDER, TIME_UP }
+	public enum Events				{ STATE, KICKOFF, GOAL, KICKOFF_SHOT, BALL_OUT, ILLEGAL_DEFENDER, TIME_UP, GAME_STUCK }
 
 	public GameStates				state	= GameStates.INITIAL;
 	public int						player	= -1;				// the robot the state or the decision is about (its number), -1 for all

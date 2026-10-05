@@ -49,6 +49,11 @@ import tc.shared.linda.Tuple;
  * <li>A robot wholly inside the area of a net (AREA1, AREA2) for more than
  *     {@link #AREA_TIME} is a fault unless it is the one robot that defends
  *     that net, the keeper of the team that owns it.
+ * <li>A game that goes nowhere -- every robot in it within {@link #STUCK_DIST}
+ *     of where it was for {@link #STUCK_TIME}, pushing against each other or
+ *     caught on something -- is stuck: the game is stopped (READY) and the
+ *     robots put back at their start positions, clear of each other, with the
+ *     ball at the centre, for a kick-off.
  * <li>A robot that is not in its own half of the field when the game is to be
  *     SET (its centre on the other side of the halfway line) is put back in its
  *     half, where it was across the field and {@link #OFFSIDE_BACK} of the way
@@ -135,6 +140,15 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	/** How the search for such a place steps (part of the diameter of the robot), and how many steps out it goes at most. */
 	static public final double		SPACING_STEP	= 0.25;
 	static public final int			SPACING_RINGS	= 60;
+	/**
+	 * The game is stuck when every robot in it (the penalised ones are out of it)
+	 * has stayed within {@link #STUCK_DIST} of where it was for {@link #STUCK_TIME}
+	 * while PLAYING: they are pushing against each other, or caught on something,
+	 * and the play goes nowhere. The game is stopped and the robots put back at
+	 * their start positions, for a kick-off.
+	 */
+	static public final double		STUCK_DIST	= 0.15;
+	static public final long		STUCK_TIME	= 15000;
 	/** How long a penalised robot is out of the game [ms] (the standard penalty of the 2007 rules). */
 	static public final long		PENALTY_TIME	= 30000;
 
@@ -160,6 +174,8 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	static public final long		AREA_TIME	= 3000;
 	protected long[]				penalty		= new long[Simulator.MAX_ROBOTS];		// when the penalty of each robot ends [ms of the system], 0 for none
 	protected double[][]			still		= new double[Simulator.MAX_ROBOTS][];	// where each robot has been standing in READY {x, y, since [ms of the system]}, null: not yet looked at
+	protected double[][]			stuck		= new double[Simulator.MAX_ROBOTS][];	// where each robot has been in PLAYING without getting anywhere {x, y, since}, null: not yet looked at
+	protected boolean[]				pending		= new boolean[Simulator.MAX_ROBOTS];		// robots about to be put somewhere else: where they are now is no matter
 
 	protected SoccerRefereeWindow	win;
 
@@ -297,7 +313,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		case READY:			pause ();		java.util.Arrays.fill (still, null);		break;		// where they stand is looked at afresh
 		case INITIAL:
 		case FINISHED:		pause ();		break;
-		case PLAYING:		if (running)	super.resume ();		break;
+		case PLAYING:		if (running)	super.resume ();		java.util.Arrays.fill (stuck, null);		break;		// how they get on is looked at afresh
 		default:
 		}
 		decide (Events.STATE, -1, null, player, "State " + s.name ());
@@ -363,6 +379,69 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 			if (u * goalSide (teamOf[r], field) < 0.0)		all = false;	// not in its own half
 		}
 		return all && (seen > 0);
+	}
+
+	/**
+	 * Whether the game is stuck: every robot in it (not penalised) has been
+	 * within {@link #STUCK_DIST} of where it was for {@link #STUCK_TIME} -- looked
+	 * at against where each one was when it last got anywhere, every time this is
+	 * asked.
+	 */
+	protected boolean stuck ()
+	{
+		Simulator	s = sim;
+		long		now = System.currentTimeMillis ();
+		boolean		all = true;
+		int			seen = 0;
+
+		if (s == null)								return false;
+		for (int r = 0; r < s.numrobots; r++)
+		{
+			if (s.MODEL[r] == null)					continue;
+			if (penalty[r] != 0)					{ stuck[r] = null;	continue; }		// out of the game: not playing, so not stuck
+
+			double		x = s.MODEL[r].real_x, y = s.MODEL[r].real_y;
+			double[]	at = stuck[r];
+
+			seen++;
+			if ((at == null) || (Math.hypot (x - at[0], y - at[1]) > STUCK_DIST))
+				stuck[r]	= at = new double[] { x, y, now };			// it got somewhere: it is looked at from here on
+			if (now - at[2] < STUCK_TIME)			all = false;
+		}
+		return all && (seen > 0);
+	}
+
+	/**
+	 * The game is stuck: it is stopped (READY, the clock does not run) and the
+	 * robots are put back at their start positions -- clear of each other, see
+	 * {@link #clearOf} -- with the ball at the centre, for a kick-off: SET and
+	 * PLAYING follow as after a goal. A penalty is over with it, as with every
+	 * kick-off.
+	 */
+	protected void gameStuck ()
+	{
+		Simulator	s = sim;
+
+		forget ();
+		decide (Events.GAME_STUCK, -1, null, -1, "GAME STUCK: no robot got anywhere for " + (STUCK_TIME / 1000)
+				+ " s, robots back to their start positions and kick-off");
+		java.util.Arrays.fill (pending, true);						// where they are now is where they are leaving
+		for (int r = 0; r < s.numrobots; r++)
+		{
+			double[]	p = s.startPose (r);
+
+			pending[r]	= false;
+			if (s.MODEL[r] == null)						continue;
+			if (p == null)								p = s.worldStart (r);
+			if (p == null)								continue;
+
+			double[]	at = clearOf (r, p[0], p[1], null);
+
+			s.placeRobot (r, at[0], at[1], p[2]);
+		}
+		java.util.Arrays.fill (pending, false);
+		centreBall ();
+		enter (GameStates.READY, -1);
 	}
 
 	/** The clock ran out: the game is over. */
@@ -432,6 +511,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 		penalties ();
 		robots ();
+		if (stuck ())								{ gameStuck ();		return; }
 
 		SimObject	ball = ball ();
 		WMZone		field = zone (fieldName);
@@ -692,6 +772,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		case STATE:				return ((st == GameStates.PLAYING) && (player < 0)) ? SoccerSounds.START : null;
 		case GOAL:				return SoccerSounds.GOAL;
 		case ILLEGAL_DEFENDER:
+		case GAME_STUCK:
 		case BALL_OUT:
 		case KICKOFF_SHOT:		return SoccerSounds.FAULT;
 		case TIME_UP:			return SoccerSounds.END;
@@ -756,7 +837,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 		for (int j = 0; j < s.numrobots; j++)
 		{
-			if ((j == r) || (s.MODEL[j] == null))		continue;
+			if ((j == r) || (s.MODEL[j] == null) || pending[j])		continue;
 			if (Math.hypot (s.MODEL[j].real_x - x, s.MODEL[j].real_y - y) <= SPACING * 2.0 * Math.max (radius (r), radius (j)))
 				return false;
 		}

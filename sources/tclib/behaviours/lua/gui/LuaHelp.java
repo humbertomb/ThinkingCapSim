@@ -175,7 +175,7 @@ public class LuaHelp
 					+ "<span class=\"mono\">chaos.REFEREE_INITIAL</span>, <span class=\"mono\">REFEREE_READY</span>, <span class=\"mono\">REFEREE_SET</span>, "
 					+ "<span class=\"mono\">REFEREE_PLAYING</span>, <span class=\"mono\">REFEREE_PENALIZED</span>, <span class=\"mono\">REFEREE_FINISHED</span> "
 					+ "(and <span class=\"mono\">name</span>, the same as text); <span class=\"mono\">player</span>, the robot it is about (-1 for all); "
-					+ "<span class=\"mono\">event</span> (STATE, KICKOFF, GOAL, KICKOFF_SHOT, BALL_OUT, ILLEGAL_DEFENDER, TIME_UP), "
+					+ "<span class=\"mono\">event</span> (STATE, KICKOFF, GOAL, KICKOFF_SHOT, BALL_OUT, ILLEGAL_DEFENDER, TIME_UP, GAME_STUCK), "
 					+ "<span class=\"mono\">team</span> and <span class=\"mono\">robot</span> it concerns, <span class=\"mono\">text</span>, "
 					+ "<span class=\"mono\">score1</span>, <span class=\"mono\">score2</span> and <span class=\"mono\">time</span> (ms of match). "
 					+ "REFEREE_INITIAL while no referee has spoken." },
@@ -457,7 +457,7 @@ public class LuaHelp
 					+ "whatever is said of the other players in the meantime." },
 		{ "name", "string", "The same state, by its name: INITIAL, READY, SET, PLAYING, PENALIZED, FINISHED." },
 		{ "player", "number", "The robot the state is about (its number in the simulation), -1 for all of them." },
-		{ "event", "string", "The last thing the referee decided: STATE (a change of state), KICKOFF, GOAL, KICKOFF_SHOT, BALL_OUT, ILLEGAL_DEFENDER, TIME_UP; empty while it has said nothing." },
+		{ "event", "string", "The last thing the referee decided: STATE (a change of state), KICKOFF, GOAL, KICKOFF_SHOT, BALL_OUT, ILLEGAL_DEFENDER, TIME_UP, GAME_STUCK; empty while it has said nothing." },
 		{ "team", "number", "The team the decision concerns (0 the red, 1 the blue), -1 for none." },
 		{ "robot", "string", "The robot named in the decision (the one that touched the ball last, the one in the area), with its team; empty for none." },
 		{ "text", "string", "What the referee said, word for word, as the ticker of its window shows it." },
