@@ -98,6 +98,7 @@ public class SimCamera extends Scene3D
 	protected ImageComponent2D		buffer;
 
 	protected List<Robot3D>			bodies	= new ArrayList<Robot3D> ();		// the other robots, in the order the simulator has them
+	protected List<tcapps.tceditor.RobotBody>	shapes	= new ArrayList<tcapps.tceditor.RobotBody> ();	// and what each is drawn with (articulated, and what walks it, or rigid)
 	protected List<Object3D>		things	= new ArrayList<Object3D> ();		// the objects the world moves about
 	protected BranchGroup			live;						// what moves hangs from here
 
@@ -280,7 +281,16 @@ public class SimCamera extends Scene3D
 		addThings ();
 	}
 
-	/** A body for every robot of the simulation but the one that carries the camera. */
+	/**
+	 * A body for every robot of the simulation but the one that carries the
+	 * camera, as the 3D world of the simulator draws it ({@link tcapps.tceditor.RobotBody}):
+	 * articulated (an AIBO), its 3D model, or a box the size of it. What the
+	 * camera sees of it is the robot itself: not the prisms of its cameras nor
+	 * its name, which are drawn for whoever watches the simulation.
+	 *
+	 * A robot whose description is not there yet (the simulator is still
+	 * bringing it up) is left for the next frame.
+	 */
 	protected void addRobots ()
 	{
 		while (bodies.size () < simul.numrobots)
@@ -289,21 +299,19 @@ public class SimCamera extends Scene3D
 			RobotDesc		rdesc = simul.RDESC[i];
 			SimulatorDesc	sdesc = simul.SDESC[i];
 			Robot3D			body = null;
+			tcapps.tceditor.RobotBody	rb = null;
 
-			if ((i != robot) && (rdesc != null))
+			if ((i != robot) && ((rdesc == null) || (sdesc == null)))		return;		// not there yet
+			if (i != robot)
 			{
-				TransformGroup	shape = ((sdesc != null) && (sdesc.V3DFILE != null)) ? getCachedObject (sdesc.V3DFILE, null) : null;
-				TransformGroup	lift = ((sdesc != null) && (sdesc.V3DLIFT != null)) ? getCachedObject (sdesc.V3DLIFT, null) : null;
-
-				if (shape != null)
-				{
-					shape.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
-					if (lift != null)		lift.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
-					body	= new Robot3D (rdesc, shape, lift, new Point3 (0.0, 0.0, 0.0), 0.0, 0.0, null);
-					live.addChild (body);
-				}
+				rb		= tcapps.tceditor.RobotBody.build (this, rdesc, sdesc);
+				body	= new Robot3D (rdesc, rb.body, rb.lift, new Point3 (0.0, 0.0, 0.0), 0.0, 0.0, null);
+				body.showCameras (false);
+				body.showName (false);
+				live.addChild (body);
 			}
-			bodies.add (body);											// null: the one with the camera, or one with no shape
+			bodies.add (body);											// null: the one with the camera
+			shapes.add (rb);
 		}
 	}
 
@@ -416,7 +424,9 @@ public class SimCamera extends Scene3D
 			RobotData		d = (simul.lastRobotData != null) ? simul.lastRobotData[i] : null;
 
 			if ((body == null) || (d == null))		continue;
-			body.move (d, new Point3 (d.real_x, d.real_y, 0.0), d.fork, d.real_a);
+			body.move (d, new Point3 (d.real_x, d.real_y, 0.0), d.fork, d.real_a, simul.cameraPans (i), simul.cameraTilts (i));
+			// an articulated one walks as it goes, and turns its head where it looks
+			shapes.get (i).step (simul.cameraPans (i), simul.cameraTilts (i), simul.commands (i));
 		}
 	}
 

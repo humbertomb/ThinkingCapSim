@@ -117,9 +117,7 @@ public class WorldView3DWindow extends JFrame
 	protected BranchGroup			selBranch;			// detachable: selection highlight
 	protected BranchGroup			robotsBranch;		// live: simulated robots (Robot3D children)
 	protected java.util.List<Robot3D>	robots = new java.util.ArrayList<Robot3D> ();
-	protected java.util.List<Articulated3D>	articulated = new java.util.ArrayList<Articulated3D> ();	// the articulated body of each robot, null for a rigid one
-	protected java.util.List<tc.vrobot.articulated.WalkingModel>	walkers = new java.util.ArrayList<tc.vrobot.articulated.WalkingModel> ();	// what moves its joints, null for none
-	protected java.util.List<long[]>	stepped = new java.util.ArrayList<long[]> ();	// when each was last moved on [ns], for the time step of its walk
+	protected java.util.List<RobotBody>	bodies = new java.util.ArrayList<RobotBody> ();	// the body of each robot (articulated, and what walks it, or rigid)
 	protected BranchGroup			objectsBranch;		// live: simulated animated objects (one TransformGroup each)
 	protected java.util.List<TransformGroup>	objects = new java.util.ArrayList<TransformGroup> ();
 	protected boolean				showAnimated	= true;	// draw the world's animated objects at their initial pose (off while simulating)
@@ -879,52 +877,10 @@ public class WorldView3DWindow extends JFrame
 			robotsBranch.setCapability (BranchGroup.ALLOW_CHILDREN_WRITE);
 			scene.addBranch (robotsBranch);
 		}
-		// an articulated robot: its kinematic model in the place of the 3D model, and
-		// its walking model to move the joints as it goes (a robot with a .kine and no
-		// walking model stands articulated at rest)
-		Articulated3D	art = null;
-		tc.vrobot.articulated.WalkingModel	walker = null;
+		// its body as the description says: articulated, its 3D model or a box
+		RobotBody		rb = RobotBody.build (scene, rdesc, sdesc);
 
-		if ((sdesc.KINEFILE != null) && (sdesc.KINEFILE.trim ().length () > 0))
-		{
-			try
-			{
-				tc.vrobot.articulated.KineModel	km = tc.vrobot.articulated.KineJson.read (new File (sdesc.KINEFILE.trim ()));
-
-				art		= new Articulated3D (km, sdesc.V3DPARTS, (sdesc.V3DTEAM != null) ? sdesc.V3DTEAM.toLowerCase () : null);
-				walker	= tc.vrobot.articulated.WalkingModel.create (sdesc.WALKMODEL, km);
-				if (walker != null)		{ walker.stand ();	art.update (); }
-
-				double[]	st = ShapeLines.standing (km, walker, sdesc.V3DPARTS);			// pitched onto its feet, the lowest of them on the floor
-
-				art.move (0.0, 0.0, st[1], 0.0, st[0]);
-			}
-			catch (Exception e)
-			{
-				System.out.println ("  [WorldView3D] Cannot read the kinematic model " + sdesc.KINEFILE + ": " + e);
-				art	= null;
-			}
-		}
-
-		TransformGroup	body = (art != null) ? null : ((sdesc.V3DFILE != null) ? scene.getCachedObject (sdesc.V3DFILE, null) : null);
-		TransformGroup	lift = (art != null) ? null : ((sdesc.V3DLIFT != null) ? scene.getCachedObject (sdesc.V3DLIFT, null) : null);
-		if (art != null)
-		{
-			body	= new TransformGroup ();
-			body.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
-			body.addChild (art);
-		}
-		else if (body == null)
-		{
-			// no 3D model: a box the size of the robot
-			body = new TransformGroup ();
-			double	r = Math.max (0.1, rdesc.RADIUS);
-			body.addChild (new Box ((float) r, (float) r, (float) (r / 2.0), matAppearance (new Color3f (0.2f, 0.4f, 0.9f), 0f)));
-			body.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
-		}
-		body.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
-		if (lift != null)		lift.setCapability (TransformGroup.ALLOW_TRANSFORM_WRITE);
-		Robot3D		r3d = new Robot3D (rdesc, body, lift, new Point3 (x, y, 0.0), 0.0, a, name);
+		Robot3D		r3d = new Robot3D (rdesc, rb.body, rb.lift, new Point3 (x, y, 0.0), 0.0, a, name);
 		r3d.setCameraBounds (wallBounds ());						// what its cameras see stops at the outer walls
 		r3d.showCameras (showFOVs);
 		r3d.showProfiles (showProfiles);
@@ -933,9 +889,7 @@ public class WorldView3DWindow extends JFrame
 		r3d.showVirtualProfiles (showVirtuals);
 		r3d.showName (showNames);
 		robots.add (r3d);
-		articulated.add (art);
-		walkers.add (walker);
-		stepped.add (new long[] { 0L });
+		bodies.add (rb);
 		updateNameScale ();											// another robot may want the letters smaller
 		robotsBranch.addChild (r3d);
 		return robots.size () - 1;
@@ -964,21 +918,7 @@ public class WorldView3DWindow extends JFrame
 		if ((index < 0) || (index >= robots.size ()))		return;
 		robots.get (index).move (data, new Point3 (data.real_x, data.real_y, 0.0), data.fork, data.real_a, pans, tilts);
 
-		Articulated3D	art = articulated.get (index);
-		tc.vrobot.articulated.WalkingModel	walker = walkers.get (index);
-
-		if ((art == null) || (walker == null))		return;
-
-		long[]	last = stepped.get (index);
-		long	now = System.nanoTime ();
-		double	dt = (last[0] == 0L) ? 0.04 : Math.min (0.2, (now - last[0]) / 1e9);
-
-		last[0]	= now;
-		if (vel != null)		walker.setVelocities (vel[0], vel[1], vel[2]);
-		if ((pans != null) && (pans.length > 0) && (tilts != null) && (tilts.length > 0) && Double.isFinite (pans[0]) && Double.isFinite (tilts[0]))
-			walker.setHead (pans[0], tilts[0]);
-		walker.step (dt);
-		art.update ();
+		bodies.get (index).step (pans, tilts, vel);
 	}
 
 	public void clearRobots ()
@@ -986,9 +926,7 @@ public class WorldView3DWindow extends JFrame
 		if (robotsBranch != null)		robotsBranch.detach ();
 		robotsBranch = null;
 		robots.clear ();
-		articulated.clear ();
-		walkers.clear ();
-		stepped.clear ();
+		bodies.clear ();
 		updateNameScale ();											// no robot to set the letters: as written
 	}
 
