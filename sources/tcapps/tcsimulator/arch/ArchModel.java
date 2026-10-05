@@ -747,10 +747,38 @@ public class ArchModel
 		return cls;
 	}
 
-	/** The symbols the class of a block, or one of its ancestors, names. */
+	/**
+	 * The symbols the class of a block, or one of its ancestors, names. A router
+	 * registers what it routes when it is set up ({@link tc.modules.LindaRouter#initialise}):
+	 * one that sets itself up on its own (SoccerLindaRouter) routes only what it
+	 * registers, and the ancestors above it are not read; one that does not
+	 * (IForkLindaRouter) adds what it names to what they route.
+	 */
 	private java.util.Map<String, List<String>> named (Block b)
 	{
-		return tcapps.tceditor.DriverClasses.symbolsOf (classOf (b), symbols ());
+		java.util.Map<String, List<String>>	all = tcapps.tceditor.DriverClasses.symbolsOf (classOf (b), symbols ());
+		java.util.Map<String, List<String>>	own;
+
+		if ((b == null) || (b.kind != ROUTER))		return all;
+		own		= new java.util.LinkedHashMap<String, List<String>> ();
+		for (java.util.Map.Entry<String, List<String>> e : all.entrySet ())
+		{
+			own.put (e.getKey (), e.getValue ());
+			if (!e.getKey ().equals (ROUTER_BASE) && setsUp (e.getKey ()))		break;
+		}
+		return own;
+	}
+
+	/** Whether a class of router declares how it is set up, replacing what its ancestors register. */
+	static private boolean setsUp (String cls)
+	{
+		try
+		{
+			ClassLoader	cl = Thread.currentThread ().getContextClassLoader ();
+			Class.forName (cls, false, (cl != null) ? cl : ArchModel.class.getClassLoader ())
+				.getDeclaredMethod ("initialise", tc.shared.linda.LindaListener.class);
+			return true;
+		} catch (Throwable e)		{ return false; }
 	}
 
 	/**
