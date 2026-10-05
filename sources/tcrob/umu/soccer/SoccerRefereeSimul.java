@@ -126,6 +126,15 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	static public final int			PENALTY_START	= 4;
 	/** How far back into its half a robot out of it on SET is put: this part of the way from the halfway line to its end line. */
 	static public final double		OFFSIDE_BACK	= 3.0 / 5.0;
+	/**
+	 * How far apart the referee puts two robots, centre to centre: this many
+	 * times the diameter of the larger of them. Where a robot is to be put is
+	 * moved, the least it has to, until it is that far from every other one.
+	 */
+	static public final double		SPACING		= 1.5;
+	/** How the search for such a place steps (part of the diameter of the robot), and how many steps out it goes at most. */
+	static public final double		SPACING_STEP	= 0.25;
+	static public final int			SPACING_RINGS	= 60;
 	/** How long a penalised robot is out of the game [ms] (the standard penalty of the 2007 rules). */
 	static public final long		PENALTY_TIME	= 30000;
 
@@ -710,8 +719,78 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		double[]	p = (s != null) ? s.worldStart (r + PENALTY_START) : null;
 
 		if (p == null)					return false;
-		s.placeRobot (r, p[0], p[1], p[2]);
+		// clear of the others, and off the pitch as the point is
+		double		rr = radius (r);
+		boolean		off = !Boolean.TRUE.equals (touches (fieldName, p[0], p[1], rr));
+		double[]	at = clearOf (r, p[0], p[1], (px, py) -> !off || !Boolean.TRUE.equals (touches (fieldName, px, py, rr)));
+		s.placeRobot (r, at[0], at[1], p[2]);
 		return true;
+	}
+
+	/** The radius of a robot (m), as its description says (0 when it says none). */
+	protected double radius (int r)
+	{
+		Simulator	s = sim;
+
+		return ((s != null) && (s.RDESC[r] != null)) ? Math.max (0.0, s.RDESC[r].RADIUS) : 0.0;
+	}
+
+	/** Whether there is room for a robot at a place: inside the world, and touching none of its walls. */
+	protected boolean room (int r, double x, double y)
+	{
+		double		rr = radius (r);
+		double[]	b;
+
+		if (world == null)								return true;
+		b	= world.bounds ();
+		if ((x - rr < b[0]) || (y - rr < b[1]) || (x + rr > b[2]) || (y + rr > b[3]))		return false;
+		for (int i = 0; i < world.walls ().n (); i++)
+			if (world.walls ().at (i).edge.segDistance (x, y) <= rr)		return false;
+		return true;
+	}
+
+	/** Whether a robot put at a place would be far enough from every other one ({@link #SPACING}). */
+	protected boolean clear (int r, double x, double y)
+	{
+		Simulator	s = sim;
+
+		for (int j = 0; j < s.numrobots; j++)
+		{
+			if ((j == r) || (s.MODEL[j] == null))		continue;
+			if (Math.hypot (s.MODEL[j].real_x - x, s.MODEL[j].real_y - y) <= SPACING * 2.0 * Math.max (radius (r), radius (j)))
+				return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Where to put a robot that is to go to (x, y): there, when no other robot is
+	 * nearer to it than {@link #SPACING} times the diameter of the larger of the
+	 * two; and otherwise the nearest place that is so, looked for on rings
+	 * around it, and that is also somewhere it may be put (<code>ok</code>; null
+	 * for anywhere) and room for it inside the walls of the world ({@link #room}).
+	 * When there is no such place, (x, y) itself.
+	 */
+	protected double[] clearOf (int r, double x, double y, java.util.function.BiPredicate<Double, Double> ok)
+	{
+		double		step = SPACING_STEP * 2.0 * Math.max (radius (r), 0.05);
+
+		if (clear (r, x, y))							return new double[] { x, y };
+		for (int k = 1; k <= SPACING_RINGS; k++)
+		{
+			double		rho = k * step;
+			int			n = Math.max (8, (int) Math.ceil (2.0 * Math.PI * rho / step));
+
+			for (int i = 0; i < n; i++)
+			{
+				double		a = 2.0 * Math.PI * i / n;
+				double		px = x + rho * Math.cos (a), py = y + rho * Math.sin (a);
+
+				if (((ok == null) || ok.test (px, py)) && room (r, px, py) && clear (r, px, py))
+					return new double[] { px, py };
+			}
+		}
+		return new double[] { x, y };
 	}
 
 	/** The team of each robot not known yet, from where it is first seen (where it starts, before it moves). */
@@ -760,9 +839,17 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 			if (u * side >= 0.0)					continue;		// in its own half (or on the line)
 
 			double		nu = cu + side * OFFSIDE_BACK * halfU;
+			double		rr = radius (r);
 
 			if (along)		y = nu;
 			else			x = nu;
+			// clear of the others, and still in its half and in the field
+			double[]	at = clearOf (r, x, y, (px, py) ->
+							(((along ? py : px) - cu) * side >= rr)
+							&& (px - rr >= field.area.getMinX ()) && (px + rr <= field.area.getMaxX ())
+							&& (py - rr >= field.area.getMinY ()) && (py + rr <= field.area.getMaxY ()));
+			x	= at[0];
+			y	= at[1];
 			s.placeRobot (r, x, y, s.MODEL[r].real_a);
 			decide (Events.STATE, teamOf[r], name (r), r, "State PENALIZED for robot " + robot (r) + ": not in its half on SET, put back in it at ("
 					+ String.format (java.util.Locale.US, "%.2f, %.2f", x, y) + ") (back in the game with the SET)", GameStates.PENALIZED);
