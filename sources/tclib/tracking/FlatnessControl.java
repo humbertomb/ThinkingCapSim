@@ -5,7 +5,7 @@ import tclib.utils.pos.Path;
 import tclib.utils.pos.Position;
 import wucore.utils.math.Angles;
 
-public class FlatnessControl {
+public class FlatnessControl { 
 	
 	// These are constant values which should be in the initialisation
 	final protected double dthreshold = 0.15;	// Derivative threshold for avoiding singularities
