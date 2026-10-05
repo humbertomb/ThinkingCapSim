@@ -65,9 +65,11 @@ import tc.shared.linda.Tuple;
  * robot has left where it was. The robot that touched the ball last is named
  * in every decision about the ball.
  *
- * Which team a robot is on is said by name (ROBOTS1, ROBOTS2) or, failing
- * that, taken from the half of the field it is first seen in: the one with
- * the red net is the red team's.
+ * Which team a robot is on is said by name (ROBOTS1, ROBOTS2), or by its
+ * description (its team, V3DTEAM: RED or BLUE), or, failing both, taken from
+ * the half of the field it is first seen in: the one with the red net is the
+ * red team's. Everything about a robot goes by its team: the net and the area
+ * it defends, the half it belongs in, and where it serves a penalty.
  *
  * It runs the game as the game controller of the league does, through the
  * states of {@link GameStates}: INITIAL the moment it starts, and then, once the
@@ -127,8 +129,23 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	protected String[]				netNames	= new String[2];
 	protected String[]				areaNames	= new String[2];
 	protected String[]				teamNames	= new String[2];
-	/** How many start points past its own a penalised robot is sent to (START_1 -> START_5). */
+	/**
+	 * The start points of the world, by team: each team has a block of
+	 * {@link #TEAM_STARTS} of them, the blue team the first (START_1..START_7)
+	 * and the red one the next (START_8..START_14). In its block, the first ones
+	 * are where its robots start and, from {@link #PENALTY_START} on,
+	 * {@link #PENALTY_POINTS} where they serve their penalties: the n-th robot of
+	 * the team (in the order of the simulator) at the n-th of them, and round
+	 * again if there are more robots than points. A world with no block for the
+	 * red team has its penalty points where the ones of the blue team would be
+	 * with the field turned half round.
+	 */
+	static public final int			TEAM_STARTS		= 7;
 	static public final int			PENALTY_START	= 4;
+	static public final int			PENALTY_POINTS	= 3;
+	/** The teams, as the referee numbers them: the red one owns Net1, the blue one Net2. */
+	static public final int			RED				= 0;
+	static public final int			BLUE			= 1;
 	/** How far back into its half a robot out of it on SET is put: this part of the way from the halfway line to its end line. */
 	static public final double		OFFSIDE_BACK	= 3.0 / 5.0;
 	/**
@@ -781,31 +798,71 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	}
 
 	/**
-	 * A robot penalised is taken off the pitch: to the start point of the world
-	 * {@link #PENALTY_START} places past its own (the robot that starts at START_1
-	 * is put on START_5), standing as that point says. What was done, for the
-	 * message of the fault; nothing when the world has no such point.
+	 * A robot penalised is taken off the pitch: to the penalty point of its team
+	 * that falls to it ({@link #penaltyPoint}; the first blue robot to START_5,
+	 * the first red one to START_12), standing as that point says, and clear of
+	 * the others. What was done, for the message of the fault; nothing when the
+	 * world has no such point.
 	 */
 	protected String penalize (int r)
 	{
-		if (!toPenaltyPoint (r))		return "";
+		String		where = toPenaltyPoint (r);
+
+		if (where == null)				return "";
 		penalty[r]	= System.currentTimeMillis () + PENALTY_TIME;
-		return ", penalised: sent to START_" + (r + PENALTY_START + 1) + " for " + (PENALTY_TIME / 1000) + " s";
+		return ", penalised: sent to " + where + " for " + (PENALTY_TIME / 1000) + " s";
+	}
+
+	/** Which robot of its team a robot is (0 the first, in the order of the simulator), or -1 when its team is not known. */
+	protected int playerOf (int r)
+	{
+		Simulator	s = sim;
+		int			n = 0;
+
+		if ((s == null) || (teamOf[r] < 0))		return -1;
+		for (int k = 0; k < r; k++)
+			if ((s.MODEL[k] != null) && (teamOf[k] == teamOf[r]))		n++;
+		return n;
+	}
+
+	/**
+	 * Where a robot serves a penalty, {x, y, heading, number of the start point}
+	 * (see {@link #TEAM_STARTS}), or null when the world has no such point. A
+	 * robot of a team not known yet goes where the blue ones would, by its number
+	 * in the simulator.
+	 */
+	protected double[] penaltyPoint (int r)
+	{
+		Simulator	s = sim;
+		int			team = teamOf[r], n = playerOf (r);
+		int			k = PENALTY_START + (((n < 0) ? r : n) % PENALTY_POINTS);
+		double[]	p;
+
+		if (s == null)							return null;
+		if (team == RED)
+		{
+			p	= s.worldStart (TEAM_STARTS + k);
+			if (p != null)						return new double[] { p[0], p[1], p[2], TEAM_STARTS + k + 1 };
+			p	= s.worldStart (k);				// no block of its own: the blue one, turned half round
+			return (p == null) ? null : new double[] { -p[0], -p[1], p[2] + Math.PI, -1 };
+		}
+		p	= s.worldStart (k);
+		return (p == null) ? null : new double[] { p[0], p[1], p[2], k + 1 };
 	}
 
 	/** A robot to where the penalised ones go (see {@link #penalize}); false when the world has no such point. */
-	protected boolean toPenaltyPoint (int r)
+	protected String toPenaltyPoint (int r)
 	{
 		Simulator	s = sim;
-		double[]	p = (s != null) ? s.worldStart (r + PENALTY_START) : null;
+		double[]	p = penaltyPoint (r);
 
-		if (p == null)					return false;
+		if (p == null)					return null;
 		// clear of the others, and off the pitch as the point is
 		double		rr = radius (r);
 		boolean		off = !Boolean.TRUE.equals (touches (fieldName, p[0], p[1], rr));
 		double[]	at = clearOf (r, p[0], p[1], (px, py) -> !off || !Boolean.TRUE.equals (touches (fieldName, px, py, rr)));
 		s.placeRobot (r, at[0], at[1], p[2]);
-		return true;
+		return (p[3] > 0) ? "START_" + (int) p[3] : String.format (java.util.Locale.US, "(%.2f, %.2f)", at[0], at[1]);
 	}
 
 	/** The radius of a robot (m), as its description says (0 when it says none). */
@@ -970,17 +1027,24 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	}
 
 	/**
-	 * The team of a robot: the one the settings name it in, or the one whose net
-	 * is nearer to where it is first seen (the half of the field it starts in).
+	 * The team of a robot: the one the settings name it in, the one its
+	 * description says (V3DTEAM: RED or BLUE), or the one whose net is nearer to
+	 * where it is first seen (the half of the field it starts in).
 	 */
 	protected int team (int robot, double x, double y)
 	{
 		String		name = (sim != null) ? sim.robotName (robot) : null;
+		String		said = ((sim != null) && (sim.SDESC[robot] != null)) ? sim.SDESC[robot].V3DTEAM : null;
 
 		for (int t = 0; t < 2; t++)
 			if ((teamRobots[t] != null) && (name != null))
 				for (String n : teamRobots[t])
 					if (n.equalsIgnoreCase (name))	return t;
+		if (said != null)
+		{
+			if (said.trim ().equalsIgnoreCase (SoccerTeam.RED))		return RED;
+			if (said.trim ().equalsIgnoreCase (SoccerTeam.BLUE))	return BLUE;
+		}
 
 		WMZone		z0 = zone (netNames[0]);
 		WMZone		z1 = zone (netNames[1]);
