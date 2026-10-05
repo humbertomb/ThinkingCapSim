@@ -69,8 +69,9 @@ public class SoccerVision extends Perception
 	protected LPONet					net2;
 	protected LPOLandmark				landmark1;
 	protected LPOLandmark				landmark2;
-	protected LPORobot					robot1;			// a robot of team 1 (blue), which scores on net 1
-	protected LPORobot					robot2;			// ... and one of team 2 (red), which scores on net 2
+	protected LPORobot					robot1;			// a robot of the team of this one (a mate), which scores on net 1
+	protected LPORobot					robot2;			// ... and one of the other team, which scores on net 2
+	protected boolean					red;			// whether this robot plays in the RED team (see SoccerTeam)
 	protected LPOAlign					align;
 
 	// Vision processing
@@ -232,36 +233,42 @@ public class SoccerVision extends Perception
 				if ((o != null) && "ball".equalsIgnoreCase (o.label) && (o.radius > 0.0))
 					ballRadius	= o.radius;
 
-		// Add domain specific LPOs to the LPS
+		// The team the robot plays in: a RED one sees the field the other way round
+		// (its Net1 is the other net, its Landmark1 the other landmark, its mates,
+		// Robot1, wear the other uniform; see SoccerTeam)
+		red		= SoccerTeam.red (item.props_robot);
+
+		// Add domain specific LPOs to the LPS (in the colours they have for the team,
+		// until they are seen in those of the channels they are seen in)
 		ball	= new LPOBall (ballRadius, "Ball", LPOSource.PERCEPT);
 		ball.anchor_fade = BALL_FADING;
 		ball.color (WColor.YELLOW.darker());
 		
 		net1	= new LPONet (NET_SIZE, "Net1", LPOSource.PERCEPT);
 		net1.anchor_fade = NET_FADING;
-		net1.color (WColor.RED);
+		net1.color (red ? WColor.BLUE : WColor.RED);
 		
 		net2	= new LPONet (NET_SIZE, "Net2", LPOSource.PERCEPT);
 		net2.anchor_fade = NET_FADING;
-		net2.color (WColor.BLUE);
+		net2.color (red ? WColor.RED : WColor.BLUE);
 		
 		landmark1	= new LPOLandmark (LM_RADIUS, "Landmark1", LPOSource.PERCEPT);
 		landmark1.anchor_fade = LM_FADING;
-		landmark1.color (WColor.YELLOW);
-		landmark1.below (WColor.CYAN);
+		landmark1.color (red ? WColor.CYAN : WColor.YELLOW);
+		landmark1.below (red ? WColor.YELLOW : WColor.CYAN);
 
 		landmark2	= new LPOLandmark (LM_RADIUS, "Landmark2", LPOSource.PERCEPT);
 		landmark2.anchor_fade = LM_FADING;
-		landmark2.color (WColor.CYAN);
-		landmark2.below (WColor.YELLOW);
+		landmark2.color (red ? WColor.YELLOW : WColor.CYAN);
+		landmark2.below (red ? WColor.CYAN : WColor.YELLOW);
 		
 		robot1	= new LPORobot (ROBOT_RADIUS, "Robot1", LPOSource.PERCEPT);
 		robot1.anchor_fade = ROBOT_FADING;
-		robot1.color (WColor.BLUE);
+		robot1.color (red ? WColor.RED : WColor.BLUE);
 
 		robot2	= new LPORobot (ROBOT_RADIUS, "Robot2", LPOSource.PERCEPT);
 		robot2.anchor_fade = ROBOT_FADING;
-		robot2.color (WColor.RED);
+		robot2.color (red ? WColor.BLUE : WColor.RED);
 
 		align	= new LPOAlign ("Align", LPOSource.ARTIFACT);
 		align.anchor_fade = NET_FADING;
@@ -273,7 +280,7 @@ public class SoccerVision extends Perception
 		// execution is started again, with frames of the one before still on their
 		// way, so no frame is made sense of while the algorithms are being replaced
 		initialized	= false;
-		synchronized (vision)		{ recognizer = new SoccerRecognizer (vconfig.recognizer); }
+		synchronized (vision)		{ recognizer = new SoccerRecognizer (vconfig.recognizer);	recognizer.red = red; }
 
 		instanceLUT ();
 		instanceSegment ();
@@ -554,12 +561,12 @@ public class SoccerVision extends Perception
 			attach (l);
 			if (l == lps)		l.update_anchors ();			// a shared LPS is aged by its owner
 			see (ball, recognizer.ball, false, ballRadius, recognizer.params.ball_channel, item, w, h);
-			see (net1, recognizer.net1, true, 0.0, recognizer.params.net1_channel, item, w, h);
-			see (net2, recognizer.net2, true, 0.0, recognizer.params.net2_channel, item, w, h);
-			seeLandmark (landmark1, recognizer.landmark1, recognizer.params.lm1_channel, recognizer.params.lm2_channel, item, w, h);
-			seeLandmark (landmark2, recognizer.landmark2, recognizer.params.lm2_channel, recognizer.params.lm1_channel, item, w, h);
-			seeRobot (robot1, recognizer.robot1, recognizer.params.robot1_channel, item, w, h);
-			seeRobot (robot2, recognizer.robot2, recognizer.params.robot2_channel, item, w, h);
+			see (net1, recognizer.net1, true, 0.0, recognizer.net1Channel (), item, w, h);
+			see (net2, recognizer.net2, true, 0.0, recognizer.net2Channel (), item, w, h);
+			seeLandmark (landmark1, recognizer.landmark1, recognizer.lm1Channel (), recognizer.lm2Channel (), item, w, h);
+			seeLandmark (landmark2, recognizer.landmark2, recognizer.lm2Channel (), recognizer.lm1Channel (), item, w, h);
+			seeRobot (robot1, recognizer.robot1, recognizer.robot1Channel (), item, w, h);
+			seeRobot (robot2, recognizer.robot2, recognizer.robot2Channel (), item, w, h);
 		}
 	}
 

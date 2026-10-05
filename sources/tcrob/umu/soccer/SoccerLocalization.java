@@ -31,6 +31,14 @@ import wucore.utils.math.Angles;
  * with the initial parameters of the static variables of this class (see
  * {@link #PARAMS}); it can be changed while it runs ({@link #method}).
  *
+ * The methods work in the field as the team of the robot sees it
+ * ({@link SoccerTeam}): Net1, the one it attacks, at +y, and Landmark1 at -x,
+ * which is what the vision calls them for its team. For a robot of the BLUE
+ * team that is the world itself; for a RED one it is the world turned half
+ * round. Where the robot is goes out (NAVIGATION) in the coordinates of the
+ * world, as every position of the architecture does, and the scripts get it
+ * back in the field of the team (see tclib.behaviours.lua.Chaos).
+ *
  * With local graphics, a window shows the position, the reduced LPS, the method
  * and the field (SoccerLocalizationWindow), updated with every LPS, and lets the
  * method and its initial parameters be chosen.
@@ -163,7 +171,8 @@ public class SoccerLocalization extends Navigation
 	protected Odometry				odom = new Odometry ();
 	protected LocLps				loclps = new LocLps ();
 	
-	protected Position				pos;
+	protected Position				pos;			// where the robot is, in the world
+	protected boolean				red;			// whether it plays in the RED team, which sees the field turned half round
 	
 	// Linda data structures
 	protected Tuple					ntuple;
@@ -244,7 +253,7 @@ public class SoccerLocalization extends Navigation
 
 		// what the method makes of it, to the window (with where the robot really is, the ground truth of the simulation)
 		if (win != null)
-			win.update (l, loclps, (item.lps.real != null) ? new Position (item.lps.real) : null);
+			win.update (l, loclps, (item.lps.real != null) ? SoccerTeam.field (new Position (item.lps.real), red) : null);		// in the field of the team, as the method has it
 
 		// where the robot is, to the rest of the architecture
 		nitem.set (pos, (item.timestamp != null) ? item.timestamp.longValue () : System.currentTimeMillis ());
@@ -252,28 +261,32 @@ public class SoccerLocalization extends Navigation
 	}	
 
 	/**
-	 * The position of the robot from the estimate of the method (mm, rad), in m and
-	 * rad. Its quality is the one of the method [0..1], and its uncertainty a
-	 * covariance (m, m, rad) with half of the box of the estimate as the standard
-	 * deviation of x and y, and its angular spread as the one of the heading.
+	 * The position of the robot from the estimate of the method (mm, rad, in the
+	 * field of its team), in m and rad, in the world. Its quality is the one of
+	 * the method [0..1], and its uncertainty a covariance (m, m, rad) with half
+	 * of the box of the estimate as the standard deviation of x and y, and its
+	 * angular spread as the one of the heading.
 	 */
 	protected void setPosition (Gs gs)
 	{
+		Position	p = new Position ();
 		double		sx, sy, sa;
 
 		sx		= gs.getDX () * 0.5 / 1000.0;
 		sy		= gs.getDY () * 0.5 / 1000.0;
 		sa		= gs.getDTheta ();
 
-		pos.set (gs.getX () / 1000.0, gs.getY () / 1000.0, gs.getTheta (), true);
-		pos.set (new double[][] { { sx * sx, 0.0, 0.0 }, { 0.0, sy * sy, 0.0 }, { 0.0, 0.0, sa * sa } });
-		pos.quality	= Math.max (0.0, Math.min (1.0, gs.getQuality ()));
+		p.set (gs.getX () / 1000.0, gs.getY () / 1000.0, gs.getTheta (), true);
+		p.set (new double[][] { { sx * sx, 0.0, 0.0 }, { 0.0, sy * sy, 0.0 }, { 0.0, 0.0, sa * sa } });
+		p.quality	= Math.max (0.0, Math.min (1.0, gs.getQuality ()));
+		pos.set (SoccerTeam.field (p, red));					// from the field of the team to the world
 	}
 		
 	public void notify_config (String space, ItemConfig item)
 	{
 		super.notify_config (space, item);
-								
+
+		red		= SoccerTeam.red (item.props_robot);			// a RED robot sees the field turned half round
 		method (METHOD);
 
 		// with local graphics, the window of the localisation

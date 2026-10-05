@@ -194,19 +194,36 @@ public class Chaos implements LuaBridge
 		return ((name != null) ? name.toUpperCase () : "?") + "_LPO";
 	}
 
-	/** Where the robot is, with how sure it is of it (quality) and its uncertainty, which the scripts read with chaos.getCurrentPos. */
-	public void pose (Position p)								{ if (p != null) synchronized (pose) { pose.set (p); } }
-	/** Where the robot starts, which the scripts read with chaos.getStartPos. */
-	public void start (double x, double y, double alpha)		{ start.set (x, y, alpha); }
+	/**
+	 * Whether the robot plays in the RED team. The scripts work in the field as
+	 * the BLUE team sees it (Net1, the one they attack, at +y), and a RED robot
+	 * sees it turned half round ({@link tcrob.umu.soccer.SoccerTeam}): the
+	 * positions it is given here in the coordinates of the world (where it is,
+	 * where it starts, where it is told to go) are handed to the scripts in the
+	 * ones of its field.
+	 */
+	protected volatile boolean		red;
+
+	public boolean	red ()										{ return red; }
+	public void		red (boolean red)							{ this.red = red; }
+
+	/** Where the robot is (in the world), with how sure it is of it (quality) and its uncertainty, which the scripts read with chaos.getCurrentPos (in the field of its team). */
+	public void pose (Position p)								{ if (p != null) synchronized (pose) { pose.set (tcrob.umu.soccer.SoccerTeam.field (p, red)); } }
+	/** Where the robot starts (in the world), which the scripts read with chaos.getStartPos (in the field of its team). */
+	public void start (double x, double y, double alpha)		{ start.set (tcrob.umu.soccer.SoccerTeam.field (new Position (x, y, alpha), red)); }
+	/** Where the robot is told to go (in the world), which the scripts read with chaos.getOptimalPose (in the field of its team). */
+	public void desired (Position p)							{ if (p != null) desired.set (tcrob.umu.soccer.SoccerTeam.field (p, red)); }
 
 	/**
 	 * The same, from the properties of the robot the simulator sends with CONFIG
 	 * (START_X, START_Y in m, START_A in rad); nothing changes when they are not
-	 * there. Every controller with a chaos calls it from notify_config.
+	 * there. They also say the team it plays in (V3DTEAM), which is taken first.
+	 * Every controller with a chaos calls it from notify_config.
 	 */
 	public void start (java.util.Properties props)
 	{
 		if (props == null)					return;
+		red		= tcrob.umu.soccer.SoccerTeam.red (props);
 		try
 		{
 			String	x = props.getProperty ("START_X"), y = props.getProperty ("START_Y"), a = props.getProperty ("START_A");

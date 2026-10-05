@@ -64,7 +64,7 @@ public class SoccerHfsmController extends HFSMController
 	{
 		chaos.lps (lps);
 		if (has_plan && (plan.tpos != null))
-			chaos.desired ().set (plan.tpos);
+			chaos.desired (plan.tpos);
 	}
 
 	/** What the scripts commanded: the vision is told what they need, and the velocities are answered. */
@@ -80,19 +80,16 @@ public class SoccerHfsmController extends HFSMController
 		nsaid	= null;
 	}
 
-	/** The description of the robot says where it starts (START_X, START_Y, START_A), which the scripts read with chaos.getStartPos. */
+	/**
+	 * The description of the robot says the team it plays in (V3DTEAM) and where
+	 * it starts (START_X, START_Y, START_A), which the scripts read with
+	 * chaos.getStartPos, in the field of the team.
+	 */
 	public void notify_config (String space, tc.shared.linda.ItemConfig item)
 	{
 		super.notify_config (space, item);
 		if ((item.props_robot == null) || (chaos == null))		return;
-		try
-		{
-			String	x = item.props_robot.getProperty ("START_X"), y = item.props_robot.getProperty ("START_Y"), a = item.props_robot.getProperty ("START_A");
-
-			if ((x != null) && (y != null) && (a != null))
-				chaos.start (Double.parseDouble (x), Double.parseDouble (y), Double.parseDouble (a));
-		}
-		catch (NumberFormatException e)		{ }
+		chaos.start (item.props_robot);
 	}
 
 	/** What the referee says (REFEREE) goes to the machine through the bridge: chaos.getGameState reads it. */

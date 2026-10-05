@@ -100,14 +100,34 @@ public class SoccerRecognizer
 		}
 	}
 
-	// What was recognised in the last frame (null: not seen): the largest blob taken for each object
+	// What was recognised in the last frame (null: not seen): the largest blob taken for each object.
+	// They are said as the team of the robot sees them (see red): net 1 is the one it attacks
 	public Detection				ball;
 	public Detection				net1;
 	public Detection				net2;
-	public Detection				landmark1;			// the landmark with the colour of lm1_channel on top (that of lm2_channel below it)
+	public Detection				landmark1;			// the landmark with the colour of lm1 on top (that of lm2 below it)
 	public Detection				landmark2;			// ... and the one the other way up
-	public Detection				robot1;				// a robot of team 1 (blue uniform), the one that scores on net 1
-	public Detection				robot2;				// ... and one of team 2 (red), which scores on net 2
+	public Detection				robot1;				// a robot of the team of this one (its mates), the one that scores on net 1
+	public Detection				robot2;				// ... and one of the other team, which scores on net 2
+
+	/**
+	 * Whether the robot plays in the RED team ({@link SoccerTeam}). The channels
+	 * of the parameters are said for the BLUE team -- net 1 the one it attacks,
+	 * landmark 1 the one on its left, robot 1 its uniform -- and a RED robot
+	 * sees the field the other way: its net 1 is the colour of net 2, its
+	 * landmark 1 the one with the colour of lm2 on top, and its mates wear the
+	 * uniform of robot 2. The channels it looks for each object in are the
+	 * ones of {@link #net1Channel} and the rest.
+	 */
+	public volatile boolean			red;
+
+	/* The channel each object is looked for in, for the team of the robot */
+	public int		net1Channel ()			{ return red ? params.net2_channel : params.net1_channel; }
+	public int		net2Channel ()			{ return red ? params.net1_channel : params.net2_channel; }
+	public int		lm1Channel ()			{ return red ? params.lm2_channel : params.lm1_channel; }
+	public int		lm2Channel ()			{ return red ? params.lm1_channel : params.lm2_channel; }
+	public int		robot1Channel ()		{ return red ? params.robot2_channel : params.robot1_channel; }
+	public int		robot2Channel ()		{ return red ? params.robot1_channel : params.robot2_channel; }
 
 	private BufferedImageDrawing	dwg = new BufferedImageDrawing ();
 
@@ -161,7 +181,9 @@ public class SoccerRecognizer
 		// the colours of the nets
 		java.util.List<Blob>	parts = landmarks (blobs, channels, horizon);
 
-		for (int n : new int[] { params.net1_channel, params.net2_channel })
+		int		n1 = net1Channel (), n2 = net2Channel ();
+
+		for (int n : new int[] { n1, n2 })
 		{
 			NetFitting	net = new NetFitting ();
 			int			color;
@@ -174,7 +196,7 @@ public class SoccerRecognizer
 				if (!partOf (blob, parts) && testValidNet (blob, config, horizon, dwg, color))
 				{
 					net.doFitting (output, segmented, blobs[n], channels.at (n), channels.at (params.carpet_channel));
-					if (n == params.net1_channel)
+					if (n == n1)
 					{
 						if ((net1 == null) || (blob.getNumPixels () > net1.pixels))		net1 = new Detection (blob);
 					}
@@ -184,8 +206,8 @@ public class SoccerRecognizer
 		}
 
 		// the robots, by the patches of their uniforms (not those of a landmark, if they share its colour)
-		robot1	= robot (blobs, channels, params.robot1_channel, parts);
-		robot2	= robot (blobs, channels, params.robot2_channel, parts);
+		robot1	= robot (blobs, channels, robot1Channel (), parts);
+		robot2	= robot (blobs, channels, robot2Channel (), parts);
 
 		return output;
 	}
@@ -244,7 +266,7 @@ public class SoccerRecognizer
 	protected java.util.List<Blob> landmarks (Blobs[] blobs, Channels channels, VisualHorizon horizon)
 	{
 		java.util.List<Blob>	parts = new java.util.ArrayList<Blob> ();
-		int						c1 = params.lm1_channel, c2 = params.lm2_channel;
+		int						c1 = lm1Channel (), c2 = lm2Channel ();
 
 		if ((c1 == c2) || !has (channels, blobs, c1) || !has (channels, blobs, c2))		return parts;
 		for (int i = 0; i < blobs[c1].getBlobNumber (); i++)

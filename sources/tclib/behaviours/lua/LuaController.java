@@ -375,7 +375,7 @@ public class LuaController extends Controller
 		chaos.lps (lps);
 		chaos.pose (pos);
 		if (has_plan && (plan.tpos != null))
-			chaos.desired ().set (plan.tpos);
+			chaos.desired (plan.tpos);
 
 		// One cycle of the program, and the behaviour it chose, which is what moves the robot
 		step ();
