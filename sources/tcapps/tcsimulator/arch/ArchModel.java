@@ -1073,6 +1073,96 @@ public class ArchModel
 			if (!names.contains (base + " " + i))		return base + " " + i;
 	}
 
+	/* ------------------------------------------------------------------ */
+	/* Copy, cut and paste                                                 */
+	/* ------------------------------------------------------------------ */
+
+	/** Whether a block can be copied: a whole robot or one of its modules (the router and the virtual robot as well), not a Linda space. */
+	public boolean isCopyable (Block b)
+	{
+		return (b != null) && ((b.kind == ROBOT) || (b.kind == MODULE) || (b.kind == ROUTER) || (b.kind == VROBOT));
+	}
+
+	/**
+	 * Whether a block can be cut: what can be copied and removed (a robot, a module,
+	 * a router), and the global Linda space, which is not copied: cutting it is
+	 * deleting it. A robot cannot do without its local space nor its virtual robot.
+	 */
+	public boolean isCuttable (Block b)
+	{
+		return (b != null) && (b.kind != LOCAL_LINDA) && (b.kind != VROBOT);
+	}
+
+	/** A copy of what a block is, to be pasted later: a robot ({@link Robot}) or a module ({@link Module}); null for what cannot be copied. */
+	public Object copyOf (Block b)
+	{
+		if (!isCopyable (b))			return null;
+		if (b.kind == ROBOT)			return hasRobot (b.robot) ? robot (b.robot).copy () : null;
+		Module	m = moduleOf (b);
+		return (m != null) ? m.copy () : null;
+	}
+
+	/**
+	 * Pastes a robot as a new one, named as it was with its number put on (the
+	 * next free one when the name ends in a number, 2 and on when it does not),
+	 * and departing from the start point that falls to it by order.
+	 */
+	public Block pasteRobot (Robot r)
+	{
+		Robot	n = r.copy ();
+
+		n.name	= nextName (r.name, robotNames ());
+		n.start	= null;
+		if ((deploy.globalLinda != null) && (n.router == null))		n.router = DeployArch.newRouter ();		// it has a global space to route to
+		deploy.robots.add (n);
+		return new Block (ROBOT, deploy.robots.size () - 1);
+	}
+
+	/**
+	 * Pastes a module in a robot: a module is added to the others (renamed if the
+	 * robot has one by that name already), and a router or a virtual robot takes
+	 * the place of the one the robot has, there being only one of each. The kind
+	 * is the one the module was copied as.
+	 */
+	public Block pasteModule (int r, Module m, int kind)
+	{
+		if (!hasRobot (r) || (m == null))		return null;
+
+		Module	n = m.copy ();
+		Robot	rob = robot (r);
+
+		switch (kind)
+		{
+		case ROUTER:	rob.router = n;			return new Block (ROUTER, r);
+		case VROBOT:	rob.virtualRobot = n;	return new Block (VROBOT, r);
+		case MODULE:
+		{
+			List<String>	names = new ArrayList<String> ();
+
+			for (Block b : robotBlocks (r))		names.add (labelOf (b));
+			if (names.contains (n.name))		n.name = uniqueName (r, n.name);
+			rob.modules.add (n);
+			Block	b = new Block (MODULE, r, rob.modules.size () - 1);
+			fixRunModes (b);
+			return b;
+		}
+		default:		return null;
+		}
+	}
+
+	/** A name that none of some others has: its trailing number put up (IFORK-1, IFORK-2...), or a 2 put on when it has none (and up from there). */
+	static public String nextName (String name, List<String> taken)
+	{
+		java.util.regex.Matcher	m = java.util.regex.Pattern.compile ("^(.*?)(\\d+)$").matcher (name);
+		String					base;
+		int						k;
+
+		if (m.matches ())		{ base = m.group (1);	k = Integer.parseInt (m.group (2)) + 1; }
+		else					{ base = name;			k = 2; }
+		while (taken.contains (base + k))		k++;
+		return base + k;
+	}
+
 	/** Removes a block (the robot container removes the whole robot; local Linda and virtual robot cannot be removed). */
 	public void remove (Block b)
 	{

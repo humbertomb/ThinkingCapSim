@@ -102,6 +102,9 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	static public final int			RIGHT_WIDTH		= 320;		// tree + properties column (as WorldEditorWindow)
 	static public final double		TREE_FRACTION	= 0.55;		// share of the tree in that column (as WorldEditorWindow)
 	protected Action				lindaAC, routerAC, moduleAC, robotAC, deleteAC;
+	protected Action				cutAC, copyAC, pasteAC;
+	protected Object				clipboard;						// what was copied or cut: a robot (DeployArch.Robot) or a module (DeployArch.Module)
+	protected int					clipKind	= -1;				// and what it was copied as (ArchModel.ROBOT, MODULE, ROUTER, VROBOT)
 	protected boolean				syncing;				// tree <-> canvas selection in progress
 
 	/** Rows of the property editor: the visible properties of the block ({@link ArchModel#propertiesOf}). */
@@ -455,6 +458,9 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		moduleAC	= ToolButtons.action ("Module", ToolIcon.MODULE, "Add a module to the selected robot", new Runnable () { public void run () { addModule (); } });
 		robotAC		= ToolButtons.action ("Robot", ToolIcon.ROBOT, "Add a robot", new Runnable () { public void run () { select (model.addRobot ()); } });
 		deleteAC	= ToolButtons.action ("Delete", ToolIcon.DELETE, "Delete the selected block  [Delete]", new Runnable () { public void run () { deleteSelection (); } });
+		cutAC		= new javax.swing.AbstractAction ("Cut")		{ public void actionPerformed (ActionEvent e) { cutSelection (); } };
+		copyAC		= new javax.swing.AbstractAction ("Copy")		{ public void actionPerformed (ActionEvent e) { copySelection (); } };
+		pasteAC		= new javax.swing.AbstractAction ("Paste")		{ public void actionPerformed (ActionEvent e) { paste (); } };
 		tb.add (ToolButtons.flatButton (lindaAC));
 		tb.add (ToolButtons.flatButton (robotAC));
 		tb.add (ToolButtons.flatButton (routerAC));
@@ -604,6 +610,14 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 			c.getInputMap (JComponent.WHEN_FOCUSED).put (KeyStroke.getKeyStroke (KeyEvent.VK_DELETE, 0), "delete");
 			c.getInputMap (JComponent.WHEN_FOCUSED).put (KeyStroke.getKeyStroke (KeyEvent.VK_BACK_SPACE, 0), "delete");
 			c.getActionMap ().put ("delete", deleteAC);
+			// and cut, copy and paste of blocks, not of the text of the tree
+			int		m = java.awt.Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ();
+			c.getInputMap (JComponent.WHEN_FOCUSED).put (KeyStroke.getKeyStroke (KeyEvent.VK_X, m), "cutBlock");
+			c.getInputMap (JComponent.WHEN_FOCUSED).put (KeyStroke.getKeyStroke (KeyEvent.VK_C, m), "copyBlock");
+			c.getInputMap (JComponent.WHEN_FOCUSED).put (KeyStroke.getKeyStroke (KeyEvent.VK_V, m), "pasteBlock");
+			c.getActionMap ().put ("cutBlock", cutAC);
+			c.getActionMap ().put ("copyBlock", copyAC);
+			c.getActionMap ().put ("pasteBlock", pasteAC);
 		}
 
 		add (tb, BorderLayout.WEST);
@@ -620,6 +634,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		int			mask = java.awt.Toolkit.getDefaultToolkit ().getMenuShortcutKeyMaskEx ();
 		JMenuBar	mb = new JMenuBar ();
 		JMenu		mfile = new JMenu ("File");
+		JMenu		medit = new JMenu ("Edit");
 		JMenu		mview = new JMenu ("View");
 		JMenu		mhelp = new JMenu ("Help");
 
@@ -633,6 +648,12 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 			mfile.add (menuItem ("Quit", KeyEvent.VK_Q, mask, new Runnable () { public void run () { quit (); } }));
 		}
 		mb.add (mfile);
+		medit.add (actionItem (cutAC, KeyEvent.VK_X, mask));
+		medit.add (actionItem (copyAC, KeyEvent.VK_C, mask));
+		medit.add (actionItem (pasteAC, KeyEvent.VK_V, mask));
+		medit.addSeparator ();
+		medit.add (actionItem (deleteAC, KeyEvent.VK_DELETE, 0));
+		mb.add (medit);
 		// the symbols of the blocks are written by default: they are part of the
 		// drawing of an architecture, and they are left out when what is being
 		// looked at is how it is wired together instead
@@ -866,6 +887,17 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	/* Edition                                                             */
 	/* ------------------------------------------------------------------ */
 
+	/** A menu entry of an action (enabled as it is), with its key. */
+	private JMenuItem actionItem (Action a, int key, int mask)
+	{
+		JMenuItem	mi = new JMenuItem (a);
+
+		mi.setIcon (null);
+		mi.setToolTipText (null);
+		mi.setAccelerator (KeyStroke.getKeyStroke (key, mask));
+		return mi;
+	}
+
 	private JMenuItem menuItem (String name, int key, int mask, final Runnable body)
 	{
 		JMenuItem	mi = new JMenuItem (name);
@@ -1020,6 +1052,49 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		rebuild (null);
 	}
 
+	/** Copies the selected block (a robot or a module) to paste it later. */
+	private void copySelection ()
+	{
+		Block	b = canvas.getSelection ();
+		Object	c = model.copyOf (b);
+
+		if (c == null)			return;
+		clipboard	= c;
+		clipKind	= b.kind;
+		updateActions ();
+	}
+
+	/** Cuts the selected block: copied, then removed. The global Linda space is not copied: cutting it is deleting it. */
+	private void cutSelection ()
+	{
+		Block	b = canvas.getSelection ();
+
+		if (!model.isCuttable (b))		return;
+		if (model.isCopyable (b))		copySelection ();
+		model.remove (b);
+		rebuild (null);
+	}
+
+	/**
+	 * Pastes what was copied: a robot as a new one, renamed with its number put
+	 * on; a module in the selected robot (a router or a virtual robot taking the
+	 * place of the one it has). With no robot selected a module has nowhere to go.
+	 */
+	private void paste ()
+	{
+		Block	b = null;
+
+		if (clipboard instanceof DeployArch.Robot)			b = model.pasteRobot ((DeployArch.Robot) clipboard);
+		else if (clipboard instanceof DeployArch.Module)
+		{
+			int		r = currentRobot ();
+
+			if (r < 0)					return;
+			b	= model.pasteModule (r, (DeployArch.Module) clipboard, clipKind);
+		}
+		if (b != null)					rebuild (b);
+	}
+
 	/** The model changed: rebuilds the tree, refreshes the diagram and selects a block. */
 	private void rebuild (Block sel)
 	{
@@ -1089,6 +1164,9 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		moduleAC.setEnabled (r >= 0);
 		robotAC.setEnabled (true);
 		deleteAC.setEnabled ((sel != null) && model.isRemovable (sel));
+		copyAC.setEnabled (model.isCopyable (sel));
+		cutAC.setEnabled (model.isCuttable (sel));
+		pasteAC.setEnabled ((clipboard instanceof DeployArch.Robot) || ((clipboard instanceof DeployArch.Module) && (r >= 0)));
 	}
 
 	/** A name was edited in place on the diagram (robot name or module INFO): tree and properties follow. */
