@@ -568,6 +568,20 @@ public class RobotView3DWindow extends JFrame
 		bg.addChild (new Shape3D (ta, coverAppearance (fam, 1.0f)));
 		bg.addChild (new Shape3D (qa, coverAppearance (fam, BASE_SHADE)));		// the base, a shade darker than the faces
 
+		// and its edges, which tell its faces apart from any angle, as the simulator draws them (Camera3D)
+		LineArray	la = new LineArray (16, LineArray.COORDINATES);
+		for (int i = 0; i < 4; i++)
+		{
+			la.setCoordinate (4 * i,     ap);
+			la.setCoordinate (4 * i + 1, c[i]);
+			la.setCoordinate (4 * i + 2, c[i]);
+			la.setCoordinate (4 * i + 3, c[(i + 1) % 4]);
+		}
+		Appearance	ea = new Appearance ();
+		ea.setColoringAttributes (new ColoringAttributes (tcapps.tceditor.visualization.Camera3D.C_EDGE, ColoringAttributes.SHADE_FLAT));
+		ea.setLineAttributes (new LineAttributes (tcapps.tceditor.visualization.Camera3D.EDGE_WIDTH, LineAttributes.PATTERN_SOLID, true));
+		bg.addChild (new Shape3D (la, ea));
+
 		return (what != null) ? what + RobotDef.fmt (r) + " m, " + RobotDef.fmt (s.hfov) + " x "
 								+ RobotDef.fmt (s.vfov) + " deg.   " : " ";
 	}
