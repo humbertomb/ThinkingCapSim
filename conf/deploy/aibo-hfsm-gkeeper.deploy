@@ -1,0 +1,148 @@
+{
+  "world": "./conf/maps/soccer_field_aibo_2007_2robots.world",
+  "robots": [
+    {
+      "name": "AIBO-4",
+      "linda": {
+        "address": "localhost",
+        "port": 3000,
+        "instantiate": true
+      },
+      "modules": [
+        {
+          "name": "Controller",
+          "properties": {
+            "CLASS": "tcrob.umu.soccer.SoccerHfsmController",
+            "GFX": "true",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "PRG": "./conf/programs/hfsm/match_gkeeper.hfsm",
+            "TYPE": "Controller",
+            "AUTO": "true",
+            "POLLED": "false",
+            "QUEUED": "false"
+          },
+          "events": [
+            {
+              "symbol": "LPS",
+              "itemClass": "tc.shared.linda.ItemLPS",
+              "method": "notify_lps"
+            },
+            {
+              "symbol": "REFEREE",
+              "itemClass": "tcrob.umu.soccer.linda.ItemReferee",
+              "method": "notify_referee"
+            },
+            {
+              "symbol": "NAVIGATION",
+              "itemClass": "tc.shared.linda.ItemNavigation",
+              "method": "notify_navigation"
+            }
+          ]
+        },
+        {
+          "name": "Perception",
+          "properties": {
+            "CLASS": "tcrob.umu.indoor.IndoorPerception",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "TYPE": "Perception",
+            "GFX": "true",
+            "POLLED": "false",
+            "QUEUED": "false"
+          },
+          "events": [
+            {
+              "symbol": "SENSORS",
+              "itemClass": "tc.shared.linda.ItemSensors",
+              "method": "notify_sensors"
+            }
+          ]
+        },
+        {
+          "name": "Vision",
+          "properties": {
+            "TYPE": "Perception",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "GFX": "true",
+            "CLASS": "tcrob.umu.soccer.SoccerVision",
+            "PARAMS": "./conf/vision/aibo-soccer-2007.chaos",
+            "POLLED": "false",
+            "QUEUED": "false"
+          },
+          "events": [
+            {
+              "symbol": "CAMERA",
+              "itemClass": "tc.shared.linda.ItemCamera",
+              "method": "notify_camera"
+            },
+            {
+              "symbol": "BEH_NEEDS",
+              "itemClass": "tc.shared.linda.ItemBehNeeds",
+              "method": "notify_beh_neeeds"
+            }
+          ]
+        },
+        {
+          "name": "Supervisor",
+          "properties": {
+            "TYPE": "Supervisor",
+            "MODE": "shared",
+            "PASSIVE": "false",
+            "GFX": "true",
+            "EXTIME": "100",
+            "CLASS": "tcrob.umu.soccer.SoccerRefereeSimul",
+            "POLLED": "false",
+            "QUEUED": "false"
+          },
+          "events": []
+        },
+        {
+          "name": "Navigation",
+          "properties": {
+            "TYPE": "Navigation",
+            "MODE": "shared",
+            "PASSIVE": "true",
+            "GFX": "true",
+            "CLASS": "tcrob.umu.soccer.SoccerLocalization",
+            "POLLED": "false",
+            "QUEUED": "false"
+          },
+          "events": [
+            {
+              "symbol": "LPS",
+              "itemClass": "tc.shared.linda.ItemLPS",
+              "method": "notify_lps"
+            }
+          ]
+        }
+      ],
+      "virtualRobot": {
+        "name": "Virtual Robot",
+        "properties": {
+          "DESC": "./conf/robots/aibo-blue.robot",
+          "EXTIME": "75",
+          "GFX": "true",
+          "MODE": "shared",
+          "PASSIVE": "false"
+        },
+        "events": [
+          {
+            "symbol": "MOTION",
+            "itemClass": "tc.shared.linda.ItemMotion",
+            "method": "notify_motion"
+          },
+          {
+            "symbol": "CAMERA_CTRL",
+            "itemClass": "tc.shared.linda.ItemCameraCtrl",
+            "method": "notify_camera_ctrl"
+          }
+        ]
+      },
+      "properties": {},
+      "start": "START_4"
+    }
+  ],
+  "supervisors": []
+}
