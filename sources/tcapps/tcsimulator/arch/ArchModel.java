@@ -1010,6 +1010,7 @@ public class ArchModel
 		String	name = DeployArch.DEFAULT_ROBOT;
 		for (int i = 2; robotNames ().contains (name); i++)		name = DeployArch.DEFAULT_ROBOT + i;
 		Robot	r = new Robot (name);
+		r.linda.port	= freePort (r.linda.port);									// a local space of its own
 		if (deploy.globalLinda != null)		r.router = DeployArch.newRouter ();		// only with a global space to route to
 		deploy.robots.add (r);
 		return new Block (ROBOT, deploy.robots.size () - 1);
@@ -1113,6 +1114,7 @@ public class ArchModel
 
 		n.name	= nextName (r.name, robotNames ());
 		n.start	= null;
+		n.linda.port	= freePort (r.linda.port);							// its local space on a port of its own
 		if ((deploy.globalLinda != null) && (n.router == null))		n.router = DeployArch.newRouter ();		// it has a global space to route to
 		deploy.robots.add (n);
 		return new Block (ROBOT, deploy.robots.size () - 1);
@@ -1148,6 +1150,17 @@ public class ArchModel
 		}
 		default:		return null;
 		}
+	}
+
+	/** The first port from one on that no Linda space of the deployment (a local one or the global one) is on. */
+	public int freePort (int from)
+	{
+		java.util.Set<Integer>	used = new java.util.HashSet<Integer> ();
+
+		for (Robot r : deploy.robots)			used.add (r.linda.port);
+		if (deploy.globalLinda != null)			used.add (deploy.globalLinda.port);
+		while (used.contains (from))			from++;
+		return from;
 	}
 
 	/** A name that none of some others has: its trailing number put up (IFORK-1, IFORK-2...), or a 2 put on when it has none (and up from there). */

@@ -315,24 +315,56 @@ public class DeployArch
 
 	/**
 	 * Problems that prevent the deployment from being executed, as messages
-	 * for the user (empty when it can run). One robot runs on its local Linda
-	 * space alone; two or more need a global Linda space and a Linda router in
-	 * every robot, which is how their modules exchange coordination tuples.
+	 * for the user (empty when it can run). Every robot runs on its own local
+	 * Linda space, which needs a port of its own: two on one port would leave the
+	 * modules that connect to it by the network (udp, tcp) on the space of the
+	 * other robot. Several robots need no global space unless they are to talk
+	 * to each other (see {@link #warnings}).
 	 */
 	public List<String> validate ()
 	{
 		List<String>	problems = new ArrayList<String> ();
+		Map<String, String>	ports = new LinkedHashMap<String, String> ();		// address:port -> who has it
+
 		if (robots.isEmpty ())
 			problems.add ("The deployment has no robots to execute.");
-		if (robots.size () > 1)
+		if (globalLinda != null)		ports.put (where (globalLinda), "the global Linda space");
+		for (Robot r : robots)
 		{
-			if (globalLinda == null)
-				problems.add ("A deployment with several robots needs a global Linda space (the robots coordinate through it).");
-			List<String>	without = new ArrayList<String> ();
-			for (Robot r : robots)	if (r.router == null)	without.add (r.name);
-			if (!without.isEmpty ())
-				problems.add ("Every robot of a multi-robot deployment needs a Linda router; missing in: " + String.join (", ", without) + ".");
+			String	w = where (r.linda), other = ports.get (w);
+
+			if (other != null)		problems.add ("The local Linda space of " + r.name + " is on " + w + ", as " + other + " is: every space needs a port of its own.");
+			else					ports.put (w, "the one of " + r.name);
 		}
 		return problems;
+	}
+
+	/**
+	 * What may not be what was meant, though the deployment can run: robots with
+	 * a Linda router and no global space to route to (the router is not
+	 * started), or a global space some robots have no router to reach. Robots
+	 * that do not cooperate need neither; the ones that do (the forklifts and
+	 * their coordination) find nothing of the others without them.
+	 */
+	public List<String> warnings ()
+	{
+		List<String>	out = new ArrayList<String> ();
+		List<String>	with = new ArrayList<String> (), without = new ArrayList<String> ();
+
+		for (Robot r : robots)		(r.router != null ? with : without).add (r.name);
+		if ((globalLinda == null) && !with.isEmpty ())
+			out.add ("There is no global Linda space: the Linda routers of " + String.join (", ", with) + " have nothing to route to and are not started.");
+		if ((globalLinda != null) && (robots.size () > 1) && !without.isEmpty ())
+			out.add ("There is a global Linda space, but " + String.join (", ", without) + " has no Linda router to reach it: it neither hears from the other robots nor is heard.");
+		return out;
+	}
+
+	/** Where a Linda space is: address and port. */
+	static private String where (Linda l)
+	{
+		String	a = (l.address == null) ? "localhost" : l.address.trim ().toLowerCase ();
+
+		if (a.equals ("127.0.0.1"))		a = "localhost";
+		return a + ":" + l.port;
 	}
 }

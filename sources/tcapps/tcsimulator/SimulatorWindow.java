@@ -555,6 +555,10 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			JOptionPane.showMessageDialog (this, String.join ("\n", problems) + "\n\nEdit the deployment architecture to fix it.", TITLE, JOptionPane.WARNING_MESSAGE);
 			return;
 		}
+		List<String>	warnings = deploy.warnings ();
+		if (!warnings.isEmpty () && (JOptionPane.showConfirmDialog (this, String.join ("\n", warnings) + "\n\nExecute it anyway?", TITLE,
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION))
+			return;
 		simulator	= new Simulator ();
 		final List<ExecArch>	execs = new ArrayList<ExecArch> ();
 		for (int i = 0; i < deploy.robots.size (); i++)
