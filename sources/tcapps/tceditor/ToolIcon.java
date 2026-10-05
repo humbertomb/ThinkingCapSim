@@ -69,6 +69,7 @@ public class ToolIcon implements Icon
 	static public final int		SAVE		= 54;		// a floppy disk (save to a file)
 	static public final int		MARKING		= 55;		// a wide coloured line lying on the floor (a marking)
 	static public final int		RESET		= 56;		// an arrow going round (start the modules afresh)
+	static public final int		SUPERVISOR	= 57;		// plain box, of a darker green than a module
 
 	protected int				type;
 	protected int				size;
@@ -405,8 +406,9 @@ public class ToolIcon implements Icon
 			g.drawLine (7, 5, 7, 17);	g.drawLine (15, 5, 15, 17);
 			break;
 		case MODULE:		// plain box
+		case SUPERVISOR:	// the same, of a darker green
 			g.setStroke (new BasicStroke (1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-			g.setColor (new Color (225, 245, 225));
+			g.setColor ((type == SUPERVISOR) ? new Color (170, 215, 170) : new Color (225, 245, 225));
 			g.fillRect (3, 5, 16, 12);
 			g.setColor (fg);
 			g.drawRect (3, 5, 16, 12);

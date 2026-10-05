@@ -101,7 +101,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 
 	static public final int			RIGHT_WIDTH		= 320;		// tree + properties column (as WorldEditorWindow)
 	static public final double		TREE_FRACTION	= 0.55;		// share of the tree in that column (as WorldEditorWindow)
-	protected Action				lindaAC, routerAC, moduleAC, robotAC, deleteAC;
+	protected Action				lindaAC, routerAC, moduleAC, supervisorAC, robotAC, deleteAC;
 	protected Action				cutAC, copyAC, pasteAC;
 	protected Object				clipboard;						// what was copied or cut: a robot (DeployArch.Robot) or a module (DeployArch.Module)
 	protected int					clipKind	= -1;				// and what it was copied as (ArchModel.ROBOT, MODULE, ROUTER, VROBOT)
@@ -167,7 +167,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		if (m == null)		return;
 		if (m.hasGlobalLinda ())		blocks.add (new Block (ArchModel.GLOBAL_LINDA, -1));
 		for (int r : m.robots ())		blocks.add (new Block (ArchModel.ROBOT, r));
-		blocks.addAll (m.allRobotBlocks ());
+		blocks.addAll (m.allModuleBlocks ());
 		for (Block b : blocks)
 			for (Property p : m.propertiesOf (b))
 				if (p.type == ArchModel.P_FILE)		m.set (b, p.key, FileCellEditor.normalise (m.get (b, p.key)));
@@ -456,6 +456,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		lindaAC		= ToolButtons.action ("Linda", ToolIcon.LINDA, "Add a global Linda space", new Runnable () { public void run () { select (model.addGlobalLinda ()); } });
 		routerAC	= ToolButtons.action ("Router", ToolIcon.ROUTER, "Add the Linda router of the selected robot", new Runnable () { public void run () { select (model.addRouter (currentRobot ())); } });
 		moduleAC	= ToolButtons.action ("Module", ToolIcon.MODULE, "Add a module to the selected robot", new Runnable () { public void run () { addModule (); } });
+		supervisorAC	= ToolButtons.action ("Supervisor", ToolIcon.SUPERVISOR, "Add a supervisor to the selected robot, or outside every robot (on the global Linda space) when none is selected", new Runnable () { public void run () { addSupervisor (); } });
 		robotAC		= ToolButtons.action ("Robot", ToolIcon.ROBOT, "Add a robot", new Runnable () { public void run () { select (model.addRobot ()); } });
 		deleteAC	= ToolButtons.action ("Delete", ToolIcon.DELETE, "Delete the selected block  [Delete]", new Runnable () { public void run () { deleteSelection (); } });
 		cutAC		= new javax.swing.AbstractAction ("Cut")		{ public void actionPerformed (ActionEvent e) { cutSelection (); } };
@@ -465,6 +466,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		tb.add (ToolButtons.flatButton (robotAC));
 		tb.add (ToolButtons.flatButton (routerAC));
 		tb.add (ToolButtons.flatButton (moduleAC));
+		tb.add (ToolButtons.flatButton (supervisorAC));
 		tb.addSeparator ();
 		tb.add (ToolButtons.flatButton (deleteAC));
 		tb.add (Box.createVerticalGlue ());
@@ -758,13 +760,15 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 
 		if (ArchModel.isStandard (sym))
 			reads.append ("<span class=\"none\">every module and every robot, by themselves</span>");
-		for (Block b : model.allRobotBlocks ())
+		for (Block b : model.allModuleBlocks ())
 		{
 			String	who;
 			String	how;
 
 			if (!model.hasSymbols (b))					continue;
-			who		= esc (model.labelOf (b)) + " <span class=\"none\">of</span> " + esc (model.getRobotId (b.robot));
+			who		= esc (model.labelOf (b)) + ((b.robot < 0)
+						? " <span class=\"none\">on the global space</span>"
+						: " <span class=\"none\">of</span> " + esc (model.getRobotId (b.robot)));
 			if (model.produces (b).contains (sym))
 			{
 				if (writes.length () > 0)				writes.append (", ");
@@ -823,7 +827,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		// a class takes by itself and nothing offers (a symbol that can be registered
 		// is an event even when one class of the development polls it as well)
 		for (String[] e : ArchModel.STD_EVENTS)			fixed.add (e[0]);
-		for (Block b : model.allRobotBlocks ())
+		for (Block b : model.allModuleBlocks ())
 			for (String sym : model.wired (b))
 				if (!fixed.contains (sym) && !rest.contains (sym))		fixed.add (sym);
 		rest.removeAll (fixed);
@@ -1032,17 +1036,47 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		if (r < 0)						return;
 		type	= JOptionPane.showInputDialog (this, "Kind of module to add:", "Add Module",
 											   JOptionPane.PLAIN_MESSAGE, null,
-											   ArchModel.MODULE_TYPES, ArchModel.MODULE_TYPES[0]);
+											   ArchModel.ROBOT_MODULE_TYPES, ArchModel.ROBOT_MODULE_TYPES[0]);
 		if (type == null)				return;						// cancelled
 		// with no class: which one of its kind it is has to be chosen, and a module
 		// left blank says so when the deployment is run
 		select (model.addModule (r, type.toString ()));
 	}
 
+	/**
+	 * Adds a supervisor: to the selected robot, on its local space, and outside
+	 * every robot when none is selected, on the global space -- which there has to
+	 * be for it to run on.
+	 */
+	private void addSupervisor ()
+	{
+		int			r = currentRobot ();
+
+		if ((r < 0) && !model.hasGlobalLinda ())
+		{
+			JOptionPane.showMessageDialog (this, NO_GLOBAL, TITLE, JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		select (model.addSupervisor (r));
+	}
+
+	static private final String		NO_GLOBAL	= "A supervisor outside the robots runs on the global Linda space,\nand the deployment has none: add one first, or select a robot.";
+
+	/** Whether removing a block takes the supervisors of no robot with it (the global space they run on), and the user agrees. */
+	private boolean dropSupervisors (Block b)
+	{
+		int		n = model.getDeploy ().supervisors.size ();
+
+		if ((b == null) || (b.kind != ArchModel.GLOBAL_LINDA) || (n == 0))		return true;
+		return JOptionPane.showConfirmDialog (this, "The supervisors outside the robots (" + n + ") run on the global Linda space\nand are deleted with it. Go on?", TITLE,
+				JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION;
+	}
+
 	private void deleteSelection ()
 	{
 		Block	b = canvas.getSelection ();
 		if ((b == null) || !model.isRemovable (b))		return;
+		if (!dropSupervisors (b))						return;
 		if (b.kind == ArchModel.ROBOT)
 		{
 			if (JOptionPane.showConfirmDialog (this, "Delete the robot " + model.getRobotId (b.robot) + " with all its modules?", TITLE,
@@ -1070,6 +1104,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		Block	b = canvas.getSelection ();
 
 		if (!model.isCuttable (b))		return;
+		if (!dropSupervisors (b))		return;
 		if (model.isCopyable (b))		copySelection ();
 		model.remove (b);
 		rebuild (null);
@@ -1078,7 +1113,8 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 	/**
 	 * Pastes what was copied: a robot as a new one, renamed with its number put
 	 * on; a module in the selected robot (a router or a virtual robot taking the
-	 * place of the one it has). With no robot selected a module has nowhere to go.
+	 * place of the one it has). With no robot selected only a supervisor has
+	 * somewhere to go: outside every robot, on the global space, if there is one.
 	 */
 	private void paste ()
 	{
@@ -1089,8 +1125,18 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		{
 			int		r = currentRobot ();
 
-			if (r < 0)					return;
-			b	= model.pasteModule (r, (DeployArch.Module) clipboard, clipKind);
+			if (r >= 0)					b = model.pasteModule (r, (DeployArch.Module) clipboard, clipKind);
+			else if ((clipKind != ArchModel.MODULE) || !ArchModel.isSupervisor ((DeployArch.Module) clipboard))
+			{
+				JOptionPane.showMessageDialog (this, "Only a supervisor can go outside the robots: select the robot to paste it in.", TITLE, JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			else if (!model.hasGlobalLinda ())
+			{
+				JOptionPane.showMessageDialog (this, NO_GLOBAL, TITLE, JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			else						b = model.pasteSupervisor ((DeployArch.Module) clipboard);
 		}
 		if (b != null)					rebuild (b);
 	}
@@ -1102,6 +1148,7 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		globalNode	= new DefaultMutableTreeNode ("Global");
 		root.add (globalNode);
 		if (model.hasGlobalLinda ())		globalNode.add (new DefaultMutableTreeNode (new Block (ArchModel.GLOBAL_LINDA, -1)));
+		for (Block b : model.globalSupervisors ())		globalNode.add (new DefaultMutableTreeNode (b));
 		for (int r : model.robots ())									// one category per robot
 		{
 			DefaultMutableTreeNode	robotNode = new DefaultMutableTreeNode (new Block (ArchModel.ROBOT, r));
@@ -1116,8 +1163,9 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		if (propsBorder != null)		updateTitle ();
 	}
 
-	static int iconOf (Block b)
+	int iconOf (Block b)
 	{
+		if (model.isSupervisor (b))		return ToolIcon.SUPERVISOR;
 		switch (b.kind)
 		{
 		case ArchModel.GLOBAL_LINDA:
@@ -1162,11 +1210,13 @@ public class DeploymentPanel extends JPanel implements ArchCanvas.Listener
 		// nothing to add them to
 		routerAC.setEnabled ((r >= 0) && !model.hasRouter (r));
 		moduleAC.setEnabled (r >= 0);
+		supervisorAC.setEnabled (true);								// outside a robot it says what it needs
 		robotAC.setEnabled (true);
 		deleteAC.setEnabled ((sel != null) && model.isRemovable (sel));
 		copyAC.setEnabled (model.isCopyable (sel));
 		cutAC.setEnabled (model.isCuttable (sel));
-		pasteAC.setEnabled ((clipboard instanceof DeployArch.Robot) || ((clipboard instanceof DeployArch.Module) && (r >= 0)));
+		pasteAC.setEnabled ((clipboard instanceof DeployArch.Robot)
+				|| ((clipboard instanceof DeployArch.Module) && ((r >= 0) || ((clipKind == ArchModel.MODULE) && ArchModel.isSupervisor ((DeployArch.Module) clipboard)))));
 	}
 
 	/** A name was edited in place on the diagram (robot name or module INFO): tree and properties follow. */

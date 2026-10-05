@@ -77,6 +77,7 @@ public class ArchCanvas extends JPanel
 	static final Color				C_LINDA		= new Color (205, 225, 250);
 	static final Color				C_ROUTER	= new Color (255, 238, 195);
 	static final Color				C_MODULE	= new Color (222, 242, 222);
+	static final Color				C_SUPER		= new Color (180, 222, 180);	// a supervisor: the green of a module, darker
 	static final Color				C_VROBOT	= new Color (250, 222, 222);
 	static final Color				C_LINE		= new Color (60, 60, 60);
 	static final Color				C_REGION	= new Color (150, 150, 150);
@@ -289,8 +290,25 @@ public class ArchCanvas extends JPanel
 
 		if (model.hasGlobalLinda ())
 		{
-			bounds.put (new Block (ArchModel.GLOBAL_LINDA, -1), new Rectangle (cx - LINDA_W / 2, y, LINDA_W, LINDA_H));
-			y += LINDA_H + 52;
+			// the supervisors of no robot go round the global space, in two columns,
+			// as the modules of a robot go round its local one
+			List<Block>	sups = model.globalSupervisors ();
+			int[]		rowH = rowHeights (sups);
+			int			stackH = 0;
+			int			gap = ROW_DY - BOX_H;
+
+			for (int row = 0; row < rowH.length; row++)		stackH += rowH[row] + ((row > 0) ? gap : 0);
+			int			topH = Math.max (stackH, LINDA_H);
+			int			my = y + Math.max (0, (LINDA_H - stackH) / 2);
+			for (int m = 0; m < sups.size (); m++)
+			{
+				int		col = (m % 2 == 0) ? -1 : 1;
+				int		ry = my;
+				for (int k = 0; k < m / 2; k++)		ry += rowH[k] + gap;
+				bounds.put (sups.get (m), new Rectangle (cx + col * coldx - modw / 2, ry, modw, BOX_H));
+			}
+			bounds.put (new Block (ArchModel.GLOBAL_LINDA, -1), new Rectangle (cx - LINDA_W / 2, y + (topH - LINDA_H) / 2, LINDA_W, LINDA_H));
+			y += topH + 52;
 		}
 
 		int		bottom = y;
@@ -368,6 +386,25 @@ public class ArchCanvas extends JPanel
 	}
 
 	/**
+	 * How tall each row of a set of modules laid out in two columns is: as tall as
+	 * its modules plus the longer of the two columns of symbols written under them.
+	 */
+	protected int[] rowHeights (List<Block> mods)
+	{
+		int		nrows = (mods.size () + 1) / 2;
+		int[]	rowH = new int[nrows];
+
+		for (int row = 0; row < nrows; row++)
+		{
+			int		lines = 0;
+			for (int m = 2 * row; (m < mods.size ()) && (m < 2 * row + 2); m++)
+				lines	= Math.max (lines, symbolRows (mods.get (m)));
+			rowH[row]	= BOX_H + symbolsHeight (lines);
+		}
+		return rowH;
+	}
+
+	/**
 	 * Takes the measures the layout is built on: a block is as wide as the two
 	 * columns written under it, so that what it is given and what it writes stay
 	 * under the block instead of reaching out of one side of it, and the region of
@@ -384,6 +421,8 @@ public class ArchCanvas extends JPanel
 				mw	= Math.max (mw, blockWidth (new Block (ArchModel.MODULE, r, m), BOX_W, SYM_PAD));
 			if (model.hasRouter (r))		rw = Math.max (rw, routerWidth (r));
 		}
+		for (Block b : model.globalSupervisors ())
+			mw	= Math.max (mw, blockWidth (b, BOX_W, SYM_PAD));
 		modw		= mw;
 		// the arrows to the Linda space keep the room they had, whatever the blocks measure
 		coldx		= LINDA_W / 2 + COL_GAP + modw / 2;
@@ -463,6 +502,9 @@ public class ArchCanvas extends JPanel
 		Rectangle	glinda = bounds.get (new Block (ArchModel.GLOBAL_LINDA, -1));
 		g.setColor (C_ARROW);
 		g.setStroke (new BasicStroke (1.5f));
+		if (glinda != null)
+			for (Block b : model.globalSupervisors ())
+				if (bounds.get (b) != null)		doubleArrow (g, bounds.get (b), glinda);
 		for (int r : model.robots ())
 		{
 			Rectangle	llinda = bounds.get (new Block (ArchModel.LOCAL_LINDA, r));
@@ -644,7 +686,7 @@ public class ArchCanvas extends JPanel
 			break;
 		case ArchModel.MODULE:
 			paintThread (g, b, r, selected);
-			g.setColor (C_MODULE);
+			g.setColor (model.isSupervisor (b) ? C_SUPER : C_MODULE);
 			g.fillRect (r.x, r.y, r.width, r.height);
 			g.setColor (border);
 			g.drawRect (r.x, r.y, r.width, r.height);

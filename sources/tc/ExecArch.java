@@ -33,6 +33,7 @@ public class ExecArch extends Thread
 	public ThreadDesc[]			thdesc;				// Actual standard modules
 	public ThreadDesc			vrdesc;				// Actual VirtualRobot module
 	public RouterDesc			lrdesc;				// Actual LindaRouter module
+	public ThreadDesc[]			supdesc		= new ThreadDesc[0];	// Supervisors of no robot (run on the global space, by the first robot)
 		
 	// Additional execution variables
 	protected boolean			initialised	= false;
@@ -172,6 +173,21 @@ public class ExecArch extends Thread
 			if (world != null)		vrdesc.config.set ("WORLD", world);
 		}
 
+		// Supervisors of no robot: they run on the global space, and the first
+		// robot, which is the one that brings it up, is the one that starts them
+		if ((robot == 0) && (glin != null) && !deploy.supervisors.isEmpty ())
+		{
+			DeployArch.Robot	none = new DeployArch.Robot (DeployArch.GLOBAL);
+
+			supdesc		= new ThreadDesc[Math.min (deploy.supervisors.size (), MAX_THS)];
+			for (i = 0; i < supdesc.length; i++)
+			{
+				supdesc[i]	= new ThreadDesc ("SUP" + (i + 1), config (none, deploy.supervisors.get (i)));
+				// no robot hands them the world: they are given the one of the deployment
+				if ((world != null) && (supdesc[i].config.get ("WORLD") == null))		supdesc[i].config.set ("WORLD", world);
+			}
+		}
+
 		initialised		= true;	
 	}
 
@@ -225,6 +241,16 @@ public class ExecArch extends Thread
 			
 			// Execute VirtualRobot if needed
 			virtual_robot ();
+
+			// Supervisors on the global space: shared with it when it is here, by
+			// the network when it is somebody else's
+			for (i = 0; i < supdesc.length; i++)
+			{
+				if ((linda_glob == null) && (supdesc[i].mode == ThreadDesc.M_SHARED))		supdesc[i].mode = ThreadDesc.M_TCP;
+				supdesc[i].start_thread (DeployArch.GLOBAL, gldesc, linda_glob);
+				if ((sim != null) && (supdesc[i].thread instanceof tcapps.tcsimulator.simulator.Simulated))
+					((tcapps.tcsimulator.simulator.Simulated) supdesc[i].thread).simulator (sim);
+			}
 		}
 		catch (Exception e) { e.printStackTrace (); }
 		
@@ -256,6 +282,8 @@ public class ExecArch extends Thread
 			if ((vrdesc != null) && (vrdesc.thread != null))		vrdesc.thread.stop ();
 			for (i = 0; i < num; i++)
 				if (thdesc[i].thread != null)						thdesc[i].thread.stop ();
+			for (i = 0; i < supdesc.length; i++)
+				if (supdesc[i].thread != null)						supdesc[i].thread.stop ();
 			if (linda_loc != null)									linda_loc.stop ();
 			if (linda_glob != null)									linda_glob.stop ();
 		} catch (Exception e) { e.printStackTrace (); }
@@ -294,6 +322,13 @@ public class ExecArch extends Thread
 		Tuple		tuple = new Tuple (Tuple.EXECUTION, item);
 		tuple.space	= robotid;
 		linda_loc.write (tuple);
+		// and to the supervisors on the global space, when this robot started them
+		if ((supdesc.length > 0) && (linda_glob != null))
+		{
+			Tuple	gt = new Tuple (Tuple.EXECUTION, item);
+			gt.space	= DeployArch.GLOBAL;
+			linda_glob.write (gt);
+		}
 		return true;
 	}
 	
@@ -352,6 +387,8 @@ public class ExecArch extends Thread
 		
 		for (i = 0; i < num; i++)
 			str += "\t" + thdesc[i] + "\n";								// Architecture modules
+		for (i = 0; i < supdesc.length; i++)
+			str += "\t" + supdesc[i] + "\n";								// Supervisors on the global space
 			
 		if (vrdesc != null)		str += "\t" + vrdesc + "\n";			// Virtual Robot
 

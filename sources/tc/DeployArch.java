@@ -22,7 +22,8 @@ import com.google.gson.GsonBuilder;
  * Deployment architecture: everything the Deployment Architecture editor
  * works with, persisted as JSON in a <code>.deploy</code> file. An optional
  * global Linda space and a list of robots, each one with its local Linda
- * space, an optional Linda router, its modules and its virtual robot. Module
+ * space, an optional Linda router, its modules and its virtual robot, and
+ * the supervisors that run outside every robot, on the global space. Module
  * properties keep the names the runtime reads (CLASS, MODE, PASSIVE, ...,
  * see tc.runtime.thread.ThreadDesc), so {@link ExecArch} executes a robot
  * straight from this model.
@@ -125,6 +126,10 @@ public class DeployArch
 	public String				world;											// world map used by the simulation (all robots); see getWorldFile
 	public Linda				globalLinda;									// null when there is none
 	public List<Robot>			robots		= new ArrayList<Robot> ();
+	public List<Module>			supervisors	= new ArrayList<Module> ();			// supervisors of no robot: they run on the global Linda space
+
+	/** Name of the space the supervisors of no robot are given, in place of the one of a robot. */
+	static public final String	GLOBAL			= "GLOBAL";
 
 	protected transient File	file;											// where it was loaded from / saved to
 	protected transient String	original;										// JSON as loaded or saved (to detect changes)
@@ -177,6 +182,7 @@ public class DeployArch
 		d.world			= world;
 		d.globalLinda	= (globalLinda == null) ? null : globalLinda.copy ();
 		for (Robot r : robots)		d.robots.add (r.copy ());
+		for (Module m : supervisors)	d.supervisors.add (m.copy ());
 		d.file			= file;
 		d.original		= original;
 		return d;
@@ -189,12 +195,21 @@ public class DeployArch
 		globalLinda	= (d.globalLinda == null) ? null : d.globalLinda.copy ();
 		robots.clear ();
 		for (Robot r : d.robots)	robots.add (r.copy ());
+		supervisors.clear ();
+		for (Module m : d.supervisors)	supervisors.add (m.copy ());
 	}
 
 	/** Fills what Gson may have left null in a hand-written or older file. */
 	protected void normalise ()
 	{
 		if (robots == null)		robots = new ArrayList<Robot> ();
+		if (supervisors == null)	supervisors = new ArrayList<Module> ();
+		for (Module m : supervisors)
+		{
+			if (m.name == null)			m.name = "Supervisor";
+			if (m.properties == null)	m.properties = new LinkedHashMap<String, String> ();
+			if (m.events == null)		m.events = new ArrayList<Event> ();
+		}
 		if ((world != null) && (world.trim ().length () == 0))		world = null;
 		for (Robot r : robots)
 		{
@@ -328,6 +343,8 @@ public class DeployArch
 
 		if (robots.isEmpty ())
 			problems.add ("The deployment has no robots to execute.");
+		if (!supervisors.isEmpty () && (globalLinda == null))
+			problems.add ("There are supervisors outside the robots, but no global Linda space for them to run on.");
 		if (globalLinda != null)		ports.put (where (globalLinda), "the global Linda space");
 		for (Robot r : robots)
 		{

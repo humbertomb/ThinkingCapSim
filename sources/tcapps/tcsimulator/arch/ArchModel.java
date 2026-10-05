@@ -70,6 +70,17 @@ public class ArchModel
 	 */
 	static public final String[]	MODULE_TYPES	= { "Controller", "Navigation", "Perception", "Planner", "Supervisor" };
 
+	/**
+	 * The kinds a module of a robot is added as from the list of them: a
+	 * supervisor is added on its own (see {@link #addSupervisor}), since it is the
+	 * one kind that may run outside every robot.
+	 */
+	static public final String[]	ROBOT_MODULE_TYPES	= { "Controller", "Navigation", "Perception", "Planner" };
+
+	/** The kind of module that watches over the others, in a robot or outside them all, on the global space. */
+	static public final String		SUPERVISOR		= "Supervisor";
+	static public final String		SUPERVISOR_BASE	= "tc.modules.Supervisor";
+
 	/** The kind of module that runs a program of its own. */
 	static public final String		CONTROLLER		= "Controller";
 	/** The kind of module that reads its parameters from a file of its own. */
@@ -214,7 +225,11 @@ public class ArchModel
 	static public final String[]	MODULE_HIDDEN	= { "PRI", "CONNECT", "TYPE" };		// CONNECT is edited in the events table, TYPE is what the module was created as
 	static public final String[]	VROBOT_HIDDEN	= { "PRI", "CONNECT" };
 
-	/** A block of the deployment: kind, robot (-1 for the global Linda) and, for modules, position in the robot. */
+	/**
+	 * A block of the deployment: kind, robot (-1 for the global Linda and for the
+	 * supervisors of no robot) and, for modules, position in the robot (or in the
+	 * supervisors of no robot).
+	 */
 	static public class Block
 	{
 		public int		kind;
@@ -273,6 +288,8 @@ public class ArchModel
 	/** The module behind a block (router, module or virtual robot), or null. */
 	public Module moduleOf (Block b)
 	{
+		if ((b.robot < 0) && (b.kind == MODULE))
+			return ((b.index >= 0) && (b.index < deploy.supervisors.size ())) ? deploy.supervisors.get (b.index) : null;
 		if (!hasRobot (b.robot))		return null;
 		Robot	r = robot (b.robot);
 		switch (b.kind)
@@ -304,6 +321,22 @@ public class ArchModel
 		return l;
 	}
 
+	/** Supervisors of no robot, which run on the global space. */
+	public List<Block> globalSupervisors ()
+	{
+		List<Block>	l = new ArrayList<Block> ();
+		for (int i = 0; i < deploy.supervisors.size (); i++)		l.add (new Block (MODULE, -1, i));
+		return l;
+	}
+
+	/** Every module block of the deployment: the ones of the robots, and the supervisors of none. */
+	public List<Block> allModuleBlocks ()
+	{
+		List<Block>	l = allRobotBlocks ();
+		l.addAll (globalSupervisors ());
+		return l;
+	}
+
 	/** Blocks of every robot. */
 	public List<Block> allRobotBlocks ()
 	{
@@ -317,6 +350,7 @@ public class ArchModel
 	{
 		if (b.kind == GLOBAL_LINDA)		return hasGlobalLinda ();
 		if (b.kind == ROBOT)			return hasRobot (b.robot);
+		if (b.robot < 0)				return globalSupervisors ().contains (b);
 		return robotBlocks (b.robot).contains (b);
 	}
 
@@ -528,6 +562,29 @@ public class ArchModel
 		return "Planner".equalsIgnoreCase (get (b, "TYPE"));
 	}
 
+	/**
+	 * Whether a module is a supervisor: one of no robot, which only a supervisor
+	 * can be; one whose class derives from tc.modules.Supervisor; or, when the
+	 * class is not there to tell, one created as one.
+	 */
+	public boolean isSupervisor (Block b)
+	{
+		if ((b == null) || (b.kind != MODULE) || (moduleOf (b) == null))		return false;
+		return (b.robot < 0) || isSupervisor (moduleOf (b));
+	}
+
+	/** The same for a module itself (one copied, say). */
+	static public boolean isSupervisor (Module m)
+	{
+		String		cls;
+
+		if (m == null)		return false;
+		cls		= (m.get ("CLASS") == null) ? "" : m.get ("CLASS").trim ();
+		if (tcapps.tceditor.DriverClasses.exists (cls))
+			return cls.equals (SUPERVISOR_BASE) || tcapps.tceditor.DriverClasses.of (SUPERVISOR_BASE, false, true).contains (cls);
+		return SUPERVISOR.equalsIgnoreCase (m.get ("TYPE"));
+	}
+
 	/** Puts down how a module runs, as it has to: polled and not passive if it is a planner, and never queued. */
 	public void fixRunModes (Block b)
 	{
@@ -542,7 +599,7 @@ public class ArchModel
 	/** The same for every module of the deployment. */
 	public void fixRunModes ()
 	{
-		for (Block b : allRobotBlocks ())
+		for (Block b : allModuleBlocks ())
 			if (b.kind == MODULE)		fixRunModes (b);
 	}
 
@@ -880,6 +937,7 @@ public class ArchModel
 					List<Module>	ms = new ArrayList<Module> (r.modules);
 					if (r.router != null)			ms.add (r.router);
 					if (r.virtualRobot != null)		ms.add (r.virtualRobot);
+					if (r == d.robots.get (0))		ms.addAll (d.supervisors);
 					for (Module m : ms)
 						for (Event e : m.events)
 							if ((e.symbol != null) && (e.itemClass != null) && (e.itemClass.trim ().length () > 0))
@@ -986,7 +1044,7 @@ public class ArchModel
 			if (java.lang.reflect.Modifier.isStatic (f.getModifiers ()) && (f.getType () == String.class))
 				try { set.add ((String) f.get (null)); } catch (Exception e) { }
 		set.addAll (learned ().keySet ());							// what the deployments of the project use (COORD, ZONE, ...)
-		for (Block b : allRobotBlocks ())
+		for (Block b : allModuleBlocks ())
 			if (hasEvents (b))
 				for (String[] e : events (b))
 					if (e[0].length () > 0)		set.add (e[0]);
@@ -1055,6 +1113,37 @@ public class ArchModel
 		return b;
 	}
 
+	/**
+	 * Adds a supervisor: to a robot, when one is given (it runs on its local
+	 * space), and outside them all when none is (-1), where it runs on the
+	 * global space -- which there has to be: null when there is not.
+	 */
+	public Block addSupervisor (int r)
+	{
+		if (r >= 0)						return addModule (r, SUPERVISOR);
+		if (!hasGlobalLinda ())			return null;
+		deploy.supervisors.add (DeployArch.newModule (uniqueName (-1, SUPERVISOR), SUPERVISOR));
+		Block	b = new Block (MODULE, -1, deploy.supervisors.size () - 1);
+		fixRunModes (b);
+		return b;
+	}
+
+	/** Pastes a supervisor outside every robot, on the global space; null when it is no supervisor or there is no global space. */
+	public Block pasteSupervisor (Module m)
+	{
+		if ((m == null) || !hasGlobalLinda () || !isSupervisor (m))		return null;
+
+		Module	n = m.copy ();
+		List<String>	names = new ArrayList<String> ();
+
+		for (Block b : globalSupervisors ())		names.add (labelOf (b));
+		if (names.contains (n.name))		n.name = uniqueName (-1, n.name);
+		deploy.supervisors.add (n);
+		Block	b = new Block (MODULE, -1, deploy.supervisors.size () - 1);
+		fixRunModes (b);
+		return b;
+	}
+
 	protected String uniqueModuleName (int r, String base)
 	{
 		List<String>	names = new ArrayList<String> ();
@@ -1068,7 +1157,7 @@ public class ArchModel
 	{
 		List<String>	names = new ArrayList<String> ();
 
-		for (Block b : robotBlocks (r))		names.add (labelOf (b));
+		for (Block b : (r < 0) ? globalSupervisors () : robotBlocks (r))		names.add (labelOf (b));
 		if (!names.contains (base))			return base;
 		for (int i = 2; ; i++)
 			if (!names.contains (base + " " + i))		return base + " " + i;
@@ -1181,9 +1270,13 @@ public class ArchModel
 	{
 		switch (b.kind)
 		{
-		case GLOBAL_LINDA:	deploy.globalLinda = null;						break;
+		case GLOBAL_LINDA:	deploy.globalLinda = null;	deploy.supervisors.clear ();	break;		// the supervisors of no robot run on it
 		case ROUTER:		if (hasRobot (b.robot))		robot (b.robot).router = null;	break;
-		case MODULE:		if (moduleOf (b) != null)	robot (b.robot).modules.remove (b.index);	break;
+		case MODULE:
+			if (moduleOf (b) == null)		break;
+			if (b.robot < 0)				deploy.supervisors.remove (b.index);
+			else							robot (b.robot).modules.remove (b.index);
+			break;
 		case ROBOT:			if (hasRobot (b.robot))		deploy.robots.remove (b.robot);	break;
 		default:			break;
 		}
