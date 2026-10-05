@@ -28,7 +28,9 @@ import wucore.utils.geom.*;
  * There it is cut to what can be seen: nothing below the floor, and nothing
  * beyond the outer walls of the world when they are known ({@link #setBounds}),
  * so a camera looking down shows the patch of floor it sees and one looking at
- * a wall stops at it. The cut is made again every time it moves.
+ * a wall stops at it. The cut is made again every time it moves. Its edges are
+ * drawn as lines, as its faces are all of one colour and seen from some angles
+ * there is no telling them apart.
  */
 public class Camera3D extends BranchGroup
 {
@@ -38,6 +40,9 @@ public class Camera3D extends BranchGroup
 	static public final float		ALPHA		= 0.7f;
 	/** The base of the pyramid, a shade darker than its faces. */
 	static public final float		BASE_SHADE	= 0.75f;
+	/** The edges of the pyramid, a much darker yellow than its faces so that the light does not wash them out, and how thick. */
+	static public final Color3f		C_EDGE		= new Color3f (0.45f, 0.36f, 0.0f);
+	static public final float		EDGE_WIDTH	= 2.0f;
 	/** Where the floor is (m): nothing is drawn below it. */
 	static public final double		FLOOR		= 0.0;
 
@@ -45,6 +50,7 @@ public class Camera3D extends BranchGroup
 	protected Point3d[][]			pyr;						// the corners of each pyramid in its camera's frame (apex first); null where it cannot be drawn
 	protected Shape3D[]				faces;						// the faces of each pyramid and the caps the cuts leave, in the world
 	protected Shape3D[]				bases;						// what it sees at its range max, a shade darker
+	protected Shape3D[]				edges;						// the edges of all of them
 	protected double[]				pan, tilt;					// how each camera is turned now (rad)
 	protected double[]				bounds;						// the outer walls: xmin, ymin, xmax, ymax (null: no walls to stop at)
 
@@ -65,6 +71,7 @@ public class Camera3D extends BranchGroup
 		pyr		= new Point3d[n][];
 		faces	= new Shape3D[n];
 		bases	= new Shape3D[n];
+		edges	= new Shape3D[n];
 		pan		= new double[n];
 		tilt	= new double[n];
 		for (int i = 0; i < n; i++)
@@ -73,8 +80,12 @@ public class Camera3D extends BranchGroup
 			if (pyr[i] == null)			continue;
 			faces[i]	= shape (1.0f);
 			bases[i]	= shape (BASE_SHADE);
+			edges[i]	= new Shape3D ();
+			edges[i].setCapability (Shape3D.ALLOW_GEOMETRY_WRITE);
+			edges[i].setAppearance (edgeAppearance ());
 			addChild (faces[i]);
 			addChild (bases[i]);
+			addChild (edges[i]);
 		}
 		move (pt, a, null, null);
 	}
@@ -129,6 +140,10 @@ public class Camera3D extends BranchGroup
 			cut (side, base);
 			faces[i].setGeometry (geometry (side));
 			bases[i].setGeometry (geometry (base));
+
+			List<Point3d[]>	all = new ArrayList<Point3d[]> (side);
+			all.addAll (base);
+			edges[i].setGeometry (outlines (all));
 		}
 	}
 
@@ -267,6 +282,26 @@ public class Camera3D extends BranchGroup
 		return ta;
 	}
 
+	/** The outlines of convex polygons, every side of each as a line; null with none. */
+	static protected GeometryArray outlines (List<Point3d[]> polys)
+	{
+		int		n = 0;
+
+		for (Point3d[] p : polys)		n += 2 * p.length;
+		if (n == 0)						return null;
+
+		LineArray	la = new LineArray (n, LineArray.COORDINATES);
+		int			k = 0;
+
+		for (Point3d[] p : polys)
+			for (int i = 0; i < p.length; i++)
+			{
+				la.setCoordinate (k++, p[i]);
+				la.setCoordinate (k++, p[(i + 1) % p.length]);
+			}
+		return la;
+	}
+
 	/* ------------------------------------------------------------------ */
 	/* The pyramid                                                         */
 	/* ------------------------------------------------------------------ */
@@ -306,6 +341,16 @@ public class Camera3D extends BranchGroup
 		s.setCapability (Shape3D.ALLOW_GEOMETRY_WRITE);
 		s.setAppearance (appearance (shade));
 		return s;
+	}
+
+	/** The edges: dark yellow, not see-through, thick. */
+	static protected Appearance edgeAppearance ()
+	{
+		Appearance	app = new Appearance ();
+
+		app.setColoringAttributes (new ColoringAttributes (C_EDGE, ColoringAttributes.SHADE_FLAT));
+		app.setLineAttributes (new LineAttributes (EDGE_WIDTH, LineAttributes.PATTERN_SOLID, true));
+		return app;
 	}
 
 	/** The faces of the pyramid in the colour the robot editor gives the cameras (yellow), see-through. */
