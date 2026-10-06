@@ -8,6 +8,7 @@ package tcrob.umu.soccer;
 import tc.runtime.thread.ModuleConfig;
 import tc.shared.linda.ItemBehNeeds;
 import tc.shared.linda.ItemNavigation;
+import tc.shared.linda.ItemStatus;
 import tc.shared.linda.Linda;
 import tc.shared.linda.Tuple;
 import tclib.behaviours.hfsm.HFSMController;
@@ -25,6 +26,11 @@ import tcrob.umu.soccer.linda.ItemReferee;
  * (the scan of the camera and the objects to keep seeing), which is told to
  * the vision as BEH_NEEDS.
  *
+ * It says how it is (STATUS), as a planner does, for whoever watches the
+ * robots (the table of robots of the simulator): OCCUPIED with the name of the
+ * state of the machine it is in, every time it changes, and ALARM with what
+ * the referee says of this robot, every time it says it.
+ *
  * Settings, besides those of {@link HFSMController}:
  * <pre>
  *   LPOS        the objects of the LPS the scripts ask for by number,
@@ -37,6 +43,8 @@ public class SoccerHfsmController extends HFSMController
 	protected Chaos					chaos;
 	protected Tuple					ntuple;						// what the scripts need of the vision (BEH_NEEDS): the scan of the camera and the objects
 	protected String				nsaid;						// what the vision was last told (scan and needs, as text); null: nothing yet
+	protected Tuple					stuple;						// how it is (STATUS)
+	protected String				ssaid;						// the state of the machine it last said it was in; null: none yet
 
 	public SoccerHfsmController (ModuleConfig cfg, Linda linda)
 	{
@@ -52,6 +60,8 @@ public class SoccerHfsmController extends HFSMController
 		if (lpos != null)						chaos.lpoNames (lpos.split ("[,;\\s]+"));
 		ntuple	= new Tuple (Tuple.BEHNEEDS, null);
 		nsaid	= null;
+		stuple	= new Tuple (Tuple.STATUS, null);
+		ssaid	= null;
 		return chaos;
 	}
 
@@ -71,6 +81,7 @@ public class SoccerHfsmController extends HFSMController
 	protected double[] after ()
 	{
 		needs ();
+		occupied ();
 		return new double[] { chaos.linear (), chaos.lateral (), chaos.rotation () };
 	}
 
@@ -78,6 +89,7 @@ public class SoccerHfsmController extends HFSMController
 	protected void machineChanged ()
 	{
 		nsaid	= null;
+		ssaid	= null;
 	}
 
 	/**
@@ -107,6 +119,11 @@ public class SoccerHfsmController extends HFSMController
 		chaos.referee (item);
 
 		String		me = robotName ();
+
+		// what it says of this robot, by name: an alarm of this robot, for whoever watches
+		if ((me != null) && (item.robot != null) && (item.robot.equals (me) || item.robot.startsWith (me + " ")))
+			status (ItemStatus.ALARM, item.text);
+
 		boolean		mine = (item.player < 0) || (item.robot == null) || (me == null)
 						   || item.robot.equals (me) || item.robot.startsWith (me + " ");		// the messages name the team after the robot
 
@@ -134,6 +151,31 @@ public class SoccerHfsmController extends HFSMController
 
 		chaos.pose (item.robot);
 		if (debug)					System.out.println ("  [SoccerHfsm] position " + item.robot + " quality " + item.robot.quality);
+	}
+
+	/** The state of the machine it is in (the innermost one), said (OCCUPIED) when it is not the one it last said. */
+	protected void occupied ()
+	{
+		tclib.behaviours.hfsm.HFSM	m = machine;
+		tclib.behaviours.hfsm.State	st = (m != null) ? m.state () : null;
+		String						name = (st != null) ? st.getName () : null;
+
+		if ((name == null) || name.equals (ssaid))		return;
+		ssaid	= name;
+		status (ItemStatus.OCCUPIED, name);
+	}
+
+	/** Says how it is (STATUS): a new item every time, as a shared Linda hands the reader the very object. */
+	protected void status (int type, String message)
+	{
+		ItemStatus		item = new ItemStatus ();
+
+		item.set (type, message, System.currentTimeMillis ());
+		synchronized (stuple)
+		{
+			stuple.value	= item;
+			linda.write (stuple);
+		}
 	}
 
 	/** The name of this robot, as the referee names the players. */
