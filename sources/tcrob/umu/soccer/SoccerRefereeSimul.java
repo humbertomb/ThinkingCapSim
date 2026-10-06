@@ -278,16 +278,21 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		enter (GameStates.INITIAL, -1);
 		drawKickoff ();
 
-		if (localgfx)
-			SwingUtilities.invokeLater (new Runnable ()
+		if (localgfx)			open_gfx ();
+	}
+
+	/** The window of the referee: the score, the clock and what it decides. */
+	protected void open_gfx ()
+	{
+		SwingUtilities.invokeLater (new Runnable ()
+		{
+			public void run ()
 			{
-				public void run ()
-				{
-					if (win != null)		return;
-					win	= new SoccerRefereeWindow (hostFrame (), SoccerRefereeSimul.this);
-					win.setVisible (true);
-				}
-			});
+				if (win != null)		return;
+				win	= new SoccerRefereeWindow (hostFrame (), SoccerRefereeSimul.this);
+				win.setVisible (true);
+			}
+		});
 	}
 
 	/** The simulator this referee looks at; its world is the one the zones are read from. */

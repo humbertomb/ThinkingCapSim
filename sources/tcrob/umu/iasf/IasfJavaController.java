@@ -118,6 +118,12 @@ public class IasfJavaController extends Controller
 		if (c_plot != null)		c_plot.close ();
 	}
 
+	/** The plot of the control action. */
+	protected void open_gfx ()
+	{
+		openMotionPlot (c_plot, c_labels);
+	}
+
 	public void step (long ctime) 
 	{
 		if (state != RUN)						return;

@@ -318,6 +318,48 @@ public abstract class StdThread implements Runnable, LindaListener
 	 */
 	protected void close_gfx ()								{ }
 
+	/**
+	 * Opens the windows the module shows when it runs with local graphics, as it
+	 * opens them when it is configured: the other half of {@link #close_gfx}, so
+	 * that they can be closed and opened again while it runs ({@link #graphics}).
+	 * The default implementation opens nothing.
+	 */
+	protected void open_gfx ()								{ }
+
+	/** Whether the module shows its windows (local graphics). */
+	public final boolean graphics ()						{ return localgfx; }
+
+	/**
+	 * Shows or hides the windows of the module while it runs: they are opened
+	 * ({@link #open_gfx}) or closed ({@link #close_gfx}), and the module draws on
+	 * them or not ({@link #localgfx}). A module that has not been configured yet
+	 * opens them when it is, as it does with local graphics.
+	 */
+	public void graphics (boolean on)
+	{
+		if (on == localgfx)						return;
+		if (!on)
+		{
+			localgfx	= false;					// nothing more is drawn on them
+			close_gfx_safe ();
+			return;
+		}
+		if (!isConfigured ())					{ localgfx = true;	return; }
+
+		// opened as the module opens them, away from the event thread (some of them
+		// wait for it), and drawn on once they are there
+		Thread		t = new Thread (new Runnable ()
+		{
+			public void run ()
+			{
+				try { open_gfx (); } catch (Exception e) { e.printStackTrace (); }
+				localgfx	= true;
+			}
+		}, "TC-Gfx-" + ((tdesc != null) ? tdesc.preffix : "module"));
+		t.setDaemon (true);
+		t.start ();
+	}
+
 	/** Runs {@link #close_gfx} on the event dispatch thread, ignoring failures. */
 	protected void close_gfx_safe ()
 	{

@@ -246,6 +246,13 @@ public class SimRobot extends VirtualRobot
 		if (camwin != null)						camwin.close ();
 		camwin	= null;
 	}
+
+	/** The plot of the motion commands and the window of the cameras, when it has any. */
+	protected void open_gfx ()
+	{
+		super.open_gfx ();
+		if ((cams != null) && (camwin == null))	open_camera_window ();
+	}
 	
 	public void childClosed (Object window)
 	{

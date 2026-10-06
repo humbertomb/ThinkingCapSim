@@ -208,6 +208,12 @@ public class IForkPlanner extends SeqPlanner
 		win		= null;
 	}
 
+	/** The window of the plan of the forklift (not the one of a plain sequence). */
+	protected void open_gfx ()
+	{
+		if ((win == null) && (topol != null))		win = new IForkPlanWindow (tdesc.robotid);
+	}
+
 	public void step (long ctime) 
 	{
 		// Check if a plan can be computed
@@ -1295,10 +1301,10 @@ public class IForkPlanner extends SeqPlanner
 		
 		if (localgfx) 	
 		{
-			swin.setVisible(false);
+			if (swin != null)	swin.setVisible(false);
 			swin = null;
 			
-			win	= new IForkPlanWindow (space);
+			open_gfx ();
 		}
 	}	
 	

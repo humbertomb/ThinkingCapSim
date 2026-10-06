@@ -1184,6 +1184,15 @@ public class IForkController extends Controller
 		if (c_plot != null)		c_plot.close ();
 	}
 
+	/** The plot of the control action, with the scales of the platform. */
+	protected void open_gfx ()
+	{
+		if ((rdesc != null) && (rdesc.model != null))
+			c_plot.rescale (-rdesc.model.Vmax, rdesc.model.Vmax,
+							-Math.toDegrees (rdesc.model.Rmax), Math.toDegrees (rdesc.model.Rmax));
+		c_plot.open (c_labels);
+	}
+
 	public void step (long ctime) 
 	{
 		if (state != RUN)						return;

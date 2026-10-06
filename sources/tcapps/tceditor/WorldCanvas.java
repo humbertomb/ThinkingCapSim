@@ -103,6 +103,8 @@ public class WorldCanvas extends JPanel
 		default public String name (int i)								{ return "element " + i; }
 		/** The i-th one was put there by hand: whoever owns it takes it from here. */
 		default public void place (int i, double x, double y, double a)	{ }
+		/** The i-th one was clicked with the right button (or the key of the menus of the platform): its menu, if it has one, shown where the mouse is. */
+		default public void popup (int i, MouseEvent e)					{ }
 	}
 
 	public interface Listener
@@ -610,6 +612,18 @@ public class WorldCanvas extends JPanel
 		anchorX	= snap (curX);
 		anchorY	= snap (curY);
 		dragged	= false;
+
+		// the menu of what the overlay draws (a robot of a simulation), on the one under the hand
+		if ((overlay != null) && (e.isPopupTrigger () || SwingUtilities.isRightMouseButton (e)))
+		{
+			int		hit = overlay.pick (curX, curY, PICK_PX / scale);
+
+			if (hit >= 0)
+			{
+				overlay.popup (hit, e);
+				return;
+			}
+		}
 
 		boolean		pan = SwingUtilities.isMiddleMouseButton (e) || (tool == T_PAN) || spaceDown
 						|| (SwingUtilities.isLeftMouseButton (e) && e.isAltDown ());

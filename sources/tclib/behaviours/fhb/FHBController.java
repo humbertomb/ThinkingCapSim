@@ -287,6 +287,16 @@ public class FHBController extends Controller
 		if (b_plot != null)		b_plot.close ();
 	}
 
+	/** The rules of the behaviour last plotted, for its plot when it is opened again. */
+	protected String[]				blabels;
+
+	/** The plot of the rules of the behaviour and the one of the control action. */
+	protected void open_gfx ()
+	{
+		if (blabels != null)	b_plot.open (blabels);
+		openMotionPlot (c_plot, c_labels);
+	}
+
 	public void step (long ctime) 
 	{
 		int				i;
@@ -465,6 +475,7 @@ public class FHBController extends Controller
 					labels[i]	= names.get (i);
 			}
 		
+			blabels	= labels;
 			if (localgfx)
 			{
 				if (labels != null)		

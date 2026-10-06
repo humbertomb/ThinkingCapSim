@@ -205,6 +205,22 @@ public class SoccerVision extends Perception
 		win		= null;
 	}
 
+	/** The window to configure and watch the vision, docked on the right of the simulator. */
+	protected void open_gfx ()
+	{
+		SwingUtilities.invokeLater (new Runnable ()
+		{
+			public void run ()
+			{
+				if (win != null)		return;
+
+				win = new SoccerVisionWindow (hostFrame (), SoccerVision.this);
+				win.setTitle ("Chaos Vision Monitor [" + robotid + "]");
+				win.setVisible (true);
+			}
+		});
+	}
+
 	public void step (long ctime)
 	{
 		if (state != RUN)		return;
@@ -287,18 +303,7 @@ public class SoccerVision extends Perception
 		instanceBlob ();
 		
 		// with local graphics, the window to configure and watch the vision (once the algorithms are there)
-		if (localgfx && (win == null))
-			SwingUtilities.invokeLater (new Runnable ()
-			{
-				public void run ()
-				{
-					if (win != null)		return;
-					
-					win = new SoccerVisionWindow (hostFrame (), SoccerVision.this);		// docked on the right of the simulator
-					win.setTitle ("Chaos Vision Monitor [" + robotid + "]");
-					win.setVisible (true);
-				}
-			});
+		if (localgfx && (win == null))		open_gfx ();
 		
 		initialized = true;
 	}

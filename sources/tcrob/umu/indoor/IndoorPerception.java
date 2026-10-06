@@ -259,6 +259,12 @@ public class IndoorPerception extends Perception
 		win		= null;
 	}
 
+	/** The window of the LPS. */
+	protected void open_gfx ()
+	{
+		if (win == null)		win = new LPSWindow (robotid);
+	}
+
 	public void step (long ctime)
 	{
 		if ((state != RUN) || (data == null))		return;
@@ -374,7 +380,7 @@ public class IndoorPerception extends Perception
 		
 		
 		if (localgfx)
-			win		= new LPSWindow (robotid);
+			open_gfx ();
 
 		//		lps.dump ();
 		firstime	= true;

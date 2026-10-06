@@ -90,6 +90,14 @@ public class IndoorNavigation extends Navigation
 		fwin		= null;
 	}
 
+	/** The windows of the grid and of the map of segments. */
+	protected void open_gfx ()
+	{
+		if ((grid == null) || (fmap == null))		return;
+		if (gwin == null)		gwin = new GridWindow (tdesc.robotid, grid, rdesc);
+		if (fwin == null)		fwin = new FSegWindow (tdesc.robotid, fmap, rdesc);
+	}
+
 	public void step (long ctime)
 	{
 		if (!initialised)		return;
@@ -260,11 +268,7 @@ public class IndoorNavigation extends Navigation
 		time_upd	= 0;
 		initialised = true;
 		
-		if (localgfx) 
-		{
-			gwin = new GridWindow (space, grid, rdesc);
-			fwin = new FSegWindow (space, fmap, rdesc);
-		}
+		if (localgfx)			open_gfx ();
 	}
 }
 

@@ -208,6 +208,21 @@ public class SoccerLocalization extends Navigation
 		win		= null;
 	}
 
+	/** The window of the localisation. */
+	protected void open_gfx ()
+	{
+		javax.swing.SwingUtilities.invokeLater (new Runnable ()
+		{
+			public void run ()
+			{
+				if (win != null)		return;
+
+				win = new SoccerLocalizationWindow (hostFrame (), "Chaos Localisation [" + getConfig ().robot () + "]", SoccerLocalization.this);
+				win.setVisible (true);
+			}
+		});
+	}
+
 	public void step (long ctime)
 	{
 		if (!initialised)		return;
@@ -290,17 +305,7 @@ public class SoccerLocalization extends Navigation
 		method (METHOD);
 
 		// with local graphics, the window of the localisation
-		if (localgfx && (win == null))
-			javax.swing.SwingUtilities.invokeLater (new Runnable ()
-			{
-				public void run ()
-				{
-					if (win != null)		return;
-
-					win = new SoccerLocalizationWindow (hostFrame (), "Chaos Localisation [" + getConfig ().robot () + "]", SoccerLocalization.this);
-					win.setVisible (true);
-				}
-			});
+		if (localgfx && (win == null))		open_gfx ();
 
 		initialised = true;
 	}

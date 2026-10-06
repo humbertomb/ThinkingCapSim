@@ -183,6 +183,12 @@ public abstract class VirtualRobot extends StdThread implements ChildWindowListe
 		plot = null;
 	}
 
+	/** The plot of the motion commands. */
+	protected void open_gfx ()
+	{
+		open_plot ();
+	}
+
 	public void childClosed (Object window)
 	{
 		if (window instanceof PlotWindow)

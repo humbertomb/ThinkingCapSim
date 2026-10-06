@@ -199,18 +199,27 @@ public class LuaController extends Controller
 			System.out.println ("  [LUA] Cannot read <" + name + ">: " + wrong + " (nothing to run)");
 		}
 
-		if (localgfx)
-		{
-			openMotionPlot (c_plot, c_labels);
-			monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, chaos, file, cfg.robot (),
-																	  new tclib.behaviours.lua.gui.LuaMonitorWindow.Reload ()
-			{
-				public void reload ()					{ LuaController.this.reload (); }
-				public void load (File f)				{ LuaController.this.load (f); }
-			});
-			if ((monitor != null) && (wrong != null))	monitor.problem (wrong);
-		}
+		problem		= wrong;
+		if (localgfx)							open_gfx ();
 		if (dump)								c_dump.open (c_labels);
+	}
+
+	/** What was the matter with the program when it was read, for the monitor (null: nothing). */
+	protected String				problem;
+
+	/** The plot of the control action and the monitor of the program. */
+	protected void open_gfx ()
+	{
+		if (file == null)						return;
+		openMotionPlot (c_plot, c_labels);
+		if (monitor != null)					return;
+		monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, chaos, file, getConfig ().robot (),
+																  new tclib.behaviours.lua.gui.LuaMonitorWindow.Reload ()
+		{
+			public void reload ()					{ LuaController.this.reload (); }
+			public void load (File f)				{ LuaController.this.load (f); }
+		});
+		if ((monitor != null) && (problem != null))	monitor.problem (problem);
 	}
 
 	/** The program being run, or null when none could be loaded. */

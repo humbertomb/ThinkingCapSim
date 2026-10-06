@@ -45,6 +45,12 @@ public class SeqPlanner extends Planner
 		swin		= null;
 	}
 
+	/** The window of the plan. */
+	protected void open_gfx ()
+	{
+		if (swin == null)		swin = new SeqPlannerWindow (tdesc.robotid);
+	}
+
 	public void step (long ctime) 
 	{
 		// Check if a plan can be computed
@@ -187,7 +193,7 @@ public class SeqPlanner extends Planner
 		newtask		= false;
 		initialised	= true;
 		
-		if (localgfx) 	swin	= new SeqPlannerWindow (space);
+		if (localgfx)			open_gfx ();
 	}
 	
 	public String htmlPlan ()

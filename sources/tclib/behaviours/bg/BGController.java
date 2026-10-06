@@ -345,6 +345,14 @@ public class BGController extends Controller
 		if (b_plot != null)		b_plot.close ();
 	}
 
+	/** The plot of the behaviours of the program and the one of the control action. */
+	protected void open_gfx ()
+	{
+		if (program == null)	return;
+		b_plot.open (program.behlabels ());
+		openMotionPlot (c_plot, c_labels);
+	}
+
 	public void step (long ctime) 
 	{
 		if (state != RUN)												return;

@@ -287,6 +287,20 @@ public class ExecArch extends Thread
 		return true;
 	}
 
+	/**
+	 * The modules of the robot, as the deployment has them, and its virtual robot
+	 * last: what each runs on (its thread, null when it did not start), for
+	 * whoever wants to look at them (their windows, say).
+	 */
+	public java.util.List<ThreadDesc> modules ()
+	{
+		java.util.List<ThreadDesc>	l = new java.util.ArrayList<ThreadDesc> ();
+
+		for (int i = 0; i < num; i++)		l.add (thdesc[i]);
+		if (vrdesc != null)					l.add (vrdesc);
+		return l;
+	}
+
 	/** The modules of the robot that are not ready yet (see {@link #isReady}), by name, for whoever waits for them. */
 	public java.util.List<String> notReady ()
 	{

@@ -137,14 +137,20 @@ public class HFSMController extends Controller
 		if (name == null)						return;
 
 		if (load (new java.io.File (name)) && localgfx)
-		{
-			openMotionPlot (c_plot, c_labels);
-			monitor	= tclib.behaviours.hfsm.gui.HFSMMonitorWindow.open (machine, cfg.robot (), new tclib.behaviours.hfsm.gui.HFSMMonitorWindow.Reload ()
+			open_gfx ();
+	}
+
+	/** The plot of the control action and the monitor of the machine. */
+	protected void open_gfx ()
+	{
+		if (machine == null)				return;
+		openMotionPlot (c_plot, c_labels);
+		if (monitor == null)
+			monitor	= tclib.behaviours.hfsm.gui.HFSMMonitorWindow.open (machine, getConfig ().robot (), new tclib.behaviours.hfsm.gui.HFSMMonitorWindow.Reload ()
 			{
 				public void reload ()						{ HFSMController.this.reload (); }
 				public void load (java.io.File f)			{ HFSMController.this.load (f); }
 			});
-		}
 	}
 
 	/**

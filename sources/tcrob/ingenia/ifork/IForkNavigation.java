@@ -97,6 +97,13 @@ public class IForkNavigation extends IndoorNavigation
 		win		= null;
 	}
 
+	/** The windows of the indoor navigation, and the one of the topological map. */
+	protected void open_gfx ()
+	{
+		super.open_gfx ();						// the grid and the map of segments, as an indoor navigation has them
+		if ((win == null) && (topol != null))		win = new HTopolWindow (tdesc.robotid, topol, rdesc);
+	}
+
 	public void notify_goal (String space, ItemGoal item)
 	{		
 		super.notify_goal (space, item);
@@ -142,8 +149,7 @@ public class IForkNavigation extends IndoorNavigation
 		czone	= node.getLabel ();
 		lzone	= "null";
 		
-		if (localgfx) 
-			win		= new HTopolWindow (space, topol, rdesc);
+		if (localgfx)			open_gfx ();
 	}
 
 	public synchronized void notify_coord (String space, ItemCoordination coord)

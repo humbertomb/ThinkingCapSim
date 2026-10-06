@@ -102,20 +102,25 @@ public class IasfLuaController extends Controller
 		else
 			System.out.println ("  [LUA] No program (PRG) for the controller: nothing to run");
 
-		if (localgfx)
+		problem		= wrong;
+		if (localgfx)							open_gfx ();
+	}
+
+	/** What was the matter with the program when it was read, for the monitor (null: nothing). */
+	protected String				problem;
+
+	/** The plot of the control action and, with a program, its monitor. */
+	protected void open_gfx ()
+	{
+		openMotionPlot (c_plot, c_labels);		// the window, with its scales as far as the platform goes
+		if ((file == null) || (monitor != null))		return;
+		monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, tc, file, getConfig ().robot (),
+																  new tclib.behaviours.lua.gui.LuaMonitorWindow.Reload ()
 		{
-			openMotionPlot (c_plot, c_labels);	// the window, with its scales as far as the platform goes
-			if (file != null)
-			{
-				monitor	= tclib.behaviours.lua.gui.LuaMonitorWindow.open (lua, tc, file, cfg.robot (),
-																		  new tclib.behaviours.lua.gui.LuaMonitorWindow.Reload ()
-				{
-					public void reload ()					{ IasfLuaController.this.load (file); }
-					public void load (File f)				{ IasfLuaController.this.load (f); }
-				});
-				if ((monitor != null) && (wrong != null))	monitor.problem (wrong);
-			}
-		}
+			public void reload ()					{ IasfLuaController.this.load (file); }
+			public void load (File f)				{ IasfLuaController.this.load (f); }
+		});
+		if ((monitor != null) && (problem != null))	monitor.problem (problem);
 	}
 
 	/**

@@ -1089,6 +1089,44 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 		}
 	}
 
+	/**
+	 * The menu of a robot of the 2D view: its name, which does nothing, and one
+	 * check box for each module of its architecture (and its virtual robot),
+	 * ticked when the module shows its windows (local graphics): unticking it
+	 * closes them, ticking it opens them.
+	 */
+	public void popup (int i, java.awt.event.MouseEvent e)
+	{
+		String		name;
+		ExecArch	arch;
+
+		synchronized (robots)		{ name = ((i >= 0) && (i < robots.size ())) ? robots.get (i).name : null; }
+		arch	= runningRobot (name);
+		if (arch == null)			return;
+
+		javax.swing.JPopupMenu	menu = new javax.swing.JPopupMenu ();
+		JMenuItem	title = new JMenuItem (name);
+
+		title.setFont (title.getFont ().deriveFont (java.awt.Font.BOLD));
+		menu.add (title);											// the robot: nothing to do
+		menu.addSeparator ();
+		for (final tc.runtime.thread.ThreadDesc td : arch.modules ())
+		{
+			final tc.runtime.thread.StdThread	th = td.thread;
+			String								label = ((td.config != null) && (td.config.name () != null)) ? td.config.name () : td.preffix;
+			final javax.swing.JCheckBoxMenuItem	item = new javax.swing.JCheckBoxMenuItem (label, (th != null) && th.graphics ());
+
+			item.setEnabled (th != null);
+			item.setToolTipText ((th != null) ? "Show or hide the windows of the module" : "The module did not start");
+			item.addActionListener (new java.awt.event.ActionListener ()
+			{
+				public void actionPerformed (java.awt.event.ActionEvent ev)		{ th.graphics (item.isSelected ()); }
+			});
+			menu.add (item);
+		}
+		menu.show (e.getComponent (), e.getX (), e.getY ());
+	}
+
 	public void place (int i, double x, double y, double a)
 	{
 		if (simulator == null)			return;
