@@ -234,6 +234,22 @@ public class Chaos implements LuaBridge
 		catch (NumberFormatException e)		{ }
 	}
 	public Position start ()									{ return start; }
+
+	/**
+	 * Whether the robot is now (its centre, where chaos.getCurrentPos says it is)
+	 * in the penalty area at one end of the field, as the team sees it: +1 the
+	 * end of Net1, the net it attacks, -1 the end of Net2, its own. The area is
+	 * the one of the field of the localisation ({@link tcrob.umu.soccer.gm.Localisation}):
+	 * AREA_WIDTH across and AREA_HEIGHT in from the end line, lines included.
+	 */
+	public boolean inArea (int end)
+	{
+		double		x, y, half = tcrob.umu.soccer.gm.Localisation.FIELD_Y_SIZE / 2.0;
+
+		synchronized (pose)		{ x = pose.x () * MM;	y = pose.y () * MM * end; }
+		return pose.valid && (Math.abs (x) <= tcrob.umu.soccer.gm.Localisation.AREA_WIDTH / 2.0)
+				&& (y <= half) && (y >= half - tcrob.umu.soccer.gm.Localisation.AREA_HEIGHT);
+	}
 	public Position pose ()										{ return pose; }
 
 	public void ballVelocity (double vx, double vy)				{ ballvel.set (vx, vy); }
@@ -497,6 +513,19 @@ public class Chaos implements LuaBridge
 		c.set ("getStartPos", new LuaFunction ("chaos.getStartPos")
 		{
 			public Object call (Object[] args)		{ return point (start.x (), start.y (), start.alpha); }
+		});
+
+		// whether the robot is in the penalty area of its own net (Net2) or of the
+		// one it attacks (Net1), by where it is now (getCurrentPos), its centre: 1 or
+		// 0, as the flags of the other functions (isNew, anchored)
+		c.set ("inNet2Area", new LuaFunction ("chaos.inNet2Area")
+		{
+			public Object call (Object[] args)		{ return Double.valueOf (inArea (-1) ? 1.0 : 0.0); }
+		});
+
+		c.set ("inNet1Area", new LuaFunction ("chaos.inNet1Area")
+		{
+			public Object call (Object[] args)		{ return Double.valueOf (inArea (1) ? 1.0 : 0.0); }
 		});
 
 		c.set ("getBallVel", new LuaFunction ("chaos.getBallVel")

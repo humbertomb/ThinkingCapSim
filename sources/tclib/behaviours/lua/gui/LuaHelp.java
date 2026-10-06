@@ -160,6 +160,8 @@ public class LuaHelp
 					+ "<span class=\"mono\">dx</span>, <span class=\"mono\">dy</span> (mm) and "
 					+ "<span class=\"mono\">dtheta</span> (degrees) its uncertainty, when there is one." },
 		{ "getStartPos", "", "Where the robot starts, the position it is put at for a kick-off: x and y in mm, theta in degrees, in the field." },
+		{ "inNet2Area", "", "Whether the robot is in the penalty area of its own net (Net2): 1 if it is, 0 if it is not (compare it: <span class=\"mono\">chaos.inNet2Area () == 1</span>; 0 is true in Lua), by where getCurrentPos says it is (its centre)." },
+		{ "inNet1Area", "", "Whether the robot is in the penalty area of the net it attacks (Net1): 1 if it is, 0 if it is not, by where getCurrentPos says it is (its centre)." },
 		{ "getBallVel", "", "How fast the ball is going, x and y in mm a second." },
 		{ "setVlin", "mm/s", "How fast to go forward. Backwards is negative." },
 		{ "setVlat", "mm/s", "How fast to go sideways, to the left of the robot. It is commanded like the other two and it is "
