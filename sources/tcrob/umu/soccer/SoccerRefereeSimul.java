@@ -170,9 +170,9 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	 */
 	static public final String		FIRSTS		= "BLUE-1, RED-1";
 	/** How far from the ball the first robot of the team that does not kick off stands on SET (m). */
-	static public final double		KICKOFF_DIST	= 1.0;
+	static public final double		KICKOFF_DIST	= 2.0;
 	/** And how far from the halfway line, in its own half, it is put when it is nearer (m). */
-	static public final double		KICKOFF_BACK	= 1.5;
+	static public final double		KICKOFF_BACK	= 2.0;
 	/** The teams, as the referee numbers them: the red one owns Net1, the blue one Net2. */
 	static public final int			RED				= 0;
 	static public final int			BLUE			= 1;

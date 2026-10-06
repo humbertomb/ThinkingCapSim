@@ -15,7 +15,7 @@
 --
 -- 20261006 Humberto Martinez
 
-local MIN_ANCHOR = 0.1			-- an object anchored less than this is not seen
+local MIN_ANCHOR = 0.6			-- an object anchored less than this is not seen
 local MIN_DARC = 15				-- on the line enough: how far from it, round the ball (mm)
 local MIN_DTHETA = 2			-- looking at the ball (deg)
 local MAX_TURNED = 45			-- the ball further to a side than this (deg): turn to it before stepping

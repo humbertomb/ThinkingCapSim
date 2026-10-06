@@ -2,7 +2,7 @@
   "world": "./conf/maps/soccer_field_aibo_2007_2robots.world",
   "robots": [
     {
-      "name": "AIBO-4",
+      "name": "BLUE-4",
       "linda": {
         "address": "localhost",
         "port": 3000,

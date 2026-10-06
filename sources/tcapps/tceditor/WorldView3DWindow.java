@@ -65,7 +65,6 @@ import tc.vrobot.RobotData;
 import tc.vrobot.RobotDesc;
 import tcapps.tceditor.visualization.Scene3D;
 import tcapps.tceditor.visualization.ViewCube;
-import tcapps.tceditor.visualization.Articulated3D;
 import tcapps.tceditor.visualization.FloorName;
 import tcapps.tceditor.visualization.Robot3D;
 import tcapps.tceditor.visualization.World3D;

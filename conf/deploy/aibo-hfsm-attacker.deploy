@@ -2,7 +2,7 @@
   "world": "./conf/maps/soccer_field_aibo_2007_2robots.world",
   "robots": [
     {
-      "name": "AIBO-1",
+      "name": "BLUE-1",
       "linda": {
         "address": "localhost",
         "port": 3000,
@@ -18,7 +18,9 @@
             "PASSIVE": "true",
             "PRG": "./conf/programs/hfsm/match_attacker.hfsm",
             "TYPE": "Controller",
-            "AUTO": "true"
+            "AUTO": "true",
+            "POLLED": "false",
+            "QUEUED": "false"
           },
           "events": [
             {
@@ -45,7 +47,9 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "TYPE": "Perception",
-            "GFX": "true"
+            "GFX": "true",
+            "POLLED": "false",
+            "QUEUED": "false"
           },
           "events": [
             {
@@ -63,7 +67,9 @@
             "PASSIVE": "true",
             "GFX": "true",
             "CLASS": "tcrob.umu.soccer.SoccerVision",
-            "PARAMS": "./conf/vision/aibo-soccer-2007.chaos"
+            "PARAMS": "./conf/vision/aibo-soccer-2007.chaos",
+            "POLLED": "false",
+            "QUEUED": "false"
           },
           "events": [
             {
@@ -86,7 +92,9 @@
             "PASSIVE": "false",
             "GFX": "true",
             "EXTIME": "100",
-            "CLASS": "tcrob.umu.soccer.SoccerRefereeSimul"
+            "CLASS": "tcrob.umu.soccer.SoccerRefereeSimul",
+            "POLLED": "false",
+            "QUEUED": "false"
           },
           "events": []
         },
@@ -97,7 +105,9 @@
             "MODE": "shared",
             "PASSIVE": "true",
             "GFX": "true",
-            "CLASS": "tcrob.umu.soccer.SoccerLocalization"
+            "CLASS": "tcrob.umu.soccer.SoccerLocalization",
+            "POLLED": "false",
+            "QUEUED": "false"
           },
           "events": [
             {
@@ -132,5 +142,6 @@
       },
       "properties": {}
     }
-  ]
+  ],
+  "supervisors": []
 }

@@ -20,46 +20,46 @@
           {
             "name": "BalLost",
             "id": 7,
-            "x": 410,
-            "y": -157,
+            "x": 392,
+            "y": -147,
             "to": "KeepPosition",
             "toId": 8,
             "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.anchored < 0.7 then \n\treturn true\nelse\n\treturn false\nend\n"
           },
           {
-            "name": "BallFar",
-            "id": 25,
-            "x": 411,
-            "y": -48,
-            "to": "KeepPosition",
-            "toId": 8,
-            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.rho > 800 then \n\treturn true\nelse\n\treturn false\nend\n"
+            "name": "OutNet2Area",
+            "id": 32,
+            "x": 550,
+            "y": 96,
+            "to": "CutBall",
+            "toId": 28,
+            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nlocal net2 = chaos.getLpo(chaos.NET2_LPO)\nif net2.anchored > net1.anchored and net2.rho > 1500 then \n\treturn true\nend\nif net1.anchored > net2.anchored and net1.rho < 4800 then \n\treturn true\nend\nif not chaos.inNet2Area () then\n\treturn true\nend\nreturn false\n\n"
           },
           {
-            "name": "FarFromNet2",
-            "id": 26,
-            "x": 405,
-            "y": 67,
-            "to": "KeepPosition",
-            "toId": 8,
-            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nlocal net2 = chaos.getLpo(chaos.NET2_LPO)\nif net2.anchored > net1.anchored and net2.rho > 1500 then \n\treturn true\nend\nif net1.anchored > net2.anchored and net1.rho < 4000 then \n\treturn true\nend\nreturn false\n\n"
+            "name": "BallNotDanger",
+            "id": 33,
+            "x": 460,
+            "y": -28,
+            "to": "CutBall",
+            "toId": 28,
+            "test": "local ball = chaos.getLpo (chaos.BALL_LPO)\nlocal pos = chaos.getStartPos ()\nlocal dist = chaos.distancePosToLpo (pos, ball)\nif dist >= 1000 then \n\treturn true\nelse\n\treturn false\nend\n"
           }
         ]
       },
       {
         "name": "KeepPosition",
         "id": 8,
-        "x": 229,
-        "y": -64,
+        "x": 207,
+        "y": -33,
         "transitions": [
           {
-            "name": "OnPlace",
+            "name": "InNetArea",
             "id": 22,
-            "x": 67,
-            "y": 120,
+            "x": 57,
+            "y": 136,
             "to": "LookForBall",
             "toId": 20,
-            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nlocal net2 = chaos.getLpo(chaos.NET2_LPO)\nlocal gs = chaos.getCurrentPos ()\nif net2.anchored > 0.7 and net2.rho < 700 then \n\treturn true\nend\nif net1.anchored > 0.7 and net1.rho > 5000 then \n\treturn true\nend\nreturn false\n\n"
+            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nlocal net2 = chaos.getLpo(chaos.NET2_LPO)\nlocal gs = chaos.getCurrentPos ()\nif net2.anchored > 0.7 and net2.rho < 700 then \n\treturn true\nend\nif net1.anchored > 0.7 and net1.rho > 5000 then \n\treturn true\nend\nif chaos.inNet2Area () then\n\treturn ture\nend\nreturn false\n\n"
           }
         ],
         "meta": true,
@@ -107,54 +107,90 @@
       {
         "name": "FaceBall",
         "id": 18,
-        "x": 553,
-        "y": 334,
+        "x": 622,
+        "y": 397,
         "code": "chaos.setBehavior(\"faceBall\")\n",
         "transitions": [
           {
             "name": "BallLost",
             "id": 21,
-            "x": 325,
-            "y": 391,
+            "x": 350,
+            "y": 449,
             "to": "LookForBall",
             "toId": 20,
             "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.anchored < 0.7 then \n\treturn true\nelse\n\treturn false\nend\n"
           },
           {
-            "name": "BallNear",
+            "name": "BallDanger",
             "id": 24,
-            "x": 665,
-            "y": 113,
+            "x": 688,
+            "y": 237,
             "to": "ClearBall",
             "toId": 5,
-            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.rho < 800 then \n\treturn true\nelse\n\treturn false\nend\n"
+            "test": "local ball = chaos.getLpo (chaos.BALL_LPO)\nlocal pos = chaos.getStartPos ()\nlocal dist = chaos.distancePosToLpo (pos, ball)\nif dist < 1000 then \n\treturn true\nelse\n\treturn false\nend\n"
+          },
+          {
+            "name": "BallNotDanger",
+            "id": 29,
+            "x": 504,
+            "y": 238,
+            "to": "CutBall",
+            "toId": 28,
+            "test": "local ball = chaos.getLpo (chaos.BALL_LPO)\nlocal pos = chaos.getStartPos ()\nlocal dist = chaos.distancePosToLpo (pos, ball)\nif dist >= 1000 then \n\treturn true\nelse\n\treturn false\nend\n"
           }
         ]
       },
       {
         "name": "LookForBall",
         "id": 20,
-        "x": 203,
-        "y": 339,
+        "x": 193,
+        "y": 362,
         "code": "chaos.setBehavior(\"lookForBall\")\n",
         "transitions": [
           {
             "name": "BallSeen",
             "id": 23,
-            "x": 320,
-            "y": 251,
+            "x": 356,
+            "y": 329,
             "to": "FaceBall",
             "toId": 18,
             "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.anchored >= 0.7 then \n\treturn true\nelse\n\treturn false\nend\n"
           },
           {
-            "name": "FarFromNet2",
+            "name": "OutNet2Area",
             "id": 27,
-            "x": 245,
-            "y": 121,
+            "x": 220,
+            "y": 142,
             "to": "KeepPosition",
             "toId": 8,
-            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nlocal net2 = chaos.getLpo(chaos.NET2_LPO)\nif net2.anchored > 0.7 and net2.rho > 1500 then \n\treturn true\nend\nif net1.anchored > 0.7 and net1.rho < 3600 then \n\treturn true\nend\nreturn false\n\n"
+            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nlocal net2 = chaos.getLpo(chaos.NET2_LPO)\nif net2.anchored > 0.7 and net2.rho > 1500 then \n\treturn true\nend\nif net1.anchored > 0.7 and net1.rho < 3600 then \n\treturn true\nend\nif not chaos.inNet2Area () then\n\treturn true\nend\nreturn false\n\n"
+          }
+        ]
+      },
+      {
+        "name": "CutBall",
+        "id": 28,
+        "x": 437,
+        "y": 119,
+        "code": "local net1 = chaos.getLpo (chaos.NET1_LPO)\nlocal lm1 = chaos.getLpo (chaos.LANDMARK1_LPO)\nlocal lm2 = chaos.getLpo (chaos.LANDMARK2_LPO)\n\nchaos.setNeeded (chaos.NET1_LPO, 1-net1.anchored)\nchaos.setNeeded (chaos.LANDMARK1_LPO, 1-lm1.anchored)\nchaos.setNeeded (chaos.LANDMARK2_LPO, 1-lm2.anchored)\nchaos.setBehavior(\"cutBall\")\n",
+        "transitions": [
+          {
+            "name": "BallLost",
+            "id": 30,
+            "x": 297,
+            "y": 241,
+            "to": "LookForBall",
+            "toId": 20,
+            "test": "local ball = chaos.getLpo(chaos.BALL_LPO)\nif ball.anchored < 0.7 then \n\treturn true\nelse\n\treturn false\nend\n"
+          },
+          {
+            "name": "OutNet2Area",
+            "id": 34,
+            "x": 294,
+            "y": 14,
+            "to": "KeepPosition",
+            "toId": 8,
+            "test": "local net1 = chaos.getLpo(chaos.NET1_LPO)\nlocal net2 = chaos.getLpo(chaos.NET2_LPO)\nif net2.anchored > 0.7 and net2.rho > 1500 then \n\treturn true\nend\nif net1.anchored > 0.7 and net1.rho < 3600 then \n\treturn true\nend\nif not chaos.inNet2Area () then\n\treturn true\nend\nreturn false\n\n"
           }
         ]
       }
