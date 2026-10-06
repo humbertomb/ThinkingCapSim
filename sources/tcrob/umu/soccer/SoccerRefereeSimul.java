@@ -56,7 +56,8 @@ import tc.shared.linda.Tuple;
  *     of where it was for {@link #STUCK_TIME}, pushing against each other or
  *     caught on something -- is stuck: the game is stopped (READY) and the
  *     robots put back at their start positions, clear of each other, with the
- *     ball at the centre, for a kick-off.
+ *     ball at the centre, for a kick-off. With every robot but the keepers
+ *     penalised it is not called: the clock runs until one is back.
  * <li>A robot that is not in its own half of the field when the game is to be
  *     SET (its centre on the other side of the halfway line) is put back in its
  *     half, where it was across the field and {@link #OFFSIDE_BACK} of the way
@@ -421,9 +422,21 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		Simulator	s = sim;
 		long		now = System.currentTimeMillis ();
 		boolean		all = true;
-		int			seen = 0;
+		int			seen = 0, players = 0;
 
 		if (s == null)								return false;
+
+		// with every robot but the keepers out of the game (penalised) there is no
+		// game to get stuck: the clock runs, and how they get on is looked at afresh
+		// once one of them is back
+		for (int r = 0; r < s.numrobots; r++)
+			if ((s.MODEL[r] != null) && (penalty[r] == 0) && !isKeeper (r))		players++;
+		if (players == 0)
+		{
+			java.util.Arrays.fill (stuck, null);
+			return false;
+		}
+
 		for (int r = 0; r < s.numrobots; r++)
 		{
 			if (s.MODEL[r] == null)					continue;
