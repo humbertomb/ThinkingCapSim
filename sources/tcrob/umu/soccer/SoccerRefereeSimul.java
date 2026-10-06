@@ -59,8 +59,8 @@ import tc.shared.linda.Tuple;
  *     ball at the centre, for a kick-off. With every robot but the keepers
  *     penalised it is not called; and when the keepers stand still the game
  *     moves on to the end of the first penalty ({@link #IDLE_TIME}).
- * <li>A keeper inside the net of its team when the game is to be SET is put by
- *     hand at its start position.
+ * <li>A keeper inside the net of its team (its centre in it) when the game is to
+ *     be SET is put by hand at its start position.
  * <li>Which team kicks off is drawn at the start of the match, and after a goal
  *     (or a kick-off shot) it is the team the ball went in the net of. On SET,
  *     the first robot of the team that does not kick off (BLUE-1, RED-1:
@@ -1163,9 +1163,9 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	}
 
 	/**
-	 * When the game is to be SET, a keeper inside the net of its team (any part of
-	 * it) is put by hand at its start position, clear of the others: the play does
-	 * not start with it in the goal.
+	 * When the game is to be SET, a keeper inside the net of its team (its centre
+	 * in it) is put by hand at its start position, clear of the others: the play
+	 * does not start with it in the goal.
 	 */
 	protected void keepersOut ()
 	{
@@ -1175,7 +1175,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		for (int r = 0; r < s.numrobots; r++)
 		{
 			if ((s.MODEL[r] == null) || (teamOf[r] < 0) || !isKeeper (r))		continue;
-			if (!Boolean.TRUE.equals (touches (netNames[teamOf[r]], s.MODEL[r].real_x, s.MODEL[r].real_y, radius (r))))		continue;
+			if (!Boolean.TRUE.equals (in (netNames[teamOf[r]], s.MODEL[r].real_x, s.MODEL[r].real_y)))		continue;		// its centre in the net: standing in front of it, it may touch it
 
 			double[]	p = s.startPose (r);
 
