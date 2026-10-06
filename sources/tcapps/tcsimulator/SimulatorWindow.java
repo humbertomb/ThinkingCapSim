@@ -81,6 +81,9 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	protected boolean				worldModified;			// world changed since the architecture was loaded/saved
 
 	protected List<ExecArch>		running;				// Robots being executed, one ExecArch each (null when none)
+	protected volatile boolean		ready;					// whether they are all set up, and can be told to run (see ExecArch.isReady)
+	/** How long the robots are waited for to be set up at most (ms): past it, they can be told to run all the same. */
+	static public final long		READY_WAIT	= 180000;
 	protected Simulator				simulator;				// Simulation engine of the running architecture
 	protected List<RobotView>		robots	= new ArrayList<RobotView> ();		// simulated robots being displayed
 	protected List<ObjectView>		objects	= new ArrayList<ObjectView> ();		// simulated animated objects being displayed (null entries: removed)
@@ -566,6 +569,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 			execs.add (new ExecArch (deploy, i, simulator));		// loads the world into the simulator and takes the start point of the robot
 		}
 		running		= execs;
+		ready		= false;
 		// while simulating, the animated objects are live: drawn (overlay / 3D) where
 		// the simulation has them and not at their initial pose, and moved by hand
 		// there to see what the modules make of it. The objects of the canvas follow
@@ -589,17 +593,56 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 						try { Thread.sleep (50); } catch (InterruptedException e) { return; }
 					if ((running == execs) && (r.getLocalLinda () != null))		monitorPanel.attach (r.getLocalLinda (), r.getRobotId ());
 				}
+
+				// and until every module of every robot is set up, before they can be told
+				// to run: a START that finds them half way through leaves them half started
+				long	t0 = System.currentTimeMillis ();
+				boolean	all = false;
+
+				while ((running == execs) && !(all = allReady (execs)) && (System.currentTimeMillis () - t0 < READY_WAIT))
+					try { Thread.sleep (100); } catch (InterruptedException e) { return; }
+				if (running != execs)		return;
+				final String	late = all ? null : notReady (execs);
+				SwingUtilities.invokeLater (new Runnable ()
+				{
+					public void run ()
+					{
+						if (running != execs)		return;
+						ready	= true;
+						statusBar.setStatus ((late == null) ? "Ready: " + String.join (", ", robotNames ()) + " (" + (System.currentTimeMillis () - t0 + 500) / 1000 + " s to set up)"
+														   : "Not every module is set up after " + (READY_WAIT / 1000) + " s (" + late + "): it can be run all the same");
+						updateExecutionState ();
+					}
+				});
 			}
 		}, "TCSim-launcher").start ();
-		statusBar.setStatus ("Executing " + String.join (", ", robotNames ()) + " (" + ((deploy.getFile () != null) ? deploy.getFile ().getName () : "untitled") + ")");
+		statusBar.setStatus ("Starting " + String.join (", ", robotNames ()) + " (" + ((deploy.getFile () != null) ? deploy.getFile ().getName () : "untitled") + "): wait until every module is set up");
 		updateExecutionState ();
 	}
 
 	/** Stops the modules and Linda servers of the running robots. */
+	/** Whether every robot of an execution is set up (see ExecArch.isReady). */
+	static private boolean allReady (List<ExecArch> execs)
+	{
+		for (ExecArch r : execs)		if (!r.isReady ())		return false;
+		return true;
+	}
+
+	/** The modules that are not set up yet, robot by robot, as they are named in the deployment. */
+	static private String notReady (List<ExecArch> execs)
+	{
+		List<String>	l = new ArrayList<String> ();
+
+		for (ExecArch r : execs)
+			for (String m : r.notReady ())		l.add (r.getRobotId () + "/" + m);
+		return String.join (", ", l);
+	}
+
 	public void terminate ()
 	{
 		if (running == null)			return;
 		List<ExecArch>	execs = running;
+		ready		= false;
 		for (ExecArch r : execs)		r.sendCommand (ItemExecution.STOP);		// stop the modules before tearing them down
 		running		= null;
 		monitorPanel.detach ();
@@ -634,7 +677,7 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	/** Sends a start/step/stop command to the modules of every robot (as the monitor's execution control). */
 	public void command (int cmd)
 	{
-		if (running == null)			return;
+		if ((running == null) || !ready)	return;					// not set up yet: see execute
 		boolean	sent = false;
 		for (ExecArch r : running)		sent |= r.sendCommand (cmd);
 		if (!sent)
@@ -689,11 +732,12 @@ public class SimulatorWindow extends JFrame implements WorldCanvas.Listener, Sim
 	private void updateExecutionState ()
 	{
 		boolean	on = (running != null);
+		boolean	go = on && ready;									// told to run only once every module is set up
 		if (executeAction != null)		executeAction.setEnabled (canExecute () || on);		// a run in course can always be restarted or stopped
-		resetAction.setEnabled (on);
-		startAction.setEnabled (on);
-		stepAction.setEnabled (on);
-		stopAction.setEnabled (on);
+		resetAction.setEnabled (go);
+		startAction.setEnabled (go);
+		stepAction.setEnabled (go);
+		stopAction.setEnabled (go);
 		updateTasksState ();
 	}
 

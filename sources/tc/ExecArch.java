@@ -269,6 +269,36 @@ public class ExecArch extends Thread
 	public boolean isRunning ()			{ return running; }
 
 	/**
+	 * Whether the robot is ready to be told to run: its modules started and
+	 * each one done with its configuration (see StdThread#isConfigured), its
+	 * virtual robot started, and so the supervisors this robot starts. Until
+	 * then a START would find modules half way through setting themselves up.
+	 */
+	public boolean isReady ()
+	{
+		int		i;
+
+		if (!running)										return false;
+		for (i = 0; i < num; i++)
+			if ((thdesc[i].thread == null) || !thdesc[i].thread.isConfigured ())		return false;
+		if ((vrdesc != null) && (vrdesc.thread == null))	return false;
+		for (i = 0; i < supdesc.length; i++)
+			if (supdesc[i].thread == null)					return false;
+		return true;
+	}
+
+	/** The modules of the robot that are not ready yet (see {@link #isReady}), by name, for whoever waits for them. */
+	public java.util.List<String> notReady ()
+	{
+		java.util.List<String>	l = new java.util.ArrayList<String> ();
+
+		for (int i = 0; i < num; i++)
+			if ((thdesc[i].thread == null) || !thdesc[i].thread.isConfigured ())		l.add (thdesc[i].preffix);
+		if ((vrdesc != null) && (vrdesc.thread == null))	l.add (vrdesc.preffix);
+		return l;
+	}
+
+	/**
 	 * Stops every module thread and the Linda servers created by this
 	 * architecture and finishes the executor thread.
 	 */

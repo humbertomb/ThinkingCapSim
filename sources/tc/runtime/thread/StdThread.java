@@ -32,6 +32,7 @@ public abstract class StdThread implements Runnable, LindaListener
 	// Debug and control parameters
 	protected int				state;
 	protected boolean			running		= false;
+	private volatile boolean	configured	= false;	// whether it has taken in its configuration (CONFIG), whatever it made of it
 	protected boolean			step		= false;
 	protected boolean			debug		= false;
 	protected boolean			auto		= true;
@@ -103,6 +104,14 @@ public abstract class StdThread implements Runnable, LindaListener
 		initialise (config);
 	}
 	
+	/**
+	 * Whether the module has taken in its configuration (CONFIG, which the robot
+	 * sends when it starts): until then it is still setting itself up -- a vision
+	 * computing its tables, a controller reading its machine -- and is not ready
+	 * to be told to run.
+	 */
+	public boolean isConfigured ()			{ return configured; }
+
 	public void start ()
 	{
 		if (state == INIT)					return;
@@ -245,6 +254,7 @@ public abstract class StdThread implements Runnable, LindaListener
 		edesc	= (EventDesc) recvs.get (tuple.key);
 		if (edesc != null)
 			edesc.notify (tuple.space, tuple.value);
+		if (Tuple.CONFIG.equals (tuple.key))		configured = true;		// done with it, however it went
 		
 		Thread.yield ();
 	}	  
