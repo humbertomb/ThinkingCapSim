@@ -72,6 +72,26 @@ public class WMZones
 		return "Unknown";		
 	}
 
+	/**
+	 * The name of the smallest zone a position is in, or "Unknown": zones may be
+	 * one inside another (the area of a net inside the field, and the field
+	 * inside the arena), and the smallest is the one that says most of where the
+	 * position is. Zones of the same size: the first of them.
+	 */
+	public String innermost (double x, double y)
+	{
+		int			i, best = -1;
+		double		size, least = Double.POSITIVE_INFINITY;
+
+		for (i = 0; (areas != null) && (i < areas.length); i++)
+		{
+			if (!areas[i].area.contains (x, y))			continue;
+			size	= areas[i].area.getWidth () * areas[i].area.getHeight ();
+			if (size < least)							{ least = size;	best = i; }
+		}
+		return (best >= 0) ? areas[best].label : "Unknown";
+	}
+
 	public int index (String label)
 	{
 		int  i;

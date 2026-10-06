@@ -620,7 +620,7 @@ public class World extends Object
 		
 		String stret = new String ("");
 		
-		stret += "Zone: "+zones.inZone (x,y)+". ";
+		stret += "Zone: "+zones.innermost (x,y)+". ";			// the smallest one it is in, when they are one inside another
 		
 		mindist = Double.POSITIVE_INFINITY;
 		index = -1;
