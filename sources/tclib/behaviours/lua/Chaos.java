@@ -639,6 +639,8 @@ public class Chaos implements LuaBridge
 				t.set ("score1", Double.valueOf ((r != null) ? r.score1 : 0));
 				t.set ("score2", Double.valueOf ((r != null) ? r.score2 : 0));
 				t.set ("time", Double.valueOf ((r != null) ? r.time : 0));
+				t.set ("kickoff", Double.valueOf ((r != null) ? r.kickoff : -1));
+				t.set ("ownKickoff", Boolean.valueOf ((r != null) && (r.kickoff == (red ? 0 : 1))));
 				return t;
 			}
 		});

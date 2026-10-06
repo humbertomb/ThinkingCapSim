@@ -35,6 +35,7 @@ public class ItemReferee extends Item implements Serializable
 	public int						score1;						// the goals of each team when it was said
 	public int						score2;
 	public long						time;						// how long the match had been running [ms]
+	public int						kickoff	= -1;				// the team that kicks off (0 the red, 1 the blue), -1 before the draw
 
 	//Constructors
 	public ItemReferee ()

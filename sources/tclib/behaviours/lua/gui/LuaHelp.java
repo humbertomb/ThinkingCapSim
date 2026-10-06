@@ -469,6 +469,8 @@ public class LuaHelp
 		{ "score1", "number", "The goals of the red team when it was said." },
 		{ "score2", "number", "The goals of the blue team." },
 		{ "time", "number", "How long the match had been running, in ms." },
+		{ "kickoff", "number", "The team that kicks off (0 the red, 1 the blue): drawn at the start, and after a goal the one that conceded it; -1 before the draw." },
+		{ "ownKickoff", "boolean", "Whether it is the team of this robot that kicks off." },
 	};
 
 	static private final String[][]	ROLE_FIELDS =

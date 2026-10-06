@@ -61,6 +61,12 @@ import tc.shared.linda.Tuple;
  *     moves on to the end of the first penalty ({@link #IDLE_TIME}).
  * <li>A keeper inside the net of its team when the game is to be SET is put by
  *     hand at its start position.
+ * <li>Which team kicks off is drawn at the start of the match, and after a goal
+ *     (or a kick-off shot) it is the team the ball went in the net of. On SET,
+ *     the first robot of the team that does not kick off (BLUE-1, RED-1:
+ *     FIRSTS) has to be {@link #KICKOFF_DIST} from the ball; if it is nearer,
+ *     it is put by hand where it was across the field and that far from the
+ *     halfway line, in its own half.
  * <li>A robot that is not in its own half of the field when the game is to be
  *     SET (its centre on the other side of the halfway line) is put back in its
  *     half, where it was across the field and {@link #OFFSIDE_BACK} of the way
@@ -156,6 +162,15 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	 * its own team as long as it likes.
 	 */
 	static public final String		KEEPERS		= "BLUE-4, RED-4";
+	/**
+	 * The first robots of each team, by name, when the settings do not say
+	 * otherwise (FIRSTS): BLUE-1 and RED-1. On SET, the first robot of the team
+	 * that does not kick off has to be more than {@link #KICKOFF_DIST} from the
+	 * ball, and is put there when it is not.
+	 */
+	static public final String		FIRSTS		= "BLUE-1, RED-1";
+	/** How far from the ball the first robot of the team that does not kick off stands on SET (m). */
+	static public final double		KICKOFF_DIST	= 1.0;
 	/** The teams, as the referee numbers them: the red one owns Net1, the blue one Net2. */
 	static public final int			RED				= 0;
 	static public final int			BLUE			= 1;
@@ -193,6 +208,8 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 	protected String[][]			teamRobots	= new String[2][];		// by name, when the settings say; null for by the half they start in
 	protected String[]				keeperNames;						// the keepers by name (KEEPERS)
+	protected String[]				firstNames;							// the first robot of each team by name (FIRSTS)
+	protected int					kickoffTeam	= -1;					// the team that kicks off next (RED, BLUE), -1 before the draw
 	protected Boolean[]				keeper		= new Boolean[Simulator.MAX_ROBOTS];	// whether each robot is the keeper of its team (null: not looked at yet)
 	protected double				throwIn;				// the throw-in line, in from the side line [m]
 	protected double				corner;					// the corner kick point, in from the end line [m]
@@ -245,14 +262,17 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		teamRobots[0]	= names (cfg.get ("ROBOTS1"));
 		teamRobots[1]	= names (cfg.get ("ROBOTS2"));
 		keeperNames		= names (cfg.get ("KEEPERS", KEEPERS));
+		firstNames		= names (cfg.get ("FIRSTS", FIRSTS));
 		throwIn			= cfg.getDouble ("THROWIN", 0.5);
 		corner			= cfg.getDouble ("CORNER", 0.65);
 		circle			= cfg.getDouble ("CIRCLE", 0.18);
 		java.util.Arrays.fill (teamOf, -1);
 		rtuple			= new Tuple (SoccerTuple.REFEREE, null);
 
-		// the game starts the moment the referee does, and nothing else for a while
+		// the game starts the moment the referee does, and nothing else for a while;
+		// and which team kicks off is drawn
 		enter (GameStates.INITIAL, -1);
+		drawKickoff ();
 
 		if (localgfx)
 			SwingUtilities.invokeLater (new Runnable ()
@@ -334,7 +354,18 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		faults		= 0;
 		forget ();
 		enter (GameStates.INITIAL, -1);
+		drawKickoff ();
 	}
+
+	/** Which team kicks off at the start of the match, drawn. */
+	protected void drawKickoff ()
+	{
+		kickoffTeam	= (Math.random () < 0.5) ? RED : BLUE;
+		decide (Events.KICKOFF, kickoffTeam, null, -1, "Draw: " + teamNames[kickoffTeam] + " kicks off");
+	}
+
+	/** The team that kicks off next (RED, BLUE), -1 before the draw. */
+	public int kickoffTeam ()							{ return kickoffTeam; }
 
 	/* ------------------------------------------------------------------ */
 	/* The game                                                            */
@@ -351,7 +382,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		stateSince	= System.currentTimeMillis ();
 		switch (s)
 		{
-		case SET:			pause ();		centreBall ();		offside ();		keepersOut ();		break;		// the robots are in place: the ball to the centre, those out of their half off it, and a keeper in its net out of it
+		case SET:			pause ();		centreBall ();		offside ();		keepersOut ();		kickoffDistance ();		break;		// the robots are in place: the ball to the centre, those out of their half off it, a keeper in its net out of it, and the first of the team that does not kick off away from the ball
 		case READY:			pause ();		java.util.Arrays.fill (still, null);		break;		// where they stand is looked at afresh
 		case INITIAL:
 		case FINISHED:		pause ();		break;
@@ -573,6 +604,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		item.setState (st, player);
 		item.setEvent (event, team, robot, text);
 		item.setScore (score[0], score[1], elapsed ());
+		item.kickoff	= kickoffTeam;
 		item.set (System.currentTimeMillis ());
 		if (linda != null)
 		{
@@ -649,7 +681,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 							"GOAL " + teamNames[team] + toucher (ball) + ": " + teamNames[0] + " " + score[0] + " - " + score[1] + " " + teamNames[1]);
 					changed ();
 				}
-				kickOff (ball, field);
+				kickOff (ball, field, net);			// the team that owns the net it went in kicks off
 				return;
 			}
 			inNet[net]	= in;
@@ -748,10 +780,11 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	 * moved: READY is theirs to walk back to their start positions in, as the
 	 * rules have it; the ball goes to the centre on SET (see {@link #centreBall}).
 	 */
-	protected void kickOff (SimObject ball, WMZone field)
+	protected void kickOff (SimObject ball, WMZone field, int team)
 	{
 		forget ();
-		decide (Events.KICKOFF, -1, null, -1, "Kick-off: robots to their starts, ball to the centre on SET");
+		kickoffTeam	= team;
+		decide (Events.KICKOFF, team, null, -1, "Kick-off " + teamNames[team] + ": robots to their starts, ball to the centre on SET");
 		enter (GameStates.READY, -1);
 	}
 
@@ -1075,6 +1108,55 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 			y	= at[1];
 			s.placeRobot (r, x, y, s.MODEL[r].real_a);
 			decide (Events.STATE, teamOf[r], name (r), r, "PENALIZED " + robot (r) + ": out of its half, to (" + fmt (x) + ", " + fmt (y) + ")", GameStates.PENALIZED);
+		}
+	}
+
+	/** Whether a robot is the first of its team: one of the ones named so (FIRSTS, {@link #FIRSTS} if the settings say nothing). */
+	protected boolean isFirst (int r)
+	{
+		String		name = (sim != null) ? sim.robotName (r) : null;
+
+		if ((name == null) || (firstNames == null))		return false;
+		for (String n : firstNames)
+			if (n.equalsIgnoreCase (name))				return true;
+		return false;
+	}
+
+	/**
+	 * When the game is to be SET, the first robot of the team that does not kick
+	 * off ({@link #FIRSTS}) has to be more than {@link #KICKOFF_DIST} from the
+	 * ball, which is at the centre by then. One that is not is put by hand where
+	 * it was across the field and that far from the halfway line, in its own
+	 * half (and clear of the others).
+	 */
+	protected void kickoffDistance ()
+	{
+		Simulator	s = sim;
+		WMZone		field = zone (fieldName);
+
+		if ((s == null) || (field == null) || (kickoffTeam < 0))		return;
+
+		boolean		along = alongY (field);
+		double		cx = field.area.getCenterX (), cy = field.area.getCenterY ();
+
+		for (int r = 0; r < s.numrobots; r++)
+		{
+			if ((s.MODEL[r] == null) || (teamOf[r] < 0) || (teamOf[r] == kickoffTeam) || !isFirst (r))		continue;
+
+			double		x = s.MODEL[r].real_x, y = s.MODEL[r].real_y;
+
+			if (Math.hypot (x - cx, y - cy) >= KICKOFF_DIST)		continue;
+
+			double		side = goalSide (teamOf[r], field);			// towards its own net
+			double		cu = along ? cy : cx;
+			double		nu = cu + side * KICKOFF_DIST;
+
+			if (along)		y = nu;
+			else			x = nu;
+			double[]	at = clearOf (r, x, y, (px, py) -> (((along ? py : px) - cu) * side >= KICKOFF_DIST - 1e-6)
+							&& (Math.hypot (px - cx, py - cy) >= KICKOFF_DIST - 1e-6) && field.area.contains (px, py));
+			s.placeRobot (r, at[0], at[1], s.MODEL[r].real_a);
+			decide (Events.STATE, teamOf[r], name (r), r, robot (r) + " near the ball on SET: to (" + fmt (at[0]) + ", " + fmt (at[1]) + ")");
 		}
 	}
 
