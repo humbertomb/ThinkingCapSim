@@ -105,7 +105,9 @@ import tc.shared.linda.Tuple;
  *
  * <pre>
  *   BALL        the animated object that is the ball (ball)
- *   FIELD       the zone of the field (Field)
+ *   FIELD       the zone of the field (Field); a world with no such zone and the
+ *               field in two halves, one of each net (Net1Field, Net2Field), has
+ *               the two of them together as the field
  *   NET1, NET2  the zones inside the nets, where a ball is a goal (Net1Inside, Net2Inside)
  *   AREA1, AREA2  the areas of the nets, where only the keeper may be (Net1Area, Net2Area)
  *   TEAM1, TEAM2  what the teams are called (Red, Blue)
@@ -1343,7 +1345,34 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	/** A zone of the world, or null when it has no such zone. */
 	protected WMZone zone (String name)
 	{
-		return (world != null) ? world.zones ().at (name) : null;
+		WMZone		z = (world != null) ? world.zones ().at (name) : null;
+
+		if ((z == null) && (world != null) && (name != null) && name.equals (fieldName))		z = halves ();
+		return z;
+	}
+
+	/** The halves of the field, one of each net, as the world may have it instead of a field. */
+	static public final String[]	HALVES		= { "Net1Field", "Net2Field" };
+
+	protected tc.shared.world.World	halvesOf;				// the world the field was made of its halves for
+	protected WMZone				halvesField;
+
+	/** The field as its two halves together ({@link #HALVES}), or null when the world has not got both. */
+	protected WMZone halves ()
+	{
+		WMZone		a, b;
+
+		if (halvesOf == world)						return halvesField;
+		halvesOf	= world;
+		halvesField	= null;
+		a			= world.zones ().at (HALVES[0]);
+		b			= world.zones ().at (HALVES[1]);
+		if ((a == null) || (b == null))				return null;
+		halvesField			= new WMZone ();
+		halvesField.label	= fieldName;
+		halvesField.area	= new java.awt.geom.Rectangle2D.Double ();
+		java.awt.geom.Rectangle2D.union (a.area, b.area, halvesField.area);
+		return halvesField;
 	}
 
 	/** Whether a point is in a zone of the world, or null when the world has no such zone. */

@@ -60,15 +60,18 @@ public class RobotMonitorPanel extends JTabbedPane
 		private static final long		serialVersionUID = 1L;
 
 		private final String[]			COLUMNS = { "Robot", "Position", "Status" };
-		private final List<String>		ids = new ArrayList<String> ();		// in the order they announced themselves
+		private final List<String>		ids = new ArrayList<String> ();		// by name, alphabetically
 		private final Map<String, String>	where = new HashMap<String, String> ();
 		private final Map<String, String>	how = new HashMap<String, String> ();
 
 		/** A robot that has announced itself; one that had already done so is left as it is. */
 		void add (String id)
 		{
+			int		i = 0;
+
 			if (ids.contains (id))		return;
-			ids.add (id);
+			while ((i < ids.size ()) && (String.CASE_INSENSITIVE_ORDER.compare (ids.get (i), id) <= 0))		i++;
+			ids.add (i, id);								// in its place, alphabetically
 			fireTableDataChanged ();
 		}
 
