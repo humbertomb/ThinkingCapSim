@@ -416,6 +416,14 @@ public class Chaos implements LuaBridge
 	 * A pose as the scripts read it: x and y in mm, theta in rad, and how sure the
 	 * robot is of it, which in a simulation it always is.
 	 */
+	/** A number of a table (0 when it has none by that name). */
+	static protected double field (LuaTable t, String key)
+	{
+		Double		d = Lua.tonumber (t.get (key));
+
+		return (d != null) ? d.doubleValue () : 0.0;
+	}
+
 	static protected LuaTable point (double x, double y, double theta)
 	{
 		LuaTable		t = new LuaTable ();
@@ -526,6 +534,32 @@ public class Chaos implements LuaBridge
 		c.set ("inNet1Area", new LuaFunction ("chaos.inNet1Area")
 		{
 			public Object call (Object[] args)		{ return Boolean.valueOf (inArea (1)); }
+		});
+
+		// how far a position of the field (x, y in mm: getCurrentPos, getStartPos, ...)
+		// is from an object of the LPS (rho in mm, theta in degrees from the heading
+		// of the robot: getLpo), the object taken to the field from where the robot is
+		// now (getCurrentPos), in mm
+		c.set ("distancePosToLpo", new LuaFunction ("chaos.distancePosToLpo")
+		{
+			public Object call (Object[] args)
+			{
+				Object		p = arg (args, 0), o = arg (args, 1);
+
+				if (!(p instanceof LuaTable) || !(o instanceof LuaTable))
+				{
+					complain (name () + " wants a position (x, y) and an object (rho, theta), and was given "
+							  + Lua.tostring (p) + " and " + Lua.tostring (o));
+					return null;
+				}
+
+				double		x = field ((LuaTable) p, "x"), y = field ((LuaTable) p, "y");
+				double		rho = field ((LuaTable) o, "rho"), theta = radians (field ((LuaTable) o, "theta"));
+				double		rx, ry, ra;
+
+				synchronized (pose)		{ rx = pose.x () * MM;	ry = pose.y () * MM;	ra = pose.alpha; }
+				return Double.valueOf (Math.hypot (rx + rho * Math.cos (ra + theta) - x, ry + rho * Math.sin (ra + theta) - y));
+			}
 		});
 
 		c.set ("getBallVel", new LuaFunction ("chaos.getBallVel")

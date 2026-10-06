@@ -162,6 +162,9 @@ public class LuaHelp
 		{ "getStartPos", "", "Where the robot starts, the position it is put at for a kick-off: x and y in mm, theta in degrees, in the field." },
 		{ "inNet2Area", "", "Whether the robot is in the penalty area of its own net (Net2): true or false, by where getCurrentPos says it is (its centre)." },
 		{ "inNet1Area", "", "Whether the robot is in the penalty area of the net it attacks (Net1): true or false, by where getCurrentPos says it is (its centre)." },
+		{ "distancePosToLpo", "pos, lpo", "How far (mm) a position of the field (<span class=\"mono\">x</span>, <span class=\"mono\">y</span> in mm, as getCurrentPos or getStartPos give it) "
+					+ "is from an object of the LPS (as getLpo gives it: <span class=\"mono\">rho</span> in mm, <span class=\"mono\">theta</span> in degrees from the heading of the robot), "
+					+ "the object taken to the field from where the robot is now (getCurrentPos)." },
 		{ "getBallVel", "", "How fast the ball is going, x and y in mm a second." },
 		{ "setVlin", "mm/s", "How fast to go forward. Backwards is negative." },
 		{ "setVlat", "mm/s", "How fast to go sideways, to the left of the robot. It is commanded like the other two and it is "
