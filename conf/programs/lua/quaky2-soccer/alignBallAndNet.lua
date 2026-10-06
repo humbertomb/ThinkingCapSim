@@ -16,7 +16,7 @@ local net2	= chaos.getLpo(chaos.NET2_LPO)
 local info	= chaos.getBehaviorInfo ()
 
 -- Compute distance at invocation
-if info.isNew > 0 then
+if info.isNew then
      chaos.setGlobal("ALIGN_RHO",1,ball.rho)
 end
 ALIGN_RHO = chaos.getGlobal("ALIGN_RHO")

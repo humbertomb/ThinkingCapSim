@@ -48,7 +48,7 @@ local net2 = chaos.getLpo(net2_pos)
 local info = chaos.getBehaviorInfo ()
 
 -- Initialisation
-if info.isNew > 0 then
+if info.isNew then
 	chaos.setGlobal("KICK_DONE",0,"FALSE")
 end
 

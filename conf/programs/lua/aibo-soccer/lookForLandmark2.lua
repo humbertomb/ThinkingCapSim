@@ -9,7 +9,7 @@ local vlin = 0
 local vlat = 0
 local vrot = 0
 
-if info.isNew > 0 or lm2.anchored > 0.8 then
+if info.isNew or lm2.anchored > 0.8 then
 	chaos.setGlobal("LM2_DIRECTION",math.sign (lm2.theta))
 end
 sgn = chaos.getGlobal("LM2_DIRECTION")

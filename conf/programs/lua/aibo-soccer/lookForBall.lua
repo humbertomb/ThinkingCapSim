@@ -10,7 +10,7 @@ local vlin = 0
 local vlat = 0
 local vrot = 0
 
-if info.isNew > 0 or ball.anchored > 0.8 then
+if info.isNew or ball.anchored > 0.8 then
 	chaos.setGlobal("BALL_DIRECTION",math.sign (ball.theta))
 end
 sgn = chaos.getGlobal("BALL_DIRECTION")

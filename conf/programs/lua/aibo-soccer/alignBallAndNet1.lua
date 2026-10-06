@@ -36,7 +36,7 @@ local vlin, vlat, vrot = 0, 0, 0
 
 -- The distance to keep: the one to the ball when the behaviour began, 
 -- precodition: the robot MUST be seeing teh ball when the behaviour is called
-if info.isNew > 0 then
+if info.isNew then
 	chaos.setGlobal("ALIGN_RHO", math.limit (ball.rho, MIN_BALL_RHO, MAX_BALL_RHO))
 end
 local align_rho = chaos.getGlobal("ALIGN_RHO")

@@ -9,7 +9,7 @@ local vlin = 0
 local vlat = 0
 local vrot = 0
 
-if info.isNew > 0 or net1.anchored > 0.8 then
+if info.isNew or net1.anchored > 0.8 then
 	chaos.setGlobal("NET1_DIRECTION",math.sign (net1.theta))
 end
 sgn = chaos.getGlobal("NET1_DIRECTION")

@@ -160,8 +160,8 @@ public class LuaHelp
 					+ "<span class=\"mono\">dx</span>, <span class=\"mono\">dy</span> (mm) and "
 					+ "<span class=\"mono\">dtheta</span> (degrees) its uncertainty, when there is one." },
 		{ "getStartPos", "", "Where the robot starts, the position it is put at for a kick-off: x and y in mm, theta in degrees, in the field." },
-		{ "inNet2Area", "", "Whether the robot is in the penalty area of its own net (Net2): 1 if it is, 0 if it is not (compare it: <span class=\"mono\">chaos.inNet2Area () == 1</span>; 0 is true in Lua), by where getCurrentPos says it is (its centre)." },
-		{ "inNet1Area", "", "Whether the robot is in the penalty area of the net it attacks (Net1): 1 if it is, 0 if it is not, by where getCurrentPos says it is (its centre)." },
+		{ "inNet2Area", "", "Whether the robot is in the penalty area of its own net (Net2): true or false, by where getCurrentPos says it is (its centre)." },
+		{ "inNet1Area", "", "Whether the robot is in the penalty area of the net it attacks (Net1): true or false, by where getCurrentPos says it is (its centre)." },
 		{ "getBallVel", "", "How fast the ball is going, x and y in mm a second." },
 		{ "setVlin", "mm/s", "How fast to go forward. Backwards is negative." },
 		{ "setVlat", "mm/s", "How fast to go sideways, to the left of the robot. It is commanded like the other two and it is "
@@ -182,9 +182,9 @@ public class LuaHelp
 					+ "<span class=\"mono\">score1</span>, <span class=\"mono\">score2</span> and <span class=\"mono\">time</span> (ms of match). "
 					+ "REFEREE_INITIAL while no referee has spoken." },
 		{ "getBehaviorInfo", "", "About the behaviour running: <span class=\"mono\">name</span>, "
-					+ "<span class=\"mono\">isNew</span> (1 on its first cycle, 0 afterwards), <span class=\"mono\">timer</span> "
+					+ "<span class=\"mono\">isNew</span> (true on its first cycle, false afterwards), <span class=\"mono\">timer</span> "
 					+ "and <span class=\"mono\">time</span> (ms since it started), <span class=\"mono\">finished</span> and "
-					+ "<span class=\"mono\">failed</span>. A behaviour that sets itself up does it when isNew is 1." },
+					+ "<span class=\"mono\">failed</span>. A behaviour that sets itself up does it when isNew is true." },
 		{ "setDesiredPos", "x, y, theta", "Where the robot is to end up: mm and degrees." },
 		{ "getDesiredPos", "", "Where it was told to end up, as a point." },
 		{ "setKick", "", "Kick now." },
@@ -443,7 +443,7 @@ public class LuaHelp
 	static private final String[][]	BEHAVIOUR_FIELDS =
 	{
 		{ "name", "string", "The behaviour running: the one the state chose with setBehavior, or the program itself." },
-		{ "isNew", "number", "1 on the first cycle the behaviour runs, 0 afterwards: where a behaviour sets itself up." },
+		{ "isNew", "boolean", "true on the first cycle the behaviour runs, false afterwards: where a behaviour sets itself up." },
 		{ "timer", "number", "How long it has been running, in ms." },
 		{ "time", "number", "The same as timer." },
 		{ "finished", "number", "Always 0: a behaviour of a state never ends on its own, the machine leaves the state." },

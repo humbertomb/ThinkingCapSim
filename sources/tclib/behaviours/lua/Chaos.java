@@ -516,16 +516,16 @@ public class Chaos implements LuaBridge
 		});
 
 		// whether the robot is in the penalty area of its own net (Net2) or of the
-		// one it attacks (Net1), by where it is now (getCurrentPos), its centre: 1 or
-		// 0, as the flags of the other functions (isNew, anchored)
+		// one it attacks (Net1), by where it is now (getCurrentPos), its centre: true
+		// or false, as Lua says yes and no
 		c.set ("inNet2Area", new LuaFunction ("chaos.inNet2Area")
 		{
-			public Object call (Object[] args)		{ return Double.valueOf (inArea (-1) ? 1.0 : 0.0); }
+			public Object call (Object[] args)		{ return Boolean.valueOf (inArea (-1)); }
 		});
 
 		c.set ("inNet1Area", new LuaFunction ("chaos.inNet1Area")
 		{
-			public Object call (Object[] args)		{ return Double.valueOf (inArea (1) ? 1.0 : 0.0); }
+			public Object call (Object[] args)		{ return Boolean.valueOf (inArea (1)); }
 		});
 
 		c.set ("getBallVel", new LuaFunction ("chaos.getBallVel")
@@ -575,7 +575,7 @@ public class Chaos implements LuaBridge
 				LuaTable	t = new LuaTable ();
 
 				t.set ("name", (behaviour != null) ? behaviour : "");
-				t.set ("isNew", Double.valueOf (behaviournew ? 1.0 : 0.0));
+				t.set ("isNew", Boolean.valueOf (behaviournew));
 				// how long the behaviour has been running (ms), which the scripts call both ways
 				t.set ("timer", Double.valueOf ((behaviourtime > 0) ? (System.currentTimeMillis () - behaviourtime) : 0.0));
 				t.set ("time", t.get ("timer"));
