@@ -48,7 +48,10 @@ import tc.shared.linda.Tuple;
  *     team did, one metre in from the end line when nobody knows.
  * <li>A robot wholly inside the area of a net (AREA1, AREA2) for more than
  *     {@link #AREA_TIME} is a fault unless it is the one robot that defends
- *     that net, the keeper of the team that owns it.
+ *     that net, the keeper of the team that owns it. The keeper of a team is
+ *     the robot that starts where the keepers start (START_4, START_11), or
+ *     the one the settings name (KEEPERS): it may be in the area and in the
+ *     net of its team as long as it likes, and is never penalised for it.
  * <li>A game that goes nowhere -- every robot in it within {@link #STUCK_DIST}
  *     of where it was for {@link #STUCK_TIME}, pushing against each other or
  *     caught on something -- is stuck: the game is stopped (READY) and the
@@ -143,6 +146,13 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	static public final int			TEAM_STARTS		= 7;
 	static public final int			PENALTY_START	= 4;
 	static public final int			PENALTY_POINTS	= 3;
+	/**
+	 * The keeper of each team is the robot that starts at the start point of the
+	 * keeper of its block (START_4 for the blue team, START_11 for the red one),
+	 * or one named in the settings (KEEPERS). It may be in the area and in the
+	 * net of its own team as long as it likes.
+	 */
+	static public final int			KEEPER_START	= 3;
 	/** The teams, as the referee numbers them: the red one owns Net1, the blue one Net2. */
 	static public final int			RED				= 0;
 	static public final int			BLUE			= 1;
@@ -170,6 +180,8 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	static public final long		PENALTY_TIME	= 30000;
 
 	protected String[][]			teamRobots	= new String[2][];		// by name, when the settings say; null for by the half they start in
+	protected String[]				keeperNames;						// the keepers by name, when the settings say (KEEPERS); null for by where they start
+	protected Boolean[]				keeper		= new Boolean[Simulator.MAX_ROBOTS];	// whether each robot is the keeper of its team (null: not looked at yet)
 	protected double				throwIn;				// the throw-in line, in from the side line [m]
 	protected double				corner;					// the corner kick point, in from the end line [m]
 	protected double				circle;					// the centre circle [m]
@@ -220,6 +232,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		teamNames[1]	= cfg.get ("TEAM2", "Blue");
 		teamRobots[0]	= names (cfg.get ("ROBOTS1"));
 		teamRobots[1]	= names (cfg.get ("ROBOTS2"));
+		keeperNames		= names (cfg.get ("KEEPERS"));
 		throwIn			= cfg.getDouble ("THROWIN", 0.5);
 		corner			= cfg.getDouble ("CORNER", 0.65);
 		circle			= cfg.getDouble ("CIRCLE", 0.18);
@@ -730,6 +743,15 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 				Boolean		net_ = touches (netNames[net], x, y, rr);
 				long		now = System.currentTimeMillis ();
 
+				// the keeper in the area and the net of its own team: where it plays
+				if ((teamOf[r] == net) && isKeeper (r))
+				{
+					robotInNet[r][net]	= false;
+					inArea[r][net]		= ((in != null) && in.booleanValue ()) ? Math.max (1L, inArea[r][net]) : 0L;	// in, for keeperIn
+					areaFault[r][net]	= false;
+					continue;
+				}
+
 				// into the net itself, however little: a fault at once, whoever it is
 				if ((net_ != null) && net_.booleanValue ())
 				{
@@ -1018,9 +1040,50 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	/** Whether a robot of the team that owns a net, other than this one, is in its area. */
 	protected boolean keeperIn (int net, int robot)
 	{
+		boolean		named = false;										// the team has a keeper of its own: only it is the keeper
+
+		for (int r = 0; (sim != null) && (r < sim.numrobots); r++)
+			if ((teamOf[r] == net) && isKeeper (r))		named = true;
 		for (int r = 0; r < inArea.length; r++)
-			if ((r != robot) && (teamOf[r] == net) && (inArea[r][net] != 0))		return true;
+			if ((r != robot) && (teamOf[r] == net) && (inArea[r][net] != 0) && (!named || isKeeper (r)))		return true;
 		return false;
+	}
+
+	/**
+	 * Whether a robot is the keeper of its team (see {@link #KEEPER_START}): named
+	 * so in the settings (KEEPERS), or starting at the start point of the keeper
+	 * of a block of the world (START_4, START_11). Looked at once.
+	 */
+	protected boolean isKeeper (int r)
+	{
+		Simulator	s = sim;
+		double[]	at;
+
+		if ((r < 0) || (r >= keeper.length) || (s == null))		return false;
+		if (keeper[r] != null)										return keeper[r].booleanValue ();
+		if (keeperNames != null)
+		{
+			String	name = s.robotName (r);
+
+			keeper[r]	= Boolean.FALSE;
+			for (String n : keeperNames)
+				if ((name != null) && n.equalsIgnoreCase (name))	keeper[r] = Boolean.TRUE;
+			return keeper[r].booleanValue ();
+		}
+		at		= s.startPose (r);
+		if (at == null)												return false;		// not started yet: asked again
+		keeper[r]	= Boolean.FALSE;
+		for (int i = 0; s.worldStart (i) != null; i++)
+		{
+			double[]	p = s.worldStart (i);
+
+			if (Math.hypot (p[0] - at[0], p[1] - at[1]) < 0.05)
+			{
+				keeper[r]	= Boolean.valueOf ((i % TEAM_STARTS) == KEEPER_START);
+				break;
+			}
+		}
+		return keeper[r].booleanValue ();
 	}
 
 	/**
