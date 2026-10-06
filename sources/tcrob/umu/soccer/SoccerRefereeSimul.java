@@ -48,10 +48,10 @@ import tc.shared.linda.Tuple;
  *     team did, one metre in from the end line when nobody knows.
  * <li>A robot wholly inside the area of a net (AREA1, AREA2) for more than
  *     {@link #AREA_TIME} is a fault unless it is the one robot that defends
- *     that net, the keeper of the team that owns it. The keeper of a team is
- *     the robot that starts where the keepers start (START_4, START_11), or
- *     the one the settings name (KEEPERS): it may be in the area and in the
- *     net of its team as long as it likes, and is never penalised for it.
+ *     that net, the keeper of the team that owns it. The keepers are named in
+ *     the settings (KEEPERS; BLUE-4 and RED-4 when they say nothing): each may
+ *     be in the area and in the net of its team as long as it likes, and is
+ *     never penalised for it.
  * <li>A game that goes nowhere -- every robot in it within {@link #STUCK_DIST}
  *     of where it was for {@link #STUCK_TIME}, pushing against each other or
  *     caught on something -- is stuck: the game is stopped (READY) and the
@@ -147,12 +147,11 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	static public final int			PENALTY_START	= 4;
 	static public final int			PENALTY_POINTS	= 3;
 	/**
-	 * The keeper of each team is the robot that starts at the start point of the
-	 * keeper of its block (START_4 for the blue team, START_11 for the red one),
-	 * or one named in the settings (KEEPERS). It may be in the area and in the
-	 * net of its own team as long as it likes.
+	 * The keepers, by name, when the settings do not say otherwise (KEEPERS):
+	 * BLUE-4 and RED-4. The keeper of a team may be in the area and in the net of
+	 * its own team as long as it likes.
 	 */
-	static public final int			KEEPER_START	= 3;
+	static public final String		KEEPERS		= "BLUE-4, RED-4";
 	/** The teams, as the referee numbers them: the red one owns Net1, the blue one Net2. */
 	static public final int			RED				= 0;
 	static public final int			BLUE			= 1;
@@ -180,7 +179,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	static public final long		PENALTY_TIME	= 30000;
 
 	protected String[][]			teamRobots	= new String[2][];		// by name, when the settings say; null for by the half they start in
-	protected String[]				keeperNames;						// the keepers by name, when the settings say (KEEPERS); null for by where they start
+	protected String[]				keeperNames;						// the keepers by name (KEEPERS)
 	protected Boolean[]				keeper		= new Boolean[Simulator.MAX_ROBOTS];	// whether each robot is the keeper of its team (null: not looked at yet)
 	protected double				throwIn;				// the throw-in line, in from the side line [m]
 	protected double				corner;					// the corner kick point, in from the end line [m]
@@ -232,7 +231,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		teamNames[1]	= cfg.get ("TEAM2", "Blue");
 		teamRobots[0]	= names (cfg.get ("ROBOTS1"));
 		teamRobots[1]	= names (cfg.get ("ROBOTS2"));
-		keeperNames		= names (cfg.get ("KEEPERS"));
+		keeperNames		= names (cfg.get ("KEEPERS", KEEPERS));
 		throwIn			= cfg.getDouble ("THROWIN", 0.5);
 		corner			= cfg.getDouble ("CORNER", 0.65);
 		circle			= cfg.getDouble ("CIRCLE", 0.18);
@@ -1049,40 +1048,20 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		return false;
 	}
 
-	/**
-	 * Whether a robot is the keeper of its team (see {@link #KEEPER_START}): named
-	 * so in the settings (KEEPERS), or starting at the start point of the keeper
-	 * of a block of the world (START_4, START_11). Looked at once.
-	 */
+	/** Whether a robot is the keeper of its team: one of the ones named so (KEEPERS, {@link #KEEPERS} if the settings say nothing). Looked at once. */
 	protected boolean isKeeper (int r)
 	{
 		Simulator	s = sim;
-		double[]	at;
+		String		name;
 
 		if ((r < 0) || (r >= keeper.length) || (s == null))		return false;
 		if (keeper[r] != null)										return keeper[r].booleanValue ();
-		if (keeperNames != null)
-		{
-			String	name = s.robotName (r);
-
-			keeper[r]	= Boolean.FALSE;
-			for (String n : keeperNames)
-				if ((name != null) && n.equalsIgnoreCase (name))	keeper[r] = Boolean.TRUE;
-			return keeper[r].booleanValue ();
-		}
-		at		= s.startPose (r);
-		if (at == null)												return false;		// not started yet: asked again
+		name		= s.robotName (r);
+		if (name == null)											return false;		// not there yet: asked again
 		keeper[r]	= Boolean.FALSE;
-		for (int i = 0; s.worldStart (i) != null; i++)
-		{
-			double[]	p = s.worldStart (i);
-
-			if (Math.hypot (p[0] - at[0], p[1] - at[1]) < 0.05)
-			{
-				keeper[r]	= Boolean.valueOf ((i % TEAM_STARTS) == KEEPER_START);
-				break;
-			}
-		}
+		if (keeperNames != null)
+			for (String n : keeperNames)
+				if (n.equalsIgnoreCase (name))						keeper[r] = Boolean.TRUE;
 		return keeper[r].booleanValue ();
 	}
 
