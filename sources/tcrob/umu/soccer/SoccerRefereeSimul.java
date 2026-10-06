@@ -440,8 +440,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		Simulator	s = sim;
 
 		forget ();
-		decide (Events.GAME_STUCK, -1, null, -1, "GAME STUCK: no robot got anywhere for " + (STUCK_TIME / 1000)
-				+ " s, robots back to their start positions and kick-off");
+		decide (Events.GAME_STUCK, -1, null, -1, "GAME STUCK for " + (STUCK_TIME / 1000) + " s: robots to their starts, kick-off");
 		java.util.Arrays.fill (pending, true);						// where they are now is where they are leaving
 		for (int r = 0; r < s.numrobots; r++)
 		{
@@ -491,6 +490,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	{
 		ItemReferee		item = new ItemReferee ();
 
+		text	= brief (text);
 		announce (text, cue (event, st, player));
 		item.setState (st, player);
 		item.setEvent (event, team, robot, text);
@@ -563,13 +563,12 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 				if (kickoff)
 					decide (Events.KICKOFF_SHOT, lastTeam (ball), lastRobot (ball),
-							"NO GOAL: kick-off shot into " + netNames[net] + " (" + teamNames[net] + " net), the ball was not touched outside the centre circle" + toucher (ball));
+							"NO GOAL: kick-off shot into the " + teamNames[net] + " net" + toucher (ball));
 				else
 				{
 					score[team]++;
 					decide (Events.GOAL, team, lastRobot (ball),
-							"GOAL for " + teamNames[team] + ": ball in " + netNames[net] + " (" + teamNames[net] + " net)" + toucher (ball)
-							+ "  --  " + teamNames[0] + " " + score[0] + " - " + score[1] + " " + teamNames[1]);
+							"GOAL " + teamNames[team] + toucher (ball) + ": " + teamNames[0] + " " + score[0] + " - " + score[1] + " " + teamNames[1]);
 					changed ();
 				}
 				kickOff (ball, field);
@@ -589,8 +588,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 			faults++;
 			place (ball, back[0], back[1]);
 			decide (Events.BALL_OUT, lastTeam (ball), lastRobot (ball),
-					"FAULT: ball out over the " + (sideOut (field, x, y) ? "side" : "end") + " line at (" + fmt (x) + ", " + fmt (y) + ")"
-					+ toucher (ball) + ", put back at (" + fmt (back[0]) + ", " + fmt (back[1]) + ")  --  faults: " + faults);
+					"OUT " + (sideOut (field, x, y) ? "side" : "end") + toucher (ball) + ": ball to (" + fmt (back[0]) + ", " + fmt (back[1]) + ") #" + faults);
 			on	= Boolean.TRUE;								// it is in the field again, and nothing to say about it
 		}
 		inField	= on;
@@ -675,7 +673,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	protected void kickOff (SimObject ball, WMZone field)
 	{
 		forget ();
-		decide (Events.KICKOFF, -1, null, -1, "Kick-off: robots to their start positions, the ball to the centre when they are set");
+		decide (Events.KICKOFF, -1, null, -1, "Kick-off: robots to their starts, ball to the centre on SET");
 		enter (GameStates.READY, -1);
 	}
 
@@ -739,8 +737,8 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 					{
 						robotInNet[r][net]	= true;
 						faults++;
-						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + robot (r) + " inside the " + teamNames[net] + " net (" + netNames[net] + "): no robot may enter it"
-								+ penalize (r) + "  --  faults: " + faults);
+						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT " + robot (r) + ": in the " + teamNames[net] + " net"
+								+ penalize (r) + " #" + faults);
 						expel (r);
 						inArea[r][net]	= 0;
 						areaFault[r][net]	= false;
@@ -760,15 +758,15 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 					if (teamOf[r] != net)			// not of the team that owns the net: it has no business there
 					{
 						faults++;
-						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + who + " over " + (AREA_TIME / 1000) + " s in " + areaNames[net] + " (" + teamNames[net] + " net): only the "
-								+ teamNames[net] + " keeper may be there" + penalize (r) + "  --  faults: " + faults);
+						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT " + who + ": " + (AREA_TIME / 1000) + " s in " + teamNames[net] + " area"
+								+ penalize (r) + " #" + faults);
 						expel (r);
 					}
 					else if (keeperIn (net, r))		// of the team, but the keeper is in already
 					{
 						faults++;
-						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT: robot " + who + " over " + (AREA_TIME / 1000) + " s in " + areaNames[net] + " (" + teamNames[net] + " net) with the keeper already there: only one may be"
-								+ penalize (r) + "  --  faults: " + faults);
+						decide (Events.ILLEGAL_DEFENDER, teamOf[r], r, "FAULT " + who + ": 2 keepers in " + teamNames[net] + " area"
+								+ penalize (r) + " #" + faults);
 						expel (r);
 					}
 				}
@@ -810,7 +808,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 
 		if (where == null)				return "";
 		penalty[r]	= System.currentTimeMillis () + PENALTY_TIME;
-		return ", penalised: sent to " + where + " for " + (PENALTY_TIME / 1000) + " s";
+		return ", to " + where + " " + (PENALTY_TIME / 1000) + " s";
 	}
 
 	/** Which robot of its team a robot is (0 the first, in the order of the simulator), or -1 when its team is not known. */
@@ -862,7 +860,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		boolean		off = !Boolean.TRUE.equals (touches (fieldName, p[0], p[1], rr));
 		double[]	at = clearOf (r, p[0], p[1], (px, py) -> !off || !Boolean.TRUE.equals (touches (fieldName, px, py, rr)));
 		s.placeRobot (r, at[0], at[1], p[2]);
-		return (p[3] > 0) ? "START_" + (int) p[3] : String.format (java.util.Locale.US, "(%.2f, %.2f)", at[0], at[1]);
+		return (p[3] > 0) ? "START_" + (int) p[3] : String.format (java.util.Locale.US, "(%.2f,%.2f)", at[0], at[1]);
 	}
 
 	/** The radius of a robot (m), as its description says (0 when it says none). */
@@ -989,8 +987,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 			x	= at[0];
 			y	= at[1];
 			s.placeRobot (r, x, y, s.MODEL[r].real_a);
-			decide (Events.STATE, teamOf[r], name (r), r, "State PENALIZED for robot " + robot (r) + ": not in its half on SET, put back in it at ("
-					+ String.format (java.util.Locale.US, "%.2f, %.2f", x, y) + ") (back in the game with the SET)", GameStates.PENALIZED);
+			decide (Events.STATE, teamOf[r], name (r), r, "PENALIZED " + robot (r) + ": out of its half, to (" + fmt (x) + ", " + fmt (y) + ")", GameStates.PENALIZED);
 		}
 	}
 
@@ -1002,7 +999,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	protected void expel (int r)
 	{
 		if (penalty[r] == 0)			return;
-		decide (Events.STATE, teamOf[r], name (r), r, "State PENALIZED for robot " + robot (r), GameStates.PENALIZED);
+		decide (Events.STATE, teamOf[r], name (r), r, "PENALIZED " + robot (r), GameStates.PENALIZED);
 	}
 
 	/** The penalties that are over: the robot is told the game is on for it again, where it is. */
@@ -1014,7 +1011,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		{
 			if ((penalty[r] == 0) || (now < penalty[r]))		continue;
 			penalty[r]	= 0;
-			decide (Events.STATE, teamOf[r], name (r), r, "Robot " + robot (r) + " back in the game", state);
+			decide (Events.STATE, teamOf[r], name (r), r, robot (r) + " back in the game", state);
 		}
 	}
 
@@ -1106,7 +1103,7 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	{
 		int		r = lastRobot (ball);
 
-		return (r >= 0) ? (", last touched by " + robot (r)) : "";
+		return (r >= 0) ? (", by " + robot (r)) : "";
 	}
 
 	/** A robot as it is named in the decisions: its name and its team. */
@@ -1167,5 +1164,15 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 		return (n.length > 0) ? n : null;
 	}
 
-	static private String fmt (double v)			{ return String.format ("%.2f", v); }
+	static private String fmt (double v)			{ return String.format (java.util.Locale.US, "%.2f", v); }
+
+	/** How long what the referee says is at most (characters): a line of the window and of the console. */
+	static public final int			MAX_TEXT	= 70;
+
+	/** What the referee says, no longer than {@link #MAX_TEXT}: cut short, with an ellipsis, when it is (a robot with a long name). */
+	static protected String brief (String text)
+	{
+		if ((text == null) || (text.length () <= MAX_TEXT))		return text;
+		return text.substring (0, MAX_TEXT - 1) + "\u2026";
+	}
 }
