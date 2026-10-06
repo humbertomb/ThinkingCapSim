@@ -57,7 +57,8 @@ import tc.shared.linda.Tuple;
  *     caught on something -- is stuck: the game is stopped (READY) and the
  *     robots put back at their start positions, clear of each other, with the
  *     ball at the centre, for a kick-off. With every robot but the keepers
- *     penalised it is not called: the clock runs until one is back.
+ *     penalised it is not called; and when the keepers stand still the game
+ *     moves on to the end of the first penalty ({@link #IDLE_TIME}).
  * <li>A robot that is not in its own half of the field when the game is to be
  *     SET (its centre on the other side of the halfway line) is put back in its
  *     half, where it was across the field and {@link #OFFSIDE_BACK} of the way
@@ -176,6 +177,15 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 	 */
 	static public final double		STUCK_DIST	= 0.15;
 	static public final long		STUCK_TIME	= 15000;
+	/**
+	 * With every robot but the keepers penalised, and the keepers standing still
+	 * (within {@link #STUCK_DIST} for this long [ms], or no keepers at all), the
+	 * game is moved on to the end of the first penalty: the clock of the match
+	 * jumps by what was left of it, that robot is back in the game, and the
+	 * others have that much less to serve. Nothing would happen in between: it is
+	 * only so that the match is not watched standing still.
+	 */
+	static public final long		IDLE_TIME	= 3000;
 	/** How long a penalised robot is out of the game [ms] (the standard penalty of the 2007 rules). */
 	static public final long		PENALTY_TIME	= 30000;
 
@@ -433,7 +443,9 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 			if ((s.MODEL[r] != null) && (penalty[r] == 0) && !isKeeper (r))		players++;
 		if (players == 0)
 		{
-			java.util.Arrays.fill (stuck, null);
+			for (int r = 0; r < s.numrobots; r++)
+				if (!isKeeper (r))					stuck[r] = null;
+			moveOn (now);
 			return false;
 		}
 
@@ -451,6 +463,45 @@ public class SoccerRefereeSimul extends Supervisor implements Simulated
 			if (now - at[2] < STUCK_TIME)			all = false;
 		}
 		return all && (seen > 0);
+	}
+
+	/**
+	 * Every robot but the keepers is penalised: when the keepers (in the game)
+	 * have been standing still for {@link #IDLE_TIME}, the game moves on to the end
+	 * of the first penalty (see {@link #IDLE_TIME}). The penalties are served in
+	 * full: what is skipped is skipped for all of them, and on the clock of the
+	 * match, which never goes past its end.
+	 */
+	protected void moveOn (long now)
+	{
+		Simulator	s = sim;
+		long		first = Long.MAX_VALUE, d;
+		int			who = -1;
+
+		for (int r = 0; r < s.numrobots; r++)
+		{
+			if ((s.MODEL[r] == null) || (penalty[r] != 0) || !isKeeper (r))		continue;
+
+			double		x = s.MODEL[r].real_x, y = s.MODEL[r].real_y;
+			double[]	at = stuck[r];
+
+			if ((at == null) || (Math.hypot (x - at[0], y - at[1]) > STUCK_DIST))
+				stuck[r]	= at = new double[] { x, y, now };			// it moved: still from here on, if it is
+			if (now - at[2] < IDLE_TIME)			return;				// a keeper on the move: the game is on
+		}
+		for (int r = 0; r < s.numrobots; r++)
+			if ((s.MODEL[r] != null) && (penalty[r] != 0) && (penalty[r] < first))		{ first = penalty[r];	who = r; }
+		if (who < 0)								return;
+		d	= first - now;
+		if (remaining () >= 0)						d = Math.min (d, remaining ());
+		if (d <= 0)									return;				// over now, or the match is
+		for (int r = 0; r < s.numrobots; r++)
+			if (penalty[r] != 0)					penalty[r] -= d;
+		accumulated	+= d;
+		for (int r = 0; r < s.numrobots; r++)
+			if (isKeeper (r) && (stuck[r] != null))	stuck[r][2] = now;	// still from now on, as far as the next jump goes
+		decide (Events.STATE, -1, null, -1, "Only keepers in play: clock +" + ((d + 500) / 1000) + " s, to the end of a penalty");
+		changed ();
 	}
 
 	/**
