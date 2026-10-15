@@ -1443,8 +1443,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	static public final String		DYNAMICS_BASE	= "tcapps.tcsimulator.simulator.objects.SimObject";
 
 	/**
-	 * The dynamics an animated object can be given: none (blank: it stays where it
-	 * is, as SimObject itself would), and every class of the development that
+	 * The dynamics an animated object can be given: SimObject itself (it stays
+	 * where it is; the default of a new object), and every class of the development that
 	 * derives from SimObject -- the mobile objects (SimMobileObject) and the loads
 	 * of the forklifts (SimCargo) among them.
 	 */
@@ -1458,11 +1458,12 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		return l.toArray (new String[0]);
 	}
 
-	/** Animated object (no dynamics yet) with the first icon of the world, centred at (x, y). */
+	/** Animated object (dynamics SimObject) with the first icon of the world, centred at (x, y). */
 	static public WorldItem addAObject (World w, double x, double y)
 	{
 		WMAObject	obj = new WMAObject ();
 		initObject (w, obj, x, y, uniqueLabel (w, "aobj"));
+		obj.dynamics = DYNAMICS_BASE;
 		w.aobjects ().add (obj);
 		return new WorldItem (WorldItem.AOBJECT, w.aobjects ().size () - 1);
 	}
