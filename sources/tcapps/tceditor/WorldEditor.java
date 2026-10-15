@@ -224,6 +224,8 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 						return new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (flowNames ()));
 					if (name.equals ("movement") && (propModel.item != null) && (propModel.item.kind == WorldItem.AOBJECT))
 						return new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (movementNames ()));
+					if (name.equals ("dynamics") && (propModel.item != null) && (propModel.item.kind == WorldItem.AOBJECT))
+						return new javax.swing.DefaultCellEditor (new javax.swing.JComboBox<String> (dynamicsNames ()));
 					if (name.equals ("icon") && (propModel.item != null) && WorldItem.isObject (propModel.item.kind))
 					{
 						// choose among the icons defined in the world
@@ -1435,6 +1437,25 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 		initObject (w, obj, x, y, "OBJECT_" + w.objects ().size ());
 		w.objects ().add (obj);
 		return new WorldItem (WorldItem.OBJECT, w.objects ().size () - 1);
+	}
+
+	/** The class every dynamics of an animated object is (or derives from): the simulation makes one of it per object. */
+	static public final String		DYNAMICS_BASE	= "tcapps.tcsimulator.simulator.objects.SimObject";
+
+	/**
+	 * The dynamics an animated object can be given: none (blank: it stays where it
+	 * is, as SimObject itself would), and every class of the development that
+	 * derives from SimObject -- the mobile objects (SimMobileObject) and the loads
+	 * of the forklifts (SimCargo) among them.
+	 */
+	static public String[] dynamicsNames ()
+	{
+		java.util.List<String>	l = new java.util.ArrayList<String> ();
+
+		l.add ("");
+		for (String c : DriverClasses.of (DYNAMICS_BASE, false, true))
+			if (!c.equals (DYNAMICS_BASE))		l.add (c);
+		return l.toArray (new String[0]);
 	}
 
 	/** Animated object (no dynamics yet) with the first icon of the world, centred at (x, y). */
