@@ -11,6 +11,7 @@ import tc.shared.lps.lpo.*;
 import tc.shared.linda.*;
 
 import wucore.utils.logs.*;
+import wucore.utils.math.Angles;
 
 public class IasfJavaController extends Controller
 {
@@ -102,8 +103,8 @@ public class IasfJavaController extends Controller
 			vrot = 15.0;			
 		}
 		
-		// Set action
-		setMotion (vlin, vlat, vrot);
+		// Set action (vrot is said in deg/s, the platform takes rad/s)
+		setMotion (vlin, vlat, vrot*Angles.DTOR);
 
 		// Plot current control commands
 		if (localgfx)
