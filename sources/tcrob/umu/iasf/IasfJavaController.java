@@ -76,12 +76,12 @@ public class IasfJavaController extends Controller
 		vlat	= 0.0;
 		vrot	= 0.0;
 
-		if (group2 < 0.5)
+		if (group2 < 0.15)
 		{
 			vlin = 0.0;
 			vrot = (group1 > group2 ? 45.0 : -45.0);
 		}
-		else if (group1 < 0.5)
+		else if (group1 < 0.3)
 		{
 			vlin = 0.1;
 			vrot = -30.0;			
@@ -91,7 +91,7 @@ public class IasfJavaController extends Controller
 			vlin = 0.2;
 			vrot = -15.0;			
 		}
-		else if (group3 < 0.5)
+		else if (group3 < 0.3)
 		{
 			vlin = 0.1;
 			vrot = 30.0;			
