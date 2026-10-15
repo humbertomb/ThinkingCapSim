@@ -1452,7 +1452,7 @@ public class WorldEditor extends JPanel implements WorldCanvas.Listener
 	{
 		java.util.List<String>	l = new java.util.ArrayList<String> ();
 
-		l.add ("");
+		l.add (DYNAMICS_BASE);
 		for (String c : DriverClasses.of (DYNAMICS_BASE, false, true))
 			if (!c.equals (DYNAMICS_BASE))		l.add (c);
 		return l.toArray (new String[0]);
